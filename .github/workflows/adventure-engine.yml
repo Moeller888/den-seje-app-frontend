@@ -9,8 +9,13 @@
 #           golden traces, content CLI (validate/build/schema), production builds and the
 #           devtools build boundary.
 #   cr01    CR-01 against the external denylist. Runs when the repository variable
-#           REQUIRE_CLEAN_ROOM_DENYLIST is "1"; the list comes from the secret CLEAN_ROOM_DENYLIST and is
-#           written to the runner's temp folder (never into the checkout). A missing secret fails the job.
+#           REQUIRE_CLEAN_ROOM_DENYLIST is "1". The list is too large for one secret (48 KB), so it is
+#           split at whole lines into the private secrets CLEAN_ROOM_DENYLIST_01 … _08; the job
+#           reassembles them in the runner's temp folder (never in the checkout, umask 077, no shell
+#           tracing, nothing printed), checks the expected entry count and SHA-256, runs CR-01 with
+#           REQUIRE_CLEAN_ROOM_DENYLIST=1 and always removes the file. A missing part, a wrong count or
+#           checksum, or a CR-01 hit fails the job. Pull requests from forks get no secrets: the job
+#           reports SKIP for them and never references the secrets.
 #   e2e     Playwright, functional specs, one worker. Chromium on pull requests; all three browsers when
 #           started by hand. The screenshot baselines are made on Windows, so screenshot tests are
 #           switched off here (E2E_SCREENSHOTS=off); they run in the documented local workflow.
@@ -79,21 +84,78 @@ jobs:
     if: vars.REQUIRE_CLEAN_ROOM_DENYLIST == '1'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # The expected denylist: parts, entries (non-empty, non-comment lines) and SHA-256 of the whole file.
+      # They identify the list without revealing it; change them together with the secrets.
+      DENYLIST_PARTS: "8"
+      DENYLIST_ENTRIES: "9588"
+      DENYLIST_SHA256: "8c19bc1e8616075e0a829eb8056fa4a813c290825765579d52f85fb217e1f4ff"
+      FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
     steps:
+      - name: Pull request from a fork (no secrets, CR-01 SKIP)
+        if: env.FORK_PR == 'true'
+        working-directory: .
+        run: |
+          echo "::notice title=CR-01 SKIP::pull requests from forks get no secrets; CR-01 runs once the change is in this repository"
+          echo "### CR-01: SKIP (pull request from a fork: no secrets)" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/checkout@v4
+        if: env.FORK_PR != 'true'
       - uses: actions/setup-node@v4
+        if: env.FORK_PR != 'true'
         with:
           node-version: 24
       - name: CR-01 against the external denylist
+        if: env.FORK_PR != 'true'
+        shell: bash
         env:
-          DENYLIST: ${{ secrets.CLEAN_ROOM_DENYLIST }}
-          REQUIRE_CLEAN_ROOM_DENYLIST: "1"
+          P01: ${{ secrets.CLEAN_ROOM_DENYLIST_01 }}
+          P02: ${{ secrets.CLEAN_ROOM_DENYLIST_02 }}
+          P03: ${{ secrets.CLEAN_ROOM_DENYLIST_03 }}
+          P04: ${{ secrets.CLEAN_ROOM_DENYLIST_04 }}
+          P05: ${{ secrets.CLEAN_ROOM_DENYLIST_05 }}
+          P06: ${{ secrets.CLEAN_ROOM_DENYLIST_06 }}
+          P07: ${{ secrets.CLEAN_ROOM_DENYLIST_07 }}
+          P08: ${{ secrets.CLEAN_ROOM_DENYLIST_08 }}
         run: |
-          if [ -n "$DENYLIST" ]; then
-            printf '%s\n' "$DENYLIST" > "$RUNNER_TEMP/clean-room-denylist.txt"
-            export CLEAN_ROOM_DENYLIST_PATH="$RUNNER_TEMP/clean-room-denylist.txt"
+          # No "set -x" anywhere: the parts must never reach the log.
+          set -euo pipefail
+          umask 077
+          list="$RUNNER_TEMP/clean-room-denylist.txt"
+          trap 'rm -f "$list"' EXIT
+          : > "$list"
+          missing=""
+          for i in $(seq 1 "$DENYLIST_PARTS"); do
+            n=$(printf '%02d' "$i")
+            var="P$n"
+            if [ -z "${!var:-}" ]; then
+              missing="$missing CLEAN_ROOM_DENYLIST_$n"
+              continue
+            fi
+            # Each part is whole lines without the final line break.
+            printf '%s\n' "${!var}" >> "$list"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error title=CR-01::missing or empty secret(s):$missing"
+            exit 1
           fi
-          node tools/check-clean-room.mjs
+          entries=$(grep -cvE '^[[:space:]]*(#|$)' "$list" || true)
+          # Via stdin: sha256sum escapes the output line when the file name contains a backslash.
+          sha=$(sha256sum < "$list" | cut -d' ' -f1)
+          if [ "$entries" != "$DENYLIST_ENTRIES" ]; then
+            echo "::error title=CR-01::the reassembled denylist has $entries entries, expected $DENYLIST_ENTRIES"
+            exit 1
+          fi
+          if [ "$sha" != "$DENYLIST_SHA256" ]; then
+            echo "::error title=CR-01::the reassembled denylist does not have the expected SHA-256"
+            exit 1
+          fi
+          echo "CR-01: denylist reassembled from $DENYLIST_PARTS parts: $entries entries, SHA-256 verified"
+          CLEAN_ROOM_DENYLIST_PATH="$list" REQUIRE_CLEAN_ROOM_DENYLIST=1 node tools/check-clean-room.mjs
+      - name: Remove the reassembled denylist
+        if: always()
+        working-directory: .
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/clean-room-denylist.txt"
 
   e2e:
     name: adventure-engine / e2e (${{ matrix.browser }})

@@ -217,7 +217,7 @@ Se `docs/decisions/phase-6.md` for formater, schema-strategi, isolation og begr�
   - Uden listen udskrives `CR-01: SKIP`, ikke `PASS`.
   - Med `REQUIRE_CLEAN_ROOM_DENYLIST=1` er en manglende liste en fejl (til CI).
   - Format: én literal pr. linje, mindst 3 tegn, `#` er kommentar.
-  - Tekstfiler matches uden forskel på store og små bogstaver; andre filer matches byte for byte.
+  - Tekstfiler matches uden forskel på store og små bogstaver. I binære filer matcher ASCII-bogstaver uden forskel på store og små, og poster med æ, ø, å osv. matcher, som de er skrevet, med små og med store bogstaver.
   - Fund vises som fil og linje plus listens linjenummer, aldrig værdien.
 
 Release-status: se `docs/release-readiness.md`.
@@ -230,7 +230,7 @@ Release-status: se `docs/release-readiness.md`.
 |---|---|---|
 | `check` | typecheck, lint med CR-02, coverage, scenarier, content-CLI, de tre builds og `node tools/check-build-boundary.mjs` | ved hver ændring |
 | `e2e` | Playwright, uden skærmbilleder (`E2E_SCREENSHOTS=off`, fordi baselines er lavet på Windows) | Chromium på PR; alle tre browsere ved manuel start |
-| `cr01` | CR-01 med den eksterne denylist | kun når repository-variablen `REQUIRE_CLEAN_ROOM_DENYLIST` er `1` |
+| `cr01` | CR-01 med den eksterne denylist: listen samles fra de private secrets `CLEAN_ROOM_DENYLIST_01` … `_08` i runnerens temp-mappe, antal poster og SHA-256 kontrolleres, og filen fjernes altid. PR'er fra forks får ingen secrets og viser `SKIP` | kun når repository-variablen `REQUIRE_CLEAN_ROOM_DENYLIST` er `1` |
 
 ## Indhold og testdata
 

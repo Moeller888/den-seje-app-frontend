@@ -40,7 +40,7 @@ content-tools, app (Game), save ← editor (separat webapp; preview kører Game)
 | Typecheck | headless og browser-tsconfig | grøn |
 | Lint og CR-02 | `pnpm lint` | grøn |
 | E2E (Playwright, én worker, sekventielt) | spil, editor og devtools | se §5 |
-| CI | `.github/workflows/adventure-engine.yml` (se §15) | grøn på GitHub for `20b1868`: `check` og `e2e (chromium)`; `CR-01`-jobbet sprunget over (variablen er ikke sat) |
+| CI | `.github/workflows/adventure-engine.yml` (se §15) | grøn på GitHub for `a430066`: `check` og `e2e (chromium)`; `CR-01`-jobbet var dengang sprunget over (variablen var ikke sat). Det nye resultat står i PR #469 |
 
 ## 4. Coverage
 
@@ -116,9 +116,18 @@ Første release-gennemgang:
 | Kontrol | Status |
 |---|---|
 | CR-02 (ingen henvisning til sporbarheds- eller analysemateriale) | **PASS** |
-| CR-01 (ingen værdi fra ekstern denylist) | **SKIP – ikke afsluttet.** Mekanismen er implementeret og testet med en syntetisk liste, men den eksterne denylist er ikke tilgængelig. CR-01 er derfor ikke bestået |
+| CR-01 (ingen værdi fra ekstern denylist) | **PASS lokalt** mod en ekstern denylist med **9.588 poster** (kørt på `a430066` med `REQUIRE_CLEAN_ROOM_DENYLIST=1`), med positiv kontrol: 100 udplantede poster blev fundet i både tekst og binær form. CI-resultatet står i PR #469 |
 
-**CR-01's manglende input:** en ekstern denylist (én literal pr. linje), som skal angives med `CLEAN_ROOM_DENYLIST_PATH`, og som skal ligge uden for projektet. I CI sættes `REQUIRE_CLEAN_ROOM_DENYLIST=1`, så fravær er en fejl.
+**Denylisten:**
+- **Oprindelse:** listen er bygget udelukkende fra source-side-materialet af en separat proces uden adgang til implementeringen. Implementeringssiden har ikke set værdierne.
+- **Indhold:** personer, scener, genstande, spilspecifikke id'er, asset-filnavne, teksttabel-nøgler, korte tekstfragmenter og SHA-256 af de originale spilfiler.
+- **Opbevaring:** listen ligger privat uden for alle Git-repositorier og committes aldrig.
+- **Levering til CI:** listen er for stor til én GitHub-secret (48 KB). Den er derfor delt ved hele linjer i flere private repository-secrets (`CLEAN_ROOM_DENYLIST_01` … `_08`), som `cr01`-jobbet samler og kontrollerer (antal poster og SHA-256) før kørslen.
+
+**Begrænsninger:**
+- **Kun ordrette strenge:** CR-01 finder ordrette strenge. Den finder ikke omskrevet tekst, kopieret struktur eller logik, eller originale billeder og lyde under nye navne. Der findes ingen checksummer for de enkelte originale assets.
+- **Tekstfragmenter er stikprøver:** der er ét vindue pr. tekstlinje.
+- **Ikke juridisk godkendelse:** kontrollen er teknisk dokumentation.
 
 Alt indhold i repoet er selvproduceret og syntetisk (proveniens: `docs/decisions/phase-4.md` §18 og fixturens assets med licens CC0-1.0 i `assets.manifest.json`). Der er ingen import af andre spils formater.
 
@@ -155,7 +164,7 @@ Se `docs/decisions/phase-4.md` §22, `phase-5.md` §13 og §15 samt `phase-6.md`
 - Editorens graf har ingen autolayout og ingen zoom.
 - Mappeskrivning kræver File System Access API (ellers ZIP), og den er ikke dækket af E2E, fordi den native dialog ikke kan styres.
 - Preview starter ved titelskærmen.
-- CR-01 kræver ekstern input.
+- CR-01 kræver ekstern input (den private denylist; i CI de private secrets, se §9).
 - Dev-værktøjernes advisories (§10).
 
 ## 12. Release blockers
@@ -163,8 +172,9 @@ Se `docs/decisions/phase-4.md` §22, `phase-5.md` §13 og §15 samt `phase-6.md`
 - **Ingen tekniske blockers for en lokal commit.** Fundene fra kodegennemgangen af PR #469 er rettet (§15), og F1–F3 fra den afsluttende gennemgang er rettet (§16).
 - **CI:** den nye workflow har kørt grønt på GitHub (`check` og `e2e (chromium)` for `20b1868`). Dens E2E-job kører på Linux uden skærmbilledtests (baselines er lavet på Windows); Firefox og WebKit køres kun ved manuel start og er endnu ikke kørt i CI.
 - **Før en offentlig udgivelse:**
-  1. CR-01 skal køres med den eksterne denylist (`REQUIRE_CLEAN_ROOM_DENYLIST=1`).
+  1. CR-01 er PASS lokalt mod 9.588 eksterne poster (§9). `cr01`-jobbet i CI skal også vise PASS, ikke SKIP; resultatet står i PR #469.
   2. Dev-værktøjerne bør opgraderes (§10).
+- **Clean-room:** kontrollerne er teknisk dokumentation, ikke juridisk godkendelse.
 
 ## 13. Buildartefakter
 
@@ -182,7 +192,7 @@ Se `docs/decisions/phase-4.md` §22, `phase-5.md` §13 og §15 samt `phase-6.md`
 
 **KLAR TIL COMMIT** (lokal commit). Fase 1–6 kan gemmes som en ren, reviewbar første version efter commit-planen i slutrapporten. Alle tests er grønne i alle tre browsere. Der er ikke staged, committet eller pushet.
 
-CR-01 er **ikke** bestået, fordi den eksterne denylist mangler. Det skal fremgå af commitbeskeden og løses før en offentlig udgivelse.
+CR-01 var på det tidspunkt **ikke** bestået, fordi den eksterne denylist manglede. Den er siden kørt lokalt med PASS (§9).
 
 ## 15. Kodegennemgang af PR #469 og rettelser
 
@@ -216,7 +226,13 @@ En uafhængig read-only gennemgang af PR #469 fandt nedenstående. Alle fund er 
 - **Jobs:**
   - `check`: typecheck, lint med CR-02, coverage, scenarier, content-CLI, de tre builds og `tools/check-build-boundary.mjs`.
   - `e2e`: Chromium på pull requests, alle tre browsere ved manuel start.
-  - `cr01`: kun når repository-variablen `REQUIRE_CLEAN_ROOM_DENYLIST` er `1`, med listen fra secret `CLEAN_ROOM_DENYLIST`.
+  - `cr01`: kun når repository-variablen `REQUIRE_CLEAN_ROOM_DENYLIST` er `1`.
+    - **Listen:** den samles fra de private secrets `CLEAN_ROOM_DENYLIST_01` … `_08` i `$RUNNER_TEMP`, med `umask 077`, uden shell tracing og uden at udskrive indhold.
+    - **Kontrol:** forventet antal poster (9.588) og SHA-256 kontrolleres, før CR-01 kører med `REQUIRE_CLEAN_ROOM_DENYLIST=1`.
+    - **Oprydning:** filen fjernes altid, både via `trap` og et `if: always()`-trin.
+    - **Fejl:** en manglende del, et forkert antal, en forkert checksum eller et CR-01-fund får jobbet til at fejle.
+    - **Forks:** PR'er fra forks får ingen secrets. Jobbet viser `SKIP` for dem og bruger ikke secrets.
+    - **Offentligt:** antal poster og SHA-256 står i workflow-filen; de identificerer listen uden at afsløre den.
 - **Ikke required:** workflowen er ikke en required check. Med path-filteret får PR'er uden ændringer i `adventure-engine/` den aldrig, så den skal ikke gøres required uden at fjerne filteret.
 
 ## 16. Afsluttende gennemgang af rettelserne (`b883fcf..20b1868`)
