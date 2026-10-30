@@ -99,10 +99,7 @@ export function extractSchemaPart(file, sql) {
 // Merged in the repository but NOT applied in production, on catalog evidence (read-only metadata,
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
-export const NOT_IN_PRODUCTION = Object.freeze({
-  "20261029120000_difficulty_scale_b.sql":
-    "not applied in production (owner decision pending, PR #371): advance_student_level, get_level_questions_for_student, request_repeat_level_question_for_student and student_level_fold_log do not exist there; A (20261020120000), which it builds on, is applied (remote 20261030045204)",
-});
+export const NOT_IN_PRODUCTION = Object.freeze({});
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
 // (2026-10-28, option B): the isolated CI tests the repository's code against the schema that code

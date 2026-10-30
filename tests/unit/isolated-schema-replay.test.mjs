@@ -54,14 +54,50 @@ test("the replayed schema has production's key objects", async () => {
   // 20260826000000's schema part: 'cancelled' is a valid job status.
   const chk = await one(db, `SELECT pg_get_constraintdef(oid) d FROM pg_constraint WHERE conname = 'generation_jobs_status_valid'`);
   assert.match(chk.d, /cancelled/);
-  // 20261020120000 (A) is applied in production (remote 20261030045204); B (20261029120000) is not.
-  // The md5 is the body production reported on 2026-10-30.
+  // 20261020120000 (A) is applied in production (remote 20261030045204). The md5 is the body
+  // production reported on 2026-10-30.
   const lvl = await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.difficulty_level_from_grade_band(integer,integer)'::regprocedure`);
   assert.equal(lvl.m, "3c6504217ad747cbdbda4d1482ccd6fb");
   assert.ok((await one(db, `SELECT to_regclass('public.student_subject_level') IS NOT NULL AS ok`)).ok, "student_subject_level");
   assert.ok((await one(db, `SELECT to_regclass('public.idx_questions_objective_level') IS NOT NULL AS ok`)).ok, "idx_questions_objective_level");
-  assert.equal((await one(db, `SELECT to_regclass('public.student_level_fold_log') IS NULL AS absent`)).absent, true, "B is not replayed");
-  assert.equal((await one(db, `SELECT count(*)::int n FROM pg_proc WHERE proname IN ('advance_student_level', 'get_level_questions_for_student', 'request_repeat_level_question_for_student')`)).n, 0);
+});
+
+test("B as production has it: fold log, indexes, the three functions, INVOKER, ACL, RLS — and no rows", async () => {
+  // 20261029120000 (B) is applied in production (remote 20261030094958). The md5s are the bodies
+  // production reported on 2026-10-30.
+  const fold = await one(db, `SELECT c.relrowsecurity rls, c.relacl::text acl,
+                                (SELECT count(*)::int FROM pg_policy p WHERE p.polrelid = c.oid) policies
+                              FROM pg_class c WHERE c.oid = 'public.student_level_fold_log'::regclass`);
+  assert.equal(fold.rls, true);
+  assert.equal(fold.policies, 0);
+  assert.equal(fold.acl, "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}");
+  const idx = async (name) => (await one(db, `SELECT pg_get_indexdef(to_regclass('public.${name}')) d`)).d;
+  assert.equal(await idx("student_level_fold_log_pkey"), "CREATE UNIQUE INDEX student_level_fold_log_pkey ON public.student_level_fold_log USING btree (question_instance_id)");
+  assert.equal(await idx("idx_student_level_fold_log_student"), "CREATE INDEX idx_student_level_fold_log_student ON public.student_level_fold_log USING btree (student_id, subject, folded_at)");
+  assert.equal(await idx("idx_qi_student_answered"), "CREATE INDEX idx_qi_student_answered ON public.question_instances USING btree (student_id, answered_at, id) WHERE answered");
+  const fns = (await db.query(`SELECT p.proname, md5(p.prosrc) m, p.prosecdef, p.proconfig::text cfg, p.proacl::text acl,
+                                 has_function_privilege('public', p.oid, 'EXECUTE') pub,
+                                 has_function_privilege('anon', p.oid, 'EXECUTE') anon,
+                                 has_function_privilege('authenticated', p.oid, 'EXECUTE') auth,
+                                 has_function_privilege('service_role', p.oid, 'EXECUTE') svc
+                               FROM pg_proc p WHERE p.pronamespace = 'public'::regnamespace
+                                 AND p.proname IN ('advance_student_level', 'get_level_questions_for_student', 'request_repeat_level_question_for_student')
+                               ORDER BY p.proname`)).rows;
+  assert.deepEqual(fns.map((f) => [f.proname, f.m]), [
+    ["advance_student_level", "4147c559353946a64c3ea1c791d19635"],
+    ["get_level_questions_for_student", "9e5862b287f6f41066eb876667c426a7"],
+    ["request_repeat_level_question_for_student", "ee153327dae5a5686e9c5efd247d27c0"],
+  ]);
+  for (const f of fns) {
+    assert.equal(f.prosecdef, false, `${f.proname} is SECURITY INVOKER`);
+    assert.match(f.cfg, /search_path=public, pg_temp/, `${f.proname} pins search_path`);
+    assert.equal(f.acl, "{postgres=X/postgres,service_role=X/postgres}", f.proname);
+    assert.deepEqual([f.pub, f.anon, f.auth, f.svc], [false, false, false, true], f.proname);
+  }
+  // Applying the migrations writes no level: neither the pupil's level nor the fold log has a row.
+  for (const t of ["student_subject_level", "student_level_fold_log"]) {
+    assert.equal((await one(db, `SELECT count(*)::int n FROM public.${t}`)).n, 0, t);
+  }
 });
 
 test("no real question row lands: the content filter was on for the whole replay and is gone afterwards", async () => {
