@@ -795,6 +795,12 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
     `mastery_score`, `mastery_balance` eller `total_attempts`, og `update_mastery()` kaldes ikke —
     hverken for MC eller tekst. Lærerens `correct_ratio` (`get_student_overview`) bygger på
     `total_attempts`. Kræver en produkt-/arkitekturbeslutning om, hvad mastery skal betyde.
+  - **Lærerstatistik (rettelse forberedt 2026-10-29, ikke anvendt):** klasseoversigten
+    (`get_teacher_visibility`) læste den forladte kolonne `is_correct` (sidst skrevet 2026-03-17) og
+    den aldrig opdaterede `total_attempts`. 41 af 46 elever med svar blev vist med 0 % korrekt, "Spm."
+    og "Forsøg i alt" var 0, og trenden altid "stabil". Migration
+    `20261029150000_teacher_stats_from_answers.sql` beregner tallene fra `was_correct` (første forsøg,
+    gentagelser udeladt) med uændret adgangskontrol og svarform. Anvendelse kræver ejerens godkendelse.
 - **2-0B — RPC EXECUTE-hygiejne (ikke startet):** `get_my_students`, `set_spotlight`,
   `remove_spotlight`, `set_student_domains`, `get_classroom_leaderboard` og `get_weekly_activity`
   har stadig EXECUTE for `anon`. De afviser kald uden `auth.uid()`, så det er P3 — men `anon` bør
