@@ -385,6 +385,18 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Print family on the tee master — D-269 (offline study; no call; the D-264 master unchanged; nothing approved).**
+  - **Placements.** Two fixed boxes on the body panel, as fractions of the cut, inside a safe area at least 10 px from the rib bands, armhole seams, contour and arms:
+    - `chest-left` (0.30 × 0.30 body widths at the master's anchor);
+    - `chest-center` (0.58 × 0.52 at 0.39 of the cut height).
+  - **Size rule.** The motif's visible content (alpha ≥ 8 box, never the canvas) is scaled as large as the box allows, capped at 50% of the box area in ink.
+    The whole illustration is kept, with one constant and no per-motif parameters.
+  - **Result.** 48/48 renders pass the automatic checks; the alpha is unchanged and the print path is byte-identical to the master's at the anchor.
+    - Visually, only `chest-center` gives a legible shape at 110×165 (the planet about 16×11 px) and a recognisable figure at 52×78.
+    - `chest-left` stays a small mark in the app.
+    - Large prints reveal the master's displacement (slightly wavy outlines, nearest-sample steps) and its flat chest.
+    - Coral shows that the family needs a colour-contrast rule.
+  - **Recommendation.** `chest-center` with the size rule. The next step is a visual owner review of the private preview. See `docs/decisions/D-269.md`.
 - **Generated material on the tee master, result — D-268 (both D-267 calls sent once and received; D-267 closed; no further call).**
   - **Automatic.** Both images passed every material check, and the master check on C held: fingerprint matched, 0 holes, fit OK, outfits 8/8.
     Both were classified as requiring visual review.
