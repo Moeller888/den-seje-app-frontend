@@ -51,12 +51,8 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** `20261030120000_student_subject_level_comment.sql`, rettelsen af
-  tabelkommentaren på `student_subject_level` efter B. Den er forberedt 2026-10-30, men ikke anvendt, så
-  afspilningen springer den over. `tests/unit/student-subject-level-comment-migration-run.test.mjs`
-  anvender den oven på afspilningen (#351 → A → B → kommentar) og viser, at kun kommentaren ændres.
-  A og B er anvendt og verificeret og anvendes derfor også her (se "Anvendt i produktionen efter
-  planens første version").
+- **Ikke anvendt i produktionen:** ingen lige nu. A, B og kommentarrettelsen er anvendt og verificeret
+  og anvendes derfor også her (se "Anvendt i produktionen efter planens første version").
 
 ## Anvendt i produktionen efter planens første version
 En fil fjernes fra `NOT_IN_PRODUCTION`, først når den er anvendt **og** verificeret i produktionen.
@@ -66,8 +62,9 @@ Filen selv ændres aldrig.
 |---|---|---|---|---|
 | `20261020120000_difficulty_scale_a.sql` | `20261030045204 difficulty_scale_a` | 2026-10-30 via `apply_migration`, filen ordret fra `main` (ejergodkendt) | Ja, læsende 2026-10-30: 0 af 2.143 opgaver uden niveau, backfill lig formlen, `difficulty_level_from_grade_band` md5-identisk med filen og kun `service_role`, `student_subject_level` med RLS og én SELECT-politik, `authenticated` kun SELECT, `anon` intet | **Anvendes**, efter #351 (`20261019150000_question_format_mix`) |
 | `20261029120000_difficulty_scale_b.sql` | `20261030094958 difficulty_scale_b` | 2026-10-30 via `apply_migration`, filen ordret fra `main` (SHA-256 `9fb5ffd33df32f8342cda143cc28c32b25478ec0332b2261925cf8ca21a96a1c`, lig SHA-256 af den sætning, migrationsloggen gemte; ejergodkendt) | Ja, læsende 2026-10-30: `student_level_fold_log` med RLS og 0 policies, kun `postgres` og `service_role` i ACL; begge indeks som i filen; de tre funktioner `SECURITY INVOKER` med låst `search_path`, EXECUTE kun for `service_role`, md5 som i filen; 0 rækker i `student_subject_level` og `student_level_fold_log`; A og #351 uændrede | **Anvendes**, efter A |
+| `20261030120000_student_subject_level_comment.sql` | `20261030182931 student_subject_level_comment` | 2026-10-30 via `apply_migration`, filen ordret fra `main` (SHA-256 `beda3783777d4f961e67358ed543cf7e849e91187408b3a9d81d4361ae1286f0`, lig SHA-256 af den sætning, migrationsloggen gemte; ejergodkendt). Filens header siger stadig "NOT APPLIED IN PRODUCTION"; den er historisk og ændres ikke | Ja, læsende 2026-10-30: tabelkommentaren ordret som godkendt; B's tre funktioner med uændret md5, `SECURITY INVOKER` og EXECUTE kun for `service_role`; ACL, grants, RLS, policies, kolonner, indeks og constraints identiske med øjebliksbilledet før; 0 rækker i begge niveautabeller | **Anvendes**, efter B |
 
-Rækkefølgen i afspilningen er #351 → A → B, som i produktionen.
+Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i produktionen.
 
 ## Repositoryet er foran produktionen (anvendes alligevel)
 Ejerbeslutning 2026-10-28 (mulighed B): den isolerede CI tester repositoryets kode mod det skema,
