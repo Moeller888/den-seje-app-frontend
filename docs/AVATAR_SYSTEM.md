@@ -385,6 +385,21 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Generated material on the tee master — D-267 (prepared and authorised: 2 single-use calls; NOT executed; 0 calls sent).**
+  - **The two calls.** Both are `images/generations` with no image or reference sent (C is never sent):
+    - TMG-1: a seamless gingham swatch, 4×4 repeats, opaque;
+    - TMG-2: a standalone chest print on a transparent background.
+  - **Locked.**
+    - The D-264 master: its fingerprint on C, its revision and spec, and seven module hashes.
+    - The rules: the swatch tile is 0.5 × body width; the print is its alpha square at the anchor width.
+    - The checks and their thresholds.
+
+    The adapter and the evaluation refuse a changed master.
+  - **Material checks.** Seamless, repeat count, baked shading, details, transparency, fringe, shadow/glow, specks and flat colours.
+    They were tested on SYNTHETIC positive and negative examples.
+  - **Local twin.** A gingham through the same master separates material faults from mapping faults.
+  - **Visual criteria.** These are never automatic.
+  - **Execution.** Needs a separate owner instruction. See `docs/decisions/D-267.md`.
 - **Tee master — D-264 (offline prototype; no call; recommendation 1: promising enough for a later generated-material test).**
   - **What.** `northstar-tee-master.mjs`: one-time data for the tee-hip cut. It has:
     - a panel map split at the drawn armhole seams, not at C's arm mask;
