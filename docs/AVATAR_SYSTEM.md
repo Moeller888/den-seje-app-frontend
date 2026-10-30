@@ -385,6 +385,122 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Generated material on the tee master — D-267 (prepared and authorised: 2 single-use calls; NOT executed; 0 calls sent).**
+  - **The two calls.** Both are `images/generations` with no image or reference sent (C is never sent):
+    - TMG-1: a seamless gingham swatch, 4×4 repeats, opaque;
+    - TMG-2: a standalone chest print on a transparent background.
+  - **Locked.**
+    - The D-264 master: its fingerprint on C, its revision and spec, and seven module hashes.
+    - The rules: the swatch tile is 0.5 × body width; the print is its alpha square at the anchor width.
+    - The checks and their thresholds.
+
+    The adapter and the evaluation refuse a changed master.
+  - **Material checks.** Seamless, repeat count, baked shading, details, transparency, fringe, shadow/glow, specks and flat colours.
+    They were tested on SYNTHETIC positive and negative examples.
+  - **Local twin.** A gingham through the same master separates material faults from mapping faults.
+  - **Visual criteria.** These are never automatic.
+  - **Execution.** Needs a separate owner instruction. See `docs/decisions/D-267.md`.
+- **Tee master — D-264 (offline prototype; no call; recommendation 1: promising enough for a later generated-material test).**
+  - **What.** `northstar-tee-master.mjs`: one-time data for the tee-hip cut. It has:
+    - a panel map split at the drawn armhole seams, not at C's arm mask;
+    - the cut's own contour;
+    - one luminance-ratio map carrying seams, rib, hem stitch, fold strokes and shading;
+    - a fixed pattern displacement of at most 3 px;
+    - sleeve axes;
+    - a chest-print anchor.
+  - **Per design.** Only material changes: a colour or seamless swatch, optional trim, and a print at an existing anchor.
+  - **Tested designs.** Plain cream and blue (K colours), SYNTHETIC stripes, tartan and a chest print.
+  - **Checks.** 0 holes, fit OK, outfits 8/8.
+  - **Visual result.**
+    - Plain designs carry the original's painting.
+    - Patterns change at the real seam and keep the fold strokes, with no double shadows.
+  - **Limits.**
+    - Patterns stay near-planar over broad areas.
+    - Highlights are clipped, and fold strokes are weaker on dark fabric.
+    - Each cut needs a clean painted neutral item.
+  - **Status.** Nothing is integrated. See `docs/decisions/D-264.md`.
+- **r1-m1 quality reference — D-262 (offline; no call; recommendation 2: a limited product family).**
+  - **Clean reference.** Clean material (approved K-set colours and SYNTHETIC seamless stripes and tartan) laid on the tee-hip cut
+    shows which faults come from the source swatches and which from the method.
+  - **Source-swatch faults, fixed by a clean seamless swatch with wrap tiling.** Ghost pocket, pleats, mirror axis, painted fold
+    strokes.
+  - **Method limits.**
+    - Patterns read as a flat print.
+    - Pattern breaks run down the chest side, because the sleeve boundary is C's arm mask and not the armhole.
+    - Northstar's crisp fold strokes are lost, because lines and fold strokes cannot be separated in a finished picture.
+    - A ratio shade restores the shading strength.
+  - **Swatch checks.** New checks on the swatch itself (seam, flatness, faint details) catch the ghost pocket and the cut-out seam.
+    Painted fold strokes and pleats are left to the eye.
+  - **Next.** No image test now: first decide per-cut panel maps, layered source art and UV. See `docs/decisions/D-262.md`.
+- **Geometry-free material laid on by the cut — D-260 (offline hypothesis r1-m1; no call).**
+  - **Method.** `northstar-r1-material.mjs`: the model would deliver only a flat fabric swatch, a trim swatch and separate details.
+    The cut supplies silhouette, fold shade, sleeve split, bands, construction lines and detail anchors. Swatches are mirror-tiled
+    (sleeves turned with the arm) and shaded by the cut.
+  - **Study.** On real generated material already in the project (R1C-1, R1-1, b1 breton and tartan): 0 holes, fitCheck passed
+    and 8/8 outfits matching the template for all three designs. Neck, cuffs and armpits are clean.
+  - **What the quality depends on.** The swatch must carry no details (a ghost pocket), no baked pleats or folds, and must tile
+    seamlessly. The pattern lies flat over the folds.
+  - **Recommendation.** Promising. Next, test whether the model can deliver a seamless flat swatch and a separate detail; one
+    proposed call, NOT authorised. See `docs/decisions/D-260.md`.
+- **R1C-1 sent and received — D-259: technically rejected; D-258 closed; this variant stopped.**
+  - **What the model ignored.** It drew a free-standing tee again (about 1.47×) with no bleed (estimated 2 px) and its own rib
+    widths. On C that leaves holes at the armpits and double band lines at the neck and cuffs; coverage, holes, trim and fit fail.
+  - **What it delivered.** New material, a whole pocket and soft folds; it obeyed "no outline", and no grey leaked.
+  - **Limitation.** The model does not deliver geometry (placement, bleed or band widths) and must not be relied on for it.
+  - **Next step.** A new owner decision: geometry-free material laid on by the cut, or stop R1 as an automatic path. See
+    `docs/decisions/D-259.md`.
+- **R1C authorised — D-258: one one-shot call, R1C-1, NOT EXECUTED (the execution is a separate owner instruction).**
+  - **Adapter and evaluation.** `openai-send-northstar-r1c-d258.mjs` follows the D-235/D-255 pattern, with Image 1 the bleed
+    canvas v2 and Image 2 C. `northstar-r1c-evaluate.mjs` runs the placement, the automatic checks, the sheets and the record.
+  - **Placement.** s1 against the cut's core grown by the ESTIMATED bleed b (0–30 px). A fixed 16 px reference turned a wider or
+    narrower bleed into a wrong scale.
+  - **Canvas v2.** No drawn lines (v1 carried the template's own rib line, seams and hem stitch) and no dark ring in the bleed.
+  - **Line detector.** Contrast, a thin valley, and an axis rule. It finds brown lines, not colour steps, shadows or corners.
+    Holes are counted before the lines.
+  - **Proven locally.** Checked on 4 positive and 7 negative constructed examples and on R1-1. Visual criteria are never
+    automatic passes.
+  - **Cost.** About $0.07 (prices re-verified 2026-10-30). See `docs/decisions/D-258.md`.
+- **D-255 closed and r1-c1 proposed — D-257 (no call; one call proposed, not authorised).**
+  - **Closed.** R1-1 is spent (technically rejected). R1-2 and R1-3 are CLOSED_UNUSED, with no claims; the adapter refuses all
+    three.
+  - **r1-c1.** The cut owns geometry AND construction; GPT owns the design:
+    - the material is painted with a 16 px bleed and no outline;
+    - the cut's reusable construction layer supplies the band masks (neck rib, cuffs) and every line (contour, band edges, hem
+      stitch) in Northstar ink;
+    - GPT paints the bands' fabric where the canvas marks them;
+    - holes are never hidden, not even under a line.
+  - **Checks (no colour classes).** Coverage before crop, the trim edge by shape (P90 ≤ 2 px), a second outline, and clipped
+    details. R1-1 itself, which was not asked for bands, has its rib 5.5–7.5 px wider than the cut's band.
+  - **Plan.** `r1c-plan-v1.json`: one call, R1C-1, about $0.07. NOT authorised. See `docs/decisions/D-257.md`.
+- **R1-1 offline: one uniform scale + translation — D-256 (hypothesis s1; no call; D-255's result unchanged).**
+  - **D-255 status.** R1-1 was sent once and is technically rejected under r1-v1: a free-standing product shot at twice the
+    cut's size. R1-2 and R1-3 are unsent; both permissions are still UNSPENT.
+  - **What s1 finds.** One uniform scale (0.504) and one shift, found automatically, fit R1-1 to tee-hip with IoU 0.976. The
+    proportions match within a few px.
+  - **What fails.** The output's own silhouette edge leaves visible faults at the seams once cut by r1-v1: holes at the armpits,
+    a white sliver and a double contour at the neck, and a clipped cuff. FIT-4 fails.
+  - **Recommendation.** Separate design and geometry differently: GPT supplies material with bleed and no outer outline, and the
+    cut alone supplies alpha, contour and seams. One proposed call, not authorised. See `docs/decisions/D-256.md`.
+- **R1 experiment authorised — D-255: three one-shot calls, NOT EXECUTED (the execution is a separate owner instruction).**
+  - **Adapter.** `tools/avatar/openai-send-northstar-r1-d255.mjs`, the D-235 pattern: Image 1 is the cut's private canvas, Image 2
+    is C. Prompts, canvases, plan and model are pinned. There is no retry, reserve or fallback.
+  - **Gate.** Each received picture needs its R1 record (`northstar-r1-evaluate.mjs`) before the next call. Coverage of the template
+    core below 0.80 stops the run.
+  - **Acceptance.** It goes beyond the fixed alpha: real material over the core, details against the cut, double outlines, pattern
+    across body and sleeves, and no skin or background. COMBO-2's pattern sensitivity is reported apart.
+  - **Cost.** About $0.21 (an estimate; prices re-verified 2026-10-29). See `docs/decisions/D-255.md`.
+- **R1, the garment generated apart from the body — D-253 (plan only; no call sent; production stays d240).**
+  - **Method.** `tools/avatar/northstar-r1-garment.mjs` (`r1-v1`). A cut is a fixed garment form taken once from an existing
+    extracted item: silhouette, alpha, fold shading, contour, layer split, shadow and covering. A generated item supplies only
+    the material inside it.
+  - **Post-processing.** One integer translation, the template's alpha, and the cut's contour. Holes are measured and never
+    filled. Nothing is done per item.
+  - **Local proof.** `tools/avatar/northstar-r1-proof.mjs` runs simulated outputs only. Shifts are recovered exactly, alpha is
+    identical, and fitCheck is OK for skin-coloured material too. 18 of 20 outfits match the template item; the other two show
+    that COMBO-2 is sensitive to patterns at seams.
+  - **Plan.** `fixtures/northstar-wardrobe/r1/r1-plan-v1.json`: three calls (skin-near top, houndstooth bottom, skin-near
+    ankle boot), at most $0.21. It is NOT authorised.
+  - **Recommendation.** Run the three calls after a separate authorisation. See `docs/decisions/D-253.md`.
 - **Contour experiment A closed — D-252: not fit for general automatic extraction in its current form; production stays d240.**
   - **Finding.** a2 takes C's own body contour into the item (neck and shoulder line beyond a neckline, the arm line under a
     sleeve hem, the leg line above a shoe collar) on 14 of 26 items. The cause is a1's bounding-line rule, and it also explains
@@ -441,13 +557,16 @@ art layer behind them can be upgraded without a rewrite.
     approval; nothing hidden) → private export in D-242's format. The pipeline registers batch items from design files.
   - **Finding.** D-228/D-235 sent their five bottom prompts with "undefined" instead of the bottoms' contract sentence; b1 sends it.
   - **Ask.** At most 28 calls, $10 ceiling (estimate $1.89–$7.91). See `docs/decisions/D-244.md`.
-- **Northstar wardrobe in the renderer — D-242: flag `AVATAR_NORTHSTAR_WARDROBE = false`, local opt-in only; not activated for
+- **Northstar wardrobe in the renderer — D-242: flag `AVATAR_NORTHSTAR_WARDROBE = false`, browser opt-in; not activated for
   pupils; no calls.**
+  - **Where (corrected by D-253).** It can be tried on lærlig.dk through a browser opt-in (`avatar.html?northstar=1`), not
+    only locally. All 31 layers and the panel are served (checked 2026-10-29). The owner's approval of the prototype's look and
+    test function stands; it is not a production approval.
   - **Path.** `mountC2Avatar` tries the C figure first (quiz, hub, avatar; aura/back only), composing it once at 1024×1536 with
     the pipeline's own arithmetic (`northstarCompose`). Any load failure or other equipped slot → today's avatar, whole.
   - **Assets.** 31 lossless WebP layers in `assets/avatar-northstar/` (owner exception to D-127 §2, public; `manifest.json`).
     All 19 K outfits are byte-identical to the pipeline. With the flag off, 54 browser pages are pixel-identical to main.
-  - **Opt-in.** `avatar.html?northstar=1`, then a K outfit in the panel (localStorage only).
+  - **Opt-in.** `avatar.html?northstar=1` (on lærlig.dk or locally), then a K outfit in the panel (stored in localStorage only).
   - **Limits.** No blink and neutral expression only; no hair/skin/eye variation; no head items. See `docs/decisions/D-242.md`.
 - **Northstar assistant review — D-240: method d240 (the assistant's review, not the owner's approval; no calls).**
   - **Fixed.** The brown ankle boot's arch (K16, K18, K19): what a closed shoe hides is taken from the picture's own opaque

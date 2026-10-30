@@ -1,0 +1,87 @@
+{
+  "scenario": "scene-portal-transition",
+  "description": "Låst portal, oplåsning, portal-veto, sceneskiftsekvens (exit/enter-hændelser med from/to), placering ved modsat portal, trigger-zone og scroll.",
+  "covers": ["TS-C05", "TS-C06", "TS-C08", "TS-C09", "TS-C10", "TS-C11", "TS-C12", "TS-C13", "TS-C14"],
+  "harness": "world-headless",
+  "content": {
+    "game": { "id": "test", "version": "0.0.1", "formatVersion": 1, "languages": ["da"], "defaultLanguage": "da",
+              "player": { "actor": "keeper" }, "entry": null, "globals": {} },
+    "scenes": [
+      { "id": "paddock", "nameKey": "s.paddock", "size": { "width": 2560, "height": 720 }, "entry": "paddock_logic#main", "variants": ["default"],
+        "spots": { "start": { "x": 200, "y": 650, "facing": "right" }, "gate_out": { "x": 2400, "y": 640, "facing": "right" },
+                   "gate_in": { "x": 2300, "y": 650, "facing": "left" } },
+        "defaultSpot": "start",
+        "walkable": [ [[0,600],[2560,600],[2560,720],[0,720]] ],
+        "triggerZones": [ { "id": "puddle", "entry": "paddock_logic#puddle", "polygon": [[1000,600],[1100,600],[1100,720],[1000,720]] } ] },
+      { "id": "barn", "nameKey": "s.barn", "size": { "width": 1280, "height": 720 }, "entry": "barn_logic#main", "variants": ["default"],
+        "spots": { "door_out": { "x": 100, "y": 650, "facing": "left" }, "door_in": { "x": 250, "y": 650, "facing": "right" } },
+        "defaultSpot": "door_in",
+        "walkable": [ [[0,600],[1280,600],[1280,720],[0,720]] ] }
+    ],
+    "actors": [ { "id": "keeper", "nameKey": "a.keeper", "scene": "paddock", "spot": "start", "entry": null, "triggersZones": true,
+                  "variants": { "default": {} } } ],
+    "portals": [
+      { "id": "paddock_barn", "from": "paddock", "to": "barn", "index": 0, "nameKey": "p.barn", "lockedKey": "p.barn.locked", "locked": true,
+        "exitSpot": "gate_out", "entrySpot": "door_in", "entry": "gate_logic#main",
+        "polygon": [[2450,400],[2560,400],[2560,600],[2450,600]] },
+      { "id": "barn_paddock", "from": "barn", "to": "paddock", "index": 0, "nameKey": "p.paddock", "locked": false,
+        "exitSpot": "door_out", "entrySpot": "gate_in", "entry": null,
+        "polygon": [[0,400],[80,400],[80,600],[0,600]] }
+    ],
+    "graphs": [
+      { "id": "paddock_logic", "kind": "logic", "nodes": [
+        { "id": "y0", "type": "entry", "name": "main", "modal": false, "next": ["y1", "y2"] },
+        { "id": "y1", "type": "guard", "expr": { "eq": [ { "var": "$action" }, { "const": "scene.exit" } ] }, "next": ["y3"] },
+        { "id": "y3", "type": "set", "var": "last_exit_to", "value": "?", "next": [] },
+        { "id": "y2", "type": "guard", "expr": { "eq": [ { "var": "$action" }, { "const": "scene.enter" } ] }, "next": ["y4"] },
+        { "id": "y4", "type": "set", "var": "paddock_entered", "value": true, "next": [] },
+        { "id": "p0", "type": "entry", "name": "puddle", "modal": false, "next": ["p1"] },
+        { "id": "p1", "type": "guard", "expr": { "eq": [ { "var": "$action" }, { "const": "zone.enter" } ] }, "next": ["p2"] },
+        { "id": "p2", "type": "set", "var": "wet_boots", "value": true, "next": [] }
+      ] },
+      { "id": "barn_logic", "kind": "logic", "nodes": [
+        { "id": "b0", "type": "entry", "name": "main", "modal": false, "next": ["b1"] },
+        { "id": "b1", "type": "guard", "expr": { "and": [ { "eq": [ { "var": "$action" }, { "const": "scene.enter" } ] },
+                                                         { "eq": [ { "var": "$from" }, { "const": "paddock" } ] } ] }, "next": ["b2"] },
+        { "id": "b2", "type": "set", "var": "barn_entered_from_paddock", "value": true, "next": [] }
+      ] },
+      { "id": "gate_logic", "kind": "logic", "nodes": [
+        { "id": "g0", "type": "entry", "name": "main", "modal": false, "next": ["g1"] },
+        { "id": "g1", "type": "guard", "expr": { "eq": [ { "var": "wet_boots" }, { "const": true } ] }, "next": ["g2"] },
+        { "id": "g2", "type": "return", "value": false }
+      ] }
+    ],
+    "i18n": { "da": { "s.paddock": "Gård", "s.barn": "Lade", "a.keeper": "Fyrmester", "p.barn": "Ladeport", "p.barn.locked": "Låst.", "p.paddock": "Ud" } }
+  },
+  "steps": [
+    { "do": "newGame" },
+    { "expect": "scroll", "x": 0 },
+    { "do": "hover", "target": { "portal": "paddock_barn" } },
+    { "expect": "cursor", "mode": "portal_locked", "tooltipKey": "p.barn.locked" },
+    { "do": "click", "target": { "portal": "paddock_barn" } },
+    { "expect": "commands", "contains": [ { "type": "React", "kind": "cannot" } ] },
+    { "expect": "actorScene", "actor": "keeper", "equals": "paddock" },
+
+    { "do": "setPortalLocked", "portal": "paddock_barn", "locked": false },
+    { "do": "walkPlayerTo", "spot": "gate_in", "runToArrival": true },
+    { "expect": "globals", "equals": { "wet_boots": true }, "note": "stien krydser trigger-zonen puddle" },
+    { "expect": "scrollClamped", "maxX": 1280 },
+    { "do": "click", "target": { "portal": "paddock_barn" } },
+    { "expect": "runResult", "entity": "paddock_barn", "value": false },
+    { "expect": "actorScene", "actor": "keeper", "equals": "paddock" },
+
+    { "do": "setGlobal", "name": "wet_boots", "value": false },
+    { "do": "click", "target": { "portal": "paddock_barn" } },
+    { "do": "runUntilIdle" },
+    { "expect": "eventOrder", "equals": ["portal.use:paddock_barn", "walk:gate_out", "scene.exit:paddock", "scene.enter:barn", "walk:door_in"] },
+    { "expect": "actorScene", "actor": "keeper", "equals": "barn" },
+    { "expect": "actorAtSpot", "actor": "keeper", "spot": "door_in" },
+    { "expect": "globals", "equals": { "barn_entered_from_paddock": true, "last_exit_to": "?" } },
+    { "expect": "modal", "value": false },
+
+    { "do": "click", "target": { "portal": "barn_paddock" } },
+    { "do": "runUntilIdle" },
+    { "expect": "actorAtSpot", "actor": "keeper", "spot": "gate_in", "note": "placeret ved modsat portals exitSpot (gate_out), derefter gået til barn_paddock.entrySpot" }
+  ],
+  "notes": "eventOrder-elementer er <$action>:<id>. Sceneskift: fade-ud og preload parallelt med scene.exit (03 C7)."
+}

@@ -7,7 +7,7 @@
  * Chromium + WebKit only.
  */
 import { test, expect } from '@playwright/test';
-import { PROD } from './helpers.js';
+import { PROD, serveCheckoutLogin } from './helpers.js';
 
 // Skip entire file on Firefox — isMobile is not supported
 test.beforeEach(async ({}, testInfo) => {
@@ -36,6 +36,7 @@ const iPhoneSE = {
 };
 
 async function loginAndWait(page: any) {
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: 'domcontentloaded' });
   await page.fill('#email', EMAIL);
   await page.fill('#password', PASSWORD);
@@ -45,7 +46,9 @@ async function loginAndWait(page: any) {
   // 20s timeout: a cold backend can add many seconds of latency in a long suite. The value was
   // calibrated on the previous host; it is left unchanged because re-tightening it needs its own
   // measurement against the live stack, not a guess.
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  // A pupil always lands on the Hub; the quiz is one step further (Spil -> index.html).
+  await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
   // Wait for question to be fully loaded (state machine at AWAITING_ANSWER)
   await page.waitForSelector('#question[data-state="ready"]', { timeout: 20000 });
 }

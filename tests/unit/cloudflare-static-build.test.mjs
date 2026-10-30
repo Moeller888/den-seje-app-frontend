@@ -1114,11 +1114,15 @@ test("the root rewrite does NOT point at the quiz, and the quiz keeps its own ad
   assert.match(quiz, /src="app\.js"/, "index.html must still load the quiz app");
 });
 
-test("student role routing still targets index.html — the landing page did not take it over", () => {
-  // js/login.js is the single owner of role routing. If the landing work had touched it, the
-  // student would stop reaching the quiz after login; this is the standing proof it did not.
-  assert.match(read("js/login.js"), /window\.location\.href\s*=\s*"index\.html"/,
-    "students must still be routed to the quiz after login");
+test("student role routing targets hub.html — the landing page did not take it over", () => {
+  // js/login.js is the single owner of role routing. Owner decision 2026-10-22 (docs/ROADMAP.md,
+  // "Elevens startside er Hub'en"): a pupil always starts on the Hub; the quiz is one step further
+  // via "Spil". This stays the standing proof that the landing work did not take routing over.
+  const login = read("js/login.js");
+  assert.match(login, /window\.location\.href\s*=\s*"hub\.html"/,
+    "students must be routed to the Hub after login");
+  assert.ok(!/window\.location\.href\s*=\s*"(\/|landing\.html|index\.html)"/.test(login),
+    "no role is routed to the landing page or straight into the quiz");
 });
 
 test("_redirects is NOT a SPA fallback — unknown paths must still reach the 404 page", () => {

@@ -282,6 +282,14 @@ const REVIEWED_LATER_READERS = {
     "student_level_fold_log (RLS on, no policies, no client privileges). It also adds the plain index " +
     "idx_qi_student_answered. No policy, RLS, table privilege or existing function on question_instances " +
     "is touched (proven in difficulty-scale-b-migration-run.test.mjs).",
+  "20261029150000_teacher_stats_from_answers.sql":
+    "redefines get_teacher_visibility and get_student_overview with the same caller gates, signatures, " +
+    "RETURNS TABLE and EXECUTE statements; only the statistics below the gate change. Both read " +
+    "question_instances for the caller's own pupils only (get_teacher_visibility: student_id IN the " +
+    "teacher's pupils; get_student_overview: the one pupil the gate admitted) and return aggregates " +
+    "(counts, a percentage, a trend), never an instance column. No policy, RLS, table privilege or " +
+    "other function on question_instances is touched (proven in " +
+    "teacher-stats-from-answers-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -410,7 +418,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261019150000_question_format_mix.sql",
      "20261025120000_student_rpc_caller_scope.sql",
      "20261027120000_repeat_answer_coin_reward.sql",
-     "20261029120000_difficulty_scale_b.sql"],
+     "20261029120000_difficulty_scale_b.sql",
+     "20261029150000_teacher_stats_from_answers.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

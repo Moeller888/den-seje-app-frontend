@@ -57,9 +57,29 @@ Tests are the **gatekeeper** and **ground truth** (CLAUDE.md rules 1, 34, 41–4
   opens a PR** — fixes stay in the working tree; commit/push/PR/merge happen separately under the
   `.claude/settings.json` permission model, and only on green.
 - **Fast smoke (daily dev, ~10s):** `npx playwright test tests/example.spec.ts --project=chromium`
-  — verifies the core flow (login → question → answer).
+  — verifies the core flow (login → Hub → "Spil" → question → answer).
 - **Full suite (before push/release, ~55s):** `npx playwright test` — all specs on Chromium,
   Firefox, WebKit (1 worker, no parallelism), against the **live** production URL.
+- **Every `playwright.config.ts` run resets live test accounts — even for a single offline spec.**
+  `tests/global-setup.ts` runs first and deletes `question_instances` and rewrites the profile of
+  the E2E slot's accounts (slot 0 unless `E2E_SLOT` is set). Slot 0 is the account set every
+  production-facing CI run uses (`E2E_SLOT_COUNT` unset), so a local live run while such a run is
+  queued or running can break it. Start a live run only when `gh run list --workflow "Playwright Tests"`
+  shows no `test` job queued or in progress, and never on a slot that another process may be using.
+  Slots 1–3 do not exist until provisioned; provisioning creates production accounts and needs the owner.
+- **CI since D-261 (D-110 phase D3):** no automatic CI run touches production data. Pull requests run
+  the required `isolated-e2e (run 1)` (a throwaway local Supabase stack, `isolated-e2e.yml`); a push to
+  `main` runs the same isolated suite plus the read-only **Production Smoke** (`production-smoke.yml`:
+  the live bundle must equal the commit's build byte for byte, GET/OPTIONS only, no credentials). The
+  production-facing suite (`playwright.yml` job `test`) runs **only** by manual dispatch, and only with
+  `confirm_production` = `production-e2e` (plus `confirm_provisioning` for an inactive slot); anything
+  else fails before `npm ci` or any Supabase call. `update-avatar-goldens.yml` stays a manual workflow
+  that changes the live slot-0 test student — dispatch it deliberately, never beside a live run.
+- **Offline run (safe beside any live run):** `npm run test:e2e:offline`
+  (`playwright.offline.config.ts`) runs only the specs in `tests/offline-specs.mjs` — no
+  `globalSetup`, no `.env`, credentials stripped, every `*.supabase.co` request answered locally.
+  A new spec joins that list only if it meets the admission rules pinned by
+  `tests/unit/offline-e2e-config.test.mjs`.
 - **Always run tests BEFORE and AFTER a change.** Never assume a fix works; re-run.
 - **Never weaken a test to make it pass:** do not raise timeouts without a root cause, do not remove
   assertions, do not switch to weaker selectors, do not bypass failing conditions. **Fix the

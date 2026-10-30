@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": [
+    "packages/core/src/**/*.ts",
+    "packages/content/src/**/*.ts",
+    "packages/geometry/src/**/*.ts",
+    "packages/media/src/**/*.ts",
+    "packages/audio/src/**/*.ts",
+    "packages/save/src/**/*.ts",
+    "packages/content-tools/src/**/*.ts",
+    "packages/content-tools/fixtures/**/*.ts",
+    "packages/scenario-runner/src/**/*.ts",
+    "packages/*/test/**/*.ts",
+    "vitest.config.ts"
+  ],
+  "//": "Tests of DOM code (editor folder I/O) are typechecked with tsconfig.browser.json.",
+  "exclude": ["packages/editor/test/io.test.ts"]
+}

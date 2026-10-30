@@ -1,0 +1,81 @@
+{
+  "scenario": "interaction-inventory-combine",
+  "description": "Saml op, vælg/fravælg i inventar, kombinér to objekter (asymmetrisk), brug på scene-objekt og på aktør, brug uden mål, hover-prioritet og reaktion når intet sker.",
+  "covers": ["TS-D02", "TS-D03", "TS-D04", "TS-D06", "TS-D07", "TS-D08", "TS-D09", "TS-D10", "TS-A04"],
+  "harness": "world-headless",
+  "content": {
+    "game": { "id": "test", "version": "0.0.1", "formatVersion": 1, "languages": ["da"], "defaultLanguage": "da",
+              "player": { "actor": "keeper" }, "entry": null, "globals": {},
+              "ui": { "inventorySlots": 2, "reactWhenNothingHappens": true } },
+    "scenes": [ { "id": "workshop", "nameKey": "s.ws", "size": { "width": 1280, "height": 720 }, "entry": null, "variants": ["default"],
+                  "spots": { "start": { "x": 200, "y": 650 }, "bench": { "x": 600, "y": 640 }, "cat_spot": { "x": 900, "y": 650 } },
+                  "defaultSpot": "start",
+                  "walkable": [ [[0,600],[1280,600],[1280,720],[0,720]] ],
+                  "objectZones": [
+                    { "entity": "rope", "polygon": [[560,560],[640,560],[640,620],[560,620]] },
+                    { "entity": "valve", "polygon": [[560,540],[700,540],[700,640],[560,640]] }
+                  ],
+                  "actorZones": [ { "actor": "cat", "polygon": [[860,560],[960,560],[960,660],[860,660]] } ] } ],
+    "actors": [
+      { "id": "keeper", "nameKey": "a.keeper", "scene": "workshop", "spot": "start", "entry": null, "variants": { "default": {} } },
+      { "id": "cat", "nameKey": "a.cat", "scene": "workshop", "spot": "cat_spot", "entry": null, "variants": { "default": {} } }
+    ],
+    "objects": [
+      { "id": "rope", "nameKey": "o.rope", "container": { "kind": "scene", "id": "workshop" }, "spot": "bench", "entry": "rope_logic#main", "icon": "i.rope", "variants": { "default": {} } },
+      { "id": "hook", "nameKey": "o.hook", "container": { "kind": "actor", "id": "keeper" }, "entry": "hook_logic#main", "icon": "i.hook", "variants": { "default": {} } },
+      { "id": "grapple", "nameKey": "o.grapple", "container": { "kind": "none" }, "entry": null, "icon": "i.grapple", "variants": { "default": {} } },
+      { "id": "valve", "nameKey": "o.valve", "container": { "kind": "scene", "id": "workshop" }, "entry": null, "variants": { "default": {} } }
+    ],
+    "graphs": [
+      { "id": "rope_logic", "kind": "logic", "nodes": [
+        { "id": "r0", "type": "entry", "name": "main", "modal": false, "next": ["r1"] },
+        { "id": "r1", "type": "guard", "expr": { "eq": [ { "var": "$action" }, { "const": "interact" } ] }, "next": ["r2"] },
+        { "id": "r2", "type": "move_object", "object": "rope", "to": { "kind": "actor", "id": "keeper" }, "next": [] }
+      ] },
+      { "id": "hook_logic", "kind": "logic", "nodes": [
+        { "id": "h0", "type": "entry", "name": "main", "modal": false, "next": ["h1"] },
+        { "id": "h1", "type": "guard", "expr": { "and": [ { "eq": [ { "var": "$action" }, { "const": "use.inventory" } ] },
+                                                         { "eq": [ { "var": "$target" }, { "const": "rope" } ] } ] }, "next": ["h2", "h3", "h4"] },
+        { "id": "h2", "type": "move_object", "object": "hook", "to": { "kind": "none" }, "next": [] },
+        { "id": "h3", "type": "move_object", "object": "rope", "to": { "kind": "none" }, "next": [] },
+        { "id": "h4", "type": "move_object", "object": "grapple", "to": { "kind": "actor", "id": "keeper" }, "next": [] }
+      ] }
+    ],
+    "i18n": { "da": { "s.ws": "Værksted", "a.keeper": "Fyrmester", "a.cat": "Kat", "o.rope": "Reb", "o.hook": "Krog", "o.grapple": "Entrehage", "o.valve": "Ventil" } }
+  },
+  "steps": [
+    { "do": "newGame" },
+    { "do": "hoverPoint", "x": 600, "y": 590, "note": "punktet ligger i både rope- og valve-zonen" },
+    { "expect": "cursor", "mode": "interact", "target": "rope", "tooltipKey": "o.rope", "note": "første zone i indholdsrækkefølgen vinder" },
+    { "expect": "warning", "code": "W-ZONE-OVERLAP", "phase": "validation" },
+    { "do": "click", "target": { "objectZone": "rope" } },
+    { "expect": "inventory", "actor": "keeper", "equals": ["hook", "rope"] },
+
+    { "do": "clickInventory", "object": "rope" },
+    { "expect": "cursor", "mode": "use", "item": "rope" },
+    { "do": "clickInventory", "object": "rope" },
+    { "expect": "cursor", "mode": "idle", "note": "samme objekt igen → fravælg" },
+
+    { "do": "clickInventory", "object": "rope" },
+    { "do": "clickInventory", "object": "hook" },
+    { "expect": "runEvent", "entity": "rope", "action": "use.inventory", "ctx": { "$item": "rope", "$target": "hook" } },
+    { "expect": "inventory", "actor": "keeper", "equals": ["hook", "rope"], "note": "asymmetrisk: rope har ingen regel for hook" },
+    { "expect": "commands", "contains": [ { "type": "React", "kind": "cannot" } ], "note": "reactWhenNothingHappens" },
+
+    { "do": "clickInventory", "object": "hook" },
+    { "do": "clickInventory", "object": "rope" },
+    { "expect": "inventory", "actor": "keeper", "equals": ["grapple"] },
+    { "expect": "cursor", "mode": "idle" },
+
+    { "do": "clickInventory", "object": "grapple" },
+    { "do": "click", "target": { "actorZone": "cat" } },
+    { "expect": "runEvent", "entity": "grapple", "action": "use.actor", "ctx": { "$target": "cat" } },
+    { "expect": "runResult", "entity": "grapple", "value": true },
+    { "expect": "commandsSinceLastClick", "contains": [ { "type": "React", "kind": "cannot" } ], "note": "entry: null + reactWhenNothingHappens (04 D5)" },
+
+    { "do": "clickInventory", "object": "grapple" },
+    { "do": "clickPoint", "x": 100, "y": 200, "note": "intet under markøren" },
+    { "expect": "cursor", "mode": "idle" },
+    { "expect": "commands", "contains": [ { "type": "React", "kind": "cannot" } ] }
+  ]
+}

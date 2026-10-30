@@ -5,7 +5,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { request } from "node:http";
 import { connect } from "node:net";
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { buildSuiteEnv, suiteViolations, SUITE_VARS } from "../isolated/run-suite.mjs";
 import { startTripwire } from "../isolated/tripwire-proxy.mjs";
 import { workerRoute } from "../isolated/serve-build.mjs";
@@ -232,9 +235,71 @@ test("plan: one isolated job per PR and per d110/par-* branch; dispatch chooses 
   assert.match(wf, /case "\$REF_NAME" in d110\/par-\*\) default=1 ;; esac/);
   assert.match(wf, /n="\$\{PARALLEL:-\$default\}"/);
   assert.match(wf, /case "\$n" in 1\|3\|6\|9\) ;; \*\) echo "invalid parallel: \$n" >&2; exit 1 ;; esac/);
-  // Each workflow run has its own concurrency group (its ref) and never the production E2E lock.
-  assert.match(wf, /group: isolated-e2e-\$\{\{ github\.ref \}\}/);
+  // Never the production E2E lock (the concurrency group itself: next test).
   assert.doesNotMatch(wf, /e2e-shared-supabase/);
+});
+
+test("D1 trigger: push to main and to d110/** both run; pull requests to main still run", () => {
+  const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8").split("\r\n").join("\n");
+  const on = wf.slice(wf.indexOf("\non:\n"), wf.indexOf("\npermissions:"));
+  assert.match(on, /\n  pull_request:\n    branches: \[ main \]\n/);
+  assert.match(on, /\n  push:\n(    #.*\n)*    branches: \[ main, "d110\/\*\*" \]\n/);
+  assert.match(on, /\n  workflow_dispatch:\n/);
+  assert.match(on, /options: \[ "1", "3", "6", "9" \]\n        default: "3"/);
+});
+
+test("D1 concurrency: overtaken pushes and PR commits cancel; a dispatch and a push to main never cancel each other", () => {
+  const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8").split("\r\n").join("\n");
+  assert.ok(wf.includes(
+    "concurrency:\n  group: >-\n    ${{ github.event_name == 'workflow_dispatch'\n" +
+    "      && format('isolated-e2e-dispatch-{0}', github.run_id)\n" +
+    "      || format('isolated-e2e-{0}-{1}', github.event_name, github.ref) }}\n" +
+    "  cancel-in-progress: true\n"), "workflow-level concurrency group, exactly");
+  // Only one concurrency block, and none on a job that could override it.
+  assert.equal(wf.split("concurrency:").length - 1, 1);
+});
+
+test("D1 plan: exactly one run per push to main and per PR; dispatch on main still chooses; other pushes 3", () => {
+  const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8").split("\r\n").join("\n");
+  const step = wf.split("\n      - id: n\n")[1].split("\n  isolated-e2e:\n")[0];
+  const script = step.split("        run: |\n")[1].split("\n").map((l) => l.replace(/^ {10}/, "")).join("\n");
+  const plan = (env) => {
+    const dir = mkdtempSync(join(tmpdir(), "iso-plan-"));
+    const out = join(dir, "out");
+    writeFileSync(out, "");
+    const r = spawnSync("bash", ["-c", script], { env: { ...process.env, PARALLEL: "", ...env, GITHUB_OUTPUT: out }, encoding: "utf8" });
+    const runs = r.status === 0 ? JSON.parse(readFileSync(out, "utf8").trim().replace(/^runs=/, "")).length : null;
+    rmSync(dir, { recursive: true, force: true });
+    return runs;
+  };
+  assert.equal(plan({ EVENT: "push", REF_NAME: "main" }), 1, "push to main: one run");
+  assert.equal(plan({ EVENT: "pull_request", REF_NAME: "466/merge" }), 1, "pull request: one run");
+  assert.equal(plan({ EVENT: "push", REF_NAME: "d110/par-3" }), 1, "d110/par-*: one run");
+  assert.equal(plan({ EVENT: "push", REF_NAME: "d110/isolated-e2e" }), 3, "other d110 pushes: 3");
+  assert.equal(plan({ EVENT: "push", REF_NAME: "mainline" }), 3, "only the exact branch main");
+  assert.equal(plan({ EVENT: "workflow_dispatch", REF_NAME: "main", PARALLEL: "9" }), 9, "dispatch on main chooses");
+  assert.equal(plan({ EVENT: "workflow_dispatch", REF_NAME: "main", PARALLEL: "1" }), 1);
+  assert.equal(plan({ EVENT: "push", REF_NAME: "main", PARALLEL: "4" }), null, "invalid value fails, never a default");
+});
+
+test("D1 isolation: no step is conditioned on the event or branch, so a push to main runs every safety layer a PR runs", () => {
+  const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8").split("\r\n").join("\n");
+  const job = wf.slice(wf.indexOf("\n  isolated-e2e:\n"));
+  // D-261: exactly one step may depend on the event — the cache WRITE on a push to main, which is an
+  // actions/cache/save step and no check. Every safety layer and every test step stays event-free.
+  const SAVE = "      - name: Save Playwright browser and apt cache\n";
+  const save = job.slice(job.indexOf(SAVE), job.indexOf("\n      - ", job.indexOf(SAVE) + SAVE.length));
+  assert.ok(job.includes(SAVE) && save.includes("        uses: actions/cache/save@v4\n"), "the exception is the cache save step");
+  assert.ok(job.indexOf(SAVE) > job.indexOf("npx playwright install --with-deps") && job.indexOf(SAVE) < job.indexOf("egress-firewall.sh lock"),
+    "it saves right after the install, before the egress lock");
+  const conds = job.replace(save, "").split("\n").filter((l) => /^\s+if:/.test(l));
+  for (const cond of conds) {
+    assert.doesNotMatch(cond, /event_name|github\.ref|ref_name|main/, cond);
+  }
+  assert.equal(job.split("\n").filter((l) => /^\s+if:.*event_name/.test(l)).length, 1, "one event-conditioned step, no more");
+  for (const layer of ["isolation-guard.mjs", "egress-blackhole.mjs --verify", "negative-controls.sh pre-lock",
+    "egress-firewall.sh lock", "negative-controls.sh post-lock",
+    "tests/isolated/run-suite.mjs"]) assert.ok(job.includes(layer), layer); // run-suite starts the tripwire
 });
 
 test("negative controls run in every job, before and after the lock, and never name a production URL as a target", () => {

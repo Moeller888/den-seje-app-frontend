@@ -1,0 +1,19 @@
+{
+  "a.bo": "Bo",
+  "a.mira": "Mira",
+  "bo.ask_light": "Have you seen any light?",
+  "bo.bye": "See you.",
+  "bo.hello": "Good morning, Mira.",
+  "bo.light": "The sun rises soon.",
+  "cut.dawn": "The sun rises over the roof.",
+  "line.draft": "There is a draught from the stairs.",
+  "line.intro": "It is dark here. I need some light.",
+  "line.lamp_lit": "Now there is light!",
+  "line.lamp_taken": "An old lamp without a wick.",
+  "o.lamp": "Lamp",
+  "o.wick": "Wick",
+  "p.down": "Down to the cellar",
+  "p.up": "Up the stairs",
+  "s.attic": "The attic",
+  "s.cellar": "The cellar"
+}

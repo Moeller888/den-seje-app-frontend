@@ -1,0 +1,23 @@
+{
+  "name": "@adventure-engine/editor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@adventure-engine/app": "workspace:*",
+    "@adventure-engine/content": "workspace:*",
+    "@adventure-engine/content-tools": "workspace:*",
+    "@adventure-engine/core": "workspace:*",
+    "@adventure-engine/geometry": "workspace:*",
+    "@adventure-engine/save": "workspace:*",
+    "@fontsource/atkinson-hyperlegible": "5.1.0"
+  },
+  "devDependencies": {
+    "vite": "5.4.11"
+  }
+}

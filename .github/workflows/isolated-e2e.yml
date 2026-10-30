@@ -24,7 +24,9 @@ on:
   pull_request:
     branches: [ main ]
   push:
-    branches: [ "d110/**" ]
+    # main (D-110 phase D1): every push to main gets exactly one isolated run of what landed, next to
+    # the old production-facing push suite in playwright.yml, which stays unchanged for now.
+    branches: [ main, "d110/**" ]
   workflow_dispatch:
     inputs:
       parallel:
@@ -36,8 +38,14 @@ on:
 permissions:
   contents: read
 
+# One group per event and ref: a newer push to the same branch (main included) or a newer commit on
+# the same PR cancels the overtaken run. A manual dispatch gets a group of its own (its run id), so a
+# push to main never cancels a dispatched run on main, and a dispatch never cancels a push run.
 concurrency:
-  group: isolated-e2e-${{ github.ref }}
+  group: >-
+    ${{ github.event_name == 'workflow_dispatch'
+      && format('isolated-e2e-dispatch-{0}', github.run_id)
+      || format('isolated-e2e-{0}-{1}', github.event_name, github.ref) }}
   cancel-in-progress: true
 
 env:
@@ -78,9 +86,11 @@ jobs:
           REF_NAME: ${{ github.ref_name }}
         run: |
           # One isolated job per PR — and per d110/par-* branch, which stand in for nine terminals'
-          # PRs in the independent-workflows measurement. Dispatch chooses; other pushes run 3.
+          # PRs in the independent-workflows measurement — and per push to main (D1: one run of what
+          # landed). Dispatch chooses; other pushes run 3.
           default=3
           if [ "$EVENT" = "pull_request" ]; then default=1; fi
+          if [ "$EVENT" = "push" ] && [ "$REF_NAME" = "main" ]; then default=1; fi
           case "$REF_NAME" in d110/par-*) default=1 ;; esac
           n="${PARALLEL:-$default}"
           case "$n" in 1|3|6|9) ;; *) echo "invalid parallel: $n" >&2; exit 1 ;; esac
@@ -125,8 +135,10 @@ jobs:
         if: needs.plan.outputs.scope != 'docs-md'
         run: npm ci
 
-      # Browsers + apt .debs from the main workflow's cache entry (same key, same paths — read only;
-      # main writes it). The Ubuntu mirror stalled here for 12+ minutes on a miss.
+      # Browsers + apt .debs from main's cache entry (same key, same paths as playwright.yml). The Ubuntu
+      # mirror stalled here for 12+ minutes on a miss. Since D-261 playwright.yml no longer runs on push,
+      # so a push to main of THIS workflow writes the entry on a miss (the key changes with every runner
+      # image); pull requests and dispatches only read it.
       - name: Playwright and runner image versions
         if: needs.plan.outputs.scope != 'docs-md'
         id: pwver
@@ -135,6 +147,7 @@ jobs:
           echo "key=pw-browsers-apt-${ImageOS:-unknown}-${ImageVersion:-unknown}-playwright-${v}" >> "$GITHUB_OUTPUT"
       - name: Restore Playwright browser and apt cache
         if: needs.plan.outputs.scope != 'docs-md'
+        id: pwcache
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -146,12 +159,27 @@ jobs:
         timeout-minutes: 15
         run: |
           set -euo pipefail
+          # Keep what apt downloads, so a miss on main can refill the cache (same as playwright.yml).
+          printf '%s\n' 'APT::Keep-Downloaded-Packages "true";' 'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
+            | sudo tee /etc/apt/apt.conf.d/99-keep-downloaded-debs > /dev/null
           mkdir -p ~/.cache/pw-apt
           seeded=$(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l)
           if [ "$seeded" -gt 0 ]; then sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/; fi
           echo "apt: seeded ${seeded} cached .deb file(s)"
           npx playwright install --with-deps
+          find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp {} ~/.cache/pw-apt/ \;
           docker pull curlimages/curl:8.11.1 > /dev/null
+      # Only a push to main writes the ~557 MB entry, and only on a miss — nine PRs saving their own would
+      # evict it from the 10 GB cache. Runs before the egress lock; it carries no secret and changes
+      # nothing the suite reads.
+      - name: Save Playwright browser and apt cache
+        if: needs.plan.outputs.scope != 'docs-md' && steps.pwcache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/pw-apt
+          key: ${{ steps.pwver.outputs.key }}
 
       - uses: supabase/setup-cli@v1
         if: needs.plan.outputs.scope != 'docs-md'
