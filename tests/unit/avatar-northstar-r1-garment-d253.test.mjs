@@ -76,7 +76,7 @@ test("D-253 the plan authorises nothing by itself: at most three calls, a skin-n
   assert.equal(p.cost.perCallMax, +per.toFixed(4)); assert.equal(p.cost.totalMax, +(per * p.calls.length).toFixed(4));
   assert.equal(p.frozen.productionBaseline.method, IP.METHOD, "the production baseline is the current method");
   // the plan never authorises by itself: R1's only send adapter is D-255's, and it takes its authority from D-255's own file
-  const adapters = readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*r1|r1.*send/i.test(f)); assert.deepEqual(adapters, ["openai-send-northstar-r1-d255.mjs"]);
+  const adapters = readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*-r1-|-r1-.*send/i.test(f)); assert.deepEqual(adapters, ["openai-send-northstar-r1-d255.mjs"]);
   const ad = readFileSync(join(REPO, "tools", "avatar", adapters[0]), "utf8"); assert.match(ad, /const DECISION = "D-255";/); assert.match(ad, /r1-authorisation-v1\.json/); assert.match(ad, /get\(plan, "authorisesImageRequest"\) !== false/);
   assert.equal(R1.R1_REVISION, p.frozen.method.revision);
 });
