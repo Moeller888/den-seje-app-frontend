@@ -150,6 +150,8 @@
   "question-format-mix-migration-run.test.mjs": 15.9,
   "question-format-mix.test.mjs": 0.3,
   "question-instances-read-scope.test.mjs": 0.2,
+  "question-attempts-v2-concurrency.test.mjs": 8,
+  "question-attempts-v2-migration-run.test.mjs": 30,
   "question-instances-server-insert-migration-run.test.mjs": 33.5,
   "question-instances-write-scope.test.mjs": 0.2,
   "question-payload-no-answer-key.test.mjs": 0.2,
