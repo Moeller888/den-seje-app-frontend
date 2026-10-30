@@ -64,9 +64,11 @@ test("the install step seeds apt from the cache, keeps what it downloads, and is
   assert.deepEqual([...order].sort((a, b) => a - b), order);
 });
 
-test("the lock itself is unchanged: always(), shared group fallback, FIFO queue, no cancel-in-progress", () => {
+test("the lock itself is unchanged: always() except on pull requests (D-241 step C), shared group fallback, FIFO queue, no cancel-in-progress", () => {
   const head = TEST_JOB.slice(0, TEST_JOB.indexOf("    steps:\n"));
-  assert.ok(head.includes("    if: always()\n"), "the required check must always report");
+  // Still reports on every push to main and dispatch, whatever classify did; pull requests are covered by
+  // the required `isolated-e2e (run 1)` instead and no longer take the shared lock.
+  assert.ok(head.includes("    if: always() && github.event_name != 'pull_request'\n"), "push/dispatch always report; PRs skip the lock");
   assert.ok(head.includes("|| 'e2e-shared-supabase'"));
   assert.ok(head.includes("cancel-in-progress: false") && head.includes("queue: max"));
   assert.ok(head.includes("    permissions:\n      contents: read\n      pull-requests: read\n      actions: read\n"), "read-only token");

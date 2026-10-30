@@ -59,6 +59,13 @@ jobs:
   # its own part. `unit` is the one check that reports: it passes only if EVERY shard succeeded, so
   # a failing, cancelled or skipped shard fails `unit`. 3 shards keeps 9 parallel PRs within the
   # account's concurrent-job budget (each shard runs ~2 min).
+  #
+  # The one exception to "no backend": a throwaway PostgreSQL 17 service container, local to each
+  # shard, for the level engine's real-concurrency test (tests/unit/difficulty-scale-b-concurrency.test.mjs) —
+  # several simultaneous sessions are something PGlite cannot show. Every shard gets it because the
+  # plan decides which shard runs that file. It is empty, reachable only from this runner, holds no
+  # secret (trust auth) and is discarded with the job; it is not Supabase.
+  # LEVEL_ENGINE_PG_REQUIRED makes that test FAIL instead of skipping if the server is missing.
   unit-shard:
     name: unit (shard ${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
@@ -67,6 +74,18 @@ jobs:
       fail-fast: false
       matrix:
         shard: [1, 2, 3]
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -77,6 +96,8 @@ jobs:
       - name: Run unit suite (shard)
         env:
           UNIT_SHARD: ${{ matrix.shard }}/3
+          LEVEL_ENGINE_PG_URL: postgres://postgres@localhost:5432/postgres
+          LEVEL_ENGINE_PG_REQUIRED: "1"
         run: npm run test:unit:ci
 
   unit:
@@ -271,11 +292,13 @@ jobs:
             .write();
 
   # ── Required check `test` — dynamic per-mode job-level lock ──────────────────
-  # Always runs (if: always()) so the required `test` check reports in every mode, even if
-  # classify failed. Job-level concurrency comes from classify; missing/invalid → shared lock.
+  # Runs on push to main and manual dispatch, in every mode, even if classify failed. NOT on pull
+  # requests since D-241 step C: a PR's E2E check is `isolated-e2e (run 1)` (isolated-e2e.yml, required
+  # by the main ruleset with `unit`), so PRs no longer queue on the shared lock. Job-level concurrency
+  # comes from classify; missing/invalid → shared lock.
   test:
     needs: classify
-    if: always()
+    if: always() && github.event_name != 'pull_request'
     # 90, not 60: the suite outgrew the old ceiling. Measured on 860d653 — 816 tests, 705 resolved
     # (454 passed, 251 skipped) and **0 failures** when the job was killed at 60 minutes. It was a
     # clock limit, not a test result. `workers: 1` stays because every e2e test shares ONE Supabase

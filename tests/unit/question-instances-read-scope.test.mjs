@@ -270,6 +270,18 @@ const REVIEWED_LATER_READERS = {
     "is unchanged — one instance matched on BOTH id and student_id — and CREATE OR REPLACE keeps EXECUTE " +
     "backend only; no policy, RLS or privilege on question_instances is touched (proven in " +
     "repeat-answer-coin-reward-migration-run.test.mjs).",
+  "20261029120000_difficulty_scale_b.sql":
+    "adds new functions only, each SECURITY INVOKER with search_path public, pg_temp and EXECUTE revoked " +
+    "from PUBLIC, anon and authenticated, granted to service_role only — so even a caller who obtained " +
+    "EXECUTE would read with its own privileges and RLS. get_level_questions_for_student reads " +
+    "question_instances only in a NOT EXISTS (qi.student_id = the given id AND qi.question_id = q.id) and " +
+    "returns no instance column. request_repeat_level_question_for_student is #351's servable repeat with " +
+    "the same reads and the same single UPDATE scoped to id AND student_id; it returns only an id. " +
+    "advance_student_level reads only the given student's own first, auto-graded verdicts (id, was_correct) " +
+    "and returns a level, never instance data; its writes go to student_subject_level and the new table " +
+    "student_level_fold_log (RLS on, no policies, no client privileges). It also adds the plain index " +
+    "idx_qi_student_answered. No policy, RLS, table privilege or existing function on question_instances " +
+    "is touched (proven in difficulty-scale-b-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -397,7 +409,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261018143726_fix_danish_question_bank_text.sql",
      "20261019150000_question_format_mix.sql",
      "20261025120000_student_rpc_caller_scope.sql",
-     "20261027120000_repeat_answer_coin_reward.sql"],
+     "20261027120000_repeat_answer_coin_reward.sql",
+     "20261029120000_difficulty_scale_b.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

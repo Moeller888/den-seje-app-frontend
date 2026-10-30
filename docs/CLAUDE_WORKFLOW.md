@@ -57,9 +57,21 @@ Tests are the **gatekeeper** and **ground truth** (CLAUDE.md rules 1, 34, 41–4
   opens a PR** — fixes stay in the working tree; commit/push/PR/merge happen separately under the
   `.claude/settings.json` permission model, and only on green.
 - **Fast smoke (daily dev, ~10s):** `npx playwright test tests/example.spec.ts --project=chromium`
-  — verifies the core flow (login → question → answer).
+  — verifies the core flow (login → Hub → "Spil" → question → answer).
 - **Full suite (before push/release, ~55s):** `npx playwright test` — all specs on Chromium,
   Firefox, WebKit (1 worker, no parallelism), against the **live** production URL.
+- **Every `playwright.config.ts` run resets live test accounts — even for a single offline spec.**
+  `tests/global-setup.ts` runs first and deletes `question_instances` and rewrites the profile of
+  the E2E slot's accounts (slot 0 unless `E2E_SLOT` is set). Slot 0 is the account set every CI run
+  uses (`E2E_SLOT_COUNT` unset), so a local live run while a Playwright workflow is queued or running
+  can break that run. Start a live run only when `gh run list --workflow "Playwright Tests"` shows
+  nothing queued or in progress, and never on a slot that another process may be using. Slots 1–3
+  do not exist until provisioned; provisioning creates production accounts and needs the owner.
+- **Offline run (safe beside any live run):** `npm run test:e2e:offline`
+  (`playwright.offline.config.ts`) runs only the specs in `tests/offline-specs.mjs` — no
+  `globalSetup`, no `.env`, credentials stripped, every `*.supabase.co` request answered locally.
+  A new spec joins that list only if it meets the admission rules pinned by
+  `tests/unit/offline-e2e-config.test.mjs`.
 - **Always run tests BEFORE and AFTER a change.** Never assume a fix works; re-run.
 - **Never weaken a test to make it pass:** do not raise timeouts without a root cause, do not remove
   assertions, do not switch to weaker selectors, do not bypass failing conditions. **Fix the

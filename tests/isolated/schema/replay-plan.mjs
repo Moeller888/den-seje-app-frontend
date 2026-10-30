@@ -102,6 +102,8 @@ export function extractSchemaPart(file, sql) {
 export const NOT_IN_PRODUCTION = Object.freeze({
   "20261020120000_difficulty_scale_a.sql":
     "not applied in production (owner decision pending): student_subject_level and difficulty_level_from_grade_band do not exist there",
+  "20261029120000_difficulty_scale_b.sql":
+    "not applied in production (owner decision pending, PR #371): the level engine needs difficulty_scale_a's student_subject_level, which production does not have",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision

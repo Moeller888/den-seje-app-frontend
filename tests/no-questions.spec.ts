@@ -14,7 +14,7 @@ import { test, expect } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
-import { PROD } from './helpers.js';
+import { PROD, serveCheckoutLogin } from './helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -57,11 +57,15 @@ test('Shows empty state when no questions are available', async ({ page }) => {
     });
   });
 
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`);
 
   await page.fill('input[type="email"]', TEST_STUDENT_EMAIL);
   await page.fill('input[type="password"]', process.env.TEST_STUDENT_PASSWORD!);
   await page.click('button');
+  // A pupil always lands on the Hub after login; the quiz is one step further (Spil -> index.html).
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  await page.goto(`${PROD}/index.html`, { waitUntil: 'domcontentloaded' });
 
   // logout-btn is intentionally hidden in the mobile redesign — wait for the question element directly
   const question = page.locator('#question');
