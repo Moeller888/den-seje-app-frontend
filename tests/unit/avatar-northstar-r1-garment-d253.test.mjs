@@ -64,7 +64,7 @@ test("D-253 a top is split by C's arms: what lies over them is the sleeve layer 
   for (let i = 0; i < N; i++) { if (c.layers.sleeves[i * 4 + 3]) { sl++; assert.ok(base.arms[i * 4 + 3] >= 128); } if (c.layers.topBody[i * 4 + 3]) assert.ok(base.arms[i * 4 + 3] < 128); } assert.ok(sl > 1000);
 });
 
-test("D-253 the plan authorises nothing: at most three calls, a skin-near and a patterned item, frozen templates and C, the cost bound from the documented basis", () => {
+test("D-253 the plan authorises nothing by itself: at most three calls, a skin-near and a patterned item, frozen templates and C, the cost bound from the documented basis", () => {
   const p = JSON.parse(readFileSync(join(REPO, "tools", "avatar", "fixtures", "northstar-wardrobe", "r1", "r1-plan-v1.json"), "utf8"));
   assert.equal(p.authorisesImageRequest, false); assert.equal(p.activePermissions, 0); assert.match(p.status, /^PLAN ONLY — NOT AUTHORISED/);
   assert.ok(p.calls.length <= 3); assert.deepEqual(p.calls.map((c) => c.category).sort(), ["bottom", "shoes", "top"]);
@@ -75,11 +75,14 @@ test("D-253 the plan authorises nothing: at most three calls, a skin-near and a 
   const d = p.cost.documented, per = (d.usage.imageInputTokens * d.price.imageInputPerM + d.usage.textInputTokensMax * d.price.textInputPerM + d.usage.imageOutputTokens * d.price.imageOutputPerM) / 1e6;
   assert.equal(p.cost.perCallMax, +per.toFixed(4)); assert.equal(p.cost.totalMax, +(per * p.calls.length).toFixed(4));
   assert.equal(p.frozen.productionBaseline.method, IP.METHOD, "the production baseline is the current method");
-  assert.ok(!readdirSync(join(REPO, "tools", "avatar")).some((f) => /send.*r1|r1.*send/i.test(f)), "no send adapter exists for R1");
+  // the plan never authorises by itself: R1's only send adapter is D-255's, and it takes its authority from D-255's own file
+  const adapters = readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*r1|r1.*send/i.test(f)); assert.deepEqual(adapters, ["openai-send-northstar-r1-d255.mjs"]);
+  const ad = readFileSync(join(REPO, "tools", "avatar", adapters[0]), "utf8"); assert.match(ad, /const DECISION = "D-255";/); assert.match(ad, /r1-authorisation-v1\.json/); assert.match(ad, /get\(plan, "authorisesImageRequest"\) !== false/);
   assert.equal(R1.R1_REVISION, p.frozen.method.revision);
 });
 
 test("D-253 the proof refuses to write inside the repository (its canvases and sheets are C-derived)", () => {
-  const r = spawnSync(process.execPath, [join(REPO, "tools", "avatar", "northstar-r1-proof.mjs"), "--out", join(REPO, "tools", "avatar", "build", "r1")], { encoding: "utf8" });
+  const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/API_?KEY/i.test(k)));
+  const r = spawnSync(process.execPath, [join(REPO, "tools", "avatar", "northstar-r1-proof.mjs"), "--out", join(REPO, "tools", "avatar", "build", "r1")], { encoding: "utf8", env });
   assert.equal(r.status, 1); assert.match(r.stderr, /REFUSED: --out must be outside the repository/); assert.ok(!existsSync(join(REPO, "tools", "avatar", "build", "r1")));
 });
