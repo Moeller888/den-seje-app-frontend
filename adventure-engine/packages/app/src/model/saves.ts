@@ -5,7 +5,9 @@
  * engine validates them on load; these helpers only pick out display fields.
  */
 
-import type { SlotStatus } from "@adventure-engine/save";
+import type { LoadedContent } from "@adventure-engine/content";
+import { parseSave } from "@adventure-engine/core";
+import type { SlotStatus, WriteResult } from "@adventure-engine/save";
 
 export interface SlotInfo {
   readonly slot: string;
@@ -15,6 +17,8 @@ export interface SlotInfo {
   readonly playTimeMs: number | null;
   /** A damaged slot with a valid `.bak`. */
   readonly backup: boolean;
+  /** Why a slot is not "ok": damaged bytes, or an intact save this content cannot load. */
+  readonly reason: "damaged" | "unloadable" | null;
 }
 
 const record = (raw: string): Record<string, unknown> | null => {
@@ -27,8 +31,8 @@ const record = (raw: string): Record<string, unknown> | null => {
 };
 
 export function slotInfo(slot: string, status: SlotStatus): SlotInfo {
-  if (status.state === "empty") return { slot, state: "empty", savedAt: null, playTimeMs: null, backup: false };
-  if (status.state === "corrupt") return { slot, state: "corrupt", savedAt: null, playTimeMs: null, backup: status.backup !== null };
+  if (status.state === "empty") return { slot, state: "empty", savedAt: null, playTimeMs: null, backup: false, reason: null };
+  if (status.state === "corrupt") return { slot, state: "corrupt", savedAt: null, playTimeMs: null, backup: status.backup !== null, reason: status.reason };
   const d = record(status.raw);
   const savedAt = d?.["savedAt"];
   const play = d?.["playTimeMs"];
@@ -38,7 +42,45 @@ export function slotInfo(slot: string, status: SlotStatus): SlotInfo {
     savedAt: typeof savedAt === "string" ? savedAt : null,
     playTimeMs: typeof play === "number" && Number.isFinite(play) && play >= 0 ? play : null,
     backup: false,
+    reason: null,
   };
+}
+
+/**
+ * Status text of a slot that is not "ok": why, and that a backup can be
+ * restored when there is one (so the choice is visible before the click).
+ */
+export function corruptStatus(row: { readonly reason: SlotInfo["reason"]; readonly backup: boolean }, t: (key: string) => string): string {
+  const what = t(row.reason === "unloadable" ? "ui.unloadable" : "ui.corrupt");
+  return row.backup ? `${what} – ${t("ui.backup_available")}` : what;
+}
+
+/**
+ * Whether the running content can load a save (follow-up: slot status): the
+ * same validation and migration as a real load, without touching the game. A
+ * slot is only "ok" when this holds; the slot manager caches the verdict.
+ */
+export function saveLoadable(content: LoadedContent, devBuild: boolean): (raw: string) => boolean {
+  return (raw) => parseSave(raw, content, { allowChecksumMismatch: devBuild }).ok;
+}
+
+/** What a finished slot write shows: data-last-save, and the notice (if any). */
+export interface WriteFeedback {
+  /** "<slot>:<seq>" once the write is confirmed in the store, "<slot>:failed" otherwise. */
+  readonly lastSave: string;
+  /** "saved" ("Gemt") only after a confirmed write; "failed" with a reason otherwise. */
+  readonly notice: { readonly kind: "saved" } | { readonly kind: "failed"; readonly reason: string } | null;
+}
+
+/**
+ * Feedback for one slot write (review M7, follow-up F5): "Gemt" and
+ * data-last-save "<slot>:<seq>" only once this write's own commit is
+ * confirmed. A refused write or a failed commit shows the failure instead.
+ */
+export async function writeFeedback(slot: string, result: WriteResult, seq: number, announce: boolean): Promise<WriteFeedback> {
+  if (!result.ok) return { lastSave: `${slot}:failed`, notice: { kind: "failed", reason: result.message } };
+  if (!(await result.committed)) return { lastSave: `${slot}:failed`, notice: { kind: "failed", reason: "storage" } };
+  return { lastSave: `${slot}:${seq}`, notice: announce ? { kind: "saved" } : null };
 }
 
 /**

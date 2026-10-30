@@ -18,8 +18,11 @@ export interface SaveStorage {
   set(key: string, value: string): void;
   remove(key: string): void;
   keys(prefix: string): string[];
-  /** Run several writes as one unit where the store supports it (IndexedDB); otherwise just run them. */
-  transaction?(fn: () => void): void;
+  /**
+   * Run several writes as one unit where the store supports it (IndexedDB). A store that commits later
+   * resolves with that unit's own result; a synchronous store returns nothing (the writes are done).
+   */
+  transaction?(fn: () => void): Promise<boolean> | void;
 }
 
 /** In-memory store. `failAt` makes the n-th following write throw (fault injection for interrupted writes). */
@@ -129,21 +132,34 @@ export interface IdbFactoryLike {
 export const IDB_NAME = "engine-saves";
 export const IDB_STORE = "slots";
 
+type Op = ["put", string, string] | ["delete", string];
+
 /**
  * IndexedDB with an in-memory mirror. `open` reads every record once; writes
  * update the mirror at once and are committed in order; a `transaction` is
- * committed as one IDB transaction. `flush()` resolves when every commit has
- * finished, with `false` when a commit since the previous flush failed; every
- * failed commit is also reported through `onError`. A failure (also one that
- * is thrown synchronously, e.g. a closed connection) never stops later commits.
+ * committed as one IDB transaction.
+ *
+ * Every commit has its own result (follow-up F4), so one failure is reported
+ * exactly once and never to another operation:
+ * - `transaction(fn)` resolves with the result of that batch; the caller
+ *   reports a failure (a slot write), and `onError` is not called for it;
+ * - a single `set`/`remove` outside a batch (settings) has no caller waiting,
+ *   so its failure goes to `onError`;
+ * - `flush()` keeps no state: it waits for the commits still pending when it
+ *   is called and says whether they all succeeded, so ignoring its result
+ *   hides nothing and moves nothing.
+ * A browser fires both `error` and `abort` for a failed transaction; only the
+ * first counts. A failure (also one thrown synchronously, e.g. a closed
+ * connection) never stops later commits.
  */
 export class IndexedDbMirror implements SaveStorage {
   private readonly db: IdbDatabaseLike;
   private readonly mirror: Map<string, string>;
-  private batch: Array<["put", string, string] | ["delete", string]> | null = null;
-  private chain: Promise<void> = Promise.resolve();
-  /** A commit failed since the last flush(). */
-  private failedSinceFlush = false;
+  /** The batch being collected by `transaction`, with the promise its caller (and nested calls) receive. */
+  private batch: { readonly ops: Op[]; readonly result: Promise<boolean> } | null = null;
+  private chain: Promise<unknown> = Promise.resolve();
+  private readonly pending = new Set<Promise<boolean>>();
+  /** Failures of commits no caller waits for (single writes outside a batch). */
   onError: (err: unknown) => void = () => {};
 
   private constructor(db: IdbDatabaseLike, mirror: Map<string, string>) {
@@ -178,42 +194,61 @@ export class IndexedDbMirror implements SaveStorage {
 
   set(key: string, value: string): void {
     this.mirror.set(key, value);
-    this.queue([["put", key, value]]);
+    this.queue(["put", key, value]);
   }
 
   remove(key: string): void {
     this.mirror.delete(key);
-    this.queue([["delete", key]]);
+    this.queue(["delete", key]);
   }
 
   keys(prefix: string): string[] {
     return [...this.mirror.keys()].filter((k) => k.startsWith(prefix)).sort();
   }
 
-  transaction(fn: () => void): void {
-    const outer = this.batch;
-    const ops: Array<["put", string, string] | ["delete", string]> = [];
-    this.batch = ops;
+  /**
+   * Run `fn` and commit its writes as one IDB transaction. Resolves with true
+   * when that transaction completed, false when it failed (also when `fn`
+   * throws: nothing is committed then). A nested call joins the outer batch
+   * and receives its result.
+   */
+  transaction(fn: () => void): Promise<boolean> {
+    if (this.batch !== null) {
+      fn();
+      return this.batch.result;
+    }
+    let settle!: (ok: boolean) => void;
+    const batch = { ops: [] as Op[], result: new Promise<boolean>((resolve) => (settle = resolve)) };
+    this.batch = batch;
     try {
       fn();
+    } catch (err) {
+      settle(false);
+      throw err;
     } finally {
-      this.batch = outer;
+      this.batch = null;
     }
-    this.queue(ops);
+    void this.commit(batch.ops, false).then(settle);
+    return batch.result;
   }
 
-  private queue(ops: Array<["put", string, string] | ["delete", string]>): void {
-    if (this.batch !== null && ops !== this.batch) {
-      this.batch.push(...ops);
-      return;
-    }
-    if (ops.length === 0) return;
-    const commit = (): Promise<void> =>
-      new Promise<void>((resolve) => {
-        const fail = (err: unknown): void => {
-          this.failedSinceFlush = true;
-          this.onError(err);
-          resolve();
+  private queue(op: Op): void {
+    if (this.batch !== null) this.batch.ops.push(op);
+    else void this.commit([op], true);
+  }
+
+  /** Commit `ops` after the previous commits; `report` sends a failure to `onError` (nobody else waits for it). */
+  private commit(ops: readonly Op[], report: boolean): Promise<boolean> {
+    if (ops.length === 0) return Promise.resolve(true);
+    const run = (): Promise<boolean> =>
+      new Promise<boolean>((resolve) => {
+        let settled = false;
+        const finish = (ok: boolean, err?: unknown): void => {
+          // error and abort both fire for one failed transaction: only the first counts.
+          if (settled) return;
+          settled = true;
+          resolve(ok);
+          if (!ok && report) this.onError(err);
         };
         try {
           const tx = this.db.transaction(IDB_STORE, "readwrite");
@@ -222,22 +257,25 @@ export class IndexedDbMirror implements SaveStorage {
             if (op[0] === "put") store.put(op[2], op[1]);
             else store.delete(op[1]);
           }
-          tx.oncomplete = () => resolve();
-          tx.onerror = tx.onabort = () => fail(new Error("IndexedDB transaction failed"));
+          tx.oncomplete = () => finish(true);
+          tx.onerror = tx.onabort = () => finish(false, new Error("IndexedDB transaction failed"));
         } catch (err) {
           // Thrown synchronously (closed connection, uncloneable value): reported, and the chain goes on.
-          fail(err);
+          finish(false, err);
         }
       });
-    this.chain = this.chain.then(commit, commit);
+    // `run` never rejects, so the chain can never be poisoned.
+    const result = this.chain.then(run);
+    this.chain = result;
+    this.pending.add(result);
+    void result.then(() => this.pending.delete(result));
+    return result;
   }
 
-  /** Resolves when every queued commit has finished: true when all commits since the previous flush succeeded. */
+  /** Resolves when the commits pending at this call have finished: true when they all succeeded. Keeps no state. */
   async flush(): Promise<boolean> {
-    await this.chain;
-    const ok = !this.failedSinceFlush;
-    this.failedSinceFlush = false;
-    return ok;
+    const results = await Promise.all([...this.pending]);
+    return results.every(Boolean);
   }
 
   close(): void {

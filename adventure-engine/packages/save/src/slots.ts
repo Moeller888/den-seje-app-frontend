@@ -12,6 +12,13 @@
  * Phase 5 decision: on the first save of a slot there is no previous version,
  * so `.bak` receives a verified copy of the new save. A slot whose main file is
  * damaged therefore always offers a valid `.bak` once it has been written once.
+ *
+ * Valid (follow-up: slot status) means more than a matching checksum: with a
+ * `loadable` check (the app passes one that parses the save against the
+ * current content) a save that no longer loads, e.g. after a content update,
+ * is not shown as "ok", and its `.bak` is offered only when that loads. Each
+ * verdict is cached by the stored text, so listing the slots again does not
+ * parse or migrate the same save again.
  */
 
 import { saveIntegrity } from "@adventure-engine/core";
@@ -20,9 +27,23 @@ import type { SaveStorage } from "./storage.ts";
 export type SlotStatus =
   | { readonly state: "empty" }
   | { readonly state: "ok"; readonly raw: string }
-  | { readonly state: "corrupt"; readonly backup: string | null };
+  /** `reason`: "damaged" (missing, changed or unreadable bytes) or "unloadable" (intact, but this content cannot load it). */
+  | { readonly state: "corrupt"; readonly backup: string | null; readonly reason: "damaged" | "unloadable" };
 
-export type WriteResult = { readonly ok: true } | { readonly ok: false; readonly message: string };
+/**
+ * Outcome of a slot write. `ok` means the write reached the in-memory view;
+ * `committed` resolves when this very write reached the store (true) or
+ * failed there (false). Synchronous stores resolve it with true at once.
+ */
+export type WriteResult = { readonly ok: true; readonly committed: Promise<boolean> } | { readonly ok: false; readonly message: string };
+
+export interface SlotOptions {
+  /** Whether an intact save can be loaded by the running content (default: every intact save can). */
+  readonly loadable?: (raw: string) => boolean;
+}
+
+/** Verdicts kept per stored text; a slot listing needs at most 2 × 6. */
+const VERDICT_CACHE = 32;
 
 export const SLOT_NAMES = ["auto", "slot1", "slot2", "slot3", "slot4", "slot5"] as const;
 
@@ -30,9 +51,41 @@ export class SlotManager {
   private readonly storage: SaveStorage;
   readonly prefix: string;
 
-  constructor(storage: SaveStorage, contentId: string) {
+  private readonly loadable: ((raw: string) => boolean) | undefined;
+  private readonly verdicts = new Map<string, SlotValidity>();
+
+  constructor(storage: SaveStorage, contentId: string, options: SlotOptions = {}) {
     this.storage = storage;
     this.prefix = `engine:${contentId}:`;
+    this.loadable = options.loadable;
+  }
+
+  /** Intact (checksum) and loadable, cached by text: the same save is never parsed twice for a listing. */
+  private validity(raw: string): SlotValidity {
+    const known = this.verdicts.get(raw);
+    if (known !== undefined) return known;
+    const v: SlotValidity = saveIntegrity(raw) !== "ok" ? "damaged" : this.loadable !== undefined && !this.loadsSafely(raw, this.loadable) ? "unloadable" : "ok";
+    if (this.verdicts.size >= VERDICT_CACHE) this.verdicts.clear();
+    this.verdicts.set(raw, v);
+    return v;
+  }
+
+  /** A check that throws (e.g. a migration bug) counts as "cannot load": the slot list and new saves keep working. */
+  private loadsSafely(raw: string, loadable: (raw: string) => boolean): boolean {
+    try {
+      return loadable(raw);
+    } catch {
+      return false;
+    }
+  }
+
+  /** Run writes as one unit where the store has them; the promise is this unit's commit result. */
+  private atomically(run: () => void): Promise<boolean> {
+    if (this.storage.transaction === undefined) {
+      run();
+      return Promise.resolve(true);
+    }
+    return this.storage.transaction(run) ?? Promise.resolve(true);
   }
 
   private key(slot: string, suffix = ""): string {
@@ -51,14 +104,12 @@ export class SlotManager {
         this.storage.set(tmp, raw);
         if (this.storage.get(tmp) !== raw) throw new Error("read-back of the temporary file differs");
         const previous = this.storage.get(main);
-        if (previous !== null && saveIntegrity(previous) === "ok") this.storage.set(bak, previous);
+        if (previous !== null && this.validity(previous) === "ok") this.storage.set(bak, previous);
         else if (this.storage.get(bak) === null) this.storage.set(bak, raw);
         this.storage.set(main, raw);
         this.storage.remove(tmp);
       };
-      if (this.storage.transaction !== undefined) this.storage.transaction(run);
-      else run();
-      return { ok: true };
+      return { ok: true, committed: this.atomically(run) };
     } catch (err) {
       return { ok: false, message: err instanceof Error ? err.message : String(err) };
     }
@@ -68,8 +119,9 @@ export class SlotManager {
     const raw = this.storage.get(this.key(slot));
     const bak = this.storage.get(this.key(slot, ".bak"));
     if (raw === null && bak === null) return { state: "empty" };
-    if (raw !== null && saveIntegrity(raw) === "ok") return { state: "ok", raw };
-    return { state: "corrupt", backup: bak !== null && saveIntegrity(bak) === "ok" ? bak : null };
+    const main = raw === null ? "damaged" : this.validity(raw);
+    if (main === "ok") return { state: "ok", raw: raw as string };
+    return { state: "corrupt", backup: bak !== null && this.validity(bak) === "ok" ? bak : null, reason: main };
   }
 
   /** A damaged main file with a valid `.bak` (spec 05 E5: "<slot>.bak tilbydes"). */
@@ -84,12 +136,7 @@ export class SlotManager {
     if (s.state !== "corrupt" || s.backup === null) return { ok: false, message: "no backup to restore" };
     const backup = s.backup;
     try {
-      const run = (): void => {
-        this.storage.set(this.key(slot), backup);
-      };
-      if (this.storage.transaction !== undefined) this.storage.transaction(run);
-      else run();
-      return { ok: true };
+      return { ok: true, committed: this.atomically(() => this.storage.set(this.key(slot), backup)) };
     } catch (err) {
       return { ok: false, message: err instanceof Error ? err.message : String(err) };
     }
@@ -121,6 +168,8 @@ export class SlotManager {
     return [...names].sort((a, b) => order(a) - order(b));
   }
 }
+
+type SlotValidity = "ok" | "damaged" | "unloadable";
 
 const order = (slot: string): number => {
   const i = (SLOT_NAMES as readonly string[]).indexOf(slot);

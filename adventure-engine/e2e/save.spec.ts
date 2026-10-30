@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import { saveChecksum, type SaveData } from "../packages/core/src/save.ts";
 import { activateHotspot, confirmLine, game, start, waitIdle } from "./helpers.ts";
 
 /**
@@ -39,6 +40,32 @@ async function saveIn(page: Page, slot: string): Promise<void> {
   await menu(page).locator(`[data-slot="${slot}"]`).click();
   await expect(game(page)).toHaveAttribute("data-last-save", new RegExp(`^${slot}:\\d+$`));
   await expect(page.locator("#notice")).toHaveText("Spillet er gemt.");
+}
+
+/** Read (value === undefined) or write one record of the game's IndexedDB store, outside the game. */
+function idbRecord(page: Page, key: string, value?: string): Promise<string | null> {
+  return page.evaluate(
+    ([k, v]) =>
+      new Promise<string | null>((resolve, reject) => {
+        const req = indexedDB.open("engine-saves", 1);
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => {
+          const tx = req.result.transaction("slots", v === null ? "readonly" : "readwrite");
+          const store = tx.objectStore("slots");
+          let out: string | null = null;
+          if (v === null) {
+            const get = store.get(k);
+            get.onsuccess = () => (out = typeof get.result === "string" ? get.result : null);
+          } else store.put(v, k);
+          tx.oncomplete = () => {
+            req.result.close();
+            resolve(out);
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    [key, value ?? null] as const,
+  );
 }
 
 test.describe("save and load (spec 05)", () => {
@@ -159,6 +186,61 @@ test.describe("save and load (spec 05)", () => {
     await expect(page.locator("#notice")).toHaveText("Sikkerhedskopien er gendannet.");
     await expect(menu(page).locator('[data-slot="slot3"]')).toBeEnabled();
     await menu(page).locator('[data-slot="slot3"]').click();
+    await expect(game(page)).toHaveAttribute("data-last-load", "ok:0");
+    await waitIdle(page);
+    await expect(page.locator('.inv-item[data-item="oilcan"]')).toBeAttached();
+  });
+
+  test("follow-up F5: a save whose IndexedDB write fails is reported once and never shown as saved", async ({ page }) => {
+    await start(page);
+    await expect(game(page)).toHaveAttribute("data-storage", "indexeddb");
+    // From now on every IndexedDB put of slot1 fails (as a full or closed store would).
+    await page.evaluate(() => {
+      const put = IDBObjectStore.prototype.put;
+      IDBObjectStore.prototype.put = function (this: IDBObjectStore, value: unknown, key?: IDBValidKey) {
+        if (typeof key === "string" && key.includes(":slot1")) throw new DOMException("simulated failure", "QuotaExceededError");
+        return put.call(this, value, key);
+      };
+    });
+    const errors: string[] = [];
+    page.on("console", (m) => {
+      if (m.type() === "error") errors.push(m.text());
+    });
+    await page.locator("#menu-button").click();
+    await menu(page).locator('[data-action="save"]').click();
+    await menu(page).locator('[data-slot="slot1"]').click();
+    await expect(game(page)).toHaveAttribute("data-last-save", "slot1:failed");
+    await expect(page.locator("#notice")).toHaveText("Spillet kunne ikke gemmes: storage");
+    // The next, unaffected save is confirmed on its own and does not inherit the failure.
+    await menu(page).locator('[data-slot="slot2"]').click();
+    await expect(game(page)).toHaveAttribute("data-last-save", /^slot2:\d+$/);
+    await expect(page.locator("#notice")).toHaveText("Spillet er gemt.");
+    // The failed slot write was reported by the save itself, not a second time through the store's error handler.
+    expect(errors.filter((e) => e.includes("IndexedDB write failed"))).toEqual([]);
+  });
+
+  test("follow-up: an intact save the content cannot load is not shown as ok; its backup is offered", async ({ page }) => {
+    await start(page);
+    await takeOilcan(page);
+    await saveIn(page, "slot3");
+    const key = `engine:${CONTENT_ID}:slot3`;
+    // Make the main file a save of another game: the checksum matches, but this content cannot load it.
+    const main = await idbRecord(page, key);
+    expect(main).not.toBeNull();
+    const d = JSON.parse(main as string) as Record<string, unknown>;
+    d["content"] = { ...(d["content"] as object), id: "another-game" };
+    d["checksum"] = saveChecksum(d as unknown as SaveData);
+    await idbRecord(page, key, JSON.stringify(d));
+    await page.reload();
+    await page.locator("#title-load").click();
+    await expect(game(page)).toHaveAttribute("data-menu", "load");
+    const row = menu(page).locator('[data-slot="slot3"]');
+    await expect(row).toBeDisabled();
+    await expect(row).toContainText("kan ikke indlæses – sikkerhedskopi kan gendannes");
+    await menu(page).locator('[data-restore="slot3"]').click();
+    await expect(page.locator("#notice")).toHaveText("Sikkerhedskopien er gendannet.");
+    await expect(row).toBeEnabled();
+    await row.click();
     await expect(game(page)).toHaveAttribute("data-last-load", "ok:0");
     await waitIdle(page);
     await expect(page.locator('.inv-item[data-item="oilcan"]')).toBeAttached();

@@ -85,7 +85,11 @@ Reparationer gives som runtime-advarslen `W-SAVE-REPAIRED` med en af disse typer
 
   En afbrydelse på et hvilket som helst trin efterlader det forrige save eller `.bak` intakt (TS-E09 med fejlindsprøjtning på hvert trin).
 - **Første save i en slot:** `.bak` får en verificeret kopi af det nye save. Dermed tilbyder en beskadiget slot altid en gyldig sikkerhedskopi, når den først er skrevet én gang.
-- `saveIntegrity(raw)` kontrollerer parse, format og checksum uden at kende indholdet. Den bruges til slotlister og til at vælge sikkerhedskopi.
+- `saveIntegrity(raw)` kontrollerer parse, format og checksum uden at kende indholdet.
+- **Gyldig slot (opfølgning, `docs/release-readiness.md` §17):** en passende checksum er ikke nok. Spillet giver `SlotManager` en `loadable`-kontrol, der kører `parseSave` mod det aktuelle indhold (samme validering og migration som et rigtigt load). Et intakt save, som indholdet ikke kan indlæse (fx efter en indholdsopdatering), vises som `corrupt` med `reason: "unloadable"` ("kan ikke indlæses"), og `.bak` tilbydes kun, når den kan indlæses. Status og knappen viser tydeligt "sikkerhedskopi kan gendannes".
+  - Vurderingen caches pr. gemt tekst (højst 32), så en slotliste ikke parser eller migrerer det samme save igen ved hver opdatering.
+  - Et save, der ikke kan indlæses, flyttes aldrig til `.bak` over en sikkerhedskopi, der kan.
+  - Scenarie-runneren bruger stadig kun checksummen (ingen `loadable`), så dens goldens er uændrede.
 
 ## 8. Autosave (spec 05 E3.2)
 
@@ -169,6 +173,8 @@ Der autogemmes i slot `auto`:
     - Klassen sættes synkront i `pointerdown`-håndteringen, så klikkets tidsstempel ligger altid før feedbackens start. Nedre grænse holder derfor uden at afhænge af maskinens hastighed. En feedback, der allerede er slut før Playwrights næste polling, bliver stadig registreret.
     - Produktets 200 ms, timeouts og retries er uændrede, og der er ingen sleeps eller skips.
     - Gentagne kørsler med én worker: Chromium 10/10, Firefox 3/3, WebKit 3/3.
+- **IndexedDB-fejl (opfølgning F4, `docs/release-readiness.md` §17):** hver commit har sit eget resultat. En slot-skrivning (en batch) svarer med `committed` til den, der skrev, og "Gemt" vises kun efter netop den skrivnings bekræftelse. Enkeltskrivninger uden en ventende kalder (indstillinger) rapporteres via `onError`. `error` og `abort` for samme transaktion tæller kun én gang, og `flush()` har ingen tilstand, så et ignoreret kald hverken skjuler eller flytter en fejl.
+  - Spejlet i hukommelsen opdateres stadig med det samme. En skrivning, der fejler i IndexedDB, er derfor synlig resten af sessionen, men ikke efter en genindlæsning; spilleren får fejlmeddelelsen.
 - **IndexedDB og flere faner:** to åbne faner har hver sin hukommelseskopi. Den sidste skrivning pr. nøgle vinder. Der er ingen synkronisering mellem faner.
 - **Autosave ved lukning:** IDB-transaktionen startes synkront ved `visibilitychange`. Browseren gennemfører den normalt, men det kan ikke garanteres, hvis processen dræbes.
 
