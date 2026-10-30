@@ -385,6 +385,25 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Tee master — D-264 (offline prototype; no call; recommendation 1: promising enough for a later generated-material test).**
+  - **What.** `northstar-tee-master.mjs`: one-time data for the tee-hip cut. It has:
+    - a panel map split at the drawn armhole seams, not at C's arm mask;
+    - the cut's own contour;
+    - one luminance-ratio map carrying seams, rib, hem stitch, fold strokes and shading;
+    - a fixed pattern displacement of at most 3 px;
+    - sleeve axes;
+    - a chest-print anchor.
+  - **Per design.** Only material changes: a colour or seamless swatch, optional trim, and a print at an existing anchor.
+  - **Tested designs.** Plain cream and blue (K colours), SYNTHETIC stripes, tartan and a chest print.
+  - **Checks.** 0 holes, fit OK, outfits 8/8.
+  - **Visual result.**
+    - Plain designs carry the original's painting.
+    - Patterns change at the real seam and keep the fold strokes, with no double shadows.
+  - **Limits.**
+    - Patterns stay near-planar over broad areas.
+    - Highlights are clipped, and fold strokes are weaker on dark fabric.
+    - Each cut needs a clean painted neutral item.
+  - **Status.** Nothing is integrated. See `docs/decisions/D-264.md`.
 - **r1-m1 quality reference — D-262 (offline; no call; recommendation 2: a limited product family).**
   - **Clean reference.** Clean material (approved K-set colours and SYNTHETIC seamless stripes and tartan) laid on the tee-hip cut
     shows which faults come from the source swatches and which from the method.
