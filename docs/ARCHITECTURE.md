@@ -143,6 +143,10 @@ Schema and most content are managed as **versioned SQL migrations** in `supabase
 - **Learning core:** `questions`, `question_instances` (per-student instance with
   `correct_answer`, `user_answer`, `answered`, `was_correct`, `next_review_at`,
   `misconception_signal`), `student_progress` (xp, coins, mastery, counters).
+  `question_instances` is the pupil's **current state** per question (`UNIQUE (student_id,
+  question_id)`), not an answer log: a repeat reopens the same row and overwrites the earlier answer.
+  The chosen fix, an append-only `question_attempts` log, is designed but not built — see
+  [`question-attempts-design.md`](question-attempts-design.md).
 - **Learning engine metadata / concept state:** `learning_engine_metadata`, concept-state RPC,
   grade/difficulty schema, plus topic "content sprint" migrations (Vikings, Cold War, etc.).
 - **Economy / shop:** `shop_items`, shop inventory/purchases, atomic purchase + RLS hardening.
