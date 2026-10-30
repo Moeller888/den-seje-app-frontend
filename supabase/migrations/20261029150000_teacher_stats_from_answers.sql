@@ -8,18 +8,19 @@
 --                                   process_text_answer, review_answer) write was_correct. The last
 --                                   is_correct value was written 2026-03-17; 53 of 5,901 rows have one.
 --   student_progress.total_attempts never incremented by any deployed function (pg_proc search).
---   question_instances.answered     also true for a repeat that was closed without an answer
---                                   (request_repeat_question*: answered = true, was_correct NULL) and
---                                   for a text answer still waiting for the teacher.
+--   question_instances.answered     also true for a text-format answer waiting for the teacher
+--                                   (process_question_attempt, answer_format 'text': answered = true,
+--                                   was_correct NULL), so answered alone does not mean "scored".
 -- Measured read-only on production 2026-10-29: of the 46 pupils with answers, the overview shows
 -- 41 at 0 % correct; computed from was_correct, 6 are at 0 % and the mean is 56 %. "Spm." and
 -- "Forsøg i alt" show 0 for every pupil except 9 accounts from February–March 2026, and the trend
 -- is always "stable" (AVG over NULL). The same day 39 pupils had scored answers and total_attempts 0.
 --
 -- THE FIX — one definition for both views
---   scored answer        = a question_instances row with was_correct IS NOT NULL
---                          (an MC/number answer, a short text answer, or a teacher-reviewed long
---                          answer; never a pending text answer or a closed, unanswered repeat)
+--   scored answer        = a question_instances row with answered = true and was_correct IS NOT NULL
+--                          (an MC/number answer or an auto-graded short text answer; never an open
+--                          or reopened question, and never a teacher-graded answer — see KNOWN,
+--                          NOT CHANGED HERE)
 --   first-attempt answer = a scored answer with repeat_count = 0
 --   get_teacher_visibility
 --     total_attempts     = number of first-attempt answers                 ("Spm.")
@@ -44,6 +45,12 @@
 --   * level (student_progress.level) is not maintained either; the pupil's Hub derives the level
 --     from XP (js/progression.js getXPProgressInLevel). Separate finding.
 --   * The answer history itself is not append-only (repeats overwrite). Separate design decision.
+--   * Teacher-graded answers are in neither statistic, before or after the teacher's review:
+--     review_answer writes teacher_score / teacher_feedback / reviewed_at, never was_correct.
+--     A text-format answer stays answered = true, was_correct NULL (process_question_attempt);
+--     a long answer stays answered = false with only user_answer saved (process-event).
+--     Production on 2026-10-30: none pending (0 long questions; 3 text-format questions with 8
+--     instances, all with was_correct set). Separate finding.
 --
 -- WHAT THIS MIGRATION DOES NOT DO
 -- No table, column, index, RLS policy, view or data change. No row is written. The signatures, the
