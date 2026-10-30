@@ -328,13 +328,17 @@ const REVIEWED_LATER_REPEAT_USERS = {
     "repeat_count (first answers only). It redefines neither request_repeat_question, " +
     "process_question_attempt nor release_open_question_outside, and alters no table — the award stays " +
     "this migration's.",
+  "20261029150000_teacher_stats_from_answers.sql":
+    "reads repeat_count only to leave repeats out of the teacher's first-attempt statistics " +
+    "(get_teacher_visibility, get_student_overview). It defines and calls none of the repeat functions " +
+    "and writes nothing."
 };
 
 test("reviewed later repeat users redefine none of this migration's functions", () => {
   const dir = join(REPO, "supabase", "migrations");
   assert.deepEqual(Object.keys(REVIEWED_LATER_REPEAT_USERS),
     ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql",
-      "20261029120000_difficulty_scale_b.sql"],
+      "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);

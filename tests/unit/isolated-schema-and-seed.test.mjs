@@ -34,6 +34,19 @@ test("every timestamped migration gets exactly one decision; every non-apply has
   assert.equal(s.apply + s.skip + s.blocked, s.total);
 });
 
+test("the level scale follows production: #351, A, B and the comment fix are replayed in that order", () => {
+  // A (remote 20261030045204), B (remote 20261030094958) and the comment fix (remote 20261030182931) are
+  // applied in production, verified 2026-10-30.
+  const files = ["20261019150000_question_format_mix.sql", "20261020120000_difficulty_scale_a.sql", "20261029120000_difficulty_scale_b.sql", "20261030120000_student_subject_level_comment.sql"];
+  const order = plan.filter((p) => p.action === "apply").map((p) => p.file);
+  for (const f of files) {
+    assert.equal(plan.find((p) => p.file === f).action, "apply", f);
+    assert.equal(NOT_IN_PRODUCTION[f], undefined, f);
+  }
+  const at = files.map((f) => order.indexOf(f));
+  assert.ok(at[0] >= 0 && at[0] < at[1] && at[1] < at[2] && at[2] < at[3], `#351 → A → B → comment, got positions ${at}`);
+});
+
 test("the empty base migration (D-110 root) is skipped as empty", () => {
   const p = plan.find((x) => x.file === "20260317165405_remote_schema.sql");
   assert.ok(p && p.action === "skip" && p.reason.startsWith("empty file"));

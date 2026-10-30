@@ -118,7 +118,9 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
       window.location.href = "reset-password.html?forced=1";
       return;
     }
-    window.location.href = "index.html";
+    // A pupil always starts on the Hub — also on the very first login. The quiz (and its
+    // one-time placement questions) is reached from there via "Spil".
+    window.location.href = "hub.html";
     return;
   }
 

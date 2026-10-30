@@ -11,7 +11,7 @@ CODEBASE OVERVIEW
 **Stack:**
 - Frontend: Vanilla JS + HTML pages, no build step, deployed to Cloudflare Workers (Static Assets) — live on `https://lærlig.dk`. `tools/cloudflare-build-static.mjs` copies an explicit allowlist into the deployed bundle; see `docs/HOSTING.md`
 - Backend: Supabase (hosted) with Deno Edge Functions (`supabase/functions/`)
-- Tests: Playwright E2E, run against the live production URL
+- Tests: Playwright E2E. Locally, `npx playwright test` runs against the live production URL. In CI (D-261): pull requests and pushes to `main` run the same suite against a throwaway local Supabase stack (`isolated-e2e.yml`, required on PRs), and a push to `main` also runs a read-only Production Smoke (`production-smoke.yml`). The old production-facing CI suite (`playwright.yml` job `test`) runs only by manual dispatch with `confirm_production` = `production-e2e`
 
 **Roles:** `student`, `teacher`, `super_admin` — stored in `profiles.role`, checked on every page load.
 
@@ -151,7 +151,8 @@ Invalid transitions are blocked and logged. Never bypass this machine.
 
 **Tests** (`tests/`):
 - `example.spec.ts` — full student flow: login → question loads → answer → feedback → next question, no-questions state
-- Tests run against live production, not localhost. The target is defined once, as `PROD` in `tests/helpers.ts`, and is overridable via the `PROD_BASE_URL` repository variable — never hardcode it in a spec
+- Local runs target live production, not localhost. The target is defined once, as `PROD` in `tests/helpers.ts`, and is overridable via the `PROD_BASE_URL` repository variable — never hardcode it in a spec
+- CI never runs the production-facing suite automatically (D-261): PRs and `main` pushes use the isolated suite, `main` pushes also the read-only Production Smoke; a production-facing CI run is a manual dispatch of "Playwright Tests" with `confirm_production` = `production-e2e`. `update-avatar-goldens.yml` is a separate manual workflow that still uses (and changes) the live slot-0 test student
 - Playwright config: 3 browsers (Chromium, Firefox, WebKit), 1 worker, no parallelism
 
 ----------------------------------------

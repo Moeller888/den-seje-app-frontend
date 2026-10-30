@@ -1,0 +1,93 @@
+{
+  "decision": "D-253",
+  "plan": "r1-v1",
+  "status": "PLAN ONLY — NOT AUTHORISED. No call may be sent on this file; authorisation is a separate owner instruction that writes its own authorisation file and adapter.",
+  "authorisesImageRequest": false,
+  "activePermissions": 0,
+  "direction": "R1 (D-252): the garment is generated apart from the body, as a layer of its own, and placed by a fixed cut template",
+  "frozen": {
+    "method": { "revision": "r1-v1", "module": "tools/avatar/northstar-r1-garment.mjs" },
+    "productionBaseline": { "method": "d240", "outfitRevision": "d239", "use": "derives the cut templates from their pinned raws, and every check (fitCheck, outfitCheck) runs unchanged" },
+    "templates": {
+      "generator": "node tools/avatar/northstar-r1-proof.mjs --out <dir outside the repo> (writes image-1.<cut>.png; deterministic)",
+      "cuts": {
+        "top": { "cut": "tee-hip", "from": "top-tee-hip-cream", "rawSha256": "9c7e2215905099f33914c2addce072c06c62669e93090341a56695e41041f770", "canvasSha256": "906e7bc18a2f5e41cbb1fb8a56e2272386b1df0a86284f42a83a02d62f92f4aa", "covering": "none" },
+        "bottom": { "cut": "trousers-square", "from": "bottom-trousers-square-olive", "rawSha256": "b7423207432780f2e1be5e49f94a2bf0888c785e7c918d117119d76f5a777d00", "canvasSha256": "fb65bf04b4e8619adaa0dd138d7e189db3aa7924abf846ca2a78178ea595a15c", "covering": "none" },
+        "shoes": { "cut": "ankleboot", "from": "shoes-ankleboots-brown", "rawSha256": "98d4a08fc038db0575ed37774682b372504a4b376040240cde05f372f3c90b2c", "canvasSha256": "9ba302a15669cc3d3b01a7b98c6d08f45c4006ebb96779218865804be62dcd89", "covering": "closed-footwear" }
+      },
+      "privacy": "the canvases are C-coordinate silhouettes of generated items: private, outside both clones, never published"
+    }
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "modelNote": "the model of D-207 … D-246, unchanged; another model is a new decision",
+    "parameters": { "size": "1024x1536", "quality": "high", "n": 1, "output_format": "png", "background": "transparent" },
+    "neverSentFields": ["mask", "input_fidelity", "output_compression", "response_format", "moderation"],
+    "images": [
+      { "role": "Image 1", "what": "the cut's template canvas (silhouette in grey fold shading, transparent elsewhere)", "sha256": "per call: frozen.templates.cuts.<category>.canvasSha256" },
+      { "role": "Image 2", "what": "C, as a private style and fit reference only", "name": "d202-base-figure-v2.image-1.png", "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818" }
+    ],
+    "noOtherReference": "no seam reference sheet: the template carries the seams"
+  },
+  "promptFrame": "Image 1 is a garment template: {noun} on a transparent background, painted flat grey with its fold shading, at its exact position and size on a 1024x1536 canvas. Image 2 shows the cartoon character it is made for; use Image 2 only for the drawing style (clean dark outlines, soft cel shading, light from the upper left). Do not draw the character or any part of a body: no skin, head, neck, arms, hands, legs or feet. Repaint the grey template as the garment described below. Fill the entire grey silhouette, keep its outline, position and size exactly, keep its folds as the fabric's shading, and paint nothing outside it. The background stays fully transparent. Garment: {design}",
+  "calls": [
+    { "callId": "R1-1-top-tee-hip-apricot-jersey", "category": "top", "cut": "tee-hip", "tests": ["skin-near colour", "details on the neck and arm contours (neckband, cuffs)", "sleeves over the arms"],
+      "noun": "one short-sleeved T-shirt",
+      "design": "a short-sleeved, hip-length T-shirt in soft apricot-peach cotton jersey (a colour close to light skin), with a slightly darker peach ribbed crew neckband, ribbed sleeve cuffs, a small patch pocket on the wearer's left chest with visible top-stitching, and a double-stitched hem." },
+    { "callId": "R1-2-bottom-trousers-houndstooth", "category": "bottom", "cut": "trousers-square", "tests": ["pattern", "waistband (linning) under the top's hem", "the area by the hands"],
+      "noun": "one pair of straight-leg trousers",
+      "design": "straight-leg trousers in a black-and-cream houndstooth wool pattern, with a solid black waistband carrying five belt loops, slanted front pocket openings with top-stitching, and a centre front crease." },
+    { "callId": "R1-3-shoes-ankleboot-nude-leather", "category": "shoes", "cut": "ankleboot", "tests": ["skin-near colour", "closed footwear (covering)", "collar at the leg contour"],
+      "noun": "one pair of closed ankle boots",
+      "design": "a pair of closed ankle boots in smooth nude-beige leather (a colour close to light skin), with a darker tan elastic side panel, a small pull loop at the back of the collar, visible stitching along the welt and a thin light-brown sole." }
+  ],
+  "expectedOutput": "one 1024x1536 RGBA PNG per call: the garment only, on a transparent background. What the method keeps is only the output's material inside the template; placement, alpha and the outline at the silhouette edge come from the template.",
+  "postProcessing": {
+    "allowed": "automatic only, the same for every item: the R1 rules of the frozen module (registration by one integer translation, template alpha, the cut's contour, edge antialias from the output within 2 px, the production sleeve split, the cut's shadow and covering)",
+    "forbidden": "per-item painting, masks, deformation, thresholds, parameters, selection or retouch; if a result would need one, the item counts as requiring a manual decision and the need is reported as a limitation"
+  },
+  "measures": {
+    "placement": "registration within ±16 px and not at the window edge; template core left unpainted ≤ 0.5 %; output paint outside the template ≤ 25 % of the core (measured; discarded)",
+    "alpha": "the composed alpha equals the template's (by construction; verified pixel for pixel)",
+    "body": "no skin, hands, feet or head drawn inside the template (assistant's visual review; not decided by colour)",
+    "fit": "fitCheck (method d240's fit revision d232): every fit-axis check passes with the cut's shadow and covering",
+    "design": "not a recolour of the template (shade correlation and edge density reported; the assistant's visual review decides)",
+    "seams": "the assistant reviews waist, hands, neck/shoulders and leg/shoe at ×2",
+    "combinations": "each new item with the existing K partners (tops tee-hip-cream, tee-hip-blue; bottoms capri-lightblue, shorts-navy, skirt-sand, trousers-square-olive; shoes sneakers-white, boots-laceup-black), and the three new items together. The method predicts the same outfit result as the cut's template item in the same outfit; every difference is reviewed. Known check sensitivity (D-253 proof): COMBO-2 reads a high-contrast pattern just below a hem as a second contour, so a COMBO-2 at a seam on a patterned item is a manual decision, never an automatic pass or fail."
+  },
+  "classification": {
+    "automaticallyUsable": "placement accepted, fit OK, no body drawn, not recolour-only, and every partner outfit has the template item's result",
+    "technicallyRejected": "placement rejected, a hole above the limit, a failed fit check, or a format error",
+    "requiresManualDecision": "anything else (an outfit differing from the template item's, a COMBO-2 on a pattern at a seam, a doubtful body or recolour finding)",
+    "reportApart": true
+  },
+  "uncertainMaterial": "reported per item in px: core holes, output paint outside the template, edge pixels filled from the output, outfit differences",
+  "manualEffort": {
+    "definition": "any human action after a result that changes its pixels, masks, registration, parameters or selection — not allowed; needing it is a limitation",
+    "review": "the assistant's visual review (sheets counted) is review, not manual effort; the owner's look and approval are separate",
+    "perCut": "a template is made once per cut, automatically from an existing item; making new cuts is a per-cut cost, reported, never per item"
+  },
+  "stopRules": [
+    "credit or access: HTTP 401, 403 or 429, or an error naming quota or billing — stop all",
+    "request shape: HTTP 400 that is not a moderation block, or any HTTP 5xx — stop all",
+    "moderation block — that call is spent; stop all",
+    "uncertain dispatch (no written outcome) — never resent; stop all",
+    "format: not a 1024x1536 RGBA PNG — that item is technically rejected; continue",
+    "template ignored: coverage of the template core below 0.80 — stop the remaining calls",
+    "no retries, no reserves, no fallback, no other model"
+  ],
+  "cost": {
+    "currency": "USD",
+    "documented": {
+      "price": { "model": "gpt-image-2.5-sunburst", "source": "https://developers.openai.com/api/docs/pricing (Standard), as documented in b1-calls-v1.json (read 2026-10-28); re-read before execution", "imageInputPerM": 8, "textInputPerM": 5, "imageOutputPerM": 30 },
+      "usage": { "imageInputTokens": 3072, "imageOutputTokens": 1372, "textInputTokensMax": 600, "source": "the 12 measured calls of the same size, quality and two-image shape (D-228, D-235), as in b1-calls-v1.json; the template canvas is an image of the same size" }
+    },
+    "perCallMax": 0.0687,
+    "calls": 3,
+    "totalMax": 0.2062,
+    "enforceable": "the call count (3), not a sum; the billed amount is read on the OpenAI usage page",
+    "uncertainty": "token counts are measured on another request shape with two 1024x1536 images and may differ for a mostly transparent canvas; the price is the list price, not an invoice"
+  },
+  "privacy": { "cSentToApi": "allowed only once authorised for these three calls", "outputs": "private, outside both clones", "h1": "never used", "publicLayers": "no new public runtime layer; the D-242 exception is not extended" }
+}

@@ -12,13 +12,17 @@
 //   4. the workflow: the concurrency group and E2E_SLOT use the IDENTICAL predicate, so the lock
 //      and the accounts can never disagree; every E2E lock queues FIFO (`queue: max`) and never
 //      cancels; every workflow holding the service-role key takes an E2E lock;
-//   5. main still runs the full suite on push (main has no branch protection).
+//   5. since D-261 (main protected by the ruleset) a push to main no longer runs the production-facing
+//      suite; a manual dispatch does, and only with confirm_production = production-e2e.
 // The block reader is indentation-based (no YAML dependency) with its own negative controls.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 import {
+  PRODUCTION_CONFIRMATION,
   MAX_SLOTS,
   LEGACY_GROUP,
   parseSlotCount,
@@ -171,17 +175,52 @@ test("dispatch guard: accepts only an accepted dispatch whose slot equals the jo
   // Not a dispatch: nothing to check (PR and push runs are unaffected).
   for (const eventName of ["pull_request", "push", "schedule", undefined]) ok({ eventName, jobSlot: "0" });
   const D = "workflow_dispatch";
-  ok({ eventName: D, dispatchSlot: "0", confirmation: "", slotCount: "", jobSlot: "0" });
-  ok({ eventName: D, dispatchSlot: "2", confirmation: "provision-slot-2", slotCount: "", jobSlot: "2" });
-  ok({ eventName: D, dispatchSlot: "2", confirmation: "", slotCount: "4", jobSlot: "2" });
+  // Every dispatch below carries the production confirmation (D-261, next test); the slot rules are unchanged.
+  const P = { productionConfirmation: PRODUCTION_CONFIRMATION };
+  ok({ ...P, eventName: D, dispatchSlot: "0", confirmation: "", slotCount: "", jobSlot: "0" });
+  ok({ ...P, eventName: D, dispatchSlot: "2", confirmation: "provision-slot-2", slotCount: "", jobSlot: "2" });
+  ok({ ...P, eventName: D, dispatchSlot: "2", confirmation: "", slotCount: "4", jobSlot: "2" });
   // Rejected dispatch: classify failed → the job would run slot 0 → the guard stops it.
-  no({ eventName: D, dispatchSlot: "3", confirmation: "", slotCount: "", jobSlot: "0" });
-  no({ eventName: D, dispatchSlot: "9", confirmation: "", slotCount: "4", jobSlot: "0" });
+  no({ ...P, eventName: D, dispatchSlot: "3", confirmation: "", slotCount: "", jobSlot: "0" });
+  no({ ...P, eventName: D, dispatchSlot: "9", confirmation: "", slotCount: "4", jobSlot: "0" });
   // Accepted, but the job disagrees (classify crashed or was tampered with) → stop.
-  no({ eventName: D, dispatchSlot: "2", confirmation: "provision-slot-2", slotCount: "", jobSlot: "0" });
-  no({ eventName: D, dispatchSlot: "0", confirmation: "", slotCount: "4", jobSlot: "1" });
-  no({ eventName: D, dispatchSlot: "1", confirmation: "", slotCount: "4", jobSlot: undefined });
-  no({ eventName: D, dispatchSlot: "1", confirmation: "", slotCount: "4", jobSlot: 1 });
+  no({ ...P, eventName: D, dispatchSlot: "2", confirmation: "provision-slot-2", slotCount: "", jobSlot: "0" });
+  no({ ...P, eventName: D, dispatchSlot: "0", confirmation: "", slotCount: "4", jobSlot: "1" });
+  no({ ...P, eventName: D, dispatchSlot: "1", confirmation: "", slotCount: "4", jobSlot: undefined });
+  no({ ...P, eventName: D, dispatchSlot: "1", confirmation: "", slotCount: "4", jobSlot: 1 });
+});
+
+test("dispatch guard (D-261): a manual run needs confirm_production = exactly production-e2e, AND the slot rules", () => {
+  assert.equal(PRODUCTION_CONFIRMATION, "production-e2e");
+  const D = "workflow_dispatch";
+  const slot0 = { eventName: D, dispatchSlot: "0", confirmation: "", slotCount: "", jobSlot: "0" };
+  assert.equal(dispatchGuard({ ...slot0, productionConfirmation: "production-e2e" }).ok, true);
+  for (const productionConfirmation of [undefined, null, "", " production-e2e", "production-e2e ", "PRODUCTION-E2E", "production", "provision-slot-1", "production-e2e\n", 1, true]) {
+    const v = dispatchGuard({ ...slot0, productionConfirmation });
+    assert.equal(v.ok, false, JSON.stringify(productionConfirmation));
+    assert.match(v.message, /confirm_production/);
+  }
+  // Both confirmations where both apply: an inactive slot needs provision-slot-<n> as well.
+  const slot2 = { eventName: D, dispatchSlot: "2", slotCount: "", jobSlot: "2" };
+  assert.equal(dispatchGuard({ ...slot2, productionConfirmation: "production-e2e", confirmation: "provision-slot-2" }).ok, true);
+  assert.equal(dispatchGuard({ ...slot2, productionConfirmation: "production-e2e", confirmation: "" }).ok, false, "provisioning still required");
+  assert.equal(dispatchGuard({ ...slot2, productionConfirmation: "", confirmation: "provision-slot-2" }).ok, false, "production still required");
+  // Not a dispatch: nothing to check (the job does not run on these events at all).
+  for (const eventName of ["pull_request", "push"]) assert.equal(dispatchGuard({ eventName, jobSlot: "0" }).ok, true);
+});
+
+test("dispatch guard CLI (D-261): a missing or wrong confirmation exits 1 before anything runs; the exact one passes", () => {
+  const run = (extra) => spawnSync(process.execPath, [fileURLToPath(new URL("../../.github/ci/dispatch-guard.mjs", import.meta.url))], {
+    env: { PATH: process.env.PATH, GITHUB_EVENT_NAME: "workflow_dispatch", DISPATCH_SLOT: "0", DISPATCH_CONFIRMATION: "", E2E_SLOT: "0", ...extra },
+    encoding: "utf8",
+  });
+  const missing = run({});
+  assert.equal(missing.status, 1);
+  assert.match(missing.stdout, /::error::manual dispatch rejected: .*confirm_production/);
+  assert.equal(run({ DISPATCH_PRODUCTION_CONFIRMATION: "yes" }).status, 1);
+  const good = run({ DISPATCH_PRODUCTION_CONFIRMATION: "production-e2e" });
+  assert.equal(good.status, 0, good.stdout);
+  assert.match(good.stdout, /manual dispatch accepted: slot 0/);
 });
 
 test("isActiveSlot respects the switch", () => {
@@ -394,11 +433,26 @@ test("goldens workflow: always slot 0 under the legacy lock", () => {
   assert.ok(src.includes('E2E_SLOT:                  "0"'));
 });
 
-// ── 5. main is not protected → the push run stays ─────────────────────────────────────────────
-test("main still runs the full suite on push (no branch protection on main)", () => {
+// ── 5. main is protected → no production-facing suite on push (D-261) ─────────────────────────
+test("D-261: a push to main no longer runs the production-facing suite; classify and unit still run on push", () => {
+  // The workflow still triggers on push (classify + the unit shards report there), …
   assert.ok(PLAYWRIGHT.startsWith("name: Playwright Tests\non:\n  push:\n    branches: [ main, master ]\n"));
-  assert.ok(PLAYWRIGHT.includes("MAIN STILL RUNS THE FULL SUITE ON PUSH."));
   assert.ok(PLAYWRIGHT.includes("let reason = 'full — non-PR/main push always runs the full suite';"));
+  // … but the `test` job runs only on a manual dispatch.
+  assert.ok(PLAYWRIGHT.includes("MAIN NO LONGER RUNS THE PRODUCTION-FACING SUITE ON PUSH (D-261"));
+  const job = PLAYWRIGHT.slice(PLAYWRIGHT.indexOf("\n  test:\n"));
+  assert.ok(job.startsWith("\n  test:\n    needs: classify\n    if: always() && github.event_name == 'workflow_dispatch'\n"));
+  // Main-push coverage now comes from the isolated suite and the read-only smoke, both on push to main.
+  const iso = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8");
+  const smoke = readFileSync(new URL("../../.github/workflows/production-smoke.yml", import.meta.url), "utf8");
+  assert.ok(iso.includes('    branches: [ main, "d110/**" ]'));
+  assert.ok(smoke.includes("on:\n  push:\n    branches: [ main ]\n"));
+});
+
+test("workflow (D-261): confirm_production is an optional string input passed to the guard, never to classify or a later step", () => {
+  assert.ok(PLAYWRIGHT.includes('      confirm_production:\n        description: "This suite runs against PRODUCTION and changes its test accounts. Type production-e2e to run it."\n        type: string\n        required: false\n        default: ""\n'));
+  const uses = PLAYWRIGHT.split("\n").filter((l) => l.includes("confirm_production") && !l.trim().startsWith("#"));
+  assert.deepEqual(uses.map((l) => l.trim()), ["confirm_production:", "DISPATCH_PRODUCTION_CONFIRMATION: ${{ inputs.confirm_production }}"]);
 });
 
 test("the Playwright run keeps one worker: parallelism is between slots, never inside a suite", () => {
