@@ -819,6 +819,24 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
     har godkendt læreroversigten visuelt. Rollback: `docs/operations/teacher-stats-rollback.md`. Åbne
     særskilte punkter: manglende historik for tidlige konti, gentagelser der overskriver første svar, og
     lærerbedømte tekstsvar, der ikke indgår (D-263 §8).
+  - **Besvarelseshistorik (retning godkendt 2026-10-30, [D-266](decisions/D-266.md), ikke bygget):** en gentagelse genåbner elevens
+    række i `question_instances` og sletter det første svar (36 tabte svar hos 1 elev 2026-10-30).
+    Ejeren har valgt en separat `question_attempts`-tabel, der kun tilføjes til, og egne
+    bedømmelseshændelser for lærere. Ingen genskabelse og ingen backfill. Implementeringen og de åbne
+    beslutninger H1–H5 er ikke godkendt. Design og trinplan:
+    [`question-attempts-design.md`](question-attempts-design.md). Loggen er ikke komplet, før lange svar
+    og lærerbedømmelser også er dækket.
+  - **Mulig dobbelt XP ved lærerbedømmelse (fundet i koden, ikke afprøvet, ikke startet):** RPC'en
+    `review_answer` (4 argumenter) lægger XP til efter karakteren, og Edge-funktionen `review-answer`
+    lægger samme beløb til igen. Udgaven med 4 argumenter har ingen sikring mod en ny bedømmelse, som
+    derfor udbetaler igen. Ingen bedømmelser i produktion siden 2026-04-22. Særskilt opgave; skal være
+    afklaret, før bedømmelser flyttes til hændelseshistorikken.
+  - **Backup og gendannelse (driftsspørgsmål, ikke startet):** projektet er på Supabase' Free-plan, og
+    på den plan har vi ingen almindelig adgang til backups (hverken visning, download eller
+    gendannelse). Ifølge Supabase' Knowledge Base kan Free-projekter i øjeblikket have op til syv daglige
+    backups, der først bliver tilgængelige efter en opgradering; det er ikke efterprøvet for dette
+    projekt, og PITR kræver en betalt plan. Backupmulighederne kræver en særskilt ejerbeslutning.
+    Gendannelse af historiske elevsvar er ikke ønsket nu.
 - **2-0B — RPC EXECUTE-hygiejne (ikke startet):** `get_my_students`, `set_spotlight`,
   `remove_spotlight`, `set_student_domains`, `get_classroom_leaderboard` og `get_weekly_activity`
   har stadig EXECUTE for `anon`. De afviser kald uden `auth.uid()`, så det er P3 — men `anon` bør
