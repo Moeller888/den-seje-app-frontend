@@ -385,6 +385,18 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **D-255 closed and r1-c1 proposed — D-257 (no call; one call proposed, not authorised).**
+  - **Closed.** R1-1 is spent (technically rejected). R1-2 and R1-3 are CLOSED_UNUSED, with no claims; the adapter refuses all
+    three.
+  - **r1-c1.** The cut owns geometry AND construction; GPT owns the design:
+    - the material is painted with a 16 px bleed and no outline;
+    - the cut's reusable construction layer supplies the band masks (neck rib, cuffs) and every line (contour, band edges, hem
+      stitch) in Northstar ink;
+    - GPT paints the bands' fabric where the canvas marks them;
+    - holes are never hidden, not even under a line.
+  - **Checks (no colour classes).** Coverage before crop, the trim edge by shape (P90 ≤ 2 px), a second outline, and clipped
+    details. R1-1 itself, which was not asked for bands, has its rib 5.5–7.5 px wider than the cut's band.
+  - **Plan.** `r1c-plan-v1.json`: one call, R1C-1, about $0.07. NOT authorised. See `docs/decisions/D-257.md`.
 - **R1-1 offline: one uniform scale + translation — D-256 (hypothesis s1; no call; D-255's result unchanged).**
   - **D-255 status.** R1-1 was sent once and is technically rejected under r1-v1: a free-standing product shot at twice the
     cut's size. R1-2 and R1-3 are unsent; both permissions are still UNSPENT.
