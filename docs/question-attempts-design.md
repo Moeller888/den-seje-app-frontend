@@ -120,8 +120,8 @@ Bemærkninger:
   `UPDATE question_instances … WHERE id = … AND answered = false RETURNING repeat_count`. Det er
   samme rækkelås, som svaret og udbetalingen allerede beskyttes af, så værdien kan ikke være forældet.
 - **Instanser fra før indførelsen:** uden backfill har en instans, der gentages efter indførelsen, kun
-  forsøg 2 i loggen. Hullet ved forsøg 1 er sandt og bevidst: det første svar findes ikke, og det
-  opfindes ikke.
+  forsøg 2 i loggen. Hullet ved forsøg 1 er sandt og bevidst: det første svar findes ikke i
+  databasen, og det opfindes ikke.
 - **Tværgående rækkefølge** for en elev: `ORDER BY answered_at, created_at, id`.
 
 ### 2.3 Resultat, tidspunkt og belønning
@@ -160,20 +160,35 @@ Klienten understøtter dette i dag: `app.js` tillader kun én indsendelse i tils
 `SUBMITTING_ANSWER`, og hverken `app.js` eller `process-event` gentager et svar automatisk. En fejl
 sender eleven tilbage til `AWAITING_ANSWER`, og en ny indsendelse rammer så instansens sikring.
 
-**Restrisiko, som lag 1 ikke lukker:** en forsinket genudsendelse af en *gammel* indsendelse, der
-ankommer først, efter at serveren har genåbnet den samme instans i en ny runde, ville blive registreret
-som svar på den nye runde. Det forudsætter, at eleven har fået resultatet, er gået videre, og at
-gentagelsen vælger netop den instans, før den gamle forespørgsel når frem. Det er ikke observeret og
-kræver en netværksgenudsendelse, som hverken `fetch` eller `functions.invoke` foretager af sig selv.
+**Det, lag 1 ikke kan afgøre:** serveren ved i dag ikke, hvilken runde en indsendelse tilhører. En
+*gammel* indsendelse, der ankommer først, efter at serveren har genåbnet den samme instans i en ny
+runde, ville derfor blive accepteret som svar på den nye runde: et forkert forsøg, og en udbetaling,
+der ikke hører til. Det kan ske ved en forsinket genudsendelse på netværket eller fra en anden fane,
+der stadig viser spørgsmålet fra den forrige runde. Det er ikke observeret, men højst ét svar pr.
+runde er ikke nok, når runden ikke er kendt.
 
-**Lag 2 (anbefalet, kræver godkendelse, jf. H5 i §9.2):** en indsendelses-id og runde-binding.
+**Lag 2: beskyttelse mod gamle indsendelser — bindende betingelse** (ejerbeslutning 2026-10-30). Den
+skal være på plads, før forsøgsloggen anvendes i produktion (§8, trin 1b og 2). Kravene er:
+
+- Serveren afgør selv, hvilken runde en indsendelse tilhører, ud fra en rundeidentitet, som serveren
+  har udstedt med spørgsmålet. Klienten kan ikke vælge eller ændre runden.
+- En indsendelse, der tilhører en afsluttet runde, afvises uden forsøg og uden ændring af XP, coins,
+  streak, quests, niveau eller mastery.
+- Et teknisk genforsøg af samme indsendelse (dobbeltklik, netværksgenforsøg, tabt svar fra serveren)
+  giver det gemte resultat og ingen ny registrering eller udbetaling.
+- Hvert forsøg registrerer, hvilken indsendelse og hvilken runde det stammer fra, så koblingen
+  indsendelse → runde → forsøg kan efterprøves.
+
+**Mekanismen er ikke besluttet (H5).** Anbefalingen er serverstyret rundeidentitet kombineret med en
+stabil idempotensnøgle:
 - `get-next-question` returnerer rundens nummer sammen med instansen.
 - `app.js` danner ét `submission_id` (`crypto.randomUUID()`) pr. bevidst indsendelse og genbruger det
   ved genforsøg af samme indsendelse. `process-event` sender det og rundenummeret videre til RPC'en.
 - RPC'en afviser en indsendelse, hvis rundenummer ikke er den åbne runde, og returnerer det gemte
   resultat, hvis `submission_id` allerede findes. `question_attempts` får
   `submission_id uuid UNIQUE`.
-- Det ændrer klientkontrakten og to Edge-funktioner og er derfor et særskilt trin (1b i §8).
+- Det ændrer klientkontrakten og to Edge-funktioner og er derfor et særskilt trin (1b i §8), men et
+  obligatorisk trin: trin 1 anvendes ikke i produktion uden det.
 
 **Sådan verificeres idempotensen:**
 - **PGlite (én forbindelse):** to kald efter hinanden på samme runde giver ét forsøg og uændret
@@ -241,8 +256,8 @@ egen hændelsestabel, og forsøget forbliver uforanderligt.
 | Niveaumotor | Uændret | `advance_student_level` folder fortsat kun `repeat_count = 0` |
 
 **Dækning:** efter trin 1 dækker loggen automatisk rettede svar (MC, tal, kort tekst). Lange svar og
-lærerbedømmelser er **ikke** dækket. Loggen må først kaldes komplet, når trin 4 og 5 (§8) er anvendt,
-og, hvis H5 godkendes, trin 1b.
+lærerbedømmelser er **ikke** dækket. Loggen må først kaldes komplet, når trin 4 og 5 (§8) er anvendt.
+Beskyttelsen mod gamle indsendelser (trin 1b) er en betingelse for overhovedet at anvende trin 1.
 
 ---
 
@@ -336,23 +351,31 @@ kollisioner med parallelle sessioner.
 - **Rollback:** `CREATE OR REPLACE` af de to funktioner tilbage til deres målte hashes (afprøvet på
   forhånd, samme metode som `docs/operations/teacher-stats-rollback.md`). Tabellen og den nye
   unikke nøgle kan blive stående uden at gøre skade.
-- **Godkendelse:** migrations-PR og merge; derefter særskilt anvendelse i produktion.
+- **Godkendelse:** migrations-PR og merge; derefter særskilt anvendelse i produktion, og først
+  sammen med trin 1b.
 
-### Trin 1b — Indsendelses-id og runde-binding (lag 2, §2.4)
-- Kun hvis ejeren godkender H5 (§9.2).
-- **Filer:** `app.js` (`submission_id` pr. bevidst indsendelse, genbrugt ved genforsøg),
-  `supabase/functions/get-next-question` (returnerer rundenummer), `supabase/functions/process-event`
-  (sender begge videre), migration med `submission_id uuid UNIQUE` og RPC'er, der tager de to værdier.
-  Nye parametre får standardværdier, så en gammel klient fortsat virker under udrulningen.
-- **Test:** samme `submission_id` to gange giver ét forsøg og samme svar; et forældet rundenummer
-  afvises uden forsøg og udbetaling; en klient uden de nye felter virker som i trin 1; Playwright for
-  quizflowet.
+### Trin 1b — Beskyttelse mod gamle indsendelser (lag 2, §2.4) — obligatorisk
+- **Bindende betingelse:** trin 1 anvendes ikke i produktion, før trin 1b er godkendt og klar. Den
+  konkrete mekanisme kræver ejerens godkendelse (H5, §9.2).
+- **Filer (med den anbefalede mekanisme):** `app.js` (`submission_id` pr. bevidst indsendelse, genbrugt
+  ved genforsøg), `supabase/functions/get-next-question` (returnerer rundenummer),
+  `supabase/functions/process-event` (sender begge videre), migration med `submission_id uuid UNIQUE`
+  og RPC'er, der tager de to værdier.
+- **Udrulning uden hul:** frontend og Edge-funktioner, der sender rundeidentiteten, udrulles først.
+  Når forsøgsloggen anvendes (trin 2), afviser RPC'erne kald uden gyldig rundeidentitet. En fane med
+  en gammel version af siden får så en fejl og skal genindlæses i stedet for at få et svar
+  registreret i en forkert runde. Hvordan eleven præsenteres for det, afgøres sammen med H5.
+- **Test:** samme `submission_id` to gange giver ét forsøg og samme svar; et tabt svar fra serveren
+  efterfulgt af et genforsøg giver ingen ny registrering; en indsendelse med et forældet rundenummer
+  efter `request_repeat_*` afvises uden forsøg og uden ændring af XP, coins, streak, quests og
+  niveau; et kald uden rundeidentitet afvises, når beskyttelsen er aktiv; samtidige kald mod rigtig
+  PostgreSQL 17; Playwright for quizflowet.
 - **Risiko:** ændring af klientkontrakten og to Edge-deploys.
-- **Rollback:** tidligere Edge-versioner og `app.js`; de nye parametre er valgfri, så RPC'erne kan
-  blive stående.
-- **Godkendelse:** migration, anvendelse, Edge-deploy og frontend-merge hver for sig.
+- **Rollback:** tidligere Edge-versioner og `app.js` sammen med rollback af trin 1 (forsøgsloggen
+  tages ud af brug samtidig, så loggen aldrig skrives uden beskyttelsen).
+- **Godkendelse:** mekanismen (H5), migration, anvendelse, Edge-deploy og frontend-merge hver for sig.
 
-### Trin 2 — Anvendelse i produktion
+### Trin 2 — Anvendelse i produktion (trin 1 og 1b samlet)
 - Ét `apply_migration` med preflight (ledger, hashes, rettigheder) og postflight (hashes, rettigheder,
   tom tabel, uændret antal rækker i `question_instances`).
 - **Godkendelse:** særskilt, for netop den migration.
@@ -389,7 +412,7 @@ kollisioner med parallelle sessioner.
 - Lærerstatistik og niveaumotor læser første forsøg fra `question_attempts` (§6).
 - **Godkendelse:** hver migration og anvendelse for sig, med beregnede før- og eftertal.
 
-**Loggen er komplet**, når trin 1, 2, 4 og 5 er anvendt i produktion, og trin 1b, hvis H5 godkendes.
+**Loggen er komplet**, når trin 1, 1b, 2, 4 og 5 er anvendt i produktion.
 
 ---
 
@@ -403,6 +426,9 @@ kollisioner med parallelle sessioner.
 4. **Ingen historisk gendannelse og ingen backfill** nu.
 5. **Adgang via backend og RPC'er** som udgangspunkt; ingen direkte klientadgang til loggen.
 6. **Implementering i afgrænsede trin** med særskilt godkendelse før hver produktionsændring.
+7. **Beskyttelse mod gamle indsendelser er en bindende implementeringsbetingelse:** en indsendelse fra
+   en tidligere runde må aldrig accepteres i en ny runde, og et teknisk genforsøg må aldrig give en ny
+   registrering eller udbetaling (§2.4). Mekanismen er ikke besluttet (H5).
 
 Desuden besluttet: backup og gendannelse er et særskilt driftsspørgsmål, og den mulige dobbelte XP
 ved lærerbedømmelse er et selvstændigt problem, der ikke rettes i denne opgave.
@@ -415,7 +441,8 @@ ved lærerbedømmelse er et selvstændigt problem, der ikke rettes i denne opgav
 | H2 | Arkivering og slettebegrænsning for spørgsmål | Spørgsmål, som elever har svaret på, arkiveres med `is_active = false` og slettes ikke; `question_instances_question_id_fkey` ændres til `ON DELETE RESTRICT` | Trin 6 |
 | H3 | Senere ændringer af lærerstatistik og niveaumotor, så de læser fra loggen | Hver for sig, efter observation (trin 3) og med beregnede før- og eftertal (§6) | Trin 7 |
 | H4 | Hvad er en ny indsendelse af et langt svar, før læreren har bedømt det? | Hver indsendelse er sit eget forsøg i samme runde, med et løbenummer | Trin 4 |
-| H5 | Lag 2: indsendelses-id og runde-binding (§2.4) | Ja, før loggen kaldes komplet; det lukker restrisikoen for forsinkede genudsendelser | Trin 1b |
+| H5 | Den konkrete mekanisme for den obligatoriske beskyttelse mod gamle indsendelser (§2.4), herunder hvordan en gammel fane håndteres | Serverstyret rundeidentitet kombineret med en stabil idempotensnøgle (`submission_id`), som beskrevet i §2.4 | Trin 1b |
 
-Anbefalet rækkefølge, ikke besluttet: trin 1–3 først; trin 1b og 6 kan tages uafhængigt; trin 5 efter
+Anbefalet rækkefølge, ikke besluttet: trin 1 og 1b forberedes og anvendes samlet (trin 2), derefter
+trin 3; trin 6 kan tages uafhængigt; trin 5 efter
 det særskilte XP-problem.
