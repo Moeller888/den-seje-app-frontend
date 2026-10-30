@@ -35,9 +35,14 @@ const KEY_READ = "process.env." + "OPENAI_API" + "_KEY";
 const CHILD_ENV = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/API_?KEY/i.test(k)));
 const isInside = (c, p) => { const r = relative(p, c); return r === "" || (!r.startsWith("..") && !isAbsolute(r)); };
 
-test("D-255 authorisation: three unspent one-shot calls of the frozen plan, no reserve, no retry, no fallback, no earlier permission; the token in D-255's status", () => {
+test("D-255 authorisation: three one-shot calls of the frozen plan (R1-1 spent, R1-2 and R1-3 closed unused by D-257), no reserve, no retry, no fallback, no earlier permission; the token in D-255's status", () => {
   assert.deepEqual([AUTH.decision, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions], ["D-255", false, 3, 0, 0, false, false]);
-  assert.deepEqual(AUTH.calls.map((e) => [e.callId, e.order, e.category, e.cut, e.mandateState, e.outcome]), PLAN.calls.map((c, k) => [c.callId, k + 1, c.category, c.cut, "UNSPENT", "NOT YET ATTEMPTED"]));
+  assert.deepEqual(AUTH.calls.map((e) => [e.callId, e.order, e.category, e.cut]), PLAN.calls.map((c, k) => [c.callId, k + 1, c.category, c.cut]));
+  // the recorded execution and closure (D-257): R1-1 spent once and received; R1-2 and R1-3 closed unused, never reopened
+  assert.deepEqual(AUTH.calls.map((e) => e.mandateState), ["SPENT", "CLOSED_UNUSED", "CLOSED_UNUSED"]);
+  assert.deepEqual([AUTH.calls[0].outcome, AUTH.calls[0].result.httpStatus, AUTH.calls[0].recordedBy], ["RECEIVED_FOR_BF_CHECK", 200, "D-257"]); assert.match(AUTH.calls[0].result.imageSha256, /^[0-9a-f]{64}$/);
+  for (const e of AUTH.calls.slice(1)) { assert.equal(e.closedBy, "D-257"); assert.equal(e.neverReopened, true); assert.match(e.outcome, /^NOT SENT/); assert.ok(!("result" in e)); }
+  assert.deepEqual([AUTH.budget.actuallySent, AUTH.budget.closed.by, AUTH.budget.closed.spent, AUTH.budget.closed.closedUnused, AUTH.budget.closed.countedAsSent], [1, "D-257", 1, 2, false]);
   for (const e of AUTH.calls) { assert.equal(e.canvas, PLAN.frozen.templates.cuts[e.category].canvasSha256); assert.equal(e.prompt.sha256, PROMPTS.items[e.callId].sha256);
     assert.deepEqual(e.claim, { identity: e.callId + "-claim", filename: e.callId + ".claim.json", eventsFilename: e.callId + ".events.jsonl" }); }
   assert.deepEqual([AUTH.frozen.plan.sha256, AUTH.frozen.prompts.sha256], [sha256(readFileSync(repoFile(PLAN_REL))), sha256(readFileSync(repoFile(PROMPTS_REL)))]);
@@ -115,6 +120,9 @@ function sandbox({ base, canvas, image } = {}) {
   const cd = join(sb.home, "Documents", "DenSejeApp-artefacts", "d-202-northstar-base-figure"); mkdirSync(cd, { recursive: true }); writeFileSync(join(cd, "d202-base-figure-v2.image-1.png"), C_BUF);
   for (const cut of Object.keys(AUTH.request.canvases)) { const d = join(sb.out, "references", cut); mkdirSync(d, { recursive: true }); writeFileSync(join(d, AUTH.request.canvases[cut].name), canvas && canvas[cut] ? canvas[cut] : readFileSync(canvasFile(cut))); }
   for (const rel of TRACKED) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  // the sandbox starts from the authorisation as merged by D-255: the recorded execution and closure (D-257) are undone in the copy only
+  { const cp = join(sb.repo, ...AUTH_REL.split("/")), c = JSON.parse(readFileSync(cp, "utf8")); delete c.budget.actuallySent; delete c.budget.closed;
+    for (const e of c.calls) { e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; delete e.result; delete e.recordedBy; delete e.closedBy; delete e.neverReopened; } writeFileSync(cp, JSON.stringify(c, null, 2) + "\n"); }
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb; }
@@ -154,4 +162,9 @@ test("a changed canvas, a changed prompt or a missing token is refused before an
   const wrong = sandbox({ canvas: { "tee-hip": png(1024, 1536) } }); refused(wrong, run(wrong, [...argsOf(ids[0]), ...SEND], KEY), "reference-canvas");
   const prompt = sandbox({ base: (s) => { const p = join(s.repo, ...PROMPTS_REL.split("/")); writeFileSync(p, readFileSync(p, "utf8").replace("apricot-peach", "apricot peach")); } }); refused(prompt, run(prompt, [...argsOf(ids[0]), ...SEND], KEY), "pins");
   const noToken = sandbox({ base: (s) => writeFileSync(decisionPath(s), readFileSync(decisionPath(s), "utf8").replace("D-255 R1: 3 CALLS AUTHORISED", "D-255 R1: PREPARED")) }); refused(noToken, run(noToken, [...argsOf(ids[0]), ...SEND], KEY), "decision");
+});
+
+test("after D-257 the closed calls are refused before any claim: the authorisation as recorded admits no further send", { skip: SKIP }, () => {
+  const sb = sandbox({ base: (s) => copyFileSync(repoFile(AUTH_REL), join(s.repo, ...AUTH_REL.split("/"))) });
+  for (const id of ids) refused(sb, run(sb, [...argsOf(id), ...SEND], KEY), "authorisation");
 });

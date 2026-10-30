@@ -1,7 +1,7 @@
 {
   "decision": "D-255",
   "experiment": "R1 (D-253): the garment generated apart from the body",
-  "status": "AUTHORISED by D-255 (D-255 R1: 3 CALLS AUTHORISED): each entry is ONE single-use call; no earlier permission is reused; the plan r1-plan-v1.json stays the unauthorised plan it was",
+  "status": "AUTHORISED by D-255 (D-255 R1: 3 CALLS AUTHORISED): each entry is ONE single-use call; no earlier permission is reused; the plan r1-plan-v1.json stays the unauthorised plan it was; CLOSED by D-257: 1 spent (R1-1), 2 closed unused (R1-2, R1-3)",
   "meta": {
     "authorisesImageRequest": false,
     "why": "authorisation is the exact token in D-255's decision status plus this file's unspent entries, never a general boolean",
@@ -22,6 +22,17 @@
       "perCallEstimate": 0.0687,
       "totalEstimate": 0.2062,
       "note": "an estimate, not a guaranteed maximum: the token counts are measured on another request shape; the billed amount is read on the OpenAI usage page"
+    },
+    "actuallySent": 1,
+    "closed": {
+      "by": "D-257",
+      "reason": "owner instruction after D-256: R1-1 technically rejected (a product shot about twice the cut's size); R1-2 and R1-3 in their frozen form would meet the same edge faults",
+      "spent": 1,
+      "received": 1,
+      "uncertain": 0,
+      "closedUnused": 2,
+      "countedAsSent": false,
+      "reopen": "never automatically; only a new owner decision"
     }
   },
   "privacy": {
@@ -31,8 +42,14 @@
     "h1": "never used"
   },
   "frozen": {
-    "plan": { "file": "tools/avatar/fixtures/northstar-wardrobe/r1/r1-plan-v1.json", "sha256": "250b6001220bd6d6c602fc68d330a5fe7e0fb51377ce1042cb1a4fe745140d63" },
-    "prompts": { "file": "tools/avatar/fixtures/northstar-wardrobe/r1/r1-prompts-v1.json", "sha256": "4c253de4de2af56f2e610cc594c53d33067e04b0797525172129f7b93247a25b" },
+    "plan": {
+      "file": "tools/avatar/fixtures/northstar-wardrobe/r1/r1-plan-v1.json",
+      "sha256": "250b6001220bd6d6c602fc68d330a5fe7e0fb51377ce1042cb1a4fe745140d63"
+    },
+    "prompts": {
+      "file": "tools/avatar/fixtures/northstar-wardrobe/r1/r1-prompts-v1.json",
+      "sha256": "4c253de4de2af56f2e610cc594c53d33067e04b0797525172129f7b93247a25b"
+    },
     "method": "r1-v1",
     "production": "d240",
     "outfitRevision": "d239",
@@ -42,17 +59,64 @@
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
     "model": "gpt-image-2.5-sunburst-2026-09-08",
-    "parameters": { "size": "1024x1536", "quality": "high", "n": 1, "output_format": "png", "background": "transparent" },
-    "fieldOrder": ["model", "image[]", "image[]", "prompt", "size", "quality", "n", "output_format", "background"],
-    "neverSentFields": ["mask", "input_fidelity", "output_compression", "response_format", "moderation"],
+    "parameters": {
+      "size": "1024x1536",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
     "images": [
-      { "role": "Image 1", "what": "the call's cut canvas (request.canvases)" },
-      { "role": "Image 2", "what": "C", "name": "d202-base-figure-v2.image-1.png", "bytes": 1300423, "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818", "tracked": false }
+      {
+        "role": "Image 1",
+        "what": "the call's cut canvas (request.canvases)"
+      },
+      {
+        "role": "Image 2",
+        "what": "C",
+        "name": "d202-base-figure-v2.image-1.png",
+        "bytes": 1300423,
+        "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tracked": false
+      }
     ],
     "canvases": {
-      "tee-hip": { "name": "image-1.tee-hip.png", "bytes": 73293, "sha256": "906e7bc18a2f5e41cbb1fb8a56e2272386b1df0a86284f42a83a02d62f92f4aa", "tracked": false },
-      "trousers-square": { "name": "image-1.trousers-square.png", "bytes": 113809, "sha256": "fb65bf04b4e8619adaa0dd138d7e189db3aa7924abf846ca2a78178ea595a15c", "tracked": false },
-      "ankleboot": { "name": "image-1.ankleboot.png", "bytes": 49601, "sha256": "9ba302a15669cc3d3b01a7b98c6d08f45c4006ebb96779218865804be62dcd89", "tracked": false }
+      "tee-hip": {
+        "name": "image-1.tee-hip.png",
+        "bytes": 73293,
+        "sha256": "906e7bc18a2f5e41cbb1fb8a56e2272386b1df0a86284f42a83a02d62f92f4aa",
+        "tracked": false
+      },
+      "trousers-square": {
+        "name": "image-1.trousers-square.png",
+        "bytes": 113809,
+        "sha256": "fb65bf04b4e8619adaa0dd138d7e189db3aa7924abf846ca2a78178ea595a15c",
+        "tracked": false
+      },
+      "ankleboot": {
+        "name": "image-1.ankleboot.png",
+        "bytes": 49601,
+        "sha256": "9ba302a15669cc3d3b01a7b98c6d08f45c4006ebb96779218865804be62dcd89",
+        "tracked": false
+      }
     },
     "canvasLocation": "<Documents>/DenSejeApp-artefacts/r1-calls/references/<cut>/image-1.<cut>.png",
     "canvasGenerator": "node tools/avatar/northstar-r1-proof.mjs --out <dir outside the repo> (deterministic; identical bytes in four runs)"
@@ -84,18 +148,81 @@
     "the executor's stop file R1-STOP.json"
   ],
   "calls": [
-    { "callId": "R1-1-top-tee-hip-apricot-jersey", "order": 1, "category": "top", "cut": "tee-hip", "canvas": "906e7bc18a2f5e41cbb1fb8a56e2272386b1df0a86284f42a83a02d62f92f4aa",
-      "prompt": { "sha256": "ad81aa616d5e01774e4e6be9d7fe73531ba6cc3f901fe197290b2db6ef45df1e" },
-      "claim": { "identity": "R1-1-top-tee-hip-apricot-jersey-claim", "filename": "R1-1-top-tee-hip-apricot-jersey.claim.json", "eventsFilename": "R1-1-top-tee-hip-apricot-jersey.events.jsonl" },
-      "mandateState": "UNSPENT", "outcome": "NOT YET ATTEMPTED" },
-    { "callId": "R1-2-bottom-trousers-houndstooth", "order": 2, "category": "bottom", "cut": "trousers-square", "canvas": "fb65bf04b4e8619adaa0dd138d7e189db3aa7924abf846ca2a78178ea595a15c",
-      "prompt": { "sha256": "420b9843e7339abdfac430c911a9b9f3c0fe2dcb62da4c40f24cd2bae5dae4d3" },
-      "claim": { "identity": "R1-2-bottom-trousers-houndstooth-claim", "filename": "R1-2-bottom-trousers-houndstooth.claim.json", "eventsFilename": "R1-2-bottom-trousers-houndstooth.events.jsonl" },
-      "mandateState": "UNSPENT", "outcome": "NOT YET ATTEMPTED" },
-    { "callId": "R1-3-shoes-ankleboot-nude-leather", "order": 3, "category": "shoes", "cut": "ankleboot", "canvas": "9ba302a15669cc3d3b01a7b98c6d08f45c4006ebb96779218865804be62dcd89",
-      "prompt": { "sha256": "073ff0d8d57b397ccbe60702df957c6a956f43b67c5ed140a2f16c4213464da9" },
-      "claim": { "identity": "R1-3-shoes-ankleboot-nude-leather-claim", "filename": "R1-3-shoes-ankleboot-nude-leather.claim.json", "eventsFilename": "R1-3-shoes-ankleboot-nude-leather.events.jsonl" },
-      "mandateState": "UNSPENT", "outcome": "NOT YET ATTEMPTED" }
+    {
+      "callId": "R1-1-top-tee-hip-apricot-jersey",
+      "order": 1,
+      "category": "top",
+      "cut": "tee-hip",
+      "canvas": "906e7bc18a2f5e41cbb1fb8a56e2272386b1df0a86284f42a83a02d62f92f4aa",
+      "prompt": {
+        "sha256": "ad81aa616d5e01774e4e6be9d7fe73531ba6cc3f901fe197290b2db6ef45df1e"
+      },
+      "claim": {
+        "identity": "R1-1-top-tee-hip-apricot-jersey-claim",
+        "filename": "R1-1-top-tee-hip-apricot-jersey.claim.json",
+        "eventsFilename": "R1-1-top-tee-hip-apricot-jersey.events.jsonl"
+      },
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_bf157a0bcaab459b8962a0e471af3486",
+        "imageSha256": "7eb48b55b2edaa6a80b07eb07594b537eb61c093cabcfb0e59493ede3343eace",
+        "usage": {
+          "input_tokens": 3322,
+          "input_tokens_details": {
+            "image_tokens": 3072,
+            "text_tokens": 250
+          },
+          "output_tokens": 1372,
+          "output_tokens_details": {
+            "image_tokens": 1372,
+            "text_tokens": 0
+          },
+          "total_tokens": 4694
+        },
+        "evaluation": "technically rejected under r1-v1: placement (paint outside the cut 2.9663 of the core; coverage 1); no stop"
+      },
+      "recordedBy": "D-257"
+    },
+    {
+      "callId": "R1-2-bottom-trousers-houndstooth",
+      "order": 2,
+      "category": "bottom",
+      "cut": "trousers-square",
+      "canvas": "fb65bf04b4e8619adaa0dd138d7e189db3aa7924abf846ca2a78178ea595a15c",
+      "prompt": {
+        "sha256": "420b9843e7339abdfac430c911a9b9f3c0fe2dcb62da4c40f24cd2bae5dae4d3"
+      },
+      "claim": {
+        "identity": "R1-2-bottom-trousers-houndstooth-claim",
+        "filename": "R1-2-bottom-trousers-houndstooth.claim.json",
+        "eventsFilename": "R1-2-bottom-trousers-houndstooth.events.jsonl"
+      },
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused (D-257); its send was refused by the local tool-permission system before it ran, no claim was created",
+      "closedBy": "D-257",
+      "neverReopened": true
+    },
+    {
+      "callId": "R1-3-shoes-ankleboot-nude-leather",
+      "order": 3,
+      "category": "shoes",
+      "cut": "ankleboot",
+      "canvas": "9ba302a15669cc3d3b01a7b98c6d08f45c4006ebb96779218865804be62dcd89",
+      "prompt": {
+        "sha256": "073ff0d8d57b397ccbe60702df957c6a956f43b67c5ed140a2f16c4213464da9"
+      },
+      "claim": {
+        "identity": "R1-3-shoes-ankleboot-nude-leather-claim",
+        "filename": "R1-3-shoes-ankleboot-nude-leather.claim.json",
+        "eventsFilename": "R1-3-shoes-ankleboot-nude-leather.events.jsonl"
+      },
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused (D-257); never attempted, no claim was created",
+      "closedBy": "D-257",
+      "neverReopened": true
+    }
   ],
   "adapterImplementations": {
     "isAuthorisation": false,
