@@ -581,9 +581,22 @@ _Last reviewed: 2026-07-01._
   - Edge Runtime kom op i første forsøg i alle 18 jobs i de to afsluttende 9-målinger. Startforsøg registreres først
     fra `3602dd7`. Et tidligere 9-forsøg havde 2 SIGBUS-nedbrud ved opstart; det står i D-241.
 
-  **Status: bevist i CI, ikke taget i brug.** Den gamle fulde suite under `e2e-shared-supabase` er uændret, og
-  overgangen kræver ejerens særskilte GO; planen står i D-241. password-help-driften mellem repository og produktion er
-  en separat opgave: D-243.
+  **Status (2026-10-28): bevist i CI, ikke taget i brug.** Overgangsplanen stod i D-241. password-help-driften mellem
+  repository og produktion er en separat opgave: D-243.
+
+  **D-110 AFSLUTTET (2026-10-30, D-265).** Overgangen er gennemført i faserne A–C, D1, D2 og D3 og verificeret på
+  faktiske main-kørsler:
+  - **Pull requests:** den påkrævede `isolated-e2e (run 1)` kører mod en lokal Supabase-stack.
+  - **Ruleset 26126869:** kræver `unit` og `isolated-e2e (run 1)` og har ingen bypass (D-249).
+  - **Push til `main`:** den samme isolerede suite (D1) og den skrivebeskyttede **Production Smoke** (D2).
+  - **Den produktionsrettede suite** (`playwright.yml`, job `test`) kører ikke længere automatisk (D3, D-261, PR #476,
+    merget som `81350e6`). Den kan kun startes manuelt med `confirm_production` = `production-e2e` og kun med ejerens
+    GO.
+
+  Ingen automatisk kørsel tager længere låsen `e2e-shared-supabase`; kun det manuelle `update-avatar-goldens.yml`
+  bruger den. Uden automatisk dækning er live Edge Functions, produktionens DB/RLS, Auth, udbydere, Worker-runtime og
+  indhold. Hvornår en manuel produktions-E2E bør køres, står i D-261. Den næste anledning er `get-next-question`-deployet
+  og `LEVEL_ENGINE=v1`. Beviser og resterende risici står i D-265.
 
 ## Completed sections
 
