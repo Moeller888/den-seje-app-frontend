@@ -1,0 +1,152 @@
+{
+  "decision": "D-267",
+  "plan": "tm-material-v1",
+  "status": "PLAN — the calls are authorised only by D-267's status token and the authorisation file's unspent entries; this file never authorises by itself",
+  "authorisesImageRequest": false,
+  "questions": [
+    "Does a generated, seamless patterned swatch, laid on the locked D-264 master by the fixed rule, give a pattern that repeats cleanly, turns at the right seams and lives with the drawn folds at Northstar quality — and does it add anything visible over the exact local twin?",
+    "Does a generated standalone chest print, placed at the existing anchor by the fixed rule, read as a Northstar print on the fabric — clean edges, no halo or shadow of its own, shaded with the fabric — at full size and at app size?"
+  ],
+  "deliveries": "two separate images, one per call; never one sheet with fabric and print (no segmentation after receipt)",
+  "valueOfTheModel": "Local code draws straight geometric patterns (stripes, gingham, tartan) exactly, seamlessly and for free; the model's possible value there is only a painted character, which the resampling to body scale (about 8x) largely removes — TMG-1 measures that against the exact local twin. Its clear value is in illustrated designs local code cannot draw (prints, figurative all-over motifs); TMG-2 measures that.",
+  "lock": {
+    "master": {
+      "revision": "tee-master-v1",
+      "specSha256": "498ad293d1e1b1d4ba0faa272251260586a03b96c0d0381b7e02417f0cdc3006",
+      "cut": "tee-hip",
+      "from": "top-tee-hip-cream",
+      "anchor": "chest-left",
+      "anchorSpec": {
+        "x": 0.2,
+        "y": 0.3,
+        "width": 0.24
+      }
+    },
+    "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026",
+    "fingerprintCovers": "seams, panel map, shading ratio, displacement, sleeve axes, base, panel sizes, revision and spec, the cut's alpha and D-257's trim bands — rebuilt on C at evaluation",
+    "modules": {
+      "tools/avatar/northstar-tee-master.mjs": "6a4b650cb8d8cbd162bc5a8563a59b4b27ac5fa2dfcd0459a359bb405f881038",
+      "tools/avatar/northstar-tee-material.mjs": "1c92255a9db6cfa8842c5d7c837096f3e8bb57ae09001da8b2ba50235595d7c5",
+      "tools/avatar/northstar-tee-master-study.mjs": "19bf411d6082891771ba233ab1acff2fa70e583226901cae87d244760ed941a7",
+      "tools/avatar/northstar-r1c-evaluate.mjs": "6bd18fffdf989243529266626518994548e4acd341b961d5cffc196f2f914a80",
+      "tools/avatar/northstar-r1-construction.mjs": "19ac018a6a3dc8cd8937e96a48fa11be78deb50bb4bbd6a12da24f38a5fe22f4",
+      "tools/avatar/northstar-r1-material.mjs": "3ea49ce7088f0b62c0c49043a7104f8baa353e76236da6824cffd98138e7e262",
+      "tools/avatar/northstar-r1-similarity.mjs": "306cfa4ce7ea1768c82ada2baf2e50cc40931e201e802ec6a9ac994d6a0c5365"
+    },
+    "noChangeAfterReceipt": "the master, its mapping, the construction layer, the anchor, the post-processing, the checks and their thresholds are not changed after receipt; the evaluation refuses a module or fingerprint that differs; a later change is a new method version, never a fix for one design"
+  },
+  "rules": {
+    "size": 1024,
+    "swatch": {
+      "repeats": 4,
+      "tileOfBodyWidth": 0.5,
+      "samples": 8
+    },
+    "print": {
+      "alphaBox": 8,
+      "samples": 8
+    },
+    "statement": "swatch: the tile holds exactly repeats x repeats of its motif and is resampled whole (wrapped area mean) to tileOfBodyWidth x the cut's body width (C: 259 px -> a 130 px tile, one repeat about 32 px); print: the square around the alpha box (alpha >= 8) is resampled (premultiplied area mean) to the anchor width, 0.24 x body width (C: 62 px), at the anchor's fixed place; the same rule for every design"
+  },
+  "postProcessing": {
+    "swatch": "prepareSwatch (northstar-tee-material.mjs)",
+    "print": "preparePrint (northstar-tee-material.mjs)",
+    "forbidden": "retouch, per-design coordinates, per-design scale, masks, colour correction, re-centring by hand"
+  },
+  "accept": {
+    "automatic": {
+      "swatch": {
+        "periodRatioMax": 0.35,
+        "halfPeriodRatioMin": 0.6,
+        "blockSpreadMax": 6,
+        "seamFactor": 1.5,
+        "seamSlack": 2
+      },
+      "print": {
+        "borderPx": 16,
+        "borderAlphaMax": 8,
+        "transparentShareMin": 0.15,
+        "extentMin": 0.5,
+        "semiShareMax": 0.08,
+        "fringeLumMax": 40,
+        "haloShareMax": 0.005,
+        "specksMax": 3,
+        "componentsMax": 6,
+        "paletteCoverMin": 0.75
+      }
+    },
+    "visual": [
+      "repetition: no visible tile edge, no repeating blemish or texture block at body or app size",
+      "panel transitions: the check turns at the drawn armhole seam, both sleeves; no step down the chest side",
+      "folds: the drawn fold strokes and shading cross the check once, not doubled; the check bends with them as far as the master allows (D-264: near-planar over broad areas)",
+      "contours: neck rib, armholes, cuffs and hem keep one clean line; no outline of the swatch's own",
+      "print: sits at the anchor on the chest, follows the fabric's shading, no white rim, no shadow or glow of its own, reads as printed on the fabric",
+      "style: the material and the print belong to Northstar's painted cartoon look (line weight, flat cel colours) at full size, 110x165 and 52x78",
+      "material vs mapping: a fault seen on the local twin as well is the master's (mapping); a fault only on the generated swatch is the material's",
+      "the value of the call: compared with the local twin and D-264's synthetic print, does the generated material add anything visible"
+    ],
+    "visualIsNeverAutomatic": true,
+    "classes": {
+      "technicallyRejected": "swatch: not opaque, wrong repeat count, holes or fitCheck failed; print: border, background or size failed; or a format reject at receipt",
+      "requiresVisualReview": "every other result; it is never an automatic pass",
+      "usable": "only after the owner's visual review"
+    },
+    "attribution": "material checks run on the delivered image before any mapping: a failure there is the material's; a fault that also shows on the local twin through the same master is the mapping's"
+  },
+  "knownLimits": [
+    "D-264: visible unevenness in straight stripes (the 3 px fold displacement and the shading ratio waver the band edges); a mapping limit, expected on the twin too",
+    "D-264: near-planar mapping over broad areas, clipped highlights, weaker fold strokes on dark fabric, luminance-only shading",
+    "the resampling to the body's scale (about 8x for the swatch, about 14x for the print) removes texture finer than a few source pixels"
+  ],
+  "evaluation": "node tools/avatar/northstar-tee-material.mjs --from-calls --out <dir outside the repo>: the lock, the material checks, the master renders (full size x2 and x3, 110x165 and 52x78), the local twin and D-264's synthetic print beside the results, the K-partner outfits for the swatch, the record (never rewritten)",
+  "calls": [
+    {
+      "callId": "TMG-1-tee-hip-swatch-gingham",
+      "order": 1,
+      "delivery": "swatch",
+      "purpose": "a clean seamless patterned fabric swatch: tests repetition, the pattern change at the panel seams and the pattern against the drawn folds on the locked master",
+      "motif": {
+        "what": "a two-colour gingham (forest green, warm off-white), exactly 4 x 4 repeats",
+        "why": "straight bands in both axes show every mapping event at once: a tile seam or repeating blemish breaks the grid, the turn at the armhole seam is visible on both sleeves, and the bands show how far the fold strokes cross and bend the check; green on off-white keeps the drawn strokes legible and is far from skin and from the K partners; a gingham can also be drawn exactly as a local twin, so material faults and mapping faults can be told apart"
+      },
+      "endpoint": "https://api.openai.com/v1/images/generations",
+      "parameters": {
+        "size": "1024x1024",
+        "quality": "high",
+        "n": 1,
+        "output_format": "png",
+        "background": "opaque"
+      },
+      "references": [],
+      "prompt": {
+        "text": "Create one square fabric swatch for a children's cartoon game avatar: a seamless, tileable gingham check in deep forest green and warm off-white. The design is exactly 4 full repeats across and exactly 4 full repeats down, so each repeat is one quarter of the image wide and one quarter high. Each repeat is a green band and an off-white gap of equal width, both horizontally and vertically; where two green bands cross the colour is darkest, where one green band crosses the off-white it is a lighter mid green. The bands are straight, evenly spaced and exactly parallel to the image edges. The swatch tiles perfectly: the left edge continues into the right edge and the top edge into the bottom edge with no seam. Style: a clean hand-painted cel-shaded cartoon illustration, flat colours with a very subtle painted woven texture inside each colour. Seen perfectly flat and straight on under even light; the fabric fills the whole image edge to edge. No shading, folds, wrinkles, creases, vignette, lighting gradient, highlights or perspective. No garment, no body, no seams, stitching, hems, buttons, labels, logos, text, borders or frames. No other objects.",
+        "bytes": 1160,
+        "sha256": "3c3d275370f66fa3223617355f5f267c3dc2d4c17cd3c96b0aa7c744a453e0e5"
+      }
+    },
+    {
+      "callId": "TMG-2-tee-hip-chest-print-planet",
+      "order": 2,
+      "delivery": "print",
+      "purpose": "a standalone chest print on a transparent background: tests a new design detail at the existing anchor (chest-left) on the locked master",
+      "motif": {
+        "what": "a cartoon planet with a tilted ring and two four-point sparkles; navy outline, flat orange, teal and pale yellow",
+        "why": "an illustration no simple local code draws (where the model has a real advantage), with an outline that can be judged against Northstar's line weight, a round body that shows any distortion, a thin ring that exposes halo and transparency faults, and separate sparkles that test small parts at 62 px; flat colours suit a print the master shades"
+      },
+      "endpoint": "https://api.openai.com/v1/images/generations",
+      "parameters": {
+        "size": "1024x1024",
+        "quality": "high",
+        "n": 1,
+        "output_format": "png",
+        "background": "transparent"
+      },
+      "references": [],
+      "prompt": {
+        "text": "Create one standalone chest print graphic for the T-shirt of a children's cartoon game avatar, on a fully transparent background: a cheerful cartoon planet with one tilted ring around it and two small four-point sparkles beside it. Flat print-ready artwork in a clean cel-shaded cartoon style: a dark navy outline of even weight around every shape, a warm orange planet, a teal ring and pale yellow sparkles, each colour solid and flat with at most one hard-edged darker tone, and no gradients. The graphic is centred and upright, fills about 80 percent of the image width, and leaves an empty transparent margin on every side; nothing touches the image edges. Only the graphic itself: no T-shirt, no fabric, no mockup, no background colour, no white sticker border, no drop shadow, no glow, no frame, no text and no letters.",
+        "bytes": 825,
+        "sha256": "142a3631e76fed8674355f20531a34f94931de9cce860e6c1dac1f6d6a51fc3a"
+      }
+    }
+  ]
+}
