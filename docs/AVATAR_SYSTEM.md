@@ -385,6 +385,16 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Geometry-free material laid on by the cut — D-260 (offline hypothesis r1-m1; no call).**
+  - **Method.** `northstar-r1-material.mjs`: the model would deliver only a flat fabric swatch, a trim swatch and separate details.
+    The cut supplies silhouette, fold shade, sleeve split, bands, construction lines and detail anchors. Swatches are mirror-tiled
+    (sleeves turned with the arm) and shaded by the cut.
+  - **Study.** On real generated material already in the project (R1C-1, R1-1, b1 breton and tartan): 0 holes, fitCheck passed
+    and 8/8 outfits matching the template for all three designs. Neck, cuffs and armpits are clean.
+  - **What the quality depends on.** The swatch must carry no details (a ghost pocket), no baked pleats or folds, and must tile
+    seamlessly. The pattern lies flat over the folds.
+  - **Recommendation.** Promising. Next, test whether the model can deliver a seamless flat swatch and a separate detail; one
+    proposed call, NOT authorised. See `docs/decisions/D-260.md`.
 - **R1C-1 sent and received — D-259: technically rejected; D-258 closed; this variant stopped.**
   - **What the model ignored.** It drew a free-standing tee again (about 1.47×) with no bleed (estimated 2 px) and its own rib
     widths. On C that leaves holes at the armpits and double band lines at the neck and cuffs; coverage, holes, trim and fit fail.
