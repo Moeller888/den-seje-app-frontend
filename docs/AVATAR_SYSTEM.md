@@ -385,6 +385,15 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **R1-1 offline: one uniform scale + translation — D-256 (hypothesis s1; no call; D-255's result unchanged).**
+  - **D-255 status.** R1-1 was sent once and is technically rejected under r1-v1: a free-standing product shot at twice the
+    cut's size. R1-2 and R1-3 are unsent; both permissions are still UNSPENT.
+  - **What s1 finds.** One uniform scale (0.504) and one shift, found automatically, fit R1-1 to tee-hip with IoU 0.976. The
+    proportions match within a few px.
+  - **What fails.** The output's own silhouette edge leaves visible faults at the seams once cut by r1-v1: holes at the armpits,
+    a white sliver and a double contour at the neck, and a clipped cuff. FIT-4 fails.
+  - **Recommendation.** Separate design and geometry differently: GPT supplies material with bleed and no outer outline, and the
+    cut alone supplies alpha, contour and seams. One proposed call, not authorised. See `docs/decisions/D-256.md`.
 - **R1 experiment authorised — D-255: three one-shot calls, NOT EXECUTED (the execution is a separate owner instruction).**
   - **Adapter.** `tools/avatar/openai-send-northstar-r1-d255.mjs`, the D-235 pattern: Image 1 is the cut's private canvas, Image 2
     is C. Prompts, canvases, plan and model are pinned. There is no retry, reserve or fallback.
