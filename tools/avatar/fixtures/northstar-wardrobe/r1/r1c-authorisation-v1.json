@@ -1,7 +1,7 @@
 {
   "decision": "D-258",
   "experiment": "R1C (D-257): the cut owns geometry and construction, the model owns the design",
-  "status": "AUTHORISED by D-258 (D-258 R1C: 1 CALL AUTHORISED): ONE single-use call; no earlier permission is reused; the plan r1c-plan-v1.json stays the unauthorised plan it was",
+  "status": "AUTHORISED by D-258 (D-258 R1C: 1 CALL AUTHORISED): ONE single-use call; no earlier permission is reused; the plan r1c-plan-v1.json stays the unauthorised plan it was; CLOSED by D-259: 1 spent and received (R1C-1, technically rejected)",
   "meta": {
     "authorisesImageRequest": false,
     "why": "authorisation is the exact token in D-258's decision status plus this file's unspent entry, never a general boolean",
@@ -23,6 +23,17 @@
       "totalEstimate": 0.0687,
       "basis": "3,072 image tokens + at most 600 text tokens in (the prompt is 1,396 bytes, about 350 tokens), 1,372 image tokens out, as measured on D-255's R1-1 (3,072 + 250 in, 1,372 out)",
       "note": "an estimate, not a guaranteed maximum; the canvas is mostly transparent and may count differently; the billed amount is read on the OpenAI usage page"
+    },
+    "actuallySent": 1,
+    "closed": {
+      "by": "D-259",
+      "reason": "the one authorised call was sent once and received",
+      "spent": 1,
+      "received": 1,
+      "uncertain": 0,
+      "refusedBeforeSend": 0,
+      "closedUnused": 0,
+      "reopen": "never automatically; only a new owner decision"
     }
   },
   "privacy": {
@@ -180,8 +191,28 @@
         "filename": "R1C-1-top-tee-hip-apricot-bleed.claim.json",
         "eventsFilename": "R1C-1-top-tee-hip-apricot-bleed.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_59720a2704684db0b9a19cea43302a70",
+        "imageSha256": "74adb3d36f73cdfc83b33c6e959983f23d892a384f06a171f043b6ba6137808a",
+        "usage": {
+          "input_tokens": 3413,
+          "input_tokens_details": {
+            "image_tokens": 3072,
+            "text_tokens": 341
+          },
+          "output_tokens": 1372,
+          "output_tokens_details": {
+            "image_tokens": 1372,
+            "text_tokens": 0
+          },
+          "total_tokens": 4785
+        },
+        "evaluation": "technically rejected under the frozen D-258 rules: placement IoU 0.9543 (estimated bleed 2 px), coverage 0.95583, 435 holes before the lines, trim P90 neck 8.5 px / cuff 4.5 px, fitCheck failed FIT-4-COVERAGE+FIT-6v2-SILHOUETTE; no own outline, no clipped detail, no tone leak"
+      },
+      "recordedBy": "D-259"
     }
   ],
   "adapterImplementations": {

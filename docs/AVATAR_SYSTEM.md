@@ -385,6 +385,13 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **R1C-1 sent and received — D-259: technically rejected; D-258 closed; this variant stopped.**
+  - **What the model ignored.** It drew a free-standing tee again (about 1.47×) with no bleed (estimated 2 px) and its own rib
+    widths. On C that leaves holes at the armpits and double band lines at the neck and cuffs; coverage, holes, trim and fit fail.
+  - **What it delivered.** New material, a whole pocket and soft folds; it obeyed "no outline", and no grey leaked.
+  - **Limitation.** The model does not deliver geometry (placement, bleed or band widths) and must not be relied on for it.
+  - **Next step.** A new owner decision: geometry-free material laid on by the cut, or stop R1 as an automatic path. See
+    `docs/decisions/D-259.md`.
 - **R1C authorised — D-258: one one-shot call, R1C-1, NOT EXECUTED (the execution is a separate owner instruction).**
   - **Adapter and evaluation.** `openai-send-northstar-r1c-d258.mjs` follows the D-235/D-255 pattern, with Image 1 the bleed
     canvas v2 and Image 2 C. `northstar-r1c-evaluate.mjs` runs the placement, the automatic checks, the sheets and the record.
