@@ -169,8 +169,16 @@ test("preconditions: an unknown function that updates question_instances stops t
   const d = await chainDb();
   await d.exec(`CREATE FUNCTION public.reset_round(p uuid) RETURNS void LANGUAGE sql AS
     $f$ UPDATE public.question_instances SET answered = false WHERE id = p $f$;`);
-  await assert.rejects(d.exec(MIGRATION), /ukendt funktion opdaterer question_instances: reset_round\(uuid\)/);
+  await assert.rejects(d.exec(MIGRATION), /ukendt funktion opdaterer answered\/repeat_count i question_instances: (public\.)?reset_round\(uuid\)/);
   assert.equal((await d.query("SELECT to_regclass('public.question_attempts') AS t")).rows[0].t, null);
+});
+
+test("preconditions: a function that updates only other question_instances columns (like the teacher review) does not block", async () => {
+  const d = await chainDb();
+  await d.exec(`CREATE FUNCTION public.note_review(p uuid) RETURNS void LANGUAGE sql AS
+    $f$ UPDATE public.question_instances SET teacher_feedback = 'ok', reviewed_at = now() WHERE id = p $f$;`);
+  await d.exec(MIGRATION);
+  assert.notEqual((await d.query("SELECT to_regclass('public.question_attempts') AS t")).rows[0].t, null);
 });
 
 test("preconditions: an existing trigger on question_instances stops the migration", async () => {

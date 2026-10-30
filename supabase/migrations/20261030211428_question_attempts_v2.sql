@@ -21,8 +21,9 @@
 -- WHAT THIS FILE CREATES
 --   0. Preconditions: the two answer functions whose reward rules the _v2 functions mirror, and the
 --      five functions that reopen or release rounds, still have the bodies the analysis was made
---      against (md5 of prosrc, read from production 2026-10-30); no unknown function writes
---      question_instances; question_instances has no trigger yet. Any mismatch stops the migration.
+--      against (md5 of prosrc, read from production 2026-10-30); no other function updates
+--      answered or repeat_count in question_instances; question_instances has no trigger yet. Any
+--      mismatch stops the migration.
 --   1. UNIQUE (id, student_id) on question_instances, the target of the composite FK. id is already
 --      the primary key, so no existing row can violate it and no row is changed.
 --   2. public.question_attempts: one row per registered answer, with the frozen result, the amounts
@@ -110,17 +111,19 @@ BEGIN
     END IF;
   END LOOP;
 
+  -- Only an UPDATE that names answered or repeat_count can fire the round guard (it is limited to
+  -- UPDATE OF answered, repeat_count), so only such writers need to be known. Writers that touch other
+  -- columns only (the teacher-review functions: teacher_score, teacher_feedback, reviewed_*) cannot
+  -- trip it and are not listed.
   FOR r IN
     SELECT p.oid::regprocedure::text AS sig
     FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
     WHERE n.nspname = 'public'
       AND p.prosrc ~* 'update\s+(public\.)?question_instances\M'
-      AND p.proname NOT IN ('process_question_attempt', 'process_text_answer', 'release_open_question_outside',
-                            'request_repeat_question', 'request_repeat_question_for_student',
-                            'request_repeat_question_servable_for_student',
-                            'request_repeat_level_question_for_student', 'review_answer')
+      AND p.prosrc ~* '\m(answered|repeat_count)\M'
+      AND p.oid::regprocedure::text NOT IN (SELECT to_regprocedure(k)::text FROM jsonb_object_keys(v_expected) AS k)
   LOOP
-    RAISE EXCEPTION 'H5 PR 1: en ukendt funktion opdaterer question_instances: % — rundevagten er ikke vurderet mod den', r.sig;
+    RAISE EXCEPTION 'H5 PR 1: en ukendt funktion opdaterer answered/repeat_count i question_instances: % — rundevagten er ikke vurderet mod den', r.sig;
   END LOOP;
 
   IF EXISTS (SELECT 1 FROM pg_catalog.pg_trigger t
