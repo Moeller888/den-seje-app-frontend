@@ -331,18 +331,41 @@ const REVIEWED_LATER_REPEAT_USERS = {
   "20261029150000_teacher_stats_from_answers.sql":
     "reads repeat_count only to leave repeats out of the teacher's first-attempt statistics " +
     "(get_teacher_visibility, get_student_overview). It defines and calls none of the repeat functions " +
-    "and writes nothing."
+    "and writes nothing.",
+  "20261030211428_question_attempts_v2.sql":
+    "adds the attempt log (D-266, H5) and NEW functions process_question_attempt_v2 / process_text_answer_v2, " +
+    "which copy the award rules of process_question_attempt (D-211) and process_text_answer unchanged and are " +
+    "called by nothing until a separately approved activation. It redefines none of this migration's functions " +
+    "(its precondition only checks their md5). Its question_instances changes are pinned below: " +
+    "UNIQUE (id, student_id), and the round guard trigger, which only enforces what every request_repeat_* " +
+    "already does (reopen = answered true -> false with repeat_count + 1)."
+};
+
+// The only question_instances statements a reviewed later user may contain, each exactly once.
+const REVIEWED_QUESTION_INSTANCES_CHANGES = {
+  "20261030211428_question_attempts_v2.sql": [
+    "ALTER TABLE public.question_instances\n  ADD CONSTRAINT question_instances_id_student_id_key UNIQUE (id, student_id);",
+    "CREATE TRIGGER question_instances_round_guard\n  BEFORE UPDATE OF answered, repeat_count ON public.question_instances\n" +
+      "  FOR EACH ROW EXECUTE FUNCTION public.question_instances_round_guard();",
+  ],
 };
 
 test("reviewed later repeat users redefine none of this migration's functions", () => {
   const dir = join(REPO, "supabase", "migrations");
   assert.deepEqual(Object.keys(REVIEWED_LATER_REPEAT_USERS),
     ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql",
-      "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql"],
+      "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql",
+      "20261030211428_question_attempts_v2.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
-    const body = readFileSync(join(dir, name), "utf8").split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
+    let body = readFileSync(join(dir, name), "utf8").split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const allowed of REVIEWED_QUESTION_INSTANCES_CHANGES[name] ?? []) {
+      assert.equal(body.split(allowed).length - 1, 1, `${name}: the reviewed statement occurs exactly once: ${allowed}`);
+      body = body.replace(allowed, "");
+    }
+    assert.equal(/CREATE\s+(OR\s+REPLACE\s+)?TRIGGER[^;]*\bON\s+(public\.)?question_instances\b/i.test(body), false,
+      `${name}: no trigger on question_instances beyond the reviewed statements`);
     assert.equal(
       /CREATE\s+(OR\s+REPLACE\s+)?FUNCTION\s+public\.(process_question_attempt|request_repeat_question|release_open_question_outside)\s*\(/i.test(body),
       false, `${name} must not redefine a function this migration owns`);
