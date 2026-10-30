@@ -593,8 +593,9 @@ _Last reviewed: 2026-07-01._
     merget som `81350e6`). Den kan kun startes manuelt med `confirm_production` = `production-e2e` og kun med ejerens
     GO.
 
-  Ingen automatisk kørsel tager længere låsen `e2e-shared-supabase`; kun det manuelle `update-avatar-goldens.yml`
-  bruger den. Uden automatisk dækning er live Edge Functions, produktionens DB/RLS, Auth, udbydere, Worker-runtime og
+  Ingen automatisk kørsel bruger længere låsen `e2e-shared-supabase`. Den bruges stadig af to manuelle kørsler: en
+  manuelt dispatchet produktionsrettet Playwright E2E på slot 0 og det manuelle `update-avatar-goldens.yml`. Slot 1–3
+  har hver sin lås (`e2e-shared-supabase-slot-<n>`). Uden automatisk dækning er live Edge Functions, produktionens DB/RLS, Auth, udbydere, Worker-runtime og
   indhold. Hvornår en manuel produktions-E2E bør køres, står i D-261. Den næste anledning er `get-next-question`-deployet
   og `LEVEL_ENGINE=v1`. Beviser og resterende risici står i D-265.
 
