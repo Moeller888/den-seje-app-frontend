@@ -51,8 +51,12 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** ingen lige nu. A og B er anvendt og verificeret og anvendes
-  derfor også her (se "Anvendt i produktionen efter planens første version").
+- **Ikke anvendt i produktionen:** `20261030120000_student_subject_level_comment.sql`, rettelsen af
+  tabelkommentaren på `student_subject_level` efter B. Den er forberedt 2026-10-30, men ikke anvendt, så
+  afspilningen springer den over. `tests/unit/student-subject-level-comment-migration-run.test.mjs`
+  anvender den oven på afspilningen (#351 → A → B → kommentar) og viser, at kun kommentaren ændres.
+  A og B er anvendt og verificeret og anvendes derfor også her (se "Anvendt i produktionen efter
+  planens første version").
 
 ## Anvendt i produktionen efter planens første version
 En fil fjernes fra `NOT_IN_PRODUCTION`, først når den er anvendt **og** verificeret i produktionen.

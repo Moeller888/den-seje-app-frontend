@@ -87,6 +87,17 @@ findes med `prosecdef = false`, `search_path=public, pg_temp`, EXECUTE kun for `
 indeks er som i filen. `student_subject_level` og `student_level_fold_log` har 0 rækker. A og #351 er
 uændrede, og `get-next-question` er stadig version 179.
 
+**Kommentarrettelse forberedt, ikke anvendt (2026-10-30).** A gav `student_subject_level` kommentaren
+"written only by SECURITY DEFINER functions", men B skriver gennem `advance_student_level`, som er
+`SECURITY INVOKER`. Rettelsen er en ny, separat migration efter B,
+`20261030120000_student_subject_level_comment.sql`, med kun ét `COMMENT ON TABLE`. A og B ændres ikke.
+Den kræver sin egen ejergodkendelse og står i `NOT_IN_PRODUCTION`, indtil den er anvendt og verificeret.
+Efterkontrol:
+```sql
+SELECT obj_description('public.student_subject_level'::regclass, 'pg_class');
+-- Forvent den nye tekst ("Elevens niveau 1–10.000 pr. fag. Serverejet: …"); alt andet uændret.
+```
+
 ### 2.5 Query-planer i produktion, før `LEVEL_ENGINE=v1`
 Kør `EXPLAIN (ANALYZE, BUFFERS)` på kandidat- og fold-forespørgslerne (§4) for en rigtig elev med lang
 historik. **Grænse:** kandidatvalget skal være under 50 ms for engelsk med alt indhold aktivt. Ligger

@@ -99,7 +99,10 @@ export function extractSchemaPart(file, sql) {
 // Merged in the repository but NOT applied in production, on catalog evidence (read-only metadata,
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
-export const NOT_IN_PRODUCTION = Object.freeze({});
+export const NOT_IN_PRODUCTION = Object.freeze({
+  "20261030120000_student_subject_level_comment.sql":
+    "not applied in production (prepared 2026-10-30, owner approval pending): the comment-only correction of student_subject_level's table comment after B; production still has A's comment",
+});
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
 // (2026-10-28, option B): the isolated CI tests the repository's code against the schema that code
