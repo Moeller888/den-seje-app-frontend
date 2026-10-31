@@ -11,7 +11,7 @@ CODEBASE OVERVIEW
 **Stack:**
 - Frontend: Vanilla JS + HTML pages, no build step, deployed to Cloudflare Workers (Static Assets) — live on `https://lærlig.dk`. `tools/cloudflare-build-static.mjs` copies an explicit allowlist into the deployed bundle; see `docs/HOSTING.md`
 - Backend: Supabase (hosted) with Deno Edge Functions (`supabase/functions/`)
-- Tests: Playwright E2E, run against the live production URL
+- Tests: Playwright E2E. Locally, `npx playwright test` runs against the live production URL. In CI (D-261): pull requests and pushes to `main` run the same suite against a throwaway local Supabase stack (`isolated-e2e.yml`, required on PRs), and a push to `main` also runs a read-only Production Smoke (`production-smoke.yml`). The old production-facing CI suite (`playwright.yml` job `test`) runs only by manual dispatch with `confirm_production` = `production-e2e`
 
 **Roles:** `student`, `teacher`, `super_admin` — stored in `profiles.role`, checked on every page load.
 
@@ -21,7 +21,7 @@ DANISH TEXT (LOCALIZATION)
 
 Danish prose must preserve the real characters **æ ø å / Æ Ø Å**. Never ASCII-transliterate them
 to `ae/oe/aa` (or `AE/OE/AA`), and never leave mojibake (`Ã¦`, `Ã¸`, `Ã¥`, `�`/U+FFFD) in
-human-facing Danish: docs, the `docs/project-state.md` decision register, UI strings, PR
+human-facing Danish: docs, the D-register (`docs/project-state.md`, `docs/decisions/`), UI strings, PR
 bodies/titles, reports, and comments meant for humans. Save files as **UTF-8**, not Windows-1252.
 ASCII transliteration is allowed only for code identifiers, filenames, URLs, CLI flags, external
 API names, or model/tool names where Unicode would be unsafe — never for prose.
@@ -44,12 +44,20 @@ Rules:
 - These documents are the **canonical documentation**. Treat them as the source of truth for their domain.
 - If conflicting information is discovered elsewhere (older notes, code comments, stale specs),
   **report it before making changes** — do not act on the conflict silently.
-- **Never silently replace architectural or product decisions.** Record decision changes (avatar:
-  the D-xxx register in `docs/project-state.md`; cross-track status: `docs/ROADMAP.md`).
+- **Never silently replace architectural or product decisions.** Record decision changes in the
+  D-register (below); cross-track status: `docs/ROADMAP.md`.
 - **Prefer updating canonical documentation over creating duplicate documents.** One source of truth
   per domain; other docs link to it rather than restating it.
-- `docs/project-state.md` remains the authoritative avatar **decision register** (D-001…D-041) and
-  risk/debt log; `docs/AVATAR_SYSTEM.md` owns the **current** avatar/activation state.
+- **The D-register** (all tracks) has two append-only parts. D-001…D-223 are the rows of the table in
+  `docs/project-state.md`, which is **frozen at D-223**: its rows stay verbatim and no row above D-223
+  may be added. Every newer decision is **one file, `docs/decisions/D-NNN.md`**, with the front matter
+  and headings described in `docs/decisions/README.md`; a later change is a new D-file that names the
+  earlier one under `relates`, never an edit of a merged one. **Reserve the number first** with
+  `node tools/decisions/reserve.mjs --owner <terminal> --task "<task>"` (atomic tag
+  `d-number/D-NNN` on origin; never by hand-picking a number). The overview is generated, never
+  committed: `node tools/decisions/index.mjs`. `tests/unit/decision-register.test.mjs` enforces this.
+- `docs/project-state.md` also remains the risk/debt log; `docs/AVATAR_SYSTEM.md` owns the
+  **current** avatar/activation state.
 
 ----------------------------------------
 COMMANDS
@@ -143,7 +151,8 @@ Invalid transitions are blocked and logged. Never bypass this machine.
 
 **Tests** (`tests/`):
 - `example.spec.ts` — full student flow: login → question loads → answer → feedback → next question, no-questions state
-- Tests run against live production, not localhost. The target is defined once, as `PROD` in `tests/helpers.ts`, and is overridable via the `PROD_BASE_URL` repository variable — never hardcode it in a spec
+- Local runs target live production, not localhost. The target is defined once, as `PROD` in `tests/helpers.ts`, and is overridable via the `PROD_BASE_URL` repository variable — never hardcode it in a spec
+- CI never runs the production-facing suite automatically (D-261): PRs and `main` pushes use the isolated suite, `main` pushes also the read-only Production Smoke; a production-facing CI run is a manual dispatch of "Playwright Tests" with `confirm_production` = `production-e2e`. `update-avatar-goldens.yml` is a separate manual workflow that still uses (and changes) the live slot-0 test student
 - Playwright config: 3 browsers (Chromium, Firefox, WebKit), 1 worker, no parallelism
 
 ----------------------------------------

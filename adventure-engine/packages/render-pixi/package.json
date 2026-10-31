@@ -1,0 +1,16 @@
+{
+  "name": "@adventure-engine/render-pixi",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@adventure-engine/content": "workspace:*",
+    "@adventure-engine/core": "workspace:*",
+    "@adventure-engine/geometry": "workspace:*",
+    "@adventure-engine/media": "workspace:*",
+    "pixi.js": "8.5.2"
+  }
+}

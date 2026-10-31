@@ -1,0 +1,545 @@
+{
+  "decision": "D-223",
+  "method": "d223",
+  "methodWhat": "D-223 — D-222's method, and at a seam between categories: (2) a rim of the item's own base garment that C explains and that lies beyond the item's own outline (> EXPLAIN_PX + 1 from its new paint and base interior) is the base garment redrawn, gone at runtime — not the item; (3) the closing — a gap ≤ 6 px between the item's own core — may cross another category's base",
+  "recordsResultsOnly": true,
+  "rewritesEarlierRecords": false,
+  "imageCalls": 0,
+  "note": "the nine original D-207 pictures and their 18 outfits through the one pipeline with method d223, the outfit check and the findings register. Earlier records (D-207, D-221, D-222) stay as they are. Technically OK is not visual approval; an open finding keeps an item or outfit from being ready.",
+  "reproducibility": {
+    "runs": 2,
+    "filesPerRun": 162,
+    "byteIdentical": true,
+    "code": {
+      "northstar-item-pilot.mjs": "9f3f56f9153f4b325ac01a20c0d98a6d1fc3269a537bde1e0292d77bf5020f23",
+      "northstar-base-figure-c.mjs": "6b1d392b63f13e4b47c23281377a668bd8c1421931f1800c2b005b090e03e229",
+      "northstar-base-figure.mjs": "a99235c19e7d69c9b4d3f37856be3bad41028860b340031df60596cb2b418b47",
+      "northstar-wardrobe.mjs": "3ab2b98e4eabfb8a76a7f31643cd8e568158775a0f3a7614d3cf4b4cc1e7ce0b",
+      "northstar-wardrobe-poc.mjs": "62440bb7a5e12eafd7cc6286720e3c27449cc001cd4972dab8c486fe3df6d877",
+      "r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+      "r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+      "r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+      "clean-r2-hair-alpha.mjs": "239c69e8a9ffc8621e6a5f17584143f7103c9ea6bf86974c664ce7c2304defbe"
+    },
+    "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+    "registerSha256": "9926d78bd2aab3ff8620cb6b4656214e7a22bd515a2b3fb79d2abc5ad6ce9933"
+  },
+  "slitCause": {
+    "where": "tee + khaki (and sweater + khaki), right hip, x 624–627, y ≈ 790–816 — C's base-top side column (lab 1) beside C's exterior",
+    "A": "the TOP took C's base-top side contour below its own hem as top paint (D-210 rule 2 takes every opaque pixel of the item's own base garment): the tee's picture leaves C's base there unchanged; in the outfit that line lay over the khaki — a double contour",
+    "B": "the BOTTOMS lost their own side outline over that column: C's base-top contour explains it (no new paint), and D-210 keeps the closing and the outline band out of another category's base; with a shorter top nothing covered it — a 1 px background slit",
+    "fix": "d223 (A): a rim of the item's own base garment that C explains and that lies beyond the item's outline (> EXPLAIN_PX + 1 from its new paint and base interior) is the base redrawn — not the item — unless leaving it out would enclose a hole (then it is seam material and stays: the shorts' side under the top). (B): the closing — a gap ≤ 6 px between the item's own core — may cross another category's base. No per-outfit mask, no general dilation, nothing painted",
+    "left": "a 1 × 3 px corner at the tee's hem (F-011), a reported crossing"
+  },
+  "outfitCheck": "BC.outfitCheck: COMBO-1a background slit between garments of two categories (C's own narrow gaps intended), 1b enclosed hole, 1c missing overlap, 1d cut inside one garment (footwear exempt: its covering rule), 2 double contour between two categories, 3 order. Crossings (≤ 6 × 6 or compact) are reported, not failed. Seams are named from the layers around a finding",
+  "d222VsD223": {
+    "top-tank-teal+bottom-shorts-navy+shoes-boots-black": {
+      "d222": {
+        "ok": true,
+        "failed": []
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white": {
+      "d222": {
+        "ok": true,
+        "failed": []
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-tank-teal+bottom-trousers-khaki+shoes-boots-black": {
+      "d222": {
+        "ok": false,
+        "failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      },
+      "d223": {
+        "ok": false,
+        "failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      }
+    },
+    "top-tank-teal+bottom-trousers-khaki+shoes-sneakers-white": {
+      "d222": {
+        "ok": false,
+        "failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-tank-teal+bottom-skirt-plum+shoes-boots-black": {
+      "d222": {
+        "ok": true,
+        "failed": []
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-tank-teal+bottom-skirt-plum+shoes-sneakers-white": {
+      "d222": {
+        "ok": true,
+        "failed": []
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-tee-red+bottom-shorts-navy+shoes-boots-black": {
+      "d222": {
+        "ok": true,
+        "failed": []
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-tee-red+bottom-shorts-navy+shoes-sneakers-white": {
+      "d222": {
+        "ok": true,
+        "failed": []
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-tee-red+bottom-trousers-khaki+shoes-boots-black": {
+      "d222": {
+        "ok": false,
+        "failed": [
+          "COMBO-1a-SEAM-BACKGROUND",
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      },
+      "d223": {
+        "ok": false,
+        "failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      }
+    },
+    "top-tee-red+bottom-trousers-khaki+shoes-sneakers-white": {
+      "d222": {
+        "ok": false,
+        "failed": [
+          "COMBO-1a-SEAM-BACKGROUND"
+        ]
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-tee-red+bottom-skirt-plum+shoes-boots-black": {
+      "d222": {
+        "ok": true,
+        "failed": []
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-tee-red+bottom-skirt-plum+shoes-sneakers-white": {
+      "d222": {
+        "ok": true,
+        "failed": []
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-sweater-green+bottom-shorts-navy+shoes-boots-black": {
+      "d222": {
+        "ok": true,
+        "failed": []
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-sweater-green+bottom-shorts-navy+shoes-sneakers-white": {
+      "d222": {
+        "ok": true,
+        "failed": []
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-sweater-green+bottom-trousers-khaki+shoes-boots-black": {
+      "d222": {
+        "ok": false,
+        "failed": [
+          "COMBO-1a-SEAM-BACKGROUND",
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      },
+      "d223": {
+        "ok": false,
+        "failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      }
+    },
+    "top-sweater-green+bottom-trousers-khaki+shoes-sneakers-white": {
+      "d222": {
+        "ok": false,
+        "failed": [
+          "COMBO-1a-SEAM-BACKGROUND",
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      },
+      "d223": {
+        "ok": true,
+        "failed": []
+      }
+    },
+    "top-sweater-green+bottom-skirt-plum+shoes-boots-black": {
+      "d222": {
+        "ok": false,
+        "failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      },
+      "d223": {
+        "ok": false,
+        "failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      }
+    },
+    "top-sweater-green+bottom-skirt-plum+shoes-sneakers-white": {
+      "d222": {
+        "ok": false,
+        "failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      },
+      "d223": {
+        "ok": false,
+        "failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      }
+    }
+  },
+  "items": {
+    "top-tank-teal": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "d222TechnicallyOk": true
+    },
+    "top-tee-red": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "d222TechnicallyOk": true
+    },
+    "top-sweater-green": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "d222TechnicallyOk": true
+    },
+    "bottom-shorts-navy": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "d222TechnicallyOk": true
+    },
+    "bottom-trousers-khaki": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "d222TechnicallyOk": true
+    },
+    "bottom-skirt-plum": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "d222TechnicallyOk": true
+    },
+    "shoes-sandals-brown": {
+      "status": "rejected",
+      "openFindings": [
+        "F-008"
+      ],
+      "d222TechnicallyOk": false
+    },
+    "shoes-boots-black": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "d222TechnicallyOk": true
+    },
+    "shoes-sneakers-white": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "d222TechnicallyOk": true
+    }
+  },
+  "outfits": {
+    "top-tank-teal+bottom-shorts-navy+shoes-boots-black": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 15
+    },
+    "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 15
+    },
+    "top-tank-teal+bottom-trousers-khaki+shoes-boots-black": {
+      "status": "rejected",
+      "openFindings": [
+        "F-001",
+        "F-006"
+      ],
+      "failedChecks": [
+        "COMBO-2-DOUBLE-CONTOUR"
+      ],
+      "faults": [
+        {
+          "seam": "leg/shoe",
+          "box": [
+            449,
+            1389,
+            7,
+            4
+          ],
+          "px": 11
+        }
+      ],
+      "reportedCrossings": 12
+    },
+    "top-tank-teal+bottom-trousers-khaki+shoes-sneakers-white": {
+      "status": "technically-ok-open-finding",
+      "openFindings": [
+        "F-010"
+      ],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 9
+    },
+    "top-tank-teal+bottom-skirt-plum+shoes-boots-black": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 12
+    },
+    "top-tank-teal+bottom-skirt-plum+shoes-sneakers-white": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 12
+    },
+    "top-tee-red+bottom-shorts-navy+shoes-boots-black": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 19
+    },
+    "top-tee-red+bottom-shorts-navy+shoes-sneakers-white": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 19
+    },
+    "top-tee-red+bottom-trousers-khaki+shoes-boots-black": {
+      "status": "rejected",
+      "openFindings": [
+        "F-001",
+        "F-006",
+        "F-011"
+      ],
+      "failedChecks": [
+        "COMBO-2-DOUBLE-CONTOUR"
+      ],
+      "faults": [
+        {
+          "seam": "leg/shoe",
+          "box": [
+            449,
+            1389,
+            7,
+            4
+          ],
+          "px": 11
+        }
+      ],
+      "reportedCrossings": 15
+    },
+    "top-tee-red+bottom-trousers-khaki+shoes-sneakers-white": {
+      "status": "technically-ok-open-finding",
+      "openFindings": [
+        "F-010",
+        "F-011"
+      ],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 12
+    },
+    "top-tee-red+bottom-skirt-plum+shoes-boots-black": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 16
+    },
+    "top-tee-red+bottom-skirt-plum+shoes-sneakers-white": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 16
+    },
+    "top-sweater-green+bottom-shorts-navy+shoes-boots-black": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 21
+    },
+    "top-sweater-green+bottom-shorts-navy+shoes-sneakers-white": {
+      "status": "technically-ok",
+      "openFindings": [],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 21
+    },
+    "top-sweater-green+bottom-trousers-khaki+shoes-boots-black": {
+      "status": "rejected",
+      "openFindings": [
+        "F-001",
+        "F-006",
+        "F-012"
+      ],
+      "failedChecks": [
+        "COMBO-2-DOUBLE-CONTOUR"
+      ],
+      "faults": [
+        {
+          "seam": "leg/shoe",
+          "box": [
+            449,
+            1389,
+            7,
+            4
+          ],
+          "px": 11
+        }
+      ],
+      "reportedCrossings": 18
+    },
+    "top-sweater-green+bottom-trousers-khaki+shoes-sneakers-white": {
+      "status": "technically-ok-open-finding",
+      "openFindings": [
+        "F-010",
+        "F-012"
+      ],
+      "failedChecks": [],
+      "faults": [],
+      "reportedCrossings": 15
+    },
+    "top-sweater-green+bottom-skirt-plum+shoes-boots-black": {
+      "status": "rejected",
+      "openFindings": [
+        "F-007"
+      ],
+      "failedChecks": [
+        "COMBO-2-DOUBLE-CONTOUR"
+      ],
+      "faults": [
+        {
+          "seam": "waist/hip",
+          "box": [
+            601,
+            798,
+            7,
+            4
+          ],
+          "px": 14
+        }
+      ],
+      "reportedCrossings": 17
+    },
+    "top-sweater-green+bottom-skirt-plum+shoes-sneakers-white": {
+      "status": "rejected",
+      "openFindings": [
+        "F-007"
+      ],
+      "failedChecks": [
+        "COMBO-2-DOUBLE-CONTOUR"
+      ],
+      "faults": [
+        {
+          "seam": "waist/hip",
+          "box": [
+            601,
+            798,
+            7,
+            4
+          ],
+          "px": 14
+        }
+      ],
+      "reportedCrossings": 17
+    }
+  },
+  "summary": {
+    "technicallyOk": 10,
+    "technicallyOkOpenFinding": 3,
+    "rejected": 5
+  },
+  "visualReview": {
+    "by": "Claude (not the owner)",
+    "note": "seams ×2 reviewed for the tee + khaki, sweater + khaki and sweater + skirt outfits; white ticks at the khaki hem / sneaker collar and one light corner pixel at the right hip under tee and sweater registered as open (F-010 … F-012). The owner's visual approval is separate and has not been given"
+  },
+  "reviewImages": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/ (items/<id>/…; package/outfit-*.full.png, .app.png, .seams-x2.png; rejected-outfit-*; o01/o02 passed and rejected overviews; rejected-shoes-sandals-brown.png)",
+  "nextStepRecommendation": {
+    "verdict": "a larger VARIED pilot batch is the right next step — as an investigation of seams and fabric colours on C, not as production; it needs its own owner decision and call authorisation (nothing prepared here)",
+    "why": "the method is reproducible and the remaining failures are systematic: items generated one by one do not always meet at the seams (khaki hem over boot, skirt waistband under sweater). Nine items cannot show how often that happens or which cuts and colours break extraction",
+    "investigate": [
+      "skin-like fabric colours (beige, peach, light orange, light pink, tan) — STRONG_TOL's known limit and the luminance shadow rule against an orange garment edge",
+      "dark fabrics close to C's contour (black / charcoal trousers) — paint explained away by C's contour",
+      "cuts at every seam: collared shirt and hoodie (neck/collar), cuffed long sleeves over the wrist (sleeve/wrist), crop and hip-length tops, tucked-in look (waist/hip), wide-leg, cuffed and capri trousers, a long skirt (hem/leg), ankle boots and high-tops of different shaft heights, low shoes (leg/shoe)",
+      "seam agreement across categories: the share of outfits that pass the outfit check, by seam"
+    ],
+    "proposedCalls": {
+      "authorised": 24,
+      "reserve": 3,
+      "max": 27,
+      "split": "8 tops, 8 bottoms, 8 shoes — about a third in skin-like or very dark colours; one-shot claims, no retry, no fallback, the D-207 reserve rules"
+    },
+    "measure": [
+      "items technically OK by category and cause",
+      "outfits OK by seam (8 × 8 × 8 = 512 outfits of the passed items)",
+      "findings per item and their kind",
+      "manual minutes per item",
+      "runtime per item and per outfit"
+    ],
+    "decideAfter": "whether to adapt the prompt per seam (shared hem heights, waistband heights), add a cross-item seam rule, or generate matched sets — before any production batch"
+  }
+}

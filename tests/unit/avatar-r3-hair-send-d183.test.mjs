@@ -22,7 +22,7 @@ import { parseEvents, deriveAttempt } from "../../tools/avatar/r3-face-neutral-a
 import { encodePng, decodePng, pixelSha256, THRESHOLDS, checkHairSheet } from "../../tools/avatar/r3-hair-tool.mjs";
 import { proposeA4, checkLocks, lockWindowsPx } from "../../tools/avatar/r3-hair-tool-v2.mjs";
 import { buildGuide, loadTargets, SCALE } from "../../tools/avatar/r3-hair-guide-v1.mjs";
-import { preD183Contract, PRE_D183_CONTRACT_CANONICAL_SHA256, PRE_D183, PRE_D183_COMMIT, preD181Contract, PRE_D181_CONTRACT_CANONICAL_SHA256, preD180Contract, PRE_D180_CONTRACT_CANONICAL_SHA256, preD179Contract, PRE_D179_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD185Contract, preD184Contract, PRE_D184_CONTRACT_CANONICAL_SHA256, PRE_D184, PRE_D184_COMMIT, preD183Contract, PRE_D183_CONTRACT_CANONICAL_SHA256, PRE_D183, PRE_D183_COMMIT, preD181Contract, PRE_D181_CONTRACT_CANONICAL_SHA256, preD180Contract, PRE_D180_CONTRACT_CANONICAL_SHA256, preD179Contract, PRE_D179_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -45,7 +45,12 @@ const GUIDE_REL = "tools/avatar/fixtures/r3-hair/guide-hair-v1.png";
 const NORTHSTAR_REL = "assets/avatar/reference/Northstar Master v2.png";
 const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
-const LIVE = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+// D-184 later recorded D-183's one send and closed its entry in place. LIVE is the contract exactly as D-183 committed it
+// (D-184's closure reversed, proven canonical below); the closed state itself is tested at the end of this file.
+// D-185 later added hairMethod.methodV2.hybridDerivation only; LIVE_NOW is the contract as D-184 left it (proven canonical
+// in avatar-r3-hair-hybrid-d185.test.mjs).
+const LIVE_NOW = preD185Contract(JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8")));
+const LIVE = preD184Contract(LIVE_NOW);
 const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
 const PRE = preD183Contract(LIVE);
 const PRE_REGISTER = REGISTER.split("\n").filter((l) => !l.startsWith("| **D-183** |")).join("\n");
@@ -221,7 +226,7 @@ test("the D-183 register row: once, directly after D-182 (another track's row, k
   assert.ok(!/[ÃÂ]\S|�/.test(ROW), "no mojibake in the Danish row");
   const doc = readFileSync(repoFile("docs/AVATAR_SYSTEM.md"), "utf8");
   assert.match(doc, /\*\*D-183 \(2026-10-22\)\*\* authorised exactly ONE further hair call/);
-  assert.match(doc, /one live permission: the fourth hair call \(D-183, Northstar for style and a geometry guide\), not yet sent \(D-174 … D-183, as of 2026-10-22\)/);
+  // the status line is current state: D-184 later closed the permission (tested below)
 });
 
 // ── static: the adapter's shape ─────────────────────────────────────────────────────────────────────────────────
@@ -363,7 +368,7 @@ const editImpl = (fn) => (sb) => editContract(sb, (c) => { const i = c.adapterIm
 const toLive = (sb) => { writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n"); copyFileSync(repoFile(REGISTER_REL), registerPath(sb)); };
 
 /** A fresh sandbox. Default: the state D-183 commits (D-183 active) as origin/main. `pre`: before D-183 (the D-181 merge). */
-function sandbox({ base, layout = "main", top, pre = false } = {}) {
+function sandbox({ base, layout = "main", top, pre = false, closed = false } = {}) {
   const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d183-sandbox-")));
   SANDBOX_ROOTS.push(root);
   const sb = { root, repo: join(root, "repo"), state: join(root, "state"), tmp: join(root, "tmp"), home: join(root, "home"), log: join(root, "fetch.log"),
@@ -377,7 +382,8 @@ function sandbox({ base, layout = "main", top, pre = false } = {}) {
   for (const k of ["border", "low", "colour", "island", "wrongsize"]) writeFileSync(sb.png + "." + k + ".png", PNGS[k]);
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
   if (pre) { writeFileSync(contractPath(sb), JSON.stringify(PRE, null, 2) + "\n"); writeFileSync(registerPath(sb), PRE_REGISTER); }
-  else writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n");   // D-183 as committed
+  else if (!closed) writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n");   // D-183 as committed, before D-184 closed it
+  else writeFileSync(contractPath(sb), JSON.stringify(LIVE_NOW, null, 2) + "\n");             // since D-184
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   if (layout === "worktree") top(sb);
@@ -665,4 +671,98 @@ test("two clones share one claim register: a claim made from one clone refuses t
   const r = runAdapter(second, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, LOCALAPPDATA: first.state, XDG_STATE_HOME: first.state, D183_MOCK_CLAIM: first.claim, D183_MOCK_EVENTS: first.events });
   assert.equal(r.status, 1, r.out); assert.match(r.out, /REFUSED \[claim-exists\]/);
   assert.equal(fetchLog(second).length, 0, "the second clone sent nothing");
+});
+
+// ── D-184: the one send is recorded and the mandate is closed (disposition: kept for review, not visually approved) ──
+const D181_ROW = REGISTER.split("\n").find((l) => l.startsWith("| **D-184** |"));
+const E_NOW = LIVE_NOW.authorisedCalls.calls.find((e) => e.callId === CALL);
+const IMPL_NOW = LIVE_NOW.adapterImplementations.entries.find((e) => e.decision === "D-183");
+const RAW_SHA_D183 = "7b36e05481dc0389a71a362b9f7501c7eaca35b2d3771c24624eefa797f2d66d";
+const REQUEST_ID_D183 = "req_d7b8bfbbb21b4defb4773bd7c143b5d9";
+const D183_ROW_SHA_AT_D183 = "8c28a562d6cba09be43dd840560b68668dc3899d761116f3107473fab4d55c4a";   // the D-183 row at the D-183 merge (a9cd716)
+
+test("D-184 changes exactly the closure: the contract as D-183 committed it is reproduced canonically", () => {
+  assert.equal(sha256(JSON.stringify(LIVE)), PRE_D184_CONTRACT_CANONICAL_SHA256, "LIVE_NOW with D-184's closure reversed is the contract at " + PRE_D184_COMMIT);
+  assert.equal(sha256(JSON.stringify(preD183Contract(LIVE_NOW))), PRE_D183_CONTRACT_CANONICAL_SHA256, "and the older chain still holds");
+  assert.deepEqual(Object.keys(LIVE_NOW), Object.keys(LIVE), "no top-level key is added");
+  assert.deepEqual(LIVE_NOW.authorisedCalls.calls.slice(0, 14), LIVE.authorisedCalls.calls.slice(0, 14), "the fourteen earlier entries are unchanged");
+  assert.deepEqual(LIVE_NOW.adapterImplementations.entries.slice(0, -1), LIVE.adapterImplementations.entries.slice(0, -1));
+  assert.deepEqual([LIVE_NOW.authorisedCalls.count, LIVE_NOW.authorisedCalls.calls.length], [15, 15], "no entry is added");
+  for (const k of ["assets", "hairMethod", "eyesPartsMethod", "deterministicOperations", "layerContract", "zModel", "meta", "architecture", "irisContract"]) assert.deepEqual(LIVE_NOW[k], LIVE[k], k + " is unchanged — no target, threshold, definition or check moves");
+  assert.deepEqual([LIVE_NOW.imageCallBudget.minimum, LIVE_NOW.imageCallBudget.maximum, LIVE_NOW.imageCallBudget.callsPlannedAndAuthorised], [LIVE.imageCallBudget.minimum, LIVE.imageCallBudget.maximum, LIVE.imageCallBudget.callsPlannedAndAuthorised], "no new capacity");
+  assert.equal(sha256(JSON.stringify(LIVE.authorisedCalls.calls.find((e) => e.callId === CALL))), E_NOW.closure.snapshotCanonicalSha256BeforeClosure);
+  for (const k of Object.keys(E)) { if (["status", "mandateState", "outcome"].includes(k)) continue; assert.deepEqual(E_NOW[k], E[k], "D-183's authorisation field " + k + " is preserved"); }
+  assert.deepEqual([PRE_D184.d183.mandateState, PRE_D184.d183impl.mandateState], ["UNSPENT", "UNSPENT"]);
+});
+
+test("D-184 closes D-183 in place: SPENT, never reused, not a permission; H1..H5 passed, D-179 checks not evaluated, no annotation; kept for review, not visually approved", () => {
+  assert.deepEqual([E_NOW.mandateState, E_NOW.neverReuse, E_NOW.notAnActivePermission, E_NOW.closure.closedBy], ["SPENT", true, true, "D-184"]);
+  assert.match(E_NOW.status, /^SPENT — SENT ONCE, HTTP 200, ONE IMAGE RECEIVED, H1\.\.H5 PASSED, D-179 PLACEMENT AND SHAPE CHECKS NOT EVALUATED, NO SOURCE ANNOTATION, NO CANDIDATE, NOTHING PROMOTED$/);
+  assert.match(E_NOW.outcome, /H1\.\.H5 PASSED .*D-179 PLACEMENT AND SHAPE CHECKS NOT EVALUATED .*NO SOURCE ANNOTATION .*NO VISUAL APPROVAL .*NO CANDIDATE .*DISPOSITION: KEPT FOR REVIEW$/);
+  assert.match(E_NOW.closure.disposition, /^KEPT FOR REVIEW, NOT VISUALLY APPROVED — .*byte for byte where they are and untracked.*approves nothing: no source anchor, no annotation, no placement, no candidate\.$/);
+  const x = E_NOW.execution;
+  assert.deepEqual([x.request.fetches, x.request.retried, x.request.requestId, x.response.httpStatus, x.response.imagesReturned], [1, false, REQUEST_ID_D183, 200, 1]);
+  assert.deepEqual([x.raw.sha256, x.raw.bytes, x.request.promptSha256], [RAW_SHA_D183, 857745, PROMPT_SHA]);
+  assert.deepEqual(x.request.parameters, { size: "1024x1024", quality: "high", n: 1, output_format: "png", background: "transparent" });
+  assert.deepEqual(x.accounting, { claimState: "consumed", dispatch: "started", result: "response", actuallySent: 1, dispatchUndetermined: 0, serverAnswered: true, automaticRetry: false, logConsistent: true });
+  assert.match(x.sentBy, /a9cd71606b90d215275fc1de30be5200ae559a90.*b4f7d88160a7240b195bcbb222bbfc23b428b895b192ef943bc16812ed8356f0/);
+  assert.deepEqual([x.claim.sha256, x.eventLog.sha256, x.response.bodySha256, x.manifest.sha256], ["3a8f129daf39c183da21a92dc23092413657a21c9a4519cb4e984353525f292f", "1279667302c5c1bb8d3c66c9f5c136cd27fd20c2120cbbe42292d16141fa03f5", "19d5f5bbff8152e2cc19a88d9ecdfb7f6a38a35c9eab7d131e6e63607f7072db", "4fd244ff463ad286240c62aa99b8bbde4822475630842f8e48a27a45487df6de"]);
+  assert.match(x.runCircumstances.ciAtSendTime, /Main CI on a9cd716 was not awaited before the send/);
+  const t = E_NOW.technicalObservations;
+  assert.match(t.passed, /^H1 .*H2 0 px .*H3 max chroma 9 .*H4 1 component, 241625 of 241625 .*H5 visible area fraction 0\.2304\. Verdict PASS_TO_ANNOTATION\.$/);
+  assert.match(t.proves, /prove nothing about the hairstyle's form, the fit points, the temple locks, a placement or the appearance/);
+  assert.match(t.notEvaluated, /^D-179's placement and shape checks \(HP1v2 seat residual and aspect, HP2, HP-LOCK, HP4v2\.\.HP8, HP-FRAG\) were not evaluated/);
+  const r = t.identifiabilityReview;
+  assert.match(r.status, /not an owner approval and not an annotation/);
+  for (const k of ["centreHairlineA4", "leftEarTopJunctionA9", "rightEarTopJunctionA10"]) assert.match(r[k], /^NOT_IDENTIFIABLE/, k);
+  assert.match(r.consequence, /no reduced fit\. No v2 DRAFT annotation was made and compose-v2 was not run\./);
+  assert.match(r.templeLocks, /Image-right: no separate temple lock/);
+  assert.match(t.halo, /no visible halo on light or dark/);
+  assert.ok(!/(HP1v2|HP2|HP-LOCK|HP-FRAG|HP[4-8]v?2?)[^.]{0,20}\b(passed|PASS)\b/.test(JSON.stringify(t)), "no D-179 check is recorded as passed");
+  assert.match(E_NOW.visualReview.status, /Northstar's painting is taken over .*follows the guide's size and position.*no V-shaped parting; no short lower edge with a readable ear transition on either side .*the image-right temple lock is not a separate lock/);
+  assert.match(E_NOW.visualReview.ownerDecision, /^Disposition: KEPT FOR REVIEW, NOT VISUALLY APPROVED\. No candidate, no source annotation and no visual approval are given\./);
+  assert.deepEqual([IMPL_NOW.adapter.status, IMPL_NOW.mandateState, IMPL_NOW.neverReuse, IMPL_NOW.closedBy], ["IMPLEMENTED — EXECUTED ONCE — SPENT", "SPENT", true, "D-184"]);
+});
+
+test("D-184's accounting: hair 3 -> 4 exactly once, the other figures and the budget 26-27 unchanged; no entry is a live permission", () => {
+  const b = LIVE_NOW.imageCallBudget, s = b.callsActuallySentSoFar, p = PRE_D184.callsActuallySentSoFar;
+  assert.deepEqual([p.hair, s.hair], [3, 4]);
+  assert.deepEqual([s.underlay, s.faceNeutral, s.eyesFixed], [5, 4, 2]);
+  assert.deepEqual(s.hairRecord.attempts.slice(0, 3), p.hairRecord.attempts, "D-175's, D-177's and D-180's records are unchanged");
+  assert.equal(s.hairRecord.attempts.length, 4);
+  assert.match(s.hairRecord.attempts[3], /^D-183-r3-hair-northstar-v4 — .*\(two reference images\).*H1\.\.H5 passed, D-179 placement and shape checks not evaluated, .*kept for review, nothing promoted \(recorded by D-184\)$/);
+  assert.deepEqual([s.hairRecord.dispatchUndetermined, s.hairRecord.serverAnswered], [0, 4]);
+  const { hair, hairRecord, ...rest } = s, { hair: ph, hairRecord: phr, ...prest } = p; assert.deepEqual(rest, prest, "underlay, faceNeutral and eyesFixed records are untouched");
+  assert.deepEqual([b.minimum, b.maximum, b.callsPlannedAndAuthorised.derivedBudget, b.callsPlannedAndAuthorised.hair, LIVE_NOW.assets[8].calls], [26, 27, "26-27", 4, 4]);
+  assert.deepEqual(LIVE_NOW.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT"), [], "no live permission remains");
+  assert.match(LIVE_NOW.authorisedCalls.budgetAccounting, /D-183 added ONE further planned hair call \(assets\[8\] 3 -> 4\) for the fourth hair sheet \(two reference images: Northstar for style, the D-183 guide for geometry; prompt v4\), sent once \(recorded by D-184\), so actually sent is hair 4 and the planned hair capacity \(4\) is used up\. The derived budget is 26-27\./);
+  const P = LIVE_NOW.prohibitions.noImageRequestAuthorised;
+  assert.match(P, /\(15\) D-183-r3-hair-northstar-v4 — NO LONGER a permission/);
+  assert.match(P, /No entry in this list is an active send permission — .*D-180's or D-183's call id or claim identity, no fifth hair call, and no other call in the R3 plan\.$/);
+  assert.ok(!/THE ONLY active send permission/.test(P));
+  assert.equal(P.slice(0, P.indexOf(" (15) ")), PRE_D184.noImageRequestAuthorised.slice(0, PRE_D184.noImageRequestAuthorised.indexOf(" (15) ")), "every earlier restriction is kept word for word");
+  assert.equal(LIVE_NOW.architecture.defaultEnabled, false, "R3 stays default OFF");
+});
+
+test("THE SPENT D-183 PERMISSION IS REFUSED BEFORE THE CLAIM: in the closed D-184 state the adapter neither dry-runs nor sends", () => {
+  const sb = sandbox({ closed: true });
+  const dry = runAdapter(sb, GOOD_ARGS);
+  assert.equal(dry.status, 1, dry.out); assert.match(dry.out, /REFUSED \[authorisation\]/); assert.match(dry.out, /mandateState: "SPENT", expected "UNSPENT"/);
+  assert.equal(existsSync(sb.claim), false); assert.equal(fetchLog(sb).length, 0);
+  const send = runAdapter(sb, [...GOOD_ARGS, ...SEND], KEY_ENV);
+  assertRefusedBeforeClaim(sb, send, "authorisation");
+  assert.match(send.out, /the entry carries neverReuse; it is not an active, unspent permission/);
+  assert.equal(readdirSync(sb.state).length, 0, "the claim register was not even created");
+});
+
+test("the D-184 register row: once, directly after D-183, D-183 verbatim, the outcome and the accounting named, no mojibake; the docs describe it", () => {
+  const lines = REGISTER.split("\n");
+  assert.equal(lines.filter((l) => l.startsWith("| **D-184** |")).length, 1);
+  assert.equal(lines.findIndex((l) => l.startsWith("| **D-184** |")), lines.findIndex((l) => l.startsWith("| **D-183** |")) + 1);
+  assert.equal(sha256(lines.find((l) => l.startsWith("| **D-183** |"))), D183_ROW_SHA_AT_D183, "D-183 is not rewritten");
+  for (const needle of [CALL, CLAIM_ID, REQUEST_ID_D183, RAW_SHA_D183, "HTTP 200", "H1–H5", "ikke vurderet", "beholdt til review", "ikke visuelt godkendt", "RECORDED — D-183 SPENT — NO LIVE PERMISSION",
+    "NOT_IDENTIFIABLE", "`hair` = 4", "`eyesFixed` = 2", "`faceNeutral` = 4", "`underlay` = 5", "26–27", "R3 forbliver default OFF"]) assert.ok(D181_ROW.includes(needle), "the D-184 row carries " + JSON.stringify(needle));
+  assert.ok(!/[ÃÂ]\S|�/.test(D181_ROW), "no mojibake in the Danish row");
+  assert.match(readFileSync(repoFile("docs/AVATAR_SYSTEM.md"), "utf8"), /\*\*D-184 \(2026-10-22\)\*\* recorded that one hair send/);
+  // the status line is current state: D-185 later added the hybrid candidate (tested in avatar-r3-hair-hybrid-d185.test.mjs)
 });

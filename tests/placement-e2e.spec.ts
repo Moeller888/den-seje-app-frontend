@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
-import { findAuthUserByEmail, PROD } from './helpers.js';
+import { findAuthUserByEmail, PROD, serveCheckoutLogin } from './helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -27,11 +27,14 @@ let studentId: string;
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function loginStudent(page: any): Promise<void> {
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: 'domcontentloaded' });
   await page.fill('#email', STUDENT_EMAIL);
   await page.fill('#password', STUDENT_PASS);
   await page.locator('#loginBtn').click();
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  // A pupil always lands on the Hub; the quiz is one step further (Spil -> index.html).
+  await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
 }
 
 // Click through all 10 placement questions then wait for quiz to load.

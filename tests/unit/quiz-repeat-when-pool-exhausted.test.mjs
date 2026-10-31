@@ -320,16 +320,52 @@ const REVIEWED_LATER_REPEAT_USERS = {
     "(question_is_servable). It reads and bumps repeat_count exactly as before, keeps every guard (one open " +
     "instance, scope, auto-graded only, never teacher-graded), and redefines neither request_repeat_question, " +
     "process_question_attempt nor release_open_question_outside — the award stays this migration's.",
+  "20261029120000_difficulty_scale_b.sql":
+    "adds request_repeat_level_question_for_student, #351's request_repeat_question_servable_for_student " +
+    "over the level engine's pool (active, levelled, servable questions in the given domains; no grade " +
+    "ceiling). It reads and bumps repeat_count exactly as before and keeps every guard (one open instance, " +
+    "auto-graded only, never teacher-graded, lost race → NULL). advance_student_level only READS " +
+    "repeat_count (first answers only). It redefines neither request_repeat_question, " +
+    "process_question_attempt nor release_open_question_outside, and alters no table — the award stays " +
+    "this migration's.",
+  "20261029150000_teacher_stats_from_answers.sql":
+    "reads repeat_count only to leave repeats out of the teacher's first-attempt statistics " +
+    "(get_teacher_visibility, get_student_overview). It defines and calls none of the repeat functions " +
+    "and writes nothing.",
+  "20261030211428_question_attempts_v2.sql":
+    "adds the attempt log (D-266, H5) and NEW functions process_question_attempt_v2 / process_text_answer_v2, " +
+    "which copy the award rules of process_question_attempt (D-211) and process_text_answer unchanged and are " +
+    "called by nothing until a separately approved activation. It redefines none of this migration's functions " +
+    "(its precondition only checks their md5). Its question_instances changes are pinned below: " +
+    "UNIQUE (id, student_id), and the round guard trigger, which only enforces what every request_repeat_* " +
+    "already does (reopen = answered true -> false with repeat_count + 1)."
+};
+
+// The only question_instances statements a reviewed later user may contain, each exactly once.
+const REVIEWED_QUESTION_INSTANCES_CHANGES = {
+  "20261030211428_question_attempts_v2.sql": [
+    "ALTER TABLE public.question_instances\n  ADD CONSTRAINT question_instances_id_student_id_key UNIQUE (id, student_id);",
+    "CREATE TRIGGER question_instances_round_guard\n  BEFORE UPDATE OF answered, repeat_count ON public.question_instances\n" +
+      "  FOR EACH ROW EXECUTE FUNCTION public.question_instances_round_guard();",
+  ],
 };
 
 test("reviewed later repeat users redefine none of this migration's functions", () => {
   const dir = join(REPO, "supabase", "migrations");
   assert.deepEqual(Object.keys(REVIEWED_LATER_REPEAT_USERS),
-    ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql"],
+    ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql",
+      "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql",
+      "20261030211428_question_attempts_v2.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
-    const body = readFileSync(join(dir, name), "utf8").split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
+    let body = readFileSync(join(dir, name), "utf8").split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const allowed of REVIEWED_QUESTION_INSTANCES_CHANGES[name] ?? []) {
+      assert.equal(body.split(allowed).length - 1, 1, `${name}: the reviewed statement occurs exactly once: ${allowed}`);
+      body = body.replace(allowed, "");
+    }
+    assert.equal(/CREATE\s+(OR\s+REPLACE\s+)?TRIGGER[^;]*\bON\s+(public\.)?question_instances\b/i.test(body), false,
+      `${name}: no trigger on question_instances beyond the reviewed statements`);
     assert.equal(
       /CREATE\s+(OR\s+REPLACE\s+)?FUNCTION\s+public\.(process_question_attempt|request_repeat_question|release_open_question_outside)\s*\(/i.test(body),
       false, `${name} must not redefine a function this migration owns`);
@@ -355,8 +391,11 @@ test("the reviewed spelling migration is the only later definition of the repeat
   assert.ok(touching.includes("20261002000000_quiz_repeat_when_pool_exhausted.sql"));
   // The spelling runtime suite proves every changed answer on repeats and pins the rest
   // of the complete function byte-for-byte, including all reward and idempotency logic.
+  // D-211 (owner decision 2026-10-26) changes ONLY the repeat award to 1 coin + 2 XP; its runtime
+  // suite (repeat-answer-coin-reward-migration-run) proves that and pins everything else.
   assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
-    ["20261018143726_fix_danish_question_bank_text.sql"]);
+    ["20261018143726_fix_danish_question_bank_text.sql",
+     "20261027120000_repeat_answer_coin_reward.sql"]);
 });
 
 test("the migration version is not shared with any other migration", () => {

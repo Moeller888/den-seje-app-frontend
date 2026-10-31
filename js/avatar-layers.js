@@ -241,6 +241,40 @@ export function isAvatarV2() {
   }
 }
 
+// ── Shared upper-body framing flag (D-195) ─────────────────────────────────────
+// One framing for every hairstyle and render path on the two small surfaces (quiz
+// #avatar-display, hub .profile-avatar): the surface adds AVATAR_FRAMING_CLASS to
+// its avatar root and that page's CSS grows every layer box 1.5× about the box's
+// top centre and clips below the hips. Layer transforms are relative to their own
+// box, so they stay aligned. DEFAULT OFF — while off no class is added and the
+// surfaces render exactly as before. Per-browser opt-in for review WITHOUT a code
+// change: localStorage.setItem('avatar_framing','upper'). Returns false on any
+// error (no localStorage etc.).
+export const AVATAR_FRAMING_UPPER = false;
+export const AVATAR_FRAMING_CLASS = "avatar-framing-upper";
+export function isAvatarFramingUpper() {
+  if (AVATAR_FRAMING_UPPER) return true;
+  try {
+    return typeof localStorage !== "undefined" && localStorage.getItem("avatar_framing") === "upper";
+  } catch (_e) {
+    return false;
+  }
+}
+
+// D-196: the framing adapts to what the avatar WEARS. Items in these slots are drawn across the
+// whole canvas width (wings 0–100 %) or down to the feet (capes), so ANY shared zoom cuts them
+// (D-195 measured up to 72 % of a wing lost at 1.5×). When one of them is equipped the figure keeps
+// today's whole-canvas view — nothing of the item is lost; the face simply stays at today's size.
+// The decision is per SLOT, never per item, and the figure is never scaled per layer.
+export const AVATAR_FRAMING_WIDE_SLOTS = Object.freeze(["back"]);
+// Should this surface frame the avatar? The flag (or opt-in) AND no wide-slot item equipped.
+// equippedSlots: { slot: itemId } as the surfaces already hold it; anything else counts as empty.
+export function avatarFramingOnFor(equippedSlots) {
+  if (!isAvatarFramingUpper()) return false;
+  const slots = (equippedSlots && typeof equippedSlots === "object") ? equippedSlots : {};
+  return !AVATAR_FRAMING_WIDE_SLOTS.some((s) => !!slots[s]);
+}
+
 // C2 base bodies — full body_type × skin_tone matrix. Each pair maps to a concrete
 // flat C2 SVG honoring the locked C2 geometry contract (head cx=80 cy=50 r=30, eyes
 // cx=68/92 cy=47, ears, neck, arm rects, hand anchors). Only the torso/shirt/shorts
@@ -771,4 +805,168 @@ export function shopPreviewModeFor(slot) {
 // render path yet — the Phase-2 stack switch (PR C) is the separately gated wiring step.
 export function hasR2StackFor(identity) {
   return !!(baseSrcForR2(identity) && hairSrcForR2(identity));
+}
+
+// ── D-242: Northstar wardrobe on the private base figure C — OFF by default ───────────────────────
+// A separate figure, not a variant of R2: C's head, eyes and proportions differ from the R2 Master v1
+// stack (measured, D-242), so no R2 face/eye/hair/blink layer and no calibrated head item is reused.
+// The figure is composed from full-resolution layers (assets/avatar-northstar/, lossless WebP
+// 1024×1536, owner-authorised exception to D-127 §2) on ONE canvas before any display scaling: layers
+// scaled one by one leave light seams at the neck and between sleeve and body (measured, D-242).
+// Only the 19 ready K outfits of the D-239/D-240 review can be chosen; the three known-faulty
+// combinations and every untested combination are not part of this integration. The choice lives in
+// this browser only (localStorage) — no database, catalog, purchase or ownership change.
+// Opt-in on one browser: localStorage.setItem("avatar_northstar", "1") (or avatar.html?northstar=1),
+// then pick an outfit in the panel on avatar.html.
+export const AVATAR_NORTHSTAR_WARDROBE = false;
+export const NORTHSTAR_OPT_IN_KEY = "avatar_northstar";
+export const NORTHSTAR_OUTFIT_KEY = "avatar_northstar_outfit";
+export const NORTHSTAR_BASE_PATH = "/assets/avatar-northstar";
+export const NORTHSTAR_CANVAS = Object.freeze({ width: 1024, height: 1536 });
+// The surfaces that show the figure; every other caller (shop previews, tests) keeps today's path.
+export const NORTHSTAR_SURFACES = Object.freeze(["quiz", "hub", "avatar"]);
+// aura and back paint behind the figure; every other equipped slot makes the WHOLE avatar keep
+// today's path (no silent item loss, as D-082).
+export const NORTHSTAR_SUPPORTED_COSMETIC_SLOTS = Object.freeze(["aura", "back"]);
+// The figure's own layers (C's body with an empty torso, forearms and hands, the head).
+export const NORTHSTAR_FIGURE = Object.freeze({ body: "figure-body-v1.webp", arms: "figure-arms-v1.webp", head: "figure-head-v1.webp" });
+// The ten items: their layers and their skin-shadow parts (multiply; on C's body, on C's arms).
+export const NORTHSTAR_ITEMS = Object.freeze({
+  "top-tee-hip-cream":            { category: "top",    layers: ["top-body", "sleeves"], shadows: ["body", "arms"] },
+  "top-tee-hip-blue":             { category: "top",    layers: ["top-body", "sleeves"], shadows: ["arms"] },
+  "bottom-skirt-sand":            { category: "bottom", layers: ["pants"],               shadows: ["body", "arms"] },
+  "bottom-shorts-navy":           { category: "bottom", layers: ["pants"],               shadows: ["body"] },
+  "bottom-capri-lightblue":       { category: "bottom", layers: ["pants"],               shadows: ["body"] },
+  "bottom-trousers-square-olive": { category: "bottom", layers: ["pants"],               shadows: ["body"] },
+  "shoes-sneakers-beige":         { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
+  "shoes-boots-laceup-black":     { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
+  "shoes-sneakers-white":         { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
+  "shoes-ankleboots-brown":       { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
+});
+// The 19 ready outfits (technically OK, no open finding; the assistant's review found them fit as a
+// visual prototype and the owner approved the prototype's overall look — not production).
+const _NS = (top, bottom, shoes) => Object.freeze({ top: "top-" + top, bottom: "bottom-" + bottom, shoes: "shoes-" + shoes });
+export const NORTHSTAR_OUTFITS = Object.freeze({
+  K01: _NS("tee-hip-cream", "skirt-sand", "sneakers-beige"),
+  K02: _NS("tee-hip-cream", "skirt-sand", "boots-laceup-black"),
+  K03: _NS("tee-hip-cream", "skirt-sand", "sneakers-white"),
+  K04: _NS("tee-hip-cream", "shorts-navy", "sneakers-beige"),
+  K05: _NS("tee-hip-cream", "shorts-navy", "boots-laceup-black"),
+  K06: _NS("tee-hip-cream", "shorts-navy", "sneakers-white"),
+  K07: _NS("tee-hip-cream", "capri-lightblue", "sneakers-beige"),
+  K08: _NS("tee-hip-cream", "capri-lightblue", "boots-laceup-black"),
+  K09: _NS("tee-hip-cream", "capri-lightblue", "sneakers-white"),
+  K10: _NS("tee-hip-blue", "shorts-navy", "sneakers-beige"),
+  K11: _NS("tee-hip-blue", "shorts-navy", "boots-laceup-black"),
+  K12: _NS("tee-hip-blue", "shorts-navy", "sneakers-white"),
+  K13: _NS("tee-hip-blue", "capri-lightblue", "sneakers-beige"),
+  K14: _NS("tee-hip-blue", "capri-lightblue", "boots-laceup-black"),
+  K15: _NS("tee-hip-blue", "capri-lightblue", "sneakers-white"),
+  K16: _NS("tee-hip-blue", "shorts-navy", "ankleboots-brown"),
+  K17: _NS("tee-hip-blue", "trousers-square-olive", "sneakers-white"),
+  K18: _NS("tee-hip-blue", "trousers-square-olive", "ankleboots-brown"),
+  K19: _NS("tee-hip-blue", "capri-lightblue", "ankleboots-brown"),
+});
+// Known fault (a double edge at the right hip): never rendered, whatever is stored.
+export const NORTHSTAR_KNOWN_FAULTY = Object.freeze([
+  "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-beige",
+  "top-tee-hip-blue+bottom-skirt-sand+shoes-boots-laceup-black",
+  "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-white",
+]);
+
+function _nsStorage(key) {
+  try { return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null; } catch (_e) { return null; }
+}
+// The flag, or this browser's explicit opt-in. Never throws.
+export function isNorthstarWardrobeOn() {
+  if (AVATAR_NORTHSTAR_WARDROBE) return true;
+  return _nsStorage(NORTHSTAR_OPT_IN_KEY) === "1";
+}
+// The outfit stored in this browser, or null for anything that is not one of the 19 K numbers.
+export function northstarSelectedOutfit() {
+  const k = _nsStorage(NORTHSTAR_OUTFIT_KEY);
+  return typeof k === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_OUTFITS, k) ? k : null;
+}
+const _nsSrc = (file) => NORTHSTAR_BASE_PATH + "/" + file;
+// The ordered canvas plan for one K outfit, or null when it is not a complete, ready outfit (top AND
+// bottom are mandatory — C's body layer has an empty torso). "draw" steps are the stack, bottom first
+// (figure: C's own layer; cut: what the closed shoe hides of C, cut out before drawing); "shade" steps
+// are the items' skin shadows, applied after the stack in item order (top, bottom, shoes).
+export function northstarCanvasPlan(key) {
+  const o = typeof key === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_OUTFITS, key) ? NORTHSTAR_OUTFITS[key] : null;
+  return o ? northstarPlanFor(o) : null;
+}
+// D-244: the same plan for any outfit { top, bottom, shoes } over an item table of the NORTHSTAR_ITEMS shape (category, layers,
+// shadows, closed) and a layer directory — what the batch export checks its layers with. Null for an incomplete outfit or a
+// known-faulty combination.
+export function northstarPlanFor(o, itemTable = NORTHSTAR_ITEMS, basePath = NORTHSTAR_BASE_PATH) {
+  if (!o || typeof o !== "object") return null;
+  const _nsSrc = (file) => basePath + "/" + file;
+  const ids = [o.top, o.bottom, o.shoes], items = ids.map((id) => (typeof id === "string" && Object.prototype.hasOwnProperty.call(itemTable, id) ? itemTable[id] : null));
+  if (items.some((it) => !it)) return null;
+  if (items[0].category !== "top" || items[1].category !== "bottom" || items[2].category !== "shoes") return null;
+  if (NORTHSTAR_KNOWN_FAULTY.indexOf(ids.join("+")) !== -1) return null;
+  const cut = items[2].closed ? _nsSrc("hide-" + o.shoes + "-v1.webp") : null;
+  const figure = (file) => ({ op: "draw", src: _nsSrc(file), figure: true, cut });
+  const layer = (id, l) => ({ op: "draw", src: _nsSrc(id + "-" + l + "-v1.webp") });
+  return [
+    figure(NORTHSTAR_FIGURE.body),
+    ...items[2].layers.map((l) => layer(o.shoes, l)),
+    ...items[1].layers.map((l) => layer(o.bottom, l)),
+    ...items[0].layers.filter((l) => l !== "sleeves").map((l) => layer(o.top, l)),
+    figure(NORTHSTAR_FIGURE.arms),
+    ...items[0].layers.filter((l) => l === "sleeves").map((l) => layer(o.top, l)),   // a sleeveless top has none
+    { op: "draw", src: _nsSrc(NORTHSTAR_FIGURE.head) },
+    ...ids.flatMap((id, k) => items[k].shadows.map((part) => ({ op: "shade", src: _nsSrc(id + "-shadow-" + part + "-v1.webp") }))),
+  ];
+}
+// Executes a plan on straight-alpha RGBA pixel arrays of n pixels (pixelsOf(src) → Uint8ClampedArray),
+// with the item pipeline's own arithmetic (D-242): the draws accumulate premultiplied and are rounded
+// once (overStack); a figure layer loses every pixel its cut mask covers; then each shadow multiplies
+// the composite where C's body or arms is the topmost layer with alpha ≥ 128 (applyShadow, D-214). The
+// same function runs in the browser and in the build tool's equivalence check. Pure; never throws for
+// a well-formed plan.
+export function northstarCompose(plan, pixelsOf, n) {
+  const acc = new Float64Array(n * 4), top = new Uint8Array(n);   // top: 1 = C's own layer, 2 = an item or the head
+  for (const step of plan) {
+    if (step.op !== "draw") continue;
+    const L = pixelsOf(step.src), M = step.cut ? pixelsOf(step.cut) : null, mark = step.figure ? 1 : 2;
+    for (let i = 0; i < n; i++) {
+      const j = i * 4; let a8 = L[j + 3];
+      if (M && M[j + 3]) a8 = 0;
+      if (!a8) continue;
+      const a = a8 / 255;
+      for (let c = 0; c < 3; c++) acc[j + c] = L[j + c] * a + acc[j + c] * (1 - a);
+      acc[j + 3] = a + acc[j + 3] * (1 - a);
+      if (a8 >= 128) top[i] = mark;
+    }
+  }
+  const out = new Uint8ClampedArray(n * 4);
+  for (let i = 0; i < n; i++) { const j = i * 4, a = acc[j + 3]; out[j + 3] = Math.round(a * 255); if (a) for (let c = 0; c < 3; c++) out[j + c] = Math.round(acc[j + c] / a); }
+  for (const step of plan) {
+    if (step.op !== "shade") continue;
+    const S = pixelsOf(step.src);
+    for (let i = 0; i < n; i++) {
+      const j = i * 4, a = S[j + 3]; if (!a || top[i] !== 1) continue;
+      for (let c = 0; c < 3; c++) out[j + c] = Math.round(out[j + c] * (1 - a / 255 + (a / 255) * S[j + c] / 255));
+    }
+  }
+  return out;
+}
+// What mountC2Avatar shows on the Northstar path, or null for today's path: the flag/opt-in is off,
+// the surface is not one of NORTHSTAR_SURFACES, no valid K outfit is stored, or an equipped cosmetic
+// sits in a slot the figure does not support. Supported cosmetics keep their src and C2 z.
+export function northstarRenderFor(surface, cosmetics) {
+  if (!isNorthstarWardrobeOn()) return null;
+  if (NORTHSTAR_SURFACES.indexOf(surface) === -1) return null;
+  const key = northstarSelectedOutfit(), plan = northstarCanvasPlan(key);
+  if (!plan) return null;
+  const list = Array.isArray(cosmetics) ? cosmetics : [];
+  const out = [];
+  for (const c of list) {
+    if (!c || !c.src || typeof c.z !== "number") continue;   // renders on no path → ignored, as on R2
+    if (NORTHSTAR_SUPPORTED_COSMETIC_SLOTS.indexOf(c.slot) === -1) return null;
+    out.push({ src: c.src, z: C2_LAYER_Z[c.slot] ?? c.z, isBase: false, inline: false, marker: "northstar-cosmetic" });
+  }
+  return { key, plan, cosmetics: out };
 }

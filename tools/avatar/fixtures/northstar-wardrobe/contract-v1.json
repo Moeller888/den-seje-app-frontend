@@ -1,0 +1,39 @@
+{
+  "id": "northstar-wardrobe-contract-v1",
+  "decision": "D-197",
+  "status": "PROOF-OF-CONCEPT CONTRACT — one fixed Northstar v2 body and pose for generated clothing items; not approved for production, no image call, R3 stays default OFF",
+  "experiment": "D-198: kept as a DOCUMENTED EXPERIMENT, not a production standard. The fit was shown with derivatives of Northstar's own clothing (recolours, deformations) and with SIMULATED generated input; it is NOT proven on any GPT-generated item. Its rule that every item covers Northstar's tee, jeans and sneakers is not carried over: contract-v2.json targets a base figure with arms, legs and feet.",
+  "source": { "file": "assets/avatar/reference/Northstar Master v2.png", "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50", "use": "the master's own painted outfit becomes the DEFAULT item of each category; the D-194 R3 head stack and the master's arms and hands are the base figure" },
+  "notUsed": ["H1 (fitting-base.H1.png) — banned; this contract does not recreate a bare or close-fitting fitting body", "the R2 base (a different figure and pose: silhouette IoU 0.77 against Northstar v2)", "any image call"],
+  "canvas": { "width": 1024, "height": 1536, "space": "Northstar v2 master coordinates, unchanged; every item is a full-canvas RGBA layer set in these coordinates" },
+  "categories": {
+    "top": { "mandatory": true, "default": "Northstar's grey tee", "layers": ["top-body", "top-sleeves"], "rule": "covers the default tee completely; top-body lies UNDER the arms, top-sleeves (inside the sleeve zone) OVER them; the hem lies over the pants; never on the hands; ends above the crotch band" },
+    "pants": { "mandatory": true, "default": "Northstar's blue jeans", "layers": ["pants"], "rule": "covers the default jeans completely; lies under the top and the hands; may widen and may cover the shoe tops down to the ground band" },
+    "shoes": { "mandatory": true, "default": "Northstar's grey sneakers", "layers": ["shoes"], "rule": "covers the default sneakers completely; lies under the pants (a boot shaft runs under the hem); the soles stand on the fixed ground line" }
+  },
+  "outOfScope": "garments that would reveal skin the base does not have — sleeveless or off-shoulder tops, crop tops, necklines below the default collar, shorts, skirts, rolled-up hems, sandals, bare feet. They need owner-approved limb material first; a fitting body under clothing is not part of this system.",
+  "margins": {
+    "coverErodePx": 3,
+    "sleeveZonePx": 14,
+    "topSidePx": 40,
+    "collarUpPx": 14,
+    "topAboveCrotchPx": 8,
+    "handGuardPx": 2,
+    "pantsSidePx": 40,
+    "waistUpPx": 30,
+    "groundBandPx": 22,
+    "shoeSidePx": 34,
+    "shoeUpPx": 150,
+    "groundTolPx": 4
+  },
+  "extraction": {
+    "key": [255, 0, 255],
+    "keyNote": "the generator receives and returns an OPAQUE picture (transparent output is refused by the model, D-151): the base figure on a flat magenta key; magenta is forbidden in every item prompt",
+    "maxShiftPx": 6,
+    "maxRegistrationDelta": 6,
+    "keyTol": 40,
+    "changeTol": 24
+  },
+  "gates": { "maxHazeShare": 0.06, "minOutlineShare": 0.45, "minSharpness": 0.70 },
+  "gateCalibration": "minSharpness is mean |Laplacian| / mean |gradient| over the item's opaque interior (contrast-independent). Measured: Northstar's own garments and their recolours and warped stimuli 0.76–1.01; the same after a 3x3 blur or a soft 2x upscale 0.39–0.61. minOutlineShare: Northstar's garments 0.85–1.00; the foreign R2 armour 0.33."
+}

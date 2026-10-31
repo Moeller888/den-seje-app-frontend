@@ -1,0 +1,88 @@
+{
+  "atlas.bo": {
+    "atlas": {
+      "columns": 2,
+      "frameHeight": 96,
+      "frameWidth": 64,
+      "frames": 2
+    },
+    "author": "adventure-engine project",
+    "bytes": 189,
+    "file": "atlas.bo.svg",
+    "kind": "atlas",
+    "license": "CC0-1.0",
+    "sha256": "94cb6696176ab013abf54a04f50330b58814eb207518d57b9819817de018d8ab",
+    "source": "drawn for the editor fixture",
+    "type": "image/svg+xml"
+  },
+  "bg.attic": {
+    "author": "adventure-engine project",
+    "bytes": 200,
+    "file": "bg.attic.svg",
+    "kind": "image",
+    "license": "CC0-1.0",
+    "sha256": "00ac0a315a57801541934224082255aeb0a7c7a7a83285f6703e3a14d26440ff",
+    "source": "drawn for the editor fixture",
+    "type": "image/svg+xml"
+  },
+  "bg.cellar": {
+    "author": "adventure-engine project",
+    "bytes": 200,
+    "file": "bg.cellar.svg",
+    "kind": "image",
+    "license": "CC0-1.0",
+    "sha256": "c1c735e967fa22424affb322e53185dc6c35270c3188c98f06776b1adea62de9",
+    "source": "drawn for the editor fixture",
+    "type": "image/svg+xml"
+  },
+  "icon.wick": {
+    "author": "adventure-engine project",
+    "bytes": 165,
+    "file": "icon.wick.svg",
+    "kind": "image",
+    "license": "CC0-1.0",
+    "sha256": "3d694f1e0bc8a8395543dcd4fc89f2ba62c1893532cb3bb29f82afc08f58db78",
+    "source": "drawn for the editor fixture",
+    "type": "image/svg+xml"
+  },
+  "img.dawn": {
+    "author": "adventure-engine project",
+    "bytes": 194,
+    "file": "img.dawn.svg",
+    "kind": "image",
+    "license": "CC0-1.0",
+    "sha256": "888cde52ce9bb241bc539938104b939156013af1026257051b4563c6418bf31e",
+    "source": "drawn for the editor fixture",
+    "type": "image/svg+xml"
+  },
+  "lamp": {
+    "author": "adventure-engine project",
+    "bytes": 156,
+    "file": "lamp.svg",
+    "kind": "image",
+    "license": "CC0-1.0",
+    "sha256": "d830cfeebe88e095c5d292ae9f1812cd761a0b631cc2e188db10059687a32583",
+    "source": "drawn for the editor fixture",
+    "type": "image/svg+xml"
+  },
+  "lamp.lit": {
+    "author": "adventure-engine project",
+    "bytes": 203,
+    "file": "lamp.lit.svg",
+    "kind": "image",
+    "license": "CC0-1.0",
+    "sha256": "55efea7d899b398d820c624af96f01bb294b310bbd0540322dc20beb89cddba0",
+    "source": "drawn for the editor fixture",
+    "type": "image/svg+xml"
+  },
+  "snd.drip": {
+    "author": "adventure-engine project",
+    "bytes": 1644,
+    "file": "snd.drip.wav",
+    "kind": "audio",
+    "license": "CC0-1.0",
+    "sha256": "053da7e8ef7d4f7cd8352881ef8160f64c713bf6e7d0e2afa10a825227bc48ff",
+    "source": "drawn for the editor fixture",
+    "type": "audio/wav"
+  }
+}

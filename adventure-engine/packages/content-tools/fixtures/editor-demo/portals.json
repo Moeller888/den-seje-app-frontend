@@ -1,0 +1,56 @@
+[
+  {
+    "arrivalSpot": "hatch",
+    "entry": null,
+    "exitSpot": "stairs",
+    "from": "cellar",
+    "id": "up",
+    "nameKey": "p.up",
+    "polygon": [
+      [
+        1150,
+        300
+      ],
+      [
+        1260,
+        300
+      ],
+      [
+        1260,
+        560
+      ],
+      [
+        1150,
+        560
+      ]
+    ],
+    "to": "attic"
+  },
+  {
+    "arrivalSpot": "arrive",
+    "entry": null,
+    "exitSpot": "hatch",
+    "from": "attic",
+    "id": "down",
+    "nameKey": "p.down",
+    "polygon": [
+      [
+        120,
+        380
+      ],
+      [
+        240,
+        380
+      ],
+      [
+        240,
+        590
+      ],
+      [
+        120,
+        590
+      ]
+    ],
+    "to": "cellar"
+  }
+]

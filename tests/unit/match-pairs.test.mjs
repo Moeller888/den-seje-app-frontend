@@ -210,11 +210,18 @@ test("grading by process_question_attempt's comparison is exact for every possib
 test("get-next-question: the key is drawn at instance creation and every path lays out from the instance key", () => {
   const index = read("supabase/functions/get-next-question/index.ts");
   assert.match(index, /if \(answer_format === "match"\) \{[\s\S]*?return \{ question, correct: createMatchKey\(parseMatchPairs\(raw\)\.length\) \};/);
-  assert.match(index, /toPublicQuestion\(q\.content, format, q\.metadata, instance\.correct_answer\)/);
+  assert.match(index, /const instanceKey = await matchInstanceKey\(format, instance\.id\);\s*const pub = toPublicQuestion\(q\.content, format, q\.metadata, instanceKey\)/);
   assert.match(index, /toPublicQuestion\(q\.content, format, q\.metadata, normalized\.correct\)/);
-  assert.match(index, /toPublicQuestion\(rq\.content, format, rq\.metadata, repeatRow\.correct_answer\)/);
-  // correct_answer is read on the backend client only and never put into a response.
-  assert.equal((index.match(/^\s*correct_answer,$/gm) ?? []).length, 2);
+  assert.match(index, /const instanceKey = await matchInstanceKey\(format, repeatRow\.id\);\s*const pub = toPublicQuestion\(rq\.content, format, rq\.metadata, instanceKey\)/);
+  // The key is read only for a "match" row, on the backend client, scoped to the verified student — the
+  // shared due/repeat selects stay as in the release-gated version (no correct_answer in them).
+  const keyRead = index.slice(index.indexOf("const matchInstanceKey"), index.indexOf("// 🔥 1. DUE QUESTIONS"));
+  assert.match(keyRead, /if \(format !== "match"\) return undefined;/);
+  assert.match(keyRead, /await admin\(\)\s*\.from\("question_instances"\)\s*\.select\("correct_answer"\)\s*\.eq\("id", instanceId\)\s*\.eq\("student_id", student_id\)/);
+  assert.match(keyRead, /if \(keyError\) throw new InstanceKeyReadError/);
+  assert.equal((index.match(/^\s*correct_answer,$/gm) ?? []).length, 0);
+  // A failed key read is a visible 500, never skipped as bad content.
+  assert.equal((index.match(/if \(e instanceof InstanceKeyReadError\) throw e;/g) ?? []).length, 2);
   for (const resp of index.matchAll(/JSON\.stringify\(\{([\s\S]*?)\}\)/g)) assert.equal(/correct_answer|normalized/.test(resp[1]), false);
 });
 

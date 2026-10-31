@@ -1,0 +1,27 @@
+node_modules/
+coverage/
+*.tsbuildinfo
+dist/
+test-results/
+playwright-report/
+dist-devtools/
+# Never commit: logs, environment files, local data, temporary and editor files
+*.log
+.env
+.env.*
+.vite/
+*.tmp-*
+*.db
+*.sqlite
+.DS_Store
+.idea/
+.vscode/
+.claude/
+# Exports and builds made by hand with the content CLI or the editor
+build/
+*-project.zip
+*-bundle.zip
+*-diagnostics.json
+# The external clean-room denylist (CR-01) must never be committed
+clean-room-denylist*
+*.denylist.txt

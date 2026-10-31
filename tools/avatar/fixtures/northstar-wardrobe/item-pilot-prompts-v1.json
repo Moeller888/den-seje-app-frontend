@@ -1,0 +1,75 @@
+{
+  "decision": "D-207",
+  "status": "FROZEN by D-207 — built unchanged from pilot-plan-v3.json (D-205): its template, its coverage sentences and each item's garment text; no other wording",
+  "template": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: {GARMENT}. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. {COVERAGE} Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+  "coverage": {
+    "top": "The new top replaces the grey sleeveless top completely and covers everything it covered.",
+    "bottom": "The new bottom replaces the dark grey shorts completely and covers everything they covered.",
+    "shoes": "Keep the grey top and the dark grey shorts unchanged."
+  },
+  "items": {
+    "top-tank-teal": {
+      "category": "top",
+      "garment": "a plain teal sleeveless tank top with wide shoulder straps, ending at the natural waist",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: a plain teal sleeveless tank top with wide shoulder straps, ending at the natural waist. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. The new top replaces the grey sleeveless top completely and covers everything it covered. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+      "sha256": "6e34c3bcad9e57a5309271fbd50eb30242d9711aab573a88bab8995166243f17",
+      "bytes": 658
+    },
+    "top-tee-red": {
+      "category": "top",
+      "garment": "a plain red t-shirt with short sleeves, ending at the hips",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: a plain red t-shirt with short sleeves, ending at the hips. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. The new top replaces the grey sleeveless top completely and covers everything it covered. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+      "sha256": "1a3e896e5a537272df3963188c3f2a607f7055794743dc21e2861a8b24dff03f",
+      "bytes": 629
+    },
+    "top-sweater-green": {
+      "category": "top",
+      "garment": "a plain green long-sleeved sweater with ribbed cuffs at the wrists, ending at the hips",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: a plain green long-sleeved sweater with ribbed cuffs at the wrists, ending at the hips. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. The new top replaces the grey sleeveless top completely and covers everything it covered. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+      "sha256": "200b3f07e3a0b8e74bc7781d156598156ccd793582e924ac2d86cb137ffc5906",
+      "bytes": 657
+    },
+    "bottom-shorts-navy": {
+      "category": "bottom",
+      "garment": "plain navy shorts ending just above the knees",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: plain navy shorts ending just above the knees. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. The new bottom replaces the dark grey shorts completely and covers everything they covered. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+      "sha256": "cdc8f6b67f658889f8fa64cec5d3edd80443b833b1b5c7476d46a1f6a82180fc",
+      "bytes": 618
+    },
+    "bottom-trousers-khaki": {
+      "category": "bottom",
+      "garment": "plain khaki long trousers down to the ankles",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: plain khaki long trousers down to the ankles. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. The new bottom replaces the dark grey shorts completely and covers everything they covered. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+      "sha256": "8adb19f50f697ec1f60d2165d555a13380c11d961d552254a15ebe7596a87358",
+      "bytes": 617
+    },
+    "bottom-skirt-plum": {
+      "category": "bottom",
+      "garment": "a plain plum skirt ending just above the knees",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: a plain plum skirt ending just above the knees. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. The new bottom replaces the dark grey shorts completely and covers everything they covered. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+      "sha256": "0e316198d816d3b349cc52400b125bb163a7bc2179f90978ae01450af9df7074",
+      "bytes": 619
+    },
+    "shoes-sandals-brown": {
+      "category": "shoes",
+      "garment": "simple brown sandals with straps; the toes stay visible",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: simple brown sandals with straps; the toes stay visible. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. Keep the grey top and the dark grey shorts unchanged. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+      "sha256": "ee12ec55b360440e909acbc4e8f12c2ab921cde56dee27ebbe26e91d559e070c",
+      "bytes": 590
+    },
+    "shoes-sneakers-white": {
+      "category": "shoes",
+      "garment": "simple white sneakers",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: simple white sneakers. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. Keep the grey top and the dark grey shorts unchanged. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+      "sha256": "79dc423dcfea0dd0d9588a9300cd299a79371cc13c3a9deee4cbfaefed072159",
+      "bytes": 556
+    },
+    "shoes-boots-black": {
+      "category": "shoes",
+      "garment": "simple black ankle boots",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: simple black ankle boots. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. Keep the grey top and the dark grey shorts unchanged. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+      "sha256": "fba5012d995ae1084e32e2c26764282df5342dd70475fa70cb63e228b6405b8e",
+      "bytes": 559
+    }
+  }
+}

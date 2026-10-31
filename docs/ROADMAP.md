@@ -15,6 +15,20 @@ _Last reviewed: 2026-07-01._
 
 ---
 
+## Elevens startside er Hub'en (ejerbeslutning 2026-10-22)
+
+- **Ejerbeslutning 2026-10-22:** en elev lander **altid** på `hub.html` efter login — også ved det
+  allerførste login. Før gik `js/login.js` direkte til quizzen (`index.html`), så identitetsprompt,
+  klassetrinsvalg og placeringstesten var det første, en ny elev mødte. De kører stadig, men først
+  når eleven går fra Hub'en til quizzen ("Spil").
+- Uændret: lærer → `teacher.html`, super_admin → `admin.html`, `must_reset_password` →
+  `reset-password.html?forced=1` (som efter skiftet sender tilbage til login og dermed til Hub'en).
+- Næste skridt (ikke bygget): måle-spørgsmål i **alle** fag. I dag måler placeringstesten kun
+  historie og gemmer ét fælles `profiles.placement_band`. Et designforslag kommer før kode og skal
+  passe med sværhedsskalaen 1–10.000 (niveau pr. fag, B1; udfasning af placeringstesten udskudt, B9).
+
+---
+
 ## Public website / landing track — Model A implemented, NOT deployed (2026-08-08)
 
 - **Owner decision: Model A.** A new public front page `landing.html` was added and `/` now
@@ -498,6 +512,92 @@ _Last reviewed: 2026-07-01._
   its `test` job **started 15:01:48Z and completed `success` 15:01:57Z (~9 s)** — Playwright, browser
   install and `npm ci` all skipped, required `test` green — i.e. docs-mode **finished before** the main
   run, never queuing behind the shared lock.
+  **E2E account slots + FIFO queue + maintainer label (2026-10-22, built, NOT activated).**
+  (1) **Four E2E account slots** (`0`–`3`): each has its own primary pupil, test teacher, the
+  teacher's pupil, and a password-less "owner" teacher that only anchors the primary pupil's
+  `teacher_id` (password-help needs the pupil to have a teacher; teacher-password-reset needs it NOT
+  to be the test teacher). Slot 0 = today's accounts, unchanged. Slots 1–3 derive every address by
+  inserting `+e2e-slot-<n>` before the `@` and reuse the existing password secrets; global-setup
+  creates them idempotently with `email_confirm` and an `app_metadata` marker, and refuses (never
+  resets) an existing account without that marker. Routing (`.github/ci/e2e-slot.mjs`): PR →
+  `number % E2E_SLOT_COUNT`; push and every other automatic event → slot 0; a manual
+  `workflow_dispatch` picks slot 0–3 independent of the switch, so a slot can be provisioned and
+  verified BEFORE PRs are routed to it, but a slot 1–3 that is not yet active additionally needs the
+  input `confirm_provisioning` = `provision-slot-<n>`. Anything else is rejected (the run fails,
+  never slot 0), and a guard step in the `test` job stops it before any Supabase call. The live
+  password-help spec refuses any call with the pupil's address unless the deployed function
+  provably cannot mail the teacher (no teacher, or a fresh cooldown row;
+  `tests/support/mail-guard.ts`); lock `e2e-shared-supabase` for slot 0
+  (kept, so old-workflow branches and the goldens regen still serialise with it) and
+  `e2e-shared-supabase-slot-<n>` for 1–3. **Switch:** repository variable `E2E_SLOT_COUNT`; unset =
+  1 slot = exactly the old behaviour, so merging creates no production users. A static audit
+  (`tests/unit/e2e-writes-slot-scoped.test.mjs`) proves every E2E write is keyed to a slot account;
+  none writes global state today. (2) **`queue: max`** on every E2E lock (supersedes PR #333): waiting
+  runs queue FIFO instead of displacing each other. (3) **Label `ci:e2e-not-required`**: skips
+  Playwright only if a write/maintain/admin user applied it, every file is under `tests/unit/`,
+  `tests/fixtures/` (not read by a spec), `tools/question-quality/`, `docs/` or
+  `supabase/migrations/`, every migration is data-only and has an executable PGlite
+  `*-migration-run.test.mjs` naming it, and the unit suite passes inside the required `test` job;
+  anything unclear → full suite. (4) **The push-to-main full run stays:** `main` has **no branch
+  protection** (no required check, direct pushes allowed), so a green PR does not prove what lands
+  on main; removing it waits for that protection.
+  **E2E lock: apt packages from the cache, stale runs stop red (2026-10-24, D-A4).**
+  (1) `npx playwright install --with-deps` runs inside the shared E2E lock, and its apt half hit a
+  slow Ubuntu mirror in 8 of 90 full runs (5.7–47 min; once 117 MB at 42 kB/s) while every queued run
+  waited; the browsers themselves always came in seconds. The `.deb` files apt downloads and the
+  browsers are now kept in the Actions cache (key = runner image + Playwright version); on a hit apt
+  installs without downloading (still verified against its signed index). Only push runs (main)
+  write the ~557 MB entry; pull requests restore it, so nine parallel PRs cannot crowd the 10 GB
+  repository cache. The install step is bounded to 15 min. **The official Playwright image was tried and rejected for now:** the pull took
+  29 s, but Chromium renders 1 px differently in it (11 golden screenshots failed, run 40079704807;
+  Firefox/WebKit green) — adopting it needs new owner-approved baselines. It remains the natural base
+  for the isolated E2E track. (2) **Stale runs stop red at lock acquisition.** The job is unconditional so the
+  required check always reports, and GitHub runs such jobs even after a cancel (measured 2026-10-23:
+  three cancelled runs still took the lock and ran the full suite). Inside the job `cancelled()`
+  stays **false** after a queued cancel (measured 2026-10-24, run 40079620782), so a status-function
+  guard cannot work; instead `.github/ci/superseded-check.mjs` reads the PR and the run's own API
+  record: a `pull_request` run whose PR moved to a newer commit or was closed stops in seconds and
+  **fails red** (a skipped required check would read as passing). Read-only, decides only about
+  itself, any doubt → run. Proven in CI: superseded run 40079689289 stopped red in 14 s. **Limit:**
+  a plain cancel of a queued run stays invisible to the job (the API keeps `status=pending`,
+  `conclusion=null`, run 40083437376); it is caught only if it also cancelled a sibling job (within
+  the first minutes). Otherwise push/close the PR or have the owner force-cancel. A cancel during the suite does not stop it (the suite finishes, afterAll
+  restores the accounts, the result is real). Pinned by `tests/unit/ci-e2e-lock-setup.test.mjs`,
+  which evaluates the workflow's own `if:` conditions per scenario. `update-avatar-goldens.yml` (manual, Chromium only) still installs under
+  its lock — a separate change.
+
+  **Isoleret E2E — D-110 løst i CI (2026-10-28, D-241).** `.github/workflows/isolated-e2e.yml` kører hele den
+  eksisterende Playwright-suite (de samme 1291 tests og de samme 289 browserbetingede spring) mod en lokal Supabase
+  pr. job. Hvert job har sin egen database, sine egne syntetiske konti og commit'ets egne Edge Functions.
+  Pipelinen er fail-closed over for produktionen i fem lag, og negative kontroller i hvert job beviser, at lagene
+  ikke er tomme. Den bruger ingen fælles lås og ingen produktionskonto.
+
+  Målt:
+  - 3 og 6 samtidige jobs, hver med 1002 bestået og 0 fejl.
+  - 9 jobs i ét workflow: 7 × 1002/0/0 og 2 × 1001/0/1. De to flaky er WebKit-navigationskapløb i specsene.
+  - **9 uafhængige workflows** (`d110/par-1`…`par-9`, ét job hver, som ni terminalers PR'er): 9 × 1002/0/0. Alle ni
+    suiter kørte samtidig i 20,6 min, uden kø, med 28,3 min gennemløb og 233,5 runner-minutter.
+  - Overalt: separate PostgreSQL-clustere og elevkonti, tripwire 0.
+  - Edge Runtime kom op i første forsøg i alle 18 jobs i de to afsluttende 9-målinger. Startforsøg registreres først
+    fra `3602dd7`. Et tidligere 9-forsøg havde 2 SIGBUS-nedbrud ved opstart; det står i D-241.
+
+  **Status (2026-10-28): bevist i CI, ikke taget i brug.** Overgangsplanen stod i D-241. password-help-driften mellem
+  repository og produktion er en separat opgave: D-243.
+
+  **D-110 AFSLUTTET (2026-10-30, D-265).** Overgangen er gennemført i faserne A–C, D1, D2 og D3 og verificeret på
+  faktiske main-kørsler:
+  - **Pull requests:** den påkrævede `isolated-e2e (run 1)` kører mod en lokal Supabase-stack.
+  - **Ruleset 26126869:** kræver `unit` og `isolated-e2e (run 1)` og har ingen bypass (D-249).
+  - **Push til `main`:** den samme isolerede suite (D1) og den skrivebeskyttede **Production Smoke** (D2).
+  - **Den produktionsrettede suite** (`playwright.yml`, job `test`) kører ikke længere automatisk (D3, D-261, PR #476,
+    merget som `81350e6`). Den kan kun startes manuelt med `confirm_production` = `production-e2e` og kun med ejerens
+    GO.
+
+  Ingen automatisk kørsel bruger længere låsen `e2e-shared-supabase`. Den bruges stadig af to manuelle kørsler: en
+  manuelt dispatchet produktionsrettet Playwright E2E på slot 0 og det manuelle `update-avatar-goldens.yml`. Slot 1–3
+  har hver sin lås (`e2e-shared-supabase-slot-<n>`). Uden automatisk dækning er live Edge Functions, produktionens DB/RLS, Auth, udbydere, Worker-runtime og
+  indhold. Hvornår en manuel produktions-E2E bør køres, står i D-261. Den næste anledning er `get-next-question`-deployet
+  og `LEVEL_ENGINE=v1`. Beviser og resterende risici står i D-265.
 
 ## Completed sections
 
@@ -709,6 +809,34 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
     `mastery_score`, `mastery_balance` eller `total_attempts`, og `update_mastery()` kaldes ikke —
     hverken for MC eller tekst. Lærerens `correct_ratio` (`get_student_overview`) bygger på
     `total_attempts`. Kræver en produkt-/arkitekturbeslutning om, hvad mastery skal betyde.
+  - **Lærerstatistik (rettet; anvendt i produktion 2026-10-30, [D-263](decisions/D-263.md)):** klasseoversigten
+    (`get_teacher_visibility`) læste den forladte kolonne `is_correct` (sidst skrevet 2026-03-17) og
+    den aldrig opdaterede `total_attempts`. 41 af 46 elever med svar blev vist med 0 % korrekt, "Spm."
+    og "Forsøg i alt" var 0, og trenden altid "stabil". Migration
+    `20261029150000_teacher_stats_from_answers.sql` beregner tallene fra `was_correct` (første forsøg,
+    gentagelser udeladt) med uændret adgangskontrol og svarform. Anvendt som produktionspost
+    `20261030092931 teacher_stats_from_answers`; bagefter vises 6 af 46 elever med 0 % korrekt, og ejeren
+    har godkendt læreroversigten visuelt. Rollback: `docs/operations/teacher-stats-rollback.md`. Åbne
+    særskilte punkter: manglende historik for tidlige konti, gentagelser der overskriver første svar, og
+    lærerbedømte tekstsvar, der ikke indgår (D-263 §8).
+  - **Besvarelseshistorik (retning godkendt 2026-10-30, [D-266](decisions/D-266.md), ikke bygget):** en gentagelse genåbner elevens
+    række i `question_instances` og sletter det første svar (36 tabte svar hos 1 elev 2026-10-30).
+    Ejeren har valgt en separat `question_attempts`-tabel, der kun tilføjes til, og egne
+    bedømmelseshændelser for lærere. Ingen genskabelse og ingen backfill. Implementeringen og de åbne
+    beslutninger H1–H5 er ikke godkendt. Design og trinplan:
+    [`question-attempts-design.md`](question-attempts-design.md). Loggen er ikke komplet, før lange svar
+    og lærerbedømmelser også er dækket.
+  - **Mulig dobbelt XP ved lærerbedømmelse (fundet i koden, ikke afprøvet, ikke startet):** RPC'en
+    `review_answer` (4 argumenter) lægger XP til efter karakteren, og Edge-funktionen `review-answer`
+    lægger samme beløb til igen. Udgaven med 4 argumenter har ingen sikring mod en ny bedømmelse, som
+    derfor udbetaler igen. Ingen bedømmelser i produktion siden 2026-04-22. Særskilt opgave; skal være
+    afklaret, før bedømmelser flyttes til hændelseshistorikken.
+  - **Backup og gendannelse (driftsspørgsmål, ikke startet):** projektet er på Supabase' Free-plan, og
+    på den plan har vi ingen almindelig adgang til backups (hverken visning, download eller
+    gendannelse). Ifølge Supabase' Knowledge Base kan Free-projekter i øjeblikket have op til syv daglige
+    backups, der først bliver tilgængelige efter en opgradering; det er ikke efterprøvet for dette
+    projekt, og PITR kræver en betalt plan. Backupmulighederne kræver en særskilt ejerbeslutning.
+    Gendannelse af historiske elevsvar er ikke ønsket nu.
 - **2-0B — RPC EXECUTE-hygiejne (ikke startet):** `get_my_students`, `set_spotlight`,
   `remove_spotlight`, `set_student_domains`, `get_classroom_leaderboard` og `get_weekly_activity`
   har stadig EXECUTE for `anon`. De afviser kald uden `auth.uid()`, så det er P3 — men `anon` bør

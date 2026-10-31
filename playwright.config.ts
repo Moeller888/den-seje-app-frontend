@@ -1,11 +1,18 @@
 import { defineConfig, devices } from '@playwright/test';
 import * as dotenv from 'dotenv';
+import { applySlotToEnv, maskCommands } from './tests/e2e-slot.mjs';
 
 // Load .env into process.env for the config process AND every worker (Playwright
 // re-evaluates this config file in each worker), so specs and global-setup can read
 // test credentials (TEST_STUDENT_EMAIL/PASSWORD) and Supabase keys from a gitignored
 // .env. Secrets are never hardcoded in test files — see .env.example.
 dotenv.config();
+
+// E2E account slot (tests/e2e-slot.mjs). Runs here — before global-setup, before any spec module
+// is loaded — so every spec that reads TEST_*_EMAIL gets its slot's account. Slot 0 (E2E_SLOT unset)
+// changes nothing. Idempotent across the per-worker re-evaluation; an invalid E2E_SLOT throws.
+applySlotToEnv(process.env);
+for (const command of maskCommands(process.env)) console.log(command);
 
 export default defineConfig({
   globalSetup: './tests/global-setup.ts',
@@ -24,7 +31,10 @@ export default defineConfig({
   // a real assertion/pixel/render failure still fails after the retry. CI keeps 2.
   retries: process.env.CI ? 2 : 1,
 
-  reporter: 'html',
+  // html as before, plus a timing summary (per project / per spec file / flaky — no titles, no
+  // values; tests/support/timing-reporter.mjs). The timing reporter reports printsToStdio() = false,
+  // so Playwright still adds its usual console reporter exactly as it did with 'html' alone.
+  reporter: [['html'], ['./tests/support/timing-reporter.mjs']],
 
   use: {
     trace: 'retain-on-failure',

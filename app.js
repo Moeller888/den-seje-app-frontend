@@ -2,6 +2,10 @@ import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
 import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, isAvatarV2, r2ExpressionOverlayAllowedFor, blinkConfigFor } from "./js/avatar-layers.js";
+// D-195: the framing flag is read through a NAMESPACE import. A named import of an export the served
+// avatar-layers.js lacks (an older cached copy during a deploy) is a module SyntaxError that would stop
+// this whole script; through the namespace a missing export is just undefined → framing stays off.
+import * as avatarLayersModule from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
@@ -494,6 +498,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         (items ?? []).forEach(it => { if (it.image_url) srcById[it.id] = it.image_url; });
       }
       const cosmetics = c2CosmeticLayers(eqSlots, id => srcById[id] ?? null);
+      // D-195/D-196: shared upper-body framing, only with the flag (default OFF → no class) and only when
+      // no wide-slot item (wings, capes) is mounted. Decided from the cosmetics actually mounted, before
+      // any layer mounts. Namespace guard: an older avatar-layers.js without the function → no framing.
+      if (typeof avatarLayersModule.avatarFramingOnFor === "function") avatarDisplay.classList.toggle(avatarLayersModule.AVATAR_FRAMING_CLASS, avatarLayersModule.avatarFramingOnFor(Object.fromEntries(cosmetics.map((c) => [c.slot, true]))) === true);
       const renderPath = await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer", cosmetics, surface: "quiz" });
       if (renderPath === "aborted") return; // a newer render superseded this one
       // PR D: re-apply the full blink profile (mode + tone) so the lids always

@@ -1,0 +1,584 @@
+{
+  "id": "r3-underlay-headneck-v1",
+  "status": "REVIEW CANDIDATE (D-186) — deterministic drawing; not a production asset, not an approval",
+  "coordinates": "master canvas 1024x1536, continuous: pixel i covers [i, i+1), x right, y down. Everything with mirror: true is drawn for the image-left side and mirrored about the head geometry's own axis: pixel i <-> pixel 1023 - i (pixel-index axis 511.5), i.e. x -> 1024 - x in these continuous coordinates (axis x = 512).",
+  "sources": {
+    "headGeometry": {
+      "file": "tools/avatar/fixtures/r3-head-geometry/r3-head-geometry-g1v3-e2-v1.png",
+      "sha256": "a7ba877560d5e9ff179b532c241aae383c12281b3a1f09eb74f77ad4704fbe43",
+      "use": "the head silhouette, rows <= 424 (G1V3 + E2, D-148), taken unchanged"
+    },
+    "contourK4": {
+      "file": "tools/avatar/fixtures/r3-head-geometry/r3-head-contour-k4-v1.png",
+      "sha256": "8e8efe590cf2ffd5fc30a7bf52a56c5cffb62d117b274fa6abbd6d3cc5d7766b",
+      "use": "the head's outer contour ink, rows <= 424 (K4, D-148), taken unchanged"
+    },
+    "underpaintingU1": {
+      "file": "tools/avatar/fixtures/r3-head-colour/r3-head-underpainting-u1-v1.png",
+      "sha256": "e67e2cccb25d914dfd016fd1ed3d9d36fa883bfc75457426b59f8d1204ba217d",
+      "use": "verified to be the head geometry filled with the adopted skin colour; the skin colour is read from it"
+    },
+    "notUsed": "H1 (never), r3-head-g1v3-v1.png (its rows 425-445 hold D-133's H1-derived TRANSITION silhouette), Northstar pixels (visual reading only), every rejected underlay output"
+  },
+  "palette": {
+    "skinMedium": [
+      254,
+      197,
+      128
+    ],
+    "skinMediumSource": "U1's fill = the S1 skin median adopted by D-149 (r3-head-colour-preparation-spec-v1.json skin.rgb)",
+    "ink": [
+      16,
+      10,
+      4
+    ],
+    "inkSource": "the K4 contour's own ink colour",
+    "skinWarmth": [
+      0.55,
+      1,
+      1.25
+    ],
+    "skinWarmthRule": "colour_c = round(skin_c * (1 - (1 - f) * warmth_c)): a shadow keeps more red than blue, so it stays warm instead of grey; the luminance layer itself is unchanged"
+  },
+  "neckGeometryN1": {
+    "why": "the head geometry stops at row 424 and its continuation used to be H1's; N1 is the self-drawn jaw underside and neck below row 424, a separate specification that leaves G1V3/E2/K4 untouched",
+    "attachment": "N1 starts at row 425 (y = 425.0). Its row-425 span lies inside the head's row-424 span (x 455..568), and the step between the two rows may not exceed the head geometry's own step between rows 423 and 424 (a bound derived from the approved geometry, not chosen)",
+    "chin": {
+      "left": [
+        {
+          "q": [
+            [
+              454,
+              424
+            ],
+            [
+              462.5,
+              428.25
+            ],
+            [
+              474,
+              435
+            ]
+          ]
+        },
+        {
+          "q": [
+            [
+              474,
+              435
+            ],
+            [
+              484,
+              442
+            ],
+            [
+              512,
+              442
+            ]
+          ]
+        }
+      ],
+      "rule": "two quadratics from the head's row-424 jaw corner ((454, 424), where the geometry's jaw edge crosses y 424) to a chin bottom at y 442: the first leaves at the jaw's own slope (2 px per row, the head geometry's 423/424 step), the joint at (474, 435) is tangent-continuous, the chin bottom is horizontal; mirrored"
+    },
+    "neck": {
+      "left": [
+        [
+          477,
+          425
+        ],
+        [
+          477,
+          452
+        ],
+        [
+          474,
+          462
+        ],
+        [
+          466,
+          472
+        ],
+        [
+          458,
+          480
+        ]
+      ],
+      "bottom": 480,
+      "rule": "the neck's image-left side from under the chin to row 480, flaring into the start of the shoulder line; mirrored; cut straight at y 480, where the tee's collar sits in a composed figure (the body is not part of this asset)"
+    }
+  },
+  "skinModel": {
+    "split": "luminance x colour: the luminance layer stores a shading factor (grey = round(255 * f), f = 1 is the plain skin colour); the colour render multiplies the skin token by f. Ramp B (hair) is not used for skin.",
+    "edgeShading": {
+      "depth": 0.07,
+      "widthPx": 16,
+      "rule": "f *= 1 - depth * max(0, 1 - (d - 1) / width), d = distance to the nearest pixel outside the head + chin silhouette; the neck has its own side shading"
+    },
+    "fields": [
+      {
+        "id": "ear-concha",
+        "mirror": true,
+        "factor": 0.8,
+        "featherPx": 1,
+        "polygon": [
+          [
+            369.31,
+            343.57
+          ],
+          [
+            368.15,
+            347.29
+          ],
+          [
+            366.65,
+            350.64
+          ],
+          [
+            364.89,
+            353.4
+          ],
+          [
+            363.01,
+            355.39
+          ],
+          [
+            361.13,
+            356.47
+          ],
+          [
+            359.37,
+            356.55
+          ],
+          [
+            358.35,
+            355.77
+          ],
+          [
+            357.65,
+            354.05
+          ],
+          [
+            357.31,
+            351.51
+          ],
+          [
+            357.36,
+            348.32
+          ],
+          [
+            357.8,
+            344.7
+          ],
+          [
+            358.59,
+            340.9
+          ],
+          [
+            359.67,
+            337.17
+          ],
+          [
+            360.99,
+            333.77
+          ],
+          [
+            362.44,
+            330.93
+          ],
+          [
+            363.94,
+            328.85
+          ],
+          [
+            365.36,
+            327.66
+          ],
+          [
+            366.63,
+            327.45
+          ],
+          [
+            368.14,
+            328.35
+          ],
+          [
+            369.3,
+            330.18
+          ],
+          [
+            370.03,
+            332.82
+          ],
+          [
+            370.28,
+            336.08
+          ],
+          [
+            370.03,
+            339.75
+          ]
+        ],
+        "on": "all",
+        "shape": "a smooth bean: ellipse centre (363, 342), radii 6.5 x 15, tilted 14 degrees, its rear half pressed in to 70 % (24 points)"
+      },
+      {
+        "id": "ear-helix-fold",
+        "mirror": true,
+        "factor": 0.86,
+        "featherPx": 1,
+        "polygon": [
+          [
+            360,
+            304
+          ],
+          [
+            351,
+            320
+          ],
+          [
+            350,
+            340
+          ],
+          [
+            354,
+            356
+          ],
+          [
+            359,
+            361
+          ],
+          [
+            357,
+            351
+          ],
+          [
+            355.5,
+            340
+          ],
+          [
+            356.5,
+            323
+          ],
+          [
+            363,
+            308
+          ]
+        ],
+        "on": "all",
+        "shape": "a crescent on the inside of the inner rim line (the helix fold)"
+      },
+      {
+        "id": "ear-front-shadow",
+        "mirror": true,
+        "factor": 0.92,
+        "featherPx": 3,
+        "polygon": [
+          [
+            364,
+            300
+          ],
+          [
+            368,
+            298
+          ],
+          [
+            378,
+            332
+          ],
+          [
+            371,
+            372
+          ],
+          [
+            366,
+            368
+          ],
+          [
+            372,
+            332
+          ]
+        ],
+        "on": "all"
+      },
+      {
+        "id": "under-chin-shadow",
+        "mirror": false,
+        "factor": 0.8,
+        "featherPx": 1,
+        "polygon": [
+          [
+            470,
+            436
+          ],
+          [
+            554,
+            436
+          ],
+          [
+            554,
+            446
+          ],
+          [
+            512,
+            458
+          ],
+          [
+            470,
+            446
+          ]
+        ],
+        "on": "neck"
+      },
+      {
+        "id": "neck-side-left",
+        "mirror": true,
+        "factor": 0.92,
+        "featherPx": 4,
+        "polygon": [
+          [
+            477,
+            440
+          ],
+          [
+            484,
+            440
+          ],
+          [
+            484,
+            480
+          ],
+          [
+            458,
+            480
+          ],
+          [
+            466,
+            472
+          ],
+          [
+            474,
+            462
+          ],
+          [
+            477,
+            452
+          ]
+        ],
+        "on": "neck"
+      }
+    ],
+    "fieldsOn": "'all' = every skin pixel; 'neck' = only neck pixels outside the head and chin (the neck lies behind the chin)"
+  },
+  "contours": [
+    {
+      "id": "chin",
+      "mirror": true,
+      "halfWidthPx": 1.4,
+      "points": [
+        {
+          "q": [
+            [
+              454.6,
+              422.8
+            ],
+            [
+              463.2,
+              427.1
+            ],
+            [
+              474.8,
+              433.85
+            ]
+          ]
+        },
+        {
+          "q": [
+            [
+              474.8,
+              433.85
+            ],
+            [
+              484.4,
+              440.7
+            ],
+            [
+              512,
+              440.6
+            ]
+          ]
+        }
+      ],
+      "rule": "the chin line drawn 1.4 px inside N1's chin edge so it sits inside the skin like K4, starting on K4's last row"
+    },
+    {
+      "id": "neck-side",
+      "mirror": true,
+      "halfWidthPx": 1.15,
+      "points": [
+        [
+          477,
+          436.5
+        ],
+        [
+          477,
+          452
+        ],
+        [
+          474,
+          462
+        ],
+        [
+          466,
+          472
+        ],
+        [
+          458,
+          479
+        ]
+      ]
+    },
+    {
+      "id": "ear-inner-rim",
+      "mirror": true,
+      "halfWidthPx": 0.8,
+      "points": [
+        {
+          "q": [
+            [
+              360,
+              304
+            ],
+            [
+              347,
+              322
+            ],
+            [
+              351,
+              342
+            ]
+          ]
+        },
+        {
+          "q": [
+            [
+              351,
+              342
+            ],
+            [
+              353,
+              354
+            ],
+            [
+              358,
+              361
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ear-concha-edge",
+      "mirror": true,
+      "halfWidthPx": 0.7,
+      "points": [
+        [
+          363.01,
+          355.39
+        ],
+        [
+          361.13,
+          356.47
+        ],
+        [
+          359.37,
+          356.55
+        ],
+        [
+          358.35,
+          355.77
+        ],
+        [
+          357.65,
+          354.05
+        ],
+        [
+          357.31,
+          351.51
+        ],
+        [
+          357.36,
+          348.32
+        ],
+        [
+          357.8,
+          344.7
+        ],
+        [
+          358.59,
+          340.9
+        ],
+        [
+          359.67,
+          337.17
+        ],
+        [
+          360.99,
+          333.77
+        ],
+        [
+          362.44,
+          330.93
+        ],
+        [
+          363.94,
+          328.85
+        ],
+        [
+          365.36,
+          327.66
+        ],
+        [
+          366.63,
+          327.45
+        ],
+        [
+          368.14,
+          328.35
+        ],
+        [
+          369.3,
+          330.18
+        ]
+      ],
+      "rule": "an open arc over the concha's bean points 4..20 (its lower, rear and upper side); the front side stays open like a C"
+    },
+    {
+      "id": "ear-front",
+      "mirror": true,
+      "halfWidthPx": 0.9,
+      "points": [
+        {
+          "q": [
+            [
+              367,
+              294
+            ],
+            [
+              379,
+              330
+            ],
+            [
+              372,
+              374
+            ]
+          ]
+        }
+      ],
+      "rule": "where the ear meets the head: from the ear's upper junction (under the hair) to its lower junction with the jaw contour (row 374)"
+    }
+  ],
+  "parameters": {
+    "supersample": 4,
+    "inkFromK4": true
+  }
+}
