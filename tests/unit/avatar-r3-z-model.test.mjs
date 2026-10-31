@@ -226,8 +226,9 @@ test("nothing is wired yet: no R3 constants and no three-way selection exist in 
   const render = readFileSync(join(REPO, "js", "avatar-render-c2.js"), "utf8");
   for (const name of ["R3_STACK_Z", "R3_COSMETIC_Z", "composeR3Layers", "r3Layers"])
     assert.ok(!layers.includes(name) && !render.includes(name), `${name} must not exist yet — D-135 is contract only`);
-  // the live selection is still the two-way one, unchanged by this decision
-  assert.match(render, /const layers = r2Layers \|\| composeC2Layers\(identity, cosmetics\);/);
+  // the live selection has no R3 branch: D-135 left it two-way; D-242 (owner-authorised) put the opt-in Northstar
+  // wardrobe figure in front of it — not R3, which stays unwired (the names above stay absent)
+  assert.match(render, /const layers = nsLayers \|\| r2Layers \|\| composeC2Layers\(identity, cosmetics\);/);
   assert.equal(C.layerContract.zIndices.decision, "D-135");
   assert.match(C.layerContract.zIndices.status, /APPROVED by D-135/);
 });

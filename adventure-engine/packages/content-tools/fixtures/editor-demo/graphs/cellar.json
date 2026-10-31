@@ -1,0 +1,70 @@
+{
+  "id": "cellar",
+  "kind": "logic",
+  "nodes": [
+    {
+      "id": "ce0",
+      "name": "enter",
+      "next": [
+        "ce1"
+      ],
+      "type": "entry"
+    },
+    {
+      "expr": {
+        "eq": [
+          {
+            "var": "$action"
+          },
+          {
+            "const": "scene.enter"
+          }
+        ]
+      },
+      "id": "ce1",
+      "next": [
+        "ce2"
+      ],
+      "type": "guard"
+    },
+    {
+      "entity": "cellar",
+      "id": "ce2",
+      "sound": "drip",
+      "times": "loop",
+      "type": "sound_play",
+      "volume": 1
+    },
+    {
+      "id": "cd0",
+      "name": "draft",
+      "next": [
+        "cd1"
+      ],
+      "type": "entry"
+    },
+    {
+      "expr": {
+        "eq": [
+          {
+            "var": "$action"
+          },
+          {
+            "const": "zone.enter"
+          }
+        ]
+      },
+      "id": "cd1",
+      "next": [
+        "cd2"
+      ],
+      "type": "guard"
+    },
+    {
+      "id": "cd2",
+      "speaker": "mira",
+      "textKey": "line.draft",
+      "type": "say"
+    }
+  ]
+}

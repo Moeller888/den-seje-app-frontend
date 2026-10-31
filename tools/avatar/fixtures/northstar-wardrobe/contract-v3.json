@@ -1,0 +1,67 @@
+{
+  "decision": "D-205",
+  "status": "ADOPTED FOR DEVELOPMENT — binding for new items on C; not a production standard, no runtime activation",
+  "base": "base-figure-c-v1.json — C, D-202's raw result, frozen as a versioned development candidate (layers and masks outside both clones, D-127 §2)",
+  "replaces": "contract-v2.json as the item contract: v2's rule 'every item covers the whole base garment + 1 px' becomes 'every item covers the base garment's INTERIOR' (the base minus its 4 px outer fabric band); the outer edge is judged by the outfit's silhouette (FIT-6). v2 stays as history.",
+  "axes": {
+    "fit": {
+      "binding": true,
+      "what": "does the new item fit C — tools/avatar/northstar-base-figure-c.mjs fitCheck(), FIT-1 … FIT-7, on the runtime body (base garments empty) with the other categories in the minimum items",
+      "limits": "FIT_LIMITS in the tool, each with its reason"
+    },
+    "compatibility": {
+      "binding": false,
+      "what": "how Northstar's old tee, jeans and sneakers sit on C — legacyReport(): reported, never a gate. Old items are reference and test material, not the fit of the new body.",
+      "knownLimitation": "the old jeans: C is up to ~3 px wider at the hips and upper thighs (D-204), and the jeans layer has no waistband where Northstar's tee hid it, so under a short top a strip of base shows; the old sneakers: C's feet show 1–2 px beside them; the old tee: C's upper arms show beside its sleeves. A limitation of the old items, never a licence for the same fault in new items."
+    },
+    "quality": {
+      "binding": "measured gates Q-1 … Q-3 (outline, sharpness, clean alpha — D-197's I5–I7); the look (V-criteria, painting style, the outfit as a whole) is the owner's"
+    }
+  },
+  "stack": [
+    "back",
+    "body",
+    "shoes",
+    "bottoms",
+    "shoes-over",
+    "top-body",
+    "bottoms-over",
+    "arms",
+    "top-sleeves",
+    "hands",
+    "hands-over",
+    "head",
+    "hair",
+    "headwear"
+  ],
+  "categories": {
+    "top": {
+      "layers": [
+        "topBody",
+        "sleeves"
+      ],
+      "mustCover": "the base top's interior on C (template-top-mustCover)",
+      "allowed": "C's base top box ± 40 px, from 14 px above its top to 8 px above the crotch, plus the sleeve zone (C's arms + 14 px)",
+      "protect": "the head and the hands (+2 px)",
+      "split": "pixels painted over C's arm pixels are sleeves; the rest is the top's body (behind the arms)"
+    },
+    "bottom": {
+      "layers": [
+        "pants"
+      ],
+      "mustCover": "the base shorts' interior on C (template-bottom-mustCover)",
+      "allowed": "C's base shorts box ± 80 px (skirts may flare), from 30 px above the waist to 22 px above the ground",
+      "protect": "the head and the ground band"
+    },
+    "shoes": {
+      "layers": [
+        "shoes"
+      ],
+      "mustCover": "nothing — sandals show the feet",
+      "allowed": "the feet ± 34 px, up to 150 px above the ankles, down to the ground line + 4",
+      "ground": "soles on the ground line y 1488 ± 4"
+    }
+  },
+  "baseGates": "gate set v3 (base-figure-spec-v1.json → gatesV3): BF9v3 tests the waist seam (no skin, no gap between the base top and the base shorts) and BF15v3 the runtime composition with the minimum items (holes, exposed cut skin, missing body, the arms in front); v1 and v2 stay the record of A (D-200) and C (D-203)",
+  "faultStimuli": "northstar-base-figure-c-proof.mjs standInItems(): a hole in a top, shorts cut 60 px short, sleeves delivered in the top-body layer (wrong layer), a patch over a hand, shoes lifted 20 px; BF15v3: a composer that puts the arms under the top's body"
+}

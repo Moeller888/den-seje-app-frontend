@@ -1,0 +1,263 @@
+{
+  "id": "r3-northstar-layers-v1",
+  "decision": "D-188",
+  "status": "REVIEW VARIANT (D-188) — Northstar v2 pixels as a direct source for this review variant only; not approved, not promotable",
+  "source": {
+    "file": "assets/avatar/reference/Northstar Master v2.png",
+    "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+    "role": "direct pixel source for this review variant only (D-188); tracked, unchanged"
+  },
+  "spec": {
+    "file": "tools/avatar/fixtures/r3-northstar-layers/spec-v1.json",
+    "sha256": "679042041790c1fea2d20c4ceb8b4c2e328214aecaefb1b64c7f7b865f457790",
+    "prototypeFile": "tools/avatar/build/northstar-v2-layers/spec.json",
+    "note": "byte-identical copy of the prototype spec"
+  },
+  "generator": {
+    "file": "tools/avatar/r3-northstar-layers.mjs",
+    "entrypoint": "node tools/avatar/r3-northstar-layers.mjs --out <empty dir>"
+  },
+  "move": {
+    "from": "tools/avatar/build/northstar-v2-layers/ (local, gitignored prototype, 2026-10-22)",
+    "what": "spec.json, the nine compositing layers and the six masks are tracked as byte-identical copies (sha256 below equal the prototype files). The generator code of nsl-lib.mjs, labels.mjs and build-layers.mjs is ported unchanged in behaviour into one module; this module rebuilds every tracked layer and mask pixel for pixel (tested). The prototype review and browser-check scripts are replaced by tools/avatar/r3-review-pack.mjs --variant northstar-layers. Not tracked: body.png (comparison only, rebuilt on demand), face.png (helper export, rebuilt), the .ora (rebuilt deterministically).",
+    "prototypeFileSha256": {
+      "spec.json": "679042041790c1fea2d20c4ceb8b4c2e328214aecaefb1b64c7f7b865f457790",
+      "nsl-lib.mjs": "4df54752075231fe97b26680ff2fd1115129b3e3fcc6999a5cbb3671e49de234",
+      "labels.mjs": "068205075d9286445fae0344dcdbc6777ab79d3a4da7ed9eca7696d14ca87a2d",
+      "build-layers.mjs": "45b20bd74c45699bbcf5d629793a626ed8bc3d74859e60632dde875d6ee1a12d",
+      "review.mjs": "94eb3f88f912ed562c5c2449aafa28e76fb7a8772a0206c853c75bc7e8c25161",
+      "make-ora.mjs": "190d7fdd2194b8f2b698b5d877a4e3f2d5ec1ded07f03e95936f02c71dc0ae08",
+      "browser-check.mjs": "258573c65f021748820b60af5c29e8a5d48ea9480cb2ea5f7a613bf0b31f8b54",
+      "layers/body.png": "d9d070aeee57fec12585cb7e4f12f505fc323a882b7ee939ffce4ff4007f18ca",
+      "layers/face.png": "b427624eb1642c145fa5aa8f6f78fbeed5ab72ccee918e71200c44326bbce3ef"
+    }
+  },
+  "compositeOrder": [
+    "skin",
+    "hairShadow",
+    "browL",
+    "browR",
+    "nose",
+    "mouth",
+    "iris",
+    "eyesFixed",
+    "hair"
+  ],
+  "layers": {
+    "skin": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/skin.png",
+      "sha256": "ecc1b4e842769e76ee9b0921729fc1519e0bedd045d94961a9202907743d3ee6",
+      "pixelSha256": "c4df1314e4f51957c1f614271d0d6ff05b0f46e730eed5bd7ef7f9728b416207",
+      "bytes": 85535,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/layers/skin.png"
+    },
+    "hairShadow": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/hairShadow.png",
+      "sha256": "c2d097918a88a2674325cd1ed96bf79d4d4019ff5ac9211352ce6f82a0422d1c",
+      "pixelSha256": "e018b3de1c4681b3f72e41a0f008af026e365faa38cac668abb01125ecc40c1f",
+      "bytes": 21774,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/layers/hairShadow.png"
+    },
+    "browL": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/browL.png",
+      "sha256": "c22aae02a1d6ad38dc3e6e0b97bdf16f16f0b7127a6d34528669bd93a448d8ee",
+      "pixelSha256": "b7be4ff1ef3ce62589d832ca6406e71bde5cb241f182d0813413ed2599e62e51",
+      "bytes": 9296,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/layers/browL.png"
+    },
+    "browR": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/browR.png",
+      "sha256": "c154101f86bd5d12e2e0a7a0b168e40cf9186287c450cdbe4d62b12680b50ea9",
+      "pixelSha256": "897d2cfdfa2ce5f81503b3f2fcb45b6f46265a4694df66e47949c8e4472cb01f",
+      "bytes": 12756,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/layers/browR.png"
+    },
+    "nose": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/nose.png",
+      "sha256": "4c2279f5c68a6713efc819ea90b26fddeec4ac034df82584d16412fb28288d34",
+      "pixelSha256": "ccd6788b75bdd823fe08d67d78ad510bc49ce1133481342b8e20de0368a0cced",
+      "bytes": 7719,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/layers/nose.png"
+    },
+    "mouth": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/mouth.png",
+      "sha256": "ddf05335e47c11c8ddd03844db115f611d0e90f21b3cf4d57de28166bb49405b",
+      "pixelSha256": "3a02f6d6eda65f35c130cfb1a6a7c99fd6fd89d901ece1c6474719bec2b7026a",
+      "bytes": 9004,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/layers/mouth.png"
+    },
+    "iris": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/iris.png",
+      "sha256": "e43d0d98e785aa77783cccc0c78a01322efc8ee92208f6503a00de3aac9d4134",
+      "pixelSha256": "c92badf10ae363f2291086c04bcf9883220c92f5c59077bf8b63b6e0ef04425f",
+      "bytes": 20697,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/layers/iris.png"
+    },
+    "eyesFixed": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/eyesFixed.png",
+      "sha256": "2b7faf8b756a30d08e0596b89df69e71edf920738b09dfa1bdb396aaa8d91049",
+      "pixelSha256": "d935696ace61d310e314231c6ea4e0bad1da7e1f8cbdf159e71d1a3cff19ae69",
+      "bytes": 29193,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/layers/eyesFixed.png"
+    },
+    "hair": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/hair.png",
+      "sha256": "9c47acd7e4ee048ec2f06ad4c16def48d8338442fe90245dfa0d61463234db69",
+      "pixelSha256": "a67ef3fdde7e6a407f360a644ce3e85eadd11e745d668edfcced9b3850d8777c",
+      "bytes": 183747,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/layers/hair.png"
+    }
+  },
+  "masks": {
+    "owners": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/masks/owners.png",
+      "sha256": "25f96bf06aca65e240c12e8c9e4e0600e0de70f726ae05dd62b7c82aaa265de5",
+      "pixelSha256": "e478bb63cfd4c81468ece4930dd20042ab913338b2628a37c3aeb0544b8d1d09",
+      "bytes": 17477,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/masks/owners.png"
+    },
+    "reconstructed": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/masks/reconstructed.png",
+      "sha256": "496c6b4ab3ab1e419b2e34d7d06c1dbc967de560ba28c9872a468edc840a12ea",
+      "pixelSha256": "4bc375205713ad7ed12d96eb7fe601a92b9dea05be02722b866d9964bf2c811f",
+      "bytes": 7703,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/masks/reconstructed.png"
+    },
+    "shadow-lit-reconstructed": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/masks/shadow-lit-reconstructed.png",
+      "sha256": "b6a27152dcdbaad70db19488749e4f8a4076f5b1b55c9b34c2f8aeb2c73e73bb",
+      "pixelSha256": "e24ace9d4f7f7e33976bc42ddcec38dab9e46a9bf3b3a3d5447e64ecfc81fead",
+      "bytes": 7581,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/masks/shadow-lit-reconstructed.png"
+    },
+    "missing-under-hair": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/masks/missing-under-hair.png",
+      "sha256": "7bfa283e7246e90c29855f4998073683bc698b75d1a17b226367f1653ae64b6d",
+      "pixelSha256": "cf3ad189cb91048eb7d017e8efa4867407e4ec975a0783847b508959f9079a0b",
+      "bytes": 8918,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/masks/missing-under-hair.png"
+    },
+    "overlap-ink-hair-features": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/masks/overlap-ink-hair-features.png",
+      "sha256": "99b77ce52fd1a238462706e047bc852f0e4d177434da0ad90ce01be19a7da80d",
+      "pixelSha256": "9b9c0c8f7a0c2e6280249d1f32a933154e0ddd302b7770ff750aec3b14ce7342",
+      "bytes": 6338,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/masks/overlap-ink-hair-features.png"
+    },
+    "overlap-ink-hair-skin": {
+      "file": "tools/avatar/fixtures/r3-northstar-layers/masks/overlap-ink-hair-skin.png",
+      "sha256": "bc95100fed932ca84bb58694590a0047d5ee1e05dd3d24b3188bc68c55441eff",
+      "pixelSha256": "c15999df57bb93b67e9ffb273b40837edcb85dd53afe1d74636c71353083e3c5",
+      "bytes": 6642,
+      "prototypeFile": "tools/avatar/build/northstar-v2-layers/masks/overlap-ink-hair-skin.png"
+    }
+  },
+  "helperExports": {
+    "face": {
+      "pixelSha256": "0b3e6b2398c22a07597a4d69086642ee9a215306f701dd5fa659e01a745375ea",
+      "note": "brows + nose + mouth in one file, for viewing and editing; never composed over the four parts"
+    }
+  },
+  "comparisonOnly": {
+    "body": {
+      "pixelSha256": "176685a53753f4b19fd2cebf83b6446f15947ab23c32e6f26bca58374b2617d2",
+      "note": "Northstar's body and clothes, copied only so the composite can be compared with the whole original; not an R3 body asset, not tracked"
+    }
+  },
+  "composite": {
+    "headPixelSha256": "71ba5b1217be91f3ccbe9e97ac1e8016be50c64909b811b0f03d9afe0f1326c3",
+    "withComparisonBodyPixelSha256": "4ec4afefd4f9945329369072454007eda99fee2221d38a9de70a3577b832410a",
+    "deviationFromOriginal": {
+      "visiblePx": 391180,
+      "bitIdenticalPx": 377143,
+      "rgb": {
+        "0": 380751,
+        "1-2": 10402,
+        "3-5": 27,
+        "6-16": 0,
+        ">16": 0
+      },
+      "alpha": {
+        "0": 377771,
+        "1-2": 13379,
+        "3-5": 30,
+        ">5": 0
+      },
+      "maxRgb": 5,
+      "maxAlpha": 5
+    }
+  },
+  "stats": {
+    "zones": {
+      "eyeL": {
+        "zonePx": 6906,
+        "liftedPx": 5729,
+        "reconstructedSkinPx": 5729
+      },
+      "eyeR": {
+        "zonePx": 6906,
+        "liftedPx": 5885,
+        "reconstructedSkinPx": 5885
+      },
+      "browL": {
+        "zonePx": 916,
+        "liftedPx": 913,
+        "reconstructedSkinPx": 913
+      },
+      "browR": {
+        "zonePx": 2668,
+        "liftedPx": 1768,
+        "reconstructedSkinPx": 1768
+      },
+      "nose": {
+        "zonePx": 621,
+        "liftedPx": 337,
+        "reconstructedSkinPx": 337
+      },
+      "mouth": {
+        "zonePx": 2610,
+        "liftedPx": 643,
+        "reconstructedSkinPx": 643
+      }
+    },
+    "highlightL": 284,
+    "highlightR": 317,
+    "hairShadowPx": 3966,
+    "halo": {
+      "px": 1132,
+      "meanLumaAboveSkin": 2.8
+    }
+  },
+  "editableSource": {
+    "format": "OpenRaster (.ora), opens in Krita and GIMP",
+    "rule": "not tracked (it repeats the tracked layers); rebuilt deterministically by buildOraFromTracked(): the tracked layer and mask bytes plus the comparison body, the composite and a thumbnail encoded from pixels, in a stored zip with fixed timestamps. Two builds give the same bytes; every member pixel is pinned here.",
+    "members": [
+      "mimetype",
+      "stack.xml",
+      "data/mask-missing-under-hair.png",
+      "data/mask-reconstructed.png",
+      "data/mask-shadow-lit-reconstructed.png",
+      "data/mask-overlap-ink-hair-features.png",
+      "data/mask-overlap-ink-hair-skin.png",
+      "data/mask-owners.png",
+      "data/hair.png",
+      "data/eyesFixed.png",
+      "data/iris.png",
+      "data/browL.png",
+      "data/browR.png",
+      "data/nose.png",
+      "data/mouth.png",
+      "data/hairShadow.png",
+      "data/skin.png",
+      "data/body.png",
+      "mergedimage.png",
+      "Thumbnails/thumbnail.png"
+    ]
+  },
+  "neverUsed": [
+    "H1 (fitting-base.H1.png)",
+    "R2 masks or geometry",
+    "G1V3 / E2 / K4 or the R3 hair targets to deform the original",
+    "any image call"
+  ]
+}

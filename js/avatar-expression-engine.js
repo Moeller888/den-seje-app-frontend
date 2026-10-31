@@ -313,6 +313,13 @@ export class ExpressionEngine {
     try {
       if (!this._container) return;
 
+      // D-242: the Northstar figure has its own painted neutral face and no expression layers — no overlay
+      // (nothing is borrowed or owned; _ownsOverlay keeps its constructor default).
+      if (this._container.dataset && this._container.dataset.avatarRenderPath === "northstar") {
+        this._overlay = null;
+        return;
+      }
+
       // R2 mode: borrow the EXISTING decomposed face layer (z3) as the swap target — do NOT
       // create or own an overlay. Its src is already the mounted neutral face asset.
       if (this._r2) {

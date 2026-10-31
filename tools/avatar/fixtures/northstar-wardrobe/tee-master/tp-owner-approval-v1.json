@@ -1,0 +1,24 @@
+{
+  "decision": "D-274",
+  "kind": "the owner's visual approval of tee print combinations (D-272); the only list a build may read",
+  "owner": {
+    "message": "Registrér min ejerbeslutning for D-272: ALLE 16 KANDIDATER ER GODKENDT.",
+    "date": "2026-10-31",
+    "scope": "Tekande: CRM, HTH, NAV, COR, FOR og MUS. Skjold: CRM, HTH, NAV, COR, FOR og MUS. Ræv: CRM, HTH, NAV og FOR. TP-FOX-COR og TP-FOX-MUS er ikke omfattet."
+  },
+  "approved": [
+    "TP-TEA-CRM", "TP-TEA-HTH", "TP-TEA-NAV", "TP-TEA-COR", "TP-TEA-FOR", "TP-TEA-MUS",
+    "TP-SHD-CRM", "TP-SHD-HTH", "TP-SHD-NAV", "TP-SHD-COR", "TP-SHD-FOR", "TP-SHD-MUS",
+    "TP-FOX-CRM", "TP-FOX-HTH", "TP-FOX-NAV", "TP-FOX-FOR"
+  ],
+  "notApproved": {
+    "TP-FOX-COR": "not covered by the owner's approval (D-272 non-candidate: weak legibility)",
+    "TP-FOX-MUS": "not covered by the owner's approval (D-272 non-candidate: weak legibility)"
+  },
+  "basis": {
+    "candidates": { "file": "tools/avatar/fixtures/northstar-wardrobe/tee-master/tp-approval-candidates-v1.json", "sha256": "db306026854cc4f639c4d7ee77fcdf913e72d7b551b2b4f3066e9bfe2fcd8f81" },
+    "d271RecordSha256": "3b573e038c034905df4f6f82cf6e85618149e8007d06c74685e553a817855fb9",
+    "what": "the 16 combinations as rendered and shown in D-271/D-272 (D-264 master tee-master-v1, D-269 chest-center box and size rule); the visual approval is not to be asked again"
+  },
+  "notCovered": "publication of derived assets, runtime integration, catalogue or shop entries, pupil activation and flag changes — each needs its own owner permission"
+}

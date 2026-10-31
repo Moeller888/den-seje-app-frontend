@@ -1,0 +1,84 @@
+{
+  "id": "r3-nape-lock-v1",
+  "status": "DRAFT — a separate review authoring part (D-187); not approved, not a production asset",
+  "method": "deterministic drawing (no image call, no Northstar pixels, no H1): one closed lock shape of two quadratics, filled with one hair grey, an inked outer edge and one inner strand line; drawn in master px and merged UNDER the D-185 hair in the same hair luminance layer at authoring time. No new runtime layer, no z-model change.",
+  "coordinates": "master canvas 1024x1536, continuous: pixel i covers [i, i+1), x right, y down",
+  "registration": {
+    "underlay": "tools/avatar/fixtures/r3-underlay-headneck/r3-underlay-headneck-v1-luminance.png (D-186)",
+    "earLobeJunction": [
+      652,
+      374
+    ],
+    "earLobeJunctionWhy": "the image-right ear's lower junction with the jaw contour: the mirror (x -> 1024 - x) of D-186's ear-front line end (372, 374)",
+    "jawContour": "the base's own silhouette edge under the ear (x 648 at row 376 to x 625 at row 384)",
+    "neckContour": "N1's image-right side (x 547 from row 436) — the lock ends above it and never reaches the neck front"
+  },
+  "side": "image-right only, as read visually from Northstar (one short lock below the image-right ear; none on the image-left side)",
+  "shape": {
+    "outer": {
+      "q": [
+        [
+          652,
+          374
+        ],
+        [
+          653,
+          396
+        ],
+        [
+          645,
+          407
+        ]
+      ]
+    },
+    "inner": {
+      "q": [
+        [
+          645,
+          407
+        ],
+        [
+          634,
+          394
+        ],
+        [
+          626,
+          382
+        ]
+      ]
+    },
+    "why": "the root lies behind the ear lobe and the jaw (inside the base silhouette, hidden); the lock hangs DOWN from under the ear-jaw junction about 25 px to a free tip at (645, 407), curving slightly outward, as Northstar's lock does; its top is the jaw contour itself, so it reads as hair behind the ear and jaw and never lies on the cheek"
+  },
+  "behind": "lock alpha = coverage x (1 - underlay alpha / 255), and 0 wherever the underlay alpha >= 128: the head, ears, chin and neck always cover it",
+  "tones": {
+    "fill": 70,
+    "ink": 22,
+    "strand": 40,
+    "why": "the hair luminance layer's own values: D-185's paint-field grey (70) and ink grey (22); the strand is between them"
+  },
+  "ink": {
+    "outerHalfWidthPx": 0.9,
+    "strandHalfWidthPx": 0.45,
+    "strand": {
+      "q": [
+        [
+          644,
+          382
+        ],
+        [
+          645,
+          396
+        ],
+        [
+          643,
+          404
+        ]
+      ]
+    },
+    "edges": "both drawn edges (outer and inner) are inked; the top edge is the base's own jaw ink",
+    "rule": "ink only where the lock's own alpha >= 16 (a line never creates hair)"
+  },
+  "parameters": {
+    "supersample": 4
+  }
+}

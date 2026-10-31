@@ -2,6 +2,10 @@ import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
 import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, isAvatarV2, r2ExpressionOverlayAllowedFor, blinkConfigFor } from "./js/avatar-layers.js";
+// D-195: the framing flag is read through a NAMESPACE import. A named import of an export the served
+// avatar-layers.js lacks (an older cached copy during a deploy) is a module SyntaxError that would stop
+// this whole script; through the namespace a missing export is just undefined → framing stays off.
+import * as avatarLayersModule from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
@@ -10,6 +14,7 @@ import { initMonitoring, captureError } from "./js/sentry.js";
 import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { prepareChoiceOptions } from "./js/answer-options.js";
 import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer, shortTextCorrection } from "./js/answer-input.js";
+import { buildMatchPairsAnswer, matchCorrectionText, readMatchLayout } from "./js/match-pairs.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 import { attachReadAloudControl, attachOptionReadAloudControl, stopReadAloud } from "./js/read-aloud/adapters/quiz.js";
@@ -177,6 +182,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   let lastMisconceptionType = null;
   // Renderer of the question on screen — "stav til" feedback names the spelling (see submitAnswer).
   let currentRenderer = null;
+  // The Match par control on screen, so the graded response can mark its connections.
+  let currentMatchControl = null;
 
   // Session rhythm tracking — Section 55.
   // sessionQuestionCount: total answered this session, passed to get-next-question.
@@ -491,6 +498,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         (items ?? []).forEach(it => { if (it.image_url) srcById[it.id] = it.image_url; });
       }
       const cosmetics = c2CosmeticLayers(eqSlots, id => srcById[id] ?? null);
+      // D-195/D-196: shared upper-body framing, only with the flag (default OFF → no class) and only when
+      // no wide-slot item (wings, capes) is mounted. Decided from the cosmetics actually mounted, before
+      // any layer mounts. Namespace guard: an older avatar-layers.js without the function → no framing.
+      if (typeof avatarLayersModule.avatarFramingOnFor === "function") avatarDisplay.classList.toggle(avatarLayersModule.AVATAR_FRAMING_CLASS, avatarLayersModule.avatarFramingOnFor(Object.fromEntries(cosmetics.map((c) => [c.slot, true]))) === true);
       const renderPath = await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer", cosmetics, surface: "quiz" });
       if (renderPath === "aborted") return; // a newer render superseded this one
       // PR D: re-apply the full blink profile (mode + tone) so the lids always
@@ -858,6 +869,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (data.status === "correct") {
+      // Match par: mark the connections green before the next question replaces them.
+      if (currentRenderer === ANSWER_RENDERERS.MATCH_PAIRS && currentMatchControl) {
+        currentMatchControl.showResult(data.correct_answer);
+      }
       feedback.textContent = "Ja! 🎯";
       feedback.className = "feedback-correct";
       playSound("equip");
@@ -931,15 +946,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         feedback.textContent = "Ikke helt —";
         feedback.className = "feedback-error";
         // "Stav til": the explanation alone does not state the spelling, so keep it on screen.
+        // Match par: the panel hides the columns, so the correct pairs are stated in words.
         const correction = currentRenderer === ANSWER_RENDERERS.SHORT_TEXT
           ? shortTextCorrection(data.correct_answer, userAnswer)
-          : null;
+          : currentRenderer === ANSWER_RENDERERS.MATCH_PAIRS && currentMatchControl
+            ? matchCorrectionText(currentMatchControl.layout, data.correct_answer)
+            : null;
         setTimeout(() => enterReflectionState(reviewText, correction), 400);
         return;
       }
 
       if (reviewText) {
         logEvent("REFLECTION_DENSITY_GATE", { sessionConsecutiveReflections, gated: true });
+      }
+
+      // Match par: the key is positions, not words — mark the connections and list the right pairs
+      // under them instead, and leave a little longer to read them.
+      if (currentRenderer === ANSWER_RENDERERS.MATCH_PAIRS && currentMatchControl
+        && currentMatchControl.showResult(data.correct_answer)) {
+        feedback.textContent = "Ikke helt — se de rigtige par.";
+        feedback.className = "feedback-error";
+        setUIState(UI_STATES.TRANSITIONING);
+        setTimeout(() => { loadAndRenderQuestion(); }, 4000);
+        return;
       }
 
       feedback.textContent = "Svaret er " + (data.correct_answer ?? "ukendt") + " — husk det nu.";
@@ -1017,6 +1046,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // One renderer per interaction type — see js/answer-input.js for the selection order.
     const renderer = resolveAnswerRenderer(question);
     currentRenderer = renderer;
+    currentMatchControl = null;
 
     // 157E: analytics — question shown (format only, no content). No-op unless active.
     track("question_shown", { format });
@@ -1094,6 +1124,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       return true;
     }
 
+    if (renderer === ANSWER_RENDERERS.MATCH_PAIRS) {
+      // Match par (js/match-pairs.js): the server sent two lists of texts, the right one shuffled.
+      // A payload that is not a valid layout falls through to the visible "unsupported" error below.
+      const layout = readMatchLayout(content);
+      if (layout) {
+        currentMatchControl = buildMatchPairsAnswer(document, {
+          layout,
+          onSubmit: submitAnswer,
+          describedBy: questionElement.id,
+        });
+        optionsContainer.appendChild(currentMatchControl.root);
+        return true;
+      }
+      logError("INVALID_MATCH_LAYOUT", { format });
+    }
+
     if (renderer === ANSWER_RENDERERS.LONG_TEXT) {
       const textarea = document.createElement("textarea");
 
@@ -1119,7 +1165,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return true;
     }
 
-    if (renderer === ANSWER_RENDERERS.UNSUPPORTED) {
+    if (renderer === ANSWER_RENDERERS.UNSUPPORTED || renderer === ANSWER_RENDERERS.MATCH_PAIRS) {
       // An interaction type this client has no renderer for must fail loud — never fall through
       // to option buttons (ARCHITECTURE.md → Question Interaction model, rule 2).
       logError("UNSUPPORTED_ANSWER_FORMAT", { format, answer_type: question.answer_type ?? null });

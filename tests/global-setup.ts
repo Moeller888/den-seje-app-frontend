@@ -3,9 +3,14 @@ import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
 import { missingSecrets, readRequiredSecret } from "./test-credentials.mjs";
+import { parseSlot, OWNER_VAR, ensureSlotUser } from "./e2e-slot.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
+// E2E account slot (tests/e2e-slot.mjs). playwright.config.ts has already rewritten the TEST_*_EMAIL
+// variables below for slots 1..3; slot 0 is the original accounts, untouched.
+const E2E_SLOT = parseSlot(process.env.E2E_SLOT);
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -197,6 +202,63 @@ async function checkQuestionPoolHealth(supabase: any): Promise<void> {
   );
 }
 
+// auth.admin.listUsers() is paginated (default 50/page): page through every user, matching the
+// address case-insensitively and trimmed (GoTrue stores it lowercased). Capped at 100 pages so an
+// API that ignored `page` cannot loop forever. Slot provisioning adds accounts, so a first-page-only
+// lookup would stop finding existing accounts and fail on a duplicate createUser.
+async function findUserByEmail(supabase: any, email: string, label: string): Promise<any | null> {
+  const wanted = email.trim().toLowerCase();
+  for (let page = 1; page <= 100; page++) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) {
+      throw new Error(`${label}: listUsers failed — ${error.message}`);
+    }
+    const users: any[] = data?.users ?? [];
+    const match = users.find((u: any) => (u.email ?? "").trim().toLowerCase() === wanted);
+    if (match) return match;
+    if (users.length === 0) break;
+  }
+  return null;
+}
+
+// ── E2E slots 1..3: account provisioning ─────────────────────────────────────
+// Slot 0 is never touched here. The create-or-verify rule (app_metadata marker; an unmarked account
+// is refused, never reset; no address or password is logged) lives in ensureSlotUser() in
+// tests/e2e-slot.mjs, where tests/unit/e2e-slot-accounts.test.mjs proves it with fakes.
+
+async function ensureSlotAccounts(supabase: any, slot: number): Promise<string> {
+  const ownerEmail = process.env[OWNER_VAR];
+  if (typeof ownerEmail !== "string" || ownerEmail === "") {
+    throw new Error(`slot-setup[${slot}]: ${OWNER_VAR} is not set — was the slot applied by playwright.config.ts?`);
+  }
+  const deps = {
+    findUser: (email: string) => findUserByEmail(supabase, email, `slot-setup[${slot}]`),
+    createUser: (attributes: Record<string, unknown>) => supabase.auth.admin.createUser(attributes),
+    log: (line: string) => console.log(line),
+  };
+  await ensureSlotUser({ slot, kind: "primary", email: TEST_STUDENT_EMAIL, password: TEST_STUDENT_PASSWORD, ...deps });
+  await ensureSlotUser({ slot, kind: "teacher", email: TEST_TEACHER_EMAIL, password: readRequiredSecret("TEST_TEACHER_PASSWORD"), ...deps });
+  await ensureSlotUser({ slot, kind: "student2", email: TEST_STUDENT2_EMAIL, password: readRequiredSecret("TEST_STUDENT2_PASSWORD"), ...deps });
+  // No password: nobody can sign in as the owner. It only anchors the primary student's teacher_id.
+  const ownerId = await ensureSlotUser({ slot, kind: "owner", email: ownerEmail, password: null, ...deps });
+
+  const { error: ownerProfileErr } = await supabase.from("profiles").upsert(
+    {
+      id: ownerId,
+      role: "teacher",
+      full_name: `Test Lærer Slot ${slot} Ejer`,
+      equipped_slots: {},
+      active_theme: "default",
+    },
+    { onConflict: "id" }
+  );
+  if (ownerProfileErr) {
+    throw new Error(`slot-setup[${slot}/owner]: profile upsert failed — ${ownerProfileErr.message}`);
+  }
+  console.log(`[global-setup] E2E slot ${slot} accounts ready (owner teacher ${ownerId})`);
+  return ownerId;
+}
+
 // ── Section 97: Teacher test account provisioning ────────────────────────────
 // Creates dedicated isolated teacher + student accounts for teacher-dashboard
 // tests. Does NOT touch the existing test student or their teacher relationship.
@@ -206,15 +268,9 @@ async function ensureTeacherTestAccounts(supabase: any): Promise<void> {
   const TEST_TEACHER_PASSWORD  = readRequiredSecret("TEST_TEACHER_PASSWORD");
   const TEST_STUDENT2_PASSWORD = readRequiredSecret("TEST_STUDENT2_PASSWORD");
 
-  const { data: usersData, error: listError } = await supabase.auth.admin.listUsers();
-  if (listError) {
-    throw new Error(`teacher-setup: listUsers failed — ${listError.message}`);
-  }
-  const allUsers: any[] = usersData?.users ?? [];
-
   // ── Test teacher ─────────────────────────────────────────────────────────
 
-  let teacherUser = allUsers.find((u: any) => u.email === TEST_TEACHER_EMAIL);
+  let teacherUser = await findUserByEmail(supabase, TEST_TEACHER_EMAIL, "teacher-setup");
   let teacherId: string;
 
   if (!teacherUser) {
@@ -252,7 +308,7 @@ async function ensureTeacherTestAccounts(supabase: any): Promise<void> {
 
   // ── Test student for teacher ─────────────────────────────────────────────
 
-  let student2User = allUsers.find((u: any) => u.email === TEST_STUDENT2_EMAIL);
+  let student2User = await findUserByEmail(supabase, TEST_STUDENT2_EMAIL, "teacher-setup");
   let student2Id: string;
 
   if (!student2User) {
@@ -344,6 +400,10 @@ export default async function globalSetup() {
   // Health check runs first — fail before touching any test state
   await checkQuestionPoolHealth(supabase);
 
+  // Slots 1..3: create/verify this slot's own accounts before anything below finds and resets them.
+  // Slot 0 skips this entirely.
+  const slotOwnerTeacherId = E2E_SLOT === 0 ? null : await ensureSlotAccounts(supabase, E2E_SLOT);
+
   // Provision teacher test accounts (idempotent)
   await ensureTeacherTestAccounts(supabase);
 
@@ -415,8 +475,10 @@ export default async function globalSetup() {
     throw new Error(`global-setup: delete failed — ${error.message}`);
   }
 
+  // Logged by user id only. The address comes from a secret (and for slots 1..3 is derived from
+  // one), so it never goes into a log line, masked or not.
   console.log(
-    `[global-setup] Deleted all question_instances for ${TEST_STUDENT_EMAIL} (${user.id})`
+    `[global-setup] Deleted all question_instances for the primary test student (${user.id}, slot ${E2E_SLOT})`
   );
 
   // Reset grade, placement_band (prevents overlays), current_band (fresh session),
@@ -447,6 +509,19 @@ export default async function globalSetup() {
   }
 
   console.log(
-    `[global-setup] Set selected_grade=9, placement_band=2, current_band=null, active_domains=null, avatar_identity=neutral(chosen) for ${TEST_STUDENT_EMAIL}`
+    `[global-setup] Set selected_grade=9, placement_band=2, current_band=null, active_domains=null, avatar_identity=neutral(chosen) for the primary test student (${user.id}, slot ${E2E_SLOT})`
   );
+
+  // Slots 1..3: the primary student belongs to the slot's password-less owner teacher — never to the
+  // slot's test teacher. password-help.spec.ts needs a teacher to restore; teacher-password-reset.spec.ts
+  // needs the test teacher to be refused on this student. Slot 0 keeps its existing teacher.
+  if (slotOwnerTeacherId !== null) {
+    const { error: ownerErr } = await supabase
+      .from("profiles")
+      .update({ teacher_id: slotOwnerTeacherId })
+      .eq("id", user.id);
+    if (ownerErr) {
+      throw new Error(`slot-setup[${E2E_SLOT}]: primary teacher_id update failed — ${ownerErr.message}`);
+    }
+  }
 }

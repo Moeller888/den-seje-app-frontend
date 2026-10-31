@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { publishableKey, serviceKey } from "../_shared/supabase-keys.ts";
 import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
@@ -9,6 +9,8 @@ import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
 import { servableWireFormat } from "../_shared/interaction-kinds.ts";
 import { pupilLogHash } from "./log-pseudonym.ts";
+import { createMatchKey, parseMatchPairs } from "../_shared/match-pairs.ts";
+import { chooseSelectionRoute, loadLevelPlan, resolveLevelEngine, type LevelReadClient } from "./level-flow.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,6 +33,19 @@ function mapAnswerFormat(format: string | null) {
   if (format.includes("number")) return "number";
   if (format.includes("text")) return "text";
   return "mc";
+}
+
+// The round the pupil is answering (D-266, H5): round_no = question_instances.repeat_count + 1 of the
+// row this response serves, read from the database, never from the request. Every reopen raises
+// repeat_count by exactly 1 (round guard, migration 20261030211428), so the first round is 1, a
+// reopened instance gets the next number and fetching an open round again gives the same number.
+// A row without a valid repeat_count is a server fault: it throws (500) instead of inventing a round.
+function roundNoOf(instance: { id?: unknown; repeat_count?: unknown } | null | undefined): number {
+  const repeatCount = instance?.repeat_count;
+  if (typeof repeatCount !== "number" || !Number.isInteger(repeatCount) || repeatCount < 0) {
+    throw new Error(`Invalid repeat_count on question instance ${String(instance?.id ?? "?")}`);
+  }
+  return repeatCount + 1;
 }
 
 // SERVER-SIDE ONLY. Validates the stored content and extracts the answer key that becomes
@@ -57,8 +72,18 @@ function normalizeContent(raw: any, answer_format: string) {
     return { question, options, correct };
   }
 
+  if (answer_format === "match") {
+    // Match par: the key is this instance's shuffle of the right column, drawn here, once, and stored
+    // as correct_answer (../_shared/match-pairs.ts). content.correct is not used.
+    return { question, correct: createMatchKey(parseMatchPairs(raw).length) };
+  }
+
   return { question, correct };
 }
+
+// A failed read of a Match par instance key is a backend error, not bad content: it must reach the outer
+// catch as a visible 500 instead of being skipped like a row the client cannot render.
+class InstanceKeyReadError extends Error {}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -131,8 +156,30 @@ serve(async (req) => {
     // the browser's answer_format from the interaction-kind registry, so a format the client cannot
     // show is skipped instead of falling back to "mc"; v1 keeps mapAnswerFormat unchanged.
     const mixEngine = resolveMixEngine(Deno.env.get("QUESTION_MIX_ENGINE"));
+    // The level engine (Edge secret LEVEL_ENGINE, ./level-flow.ts). Unset = "off" = everything below
+    // runs exactly as before; "v1" changes only step 2 (new questions) and step 3 (repeat RPC).
+    const levelEngine = resolveLevelEngine(Deno.env.get("LEVEL_ENGINE"));
+    const route = chooseSelectionRoute(mixEngine, levelEngine);
     const wireFormat = (row: { answer_format?: unknown; answer_type?: unknown; content?: unknown }): string | null =>
       mixEngine === "v2" ? servableWireFormat(row) : mapAnswerFormat(row.answer_format as string | null);
+
+    // Match par only: the instance key (question_instances.correct_answer) lays out the shuffled right
+    // column (../_shared/match-pairs.ts). It is read here, on the backend client, scoped to the verified
+    // student and ONLY for a "match" row — every other format makes exactly the reads it made before
+    // (release gate, docs/operations/level-engine-rollout.md §3.1). The key is never put into a response.
+    // No row → null → toPublicQuestion throws → the row is skipped as unrenderable.
+    const matchInstanceKey = async (format: string, instanceId: string): Promise<unknown> => {
+      if (format !== "match") return undefined;
+      const { data: keyRows, error: keyError } = await admin()
+        .from("question_instances")
+        .select("correct_answer")
+        .eq("id", instanceId)
+        .eq("student_id", student_id)
+        .limit(1);
+      if (keyError) throw new InstanceKeyReadError(`Match key read failed for ${instanceId}: ${keyError.message}`);
+      const keyRow = Array.isArray(keyRows) && keyRows.length > 0 ? keyRows[0] : null;
+      return keyRow ? keyRow.correct_answer : null;
+    };
 
     // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
     // Due instances are served regardless of grade filter (backwards compatible).
@@ -142,6 +189,7 @@ serve(async (req) => {
       .from("question_instances")
       .select(`
         id,
+        repeat_count,
         next_review_at,
         questions (
           content,
@@ -175,15 +223,19 @@ serve(async (req) => {
     for (const instance of sortedDue) {
       const q = instance.questions;
       if (!q) continue;
+      // Outside the try: an invalid round fails loud instead of being skipped like bad content.
+      const roundNo = roundNoOf(instance);
 
       try {
         const format = wireFormat(q);
         if (format === null) throw new Error(`Unservable format: ${q.answer_format}`);
-        const pub = toPublicQuestion(q.content, format, q.metadata);
+        const instanceKey = await matchInstanceKey(format, instance.id);
+        const pub = toPublicQuestion(q.content, format, q.metadata, instanceKey);
 
         return new Response(
           JSON.stringify({
             question_instance_id: instance.id,
+            round_no: roundNo,
             content: pub.content,
             answer_format: format,
             answer_type: q.answer_type || "short",
@@ -196,6 +248,7 @@ serve(async (req) => {
           }
         );
       } catch (e) {
+        if (e instanceof InstanceKeyReadError) throw e;
         console.error("Skipping due instance with bad content:", instance.id, e);
       }
     }
@@ -213,7 +266,24 @@ serve(async (req) => {
     // (mixEngine and wireFormat are resolved before step 1.)
     let sortedQuestions: any[];
 
-    if (mixEngine === "v2") {
+    if (route.newQuestions === "level" || route.newQuestions === "level+mix") {
+      // LEVEL_ENGINE=v1: the pupil's server-owned level for the subject, nearest-level candidates, no
+      // grade ceiling (migration 20261029120000; ./level-flow.ts). Needs migrations #351, A and B.
+      const { ordered, level, mixKind } = await loadLevelPlan(admin() as unknown as LevelReadClient, {
+        studentId: student_id,
+        subject: scope.subject,
+        grade: selectedGrade,
+        domains: subjectDomains,
+        wavePhase,
+        lastMisconceptionType,
+        mixEngine,
+      });
+      console.log("LEVEL_ENGINE:", JSON.stringify({
+        route: route.newQuestions, subject: scope.subject, level: level.level, answered: level.answered,
+        newly_folded: level.newlyFolded, seed_source: level.seedSource, candidates: ordered.length, mix_kind: mixKind,
+      }));
+      sortedQuestions = ordered;
+    } else if (mixEngine === "v2") {
       const { plan, band } = await loadFormatMixPlan(admin() as unknown as MixReadClient, {
         studentId: student_id,
         grade: selectedGrade,
@@ -286,7 +356,7 @@ serve(async (req) => {
         if (resolved === null) throw new Error(`Unservable format: ${q.answer_format}`);
         format = resolved;
         normalized = normalizeContent(q.content, format);
-        pub = toPublicQuestion(q.content, format, q.metadata);
+        pub = toPublicQuestion(q.content, format, q.metadata, normalized.correct);
       } catch (e) {
         console.error("Skipping question with bad content:", q.id, e);
         continue;
@@ -334,14 +404,20 @@ serve(async (req) => {
       // v2: "exhausted" means no SERVABLE unserved question is left — the same rule the v2 candidate
       // window uses (public.question_is_servable), so a pool that holds only formats the client cannot
       // show still reaches repeats instead of "no questions". Every other guard is identical.
-      const { data: repeatId, error: repeatError } = mixEngine === "v2"
-        ? await admin().rpc(
-          "request_repeat_question_servable_for_student",
-          { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
-        )
+      // LEVEL_ENGINE=v1: the same guards over the level engine's pool (20261029120000).
+      const { data: repeatId, error: repeatError } = route.repeatArgs !== "student+domains"
+        ? (mixEngine === "v2"
+          ? await admin().rpc(
+            "request_repeat_question_servable_for_student",
+            { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
+          )
+          : await admin().rpc(
+            "request_repeat_question_for_student",
+            { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
+          ))
         : await admin().rpc(
-          "request_repeat_question_for_student",
-          { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
+          "request_repeat_level_question_for_student",
+          { p_student_id: student_id, p_domains: subjectDomains }
         );
 
       if (repeatError) throw repeatError;
@@ -351,6 +427,7 @@ serve(async (req) => {
           .from("question_instances")
           .select(`
             id,
+            repeat_count,
             questions (
               content,
               answer_format,
@@ -382,14 +459,18 @@ serve(async (req) => {
           } | null | undefined;
 
           if (rq && rq.is_active !== false) {
+            // The reopened round, read back after the reopen (outside the try, so it fails loud).
+            const roundNo = roundNoOf(repeatRow);
             try {
               const format = wireFormat(rq);
               if (format === null) throw new Error(`Unservable format: ${rq.answer_format}`);
-              const pub = toPublicQuestion(rq.content, format, rq.metadata);
+              const instanceKey = await matchInstanceKey(format, repeatRow.id);
+              const pub = toPublicQuestion(rq.content, format, rq.metadata, instanceKey);
 
               return new Response(
                 JSON.stringify({
                   question_instance_id: repeatRow.id,
+                  round_no: roundNo,
                   content: pub.content,
                   answer_format: format,
                   answer_type: rq.answer_type || "short",
@@ -403,6 +484,7 @@ serve(async (req) => {
                 }
               );
             } catch (e) {
+              if (e instanceof InstanceKeyReadError) throw e;
               // Bad content on the repeat candidate: fall through to no_questions rather than
               // serving something the client cannot render. The instance stays reopened, and the
               // DUE step picks it up next time under the same guard.
@@ -423,9 +505,13 @@ serve(async (req) => {
       );
     }
 
+    // The new instance's round, from the row the insert returned (repeat_count's default, 0 → round 1).
+    const roundNo = roundNoOf(inserted.instance as { id?: unknown; repeat_count?: unknown });
+
     return new Response(
       JSON.stringify({
         question_instance_id: inserted.instance.id,
+        round_no: roundNo,
         content: inserted.pub.content,
         answer_format: inserted.format,
         answer_type: inserted.question?.answer_type || "short",

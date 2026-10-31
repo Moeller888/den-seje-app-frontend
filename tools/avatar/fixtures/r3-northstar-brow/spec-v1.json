@@ -1,0 +1,94 @@
+{
+  "id": "r3-northstar-brow-v1",
+  "decision": "D-190",
+  "status": "REVIEW VARIANT — the image-left brow completed by the D-158 mirroring on the D-189 baseline; not approved, not promotable",
+  "source": {
+    "file": "assets/avatar/reference/Northstar Master v2.png",
+    "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50"
+  },
+  "baseline": {
+    "decision": "D-189",
+    "manifest": "tools/avatar/fixtures/r3-northstar-head/manifest-v1.json",
+    "mergeCommit": "cb2fa202a8fdcaa26d9bd69d195a4036b5982464"
+  },
+  "method": {
+    "binding": "D-158 (1)(b)–(h): the fully visible image-right brow is the shape source; it is mirrored about the face's MEASURED anatomical midline (not the canvas centre); afterwards only a small, mathematically described, reproducible adjustment is allowed (translation; a very small rotation and, only on documented need, a small uniform scale); freehand correction and non-linear deformation are not allowed; pixels in the hair-covered area are reconstructed and never described as observed; the brow is not shortened, moved or enlarged to show better under the hair.",
+    "sourceBrow": "the D-189 browR layer (Northstar's own right brow with its cleaned edge), pixels with alpha >= 128 define its shape",
+    "observedBrow": "the D-189 browL layer (Northstar's own visible left brow), pixels with alpha >= 128",
+    "axis": {
+      "rule": "the midpoint of the centroids of the two eye components (D-188 iris ∪ eyes-fixed, alpha >= 128, split at x = 510)",
+      "note": "D-158 measured 510.90 on its own segmentation of the original; it recorded that every axis candidate except the nose stroke lands the fit at the same absolute place, because the translation absorbs the axis"
+    },
+    "fit": {
+      "order": "lexicographic, as D-158: (1) fewest mirrored brow pixels on SAFE visible skin, (2) highest IoU with the observed brow, (3) smallest deviation |tx| + |ty| + |rotationDeg| + 100·|scale − 1|. IoU and recall are measured only where the brow is observable, i.e. outside D-188's missing-under-hair mask: the observed brow is truncated by the hair, so a whole-box IoU would reward shrinking the mirror (set after the first local run gave 0.567 against D-158's 0.938).",
+      "safeSkin": "original visible skin (D-188 skin-owned, class S/O, alpha >= 250, not reconstructed), eroded by 2 px for the ±1–2 px edge uncertainty",
+      "stages": [
+        {
+          "name": "translation",
+          "tx": [
+            -12,
+            12,
+            1
+          ],
+          "ty": [
+            -12,
+            12,
+            1
+          ],
+          "rotationDeg": [
+            0
+          ],
+          "scale": [
+            1
+          ]
+        },
+        {
+          "name": "translation + small rotation (only if translation leaves skin pixels)",
+          "tx": [
+            -12,
+            12,
+            1
+          ],
+          "ty": [
+            -12,
+            12,
+            1
+          ],
+          "rotationDeg": [
+            -3,
+            3,
+            1
+          ],
+          "scale": [
+            1
+          ]
+        },
+        {
+          "name": "+ small uniform scale (only if rotation still leaves skin pixels)",
+          "tx": [
+            -12,
+            12,
+            1
+          ],
+          "ty": [
+            -12,
+            12,
+            1
+          ],
+          "rotationDeg": [
+            -3,
+            3,
+            1
+          ],
+          "scale": [
+            0.96,
+            1.04,
+            0.02
+          ]
+        }
+      ],
+      "resampling": "inverse mapping with bilinear interpolation of premultiplied RGBA; rotation and scale about the mirrored brow's alpha centroid"
+    },
+    "completion": "the completed brow = the observed brow over the fitted mirror, where the mirror contributes ONLY inside D-188's missing-under-hair mask and only where the observed brow has no pixel; every observed pixel is kept; nothing is added on visible skin"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "decision": "D-242",
+  "what": "the private inputs of build-northstar-runtime-assets.mjs: each item's run (under <Documents>/DenSejeApp-artefacts/) and method; the review picture of each K outfit (D-239/D-240 visual review) for provenance. d240 changes only the brown ankle boot (D-240); the D-235 items' layers are d239's, byte-identical under d240.",
+  "items": {
+    "top-tee-hip-cream": {
+      "run": "d-239-targeted-correction/final1-d235",
+      "method": "d239"
+    },
+    "top-tee-hip-blue": {
+      "run": "d-240-shoe-cover/run-1",
+      "method": "d240"
+    },
+    "bottom-skirt-sand": {
+      "run": "d-239-targeted-correction/final1-d235",
+      "method": "d239"
+    },
+    "bottom-shorts-navy": {
+      "run": "d-240-shoe-cover/run-1",
+      "method": "d240"
+    },
+    "bottom-capri-lightblue": {
+      "run": "d-240-shoe-cover/run-1",
+      "method": "d240"
+    },
+    "bottom-trousers-square-olive": {
+      "run": "d-240-shoe-cover/run-1",
+      "method": "d240"
+    },
+    "shoes-sneakers-beige": {
+      "run": "d-239-targeted-correction/final1-d235",
+      "method": "d239"
+    },
+    "shoes-boots-laceup-black": {
+      "run": "d-239-targeted-correction/final1-d235",
+      "method": "d239"
+    },
+    "shoes-sneakers-white": {
+      "run": "d-240-shoe-cover/run-1",
+      "method": "d240"
+    },
+    "shoes-ankleboots-brown": {
+      "run": "d-240-shoe-cover/run-1",
+      "method": "d240"
+    }
+  },
+  "reviewFullPngSha256": {
+    "K01": "e6ff45014c768fe6b22fdce01188dc7df11dd847d3c796abe91b611f5877f31c",
+    "K02": "2c343861d4fe46a3c9e7e2ab2a9735a6f3e8cad65b278387f6f34ed385c62b13",
+    "K03": "7cc965d5fcfa2660b5afe7452f6aed8e491824f917751fe4cda12ddcfc56d946",
+    "K04": "4f8d0096e50ddf11174f88c0775ac545b33f6265b93fa9e4eb554141da9a6642",
+    "K05": "d966d9b34a42bfaa85bae34085d97ed07db2bf1393c15f6ca8825666b19d6a1f",
+    "K06": "0a2ffa2d4fab9aeccefc9319bf309c4ffdf587dcaad5cf5628c33a6805d59d93",
+    "K07": "4bafb4e517e20544bf4429b7c4930a067083a9929761259576a958fddd010b09",
+    "K08": "8be6a7a4632d9ed6fe716f765d7808945c3cf96a144785b283d83157f17a9637",
+    "K09": "a0979b21dcf099f68370d3153e6bf9a306abc63c266655379b7f342f45c61212",
+    "K10": "20594cfd17d846f31c044c4131593026672f8e6c8db379c0ead57742afaa7a13",
+    "K11": "7ca551a06f33156a8d6580b23beb7ced2f6bee67b6d2463888ddac9f74a0d599",
+    "K12": "6adfc3fa2353ddadf354184b36aba128bf710ccc800f905c0f961cd2404e0a70",
+    "K13": "879426d8f373659648d315e6348bcdf41173971f9a628888adc789cb5e3df26a",
+    "K14": "5b3fe11a86c032b9df27980a51818a3ebf47fcd7e9678cbe973132a36a60f49c",
+    "K15": "6912986aa04786c70d30a4061d6d239e13741c4214ab7cf49ea5286e7b9a8f22",
+    "K16": "9e38904c961142f2b3f086b4bc34d5305a46a6ae9761397c7baf0780e9ae1a6d",
+    "K17": "2ca7a9d7e57bbdb2a50c5c046e641d55033d0ea308bca8c43b26ddfaf6436805",
+    "K18": "a3c93111c0ec6e7b2f8a2d81901e16d9459002a7ebde75dbae6779569e4219a3",
+    "K19": "8588a01ed9f6f20a3c0dbfa8fe47e560579d929632e21b022022169aa60b05b9"
+  }
+}

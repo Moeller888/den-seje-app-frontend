@@ -1,6 +1,7 @@
 // Section 136: Password reset & student self-service tests.
-// UI tests use the production page. API tests drive the update flow directly
-// via the student's anon-key client — no real email required.
+// UI tests use the production page; the reset form's server call is intercepted in the browser
+// (test 4), so no help request and no mail is ever produced. API tests drive the update flow
+// directly via the student's anon-key client — no real email required.
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
@@ -8,6 +9,8 @@ import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
 import { findAuthUserByEmail, PROD, STUDENT_TEMP_PASSWORD, PUBLIC_API_KEY } from './helpers.js';
+// The real HTTP contract of request-password-help (pure module: no client, no env, no network).
+import { CORS_HEADERS, GENERIC_BODY } from '../supabase/functions/request-password-help/handler.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -76,22 +79,72 @@ test('3. Submitting empty email shows validation error', async ({ page }) => {
   await expect(msg).toContainText(/skriv/i);
 });
 
-test('4. Reset request form handles Supabase response gracefully', async ({ page, browserName }) => {
-  // Deduplicate across browsers — the API call is identical in all three;
-  // Supabase also rate-limits password reset emails, so only one attempt per run.
-  test.skip(browserName !== 'chromium', 'API-call deduplication across browsers');
+// THE FORM'S SERVER CALL IS INTERCEPTED. Since Section 173 the form posts the typed address to the
+// request-password-help Edge Function (js/login.js), and for a STUDENT address that function mails
+// the student's teacher. A live call from here would therefore mail a real person on every run —
+// this test used to type the test student's address and did exactly that whenever no cooldown row
+// happened to exist. The function itself is tested in password-help.spec.ts (api project), behind
+// a guard that refuses any call that could reach the mail path.
+//
+// Here the call is answered inside the browser with the function's own generic body and CORS
+// headers (handler.ts), and it never leaves the browser. The intercept is installed before the
+// page loads. As a second barrier the typed address is a reserved .invalid one, so even a request
+// that somehow escaped could not name a real account. Request data is compared, never printed.
+const RESET_FORM_ADDRESS = 'no-such-user-password-reset-form@example.invalid';
+const INTERCEPT_MARKER = 'password-reset-spec-test-4';
+
+test('4. Reset request form sends one request and shows the generic answer (call intercepted)', async ({ page }) => {
+  const posts: Array<{ method: string; body: unknown }> = [];
+  const markers: Array<string | null> = [];
+
+  await page.route('**/functions/v1/request-password-help', async (route: any) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: CORS_HEADERS });
+      return;
+    }
+    let body: unknown = null;
+    try {
+      body = request.postDataJSON();
+    } catch {
+      body = null;
+    }
+    posts.push({ method: request.method(), body });
+    await route.fulfill({
+      status: 200,
+      headers: { ...CORS_HEADERS, 'content-type': 'application/json', 'x-e2e-intercepted': INTERCEPT_MARKER },
+      body: JSON.stringify(GENERIC_BODY),
+    });
+  });
+  // Records where the browser's answer came from: the intercept stamps every answer it produces.
+  page.on('response', (response: any) => {
+    if (response.url().endsWith('/functions/v1/request-password-help') && response.request().method() !== 'OPTIONS') {
+      markers.push(response.headers()['x-e2e-intercepted'] ?? null);
+    }
+  });
 
   await page.goto(`${PROD}/login.html`, { waitUntil: 'domcontentloaded' });
   await page.locator('#forgotBtn').click();
-  await page.fill('#reset-email', STUDENT_EMAIL);
+  await page.fill('#reset-email', RESET_FORM_ADDRESS);
   await page.locator('#resetRequestBtn').click();
 
-  // Whether Supabase returns success or a rate-limit/config error, the form
-  // must (a) show a non-empty message and (b) re-enable the button.
-  // The actual email delivery is an infrastructure concern, not a code concern.
-  const msg = page.locator('#reset-message');
-  await expect(msg).not.toBeEmpty({ timeout: 10000 });
+  // The form must actually make the call — a missing request fails here, by name.
+  await expect
+    .poll(() => posts.length, { message: 'the form must call request-password-help exactly once', timeout: 10000 })
+    .toBe(1);
+  expect(posts[0].method).toBe('POST');
+  expect(
+    JSON.stringify(posts[0].body) === JSON.stringify({ email: RESET_FORM_ADDRESS }),
+    'the request body must be exactly { email: <the typed address> }',
+  ).toBe(true);
+
+  // The UI shows the function's generic answer, re-enables the button and clears the field.
+  await expect(page.locator('#reset-message')).toHaveText(GENERIC_BODY.message, { timeout: 10000 });
   await expect(page.locator('#resetRequestBtn')).toBeEnabled();
+  await expect(page.locator('#reset-email')).toHaveValue('');
+
+  // And the answer the browser received came from the intercept, not from the server.
+  expect(markers, 'every answer must come from the in-browser intercept').toEqual([INTERCEPT_MARKER]);
 });
 
 test('5. reset-password.html without a token shows invalid-link message', async ({ page }) => {

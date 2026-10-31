@@ -1,0 +1,2686 @@
+{
+  "$id": "https://adventure-engine.invalid/schema/actors.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "actor": {
+      "additionalProperties": false,
+      "properties": {
+        "dialog": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "entry": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grounded": {
+          "type": "boolean"
+        },
+        "hitBox": {
+          "additionalProperties": false,
+          "properties": {
+            "height": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            "width": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "type": "object"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "nameKey": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "referenceHeight": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "scene": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sounds": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "spot": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "triggersZones": {
+          "type": "boolean"
+        },
+        "variants": {
+          "additionalProperties": {
+            "$ref": "#/definitions/variant"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "scene",
+        "entry",
+        "variants"
+      ],
+      "type": "object"
+    },
+    "animInstr": {
+      "discriminator": {
+        "propertyName": "op"
+      },
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "n": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "op": {
+              "const": "frame"
+            }
+          },
+          "required": [
+            "op",
+            "n"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "from": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "op": {
+              "const": "play"
+            },
+            "to": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "op",
+            "from",
+            "to"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "from": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "op": {
+              "const": "loopRange"
+            },
+            "to": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "op",
+            "from",
+            "to"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "frames": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "op": {
+              "const": "wait"
+            }
+          },
+          "required": [
+            "op",
+            "frames"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "n": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            "op": {
+              "const": "fps"
+            }
+          },
+          "required": [
+            "op",
+            "n"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "op": {
+              "const": "layer"
+            }
+          },
+          "required": [
+            "op",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "layerPop"
+            }
+          },
+          "required": [
+            "op"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "entity": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "op": {
+              "const": "signal"
+            }
+          },
+          "required": [
+            "op",
+            "entity",
+            "name"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "animation": {
+      "additionalProperties": false,
+      "properties": {
+        "atlas": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "defaultFps": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "instructions": {
+          "items": {
+            "$ref": "#/definitions/animInstr"
+          },
+          "type": "array"
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "maxDuration": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "atlas",
+        "instructions"
+      ],
+      "type": "object"
+    },
+    "atlas": {
+      "additionalProperties": false,
+      "properties": {
+        "anchor": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "columns": {
+          "maximum": 4096,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "frameHeight": {
+          "exclusiveMinimum": 0,
+          "maximum": 16384,
+          "type": "number"
+        },
+        "frameWidth": {
+          "exclusiveMinimum": 0,
+          "maximum": 16384,
+          "type": "number"
+        },
+        "frames": {
+          "maximum": 4096,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "layers": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "dx": {
+                "type": "number"
+              },
+              "dy": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "dx",
+              "dy"
+            ],
+            "type": "object"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "frameWidth",
+        "frameHeight",
+        "frames"
+      ],
+      "type": "object"
+    },
+    "camera": {
+      "additionalProperties": false,
+      "properties": {
+        "focal": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "horizon": {
+          "type": "number"
+        },
+        "scale": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "speed": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "tilt": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "focal",
+        "height",
+        "tilt",
+        "horizon",
+        "speed"
+      ],
+      "type": "object"
+    },
+    "container": {
+      "discriminator": {
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "kind": {
+              "const": "scene"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "kind": {
+              "const": "actor"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "none"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "contentPackage": {
+      "additionalProperties": false,
+      "properties": {
+        "actors": {
+          "items": {
+            "$ref": "#/definitions/actor"
+          },
+          "type": "array"
+        },
+        "animations": {
+          "items": {
+            "$ref": "#/definitions/animation"
+          },
+          "type": "array"
+        },
+        "game": {
+          "$ref": "#/definitions/game"
+        },
+        "graphs": {
+          "items": {
+            "$ref": "#/definitions/graph"
+          },
+          "type": "array"
+        },
+        "i18n": {
+          "additionalProperties": {
+            "$ref": "#/definitions/i18nTable"
+          },
+          "type": "object"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/definitions/object"
+          },
+          "type": "array"
+        },
+        "portals": {
+          "items": {
+            "$ref": "#/definitions/portal"
+          },
+          "type": "array"
+        },
+        "saveMigrations": {
+          "items": {
+            "$ref": "#/definitions/saveMigration"
+          },
+          "type": "array"
+        },
+        "scenes": {
+          "items": {
+            "$ref": "#/definitions/scene"
+          },
+          "type": "array"
+        },
+        "sounds": {
+          "items": {
+            "$ref": "#/definitions/sound"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "game"
+      ],
+      "type": "object"
+    },
+    "cutscene": {
+      "additionalProperties": false,
+      "properties": {
+        "hold": {
+          "type": "boolean"
+        },
+        "skipAfterMs": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "skippable": {
+          "type": "boolean"
+        },
+        "variants": {
+          "additionalProperties": {
+            "$ref": "#/definitions/cutsceneVariant"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "variants"
+      ],
+      "type": "object"
+    },
+    "cutsceneVariant": {
+      "additionalProperties": false,
+      "properties": {
+        "durationMs": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "timeline": {
+          "items": {
+            "$ref": "#/definitions/timelineFrame"
+          },
+          "type": "array"
+        },
+        "video": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "edge": {
+      "oneOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "order": {
+              "type": "number"
+            },
+            "to": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "to"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "expr": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "const": {
+              "type": [
+                "boolean",
+                "number",
+                "string"
+              ]
+            }
+          },
+          "required": [
+            "const"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "var": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "var"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "eq": {
+              "items": {
+                "$ref": "#/definitions/expr"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            }
+          },
+          "required": [
+            "eq"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "neq": {
+              "items": {
+                "$ref": "#/definitions/expr"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            }
+          },
+          "required": [
+            "neq"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "and": {
+              "items": {
+                "$ref": "#/definitions/expr"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "and"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "or": {
+              "items": {
+                "$ref": "#/definitions/expr"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "or"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "$ref": "#/definitions/expr"
+            }
+          },
+          "required": [
+            "not"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "lt": {
+              "items": {
+                "$ref": "#/definitions/expr"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            }
+          },
+          "required": [
+            "lt"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "lte": {
+              "items": {
+                "$ref": "#/definitions/expr"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            }
+          },
+          "required": [
+            "lte"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "gt": {
+              "items": {
+                "$ref": "#/definitions/expr"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            }
+          },
+          "required": [
+            "gt"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "gte": {
+              "items": {
+                "$ref": "#/definitions/expr"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            }
+          },
+          "required": [
+            "gte"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "game": {
+      "additionalProperties": false,
+      "properties": {
+        "defaultLanguage": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "entry": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fallbackLanguage": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "formatVersion": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "globals": {
+          "additionalProperties": {
+            "type": [
+              "boolean",
+              "number",
+              "string"
+            ]
+          },
+          "type": "object"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "languages": {
+          "items": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "player": {
+          "additionalProperties": false,
+          "properties": {
+            "actor": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "actor"
+          ],
+          "type": "object"
+        },
+        "ui": {
+          "$ref": "#/definitions/ui"
+        },
+        "version": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "viewport": {
+          "additionalProperties": false,
+          "properties": {
+            "height": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            "width": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "formatVersion",
+        "languages",
+        "defaultLanguage"
+      ],
+      "type": "object"
+    },
+    "graph": {
+      "additionalProperties": false,
+      "properties": {
+        "actors": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "logic",
+            "dialog"
+          ]
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/definitions/node"
+          },
+          "type": "array"
+        },
+        "owner": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "nodes"
+      ],
+      "type": "object"
+    },
+    "i18nTable": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "layer": {
+      "additionalProperties": false,
+      "properties": {
+        "assets": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "depth": {
+          "type": "number"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "depth"
+      ],
+      "type": "object"
+    },
+    "manifestEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "atlas": {
+          "$ref": "#/definitions/atlas"
+        },
+        "bytes": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "formats": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "bytes": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "hash": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "url": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "url"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "hash": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "image",
+            "atlas",
+            "audio",
+            "video"
+          ]
+        },
+        "language": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "url": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "node": {
+      "discriminator": {
+        "propertyName": "type"
+      },
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "modal": {
+              "type": "boolean"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "entry"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "name"
+          ],
+          "title": "entry",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "expr": {
+              "$ref": "#/definitions/expr"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "guard"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "expr"
+          ],
+          "title": "guard",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "return"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "value"
+          ],
+          "title": "return",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "random"
+            }
+          },
+          "required": [
+            "id",
+            "type"
+          ],
+          "title": "random",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxMs": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "minMs": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "mode": {
+              "enum": [
+                "block",
+                "background"
+              ]
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "delay"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "minMs",
+            "maxMs",
+            "mode"
+          ],
+          "title": "delay",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "join"
+            }
+          },
+          "required": [
+            "id",
+            "type"
+          ],
+          "title": "join",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "detach"
+            }
+          },
+          "required": [
+            "id",
+            "type"
+          ],
+          "title": "detach",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "set"
+            },
+            "value": {
+              "type": [
+                "boolean",
+                "number",
+                "string"
+              ]
+            },
+            "var": {
+              "pattern": "^[a-z][a-z0-9_.]*$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "var",
+            "value"
+          ],
+          "title": "set",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "from": {
+              "$ref": "#/definitions/container"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "object": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "spot": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "to": {
+              "$ref": "#/definitions/container"
+            },
+            "type": {
+              "const": "move_object"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "object",
+            "to"
+          ],
+          "title": "move_object",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "actor": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "scene": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "spot": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": {
+              "const": "move_actor"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "actor",
+            "scene"
+          ],
+          "title": "move_actor",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "entity": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "set_variant"
+            },
+            "variant": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "entity",
+            "variant"
+          ],
+          "title": "set_variant",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "nameKey": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "object": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": {
+              "const": "rename"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "object",
+            "nameKey"
+          ],
+          "title": "rename",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "portal": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": {
+              "const": "portal_lock"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "portal",
+            "locked"
+          ],
+          "title": "portal_lock",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "actor": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "player_set"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "actor"
+          ],
+          "title": "player_set",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "object": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": {
+              "const": "interact"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "object"
+          ],
+          "title": "interact",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "actor": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "scene": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "spot": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": {
+              "const": "walk_to"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "actor",
+            "spot"
+          ],
+          "title": "walk_to",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "actor": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "target": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": {
+              "const": "talk"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "actor",
+            "target"
+          ],
+          "title": "talk",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "item": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "object",
+                "actor",
+                "inventory"
+              ]
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "target": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": {
+              "const": "use_item"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "item",
+            "target",
+            "kind"
+          ],
+          "title": "use_item",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "actor": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "portal": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "toScene": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": {
+              "const": "portal_use"
+            }
+          },
+          "required": [
+            "id",
+            "type"
+          ],
+          "title": "portal_use",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "actor": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "stop_walk"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "actor"
+          ],
+          "title": "stop_walk",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "speaker": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "textKey": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": {
+              "const": "say"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "speaker",
+            "textKey"
+          ],
+          "title": "say",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "choice"
+            }
+          },
+          "required": [
+            "id",
+            "type"
+          ],
+          "title": "choice",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "end_dialog"
+            }
+          },
+          "required": [
+            "id",
+            "type"
+          ],
+          "title": "end_dialog",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "actor": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "entryName": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "dialog_push"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "actor",
+            "entryName"
+          ],
+          "title": "dialog_push",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "actor": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "dialog_pop"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "actor"
+          ],
+          "title": "dialog_pop",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "animation": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "entity": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "play_animation"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "entity",
+            "animation"
+          ],
+          "title": "play_animation",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "entity": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "sound": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "times": {
+              "oneOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "const": "loop"
+                }
+              ]
+            },
+            "type": {
+              "const": "sound_play"
+            },
+            "volume": {
+              "minimum": 0,
+              "type": "number"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "entity",
+            "sound"
+          ],
+          "title": "sound_play",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "entity": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "sound": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": {
+              "const": "sound_stop"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "entity",
+            "sound"
+          ],
+          "title": "sound_stop",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "hold": {
+              "type": "boolean"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "cutscene"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "name"
+          ],
+          "title": "cutscene",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "cutscene_clear"
+            }
+          },
+          "required": [
+            "id",
+            "type"
+          ],
+          "title": "cutscene_clear",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "input_lock"
+            }
+          },
+          "required": [
+            "id",
+            "type"
+          ],
+          "title": "input_lock",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "input_unlock"
+            }
+          },
+          "required": [
+            "id",
+            "type"
+          ],
+          "title": "input_unlock",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "next": {
+              "items": {
+                "$ref": "#/definitions/edge"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "quit"
+            }
+          },
+          "required": [
+            "id",
+            "type"
+          ],
+          "title": "quit",
+          "type": "object"
+        }
+      ]
+    },
+    "object": {
+      "additionalProperties": false,
+      "properties": {
+        "container": {
+          "$ref": "#/definitions/container"
+        },
+        "entry": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "icon": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "nameKey": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sounds": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "spot": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "variants": {
+          "additionalProperties": {
+            "$ref": "#/definitions/variant"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "container",
+        "entry",
+        "variants"
+      ],
+      "type": "object"
+    },
+    "point": {
+      "items": {
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "type": "array"
+    },
+    "polygon": {
+      "items": {
+        "$ref": "#/definitions/point"
+      },
+      "minItems": 3,
+      "type": "array"
+    },
+    "portal": {
+      "additionalProperties": false,
+      "properties": {
+        "arrivalSpot": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entry": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entrySpot": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "exitSpot": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "from": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "index": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "lockedKey": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "nameKey": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "polygon": {
+          "$ref": "#/definitions/polygon"
+        },
+        "to": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "from",
+        "to",
+        "entry"
+      ],
+      "type": "object"
+    },
+    "projectAsset": {
+      "additionalProperties": false,
+      "properties": {
+        "alternatives": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "bytes": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "sha256": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "file",
+              "type",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "atlas": {
+          "$ref": "#/definitions/atlas"
+        },
+        "author": {
+          "type": "string"
+        },
+        "bytes": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "file": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "image",
+            "atlas",
+            "audio",
+            "video",
+            "font"
+          ]
+        },
+        "language": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "file",
+        "type",
+        "bytes",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "rect": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "type": "object"
+    },
+    "saveMigration": {
+      "additionalProperties": false,
+      "properties": {
+        "fromVersion": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "remove": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "rename": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "setGlobals": {
+          "additionalProperties": {
+            "type": [
+              "boolean",
+              "number",
+              "string"
+            ]
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "fromVersion"
+      ],
+      "type": "object"
+    },
+    "scene": {
+      "additionalProperties": false,
+      "properties": {
+        "actorZones": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "actor": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "polygon": {
+                "$ref": "#/definitions/polygon"
+              },
+              "priority": {
+                "type": "number"
+              },
+              "talkSpot": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "variant": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "actor",
+              "polygon"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "blockers": {
+          "items": {
+            "$ref": "#/definitions/polygon"
+          },
+          "type": "array"
+        },
+        "camera": {
+          "$ref": "#/definitions/camera"
+        },
+        "cutscenes": {
+          "additionalProperties": {
+            "$ref": "#/definitions/cutscene"
+          },
+          "type": "object"
+        },
+        "defaultSpot": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "entry": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$",
+          "type": "string"
+        },
+        "layers": {
+          "items": {
+            "$ref": "#/definitions/layer"
+          },
+          "type": "array"
+        },
+        "nameKey": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "objectZones": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "entity": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "nameKey": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "polygon": {
+                "$ref": "#/definitions/polygon"
+              },
+              "priority": {
+                "type": "number"
+              },
+              "variant": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "polygon"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "portraitRegions": {
+          "additionalProperties": {
+            "$ref": "#/definitions/rect"
+          },
+          "type": "object"
+        },
+        "size": {
+          "additionalProperties": false,
+          "properties": {
+            "height": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            "width": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "type": "object"
+        },
+        "sounds": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "speechRegions": {
+          "additionalProperties": {
+            "$ref": "#/definitions/rect"
+          },
+          "type": "object"
+        },
+        "spots": {
+          "additionalProperties": {
+            "$ref": "#/definitions/spot"
+          },
+          "type": "object"
+        },
+        "triggerZones": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "entry": {
+                "anyOf": [
+                  {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "polygon": {
+                "$ref": "#/definitions/polygon"
+              }
+            },
+            "required": [
+              "id",
+              "entry",
+              "polygon"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "variants": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "walkSpeed": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "walkable": {
+          "items": {
+            "$ref": "#/definitions/polygon"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "entry"
+      ],
+      "type": "object"
+    },
+    "sound": {
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "channel": {
+          "enum": [
+            "music",
+            "ambient",
+            "sfx",
+            "voice"
+          ]
+        },
+        "durationMs": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "loopEndMs": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "loopStartMs": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "persistAcrossScenes": {
+          "type": "boolean"
+        },
+        "volume": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "asset",
+        "channel"
+      ],
+      "type": "object"
+    },
+    "spot": {
+      "additionalProperties": false,
+      "properties": {
+        "facing": {
+          "enum": [
+            "right",
+            "down_right",
+            "down",
+            "down_left",
+            "left",
+            "up_left",
+            "up",
+            "up_right"
+          ]
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "scale": {
+          "type": "boolean"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "timelineFrame": {
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "atMs": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "textKey": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "atMs"
+      ],
+      "type": "object"
+    },
+    "ui": {
+      "additionalProperties": false,
+      "properties": {
+        "cannotTextKeys": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "clickFeedbackMs": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "fadeMs": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "inventoryHeight": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "inventorySlots": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "playerLinesAsMenu": {
+          "type": "boolean"
+        },
+        "reactWhenNothingHappens": {
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "variant": {
+      "additionalProperties": false,
+      "properties": {
+        "animations": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "portrait": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sprite": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [],
+      "type": "object"
+    }
+  },
+  "items": {
+    "$ref": "#/definitions/actor"
+  },
+  "title": "actors",
+  "type": "array"
+}

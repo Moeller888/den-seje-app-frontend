@@ -1,0 +1,622 @@
+/* Layers (spec 06 F2.1): canvas 1–3, speech 4, UI 5, fade 6, screens, cursor 7. */
+:root {
+  --ink: #f6f1e7;
+  --panel: #1d1a17;
+  --panel-2: #2b2621;
+  --accent: #f2c14e;
+  --focus: #7cc4ff;
+  --show-ms: 1000ms;
+  --hide-ms: 500ms;
+  font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
+  color: var(--ink);
+  background: #000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+#game {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  outline: none;
+}
+
+#stage,
+#surface {
+  position: absolute;
+  inset: 0;
+}
+
+#stage {
+  z-index: 1;
+}
+
+#surface {
+  z-index: 2;
+  cursor: none;
+  touch-action: none;
+}
+
+#overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+}
+
+#speech-layer {
+  z-index: 4;
+}
+
+#ui-layer {
+  z-index: 5;
+}
+
+.fade {
+  z-index: 6;
+  background: #000;
+  opacity: 1;
+}
+
+#screens {
+  z-index: 6;
+}
+
+.layer-cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 7;
+  width: 32px;
+  height: 32px;
+  margin: -2px 0 0 -2px;
+  filter: drop-shadow(0 1px 1px #000);
+}
+
+.layer-cursor .cursor-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.layer-cursor.clicking {
+  transform-origin: 2px 2px;
+  scale: 0.8;
+}
+
+.layer-cursor[hidden],
+[hidden] {
+  display: none !important;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 4px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Speech bubbles (spec 06 F5) */
+.bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: 460px;
+  padding: 14px 18px 10px;
+  background: rgba(16, 14, 12, 0.94);
+  border: 2px solid var(--accent);
+  border-radius: 14px;
+  font-size: 24px;
+  line-height: 1.35;
+}
+
+.bubble-name {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 20px;
+}
+
+.bubble-hint {
+  margin-top: 6px;
+  font-size: 16px;
+  color: #d6cfc3;
+  text-align: right;
+}
+
+/* Choice menu (spec 04 D6) */
+.menu {
+  position: absolute;
+  left: 160px;
+  right: 160px;
+  bottom: 120px;
+  padding: 14px;
+  background: rgba(16, 14, 12, 0.96);
+  border: 2px solid var(--accent);
+  border-radius: 14px;
+  pointer-events: auto;
+}
+
+.menu-title {
+  font-size: 18px;
+  color: #d6cfc3;
+  margin: 0 0 8px 6px;
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.menu-option {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 24px;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 10px;
+}
+
+.menu-option.active {
+  background: var(--panel-2);
+  border-color: var(--accent);
+}
+
+.menu-num {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Inventory panel (spec 04 D4): slides up while pointer or focus is inside. */
+.inventory {
+  position: absolute;
+  left: 220px;
+  right: 220px;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--panel);
+  border: 2px solid #5c5146;
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
+  pointer-events: auto;
+  transform: translateY(calc(100% - 14px));
+  transition: transform var(--hide-ms) ease-in;
+}
+
+.inventory:hover,
+.inventory:focus-within,
+.inventory.pinned {
+  transform: translateY(0);
+  transition: transform var(--show-ms) ease-out;
+}
+
+.inv-slots {
+  flex: 1;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inv-slot {
+  width: 76px;
+  height: 76px;
+}
+
+.inv-slot.empty {
+  border: 2px dashed #4a4139;
+  border-radius: 10px;
+}
+
+.inv-item {
+  width: 76px;
+  height: 76px;
+  padding: 4px;
+  background: var(--panel-2);
+  border: 3px solid transparent;
+  border-radius: 10px;
+}
+
+.inv-item img {
+  width: 100%;
+  height: 100%;
+}
+
+.inv-item[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(242, 193, 78, 0.35);
+}
+
+.inv-item.broken {
+  background: repeating-linear-gradient(45deg, #ff00ff 0 8px, #000 8px 16px);
+}
+
+.inv-text {
+  font-size: 13px;
+}
+
+.inv-scroll {
+  width: 44px;
+  height: 64px;
+  font-size: 34px;
+  background: var(--panel-2);
+  border: 2px solid #5c5146;
+  border-radius: 10px;
+}
+
+.inv-scroll:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 6px 12px;
+  background: rgba(16, 14, 12, 0.92);
+  border-radius: 8px;
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+/* Hotspot list: hidden until it receives keyboard focus (accessibility extension). */
+.hotspots {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  max-width: 420px;
+  padding: 10px 14px;
+  background: rgba(16, 14, 12, 0.95);
+  border: 2px solid var(--focus);
+  border-radius: 12px;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(-140%);
+}
+
+.hotspots:focus-within {
+  opacity: 1;
+  transform: none;
+}
+
+.hotspots-title {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.hotspots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hotspot {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 20px;
+  background: var(--panel-2);
+  border: 2px solid #5c5146;
+  border-radius: 8px;
+}
+
+.hotspot[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.langbar {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+}
+
+.langs {
+  display: flex;
+  gap: 6px;
+}
+
+.langs button {
+  padding: 6px 12px;
+  font-size: 18px;
+  background: rgba(16, 14, 12, 0.85);
+  border: 2px solid #5c5146;
+  border-radius: 8px;
+}
+
+.langs button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Screens */
+.title-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: radial-gradient(circle at 50% 40%, #3a2f26, #0d0b09 70%);
+  pointer-events: auto;
+}
+
+.title-screen h1 {
+  margin: 0;
+  font-size: 64px;
+  color: var(--accent);
+}
+
+.subtitle,
+.help {
+  margin: 0;
+  font-size: 22px;
+  color: #ddd5c8;
+}
+
+.help {
+  font-size: 18px;
+}
+
+.primary {
+  padding: 14px 36px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1d1a17;
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+}
+
+.secondary {
+  padding: 10px 28px;
+  font-size: 22px;
+  background: rgba(16, 14, 12, 0.85);
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+}
+
+/* Pause menu and save/load lists (phase 5) */
+.game-menu-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 7, 6, 0.72);
+  pointer-events: auto;
+}
+
+.game-menu {
+  min-width: 520px;
+  max-width: 900px;
+  padding: 24px 32px;
+  background: #1d1a17;
+  border: 2px solid var(--accent);
+  border-radius: 14px;
+}
+
+.game-menu h2 {
+  margin: 0 0 16px;
+  font-size: 34px;
+  color: var(--accent);
+}
+
+.game-menu-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-button {
+  padding: 10px 18px;
+  font-size: 22px;
+  text-align: left;
+  background: rgba(16, 14, 12, 0.85);
+  border: 2px solid #5c5146;
+  border-radius: 10px;
+}
+
+.menu-button:hover:not([disabled]) {
+  border-color: var(--accent);
+}
+
+.menu-button[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.slot-row {
+  display: flex;
+  gap: 8px;
+}
+
+.slot-row > .menu-button:first-child {
+  flex: 1;
+}
+
+.slot-row.corrupt > .menu-button:first-child {
+  border-style: dashed;
+}
+
+.loading,
+.notice {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  padding: 12px 20px;
+  font-size: 22px;
+  background: rgba(16, 14, 12, 0.95);
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+}
+
+.loading {
+  top: 45%;
+}
+
+.notice {
+  top: 24px;
+  max-width: 900px;
+}
+
+/* Cutscenes (phase 4, spec 06 F6): the cursor is hidden; input goes to skip only. */
+.cutscene {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+}
+
+.cutscene[data-state="held"] {
+  pointer-events: none;
+}
+
+.cutscene-picture,
+.cutscene-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cutscene-caption {
+  position: absolute;
+  left: 160px;
+  right: 160px;
+  bottom: 70px;
+  margin: 0;
+  padding: 12px 18px;
+  font-size: 28px;
+  text-align: center;
+  background: rgba(16, 14, 12, 0.85);
+  border-radius: 12px;
+}
+
+.cutscene-hint {
+  position: absolute;
+  right: 20px;
+  bottom: 16px;
+  margin: 0;
+  font-size: 18px;
+  color: #ddd5c8;
+}
+
+#game[data-cutscene="playing"] #cursor,
+#game[data-cutscene="playing"] #tooltip {
+  display: none !important;
+}
+
+#game[data-cutscene="playing"] #surface {
+  cursor: default;
+}
+
+.mute {
+  padding: 6px 12px;
+  font-size: 18px;
+  background: rgba(16, 14, 12, 0.85);
+  border: 2px solid #5c5146;
+  border-radius: 8px;
+}
+
+.mute[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.langbar {
+  display: flex;
+  gap: 6px;
+}
+
+/* "cannot" feedback (spec 04 D8) */
+#game.cannot #overlay {
+  animation: cannot 300ms ease-in-out;
+}
+
+@keyframes cannot {
+  25% {
+    translate: -4px 0;
+  }
+  75% {
+    translate: 4px 0;
+  }
+}
+
+/* Reduced motion: no slides, fades or shakes. */
+#game.reduced-motion {
+  --show-ms: 0ms;
+  --hide-ms: 0ms;
+}
+
+#game.reduced-motion #overlay {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --show-ms: 0ms;
+    --hide-ms: 0ms;
+  }
+  #game.cannot #overlay {
+    animation: none;
+  }
+}

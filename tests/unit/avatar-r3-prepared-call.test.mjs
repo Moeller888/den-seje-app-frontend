@@ -153,11 +153,12 @@ test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-
   assert.deepEqual([d180.mandateState, d180.neverReuse, d180.notAnActivePermission, d180.closure.closedBy], ["SPENT", true, true, "D-181"]);
   assert.match(d180.prohibitions.noRetry, /Exactly one fetch/);
   // The fifteenth is D-183's: ONE further hair sheet with two reference images (Northstar for style, the geometry guide),
-  // authorised and not yet attempted.
+  // sent once (HTTP 200, H1..H5 passed, fit points not identifiable under D-179, kept for review) and closed by D-184.
   const d183 = CONTRACT.authorisedCalls.calls[14];
-  assert.deepEqual([d183.callId, d183.decision, d183.mandateState, d183.outcome], ["D-183-r3-hair-northstar-v4", "D-183", "UNSPENT", "NOT YET ATTEMPTED"]);
+  assert.deepEqual([d183.callId, d183.decision], ["D-183-r3-hair-northstar-v4", "D-183"]);
+  assert.deepEqual([d183.mandateState, d183.neverReuse, d183.notAnActivePermission, d183.closure.closedBy], ["SPENT", true, true, "D-184"]);
   assert.match(d183.prohibitions.noRetry, /Exactly one fetch/);
-  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT").map((x) => x.callId), ["D-183-r3-hair-northstar-v4"], "D-183's is the only live permission");
+  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT"), [], "no live permission remains");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });

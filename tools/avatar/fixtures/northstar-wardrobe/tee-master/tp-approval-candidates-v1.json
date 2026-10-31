@@ -1,0 +1,34 @@
+{
+  "decision": "D-272",
+  "kind": "an approval pack for the owner's visual review; it approves nothing and records no owner decision",
+  "source": {
+    "experiment": "D-270 (prepared), D-271 (executed and closed)",
+    "result": "<Documents>/DenSejeApp-artefacts/d-270-tpv-result (private; never tracked or published)",
+    "recordSha256": "3b573e038c034905df4f6f82cf6e85618149e8007d06c74685e553a817855fb9",
+    "evaluator": "tools/avatar/northstar-tee-print-validation.mjs (revision tpv-v1, unchanged)",
+    "calls": {
+      "TPV-1-tee-print-animal-fox": { "code": "FOX", "motif": "fox (animal)", "imageSha256": "a7b321204599be347a790224974836adf88090d4d6cf847e062577da2003c219" },
+      "TPV-2-tee-print-object-teapot": { "code": "TEA", "motif": "teapot (object)", "imageSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1" },
+      "TPV-3-tee-print-emblem-shield": { "code": "SHD", "motif": "shield (emblem)", "imageSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31" }
+    },
+    "colours": { "cream": "CRM", "heather": "HTH", "navy": "NAV", "coral": "COR", "forest": "FOR", "mustard": "MUS" }
+  },
+  "master": { "revision": "tee-master-v1", "fingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026", "cut": "tee-hip" },
+  "placement": { "name": "chest-center", "decision": "D-269", "spec": { "x": 0, "y": 0.39, "width": 0.58, "height": 0.52 }, "boxOnC": [437, 537, 150, 135], "rule": { "alphaBox": 8, "inkShare": 0.5, "samples": 8 } },
+  "idFormat": "TP-<motif code>-<colour code>, e.g. TP-TEA-CRM; stable for this pack",
+  "advisory": {
+    "by": "ChatGPT (advisory candidate selection, recorded as given; not an owner approval)",
+    "candidates": ["TP-TEA-CRM", "TP-TEA-HTH", "TP-TEA-NAV", "TP-TEA-COR", "TP-TEA-FOR", "TP-TEA-MUS", "TP-SHD-CRM", "TP-SHD-HTH", "TP-SHD-NAV", "TP-SHD-COR", "TP-SHD-FOR", "TP-SHD-MUS", "TP-FOX-CRM", "TP-FOX-HTH", "TP-FOX-NAV", "TP-FOX-FOR"],
+    "notes": { "TP-SHD-MUS": "den gule kant står svagere mod sennep" },
+    "notCandidates": { "TP-FOX-COR": "svag læsbarhed: den orange krop glider i ét med koral", "TP-FOX-MUS": "svag læsbarhed: den orange krop glider i ét med sennep" }
+  },
+  "owner": {
+    "status": "PENDING — no combination is approved; this file and the pack never record an owner decision",
+    "messageFormat": [
+      "D-272 GODKENDT: ALLE 16 KANDIDATER",
+      "D-272 GODKENDT: <ID>, <ID>, …",
+      "D-272 AFVIST: <ID>, <ID>, …"
+    ],
+    "rules": "only IDs named in the owner's own message are decided; an unnamed ID stays undecided; the two non-candidates are approved only if named explicitly; the owner's message is recorded in a later decision, never by this pack"
+  }
+}

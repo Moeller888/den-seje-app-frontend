@@ -1,0 +1,410 @@
+{
+  "status": "DESIGNPROTOTYPE v5 — not a production asset, not a candidate, no source anchors",
+  "basedOn": "r3-eyes-design-prototype-v4 (unchanged): the same outer/inner corners, ring centres and sizes, pupils, highlights, iris paint, folds and colours",
+  "changedFromV4": [
+    "topCps (rounder shoulders, same top point)",
+    "lowerPts (replaces bottom/bottomCps: U-shaped lower outline closer to the ring)",
+    "lash (wraps down the outer side, rounded outer hook instead of the pointed flick)",
+    "lowerContour (tapered, broken stroke instead of a uniform 1.4 px line)"
+  ],
+  "colours": {
+    "lash": "#120a07",
+    "ring": "#3a2a22",
+    "ringOpacity": 0.85,
+    "lowerLine": "#2a1a12",
+    "scleraTop": "#e6d8d6",
+    "sclera": "#ffffff",
+    "highlight": "#ffffff",
+    "foldLine": "#5c3a2a",
+    "foldLineOpacity": 0.62,
+    "foldShadow": "#b07a5e",
+    "foldShadowOpacity": 0.16
+  },
+  "ringStrokePx": 1.4,
+  "foldMaxWidthPx": 1.7,
+  "foldShadowBlurPx": 1.2,
+  "foldSpan": [
+    0.12,
+    0.88
+  ],
+  "lash": {
+    "outerW": 1.6,
+    "cornerW": 4.2,
+    "midW": 6.2,
+    "innerW": 1.6,
+    "peakAt": 0.38,
+    "below": 3,
+    "belowInnerFactor": 0.35,
+    "wrapLenPx": 27,
+    "wrapEndW": 0.6,
+    "wrapBelow": 1.6,
+    "wrapEase": 0.55,
+    "hookPx": 1.3,
+    "hookSigmaPx": 4.5,
+    "hookOffsetPx": 2
+  },
+  "lowerContour": {
+    "colour": "#2a1a12",
+    "widths": [
+      [
+        0,
+        1.6
+      ],
+      [
+        0.22,
+        1.25
+      ],
+      [
+        0.45,
+        0.75
+      ],
+      [
+        0.6,
+        0.3
+      ],
+      [
+        0.7,
+        0
+      ],
+      [
+        0.86,
+        0
+      ],
+      [
+        0.95,
+        0.35
+      ],
+      [
+        1,
+        0.6
+      ]
+    ]
+  },
+  "eyes": {
+    "eyeLeft": {
+      "outer": [
+        402,
+        310
+      ],
+      "inner": [
+        477,
+        311
+      ],
+      "innerTop": [
+        477,
+        304
+      ],
+      "top": [
+        440,
+        287
+      ],
+      "topCps": [
+        [
+          405,
+          297
+        ],
+        [
+          420,
+          287.5
+        ],
+        [
+          458,
+          286
+        ],
+        [
+          472,
+          292
+        ]
+      ],
+      "ring": {
+        "c": [
+          448.8,
+          321.7
+        ],
+        "r": [
+          25.4,
+          33.2
+        ]
+      },
+      "pupil": {
+        "c": [
+          451,
+          320.8
+        ],
+        "r": [
+          11,
+          17.8
+        ]
+      },
+      "highlight": {
+        "c": [
+          441.1,
+          306
+        ],
+        "r": [
+          8.1,
+          9.3
+        ]
+      },
+      "fold": [
+        [
+          432,
+          272
+        ],
+        [
+          458,
+          274
+        ],
+        [
+          470,
+          281
+        ],
+        [
+          476,
+          286
+        ]
+      ],
+      "lowerPts": [
+        [
+          477,
+          311
+        ],
+        [
+          477.6,
+          322
+        ],
+        [
+          476,
+          334
+        ],
+        [
+          470.5,
+          346
+        ],
+        [
+          461,
+          353.6
+        ],
+        [
+          449,
+          355.9
+        ],
+        [
+          436,
+          354.5
+        ],
+        [
+          422,
+          349.5
+        ],
+        [
+          410.5,
+          339.5
+        ],
+        [
+          404,
+          326
+        ],
+        [
+          402,
+          310
+        ]
+      ]
+    },
+    "eyeRight": {
+      "outer": [
+        617,
+        312
+      ],
+      "inner": [
+        541,
+        318
+      ],
+      "innerTop": [
+        541,
+        309
+      ],
+      "top": [
+        580,
+        286
+      ],
+      "topCps": [
+        [
+          614,
+          298
+        ],
+        [
+          600,
+          286.5
+        ],
+        [
+          560,
+          286
+        ],
+        [
+          546,
+          294
+        ]
+      ],
+      "ring": {
+        "c": [
+          571,
+          320.6
+        ],
+        "r": [
+          25.7,
+          34
+        ]
+      },
+      "pupil": {
+        "c": [
+          570.4,
+          322
+        ],
+        "r": [
+          10.4,
+          16.3
+        ]
+      },
+      "highlight": {
+        "c": [
+          562.1,
+          305.6
+        ],
+        "r": [
+          7.9,
+          9.8
+        ]
+      },
+      "fold": [
+        [
+          541,
+          288
+        ],
+        [
+          549,
+          280
+        ],
+        [
+          556,
+          274
+        ],
+        [
+          565,
+          272
+        ],
+        [
+          582,
+          272
+        ]
+      ],
+      "lowerPts": [
+        [
+          541,
+          318
+        ],
+        [
+          540.6,
+          329
+        ],
+        [
+          543,
+          340.5
+        ],
+        [
+          549.5,
+          350
+        ],
+        [
+          559,
+          354.8
+        ],
+        [
+          571,
+          355.7
+        ],
+        [
+          584,
+          354.3
+        ],
+        [
+          598,
+          348.5
+        ],
+        [
+          609.5,
+          338
+        ],
+        [
+          615.5,
+          325
+        ],
+        [
+          617,
+          312
+        ]
+      ]
+    }
+  },
+  "iris": {
+    "top": 52,
+    "upperMid": 96,
+    "lower": 178,
+    "rimDarkenOpacity": 0.5,
+    "pupil": 12,
+    "pupilSoftPx": 0.8,
+    "patches": [
+      {
+        "dx": -0.42,
+        "dy": 0.5,
+        "rx": 0.3,
+        "ry": 0.22,
+        "lum": 212,
+        "op": 0.75
+      },
+      {
+        "dx": 0.05,
+        "dy": 0.66,
+        "rx": 0.34,
+        "ry": 0.2,
+        "lum": 196,
+        "op": 0.8
+      },
+      {
+        "dx": 0.46,
+        "dy": 0.46,
+        "rx": 0.26,
+        "ry": 0.24,
+        "lum": 222,
+        "op": 0.65
+      },
+      {
+        "dx": -0.1,
+        "dy": 0.3,
+        "rx": 0.4,
+        "ry": 0.16,
+        "lum": 150,
+        "op": 0.45
+      }
+    ],
+    "patchBlurPx": 2.2
+  },
+  "tints": {
+    "brown R3_IRIS_DEFAULT #A34A0F": [
+      163,
+      74,
+      15
+    ],
+    "blue #2F6FB5": [
+      47,
+      111,
+      181
+    ],
+    "green #3F8F4A": [
+      63,
+      143,
+      74
+    ]
+  },
+  "lashSheen": "not added: at 1:1 and the display sizes it did not make the eyes closer to Northstar"
+}

@@ -81,6 +81,10 @@ test("only the reviewed face-neutral source files are tracked — no preparation
     "tools/avatar/fixtures/r3-face-neutral/prompt-guide-b-v1.txt",
     "tools/avatar/openai-send-r3-face-neutral-d162.mjs",
     "tests/unit/avatar-r3-face-neutral-send-d162.test.mjs",
+    // D-190 (owner instruction 2026-10-22: "Gør venstre bryn komplet med D-158-spejlingen", with commit and merge authorised):
+    // the versioned review mask of the fitted mirror in the D-190 review variant. It is a D-190 artefact pinned by its
+    // manifest, not D-158's offline study output, which stays untracked.
+    "tools/avatar/fixtures/r3-northstar-brow/masks/brow-mirror-fitted.png",
   ]);
   assert.deepEqual(tracked.filter((f) => f !== self && !authorised.has(f) && /r3-face-neutral|brow-mirror-fit|face-neutral-prep/i.test(f)), []);
   assert.deepEqual(tracked.filter((f) => f.startsWith("tools/avatar/build/")), []);

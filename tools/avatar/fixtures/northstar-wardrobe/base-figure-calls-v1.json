@@ -1,0 +1,188 @@
+{
+  "decision": "D-199",
+  "track": "Northstar wardrobe base figure (D-197/D-198) — separate from the R3 shadow stack; the R3 contract's authorisedCalls and its derived image-call budget are not changed by this file",
+  "meta": {
+    "authorisesImageRequest": false,
+    "rule": "Authorisation is never a general boolean. Only an entry below, UNSPENT, verified field by field from origin/main by tools/avatar/openai-send-northstar-base-figure-d199.mjs, can be sent — and only on a separate, explicit owner instruction after this file is merged (D-183 §8 pattern). Merging is not an instruction to run."
+  },
+  "budget": {
+    "ownerApproval": "D-199 (owner, 2026-10-25): at most 2 image calls for the base figure — A, and B only as a reserve; no automatic retries, no extra calls, no fallback model; B uses the same frozen request unless the owner approves a concrete change. Not the clothing pilot, not mass production.",
+    "authorised": 2,
+    "calls": { "A": 1, "B": "0-1 (reserve)" },
+    "actuallySent": 2,
+    "recordedBy": "D-200",
+    "d202": "B closed unused; its slot passes to D-202-northstar-base-figure-v2 (prompt v2). Budget still at most 2 calls including A: at most ONE call remains, no retries, no fallback; an undetermined dispatch result never permits a further send.",
+    "remaining": 0,
+    "d203": "D-202-northstar-base-figure-v2 sent once and recorded by D-203: the budget is spent (2 of 2). No call remains; a further attempt needs a new owner decision with new capacity.",
+    "countingRule": "D-159: every call actually sent counts, whatever its outcome; a consumed claim excludes any further attempt under the same call id."
+  },
+  "authorisedCalls": {
+    "calls": [
+      {
+        "slot": "A",
+        "callId": "D-199-northstar-base-figure-a",
+        "decision": "D-199",
+        "preparedBy": "D-198",
+        "status": "AUTHORISED — first attempt",
+        "mandateState": "SPENT",
+        "outcome": "TECHNICAL_REJECT",
+        "recordedBy": "D-200",
+        "neverReuse": true,
+        "notAnActivePermission": true,
+        "execution": {"sentFrom": "detached worktree at origin/main 8d7f4ec518b50d593a8fa6b5d838c4cc37c91c73, after a passing dry run", "adapterSha256": "432106bf0a06ab46222d9c2e2d44bde1e7002a8c9dc894588d32261049b4ff83", "claimConsumedAt": "2026-10-25T11:39:35.240Z", "dispatchAt": "2026-10-25T11:39:35.244Z", "answerAt": "2026-10-25T11:40:02.230Z", "httpStatus": 200, "requestId": "req_ff3e075f80e54418a8b24317bceb598f", "fetches": 1, "rawResponse": {"bytes": 1739529, "sha256": "1d02b001d939292cc8a83fe8441e561438b3449550511f8a58b735d00adf78b2"}, "image": {"bytes": 1304236, "sha256": "e450dbf1c5795b068a60f48ac28a3b9b08a92a487e8267d6404c3d9ddafef645", "size": [1024, 1536], "receipt": "RECEIVED_FOR_BF_CHECK"}, "storage": "<Documents>/DenSejeApp-artefacts/d-199-northstar-base-figure/a/ — outside both clones, untracked, unpublished (D-127 §2); the raw image is unchanged", "bfResult": {"verdict": "TECHNICAL_REJECT", "failed": {"BF4-POSE": "both feet stand 7 px above the ground line (sole y 1481, line 1488, tolerance ±4); centre axis 511.9 vs 511.8 and hands IoU 0.964 / 0.944 pass", "BF5-ENVELOPE": "54 px outside Northstar's silhouette + 6 px (the base shorts flare beyond the jeans at the hips)", "BF9-BASE-TOP": "the base top covers 98.53 % of the chest band (minimum 99.5 %): the deep armholes leave skin at its sides; hem y 793 and colour pass", "BF14-ALPHA": "7.91 % semi-transparent pixels (maximum 6 %)", "BF15-DRESS-BACK": "dressed in D-197's defaults, 1,083 base-garment pixels stay visible beside the jeans at the hips; silhouette IoU 0.9844 (minimum 0.985)"}, "passed": ["BF1-FORMAT", "BF2-REGISTRATION (shift 0/0, head IoU 0.9921)", "BF3-NECK-JOIN (1 px)", "BF6-ARMS", "BF7-LEGS", "BF8-FEET", "BF10-BASE-SHORTS (hem y 957/957)", "BF11-SKIN-TONE (distance 1)", "BF12-OUTLINE (0.947)", "BF13-SHARPNESS (0.738)"], "thresholds": "unchanged: base-figure-spec-v1.json at origin/main 8d7f4ec", "provenancePx": {"original-kept": 129874, "original-reference": 33893, "reconstructed": 106547, "new": 96456, "removed": 23184}}, "toolFinding": "the recomposition (the D-194 seam rule FG.bodyLayer, which un-mixes the R3 head's antialiased edge out of the BODY pixels) leaves a faint pale line across the neck of the composed figure; the raw image does not have it. A tool defect of the recomposition for a generated body, not of the image; to be fixed before any adoption", "visualReview": "NOT given. A technical rejection is not a visual verdict; the owner has not reviewed V1–V8"},
+        "endpoint": "https://api.openai.com/v1/images/edits",
+        "operation": "images.edits",
+        "model": "gpt-image-2.5-sunburst-2026-09-08",
+        "parameters": { "size": "1024x1536", "quality": "high", "n": 1, "output_format": "png", "background": "transparent" },
+        "fieldOrder": ["model", "image[]", "prompt", "size", "quality", "n", "output_format", "background"],
+        "neverSentFields": ["mask", "input_fidelity", "output_compression", "response_format", "moderation"],
+        "inputs": [
+          { "order": 1, "role": "Image 1", "purpose": "the only reference: Northstar v2's identity, pose, proportions, painting style and coordinates", "name": "Northstar Master v2.png", "repoPath": "assets/avatar/reference/Northstar Master v2.png", "bytes": 761394, "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50", "tracked": true }
+        ],
+        "prompt": { "file": "tools/avatar/fixtures/northstar-wardrobe/base-figure-prompt-v1.txt", "bytes": 2282, "sha256": "8076c3d1a6f7fd141af3fbacd9f7a8f21b8aa6bc8d6ead0dd018a2172f61fd99", "encoding": "UTF-8, LF only, ending in exactly one LF (the frozen D-198 bytes)" },
+        "claim": { "identity": "D-199-northstar-base-figure-a-claim", "filename": "D-199-northstar-base-figure-a.claim.json", "eventsFilename": "D-199-northstar-base-figure-a.events.jsonl" },
+        "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d199.mjs", "ownerApprovalFlag": "--owner-approval=D-199-A" },
+        "outputs": { "count": 1, "image": [1024, 1536], "dir": "<Documents>/DenSejeApp-artefacts/d-199-northstar-base-figure/a", "storage": "OUTSIDE both clones (D-127 §2): a figure in close-fitting base clothing is never tracked, never placed under assets/, never published" },
+        "prohibitions": { "noRetry": "Exactly one fetch. No retry, no fallback model, no second call site.", "noH1": "H1 and anything derived from it are never read, sent or compared.", "noMask": "No mask, no input_fidelity, no second image." },
+        "outputHandling": {
+          "receipt": "the raw response and the image are stored unchanged; the adapter checks only that exactly one decodable 1024×1536 8-bit RGBA PNG arrived (BF1's format part); anything else is a TECHNICAL_REJECT or UNEXPECTED",
+          "technicalChecks": "BF1–BF15 by tools/avatar/northstar-base-figure.mjs --review, thresholds exactly as base-figure-spec-v1.json at origin/main; no threshold changes after the result",
+          "visual": "V1–V8 only by the owner; a BF pass is never a visual approval",
+          "neverRetouched": "the raw image is never changed; registration is an integer shift, recomposition puts the R3 head stack over the body; nothing is painted"
+        }
+      },
+      {
+        "slot": "B",
+        "callId": "D-199-northstar-base-figure-b",
+        "decision": "D-199",
+        "preparedBy": "D-198",
+        "status": "AUTHORISED — RESERVE, locked until A is recorded as rejected",
+        "gateState": "OPEN since D-200 (A recorded as TECHNICAL_REJECT) — still needs the owner's separate execution instruction; same frozen request unless the owner approves a concrete change",
+        "mandateState": "CLOSED_UNUSED",
+        "outcome": "NEVER SENT — closed by D-202: the owner approved a concrete change (prompt v2), so B's frozen v1 request is retired and its slot passes to D-202's single call",
+        "closedBy": "D-202",
+        "neverReuse": true,
+        "notAnActivePermission": true,
+        "requiresA": { "mandateState": "SPENT", "outcomeOneOf": ["TECHNICAL_REJECT", "OWNER_VISUAL_REJECT"], "recordedBy": "a register row named in A's recordedBy field" },
+        "sameRequestAsA": "B sends exactly A's frozen request (model, parameters, field order, the one image, the prompt bytes). A concrete change needs a separate owner approval and a new decision; this entry would then be closed, not edited.",
+        "endpoint": "https://api.openai.com/v1/images/edits",
+        "operation": "images.edits",
+        "model": "gpt-image-2.5-sunburst-2026-09-08",
+        "parameters": { "size": "1024x1536", "quality": "high", "n": 1, "output_format": "png", "background": "transparent" },
+        "fieldOrder": ["model", "image[]", "prompt", "size", "quality", "n", "output_format", "background"],
+        "neverSentFields": ["mask", "input_fidelity", "output_compression", "response_format", "moderation"],
+        "inputs": [
+          { "order": 1, "role": "Image 1", "purpose": "the only reference: Northstar v2's identity, pose, proportions, painting style and coordinates", "name": "Northstar Master v2.png", "repoPath": "assets/avatar/reference/Northstar Master v2.png", "bytes": 761394, "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50", "tracked": true }
+        ],
+        "prompt": { "file": "tools/avatar/fixtures/northstar-wardrobe/base-figure-prompt-v1.txt", "bytes": 2282, "sha256": "8076c3d1a6f7fd141af3fbacd9f7a8f21b8aa6bc8d6ead0dd018a2172f61fd99", "encoding": "UTF-8, LF only, ending in exactly one LF (the frozen D-198 bytes)" },
+        "claim": { "identity": "D-199-northstar-base-figure-b-claim", "filename": "D-199-northstar-base-figure-b.claim.json", "eventsFilename": "D-199-northstar-base-figure-b.events.jsonl" },
+        "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d199.mjs", "ownerApprovalFlag": "--owner-approval=D-199-B" },
+        "outputs": { "count": 1, "image": [1024, 1536], "dir": "<Documents>/DenSejeApp-artefacts/d-199-northstar-base-figure/b", "storage": "OUTSIDE both clones (D-127 §2): a figure in close-fitting base clothing is never tracked, never placed under assets/, never published" },
+        "prohibitions": { "noRetry": "Exactly one fetch. No retry, no fallback model, no second call site.", "noH1": "H1 and anything derived from it are never read, sent or compared.", "noMask": "No mask, no input_fidelity, no second image." },
+        "outputHandling": {
+          "receipt": "the raw response and the image are stored unchanged; the adapter checks only that exactly one decodable 1024×1536 8-bit RGBA PNG arrived (BF1's format part); anything else is a TECHNICAL_REJECT or UNEXPECTED",
+          "technicalChecks": "BF1–BF15 by tools/avatar/northstar-base-figure.mjs --review, thresholds exactly as base-figure-spec-v1.json at origin/main; no threshold changes after the result",
+          "visual": "V1–V8 only by the owner; a BF pass is never a visual approval",
+          "neverRetouched": "the raw image is never changed; registration is an integer shift, recomposition puts the R3 head stack over the body; nothing is painted"
+        }
+      },
+      {
+        "slot": "C",
+        "callId": "D-202-northstar-base-figure-v2",
+        "decision": "D-202",
+        "preparedBy": "D-201",
+        "status": "AUTHORISED — the last call of the budget (prompt v2)",
+        "mandateState": "SPENT",
+        "outcome": "TECHNICAL_REJECT",
+        "recordedBy": "D-203",
+        "neverReuse": true,
+        "notAnActivePermission": true,
+        "execution": {"sentFrom": "detached worktree at origin/main 891f3a4c5f56d3b2e968423960ae79af1371fe6b, after a passing dry run", "adapterSha256": "e5581dba8d3e2f620cc473dc75493c5c19ae2bb71b1a4e3220ae8dcf592f009f", "claimConsumedAt": "2026-10-25T15:26:48.469Z", "dispatchAt": "2026-10-25T15:26:48.480Z", "answerAt": "2026-10-25T15:27:15.174Z", "httpStatus": 200, "requestId": "req_bf10fc91b63849f5933b4b66a5fb4a8d", "fetches": 1, "rawResponse": {"bytes": 1734445, "sha256": "d692ecf1d141ef1d87f707c4d5da8c6ecd205aa777a12dad4746a7dfbd88900e"}, "image": {"bytes": 1300423, "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818", "size": [1024, 1536], "receipt": "RECEIVED_FOR_BF_CHECK"}, "storage": "<Documents>/DenSejeApp-artefacts/d-202-northstar-base-figure/ — outside both clones, untracked, unpublished (D-127 §2); the raw image is unchanged", "bfResult": {"gateSet": "v2 (D-202)", "verdict": "TECHNICAL_REJECT", "failed": {"BF9v2-BASE-TOP": "the chest band is covered completely (coverage 1, armpit y 609), but the base top's hem is at y 785, 1 px above the range 786–798", "BF15-DRESS-BACK": "dressed in D-197's defaults, 1,154 base-shorts pixels stay visible: the shorts' outer outline runs 6–7 px outside the jeans along both hips (silhouette IoU 0.9851 passes)"}, "passed": ["BF1-FORMAT", "BF2-REGISTRATION (0/0, head IoU 0.9925)", "BF3-NECK-JOIN (1 px)", "BF4v2-POSE (soles y 1486/1486, 0 px outside the sneakers)", "BF5-ENVELOPE (0 px outside, A: 54)", "BF6-ARMS", "BF7-LEGS", "BF8-FEET", "BF10-BASE-SHORTS (hem y 956/955)", "BF11-SKIN-TONE (1.4)", "BF12-OUTLINE (0.941)", "BF13-SHARPNESS (0.794)", "BF14v2-ALPHA (2.09 % after the dust cleanup, interior 0)"], "thresholds": "unchanged: base-figure-spec-v1.json at origin/main 891f3a4", "neckLine": "0 px with the D-201 seam (127 px with the D-194 rule)", "v1ForComparison": "BF9, BF14 and BF15 fail under the superseded v1 set", "provenancePx": {"original-kept": 129874, "original-reference": 33825, "reconstructed": 107954, "new": 97155, "removed": 20617}}, "againstA": "prompt v2 removed the shorts' flare at the leg openings (BF5 54 → 0 px) and the high crotch, but not the extra width along the hips: 6–7 px per side (A 4–7 px); BF15 1,154 px (A 1,083)", "visualReview": "NOT given. A technical rejection is not a visual verdict; the owner has not reviewed V1–V8"},
+        "replaces": "D-199-northstar-base-figure-b (closed unused)",
+        "endpoint": "https://api.openai.com/v1/images/edits",
+        "operation": "images.edits",
+        "model": "gpt-image-2.5-sunburst-2026-09-08",
+        "parameters": {
+          "size": "1024x1536",
+          "quality": "high",
+          "n": 1,
+          "output_format": "png",
+          "background": "transparent"
+        },
+        "fieldOrder": [
+          "model",
+          "image[]",
+          "prompt",
+          "size",
+          "quality",
+          "n",
+          "output_format",
+          "background"
+        ],
+        "neverSentFields": [
+          "mask",
+          "input_fidelity",
+          "output_compression",
+          "response_format",
+          "moderation"
+        ],
+        "inputs": [
+          {
+            "order": 1,
+            "role": "Image 1",
+            "purpose": "the only reference: Northstar v2's identity, pose, proportions, painting style and coordinates",
+            "name": "Northstar Master v2.png",
+            "repoPath": "assets/avatar/reference/Northstar Master v2.png",
+            "bytes": 761394,
+            "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+            "tracked": true
+          }
+        ],
+        "prompt": {
+          "file": "tools/avatar/fixtures/northstar-wardrobe/base-figure-prompt-v2.txt",
+          "bytes": 2480,
+          "sha256": "8262452eb0444518db0d435d9e2c203fcbd370a3bdc07597c49dcd3467395dd1",
+          "encoding": "UTF-8, LF only, ending in exactly one LF (the frozen D-202 bytes)"
+        },
+        "claim": {
+          "identity": "D-202-northstar-base-figure-v2-claim",
+          "filename": "D-202-northstar-base-figure-v2.claim.json",
+          "eventsFilename": "D-202-northstar-base-figure-v2.events.jsonl"
+        },
+        "adapter": {
+          "file": "tools/avatar/openai-send-northstar-base-figure-d202.mjs",
+          "ownerApprovalFlag": "--owner-approval=D-202"
+        },
+        "outputs": {
+          "count": 1,
+          "image": [
+            1024,
+            1536
+          ],
+          "dir": "<Documents>/DenSejeApp-artefacts/d-202-northstar-base-figure",
+          "storage": "OUTSIDE both clones (D-127 §2): a figure in close-fitting base clothing is never tracked, never placed under assets/, never published"
+        },
+        "prohibitions": {
+          "noRetry": "Exactly one fetch. No retry, no fallback model, no second call site.",
+          "noH1": "H1 and anything derived from it are never read, sent or compared.",
+          "noMask": "No mask, no input_fidelity, no second image.",
+          "noFurtherCall": "This is the last call of the budget: whatever its outcome — including an undetermined dispatch — no further send is possible under D-199/D-202."
+        },
+        "outputHandling": {
+          "receipt": "the raw response and the image are stored unchanged; the adapter checks only that exactly one decodable 1024×1536 8-bit RGBA PNG arrived; anything else is a TECHNICAL_REJECT or UNEXPECTED",
+          "technicalChecks": "BF1–BF15 in the binding gate set v2 (BF4v2, BF9v2, BF14v2 adopted by D-202) by tools/avatar/northstar-base-figure.mjs --review, thresholds exactly as base-figure-spec-v1.json at origin/main; no threshold changes after the result",
+          "visual": "V1–V8 only by the owner; a BF pass is never a visual approval",
+          "neverRetouched": "the raw image is never changed; registration is an integer shift; derived post-processing only the established dust cleanup and the D-201 seam composition; nothing is painted or deformed"
+        }
+      }
+    ]
+  },
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "entries": [
+      { "callId": "D-199-northstar-base-figure-a", "decision": "D-199", "authorisedBy": "D-199", "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d199.mjs", "status": "IMPLEMENTED — NOT EXECUTED", "ownerApproval": "D-199-A", "ownerApprovalFlag": "--owner-approval=D-199-A" }, "mandateState": "SPENT", "outcome": "TECHNICAL_REJECT", "recordedBy": "D-200", "mergeIsNotAnInstruction": true, "executionRequiresSeparateOwnerInstruction": true },
+      { "callId": "D-199-northstar-base-figure-b", "decision": "D-199", "authorisedBy": "D-199", "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d199.mjs", "status": "IMPLEMENTED — NOT EXECUTED", "ownerApproval": "D-199-B", "ownerApprovalFlag": "--owner-approval=D-199-B" }, "mandateState": "CLOSED_UNUSED", "outcome": "NEVER SENT", "closedBy": "D-202", "mergeIsNotAnInstruction": true, "executionRequiresSeparateOwnerInstruction": true },
+      { "callId": "D-202-northstar-base-figure-v2", "decision": "D-202", "authorisedBy": "D-202", "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d202.mjs", "status": "IMPLEMENTED — NOT EXECUTED", "ownerApproval": "D-202", "ownerApprovalFlag": "--owner-approval=D-202" }, "mandateState": "SPENT", "outcome": "TECHNICAL_REJECT", "recordedBy": "D-203", "mergeIsNotAnInstruction": true, "executionRequiresSeparateOwnerInstruction": true }
+    ]
+  }
+}

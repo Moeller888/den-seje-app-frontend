@@ -1,0 +1,123 @@
+{
+  "decision": "D-218",
+  "status": "PREPARED — NOT AUTHORISED — NO SEND ADAPTER (a masked request needs its own adapter under an authorising decision; D-207's adapter never sends a mask)",
+  "purpose": "compare a MASKED edit with the existing unmasked D-207 results on the same base, the same model, the same frozen prompts — only the mask added",
+  "model": {
+    "id": "gpt-image-2.5-sunburst-2026-09-08",
+    "changed": false,
+    "documentation": "OpenAI image-generation guide: 'Masking with GPT Image is entirely prompt-based. The model uses the mask as guidance, but may not follow its exact shape with complete precision.' The mask applies to the FIRST input image, must have the same size and an alpha channel; fully transparent areas mark the edit. The guide's mask examples use gpt-image-2.5-sunburst; input_fidelity cannot be changed for the newer models. With a mask the prompt must describe the whole resulting image (OpenAI cookbook).",
+    "sources": [
+      "https://developers.openai.com/api/docs/guides/image-generation",
+      "https://developers.openai.com/api/reference/python/resources/images/methods/edit",
+      "https://developers.openai.com/cookbook/examples/generate_images_with_gpt_image"
+    ]
+  },
+  "consequence": "a mask can steer the model; it cannot preserve C. C is preserved by the LOCAL composition (extraction keeps only the item; the body shown is always C's pixels) — that is not proof that the garment fits.",
+  "regions": {
+    "apiEdit": "regionsC().apiEdit — the item's allowed region grown by API_MASK_MARGIN_PX (8), never the head or the hands; the mask's alpha is 0 exactly there",
+    "itemAllowed": "regionsC().itemAllowed — the category envelope minus its protected regions; extraction and FIT-2/FIT-3 enforce it",
+    "bodyVisibility": "regionsC().hidden(layers) — the item type's declared covering: closed footwear hides C's foot from the shoe's solid top down, column by column; open footwear and all other items hide nothing; VIS-2 requires the item to replace what it hides"
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "parameters": {
+      "size": "1024x1536",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "image": {
+      "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+      "role": "the first and only image — C"
+    },
+    "mask": "per case below (derived from C, written outside both clones, pinned by hash)",
+    "prompt": "the case's frozen D-207 prompt, unchanged"
+  },
+  "cases": [
+    {
+      "id": "M-1",
+      "item": "bottom-skirt-plum",
+      "why": "missing skirt material at the hem corner (C's thigh 1–3 px outside the hem) — not hideable by any covering rule without cutting the leg; does a mask over the bottom envelope make the model keep C's legs and cover them?",
+      "mask": {
+        "category": "bottom",
+        "sha256": "31cf690b5d30b33d5e0e14c6bee5623b99c8c64ff3bd81b98a37950e71ac4f46",
+        "bytes": 10761
+      },
+      "prompt": {
+        "item": "bottom-skirt-plum",
+        "sha256": "0e316198d816d3b349cc52400b125bb163a7bc2179f90978ae01450af9df7074"
+      },
+      "baseline": {
+        "raw": "c0d4e6e61f8679059f1b7fe4230084f5cb0372a50d4cc6ac0929d3fb40ec1670",
+        "changedOutsideItemRegionPx": 6254,
+        "FIT-6v2 sliverPx": 24,
+        "FIT-4 enclosedHolePx": 9
+      }
+    },
+    {
+      "id": "M-2",
+      "item": "shoes-sandals-brown",
+      "why": "open footwear: the generated toes lie 1–8 px from C's, and the sole's inner edge follows them; does a mask make the model keep C's toes so the straps and the sole fit C's foot?",
+      "mask": {
+        "category": "shoes",
+        "sha256": "b472d661b4c782a9523186a0c66f88e2cd44efcfb29a5ac3d72bb876cd16399f",
+        "bytes": 9523
+      },
+      "prompt": {
+        "item": "shoes-sandals-brown",
+        "sha256": "ee12ec55b360440e909acbc4e8f12c2ab921cde56dee27ebbe26e91d559e070c"
+      },
+      "baseline": {
+        "raw": "5a203e424d81dc9b8af57a5e3e664ffa405f964fa92816f2159f34435e4d4dfe",
+        "changedOutsideItemRegionPx": 16945,
+        "FIT-6v2 sliverPx": 12
+      }
+    },
+    {
+      "id": "M-3",
+      "item": "shoes-sneakers-white",
+      "why": "control: a closed shoe that passes locally under the D-218 covering; measures what the mask alone changes in the model's redraw",
+      "mask": {
+        "category": "shoes",
+        "sha256": "b472d661b4c782a9523186a0c66f88e2cd44efcfb29a5ac3d72bb876cd16399f",
+        "bytes": 9523
+      },
+      "prompt": {
+        "item": "shoes-sneakers-white",
+        "sha256": "79dc423dcfea0dd0d9588a9300cd299a79371cc13c3a9deee4cbfaefed072159"
+      },
+      "baseline": {
+        "raw": "85970a93faf4d2dad4fc370bf3cfe9b80e9a6eb74b66ca7ae8ead7df4a518611",
+        "changedOutsideItemRegionPx": 16151,
+        "FIT-6v2 sliverPx": 0
+      }
+    }
+  ],
+  "acceptance": {
+    "perCase": [
+      "the model's raw change OUTSIDE the item's region lower than the baseline (evidence: modelRawChanges.changedOutsideItemRegionPx)",
+      "fitCheck revision d218 passes with the item's declared covering (FIT-1…7, VIS-2) — no limit changed",
+      "M-1: no FIT-6v2 strip at the hem; M-2: the generated toe lines within 2 px of C's (median) and FIT-6v2 passes; M-3: still passes",
+      "the owner's visual review on C at full size and at app sizes — a technical pass is never the approval"
+    ],
+    "methodVerdict": "the mask is adopted for the item system only if M-1 and M-2 improve against their baselines without M-3 worsening; one case is no proof, it decides whether a larger batch is worth asking for"
+  },
+  "testableWithoutCalls": [
+    "the three regions and their separation",
+    "the API mask's alpha on exactly the edit region",
+    "closed-footwear covering and VIS-2 on the existing raws and on stimuli",
+    "the evidence measures and images"
+  ],
+  "onlyNewResultsShow": [
+    "whether the model follows the mask at all",
+    "whether it redraws less of the body",
+    "whether masked skirts and sandals fit C — mock tests prove the tools, not the model's fit"
+  ],
+  "budget": {
+    "requestedCalls": 3,
+    "reserves": 0,
+    "separateFromD207": "D-207 is closed (11 of 12; reserve-3 unspent and not used)",
+    "retry": "none; an undetermined dispatch is spent"
+  }
+}
