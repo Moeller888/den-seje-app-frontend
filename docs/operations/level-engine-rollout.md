@@ -161,17 +161,61 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat | dette repository | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
-| Rollback | `21ec9ff` med låsningen (kun linje 2 i `index.ts` er ændret) | 11 | `ca21b993839e48ff4e5baf3189306860d6b349fdcc7eea12f65ab78a73e418c6` |
+| Kandidat | dette repository | 12 | `a52e2da432f61fb7cdcf38827529526a33e9b0d6ad123cc0a91095cb4d30ebc3` |
+| Version 180, som deployet 2026-10-31 — **rollback-mål før H5-aktivering** | `1aee47a` (main, merge af #487), uændret | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
+| Historisk rollback til version 179 (det, `materialize-rollback` skriver) | `21ec9ff` med låsningen (kun linje 2 i `index.ts` er ændret) | 11 | `ca21b993839e48ff4e5baf3189306860d6b349fdcc7eea12f65ab78a73e418c6` |
 | Version 179, som deployet | `21ec9ff` uændret | 11 | `c4414671f3a5aff1e8d5bc3cb57ec4e92bb0d70ef8008a7ade39a75730c81985` |
 
-Kandidaten adskiller sig fra version 179 i `index.ts` (niveaugrenen og låsningen) og den nye
-`level-flow.ts`. De øvrige 10 filer er byte-identiske. Unit-testen kræver, at kandidatmanifestet i
+Kandidaten adskiller sig fra version 179 i `index.ts` (niveaugrenen, låsningen og H5's `round_no`),
+`instance-insert.ts` (læser `repeat_count` tilbage, H5) og den nye `level-flow.ts`. De øvrige 9 filer
+er byte-identiske. Fra version 180 adskiller den sig kun ved H5's `round_no` (D-266, H5 PR 2): et nyt
+svarfelt og `repeat_count` i de tre læsninger, der udleverer en instans. Slukket-pariteten fjerner
+præcis den forskel efter at have kontrolleret den, og resten skal stadig være identisk med version 179.
+Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
+kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten
 gennemgås igen.
 
-**Rollback-kilde: `21ec9ff`** (2026-10-20, "fix(opgaveformer): ret fallback, serverniveau og
-repeat-pulje …").
+**Rollback-mål før H5-aktivering: version 180 fra `1aee47a`.** Version 180 er den version, kandidaten
+afløser. Et deploy af kandidaten rulles derfor tilbage til version 180, ikke til version 179: version
+179 mangler også niveaugrenen og låsningen fra #487.
+- **Kilde:** commit `1aee47aaa81c8eb3c266be762ffd86bc9951ee02` (merge af #487 på main, 2026-10-30).
+  Modulgrafen er den samme i `d7571d6`, `b1f4e8e` og `988755b`. Commit'en er uforanderlig og ligger i
+  main-historikken, så der er ikke brug for et tag.
+- **Lig med version 180:** alle 12 filer, `get_edge_function` viser for version 180, er byte for byte
+  lig med filerne i `1aee47a` (kontrolleret 2026-10-31). Manifestet `a6a874…` består af:
+
+  ```
+  3790eaafb399ce683e04cb1768eba6d0303789c389b63fe44609b0be4bb398dc  functions/_shared/interaction-kinds.ts
+  cfa41770e2752d3d44e5b85c8d74f32cdbcbbc93715c706662ebe6d1240ca68b  functions/_shared/question-dto.ts
+  472b99398ba2e94b3a71ee6383bce6d70f8bcfe0d76b955b0912e94a3eaa274d  functions/_shared/supabase-keys.ts
+  52047e69faf4e12b45df387e9510d1be97c68ef9d02795ff3e2ef40657d394da  functions/get-next-question/deno.json
+  7638e2063fa045fb8011910afabeb6856d528062b2ea8a7e0b4fd23a234f7f9f  functions/get-next-question/format-mix.ts
+  aff35dcfa8583ac4c2a7f55f7389b5dec442dd4a1a90c55347e42a5a3db103c5  functions/get-next-question/index.ts
+  7c9864a1b80943b7590dad726e1ca1a67c505a0e2cf47bee447339db3df81b8c  functions/get-next-question/instance-insert.ts
+  df5c574b5a20a8aa3bd93e4f47029fafb14010256db9b7a8751bba710f724125  functions/get-next-question/level-flow.ts
+  f161934181edac9ee4a5c7c37723a18b150cc214c363b5a42697b103bffcb082  functions/get-next-question/mix-flow.ts
+  a0be345d09a0fa114571e139927588a8ef7d5e752fe479c7b9cd51a544b18e7e  functions/get-next-question/scope.ts
+  eb3cce0affc37c46c7e52561777ad8857427e878b21346dc44a31672dea3a1d3  functions/get-next-question/server-band.ts
+  9a0e60610e52536cbdc328816b7758f4f334f64aeb6502c53a80968e1b3ff5c3  functions/get-next-question/wave-order.ts
+  ```
+- **Filerne genskabes uden værktøjsændring:** `git worktree add --detach <mappe> 1aee47a`. I den
+  mappe skal `node tools/edge/gnq-release.mjs manifest` vise `candidate (working tree): a6a874…
+  (12 files)`. De 12 filer deployes derfra, med stierne i manifestet.
+- **`materialize-rollback` skriver ikke version 180.** Værktøjet skriver altid `21ec9ff` med
+  låsningen, altså version 179 (`ca21b993…`, 11 filer). Det bruges kun til den historiske rollback
+  nedenfor.
+
+**Efter H5-aktivering** (D-273) afhænger klienten (`app.js`), `process-event`, `get-next-question` og
+databasens kontrakt (`_v2`-funktionerne og rettighederne på de gamle svarfunktioner) af `round_no` og
+`submission_id`. En rollback af `get-next-question` alene kan da være usikker. Klient, Edge-funktioner
+og database vurderes samlet, forward-fix er udgangspunktet, og en `GRANT` tilbage på de gamle
+svarfunktioner kræver ejerens særskilte GO. Rollback til version 180 som ovenfor gælder kun før
+aktiveringen.
+
+**Historisk rollback-kilde for version 179: `21ec9ff`** (2026-10-20, "fix(opgaveformer): ret fallback,
+serverniveau og repeat-pulje …"). Den var rollback-målet for deployet af version 180 og bevares som
+reference.
 - **Lig med version 179:** commit'ens modulgraf er byte for byte de 11 filer, `get_edge_function`
   viste for version 179 (kontrolleret 2026-10-30).
 - **I main-historikken:** `git merge-base --is-ancestor 21ec9ff origin/main` er sand (2026-10-30), så
@@ -205,9 +249,12 @@ repeat-pulje …").
      ukendt: deploy er blokeret.
    - Kontrol 2026-10-30: 11 navne, `LEVEL_ENGINE` findes ikke. `QUESTION_MIX_ENGINE` findes, men
      dens værdi er ikke læst. Pariteten dækker alle tre tilstande.
-4. **Live-tilstand:** `get_edge_function get-next-question` er version 179, og dens filer giver
-   manifestet `c4414671…`. Afviger det, har nogen deployet siden: stop.
-5. **Rollback klar:** rollback-filerne er skrevet, og deres manifest er `ca21b993…`.
+4. **Live-tilstand:** `get_edge_function get-next-question` er version 180, og dens filer giver
+   manifestet `a6a874…`. Afviger det, har nogen deployet siden: stop. (Ved deployet af version 180
+   var kravet version 179 og `c4414671…`.)
+5. **Rollback klar:** en ren checkout af `1aee47a` findes, og `manifest` viser `a6a874…` for den
+   (version 180). (Ved deployet af version 180 var rollback-filerne `21ec9ff` med manifest
+   `ca21b993…`.)
 
 **Deploy:** Supabase-pluginets `deploy_edge_function` med disse parametre:
 - `name` `get-next-question`;
@@ -229,16 +276,21 @@ Ingen secret ændres.
 6. Secret-navnene er uændrede.
 
 **Rollback** (ved en afvigelse: stop, rapportér, og ejeren beslutter):
-- **Udførelse:** deploy rollback-filerne (11 filer, manifest `ca21b993…`) med samme parametre.
+- **Udførelse før H5-aktivering:** deploy de 12 filer fra `1aee47a` (manifest `a6a874…`, version
+  180) med samme parametre. Efter H5-aktivering: se "Efter H5-aktivering" ovenfor.
+- **Historisk (rollback af version 180 til 179):** rollback-filerne fra `materialize-rollback` (11
+  filer, manifest `ca21b993…`).
 - **Efterkontrol:**
-  - filerne giver rollback-manifestet;
-  - `level-flow.ts` findes ikke;
+  - filerne giver det deployede rollback-manifest (`a6a874…` for version 180);
+  - for version 180: `level-flow.ts` findes, og `round_no` er ikke i svaret; for version 179:
+    `level-flow.ts` findes ikke;
   - `verify_jwt` er false;
   - OPTIONS giver 200 `ok`;
   - Production Smoke er grøn;
   - der er ingen `LEVEL_ENGINE:`-linjer.
-- **Det, rollback ikke kan:** versionsnummeret bliver nyt, for version 179 kan ikke genaktiveres som
-  sådan. `ezbr_sha256` vil afvige fra version 179's `cf25886c…`.
+- **Det, rollback ikke kan:** versionsnummeret bliver nyt, for en tidligere version kan ikke
+  genaktiveres som sådan. `ezbr_sha256` vil afvige fra den tidligere versions (version 179:
+  `cf25886c…`).
 - **Ingen side-ændringer:** rollback ændrer hverken database eller secrets.
 
 ---
