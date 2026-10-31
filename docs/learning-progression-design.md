@@ -945,7 +945,7 @@ Hvert trin er sin egen sektion med audit, PR, tests og ejergodkendelse (CLAUDE_W
 | Trin | Indhold | Afhænger af | Leverance / "done" |
 |---|---|---|---|
 | **L0** | Retningen er godkendt (LP-1, 2026-10-31). Ejeren afgør §14.1 (LP-3, LP-5, LP-15, LP-16). D-278 anvendes (særskilt GO). Read-only produktionstjek (§2.6). Dokumentkonflikterne (§2.4) rettes. | — | D-fil med beslutningerne i §14.1. Tjek dokumenteret. |
-| **L1** | **Historikfundament:** `question_attempts` anvendes sammen med følgemigrationen (LP-3, D-110). D-266 PR 3 (#498, merget) deployes, og PR 4–5 bygges. Bedømmelsesrettelse og statisk validering af opgaver (LP-15). | L0, H1–H4 (LP-16) | Hvert svar logges med tilstand, hints og tid. Replay-test grøn. Evidensgyldighed kan beregnes pr. opgave. |
+| **L1** | **Historikfundament** (kontrakter K1–K6: [L1-kontrakter](learning-progression-l1-contracts.md)): `question_attempts` anvendes sammen med følgemigrationen (LP-3, D-110). D-266 PR 3 (#498, merget) deployes, og PR 4–5 bygges. Bedømmelsesrettelse og statisk validering af opgaver (LP-15). | L0, H1–H4 (LP-16) | Hvert svar logges med tilstand, hints og tid. Replay-test grøn. Evidensgyldighed kan beregnes pr. opgave. |
 | **L2** | **Indholdsmodel:** læringsmål, forudsætninger, indholdsenheder og kobling til opgaver. Valideringsværktøj. Ét pilotforløb pr. fag (historie: besættelsen; engelsk: datid; dansk: vælges, LP-13). | L0 | Pilotindhold inaktivt i produktion. Validering grøn (graf, kobling, misopfattelser). |
 | **L3** | **Introduktion og eksponering:** renderer for indholdskort (oplæsning), sandt/falsk som forståelsestjek, logning af eksponering, lærerens "gennemgået i klassen". | L1, L2 | Bag flag. E2E: introduktion → tjek → eksponering logget. |
 | **L4** | **Tilstandsmotor i skygge:** fold fra logs, tilstande og flag (§4.3), forklaringer, repetitionsplan. Lærerens varmekort (læsning). | L1, L2 | Motoren beregner og logger. Eleverne mærker intet. Simulationen af gættere < 1 %. |
@@ -1083,11 +1083,16 @@ fordi klasserne er forskellige, men retfærdigt.
 
 ## 14. Ejerbeslutninger
 
-**Status 2026-10-31:** LP-1 er afgjort. Læringsmodellen er godkendt som overordnet arbejdsretning,
-men ikke som endeligt design. De øvrige beslutninger står åbne og er delt i tre grupper efter,
-hvornår de skal træffes.
+**Status 2026-10-31:**
+- **LP-1 er afgjort.** Læringsmodellen er godkendt som overordnet arbejdsretning, ikke som endeligt
+  design.
+- **LP-3, LP-5, LP-15 og LP-16 er godkendt som arkitekturprincipper** ([D-282](decisions/D-282.md)).
+  Det er ikke en godkendelse af migration, deploy, ændring af produktionsadfærd eller merge.
+  Deres konkrete udformning står som udkast i
+  [learning-progression-l1-contracts.md](learning-progression-l1-contracts.md).
+- **De øvrige beslutninger står åbne.**
 
-### 14.1 Nødvendige før L1 (historikfundamentet)
+### 14.1 Nødvendige før L1 (historikfundamentet): godkendt som principper (D-282)
 
 | # | Beslutning | Hvorfor nu | Anbefaling |
 |---|---|---|---|
