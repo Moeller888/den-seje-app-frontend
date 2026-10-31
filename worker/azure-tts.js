@@ -6,7 +6,7 @@
 // The subscription key is sent as a request header from the Worker to Azure only. It never
 // appears in a response, a log line or an error message.
 
-import { TTS_FORMAT } from "../js/read-aloud/tts-key.js";
+import { TTS_BLANK, TTS_FORMAT } from "../js/read-aloud/tts-key.js";
 
 export class TtsError extends Error {
   /** @param {string} code  stable, key-free code safe to return to the browser */
@@ -29,10 +29,18 @@ export function escapeXml(value) {
     .replace(/'/g, "&apos;");
 }
 
-/** One <voice> element per language run, in order. Text is XML-escaped. */
+/** Spoken length of a gap-fill blank (TTS_BLANK). */
+export const BLANK_BREAK_MS = 600;
+
+/** Escaped run text with every TTS_BLANK replaced by a fixed SSML pause. */
+function ssmlText(text) {
+  return String(text).split(TTS_BLANK).map(escapeXml).join('<break time="' + BLANK_BREAK_MS + 'ms"/>');
+}
+
+/** One <voice> element per language run, in order. Text is XML-escaped; blanks become pauses. */
 export function buildSsml(canonical) {
   const runs = canonical && Array.isArray(canonical.segments) ? canonical.segments : [];
-  const body = runs.map((run) => '<voice name="' + escapeXml(run.voice) + '">' + escapeXml(run.text) + "</voice>").join("");
+  const body = runs.map((run) => '<voice name="' + escapeXml(run.voice) + '">' + ssmlText(run.text) + "</voice>").join("");
   return '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="da-DK">' + body + "</speak>";
 }
 
