@@ -23,10 +23,18 @@ export const TTS_LIMITS = Object.freeze({ maxChars: 800, maxSegments: 24 });
 
 const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/u;
 
-/** NFC, whitespace collapsed to single spaces, trimmed. Non-strings become "". */
+/**
+ * A gap-fill blank ("You ___ my friend") is read as a pause, never as "underscore underscore".
+ * Two or more underscores become this marker; the Worker's SSML turns it into a <break>.
+ * Because the marker is part of the normalised text, every blank text gets a new key, so a
+ * clip cached before this rule (which said "underscore") is never served again.
+ */
+export const TTS_BLANK = "…";
+
+/** NFC, blanks → TTS_BLANK, whitespace collapsed to single spaces, trimmed. Non-strings become "". */
 export function normalizeTtsText(value) {
   if (typeof value !== "string") return "";
-  return value.normalize("NFC").replace(/\s+/gu, " ").trim();
+  return value.normalize("NFC").replace(/_{2,}/gu, " " + TTS_BLANK + " ").replace(/\s+/gu, " ").trim();
 }
 
 /**
