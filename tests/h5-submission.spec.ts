@@ -1,0 +1,538 @@
+// H5 PR 4 (D-266, D-273): the quiz page's answer submissions, in a real browser.
+//
+// Same harness as stav-til.spec.ts: the test pupil logs in for real, the read-only progress/avatar loads
+// are real, and BOTH answer-path calls are intercepted — get-next-question serves fixture questions and
+// process-event answers as H5 PR 3's process-event would (recorded / replay / refusals / 426 / 500), or
+// the connection is cut. No question, instance or answer is created anywhere.
+//
+// H5 is OFF in the shipped code (js/answer-submission.js: ENABLE_H5_SUBMISSIONS = false, no browser
+// override). The "ON" tests flip that constant in the copy THIS TEST serves the browser — an
+// interception only a test harness can make — to prove what the code will do once the owner turns it
+// on. The "OFF" tests serve the module unchanged.
+//
+// Runs in the isolated E2E suite (CI, local stack). Chromium only: the behaviour is engine-independent
+// JavaScript, and every test logs in.
+
+import { test, expect } from '@playwright/test';
+import * as dotenv from 'dotenv';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import * as path from 'path';
+import { PROD, serveCheckoutLogin } from './helpers.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const REPO = path.resolve(__dirname, '..');
+dotenv.config({ path: path.resolve(REPO, '.env') });
+
+test.skip(({ browserName }) => browserName !== 'chromium', 'engine-independent; every test logs in');
+
+const KEY = 'laerlig_h5_pending_v1';
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const LEGACY_KEYS = ['answer', 'question_instance_id', 'question_shown_at', 'student_id'];
+const H5_KEYS = [...LEGACY_KEYS, 'round_no', 'submission_id'].sort();
+
+const MODULE_SRC = readFileSync(path.join(REPO, 'js', 'answer-submission.js'), 'utf8');
+const MODULE_ON = MODULE_SRC.replace('export const ENABLE_H5_SUBMISSIONS = false;', 'export const ENABLE_H5_SUBMISSIONS = true;');
+if (MODULE_ON === MODULE_SRC) throw new Error('the H5 flag line was not found — the ON harness would test nothing');
+
+const LOCAL_FRONTEND: Record<string, string> = {
+  '/index.html': path.join(REPO, 'index.html'),
+  '/app.js': path.join(REPO, 'app.js'),
+  '/js/answer-input.js': path.join(REPO, 'js', 'answer-input.js'),
+  '/js/match-pairs.js': path.join(REPO, 'js', 'match-pairs.js'),
+  '/js/flags.js': path.join(REPO, 'js', 'flags.js'),
+  '/css/match-pairs.css': path.join(REPO, 'css', 'match-pairs.css'),
+};
+
+const CORS = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-headers': '*',
+  'access-control-allow-methods': 'GET,POST,PATCH,PUT,DELETE,OPTIONS',
+};
+
+const I = (n: number) => `00000000-0000-4000-8000-0000000004${String(n).padStart(2, '0')}`;
+const MC = { question_instance_id: I(1), round_no: 1, content: { question: 'H5: Hvad er Frankrigs hovedstad?', options: ['Paris', 'Rom'] }, answer_format: 'mc', answer_type: 'short', metadata: null, wave_phase: 'challenge' };
+const TEXT = { question_instance_id: I(2), round_no: 3, content: { question: 'H5: Stav til: blåbær' }, answer_format: 'text', answer_type: 'short', metadata: null, wave_phase: 'challenge' };
+const LONG = { question_instance_id: I(3), round_no: 1, content: { question: 'H5: Skriv om din sommer.' }, answer_format: 'text', answer_type: 'long', metadata: null, wave_phase: 'challenge' };
+const MATCH = { question_instance_id: I(4), round_no: 2, content: { question: 'H5: Forbind landet med hovedstaden', match: { left: ['Danmark', 'Norge'], right: ['Oslo', 'København'] } }, answer_format: 'match', answer_type: 'short', metadata: null, wave_phase: 'challenge' };
+const NO_ROUND = { ...MC, question_instance_id: I(5), round_no: undefined };
+
+const graded = (outcome: string, status = 'correct', round_no = 1) => ({
+  status: 200,
+  body: { outcome, status, correct_answer: 'Paris', review_text: null, misconception_type: null, round_no, xp_awarded: status === 'correct' ? 10 : 0, coins_awarded: status === 'correct' ? 5 : 0 },
+});
+const RECORDED = graded('recorded');
+const REPLAY = graded('replay');
+// What process-event version 34 (no H5) answers: graded, no outcome.
+const legacyGraded = (status: string) => ({ status: 200, body: { status, correct_answer: 'Paris', review_text: status === 'incorrect' ? 'Husk: Paris.' : null, misconception_type: null } });
+const LEGACY_CORRECT = legacyGraded('correct');
+const INCOMPATIBLE = 'Lærlig kan ikke registrere svar sikkert lige nu';
+const STORAGE = 'Dit svar er ikke sendt: browseren kan ikke gemme det midlertidigt';
+// The connection is cut — 'before': the server never gets the request; 'after': the server gets it and
+// registers it, and the reply is lost on the way back.
+type Reply = { status?: number; body?: unknown; cut?: 'before' | 'after' };
+const CUT_BEFORE: Reply = { cut: 'before' };
+const CUT_AFTER: Reply = { cut: 'after' };
+
+type Opts = { h5: boolean; questions: unknown[]; replies: Reply[]; init?: string };
+
+// Logs the test pupil in with the checked-out quiz page and both answer-path calls intercepted on the
+// whole browser context (so a second tab sees the same fixtures).
+//
+// The process-event stand-in keeps three separate records:
+//   submitted   every request the browser sent (a retry is a request too)
+//   registered  every NEW answer the stand-in server registered — at most one per submission_id
+//   replayed    requests answered with the original result and no new registration (outcome "replay")
+// It SIMULATES the database's idempotency so the browser's behaviour can be checked against it; it is
+// not evidence of that idempotency. The database guarantees — one attempt per submission_id, the frozen
+// result on replay, round_closed / stale_round, rewards paid once, also under simultaneous sessions —
+// are proven against the real SQL in tests/unit/question-attempts-v2-migration-run.test.mjs (PGlite),
+// tests/unit/question-attempts-v2-concurrency.test.mjs (PostgreSQL 17) and, for Match par,
+// tests/unit/question-attempts-v2-match-grading.test.mjs.
+// scriptErrors catches a test whose scripted replies contradict that model (a second registration of
+// the same submission_id, or a replay of one that was never registered); every retry test (lost reply,
+// then replay) checks it is empty together with exactly one registration and one replay.
+async function openQuiz(page: any, { h5, questions, replies, init }: Opts) {
+  const context = page.context();
+  const submitted: any[] = [];
+  const registered: any[] = [];
+  const replayed: any[] = [];
+  const scriptErrors: string[] = [];
+  const calls: string[] = [];       // order of answer-path calls
+  let served = 0;
+  const isRegistered = (id: unknown) => typeof id === 'string' && registered.some((r) => r.submission_id === id);
+  const register = (body: any) => {
+    if (isRegistered(body.submission_id)) scriptErrors.push(`second registration of ${body.submission_id}`);
+    else registered.push(body);
+  };
+
+  if (init) await context.addInitScript(init);
+
+  await context.route((url: URL) => url.pathname in LOCAL_FRONTEND || url.pathname === '/js/answer-submission.js', async (route: any) => {
+    const p = new URL(route.request().url()).pathname;
+    const body = p === '/js/answer-submission.js' ? (h5 ? MODULE_ON : MODULE_SRC) : readFileSync(LOCAL_FRONTEND[p], 'utf8');
+    await route.fulfill({
+      status: 200,
+      headers: {
+        'content-type': p.endsWith('.html') ? 'text/html; charset=utf-8' : p.endsWith('.css') ? 'text/css; charset=utf-8' : 'text/javascript; charset=utf-8',
+        'cache-control': 'no-store',
+      },
+      body,
+    });
+  });
+
+  await context.route('**/functions/v1/get-next-question', async (route: any) => {
+    if (route.request().method() === 'OPTIONS') { await route.fulfill({ status: 204, headers: CORS }); return; }
+    calls.push('get-next-question');
+    const q = served < questions.length ? questions[served] : { step: 'no_questions' };
+    served++;
+    await route.fulfill({ status: 200, headers: { ...CORS, 'content-type': 'application/json' }, body: JSON.stringify(q) });
+  });
+
+  await context.route('**/functions/v1/process-event', async (route: any) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') { await route.fulfill({ status: 204, headers: CORS }); return; }
+    calls.push('process-event');
+    const body = request.postDataJSON();
+    submitted.push(body);
+    const reply = replies[Math.min(submitted.length - 1, replies.length - 1)];
+    if (reply.cut) {
+      if (reply.cut === 'after') register(body);
+      await route.abort('failed');
+      return;
+    }
+    if (reply.status === 200) {
+      if ((reply.body as any)?.outcome === 'replay') {
+        if (!isRegistered(body.submission_id)) scriptErrors.push(`replay of unregistered ${body.submission_id}`);
+        replayed.push(body);
+      } else {
+        // recorded — or a backend without H5 that grades (and pays) the old way
+        register(body);
+      }
+    }
+    await route.fulfill({ status: reply.status, headers: { ...CORS, 'content-type': 'application/json' }, body: JSON.stringify(reply.body) });
+  });
+
+  await serveCheckoutLogin(page);
+  await page.goto(`${PROD}/login.html`);
+  await page.fill('input[type="email"]', process.env.TEST_STUDENT_EMAIL!);
+  await page.fill('input[type="password"]', process.env.TEST_STUDENT_PASSWORD!);
+  await page.click('button');
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  await page.goto(`${PROD}/index.html`, { waitUntil: 'domcontentloaded' });
+  return { submitted, registered, replayed, scriptErrors, calls, feedbackLog: () => watchFeedback(page) };
+}
+
+// Every text #feedback shows, in order (installed once per document).
+async function installFeedbackLog(page: any) {
+  await page.evaluate(() => {
+    if ((window as any).__feedbackLog) return;
+    const el = document.getElementById('feedback')!;
+    const log: string[] = ((window as any).__feedbackLog = []);
+    new MutationObserver(() => {
+      const text = el.textContent ?? '';
+      if (text && log[log.length - 1] !== text) log.push(text);
+    }).observe(el, { childList: true, characterData: true, subtree: true });
+  });
+}
+async function watchFeedback(page: any): Promise<string[]> {
+  return page.evaluate(() => (window as any).__feedbackLog ?? []);
+}
+async function ready(page: any, question: any) {
+  await expect(page.locator('#question')).toHaveAttribute('data-state', 'ready', { timeout: 20000 });
+  await expect(page.locator('#question')).toContainText(question.content.question);
+  await installFeedbackLog(page);
+}
+const stored = (page: any) => page.evaluate((k: string) => sessionStorage.getItem(k), KEY);
+const option = (page: any, text: string) => page.locator('#options button', { hasText: new RegExp(`^${text}$`) });
+const UNCERTAIN = /Forbindelsen svigtede/;
+
+// ── H5 OFF (the shipped default) ─────────────────────────────────────────────────────────────────
+test('OFF: the request is exactly the legacy one, nothing is stored, the result shows as before', async ({ page }) => {
+  const q = await openQuiz(page, { h5: false, questions: [MC], replies: [LEGACY_CORRECT] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  expect(q.submitted).toHaveLength(1);
+  expect(Object.keys(q.submitted[0]).sort()).toEqual(LEGACY_KEYS);
+  expect(await stored(page)).toBeNull();
+});
+
+test('OFF: a 500 keeps today\'s message and lets the pupil answer again; only an exact 426 says "update"', async ({ page }) => {
+  const q = await openQuiz(page, { h5: false, questions: [MC], replies: [{ status: 500, body: { error: 'boom' } }, { status: 426, body: { outcome: 'client_outdated', error: 'Client outdated' } }] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText('⚠️ Fejl ved svar – prøv igen');
+  await expect(option(page, 'Paris')).toBeEnabled();
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText('Lærlig er blevet opdateret. Genindlæs siden for at fortsætte.');
+  await expect(page.locator('#reload-page-btn')).toBeVisible();
+  await expect(option(page, 'Paris')).toBeDisabled();
+  expect(q.submitted.every((b) => Object.keys(b).sort().join() === LEGACY_KEYS.join())).toBe(true);
+});
+
+// ── H5 ON (forced in this test only) ─────────────────────────────────────────────────────────────
+test('ON: round_no from the question, one UUID per deliberate answer, a double click sends once', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [RECORDED] });
+  await ready(page, MC);
+  const paris = option(page, 'Paris');
+  await paris.dblclick();
+  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  expect(q.submitted).toHaveLength(1);
+  expect(Object.keys(q.submitted[0]).sort()).toEqual(H5_KEYS);
+  expect(q.submitted[0]).toMatchObject({ question_instance_id: MC.question_instance_id, answer: 'Paris', round_no: 1 });
+  expect(q.submitted[0].submission_id).toMatch(UUID);
+  expect(await stored(page), 'settled → removed').toBeNull();
+});
+
+test('ON: no connection before the server — locked answer, "Send igen" sends the same submission', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [CUT_BEFORE, RECORDED] });
+  await ready(page, MC);
+  await option(page, 'Rom').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  // Locked: no other option can be chosen under this submission.
+  await expect(option(page, 'Paris')).toBeDisabled();
+  await expect(option(page, 'Rom')).toBeDisabled();
+  const pending = JSON.parse(await stored(page));
+  expect(pending).toMatchObject({ answer: 'Rom', round_no: 1, question_instance_id: MC.question_instance_id });
+  await page.locator('#h5-retry-btn').click();
+  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  expect(q.submitted).toHaveLength(2);
+  expect(q.submitted[1]).toEqual({ ...q.submitted[0], question_shown_at: q.submitted[1].question_shown_at });
+  expect(q.submitted[1].submission_id).toBe(pending.submission_id);
+  expect(q.registered).toHaveLength(1);
+});
+
+test('ON: registered but the reply is lost — the retry gets the replay, shown once, nothing counted twice', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [CUT_AFTER, REPLAY] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  await page.locator('#h5-retry-btn').click();
+  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  await expect.poll(() => q.calls.filter((c) => c === 'get-next-question').length).toBe(2);
+  expect((await q.feedbackLog()).filter((t) => t === 'Ja! 🎯')).toHaveLength(1);
+  expect(q.submitted[1].submission_id).toBe(q.submitted[0].submission_id);
+  expect(await stored(page)).toBeNull();
+  expect({ registered: q.registered.length, replayed: q.replayed.length, scriptErrors: q.scriptErrors }).toEqual({ registered: 1, replayed: 1, scriptErrors: [] });
+});
+
+test('ON: reload with an unsettled submission — it is settled FIRST, before any new question', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC, TEXT], replies: [CUT_AFTER, REPLAY] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  const pending = JSON.parse(await stored(page));
+  const before = q.calls.length;
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#question')).toHaveText('Dit sidste svar er registreret: rigtigt! 🎯', { timeout: 20000 });
+  expect(q.calls.slice(before), 'process-event before get-next-question').toEqual(['process-event']);
+  expect(q.submitted[1]).toMatchObject({ submission_id: pending.submission_id, answer: 'Paris', round_no: 1, question_instance_id: MC.question_instance_id });
+  expect(await stored(page)).toBeNull();
+  await page.locator('#h5-continue-btn').click();
+  await ready(page, TEXT);
+  expect({ registered: q.registered.length, replayed: q.replayed.length, scriptErrors: q.scriptErrors }).toEqual({ registered: 1, replayed: 1, scriptErrors: [] });
+});
+
+test('ON: reload while the server is still unreachable — no new question is fetched', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC, TEXT], replies: [CUT_BEFORE, CUT_BEFORE, RECORDED] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  const gnqBefore = q.calls.filter((c) => c === 'get-next-question').length;
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#question')).toHaveText('Dit sidste svar er ikke afsluttet endnu.', { timeout: 20000 });
+  await expect(page.locator('#h5-retry-btn')).toBeVisible();
+  expect(q.calls.filter((c) => c === 'get-next-question').length, 'nothing new loaded').toBe(gnqBefore);
+  await page.locator('#h5-retry-btn').click();
+  await expect(page.locator('#question')).toHaveText('Dit sidste svar er registreret: rigtigt! 🎯');
+  expect(new Set(q.submitted.map((b) => b.submission_id)).size).toBe(1);
+});
+
+test('ON: the answer cannot be edited while its submission is unsettled', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [TEXT], replies: [CUT_BEFORE, graded('recorded', 'correct', 3)] });
+  await ready(page, TEXT);
+  const input = page.locator('#short-answer-input');
+  await input.fill('blåbær');
+  await input.press('Enter');
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  await expect(input).toBeDisabled();
+  await expect(page.locator('#options .submit-btn:not(#h5-retry-btn)')).toBeDisabled();
+  await page.locator('#h5-retry-btn').click();
+  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  expect(q.submitted.map((b) => [b.answer, b.round_no])).toEqual([['blåbær', 3], ['blåbær', 3]]);
+});
+
+for (const [outcome, status, text] of [
+  ['round_closed', 409, 'Dette spørgsmål er allerede besvaret. Vi henter et nyt.'],
+  ['stale_round', 409, 'Svaret hørte til en tidligere runde. Vi henter et nyt spørgsmål.'],
+  ['submission_conflict', 409, 'Svaret kunne ikke registreres. Vi henter et nyt spørgsmål.'],
+  ['not_found', 404, 'Spørgsmålet findes ikke længere. Vi henter et nyt.'],
+  ['invalid_request', 400, 'Svaret kunne ikke behandles. Vi henter et nyt spørgsmål.'],
+] as const) {
+  test(`ON: ${status} ${outcome} is a refusal — never shown as right or wrong, the next question follows`, async ({ page }) => {
+    const q = await openQuiz(page, { h5: true, questions: [MC, TEXT], replies: [{ status, body: { outcome, error: 'x' } }] });
+    await ready(page, MC);
+    await option(page, 'Paris').click();
+    await expect(page.locator('#feedback')).toHaveText(text);
+    await ready(page, TEXT);
+    const log = await q.feedbackLog();
+    expect(log.some((t) => /Ja!|Ikke helt|Svaret er/.test(t))).toBe(false);
+    expect(await stored(page)).toBeNull();
+  });
+}
+
+test('ON: 500 is uncertain (retry the same submission); 426 says "update"', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [{ status: 500, body: { error: 'Could not process answer' } }, { status: 426, body: { outcome: 'client_outdated', error: 'Client outdated' } }] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  await page.locator('#h5-retry-btn').click();
+  await expect(page.locator('#feedback')).toHaveText('Lærlig er blevet opdateret. Genindlæs siden for at fortsætte.');
+  await expect(page.locator('#reload-page-btn')).toBeVisible();
+  expect(q.submitted[1].submission_id).toBe(q.submitted[0].submission_id);
+  expect(await stored(page)).toBeNull();
+});
+
+test('ON: Match par — the connections as JSON with round_no; an incomplete answer is "change it", not a retry', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MATCH], replies: [{ status: 400, body: { status: 'invalid', error: 'Forbind alle par, før du sender.' } }, graded('recorded', 'correct', 2)] });
+  await ready(page, MATCH);
+  const left = (t: string) => page.locator('.match-column-left button.match-item', { hasText: t });
+  const right = (t: string) => page.locator('.match-column-right button.match-item', { hasText: t });
+  await left('Danmark').click(); await right('København').click();
+  await left('Norge').click(); await right('Oslo').click();
+  await page.locator('#match-submit').click();
+  await expect(page.locator('#feedback')).toHaveText('⚠️ Forbind alle par, før du sender.');
+  await expect(page.locator('#h5-retry-btn')).toHaveCount(0);
+  expect(await stored(page), 'refused for good: nothing left pending').toBeNull();
+  await expect(page.locator('#match-submit')).toBeEnabled();
+  await page.locator('#match-submit').click();
+  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  expect(q.submitted.map((b) => [b.answer, b.round_no])).toEqual([['[[0,1],[1,0]]', 2], ['[[0,1],[1,0]]', 2]]);
+  expect(q.submitted[1].submission_id, 'a new deliberate answer after a definite refusal').not.toBe(q.submitted[0].submission_id);
+});
+
+test('ON: a long answer keeps the teacher path — legacy request, nothing stored', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [LONG], replies: [{ status: 200, body: { status: 'pending', correct_answer: null, review_text: null } }] });
+  await ready(page, LONG);
+  await page.locator('#options textarea').fill(Array.from({ length: 25 }, (_, i) => 'ord' + i).join(' '));
+  await page.locator('#options .submit-btn').click();
+  await expect.poll(() => q.feedbackLog()).toContain('⏳ Afventer lærerens vurdering');
+  expect(Object.keys(q.submitted[0]).sort()).toEqual(LEGACY_KEYS);
+  expect(await stored(page)).toBeNull();
+});
+
+test('ON: a question without round_no (a backend without H5) is refused locally — no request, no legacy fallback', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [NO_ROUND], replies: [RECORDED] });
+  await ready(page, NO_ROUND);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText('⚠️ Spørgsmålet kunne ikke sendes sikkert. Genindlæs siden og prøv igen.');
+  expect(q.submitted).toHaveLength(0);
+});
+
+test("ON: another pupil's pending submission in this tab is discarded unread", async ({ page }) => {
+  const foreign = JSON.stringify({ v: 1, student_id: '99999999-9999-4999-8999-999999999999', question_instance_id: I(9), round_no: 1, submission_id: '6f1c2a9e-4b7d-4e2a-9c3f-0d8b5e7a1c24', answer: 'Paris', created_at: Date.now() });
+  const init = `if (location.pathname.endsWith('/index.html')) { try { sessionStorage.setItem(${JSON.stringify(KEY)}, ${JSON.stringify(foreign)}); } catch (e) {} }`;
+  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [RECORDED], init });
+  await ready(page, MC);
+  expect(q.calls[0], 'no recovery call for a foreign submission').toBe('get-next-question');
+  expect(q.submitted).toHaveLength(0);
+  expect(await stored(page)).toBeNull();
+});
+
+test('ON: logout drops the pending submission; back navigation does not bring it back', async ({ page }) => {
+  await openQuiz(page, { h5: true, questions: [MC], replies: [CUT_BEFORE] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  expect(await stored(page)).not.toBeNull();
+  // A pupil logs out from the hub (the quiz page's #logout-btn is hidden). Same tab, so the same
+  // sessionStorage: every logout ends on login.html, which drops it.
+  await page.goto(`${PROD}/hub.html`, { waitUntil: 'domcontentloaded' });
+  expect(await stored(page), 'still there on the hub — only a logout or a pupil switch drops it').not.toBeNull();
+  await page.locator('#logoutBtn').click();
+  await page.waitForURL(/login\.html/, { timeout: 20000 });
+  await expect.poll(() => stored(page)).toBeNull();
+  await page.goBack();
+  await page.waitForURL(/login\.html/, { timeout: 20000 });
+  expect(await stored(page)).toBeNull();
+});
+
+test('ON: two tabs answering the same round — one is graded, the other is refused, nothing twice', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC, MC], replies: [RECORDED, { status: 409, body: { outcome: 'round_closed', error: 'Round already closed' } }] });
+  await ready(page, MC);
+  const second = await page.context().newPage();
+  await second.goto(`${PROD}/index.html`, { waitUntil: 'domcontentloaded' });
+  await ready(second, MC);
+  await option(page, 'Paris').click();
+  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  await option(second, 'Paris').click();
+  await expect(second.locator('#feedback')).toHaveText('Dette spørgsmål er allerede besvaret. Vi henter et nyt.');
+  expect(q.submitted[1].submission_id).not.toBe(q.submitted[0].submission_id);
+  expect(q.registered).toHaveLength(1);
+});
+
+test('ON: storage that refuses the write — nothing is sent or graded, the typed answer stays editable', async ({ page }) => {
+  const init = `(() => { const orig = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) {
+    if (this === window.sessionStorage && k === ${JSON.stringify(KEY)}) throw new DOMException('full', 'QuotaExceededError');
+    return orig.call(this, k, v); }; })();`;
+  const q = await openQuiz(page, { h5: true, questions: [TEXT], replies: [RECORDED], init });
+  await ready(page, TEXT);
+  const input = page.locator('#short-answer-input');
+  await input.fill('blåbær');
+  await input.press('Enter');
+  await expect(page.locator('#feedback')).toContainText(STORAGE);
+  expect(q.submitted, 'no request leaves without a stored, re-findable submission').toHaveLength(0);
+  await expect(input).toBeEnabled();
+  await expect(input).toHaveValue('blåbær');
+  const log = await q.feedbackLog();
+  expect(log.some((t) => /Ja!|Ikke helt|Svaret er/.test(t)), 'a storage fault is never a wrong answer').toBe(false);
+  expect(await stored(page)).toBeNull();
+});
+
+for (const status of ['correct', 'incorrect'] as const) {
+  test(`ON: a backend without H5 answers 200 ${status} without outcome — not shown as graded, blocked, not resent after reload`, async ({ page }) => {
+    const q = await openQuiz(page, { h5: true, questions: [MC, TEXT], replies: [legacyGraded(status)] });
+    await ready(page, MC);
+    await option(page, 'Paris').click();
+    await expect(page.locator('#feedback')).toContainText(INCOMPATIBLE);
+    await expect(page.locator('#go-hub-btn')).toBeVisible();
+    await expect(page.locator('#h5-retry-btn')).toHaveCount(0);
+    await expect(option(page, 'Paris')).toBeDisabled();
+    const log = await q.feedbackLog();
+    expect(log.some((t) => /Ja!|Ikke helt|Svaret er/.test(t)), 'never counted as right or wrong').toBe(false);
+    const kept = JSON.parse(await stored(page));
+    expect(kept).toMatchObject({ blocked: 'incompatible_backend', answer: 'Paris', submission_id: q.submitted[0].submission_id, round_no: 1 });
+    const gnq = q.calls.filter((c) => c === 'get-next-question').length;
+    expect(gnq, 'no automatic next question').toBe(1);
+
+    const before = q.calls.length;
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#question')).toHaveText('Dit sidste svar kunne ikke registreres sikkert.', { timeout: 20000 });
+    await expect(page.locator('#feedback')).toContainText(INCOMPATIBLE);
+    expect(q.calls.slice(before), 'after the reload: no resend, no new question').toEqual([]);
+    expect(JSON.parse(await stored(page)).submission_id).toBe(kept.submission_id);
+  });
+}
+
+test('ON: a recorded result for another round is not trusted — blocked, not shown as graded', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [graded('recorded', 'correct', 2)] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toContainText(INCOMPATIBLE);
+  expect((await q.feedbackLog()).includes('Ja! 🎯')).toBe(false);
+  expect(JSON.parse(await stored(page)).blocked).toBe('incompatible_backend');
+});
+
+for (const [status, body] of [[400, { error: 'Missing required fields' }], [403, { error: 'Forbidden' }], [404, { error: 'Requested function was not found' }]] as const) {
+  test(`ON: a generic ${status} without H5's outcome is uncertain — kept, resent with the same UUID by hand`, async ({ page }) => {
+    const q = await openQuiz(page, { h5: true, questions: [MC], replies: [{ status, body }, RECORDED] });
+    await ready(page, MC);
+    await option(page, 'Paris').click();
+    await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+    expect(JSON.parse(await stored(page)).submission_id).toBe(q.submitted[0].submission_id);
+    expect(q.calls.filter((c) => c === 'get-next-question').length, 'not skipped to a new question').toBe(1);
+    await page.locator('#h5-retry-btn').click();
+    await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+    expect(q.submitted[1].submission_id).toBe(q.submitted[0].submission_id);
+  });
+}
+
+// ── A sent submission must always be re-sendable (no "Send igen" that never sends) ───────────────
+// sessionStorage only, so the Supabase session in localStorage keeps working.
+const BREAK_SESSION_STORAGE = `(() => {
+  const set = Storage.prototype.setItem, get = Storage.prototype.getItem;
+  Storage.prototype.setItem = function (k, v) { if (this === window.sessionStorage) throw new DOMException('full', 'QuotaExceededError'); return set.call(this, k, v); };
+  Storage.prototype.getItem = function (k) { if (this === window.sessionStorage) throw new DOMException('denied', 'SecurityError'); return get.call(this, k); };
+})();`;
+
+test('ON: storage fails AFTER the first send — "Send igen" still sends the same submission', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [CUT_AFTER, REPLAY] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  const pending = JSON.parse(await stored(page));
+  await page.evaluate(BREAK_SESSION_STORAGE);
+  await page.locator('#h5-retry-btn').click();
+  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  await expect.poll(() => q.calls.filter((c) => c === 'get-next-question').length).toBe(2);
+  // 1–2: exactly two requests, identical in everything that identifies the submission.
+  expect(q.submitted).toHaveLength(2);
+  expect(q.submitted[0]).toMatchObject({ submission_id: pending.submission_id, question_instance_id: MC.question_instance_id, answer: 'Paris', round_no: 1 });
+  expect(q.submitted[1]).toEqual({ ...q.submitted[0], question_shown_at: q.submitted[1].question_shown_at });
+  // 3–5: the first was registered (its reply lost), the second got the replay — one new answer only.
+  expect(q.registered).toEqual([q.submitted[0]]);
+  expect(q.replayed).toEqual([q.submitted[1]]);
+  expect(q.scriptErrors).toEqual([]);
+  // 6–7: the original result is shown once, and the quiz moves on once (no second answer, no extra progression).
+  expect((await q.feedbackLog()).filter((t) => t === 'Ja! 🎯')).toHaveLength(1);
+});
+
+test('ON: a stored copy older than the 12-hour limit does not freeze "Send igen" in an open tab', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [CUT_AFTER, REPLAY] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  const first = q.submitted[0].submission_id;
+  // 13 hours later in the same tab: the stored copy no longer reads back as current.
+  await page.evaluate(() => { const real = Date.now.bind(Date); Date.now = () => real() + 13 * 3600 * 1000; });
+  await page.locator('#h5-retry-btn').click();
+  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  expect(q.submitted.map((b) => b.submission_id)).toEqual([first, first]);
+  expect({ registered: q.registered.length, replayed: q.replayed.length, scriptErrors: q.scriptErrors }).toEqual({ registered: 1, replayed: 1, scriptErrors: [] });
+});
+
+test('ON: after a reload, storage that can be read but not written does not freeze recovery', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC, TEXT], replies: [CUT_AFTER, REPLAY] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  const pending = JSON.parse(await stored(page));
+  // Writes fail from the next document on; reads still work, so the submission is found again.
+  await page.context().addInitScript(`(() => { const set = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k, v) { if (this === window.sessionStorage) throw new DOMException('full', 'QuotaExceededError'); return set.call(this, k, v); }; })();`);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#question')).toHaveText('Dit sidste svar er registreret: rigtigt! 🎯', { timeout: 20000 });
+  expect(q.submitted[1]).toMatchObject({ submission_id: pending.submission_id, answer: 'Paris', round_no: 1 });
+  expect({ registered: q.registered.length, replayed: q.replayed.length, scriptErrors: q.scriptErrors }).toEqual({ registered: 1, replayed: 1, scriptErrors: [] });
+});
