@@ -385,7 +385,18 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Tee print family, owner approval and runtime layers — D-274 (16 of 18 approved by the owner; layers staged PRIVATELY, not published; no runtime change).**
+- **Print tees in the Northstar opt-in — D-275 (32 layers published with the owner's D-274 permission; flag stays false; no catalogue, shop or pupil change).**
+  - **Where.** `avatar.html?northstar=1` → pick K01–K09 → the row "T-shirt med tryk (til K01–K09)" (16 approved IDs).
+    The choice lives in this browser only (`avatar_northstar_tee`); a tee is ignored on K10–K19. `?northstar=0` forgets it.
+  - **Runtime.** `NORTHSTAR_PRINT_TEES` holds exactly the approval file's 16 IDs. Their items reuse the cream tee's published skin shadows (`shadowsOf`).
+    The figure key is `K…+TP-…`. `assets/avatar-northstar/` now holds 63 files (D-242's 31 + D-274's 32, manifest extension).
+  - **Verified.**
+    - 153 outfits (144 with a print) are byte-identical to the pipeline on the published files.
+    - In Chromium the figure matches the Node composite (≤2 levels).
+    - Without the opt-in 18 pages are identical to main.
+    - The panel's choice, reload and return to today's avatar work, and a missing layer gives today's avatar.
+  - See `docs/decisions/D-275.md`.
+- **Tee print family, owner approval and runtime layers — D-274 (16 of 18 approved by the owner; the 32 layers published by D-275).**
   - **Approved.** The owner approved all 16 D-272 candidates; TP-FOX-COR and TP-FOX-MUS are not covered.
     The approval file `tp-owner-approval-v1.json` is the only list a build reads.
   - **Layers.** `build-northstar-tee-print-layers.mjs` rebuilds each approved combination under the D-270 lock.
@@ -626,7 +637,7 @@ art layer behind them can be upgraded without a rewrite.
     test function stands; it is not a production approval.
   - **Path.** `mountC2Avatar` tries the C figure first (quiz, hub, avatar; aura/back only), composing it once at 1024×1536 with
     the pipeline's own arithmetic (`northstarCompose`). Any load failure or other equipped slot → today's avatar, whole.
-  - **Assets.** 31 lossless WebP layers in `assets/avatar-northstar/` (owner exception to D-127 §2, public; `manifest.json`).
+  - **Assets.** 31 lossless WebP layers in `assets/avatar-northstar/` (owner exception to D-127 §2, public; `manifest.json`); D-275 added D-274's 32 print-tee layers under its own permission.
     All 19 K outfits are byte-identical to the pipeline. With the flag off, 54 browser pages are pixel-identical to main.
   - **Opt-in.** `avatar.html?northstar=1` (on lærlig.dk or locally), then a K outfit in the panel (stored in localStorage only).
   - **Limits.** No blink and neutral expression only; no hair/skin/eye variation; no head items. See `docs/decisions/D-242.md`.
