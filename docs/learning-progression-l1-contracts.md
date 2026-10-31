@@ -1,4 +1,4 @@
-# Læringsprogression L1: kontrakter og acceptkriterier (udkast, revision 2)
+# Læringsprogression L1: kontrakter og acceptkriterier (udkast, revision 3)
 
 **Status:** UDKAST.
 - **Godkendt som principper:** LP-3, LP-5, LP-15 og LP-16 ([D-282](decisions/D-282.md)).
@@ -13,6 +13,14 @@
 - **Q3:** H2 og H4 hører til D-266-sporet og må ikke blokere uafhængigt arbejde (K6).
 - **Q4:** målingen hedder et *teknisk tidsinterval* og må aldrig alene give en negativ vurdering. En
   senere sikker registrering af præsentationstidspunktet er beskrevet (K1, K9).
+
+**Revision 3 (2026-11-01)** præciserer:
+- **A:** Startestimat, påvist niveau og usikkerhed holdes adskilt (K7.1).
+- **B:** Opgavetilpasningen er aldrig en vurdering (K7.2).
+- **C:** Det tekniske tidsinterval har ingen virkning på mestring i L1–L4 (K1).
+- **D:** Revision ved pålidelig evidens for glemsel (K7.4).
+
+Q1a fremlægges til endelig beslutning (K7.6).
 
 **Grundlag:**
 - [D-277](decisions/D-277.md) (designudkast) og [question-attempts-design.md](question-attempts-design.md)
@@ -52,9 +60,12 @@ første række skrives. Den mergede fil ændres ikke.
   netværk, indlæsning, oplæsning og en eventuel genindlæsning af siden.
 - Fordi `created_at` ligger *før* eleven ser opgaven, er intervallet altid ≥ elevens reelle tid. Det
   kan kun skjule et hurtigt gæt, aldrig få et ærligt svar til at ligne et gæt.
-- **Den må aldrig alene give en negativ vurdering.** Den eneste tilladte brug er at *tilbageholde
-  positiv evidens*. Et korrekt svar under formens gættetærskel tæller ikke som mestringsevidens, men
-  tæller heller aldrig imod eleven. Den bruges aldrig til at vurdere, om en elev er "langsom".
+- **I L1–L4 logges den kun. Den har ingen virkning på mestring, niveau eller belønning** (revision 3,
+  C). Pauser, genindlæsning, læsehastighed, oplæsning og tekniske forsinkelser kan gøre intervallet
+  misvisende i begge retninger, så det må hverken forhindre mestring eller give en negativ vurdering.
+- Om den senere må bruges, fx til at kræve én ekstra bekræftende opgave ved gættelige former (sandt/
+  falsk, MC), afgøres af ejeren ud fra pilotdata og K9's mere præcise måling. Den bruges aldrig til at
+  vurdere, om en elev er "langsom".
 - Formålet (gættesignal) skrives ind i privatlivsdokumentationen, før kolonnen anvendes.
 
 **`question_content_sha256` (begrundet af Q2):** Rettes en opgave senere (tekst, svarmuligheder eller
@@ -72,7 +83,7 @@ kan derfor ikke ændre sig ubemærket.
 |---|---|---|---|
 | **G0: Før loggen** (kun `question_instances`) | **Bruges ikke** (ingen backfill, D-266 §7) | Uændret indtil H3 | Uændret |
 | **G1: `quiz_v1`** | Kan kun **påvise** viden. Et korrekt svar kan bidrage til `formodet_kendt`, som skal bekræftes af et `check`. **Et forkert svar er aldrig negativ evidens.** | *Arbejdsniveau:* begge retninger. *Fagligt niveau:* **kun op** (K7) | Som i dag via H3 |
-| **G2: `server_interval_ms = NULL`** | Aldrig markeret "muligt gæt" | — | — |
+| **G2: `server_interval_ms` (enhver værdi, også `NULL`)** | Ingen virkning i L1–L4 (K1) | Ingen virkning | — |
 | **G3: `objective_ids = NULL`** | Kun via en **versionsstyret afledt kobling** (K8), og kun til påvisning | — | — |
 | **G4: Bedømt efter gammel normalisering** | Loggen ændres ikke. Forsøg på opgaver, som K5 markerer med kollision, udelukkes ved foldning og kan genberegnes. | Samme udelukkelse | Uændret |
 
@@ -99,9 +110,9 @@ FAKTA: `process_question_attempt` fjerner i dag alt uden for `[a-z0-9]` (`202610
 
 | Forsøg | Arbejdsniveau | Fagligt niveau (K7) |
 |---|---|---|
-| `check`, `review`, `application`, `hints_used = 0`, evidensgyldig, og målet har registreret eksponering | Begge retninger | Begge retninger (L4+, se K7) |
-| `quiz_v1` | Begge retninger | **Kun op** |
-| `diagnostic` | Begge retninger | **Kun op** (startregel) |
+| `check`, `review`, `application`, `hints_used = 0`, evidensgyldig, og målet har registreret eksponering | Begge retninger | Op (K7.3). Ned kun via glemselsreglen (K7.4, L4+). |
+| `quiz_v1` | Begge retninger | **Kun op** (K7.3) |
+| `diagnostic` | Begge retninger | **Kun op** (K7.3) |
 | `practice` eller `hints_used > 0` | Nej | Nej |
 
 I L1 er K4 en specifikation med en testharness: `levelFoldEligible(attempt, target)` for target
@@ -127,44 +138,98 @@ for sletning) og H4 (genindsendelse af lange svar) afklares, før svarloggen anv
 **Ikke blokeret af H1–H4:** K3, K4, K5, K7, K8 og K9 (specifikationer, rene funktioner og
 read-only rapporter) kan bygges nu. Kun *anvendelsen* af K1 i produktionen venter på H2 og H4.
 
-## K7: Arbejdsniveau og fagligt niveau (Q1) (FORSLAG)
+## K7: Arbejdsniveau og fagligt niveau (Q1, Q1a) (FORSLAG, revision 3)
 
-**Ejerens krav:** Ingen automatisk niveausænkning ud fra gamle `quiz_v1`-svar, når det er ukendt, om
-eleven er blevet introduceret for stoffet.
+**Ejerens krav:**
+- Ingen automatisk niveausænkning ud fra `quiz_v1`, når det er ukendt, om eleven er blevet
+  introduceret for stoffet.
+- **A:** Klassetrinnets start og placering må ikke fremstå som dokumenteret kompetence.
+- **B:** Arbejdsniveauet må ikke være en negativ faglig vurdering.
+- **D:** Niveau og mestring skal kunne revideres ved pålidelig evidens for glemsel, uden at quizfejl
+  automatisk sænker niveauet.
 
-**Modellen har to størrelser pr. elev og fag:**
+### K7.1 Tre adskilte størrelser pr. elev og fag (A)
 
-| | **Arbejdsniveau** (midlertidig sværhedstilpasning) | **Fagligt niveau** (varig vurdering) |
+| Størrelse | Hvad det er | Hvad det **ikke** er | Kilde |
+|---|---|---|---|
+| **Startestimat** | Et praktisk udgangspunkt for opgavevalget | Dokumenteret kompetence | Klassetrinnets serverafledte start. I historie den gennemførte placeringstest, som er en kort MC-test og derfor også kun et estimat. |
+| **Påvist niveau** | Det højeste niveau, hvor eleven har vist viden efter evidensreglen (K7.3) | En påstand om, at eleven *ikke* kan noget over niveauet | Korrekte, uassisterede svar på evidensgyldige opgaver |
+| **Usikkerhed** | Hvor meget evidens niveauet hviler på | — | Antal og variation af de svar, der bærer det påviste niveau: `ingen evidens` / `foreløbigt` (< 3 svar) / `underbygget` (≥ 3 svar fra ≥ 2 sessioner). Tærsklerne er HEURISTIK. |
+
+**Det faglige niveau** er det påviste niveau, når det findes. Ellers er det startestimatet, **markeret
+som estimat**.
+
+**Visning for læreren (FORSLAG):**
+- "Startestimat: klassetrin 6 (ikke påvist endnu)"
+- "Påvist niveau ≥ 4.100 (foreløbigt, 2 svar)"
+- "Påvist niveau ≥ 4.700 (underbygget, 6 svar fra 3 sessioner)"
+
+Et estimat vises aldrig som "eleven kan …".
+
+### K7.2 Arbejdsniveau: opgavetilpasning, ikke vurdering (B)
+
+| Egenskab | Regel |
+|---|---|
+| Formål | Kun at vælge den næste opgave. |
+| Bevægelse | Op og ned efter de seneste svar, også `quiz_v1` og forkerte svar. |
+| Levetid | Nulstilles til det faglige niveau ved hver ny session (ingen pause over 2 timer, samme definition som D-278). |
+| Nedre grænse | Højst Δ under det faglige niveau (HEURISTIK: 2 celler ≈ 560 på skalaen 1–10.000). |
+| **Aldrig** | Vist for læreren eller eleven som et niveau. Med i rapporter, statistik eller lærerens overblik. Gemt som vurdering. Brugt til at ændre det faglige niveau. |
+| Navngivning | Hedder internt `working_level` og i al dokumentation "opgavetilpasning". |
+
+### K7.3 Hvornår det faglige niveau må ændres
+
+| Retning | Tilladt ud fra | Aldrig ud fra |
 |---|---|---|
-| Formål | Vælge opgaver, der passer *nu*, så eleven hverken keder sig eller sidder fast | Systemets bedste vurdering af, hvad eleven fagligt kan klare |
-| Bevæger sig | Op og ned efter de seneste svar, også `quiz_v1` og forkerte svar | **Op** ved påvist viden: korrekte, uassisterede svar på opgaver over det nuværende niveau, på mindst 2 forskellige opgaver (HEURISTIK). **Ned** kun ved evidens fra `check`/`review` på mål med registreret eksponering (fra L4). **Aldrig ned** ved `quiz_v1` eller `diagnostic`. |
-| Levetid | **Nulstilles til det faglige niveau ved hver ny session** (session = ingen pause over 2 timer, samme definition som D-278) | Varig. Hver ændring logges med forklaring. |
-| Nedre grænse | Højst Δ under det faglige niveau (HEURISTIK: 2 celler ≈ 560 på skalaen 1–10.000, hvor én celle ≈ et bånd inden for et klassetrin) | Aldrig under klassetrinnets serverafledte start (eller placeringen i historie), medmindre der er evidens fra `check` |
-| Vises for læreren | **Nej.** Det er ikke en vurdering. | Ja, med usikkerhed og med "påvist ved …" |
-| Vises for eleven | Nej | Valgfrit, aldrig som en dom |
+| **Op** | Mindst 2 forskellige korrekte, uassisterede svar på evidensgyldige opgaver over det nuværende niveau i samme eller forskellige sessioner (HEURISTIK). Gælder for alle tilstande, også `quiz_v1` og `diagnostic`. | Svar med hints. Ugyldige opgaver. Gentagelse af samme opgave inden for 24 t. |
+| **Ned** | Kun **pålidelig evidens for glemsel** (K7.4) | `quiz_v1`. `diagnostic`. `practice`. Svar med hints. `server_interval_ms`. Fejl på stof uden registreret eksponering. |
 
-**Konsekvens for den nuværende niveaumotor (FAKTA, vigtig):**
-- Den byggede motor (`student_subject_level`, `advance_student_level`) har **ét** niveau pr. fag.
-  Folden går op og ned efter første svar og lægger sig omkring 75 % rigtige.
-- Aktiveres den uændret, sænkes det varige niveau automatisk af `quiz_v1`-svar. **Det strider mod
-  Q1.**
-- **Anbefaling:** Før `LEVEL_ENGINE` aktiveres, udvides motoren:
-  - det nuværende `level` bliver *arbejdsniveau* med nulstilling pr. session og nedre grænse;
-  - et nyt `assessed_level` bliver *fagligt niveau*, som kun går op i L1–L3.
+### K7.4 Revision ved glemsel (D)
 
-  Det er en ændring af en anvendt migration og af gnq, så det kræver release-gate, migration og din
-  GO. **Aktiveringen af niveaumotoren bør derfor vente på denne beslutning.**
+At glemme er normalt, og svaret på det er **repetition, ikke en lavere vurdering**. Revisionen sker
+derfor i to trin. Det faglige niveau rører man kun som det sidste:
 
-**Konkrete konsekvenser:**
+1. **Læringsmål (mestring):** En fejlet `review` på et mestret mål giver `genopfrisk` (D-277 §4.3).
+   Historikken bevares, og repetitionen kommer først. Det er en *aktuel* tilstand, ikke en
+   tilbagekaldelse.
+2. **Fagligt niveau:** Revideres **ét trin ned** (højst én celle ≈ 280) kun når **alle** disse holder:
+   - mindst 3 forskellige læringsmål på eller under det påviste niveau står i `genopfrisk`;
+   - hvert af dem har fejlet efter **både** repetition **og** kort genintroduktion;
+   - fejlene stammer fra `review` eller `check`, uden hints, på evidensgyldige opgaver og på mål med
+     registreret eksponering;
+   - fejlene ligger i mindst 2 sessioner på forskellige dage.
 
-| Fag | Udgangspunkt (fagligt niveau) | Eksempel | Med modellen | Uden modellen (motoren som bygget) |
+   Alle tal er HEURISTIK og kalibreres i piloten (D-277 §4.9).
+3. **Hver revision er sporbar:**
+   - den logges med forklaring, fx "revideret 4.700 → 4.420: 3 mål fejlede efter genintroduktion 3.
+     og 5. nov.";
+   - den er synlig for læreren;
+   - den kan tilsidesættes af læreren (logget som `lærervurdering`);
+   - den sletter aldrig den tidligere påviste historik.
+4. **Op igen:** Den samme evidensregel som K7.3 gælder. En revision er ikke en "straf", som eleven
+   skal arbejde sig ud af.
+
+### K7.5 Konsekvenser pr. fag
+
+| Fag | Startestimat | Eksempel | Med modellen | Uden modellen (motoren som bygget) |
 |---|---|---|---|---|
-| **Historie** | Den gennemførte placeringstest (`placement_sessions`), ellers klassetrinnets start | En 6.-klasseelev svarer forkert på 4 vikingespørgsmål i træk. Klassen har endnu ikke haft vikingetiden. | Arbejdsniveauet falder i sessionen, og eleven får lettere vikingespørgsmål. **Det faglige niveau er uændret.** Næste dag starter eleven igen på det faglige niveau. | Det varige niveau falder. Eleven fastholdes i lettere stof, også i emner eleven kan. |
-| **Engelsk** | Klassetrinnets start. Placeringen udelukker engelsk. Indholdet dækker kun klassetrin 3–5, bånd 1–4. | En 8.-klasseelev ligger over indholdets loft. Hun svarer forkert på 2 grammatikopgaver på klassetrin 4. | Arbejdsniveauet tilpasses inden for det tilgængelige indhold. **Det faglige niveau falder ikke.** Læreren ser "fagligt niveau over indholdets loft", altså en **indholdsmangel, ikke en elevmangel**. | Niveauet falder mod klassetrin 3–4 og ser ud som en svag elev. |
-| **Dansk** | Klassetrinnets start. Placeringen udelukker dansk. 210 opgaver, få pr. celle. | En 5.-klasseelev fejler 3 tegnsætningsopgaver. | Arbejdsniveauet falder i sessionen. Det faglige niveau stiger kun, når eleven svarer rigtigt over sit niveau. Fordi puljen er lille, kommer gentagelser hurtigt. De ændrer ikke det faglige niveau. | Niveauet falder, og den lille pulje gør faldet svært at komme op fra. |
+| **Historie** | Placeringstest (estimat), ellers klassetrinnets start | En 6.-klasseelev fejler 4 vikingespørgsmål. Klassen har endnu ikke haft vikingetiden. | Opgavetilpasningen giver lettere vikingespørgsmål i sessionen. Det faglige niveau er uændret, og læreren ser stadig "startestimat (placering)". Næste dag starter eleven på det faglige niveau igen. | Det varige niveau falder. |
+| **Engelsk** | Klassetrinnets start. Indholdet dækker kun klassetrin 3–5. | En 8.-klasseelev fejler 2 opgaver på klassetrin 4. | Opgavetilpasningen sker inden for det tilgængelige indhold, og det faglige niveau falder ikke. Læreren ser "startestimat over indholdets loft", altså en **indholdsmangel, ikke en elevmangel**. | Niveauet falder mod klassetrin 3–4. |
+| **Dansk** | Klassetrinnets start. Placeringen udelukker dansk. | En 5.-klasseelev fejler 3 tegnsætningsopgaver. | Opgavetilpasningen falder i sessionen. Det faglige niveau stiger kun ved påvist viden. Først efter introduktion, repetition og genintroduktion kan gentagne fejl revidere det (K7.4). | Niveauet falder, og den lille pulje gør faldet svært at komme op fra. |
 
-**Teknisk opdeling:** Arbejdsniveauet kan beregnes uden ny persistens ud fra sessionens forsøg i
-loggen plus det faglige niveau. Det faglige niveau gemmes som en fold med fold-log, ligesom i dag.
+### K7.6 Konsekvens for den byggede niveaumotor (FAKTA) og Q1a
+
+- **FAKTA:** `student_subject_level` og `advance_student_level` har **ét** niveau pr. fag. Folden går
+  op og ned efter første svar og lægger sig omkring 75 % rigtige.
+- **Q1a:** Aktiveres den uændret, sænker `quiz_v1`-svar det varige niveau. Det strider mod Q1 og K7.3.
+- **Forslag til Q1a:**
+  - Motoren deles, før `LEVEL_ENGINE` aktiveres. Det nuværende `level` bliver *opgavetilpasning* med
+    nulstilling pr. session og nedre grænse.
+  - Et nyt felt, `assessed_level`, bliver *påvist niveau* med usikkerhed og fold-log. Det går kun op i
+    L1–L3, og nedrevision (K7.4) kommer først med L4.
+  - Startestimatet gemmes for sig med kilden (`grade` eller `placement`).
+- **Hvad det kræver:** en ny migration til en anvendt tabel, en ændring af gnq med release-gate og
+  nye tests. Hver del kræver sin egen godkendelse. **Indtil da aktiveres `LEVEL_ENGINE` ikke.**
 
 ## K8: Versionsstyret afledt kobling til læringsmål (Q2) (FORSLAG)
 
@@ -236,10 +301,13 @@ hurtigt", aldrig til "for langsomt".
 | L1-A10 | Replay: de samme rækker og versioner giver de samme kategorier, den samme egnethed og den samme afledte evidens. | Unit |
 | L1-A11 | Følgemigrationen anvendes efter PR 1 og før der findes nogen række. Rækkefølgen håndhæves af NOT NULL og RPC-signaturer. | PGlite |
 | L1-A12 | Tilbagerulning af K1 og K3 er dokumenteret og afspillet i en test. | PGlite |
-| L1-A13 | K7: Arbejdsniveauet nulstilles til det faglige niveau ved en ny session, ligger aldrig mere end Δ under det og vises aldrig for læreren. | Unit (ren funktion) |
-| L1-A14 | K7: Det faglige niveau stiger kun ved ≥ 2 forskellige korrekte, uassisterede opgaver over niveauet og falder aldrig af `quiz_v1` eller `diagnostic`. Hver ændring har en forklaring. | Unit |
+| L1-A13 | K7.2: Opgavetilpasningen nulstilles til det faglige niveau ved en ny session og ligger aldrig mere end Δ under det. Den optræder aldrig i lærervisning, rapporter, statistik eller som input til det faglige niveau. | Unit (ren funktion) + unit (lærer-RPC'ernes output) |
+| L1-A14 | K7.3: Det faglige niveau stiger kun ved ≥ 2 forskellige korrekte, uassisterede, evidensgyldige opgaver over niveauet. Det falder aldrig af `quiz_v1`, `diagnostic`, `practice`, hints eller `server_interval_ms`. Hver ændring har en forklaring. | Unit |
 | L1-A15 | K8: Den samme koblingsversion og de samme opgavehash giver identisk afledt evidens. En ny version ændrer ikke gamle resultater, men giver en diff-rapport. Afledt evidens giver aldrig `mestret`. | Unit (replay) |
-| L1-A16 | K1/Q4: `server_interval_ms` kan alene kun *tilbageholde* positiv evidens, aldrig give negativ evidens eller sænke et niveau. | Unit (ren fold) |
+| L1-A16 | K1 (revision 3, C): Mestring, niveau og belønning er identiske uanset værdien af `server_interval_ms`, også `NULL` og ekstreme værdier (egenskabstest). | Unit (ren fold, egenskabstest) |
+| L1-A17 | K7.1 (A): Et niveau, der kun hviler på startestimatet (klassetrin eller placering), vises altid som "startestimat" med kilde og aldrig som påvist kompetence. Påvist niveau vises med usikkerhed. | Unit (visningsmodel) |
+| L1-A18 | K7.4 (D): Det faglige niveau revideres ét trin ned kun når alle betingelser i K7.4 holder (≥ 3 mål, efter repetition og genintroduktion, kun `review`/`check` med eksponering, ≥ 2 dage). Fjernes én betingelse i testdata, sker ingen revision. Revisionen logges, kan tilsidesættes og sletter ingen historik. | Unit (ren fold) |
+| L1-A19 | K7.4: En fejlet repetition giver `genopfrisk` på målet, men ændrer ikke det faglige niveau alene. | Unit |
 
 ## Ikke i L1
 
@@ -251,8 +319,8 @@ særskilt beslutning (se nedenfor). K9 hører til L3 eller L5.
 
 | # | Beslutning | Anbefaling |
 |---|---|---|
-| **Q1 (fremlagt igen)** | Godkendes modellen med arbejdsniveau og fagligt niveau (K7) som retning? | Ja. |
-| **Q1a** | Skal `LEVEL_ENGINE` vente på, at motoren deles i arbejdsniveau og fagligt niveau? | **Ja.** Uændret aktivering ville sænke det varige niveau af `quiz_v1`-svar. |
+| **Q1** | Opdelingen i arbejdsniveau og fagligt niveau | Støttet principielt af ejeren 2026-11-01. Præciseret i revision 3 (A–D). |
+| **Q1a (til endelig beslutning)** | Deles niveaumotoren i *opgavetilpasning* og *påvist niveau* med startestimat og usikkerhed (K7.1–K7.4), og venter `LEVEL_ENGINE` på det (K7.6)? | **Ja.** Uændret aktivering ville sænke det varige niveau af `quiz_v1`-svar og vise estimater som kompetence. |
 | Q2 | Versionsstyret afledt kobling (K8), kun som påvisning | Indarbejdet som ønsket. Godkendes sammen med L2. |
 | Q3 | H2 og H4 i D-266-sporet før anvendelse af K1 | Accepteret principielt. Blokerer ikke K3–K5 og K7–K9. |
 | Q4 | `server_interval_ms` som teknisk interval, kun tilbageholdende (K1), og K9 senere | Indarbejdet som ønsket. |

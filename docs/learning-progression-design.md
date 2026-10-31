@@ -283,7 +283,7 @@ læreren.
 | `anvendelse` | Eleven kan bruge viden i en ny sammenhæng. | Kilde + spørgsmål, find fejlen, nyt regnestykke, hotspot |
 | `forklaring` | Eleven kan begrunde. Vurderes af læreren. | Langt lærersvar |
 
-**Et svar er kun mestringsevidens, når alle fem betingelser holder (FORSLAG):**
+**Et svar er kun mestringsevidens, når alle fire betingelser holder (FORSLAG):**
 1. Aktivitetstilstanden er `tjek`, `repetition` eller `anvendelse`. **Aldrig `diagnostik` og aldrig
    `øvelse`.**
 2. Der er ikke brugt hints.
@@ -292,8 +292,12 @@ læreren.
 4. Det er ikke en gentagelse af samme opgave inden for 24 t. Det ville måle hukommelse for opgaven,
    ikke for målet (HYPOTESE, støttet af Yang m.fl. 2021: omformulerede spørgsmål g = 0,56 mod
    identiske).
-5. Svaret er ikke markeret som "muligt gæt". Det kræver logning af svartid (§8.2) og en tærskel pr.
-   form (HEURISTIK).
+
+*Revision 3:* Den tidligere betingelse 5 ("ikke markeret som muligt gæt") er **fjernet**. Det tekniske
+tidsinterval `server_interval_ms` kan være misvisende: pauser, genindlæsning, læsehastighed, oplæsning
+og tekniske forsinkelser påvirker det. Det må derfor ikke alene forhindre mestring. I L1–L4 logges
+det kun, og det har ingen virkning på mestring eller niveau. Om det senere må bruges, afgøres af
+ejeren ud fra pilotdata ([L1-kontrakter](learning-progression-l1-contracts.md) K1, K9).
 
 **Gætteloft (FAKTA: kombinatorik ved tilfældigt valg, og ved delvis viden):**
 
@@ -820,7 +824,7 @@ Dermed lønner det sig at vende tilbage. Dagens repetitionsbelønning (2/1, D-21
 | R3 | Hints koster aldrig XP i øvelsen. Øvelses-XP har et loft pr. mål og et loft pr. dag på tværs af mål. | Hjælpsøgning skal være billig (Aleven 2003). Lofterne fjerner gevinsten ved volumen. |
 | R4 | En mestringsbonus i mønter pr. mål er **lille** og rettet mod opgaven. Den kan suppleres af uforudsigelige, ikke-annoncerede kosmetiske overraskelser. | FORSKNING: også belønninger, der afhænger af præstation, svækker elevernes frie lyst (d = −0,28), og mest for børn. Uventede belønninger gør det ikke (Deci m.fl. 1999). |
 | R5 | Repetition har sit eget budget, som kun udbetales, når repetitionen er forfalden. | Spacing skal være attraktivt og må ikke kunne farmes. |
-| R6 | Ingen belønning afhænger af svartid. Svartid bruges kun som gættesignal. | Ingen incitament til hastighed (Baker 2004). |
+| R6 | Ingen belønning afhænger af tidsintervallet. Det logges kun til analyse (§4.2). | Ingen incitament til hastighed (Baker 2004). |
 | R7 | Quests bliver læringshandlinger: "genopfrisk 3 mål", "lær ét nyt mål", "ret en misopfattelse". | Volumen-quests strider mod R3. |
 | R8 | Streak tæller en dag med mindst én gennemført læringshandling, ikke ét vilkårligt svar. | — |
 | R9 | Ranglister rangerer aldrig efter volumen (LP-10). | Social sammenligning kan demotivere svage elever (HYPOTESE). |
@@ -899,9 +903,9 @@ efter at D-278 er anvendt.
 - Tilstanden må aldrig alene bruges til en beslutning med retsvirkning (GDPR art. 22). Det er heller
   ikke hensigten.
 - `server_interval_ms` er et *teknisk tidsinterval* (fra serverens oprettelse af instansen til svaret), ikke
-  elevens svartid. Det kan kun *tilbageholde* positiv evidens og må aldrig alene give en negativ vurdering
-  ([L1-kontrakter](learning-progression-l1-contracts.md) K1, K9). Det har kun ét formål, at fange gæt, og skal begrundes i
-  privatlivsdokumentationen.
+  elevens svartid. I L1–L4 logges det kun. Det påvirker hverken mestring eller niveau og må aldrig alene
+  forhindre mestring eller give en negativ vurdering ([L1-kontrakter](learning-progression-l1-contracts.md)
+  K1, K9). Formålet (analyse af gæt i piloten) skal begrundes i privatlivsdokumentationen.
 
 ### 8.3 Forløb (skitse)
 
@@ -929,7 +933,7 @@ hub → vælg fag → get-next-activity (gnq udvidet, bag flag)
 | Mestring | Død | Tilstandsmotor (§4.3), deterministisk og forklarlig | Ny motor (fold) + skyggetilstand | Log, mål |
 | Repetition | Kun "puljen er brugt op" | Planlagt pr. mål | Repetitionsplan i tilstanden | Motor |
 | Niveau | Klientbånd, klassetrin som loft | Niveaumotor pr. fag, klassetrin = start | `LEVEL_ENGINE`-aktivering + fold uden diagnostik | LP-5 |
-| Svartid | Smides væk | Logges som gættesignal | `server_interval_ms` | LP-3 |
+| Tidsinterval | Smides væk | Logges som teknisk interval (ingen virkning i L1–L4) | `server_interval_ms` | LP-3 |
 | Bedømmelse | `[a-z0-9]`-strip | Korrekt for æøå og tal | Evaluator-rettelse | — |
 | Belønning | Volumen og korrekt førstegangssvar | R1–R10 | Ændring af RPC'er og quests | Motor live |
 | Lærerindsigt | %, trend, bånd | Varmekort, misopfattelser, eksponering, tilsidesættelse | UI + RPC'er | Motor |
