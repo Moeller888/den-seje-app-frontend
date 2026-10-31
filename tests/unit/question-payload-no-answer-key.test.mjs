@@ -141,9 +141,10 @@ test("every question response is built from toPublicQuestion — never from norm
 
 test("the key-bearing reads run on the backend client, scoped to the verified student", () => {
   // The due and repeat reads embed questions(content) — the key — so they must not depend on the
-  // pupil being able to read it, and must be scoped to student_id.
+  // pupil being able to read it, and must be scoped to student_id. The third is Match par's instance
+  // key (correct_answer of a "match" row, PR #377), under the same rule.
   const reads = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.from\("question_instances"\)[\s\S]*?;/g)].map((m) => m[0]);
-  assert.equal(reads.length, 2);
+  assert.equal(reads.length, 3);
   for (const r of reads) assert.match(r, /\.eq\("student_id", student_id\)/);
   assert.equal(/supabase\s*\.from\("question_instances"\)/.test(INDEX_CODE), false,
     "no question_instances read on the user client");

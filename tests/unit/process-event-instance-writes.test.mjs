@@ -214,7 +214,7 @@ test("long answer: a key/config failure is a controlled 500 with no user-client 
 });
 
 test("the MC/number and short-text award RPC paths are unchanged", () => {
-  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,\s*\{\s*studentId:\s+user\.id,\s*instanceId:\s+question_instance_id,\s*answer,\s*questionShownAt:\s+question_shown_at \?\? Date\.now\(\),\s*\}\s*\)/);
+  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,\s*\{\s*studentId:\s+user\.id,\s*instanceId:\s+question_instance_id,\s*answer:\s+gradedAnswer,\s*questionShownAt:\s+question_shown_at \?\? Date\.now\(\),\s*\}\s*\)/);
   assert.match(PATH_TEXT, /await callProcessTextAnswer\(\s*makeAdminClient,\s*\{\s*instanceId: question_instance_id,\s*userId:\s+user\.id,\s*answer,\s*isCorrect,\s*\}\s*\)/);
   // The misconception write comes after the award RPC, never before it.
   assert.ok(PATH_MC.indexOf("await callProcessQuestionAttempt(") < PATH_MC.indexOf("await recordMisconceptionSignal("));

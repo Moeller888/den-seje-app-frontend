@@ -10,6 +10,7 @@
 //   answer_format "text" + type "long" → "long_text"    textarea + teacher review, unchanged
 //   answer_format "text" otherwise     → "short_text"   one-line input — "stav til"
 //   answer_format contains "mc"        → "choice"       option buttons, unchanged
+//   answer_format "match"              → "match_pairs"  Match par (js/match-pairs.js)
 //   anything else                      → "unsupported"  visible error, never option buttons
 //
 // "text" without an answer_type is short: get-next-question already sends `answer_type || "short"`,
@@ -30,6 +31,7 @@ export const ANSWER_RENDERERS = Object.freeze({
   LONG_TEXT: "long_text",
   SHORT_TEXT: "short_text",
   CHOICE: "choice",
+  MATCH_PAIRS: "match_pairs",
   UNSUPPORTED: "unsupported",
 });
 
@@ -46,6 +48,8 @@ export function resolveAnswerRenderer(question) {
   }
 
   if (format.includes("mc")) return ANSWER_RENDERERS.CHOICE;
+
+  if (format === "match") return ANSWER_RENDERERS.MATCH_PAIRS;
 
   return ANSWER_RENDERERS.UNSUPPORTED;
 }

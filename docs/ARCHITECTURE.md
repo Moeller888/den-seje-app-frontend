@@ -464,7 +464,7 @@ both over a 210-case matrix, so they can only change together.
 
 **Interaction kinds** — one registry, `supabase/functions/_shared/interaction-kinds.ts`:
 `choice` (base kind) · `short_text` (Stav til) · `long_text` (teacher-graded) · `number` ·
-`force_text` · `match_pairs` (registered, **not servable**). `classifyQuestion` names a kind only
+`force_text` · `match_pairs` (renderer and grading built 2026-10-22, **not servable**). `classifyQuestion` names a kind only
 where `mapAnswerFormat` (server), `process-event` (grading) and `resolveAnswerRenderer` (browser) agree
 (a parity test runs all three); anything else is `null` and never served by `v2`. Long answers have
 `maxShare 0`: `process-event` keeps a long answer open until the teacher grades it, so a long question
@@ -499,12 +499,34 @@ to the SQL in PGlite. The band is one level across subjects, like the client's t
 level is a separate product decision. `profiles.current_band`,
 `profiles.placement_band` (both client-writable) and the request body are not inputs.
 
-**Adding a new kind (Match par next):** (1) registry entry with `servable: false`; (2) renderer in
+**Adding a new kind:** (1) registry entry with `servable: false`; (2) renderer in
 `js/answer-input.js`, evaluator/award path in `process-event`, deliberate extension of
 `_shared/question-dto.ts`; (3) flip `servable` in the registry **and** in `question_is_servable` (a
-reviewed migration) in the PR that ships the renderer, extending both parity tests. The candidate
-window and the mix need no change: a new `answer_format` gets its own stratum, and the mix reads
-limits from the registry.
+reviewed migration), extending both parity tests. The candidate window and the mix need no change: a
+new `answer_format` gets its own stratum, and the mix reads limits from the registry.
+
+**Match par (`match_pairs`) — steps 1 and 2 done (2026-10-22), step 3 NOT done: not servable.**
+Contract in `supabase/functions/_shared/match-pairs.ts`. Stored row: `answer_format = 'match'`,
+`answer_type = 'short'`, `content = { question, pairs: [{ left, right }, …] }` with 2–6 pairs, unique
+texts per side, no `options` (`RECOMMENDED_PAIRS_BY_BAND`: band 1 → 2–3 pairs … band 5 → 5–6).
+*Key:* when `get-next-question` creates the instance it shuffles the right column once (crypto,
+never the identity) and stores that shuffle as `question_instances.correct_answer`, e.g.
+`0:2,1:0,2:1` = left 0 belongs with right display position 2. The key alone rebuilds the layout, so
+due and repeat instances look as first served. *Payload:* `content.match = { left, right }` — two
+lists of texts; `content.pairs` never leaves the server. *Answer:* the browser sends
+`[[left, right], …]` in display positions; `process-event` accepts only one connection per item
+(else 400, nothing recorded) and rewrites it in the key's form; **`process_question_attempt` grades
+and pays it exactly like MC** (its `[^a-z0-9]` normalisation makes `0:2,1:0,2:1` and the key compare as
+`021021`, unambiguous with ≤ 6 pairs) — full award once, the 2-XP repeat award, streak, quests,
+`next_review_at`. No new RPC, no migration. Not `process_text_answer`: it ignores `repeat_count`, and
+the repeat RPC reopens every non-`text` auto-graded instance. *Browser:* `js/match-pairs.js` (tap an
+item, then its partner; arrows, Enter/Space, Escape; colour + number per pair; live region),
+`css/match-pairs.css`, demo `tools/match-pairs/demo.html` (local only). Tap-to-connect and grading through
+`process_question_attempt` are owner decisions (2026-10-22, ROADMAP → Opgaveformer). *Step 3 must
+also* teach v1's `mapAnswerFormat` `"match"` (today it maps it to `"mc"`, and the row is then skipped
+for lack of options) or retire v1; show a Match par `user_answer` to teachers as pairs in words
+(`js/student-detail.js` prints it raw, as it does for MC); and add the content through a reviewed
+migration.
 
 **Activation order** (each step its own owner authorisation): security review → apply the migration
 (D-110, `apply_migration`) → deploy `get-next-question` (diff live vs repo first) → set
