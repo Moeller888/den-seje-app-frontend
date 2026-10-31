@@ -2,10 +2,10 @@
 // place, and no other branch uploads a version (an assets-only branch upload wiped them twice).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { dirname, join, posix } from "node:path";
 import {
   main, planFor, secretNamesOf, missingSecrets, latestVersionId, deployedVersionIds,
   REQUIRED_SECRETS, WRANGLER, PRODUCTION_BRANCH,
@@ -197,4 +197,39 @@ test("HOSTING.md names this script as the deploy command for every branch", () =
 test("HOSTING.md does not claim the dashboard change has already been made", () => {
   const doc = readFileSync(join(REPO, "docs", "HOSTING.md"), "utf8");
   assert.doesNotMatch(doc, /indført 2026-10-22/);
+});
+
+// Cloudflare runs the commands in docs/HOSTING.md's dashboard block on Linux, where file names are
+// case-sensitive. A command pointing at a file the repository does not hold fails the build with
+// "Cannot find module" before anything is checked or deployed. existsSync is case-insensitive on
+// Windows, so every path segment is matched exactly against its directory listing.
+function existsExactCase(relPath) {
+  let dir = REPO;
+  for (const part of relPath.split("/")) {
+    if (!readdirSync(dir).includes(part)) return false;
+    dir = join(dir, part);
+  }
+  return true;
+}
+
+test("every node command in the Cloudflare dashboard block names a file that exists (exact case)", () => {
+  const doc = readFileSync(join(REPO, "docs", "HOSTING.md"), "utf8");
+  const block = doc.split("CLOUDFLARE DASHBOARD")[1]?.split("```")[1] ?? "";
+  const commands = [...block.matchAll(/^(Build command|Deploy command|Non-production branch deploy command):\s+(.+)$/gm)];
+  assert.deepEqual(commands.map((m) => m[1]),
+    ["Build command", "Deploy command", "Non-production branch deploy command"]);
+  for (const [, label, command] of commands) {
+    const node = /^node\s+(\S+)$/.exec(command.trim());
+    assert.ok(node, `${label} is not a plain "node <file>" command: ${command}`);
+    const file = posix.normalize(node[1]);
+    assert.ok(!file.startsWith("..") && !posix.isAbsolute(file), `${label} points outside the repository: ${file}`);
+    assert.ok(existsExactCase(file), `${label} names ${file}, which is not in the repository with that exact case`);
+  }
+});
+
+test("the exact-case check rejects a wrong case and a missing file", () => {
+  assert.equal(existsExactCase("tools/cloudflare-deploy.mjs"), true);
+  assert.equal(existsExactCase("tools/Cloudflare-deploy.mjs"), false);
+  assert.equal(existsExactCase("Tools/cloudflare-deploy.mjs"), false);
+  assert.equal(existsExactCase("tools/cloudflare-deploy-missing.mjs"), false);
 });
