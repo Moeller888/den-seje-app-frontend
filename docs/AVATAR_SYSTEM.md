@@ -385,6 +385,15 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Tee print family, approval pack — D-272 (owner approval PENDING: 0 of 18; no call, no integration).**
+  - **Candidates.** 16 advisory candidates (ChatGPT's selection, not an owner approval) with stable IDs `TP-<FOX|TEA|SHD>-<CRM|HTH|NAV|COR|FOR|MUS>`.
+    The 2 non-candidates are shown apart with their reason: TP-FOX-COR and TP-FOX-MUS.
+  - **Inputs.** D-271's 18 results are kept unchanged; the candidate fixture is `tp-approval-candidates-v1.json`.
+  - **Pack.** `northstar-tee-print-approval-pack.mjs` writes a private pack.
+    - `manifest.json` keeps the technical, advisory and owner statuses separate.
+    - `index.html` has a local-only review with nothing pre-selected.
+  - **Owner decision.** The owner replies `D-272 GODKENDT: …` / `D-272 AFVIST: …`.
+  - **Next.** The integration plan (approved IDs only; needs a public-asset permission) is in `docs/decisions/D-272.md`.
 - **Independent validation of large central prints, result — D-271 (all three D-270 calls sent once and received; D-270 closed; no further call).**
   - **Yield.** 3 of 3 delivered, and all three passed the delivery checks.
   - **Placement.** OK in 18 of 18 combinations; nothing is cut or touches the neck, seams or armpits.

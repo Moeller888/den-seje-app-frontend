@@ -1,8 +1,9 @@
 # Besvarelseshistorik: `question_attempts` — design
 
 **Status:** ARKITEKTURRETNING GODKENDT, IKKE BYGGET. Ejeren har 2026-10-30 godkendt retningen og
-principperne i §9.1. Implementeringen og beslutningerne i §9.2 er **ikke** godkendt. Intet i dette
-dokument er implementeret eller anvendt. Hvert implementeringstrin i §8 kræver sin egen godkendelse.
+principperne i §9.1. H5 er afgjort 2026-10-30 ([D-273](decisions/D-273.md), §9.3): variant C og M2
+som teknisk retning, ikke aktiveret. H1–H4 i §9.2 er **ikke** godkendt. Intet er anvendt i
+produktion. Hvert implementeringstrin i §8 kræver sin egen godkendelse.
 **Dato:** 2026-10-30 · **Grundlag:** `main` @ `6feb3cc` og produktionens live funktionsdefinitioner,
 læst samme dag (kun læsning).
 **Beslutning:** [D-266](decisions/D-266.md).
@@ -179,8 +180,9 @@ skal være på plads, før forsøgsloggen anvendes i produktion (§8, trin 1b og
 - Hvert forsøg registrerer, hvilken indsendelse og hvilken runde det stammer fra, så koblingen
   indsendelse → runde → forsøg kan efterprøves.
 
-**Mekanismen er ikke besluttet (H5).** Anbefalingen er serverstyret rundeidentitet kombineret med en
-stabil idempotensnøgle:
+**Mekanismen er afgjort (H5, [D-273](decisions/D-273.md)):** variant C, serverstyret rundeidentitet
+kombineret med en stabil idempotensnøgle. Anbefalingen herunder blev grundlaget; de godkendte
+detaljer (rundevagt, `_v2`-funktioner, uforanderligt resultat, M2) står i D-273:
 - `get-next-question` returnerer rundens nummer sammen med instansen.
 - `app.js` danner ét `submission_id` (`crypto.randomUUID()`) pr. bevidst indsendelse og genbruger det
   ved genforsøg af samme indsendelse. `process-event` sender det og rundenummeret videre til RPC'en.
@@ -316,6 +318,24 @@ Alle migrationer anvendes kun med `apply_migration` efter en særskilt ejergodke
 bruges. Før merge af en migrations-PR kontrolleres versionsnummeret mod en frisk `origin/main` for
 kollisioner med parallelle sessioner.
 
+**Status for trin 1 og 1b efter H5 (2026-10-31, [D-273](decisions/D-273.md)):** trin 1 og 1b bygges
+som nye `_v2`-funktioner i stedet for `CREATE OR REPLACE` af de eksisterende (H5, punkt 5), og
+aktiveringen sker ved `REVOKE EXECUTE` på de gamle funktioner (M2). Inddelingen i PR'er er et forslag,
+ikke en ejerbeslutning:
+
+| PR | Indhold | Status |
+|---|---|---|
+| PR 1 | Migration `20261030211428` (forsøgslog, rundevagt, `_v2`) | PR #488 merget, ikke anvendt i produktion |
+| PR 2 | `get-next-question` udleverer `round_no` | PR #494, draft, ikke deployet |
+| PR 3 | `process-event` sender `round_no` og `submission_id` til `_v2` | ikke startet |
+| PR 4 | `app.js`: `submission_id`, låst genforsøg, sessionStorage pr. elev | ikke startet |
+| PR 5 | Aktivering (M2) | ikke startet; særskilt ejer-GO |
+| PR 6 | Mulig oprydning af den gamle gren i `process-event` | ikke defineret, ikke godkendt |
+
+Rollback følger D-273: før aktivering kan `get-next-question` rulles tilbage til version 180, hvis
+den samlede kontrakt tillader det; efter aktivering rulles klient, Edge-funktioner og database ikke
+tilbage hver for sig, og forward-fix er udgangspunktet.
+
 ### Trin 0 — Design og beslutning (denne PR)
 - **Filer:** dette dokument, `docs/decisions/D-266.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`.
 - **Test:** `tests/unit/decision-register.test.mjs`, `git diff --check`, CI-klassificering `docs-md`.
@@ -355,8 +375,9 @@ kollisioner med parallelle sessioner.
   sammen med trin 1b.
 
 ### Trin 1b — Beskyttelse mod gamle indsendelser (lag 2, §2.4) — obligatorisk
-- **Bindende betingelse:** trin 1 anvendes ikke i produktion, før trin 1b er godkendt og klar. Den
-  konkrete mekanisme kræver ejerens godkendelse (H5, §9.2).
+- **Bindende betingelse:** trin 1 anvendes ikke i produktion, før trin 1b er godkendt og klar.
+  Mekanismen er afgjort (H5, [D-273](decisions/D-273.md)); anvendelse, deploys, merge og aktivering
+  kræver stadig hver sit GO.
 - **Filer (med den anbefalede mekanisme):** `app.js` (`submission_id` pr. bevidst indsendelse, genbrugt
   ved genforsøg), `supabase/functions/get-next-question` (returnerer rundenummer),
   `supabase/functions/process-event` (sender begge videre), migration med `submission_id uuid UNIQUE`
@@ -364,7 +385,9 @@ kollisioner med parallelle sessioner.
 - **Udrulning uden hul:** frontend og Edge-funktioner, der sender rundeidentiteten, udrulles først.
   Når forsøgsloggen anvendes (trin 2), afviser RPC'erne kald uden gyldig rundeidentitet. En fane med
   en gammel version af siden får så en fejl og skal genindlæses i stedet for at få et svar
-  registreret i en forkert runde. Hvordan eleven præsenteres for det, afgøres sammen med H5.
+  registreret i en forkert runde. H5 afgør, at håndhævelsen sker i databasen ved et kontrolleret
+  skift uden for undervisningstiden (M2, D-273); hvordan eleven præsenteres for fejlen, afgøres i
+  PR 3 og PR 4.
 - **Test:** samme `submission_id` to gange giver ét forsøg og samme svar; et tabt svar fra serveren
   efterfulgt af et genforsøg giver ingen ny registrering; en indsendelse med et forældet rundenummer
   efter `request_repeat_*` afvises uden forsøg og uden ændring af XP, coins, streak, quests og
@@ -373,7 +396,8 @@ kollisioner med parallelle sessioner.
 - **Risiko:** ændring af klientkontrakten og to Edge-deploys.
 - **Rollback:** tidligere Edge-versioner og `app.js` sammen med rollback af trin 1 (forsøgsloggen
   tages ud af brug samtidig, så loggen aldrig skrives uden beskyttelsen).
-- **Godkendelse:** mekanismen (H5), migration, anvendelse, Edge-deploy og frontend-merge hver for sig.
+- **Godkendelse:** mekanismen er afgjort (H5, D-273); migration, anvendelse, Edge-deploy,
+  frontend-merge og aktivering hver for sig.
 
 ### Trin 2 — Anvendelse i produktion (trin 1 og 1b samlet)
 - Ét `apply_migration` med preflight (ledger, hashes, rettigheder) og postflight (hashes, rettigheder,
@@ -428,12 +452,12 @@ kollisioner med parallelle sessioner.
 6. **Implementering i afgrænsede trin** med særskilt godkendelse før hver produktionsændring.
 7. **Beskyttelse mod gamle indsendelser er en bindende implementeringsbetingelse:** en indsendelse fra
    en tidligere runde må aldrig accepteres i en ny runde, og et teknisk genforsøg må aldrig give en ny
-   registrering eller udbetaling (§2.4). Mekanismen er ikke besluttet (H5).
+   registrering eller udbetaling (§2.4). Mekanismen blev afgjort samme dag (H5, §9.3).
 
 Desuden besluttet: backup og gendannelse er et særskilt driftsspørgsmål, og den mulige dobbelte XP
 ved lærerbedømmelse er et selvstændigt problem, der ikke rettes i denne opgave.
 
-### 9.2 Åbne beslutninger (ikke godkendt; anbefalinger)
+### 9.2 Åbne beslutninger (H1–H4 ikke godkendt; anbefalinger)
 
 | | Spørgsmål | Anbefaling | Afgøres før |
 |---|---|---|---|
@@ -441,8 +465,14 @@ ved lærerbedømmelse er et selvstændigt problem, der ikke rettes i denne opgav
 | H2 | Arkivering og slettebegrænsning for spørgsmål | Spørgsmål, som elever har svaret på, arkiveres med `is_active = false` og slettes ikke; `question_instances_question_id_fkey` ændres til `ON DELETE RESTRICT` | Trin 6 |
 | H3 | Senere ændringer af lærerstatistik og niveaumotor, så de læser fra loggen | Hver for sig, efter observation (trin 3) og med beregnede før- og eftertal (§6) | Trin 7 |
 | H4 | Hvad er en ny indsendelse af et langt svar, før læreren har bedømt det? | Hver indsendelse er sit eget forsøg i samme runde, med et løbenummer | Trin 4 |
-| H5 | Den konkrete mekanisme for den obligatoriske beskyttelse mod gamle indsendelser (§2.4), herunder hvordan en gammel fane håndteres | Serverstyret rundeidentitet kombineret med en stabil idempotensnøgle (`submission_id`), som beskrevet i §2.4 | Trin 1b |
 
 Anbefalet rækkefølge, ikke besluttet: trin 1 og 1b forberedes og anvendes samlet (trin 2), derefter
 trin 3; trin 6 kan tages uafhængigt; trin 5 efter
 det særskilte XP-problem.
+
+### 9.3 H5 afgjort 2026-10-30
+
+Ejeren godkendte H5's tekniske retning med ni punkter, herunder variant C (`round_no = repeat_count + 1`,
+`submission_id` og en databasevagt) og M2 (håndhævelse i databasen ved et kontrolleret skift uden for
+undervisningstiden). Punkterne står ordret i [D-273](decisions/D-273.md). Produktionsændringer og
+aktivering er ikke godkendt og kræver hver sit GO.
