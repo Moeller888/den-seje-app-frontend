@@ -926,26 +926,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // The rule before EVERY send: the locked submission must be stored and read back. Returns true when
-  // it may be sent; otherwise the pupil is told, and nothing is sent or graded.
+  // Before every send the locked submission is stored and read back.
+  //   * FIRST send: if that fails, nothing is sent — the pupil is told, the answer stays editable.
+  //   * a submission that has already left this page (or came back from storage after a reload): it is
+  //     sent anyway. The server may have it, and resending the SAME submission_id is the only way to
+  //     settle it and can never register it twice. Refusing would leave a "Send igen" that never sends
+  //     — for as long as the storage fails, once the stored copy is older than PENDING_MAX_AGE_MS, or
+  //     on the recovery screen, where submitAnswer() is not reachable. Only reload recovery is lost,
+  //     and that went with the storage.
   function readyToSend(record) {
     const persisted = persistAndVerify(safeSessionStorage(), record);
     if (persisted.ok) return true;
     const sentBefore = sentSubmissions.has(record.submission_id);
     logError("H5_STORAGE_UNAVAILABLE", { error: persisted.error, sent_before: sentBefore });
-    if (!sentBefore) {
-      // Never sent: there is nothing to settle. The answer stays in the controls, unlocked.
-      pendingSubmission = null;
-      clearPending(safeSessionStorage());
-      feedback.textContent = STORAGE_TEXT;
-      feedback.className = "feedback-error";
-      setAnswerControlsDisabled(false);
-      if (uiState === UI_STATES.SUBMITTING_ANSWER) setUIState(UI_STATES.AWAITING_ANSWER);
-      return false;
-    }
-    // Sent before: the server may have it. It stays locked; the pupil can try again.
-    showUncertain(() => { submitAnswer(record.answer); });
+    if (sentBefore) return true;
+    // Never sent: there is nothing to settle. The answer stays in the controls, unlocked.
+    pendingSubmission = null;
+    clearPending(safeSessionStorage());
     feedback.textContent = STORAGE_TEXT;
+    feedback.className = "feedback-error";
+    setAnswerControlsDisabled(false);
+    if (uiState === UI_STATES.SUBMITTING_ANSWER) setUIState(UI_STATES.AWAITING_ANSWER);
     return false;
   }
 

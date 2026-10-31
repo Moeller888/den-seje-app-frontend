@@ -445,3 +445,52 @@ for (const [status, body] of [[400, { error: 'Missing required fields' }], [403,
     expect(q.submitted[1].submission_id).toBe(q.submitted[0].submission_id);
   });
 }
+
+// ── A sent submission must always be re-sendable (no "Send igen" that never sends) ───────────────
+// sessionStorage only, so the Supabase session in localStorage keeps working.
+const BREAK_SESSION_STORAGE = `(() => {
+  const set = Storage.prototype.setItem, get = Storage.prototype.getItem;
+  Storage.prototype.setItem = function (k, v) { if (this === window.sessionStorage) throw new DOMException('full', 'QuotaExceededError'); return set.call(this, k, v); };
+  Storage.prototype.getItem = function (k) { if (this === window.sessionStorage) throw new DOMException('denied', 'SecurityError'); return get.call(this, k); };
+})();`;
+
+test('ON: storage fails AFTER the first send — "Send igen" still sends the same submission', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [CUT_AFTER, REPLAY] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  const pending = JSON.parse(await stored(page));
+  await page.evaluate(BREAK_SESSION_STORAGE);
+  await page.locator('#h5-retry-btn').click();
+  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  expect(q.submitted).toHaveLength(2);
+  expect(q.submitted[1]).toMatchObject({ submission_id: pending.submission_id, answer: 'Paris', round_no: 1 });
+  expect(q.registered).toHaveLength(1);
+});
+
+test('ON: a stored copy older than the 12-hour limit does not freeze "Send igen" in an open tab', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [CUT_AFTER, REPLAY] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  const first = q.submitted[0].submission_id;
+  // 13 hours later in the same tab: the stored copy no longer reads back as current.
+  await page.evaluate(() => { const real = Date.now.bind(Date); Date.now = () => real() + 13 * 3600 * 1000; });
+  await page.locator('#h5-retry-btn').click();
+  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  expect(q.submitted.map((b) => b.submission_id)).toEqual([first, first]);
+});
+
+test('ON: after a reload, storage that can be read but not written does not freeze recovery', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC, TEXT], replies: [CUT_AFTER, REPLAY] });
+  await ready(page, MC);
+  await option(page, 'Paris').click();
+  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+  const pending = JSON.parse(await stored(page));
+  // Writes fail from the next document on; reads still work, so the submission is found again.
+  await page.context().addInitScript(`(() => { const set = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k, v) { if (this === window.sessionStorage) throw new DOMException('full', 'QuotaExceededError'); return set.call(this, k, v); }; })();`);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#question')).toHaveText('Dit sidste svar er registreret: rigtigt! 🎯', { timeout: 20000 });
+  expect(q.submitted[1]).toMatchObject({ submission_id: pending.submission_id, answer: 'Paris', round_no: 1 });
+});
