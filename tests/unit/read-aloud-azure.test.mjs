@@ -4,11 +4,11 @@
 import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import {
-  canonicalTtsRequest, normalizeTtsText, ttsKey, ttsClipPaths, TTS_VOICES, TTS_LIMITS, TTS_CACHE_VERSION,
+  canonicalTtsRequest, normalizeTtsText, ttsKey, ttsClipPaths, TTS_VOICES, TTS_LIMITS, TTS_CACHE_VERSION, TTS_BLANK,
 } from "../../js/read-aloud/tts-key.js";
 import { createClipService, validateTtsBody } from "../../worker/clip-service.js";
 import {
-  TtsError, buildSsml, synthesizeAzure, parseBinaryFrame, wordBoundariesFrom,
+  TtsError, buildSsml, synthesizeAzure, parseBinaryFrame, wordBoundariesFrom, BLANK_BREAK_MS,
 } from "../../worker/azure-tts.js";
 import { authenticateTtsRequest, createSupabaseVerifier, safeEqual } from "../../worker/auth.js";
 import worker, { TtsClipCoordinator } from "../../worker/index.js";
@@ -292,6 +292,28 @@ test("azure protocol: frame helpers", () => {
   assert.deepEqual(Array.from(parsed.audio), [9]);
   assert.deepEqual(wordBoundariesFrom("not json"), []);
   assert.ok(buildSsml({ segments: [{ voice: "da-DK-ChristelNeural", text: "a & b" }] }).includes("a &amp; b"));
+});
+
+test("gap-fill blank: underscores become one pause, never the word \"underscore\"", async () => {
+  assert.equal(TTS_BLANK, "…");
+  assert.equal(normalizeTtsText("You ___ my friend."), "You … my friend.");
+  assert.equal(normalizeTtsText("You______my friend."), "You … my friend.");
+  assert.equal(normalizeTtsText("Han __ og hun ___."), "Han … og hun … .");
+  assert.equal(normalizeTtsText("snake_case"), "snake_case");
+  assert.equal(normalizeTtsText(normalizeTtsText("You ___ my friend.")), "You … my friend.");
+
+  const blank = canonicalTtsRequest("Hvilket ord mangler?", [
+    { text: "Hvilket ord mangler? ", lang: "da-DK" }, { text: "'You ___ my friend.'", lang: "en-GB" },
+  ]);
+  assert.equal(blank.ok, true);
+  const ssml = buildSsml(blank.value);
+  assert.ok(ssml.includes("&apos;You <break time=\"" + BLANK_BREAK_MS + "ms\"/> my friend.&apos;"));
+  assert.ok(!ssml.includes("_"));
+  assert.ok(!ssml.includes(TTS_BLANK));
+
+  // A clip cached before the rule ("underscore") has a different key and is never served again.
+  const before = { v: blank.value.v, format: blank.value.format, segments: blank.value.segments.map((r) => ({ ...r, text: r.text.replace(TTS_BLANK, "___") })) };
+  assert.notEqual(await ttsKey(blank.value), await ttsKey(before));
 });
 
 // ── Worker: authentication ───────────────────────────────────────────────────
