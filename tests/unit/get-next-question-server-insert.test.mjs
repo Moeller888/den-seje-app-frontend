@@ -76,7 +76,8 @@ test("the instance is inserted on the admin client with exactly the server-side 
       mastery_snapshot: 1,
       next_review_at: ASSIGNMENT.nowIso,
     } },
-    { step: "select", columns: "id" },
+    // repeat_count is read back for round_no (D-266, H5 PR 2); it is never written (next test).
+    { step: "select", columns: "id, repeat_count" },
     { step: "limit", count: 1 },
   ]);
 });

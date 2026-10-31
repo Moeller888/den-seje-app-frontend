@@ -69,6 +69,7 @@ export async function insertQuestionInstance(
       mastery_snapshot: 1,
       next_review_at: assignment.nowIso,
     })
-    .select("id")
+    // repeat_count is read back, not assumed: get-next-question derives round_no from it (D-266, H5).
+    .select("id, repeat_count")
     .limit(1);
 }

@@ -95,11 +95,11 @@ function scenario(s) {
     const has = (op, ...a) => ops.some((o) => o[0] === op && a.every((x, i) => o[i + 1] === x));
     if (kind === "from" && name === "profiles") return { data: { active_domains: ["vikings"], selected_grade: 7 }, error: null };
     if (kind === "from" && name === "question_instances") {
-      if (ops.some((o) => o[0] === "insert")) return { data: [{ id: "new-inst" }], error: null };
+      if (ops.some((o) => o[0] === "insert")) return { data: [{ id: "new-inst", repeat_count: 0 }], error: null };
       if (has("eq", "answered", false)) {
-        return { data: s === "due" ? [{ id: "due-1", next_review_at: "t", questions: { ...MCQ("dq"), is_active: true } }] : [], error: null };
+        return { data: s === "due" ? [{ id: "due-1", repeat_count: 0, next_review_at: "t", questions: { ...MCQ("dq"), is_active: true } }] : [], error: null };
       }
-      if (has("eq", "id", "rep-1")) return { data: [{ id: "rep-1", questions: { ...MCQ("rq"), is_active: true } }], error: null };
+      if (has("eq", "id", "rep-1")) return { data: [{ id: "rep-1", repeat_count: 1, questions: { ...MCQ("rq"), is_active: true } }], error: null };
       return { data: [], error: null };
     }
     if (kind === "rpc") {
@@ -128,11 +128,15 @@ const normalise = (x) => JSON.parse(JSON.stringify(x).replace(/\d{4}-\d\d-\d\dT[
 const show = (x) => (typeof x === "string" ? x : x instanceof Error ? x.message : JSON.stringify(x));
 
 // One request: status, body, every backend call (with arguments) and every log line.
-export async function runCase(handler, { mix, level, subject, scenario: s }) {
+// Optional: patch(kind, name, ops, result) → result replaces one backend answer (the rows carry
+// repeat_count as the database does, so versions that ignore it are unaffected), and extraBody adds
+// fields to the request body (what a manipulated client could send).
+export async function runCase(handler, { mix, level, subject, scenario: s, patch, extraBody }) {
   setEnv("QUESTION_MIX_ENGINE", mix);
   setEnv("LEVEL_ENGINE", level);
   globalThis.__gnqTrace = [];
-  globalThis.__gnqScenario = scenario(s);
+  const base = scenario(s);
+  globalThis.__gnqScenario = patch ? (kind, name, ops) => patch(kind, name, ops, base(kind, name, ops)) : base;
   const logs = [];
   const { log, error } = console;
   console.log = (...a) => { logs.push("LOG " + a.map(show).join(" ")); };
@@ -141,7 +145,7 @@ export async function runCase(handler, { mix, level, subject, scenario: s }) {
     const res = await handler(new Request("http://stub/", {
       method: "POST",
       headers: { Authorization: "Bearer pupil" },
-      body: JSON.stringify({ subject, session_context: { wave_phase: "challenge" } }),
+      body: JSON.stringify({ subject, session_context: { wave_phase: "challenge" }, ...extraBody }),
     }));
     return normalise({ status: res.status, body: await res.text(), calls: globalThis.__gnqTrace, logs });
   } finally {
