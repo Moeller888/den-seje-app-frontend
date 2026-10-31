@@ -393,9 +393,13 @@ test("the reviewed spelling migration is the only later definition of the repeat
   // of the complete function byte-for-byte, including all reward and idempotency logic.
   // D-211 (owner decision 2026-10-26) changes ONLY the repeat award to 1 coin + 2 XP; its runtime
   // suite (repeat-answer-coin-reward-migration-run) proves that and pins everything else.
+  // D-280 changes ONLY the alias count (two or more reviewed versions) and, on reopen, sets an MC key
+  // to content.correct; its runtime suite (mc-length-cue-top10-migration-run) proves the rewards,
+  // the repeat amount and the reopen order unchanged.
   assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
     ["20261018143726_fix_danish_question_bank_text.sql",
-     "20261027120000_repeat_answer_coin_reward.sql"]);
+     "20261027120000_repeat_answer_coin_reward.sql",
+     "20261031194700_mc_length_cue_top10.sql"]);
 });
 
 test("the migration version is not shared with any other migration", () => {

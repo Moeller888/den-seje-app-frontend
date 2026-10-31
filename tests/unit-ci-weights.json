@@ -126,6 +126,7 @@
   "kloeft.test.mjs": 0.1,
   "mc-answer-key.test.mjs": 0.4,
   "mc-correct-answer-fix-migration-run.test.mjs": 17.1,
+  "mc-length-cue-top10-migration-run.test.mjs": 50,
   "mc-length-cue.test.mjs": 0.1,
   "migration-workflow-policy.test.mjs": 0.2,
   "naal.test.mjs": 0.2,
