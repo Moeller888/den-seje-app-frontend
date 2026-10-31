@@ -385,7 +385,16 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Tee print family, approval pack — D-272 (owner approval PENDING: 0 of 18; no call, no integration).**
+- **Tee print family, owner approval and runtime layers — D-274 (16 of 18 approved by the owner; layers staged PRIVATELY, not published; no runtime change).**
+  - **Approved.** The owner approved all 16 D-272 candidates; TP-FOX-COR and TP-FOX-MUS are not covered.
+    The approval file `tp-owner-approval-v1.json` is the only list a build reads.
+  - **Layers.** `build-northstar-tee-print-layers.mjs` rebuilds each approved combination under the D-270 lock.
+    - It writes only the 32 tee layers (top-body, sleeves) as lossless WebP to a private staging directory.
+    - Each layer is checked against D-271's record and the cream tee's alpha.
+    - Each combination composes byte-identically through the browser's `northstarCompose`.
+    - The skin shadow is the published cream tee's, byte-identical.
+  - **Missing.** The owner's permission to publish the 32 listed files under `assets/avatar-northstar/` (D-242's exception covers only its 31). See `docs/decisions/D-274.md`.
+- **Tee print family, approval pack — D-272 (owner decision recorded in D-274: 16 of 18 approved; no call, no integration).**
   - **Candidates.** 16 advisory candidates (ChatGPT's selection, not an owner approval) with stable IDs `TP-<FOX|TEA|SHD>-<CRM|HTH|NAV|COR|FOR|MUS>`.
     The 2 non-candidates are shown apart with their reason: TP-FOX-COR and TP-FOX-MUS.
   - **Inputs.** D-271's 18 results are kept unchanged; the candidate fixture is `tp-approval-candidates-v1.json`.
