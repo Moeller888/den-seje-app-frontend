@@ -420,9 +420,9 @@ test("the correction without a typed answer names only the spelling", () => {
   }
 });
 
-test("app.js keeps the correction only for \"stav til\" — other reflections are unchanged", () => {
+test("app.js keeps the correction only for \"stav til\" and Match par — other reflections are unchanged", () => {
   const app = read("../../app.js");
-  assert.match(app, /currentRenderer === ANSWER_RENDERERS\.SHORT_TEXT\s*\?\s*shortTextCorrection\(data\.correct_answer, userAnswer\)\s*:\s*null/);
+  assert.match(app, /currentRenderer === ANSWER_RENDERERS\.SHORT_TEXT\s*\?\s*shortTextCorrection\(data\.correct_answer, userAnswer\)\s*:\s*currentRenderer === ANSWER_RENDERERS\.MATCH_PAIRS && currentMatchControl\s*\?\s*matchCorrectionText\(currentMatchControl\.layout, data\.correct_answer\)\s*:\s*null/);
   assert.match(app, /enterReflectionState\(reviewText, correction\)/);
   assert.match(app, /feedback\.textContent = leadText \?\? "";/);
 });

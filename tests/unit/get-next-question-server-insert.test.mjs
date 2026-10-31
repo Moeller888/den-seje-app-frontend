@@ -157,6 +157,9 @@ test("the admin client is used only for the instance insert and the server-only 
   assert.match(INDEX_CODE, /await insertQuestionInstance\(makeAdminClient, \{/);
   const adminUses = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.(from|rpc)\(\s*"([a-z_]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
   assert.deepEqual(adminUses, [
+    // Match par only (PR #377): the instance key of a "match" row, read on its own so every other
+    // format makes the release-gated reads unchanged (pinned in match-pairs.test.mjs).
+    "from:question_instances",
     "from:question_instances",
     "rpc:get_unserved_questions_for_student",
     // QUESTION_MIX_ENGINE "v2" only: the same repeat with exhaustion judged on servable formats
@@ -178,7 +181,7 @@ test("the admin client is used only for the instance insert and the server-only 
   // pinned in level-flow.test.mjs.
   assert.equal((INDEX_CODE.match(/await loadLevelPlan\(admin\(\) as unknown as LevelReadClient, \{\s*studentId: student_id,/g) ?? []).length, 1,
     "the level engine call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 9, "no other admin() use");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 10, "no other admin() use (the 10th is Match par's key read)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {

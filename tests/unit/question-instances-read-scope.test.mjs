@@ -290,6 +290,13 @@ const REVIEWED_LATER_READERS = {
     "(counts, a percentage, a trend), never an instance column. No policy, RLS, table privilege or " +
     "other function on question_instances is touched (proven in " +
     "teacher-stats-from-answers-migration-run.test.mjs).",
+  "20261029170000_mc_grading_compensation.sql":
+    "a one-off, owner-run data fix (D-254) in an anonymous DO block — no function, nothing a client can " +
+    "call. It reads question_instances only to resolve two attempts of one question by SHA-256 of their id " +
+    "(id, student_id) and returns nothing to anyone. Its writes go to student_progress and the new table " +
+    "progress_corrections (RLS on, no policies, REVOKE ALL from PUBLIC, anon, authenticated and " +
+    "service_role). No policy, RLS, table privilege or row of question_instances is touched (proven in " +
+    "mc-grading-compensation-migration-run.test.mjs).",
   "20261030211428_question_attempts_v2.sql":
     "process_question_attempt_v2 and process_text_answer_v2 (D-266, H5) read one instance matched on " +
     "BOTH id and the given student_id (SELECT … FOR UPDATE) and return only that pupil's own result " +
@@ -427,6 +434,7 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261027120000_repeat_answer_coin_reward.sql",
      "20261029120000_difficulty_scale_b.sql",
      "20261029150000_teacher_stats_from_answers.sql",
+     "20261029170000_mc_grading_compensation.sql",
      "20261030211428_question_attempts_v2.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges

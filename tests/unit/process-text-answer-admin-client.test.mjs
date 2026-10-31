@@ -207,10 +207,15 @@ test("the deploy diagnostic logs only serviceKeySource(), never a key", () => {
 });
 
 test("MC / number call process_question_attempt via the admin client with server-side values", () => {
-  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,\s*\{\s*studentId:\s+user\.id,\s*instanceId:\s+question_instance_id,\s*answer,\s*questionShownAt:\s+question_shown_at \?\? Date\.now\(\),\s*\}\s*\)/);
+  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,\s*\{\s*studentId:\s+user\.id,\s*instanceId:\s+question_instance_id,\s*answer:\s+gradedAnswer,\s*questionShownAt:\s+question_shown_at \?\? Date\.now\(\),\s*\}\s*\)/);
   assert.equal(/supabase\s*\.rpc\(\s*["']process_question_attempt["']/.test(INDEX_CODE), false,
     "process_question_attempt is never called on the user client");
   assert.equal(/callProcessTextAnswer/.test(PATH_MC), false);
+  // gradedAnswer is the pupil's answer, except for Match par, where it is only the shape-checked
+  // canonical form of the same connections (_shared/match-pairs.ts) — never a server-chosen value.
+  assert.match(INDEX_CODE, /let gradedAnswer = answer\r?\n/);
+  assert.equal((INDEX_CODE.match(/gradedAnswer = /g) ?? []).length, 2, "declared once, reassigned once");
+  assert.match(INDEX_CODE, /if \(format === "match"\) \{\s*const canonical = canonicalMatchAnswer\(answer, correct_answer\)\s*if \(canonical === null\) \{[\s\S]*?status: 400[\s\S]*?\}\s*gradedAnswer = canonical\s*\}/);
 });
 
 test("a key failure on the MC / number path is a visible 500 — no user-client fallback", () => {

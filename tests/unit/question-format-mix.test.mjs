@@ -38,11 +38,11 @@ const mapAnswerFormat = (() => {
 })();
 
 // ── 1. Interaction kinds ─────────────────────────────────────────────────────────────────────────
-test("registry: exactly one base kind (choice); Match par is registered but NOT servable", () => {
+test("registry: exactly one base kind (choice); Match par has its renderer but is NOT servable", () => {
   assert.equal(BASE_KIND, "choice");
   assert.deepEqual(KIND_ORDER, ["choice", "short_text", "long_text", "number", "force_text", "match_pairs"]);
   assert.equal(INTERACTION_KINDS.match_pairs.servable, false);
-  assert.equal(INTERACTION_KINDS.match_pairs.renderer, null);
+  assert.equal(INTERACTION_KINDS.match_pairs.renderer, "match_pairs");
   for (const k of KIND_ORDER.filter((k) => k !== "match_pairs")) assert.equal(INTERACTION_KINDS[k].servable, true, k);
   assert.equal(isServableKind("match_pairs"), false);
   assert.equal(isServableKind(null), false);
@@ -475,7 +475,8 @@ test("index.ts: shadow serves v1; a shadow failure is logged and never changes t
 test("index.ts: both engines feed the same insert loop, public DTO and answer-key path", () => {
   const loop = INDEX_CODE.slice(INDEX_CODE.indexOf("for (const q of sortedQuestions)"));
   assert.match(loop, /normalized = normalizeContent\(q\.content, format\);/);
-  assert.match(loop, /pub = toPublicQuestion\(q\.content, format, q\.metadata\);/);
+  // The fourth argument is the instance key; only Match par reads it, to lay out its shuffled column.
+  assert.match(loop, /pub = toPublicQuestion\(q\.content, format, q\.metadata, normalized\.correct\);/);
   assert.match(loop, /correctAnswer: normalized\.correct,/);
   assert.match(INDEX_CODE, /content: inserted\.pub\.content,/);
   // The due (spaced repetition / interrupted request) step still runs before any new question.

@@ -8,6 +8,7 @@ import { sortByWave } from "./wave-order.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
 import { servableWireFormat } from "../_shared/interaction-kinds.ts";
+import { createMatchKey, parseMatchPairs } from "../_shared/match-pairs.ts";
 import { chooseSelectionRoute, loadLevelPlan, resolveLevelEngine, type LevelReadClient } from "./level-flow.ts";
 
 const corsHeaders = {
@@ -70,8 +71,18 @@ function normalizeContent(raw: any, answer_format: string) {
     return { question, options, correct };
   }
 
+  if (answer_format === "match") {
+    // Match par: the key is this instance's shuffle of the right column, drawn here, once, and stored
+    // as correct_answer (../_shared/match-pairs.ts). content.correct is not used.
+    return { question, correct: createMatchKey(parseMatchPairs(raw).length) };
+  }
+
   return { question, correct };
 }
+
+// A failed read of a Match par instance key is a backend error, not bad content: it must reach the outer
+// catch as a visible 500 instead of being skipped like a row the client cannot render.
+class InstanceKeyReadError extends Error {}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -151,6 +162,24 @@ serve(async (req) => {
     const wireFormat = (row: { answer_format?: unknown; answer_type?: unknown; content?: unknown }): string | null =>
       mixEngine === "v2" ? servableWireFormat(row) : mapAnswerFormat(row.answer_format as string | null);
 
+    // Match par only: the instance key (question_instances.correct_answer) lays out the shuffled right
+    // column (../_shared/match-pairs.ts). It is read here, on the backend client, scoped to the verified
+    // student and ONLY for a "match" row — every other format makes exactly the reads it made before
+    // (release gate, docs/operations/level-engine-rollout.md §3.1). The key is never put into a response.
+    // No row → null → toPublicQuestion throws → the row is skipped as unrenderable.
+    const matchInstanceKey = async (format: string, instanceId: string): Promise<unknown> => {
+      if (format !== "match") return undefined;
+      const { data: keyRows, error: keyError } = await admin()
+        .from("question_instances")
+        .select("correct_answer")
+        .eq("id", instanceId)
+        .eq("student_id", student_id)
+        .limit(1);
+      if (keyError) throw new InstanceKeyReadError(`Match key read failed for ${instanceId}: ${keyError.message}`);
+      const keyRow = Array.isArray(keyRows) && keyRows.length > 0 ? keyRows[0] : null;
+      return keyRow ? keyRow.correct_answer : null;
+    };
+
     // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
     // Due instances are served regardless of grade filter (backwards compatible).
     // Read through the backend client, scoped to the verified student: the embedded question carries
@@ -199,7 +228,8 @@ serve(async (req) => {
       try {
         const format = wireFormat(q);
         if (format === null) throw new Error(`Unservable format: ${q.answer_format}`);
-        const pub = toPublicQuestion(q.content, format, q.metadata);
+        const instanceKey = await matchInstanceKey(format, instance.id);
+        const pub = toPublicQuestion(q.content, format, q.metadata, instanceKey);
 
         return new Response(
           JSON.stringify({
@@ -217,6 +247,7 @@ serve(async (req) => {
           }
         );
       } catch (e) {
+        if (e instanceof InstanceKeyReadError) throw e;
         console.error("Skipping due instance with bad content:", instance.id, e);
       }
     }
@@ -320,7 +351,7 @@ serve(async (req) => {
         if (resolved === null) throw new Error(`Unservable format: ${q.answer_format}`);
         format = resolved;
         normalized = normalizeContent(q.content, format);
-        pub = toPublicQuestion(q.content, format, q.metadata);
+        pub = toPublicQuestion(q.content, format, q.metadata, normalized.correct);
       } catch (e) {
         console.error("Skipping question with bad content:", q.id, e);
         continue;
@@ -428,7 +459,8 @@ serve(async (req) => {
             try {
               const format = wireFormat(rq);
               if (format === null) throw new Error(`Unservable format: ${rq.answer_format}`);
-              const pub = toPublicQuestion(rq.content, format, rq.metadata);
+              const instanceKey = await matchInstanceKey(format, repeatRow.id);
+              const pub = toPublicQuestion(rq.content, format, rq.metadata, instanceKey);
 
               return new Response(
                 JSON.stringify({
@@ -447,6 +479,7 @@ serve(async (req) => {
                 }
               );
             } catch (e) {
+              if (e instanceof InstanceKeyReadError) throw e;
               // Bad content on the repeat candidate: fall through to no_questions rather than
               // serving something the client cannot render. The instance stays reopened, and the
               // DUE step picks it up next time under the same guard.

@@ -11,6 +11,8 @@
 // serves main's frontend until a change is merged, so app.js and js/answer-input.js are served from
 // this checkout — and so is index.html, whose #feedback / #review-feedback live regions are part of
 // the change. After merge the live files are the same bytes, so the overlay changes nothing.
+// Every module app.js imports that may be new in the checkout is overlaid too: a module that is not
+// live yet (js/match-pairs.js before Match par is merged) would otherwise 404 and stop app.js loading.
 
 import { test, expect } from '@playwright/test';
 import * as dotenv from 'dotenv';
@@ -27,6 +29,8 @@ const LOCAL_FRONTEND: Record<string, string> = {
   '/index.html': path.join(REPO, 'index.html'),
   '/app.js': path.join(REPO, 'app.js'),
   '/js/answer-input.js': path.join(REPO, 'js', 'answer-input.js'),
+  '/js/match-pairs.js': path.join(REPO, 'js', 'match-pairs.js'),
+  '/css/match-pairs.css': path.join(REPO, 'css', 'match-pairs.css'),
 };
 
 const CORS = {
@@ -70,7 +74,8 @@ async function openStavTil(page: any, replies: Reply[], question: unknown = FIXT
     await route.fulfill({
       status: 200,
       headers: {
-        'content-type': file.endsWith('.html') ? 'text/html; charset=utf-8' : 'text/javascript; charset=utf-8',
+        'content-type': file.endsWith('.html') ? 'text/html; charset=utf-8'
+          : file.endsWith('.css') ? 'text/css; charset=utf-8' : 'text/javascript; charset=utf-8',
         'cache-control': 'no-store',
       },
       body: readFileSync(file, 'utf8'),

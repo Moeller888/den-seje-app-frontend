@@ -83,7 +83,24 @@ export const INSTANCES = Object.freeze({
   "long-1":    { student_id: STUDENT, correct_answer: null, questions: q("text", "long") },
   "nometa-1":  { student_id: STUDENT, correct_answer: "a", questions: { answer_format: "mc", answer_type: "short", content: null, metadata: null } },
   "foreign-1": { student_id: "stu-2", correct_answer: "a", questions: q("mc", "short") },
+  // Match par (#377): 2–6 pairs; the key is the instance's shuffle of the right column.
+  ...Object.fromEntries(Object.entries(MATCH_KEYS()).map(([n, key]) => [`match-${n}`, {
+    student_id: STUDENT, correct_answer: key,
+    questions: q("match", "short", { content: { question: "Forbind", pairs: Array.from({ length: Number(n) }, (_, i) => ({ left: "L" + i, right: "R" + i })) } }),
+  }])),
 });
+
+// One fixed, non-identity key per pair count ("left:right display position").
+function MATCH_KEYS() {
+  return { 2: "0:1,1:0", 3: "0:2,1:0,2:1", 4: "0:3,1:2,2:0,3:1", 5: "0:4,1:0,2:3,3:1,4:2", 6: "0:5,1:3,2:1,3:0,4:4,5:2" };
+}
+export const MATCH_KEY_BY_PAIRS = Object.freeze(MATCH_KEYS());
+// The connections the browser sends for a key, as JSON ([[left, right], …]), in the given order.
+export function matchConnections(key, { reverse = false, swap = false } = {}) {
+  const pairs = key.split(",").map((p) => p.split(":").map(Number));
+  if (swap) [pairs[0][1], pairs[1][1]] = [pairs[1][1], pairs[0][1]];
+  return JSON.stringify(reverse ? pairs.reverse() : pairs);
+}
 
 const isRead = (kind, name, ops) => kind === "from" && name === "question_instances" && ops.some((o) => o[0] === "maybeSingle");
 const isUpdate = (kind, name, ops) => kind === "from" && name === "question_instances" && ops.some((o) => o[0] === "update");
@@ -205,19 +222,41 @@ export const LEGACY_CASES = Object.freeze({
   "extra unrelated fields":  { body: { question_instance_id: "mc-1", answer: "a", client_version: 7, round: 2 } },
 });
 
-export async function runLegacyCases(handler) {
+// ── Match par cases (#377, main 2d8577c): not part of version 34, which had no Match par ──────────
+// Legacy requests; the browser sends its connections as a JSON string.
+const MATCH_INVALID = {
+  "too few connections":   '[[0,1]]',
+  "too many connections":  '[[0,1],[1,0],[1,1]]',
+  "index out of range":    '[[0,1],[1,2]]',
+  "negative index":        '[[0,1],[-1,0]]',
+  "duplicate left":        '[[0,1],[0,0]]',
+  "duplicate right":       '[[0,1],[1,1]]',
+  "not a pair":            '[[0,1],[1]]',
+  "not json":              "0:1,1:0",
+  "too long":              "[" + " ".repeat(200) + "]",
+};
+export const MATCH_CASES = Object.freeze({
+  ...Object.fromEntries(Object.entries(MATCH_KEY_BY_PAIRS).flatMap(([n, key]) => [
+    [`match ${n} pairs correct`, { body: { question_instance_id: `match-${n}`, answer: matchConnections(key, { reverse: true }) } }],
+    [`match ${n} pairs wrong`, { body: { question_instance_id: `match-${n}`, answer: matchConnections(key, { swap: true }) } }],
+  ])),
+  ...Object.fromEntries(Object.entries(MATCH_INVALID).map(([name, answer]) =>
+    [`match invalid: ${name}`, { body: { question_instance_id: "match-2", answer } }])),
+  "match parsed array":      { body: { question_instance_id: "match-3", answer: [[0, 2], [1, 0], [2, 1]] } },
+});
+
+async function runCases(handler, cases) {
   const out = {};
-  for (const [name, c] of Object.entries(LEGACY_CASES)) out[name] = await runCase(handler, c);
+  for (const [name, c] of Object.entries(cases)) out[name] = await runCase(handler, c);
   return out;
 }
+export const runLegacyCases = (handler) => runCases(handler, LEGACY_CASES);
+export const runMainCases = (handler) => runCases(handler, { ...LEGACY_CASES, ...MATCH_CASES });
 
-const invoked = process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
-if (invoked) {
-  const [functionsDir, out] = process.argv.slice(2);
-  if (!functionsDir || !out) { console.error("usage: process-event-harness.mjs <functions-dir> <out.json>"); process.exit(2); }
-  const handler = await loadHandler(join(resolve(functionsDir), "process-event", "index.ts"));
-  const cases = await runLegacyCases(handler);
-  writeFileSync(out, JSON.stringify({
+// The two references (H5 PR 3): version 34 as deployed, and main after #377 and #464.
+const SOURCES = {
+  v34: {
+    run: runLegacyCases,
     source: {
       version: 34,
       ezbr_sha256: "9efa541c4482b0ea593d6a3684e0bf3de0365e6b97f3c35b8137918514f0f11c",
@@ -225,7 +264,25 @@ if (invoked) {
       commit: "03f5954",
       note: "written from the 7 files deployed as process-event version 34 (read 2026-10-31), byte-identical to commit 03f5954",
     },
-    cases,
-  }, null, 2) + "\n");
+  },
+  main: {
+    run: runMainCases,
+    source: {
+      commit: "2d8577cd1303cdc2705c988f97a722caf4ea9086",
+      note: "written from process-event on main after #377 (Match par) and #464 (D-254), before H5 PR 3; NOT deployed (production runs version 34)",
+    },
+  },
+};
+
+const invoked = process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
+if (invoked) {
+  const [functionsDir, out, which = "v34"] = process.argv.slice(2);
+  if (!functionsDir || !out || !SOURCES[which]) {
+    console.error("usage: process-event-harness.mjs <functions-dir> <out.json> [v34|main]");
+    process.exit(2);
+  }
+  const handler = await loadHandler(join(resolve(functionsDir), "process-event", "index.ts"));
+  const cases = await SOURCES[which].run(handler);
+  writeFileSync(out, JSON.stringify({ source: SOURCES[which].source, cases }, null, 2) + "\n");
   console.log(`wrote ${Object.keys(cases).length} cases to ${out}`);
 }

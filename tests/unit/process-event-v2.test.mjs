@@ -12,11 +12,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { LEGACY_CASES, STUDENT, loadHandler, runCase } from "./helpers/process-event-harness.mjs";
+import {
+  LEGACY_CASES, MATCH_CASES, MATCH_KEY_BY_PAIRS, STUDENT, loadHandler, matchConnections, runCase,
+} from "./helpers/process-event-harness.mjs";
 import { answerMode, replyForV2, isRevokedLegacyRpc } from "../../supabase/functions/process-event/answer-v2.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const GOLDEN = JSON.parse(readFileSync(join(ROOT, "tests", "fixtures", "process-event-v34-parity.json"), "utf8"));
+const MAIN_GOLDEN = JSON.parse(readFileSync(join(ROOT, "tests", "fixtures", "process-event-main-parity.json"), "utf8"));
 const loaded = loadHandler(join(ROOT, "supabase", "functions", "process-event", "index.ts"));
 loaded.catch(() => {});
 
@@ -54,24 +57,58 @@ const recorded = (over = {}) => ({
   xp_awarded: 10, coins_awarded: 5, round_no: 1, ...over,
 });
 
-// ── Legacy: version 34, call for call ────────────────────────────────────────────────────────────
-test("the golden file is version 34's", () => {
+// ── Legacy: two references, kept apart ───────────────────────────────────────────────────────────
+// A. version 34, as deployed (GOLDEN, unchanged since it was written from the deployed bytes).
+// B. main 2d8577c after #377 (Match par) and #464 (D-254), before this PR (MAIN_GOLDEN; not deployed).
+// The only difference between A and B on the requests version 34 knew is #377's renamed log line on
+// the MC / number path. It is listed here, not folded into the version 34 file.
+const MAIN_CHANGES_SINCE_V34 = Object.freeze([
+  { pr: 377, field: "logs", from: "LOG FLOW: MC/NUMBER → process_question_attempt", to: "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt" },
+]);
+const applyMainChanges = (c) => ({
+  ...c,
+  logs: c.logs.map((l) => MAIN_CHANGES_SINCE_V34.find((x) => x.from === l)?.to ?? l),
+});
+const strip = ({ json, ...r }) => r;
+
+test("reference A is version 34's; reference B is main 2d8577c's", () => {
   assert.equal(GOLDEN.source.version, 34);
   assert.equal(GOLDEN.source.ezbr_sha256, "9efa541c4482b0ea593d6a3684e0bf3de0365e6b97f3c35b8137918514f0f11c");
   assert.equal(GOLDEN.source.manifest_sha256, "dbdadf81da912bf4a962e5f2937b3d147f0fc930afeb4663bb89ac2674ceb2ff");
   assert.deepEqual(Object.keys(GOLDEN.cases), Object.keys(LEGACY_CASES));
+  assert.equal(MAIN_GOLDEN.source.commit, "2d8577cd1303cdc2705c988f97a722caf4ea9086");
+  assert.deepEqual(Object.keys(MAIN_GOLDEN.cases), [...Object.keys(LEGACY_CASES), ...Object.keys(MATCH_CASES)]);
 });
 
-test("legacy requests (no round_no, no submission_id) behave exactly as version 34", async () => {
+test("A vs B: main differs from version 34 only by #377's log line on the MC / number path", () => {
+  const touched = [];
+  for (const name of Object.keys(LEGACY_CASES)) {
+    const v34 = GOLDEN.cases[name];
+    const main = MAIN_GOLDEN.cases[name];
+    assert.deepEqual(main, applyMainChanges(v34), name);
+    if (JSON.stringify(main) !== JSON.stringify(v34)) touched.push(name);
+  }
+  assert.deepEqual(touched, ["mc correct", "mc incorrect", "mc incorrect no meta", "mc misconception fails",
+    "mc review update fails", "mc rpc error", "mc rpc no data", "mc already answered", "number correct",
+    "number incorrect", "extra unrelated fields"]);
+});
+
+test("A: legacy requests behave as version 34 — status, body and every backend call — plus only the listed main change", async () => {
   for (const [name, c] of Object.entries(LEGACY_CASES)) {
-    const r = await send(c);
-    const { json, ...actual } = r;
-    assert.deepEqual(actual, GOLDEN.cases[name], name);
+    const actual = strip(await send(c));
+    assert.deepEqual(actual, applyMainChanges(GOLDEN.cases[name]), name);
+    assert.deepEqual({ ...actual, logs: null }, { ...GOLDEN.cases[name], logs: null }, `${name}: nothing but logs differs from v34`);
+  }
+});
+
+test("B: legacy and Match par requests behave exactly as main 2d8577c", async () => {
+  for (const [name, c] of Object.entries({ ...LEGACY_CASES, ...MATCH_CASES })) {
+    assert.deepEqual(strip(await send(c)), MAIN_GOLDEN.cases[name], name);
   }
 });
 
 test("the legacy path never calls a _v2 function", async () => {
-  for (const [name, c] of Object.entries(LEGACY_CASES)) {
+  for (const [name, c] of Object.entries({ ...LEGACY_CASES, ...MATCH_CASES })) {
     const r = await send(c);
     assert.ok(!rpcs(r).some((x) => x.name.endsWith("_v2")), name);
   }
@@ -338,6 +375,74 @@ test("the same submission_id with a changed answer is a conflict: no new id, no 
   assert.deepEqual(changed.json, { outcome: "submission_conflict", error: "Submission id already used" });
   assert.deepEqual(rpcs(changed).map((x) => x.ops[0][1].p_submission_id), [SUB], "one call, with the client's own id");
   assert.deepEqual(writes(changed), []);
+});
+
+// ── Match par (#377) on the H5 path: built, NOT servable; prepared only ──────────────────────────
+const MATCH_INVALID_CASES = Object.entries(MATCH_CASES).filter(([name]) => name.startsWith("match invalid:"));
+// A stand-in for the database's replay rule (instance, round and answer of the stored submission):
+// the first answer per submission_id is recorded, the same answer again is a replay, another is a conflict.
+function submissionLog() {
+  const seen = new Map();
+  return v2Returns((args) => {
+    const key = `${args.p_submission_id}`;
+    const ok = args.p_answer === MATCH_KEY_BY_PAIRS[args.p_question_instance_id.split("-")[1]];
+    const res = recorded({ status: ok ? "correct" : "incorrect", correct_answer: "k", xp_awarded: ok ? 10 : 0, coins_awarded: ok ? 5 : 0 });
+    if (!seen.has(key)) { seen.set(key, args.p_answer); return res; }
+    return seen.get(key) === args.p_answer ? { ...res, outcome: "replay" } : { outcome: "submission_conflict" };
+  });
+}
+
+test("Match par, 2–6 pairs: H5 sends _v2 exactly the canonical answer the legacy path sends process_question_attempt", async () => {
+  for (const [n, key] of Object.entries(MATCH_KEY_BY_PAIRS)) {
+    for (const [label, answer] of [["correct", matchConnections(key, { reverse: true })], ["wrong", matchConnections(key, { swap: true })]]) {
+      const instance = `match-${n}`;
+      const legacy = await send({ body: { question_instance_id: instance, answer } });
+      const h5 = await send({ body: h5Body(instance, answer), backend: submissionLog() });
+      const legacyArgs = rpcs(legacy).find((x) => x.name === "process_question_attempt").ops[0][1];
+      const v2Args = rpcs(h5).find((x) => x.name === V2.mc).ops[0][1];
+      assert.match(v2Args.p_answer, /^(\d:\d,)+\d:\d$/, `${n} ${label}: canonical, not the raw JSON`);
+      assert.equal(v2Args.p_answer, legacyArgs.p_answer, `${n} ${label}: the same string on both paths`);
+      assert.equal(v2Args.p_answer === key, label === "correct", `${n} ${label}`);
+      assert.deepEqual(rpcs(h5).map((x) => [x.client, x.name]), [["admin", V2.mc]], "no second grading path");
+      assert.equal(h5.json.status, label === "correct" ? "correct" : "incorrect");
+      assert.deepEqual(writes(h5), [], `${n} ${label}: nothing written after _v2`);
+    }
+  }
+});
+
+test("Match par: an invalid or incomplete answer is refused on the H5 path before any RPC, as on main", async () => {
+  for (const [name, c] of MATCH_INVALID_CASES) {
+    const r = await send({ body: { ...c.body, round_no: 1, submission_id: SUB }, backend: submissionLog() });
+    assert.equal(r.status, 400, name);
+    assert.equal(r.body, MAIN_GOLDEN.cases[name].body, `${name}: #377's response`);
+    assert.deepEqual(rpcs(r), [], `${name}: nothing graded, recorded or paid`);
+    assert.deepEqual(writes(r), [], name);
+    assert.doesNotMatch(r.body, /\d:\d/, `${name}: no key`);
+  }
+});
+
+test("Match par retry: the same connections in another order replay; changed connections conflict", async () => {
+  const key = MATCH_KEY_BY_PAIRS[4];
+  const backend = submissionLog();
+  const first = await send({ body: h5Body("match-4", matchConnections(key)), backend });
+  const reordered = await send({ body: h5Body("match-4", matchConnections(key, { reverse: true })), backend });
+  const changed = await send({ body: h5Body("match-4", matchConnections(key, { swap: true })), backend });
+  assert.equal(first.json.outcome, "recorded");
+  assert.equal(reordered.json.outcome, "replay", "the canonical form does not depend on the order the browser sends");
+  assert.deepEqual(rpcs(reordered)[0].ops[0][1].p_answer, rpcs(first)[0].ops[0][1].p_answer);
+  assert.equal(changed.status, 409);
+  assert.deepEqual(changed.json, { outcome: "submission_conflict", error: "Submission id already used" });
+  for (const r of [first, reordered, changed]) assert.deepEqual(writes(r), []);
+});
+
+test("Match par: a stale round and the other refusals carry no key and write nothing", async () => {
+  for (const outcome of ["stale_round", "round_closed", "submission_conflict", "not_found"]) {
+    const r = await send({ body: h5Body("match-3", matchConnections(MATCH_KEY_BY_PAIRS[3]), { round_no: 1 }), backend: v2Returns({ outcome }) });
+    assert.ok(r.status === 409 || r.status === 404, outcome);
+    assert.equal("correct_answer" in r.json, false, outcome);
+    assert.doesNotMatch(r.body, /\d:\d/, outcome);
+    assert.deepEqual(writes(r), [], outcome);
+  }
 });
 
 test("replyForV2 is the single mapping: every outcome has a fixed status", () => {
