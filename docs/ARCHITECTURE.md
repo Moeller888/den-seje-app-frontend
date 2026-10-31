@@ -453,6 +453,13 @@ the browser.
    formats the client cannot show (e.g. Match par before its renderer) gave "no questions" although
    answered questions could be repeated. All other guards are the old function's, byte for byte.
 `shadow` serves `v1` and only logs the `v2` decision (`FORMAT_MIX:`), for comparison before switching;
+each `FORMAT_MIX:` line carries `pupil`, a one-way pseudonym (first 16 hex of SHA-256 of a fixed prefix +
+the student id, `get-next-question/log-pseudonym.ts`) — no id, so the evaluation groups lines per pupil and
+leaves out test accounts by computing their pseudonyms. **The hash does NOT make the data
+anonymous** — it is pseudonymised personal data: with the student ids (which the operators who can read
+the logs also hold) every line links back to a pupil. Log access: Supabase organisation members only;
+retention: the plan's log retention (free plan, 1 day as of 2026-10-22), in eu-west-1. See the header of
+`log-pseudonym.ts`;
 it does call `advance_student_band`, i.e. it fills `student_band_state` (a server-only table) without
 changing what is served. In `v2` every path — due, new, repeat — takes the browser's `answer_format`
 from the registry (`servableWireFormat`): an unknown format is skipped and logged, never served as

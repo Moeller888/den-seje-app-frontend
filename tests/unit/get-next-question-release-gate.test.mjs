@@ -5,14 +5,16 @@
 //    backend calls with their arguments and log lines, for every QUESTION_MIX_ENGINE mode, both
 //    subjects and five situations. The v179 side is tests/fixtures/gnq-v179-parity.json, written by
 //    `node tools/edge/gnq-release.mjs golden` from 21ec9ff through the same harness.
-//    The one reviewed difference is H5 PR 2's round_no (D-266): withoutRoundNo checks it is present and
-//    right, removes exactly it, and everything else must still be identical to v179.
+//    The reviewed differences are H5 PR 2's round_no (D-266) and PR #379's pupil pseudonym in the
+//    FORMAT_MIX: log line: withoutRoundNo / withoutPupil check each is present and exactly right, remove
+//    exactly it, and everything else must still be identical to v179.
 // 2. No floating import: every non-relative import in the deployed module graph names an exact version,
 //    and supabase-js is the pinned release version.
 // 3. The candidate manifest documented in the runbook is the manifest of this tree.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
@@ -61,6 +63,29 @@ function withoutRoundNo(r, label) {
   return { ...r, body, calls };
 }
 
+// PR #379: both FORMAT_MIX: lines (shadow and v2) carry pupil = the first 16 hex of
+// SHA-256("laerlig-format-mix-log-v1:" + student_id), computed here independently of
+// ./log-pseudonym.ts for the harness pupil "stu-1". This asserts it on every FORMAT_MIX: line, that no
+// other line carries it, then removes exactly that field and nothing else. pupilLines counts the lines
+// checked, so the off-parity test can prove the check was not vacuous.
+const PUPIL = createHash("sha256").update("laerlig-format-mix-log-v1:stu-1").digest("hex").slice(0, 16);
+let pupilLines = 0;
+function withoutPupil(r, label) {
+  const logs = r.logs.map((l) => {
+    const prefix = "LOG FORMAT_MIX: ";
+    if (!l.startsWith(prefix)) {
+      assert.equal(l.includes(PUPIL) || l.includes('"pupil"'), false, `${label}: pupil outside FORMAT_MIX`);
+      return l;
+    }
+    const parsed = JSON.parse(l.slice(prefix.length));
+    assert.equal(parsed.pupil, PUPIL, `${label}: FORMAT_MIX pupil`);
+    delete parsed.pupil;
+    pupilLines++;
+    return prefix + JSON.stringify(parsed);
+  });
+  return { ...r, logs };
+}
+
 const touchesLevelEngine = (r) => r.calls.some((c) => B_FUNCTIONS.includes(c.name) || LEVEL_TABLES.includes(c.name))
   || r.logs.some((l) => l.includes("LEVEL_ENGINE:"));
 
@@ -79,20 +104,21 @@ test("the first request of a fresh isolate (key-source log included) matches v17
   assert.ok(warmup.logs.some((l) => l.includes("[supabase-keys]")), "the once-per-isolate log is part of the comparison");
 });
 
-test("LEVEL_ENGINE off (missing, empty, false, true, 0, off, V1, \" v1\"): identical to v179 in status, body, calls and logs, apart from round_no", async () => {
+test("LEVEL_ENGINE off (missing, empty, false, true, 0, off, V1, \" v1\"): identical to v179 in status, body, calls and logs, apart from round_no and the FORMAT_MIX pupil", async () => {
   const { handler } = await loaded;
   let runs = 0;
   for (const level of OFF_VALUES) for (const mix of MIX_VALUES) for (const subject of SUBJECTS) for (const s of SCENARIOS) {
     const c = { mix, level, subject, scenario: s };
     const got = await runCase(handler, c);
     const label = `LEVEL_ENGINE=${level === undefined ? "<missing>" : JSON.stringify(level)} ${caseKey(c)}`;
-    assert.deepEqual(withoutRoundNo(got, label), GOLDEN.cases[caseKey(c)], label);
+    assert.deepEqual(withoutPupil(withoutRoundNo(got, label), label), GOLDEN.cases[caseKey(c)], label);
     assert.ok(!got.calls.some((x) => B_FUNCTIONS.includes(x.name)), `${label}: a B function was called`);
     assert.ok(!got.calls.some((x) => LEVEL_TABLES.includes(x.name)), `${label}: a level table was read or written`);
     assert.ok(!got.logs.some((l) => l.includes("LEVEL_ENGINE:")), `${label}: level log line`);
     runs++;
   }
   assert.equal(runs, OFF_VALUES.length * MIX_VALUES.length * SUBJECTS.length * SCENARIOS.length);
+  assert.ok(pupilLines > 0, "the FORMAT_MIX pupil check ran on at least one line");
 });
 
 test("negative control: LEVEL_ENGINE=\"v1\" is caught by the same comparison (B functions called, behaviour differs)", async () => {
@@ -133,9 +159,10 @@ test("the guard itself: floating specifiers are rejected, exact ones accepted", 
 
 test("the runbook records this tree's candidate manifest, the pinned supabase-js and the rollback source", () => {
   const m = manifest(read, graphFiles(read));
-  assert.equal(m.files.length, 13);
+  assert.equal(m.files.length, 14);
   assert.ok(m.files.includes("functions/get-next-question/level-flow.ts"));
   assert.ok(m.files.includes("functions/_shared/match-pairs.ts"));
+  assert.ok(m.files.includes("functions/get-next-question/log-pseudonym.ts"));
   assert.ok(RUNBOOK.includes(m.hash), `runbook §3.1 must name the candidate manifest ${m.hash}`);
   assert.ok(RUNBOOK.includes(`supabase-js@${SUPABASE_JS_VERSION}`));
   assert.ok(RUNBOOK.includes(`\`${ROLLBACK_COMMIT}\``));
