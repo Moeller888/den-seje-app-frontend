@@ -84,6 +84,24 @@ export async function writeFeedback(slot: string, result: WriteResult, seq: numb
 }
 
 /**
+ * Save status in call order (follow-up review): every operation takes a ticket when it starts, and its
+ * result may update the shared status (`data-last-save`, "Gemt") only if no newer operation's result was
+ * shown already. A failure is always reported by its own notice.
+ */
+export function statusOrder(): { ticket(): number; isLatest(ticket: number): boolean } {
+  let issued = 0;
+  let shown = 0;
+  return {
+    ticket: () => ++issued,
+    isLatest: (ticket) => {
+      if (ticket < shown) return false;
+      shown = ticket;
+      return true;
+    },
+  };
+}
+
+/**
  * What "Fortsæt" does (TS-A03): the valid slot saved last (ISO times compare
  * as text; on a tie the earlier slot in the list wins), else the first damaged
  * slot that offers its backup, else nothing (the button is not shown).

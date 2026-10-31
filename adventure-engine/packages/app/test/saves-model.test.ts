@@ -3,7 +3,7 @@ import { Engine, saveChecksum, type SaveData } from "@adventure-engine/core";
 import { MemoryStorage, SlotManager, type WriteResult } from "@adventure-engine/save";
 import { describe, expect, it } from "vitest";
 import { demoContent } from "../src/demo/content.ts";
-import { continueChoice, corruptStatus, formatPlayTime, saveLoadable, savePlayerScene, slotInfo, writeFeedback, type SlotInfo } from "../src/model/saves.ts";
+import { continueChoice, corruptStatus, formatPlayTime, saveLoadable, savePlayerScene, slotInfo, statusOrder, writeFeedback, type SlotInfo } from "../src/model/saves.ts";
 
 /** A real save of the demo (idle right after the opening line). */
 function demoSave(clock: string): string {
@@ -142,6 +142,43 @@ describe("follow-up F5: save feedback only after a confirmed write", () => {
     commits[0]?.resolve(true);
     expect(await first).toEqual({ lastSave: "slot1:1", notice: { kind: "saved" } });
     expect(await second).toEqual({ lastSave: "slot2:failed", notice: { kind: "failed", reason: "storage" } });
+  });
+
+  it("review 3: overlapping writes to one slot each get their own result, and an older result never replaces a newer status", async () => {
+    const commits: Array<ReturnType<typeof deferred>> = [];
+    const store = Object.assign(new MemoryStorage(), {
+      transaction: (fn: () => void): Promise<boolean> => {
+        fn();
+        const d = deferred();
+        commits.push(d);
+        return d.promise;
+      },
+    });
+    const slots = new SlotManager(store, "clockmaker-demo");
+    const order = statusOrder();
+    const status: string[] = [];
+    // The game's afterWrite: a ticket per operation; only the latest result may set the shared status.
+    const track = (slot: string, r: WriteResult, seq: number): Promise<void> => {
+      const ticket = order.ticket();
+      return writeFeedback(slot, r, seq, true).then((f) => {
+        if (order.isLatest(ticket)) status.push(f.lastSave);
+      });
+    };
+    const first = track("slot1", slots.write("slot1", demoSave("2026-10-30T10:00:00.000Z")), 1);
+    const second = track("slot1", slots.write("slot1", demoSave("2026-10-30T10:01:00.000Z")), 2);
+    // The second write waits for the first: only one commit has started.
+    expect(commits).toHaveLength(1);
+    commits[0]?.resolve(false);
+    await first;
+    await Promise.resolve();
+    expect(commits).toHaveLength(2);
+    commits[1]?.resolve(true);
+    await second;
+    expect(status).toEqual(["slot1:failed", "slot1:2"]);
+    // A newer result shown first wins over an older one that settles later.
+    const late = order.ticket();
+    const newer = order.ticket();
+    expect([order.isLatest(newer), order.isLatest(late)]).toEqual([true, false]);
   });
 });
 

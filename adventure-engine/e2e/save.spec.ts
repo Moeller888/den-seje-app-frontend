@@ -219,7 +219,7 @@ test.describe("save and load (spec 05)", () => {
     expect(errors.filter((e) => e.includes("IndexedDB write failed"))).toEqual([]);
   });
 
-  test("follow-up: an intact save the content cannot load is not shown as ok; its backup is offered", async ({ page }) => {
+  test("follow-up: an intact save the content cannot load is not shown as ok; its backup is offered and the save is kept", async ({ page }) => {
     await start(page);
     await takeOilcan(page);
     await saveIn(page, "slot3");
@@ -239,6 +239,8 @@ test.describe("save and load (spec 05)", () => {
     await expect(row).toContainText("kan ikke indlæses – sikkerhedskopi kan gendannes");
     await menu(page).locator('[data-restore="slot3"]').click();
     await expect(page.locator("#notice")).toHaveText("Sikkerhedskopien er gendannet.");
+    // The replaced save was intact: it is kept byte for byte in .held, in the real store.
+    expect(await idbRecord(page, `${key}.held`)).toBe(JSON.stringify(d));
     await expect(row).toBeEnabled();
     await row.click();
     await expect(game(page)).toHaveAttribute("data-last-load", "ok:0");

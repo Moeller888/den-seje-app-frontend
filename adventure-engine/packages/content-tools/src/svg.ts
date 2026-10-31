@@ -1,92 +1,105 @@
 /**
- * SVG pictures: an allowlist check (follow-up to the review's "SVG blocklist"
- * finding; docs/release-readiness.md §17).
+ * SVG pictures: a basic static profile (follow-up to the review's "SVG
+ * blocklist" finding; docs/release-readiness.md §17, docs/decisions/phase-6.md §8).
  *
  * The file is read by a small, strict tokenizer (no dependency). Anything it
  * does not recognise is refused, so an unknown construct can never slip
- * through. Accepted:
+ * through. The profile is frozen to what plain, static pictures need — the
+ * project's 25 pictures use only shapes, paths, groups, colours and
+ * `translate`/`scale` — so a picture can never refer to anything, not even to
+ * a part of itself. Accepted:
  * - one root element `<svg>`, an optional `<?xml version="1.0"?>` declaration
  *   (encoding only UTF-8) at the very start, well-formed comments, whitespace;
- * - the elements in `ELEMENTS` (shapes, paths, text, groups, `use`,
- *   gradients, patterns, clip paths, masks, markers and filter primitives),
- *   unprefixed and spelled exactly (SVG names are case-sensitive);
- * - the attributes in `ATTRIBUTES` (geometry, paint, text and filter
- *   parameters), plus `xlink:href`, `xml:space` and `xml:lang`;
- * - `xmlns` only with the SVG namespace and `xmlns:xlink` only with the XLink
+ * - the elements in `SVG_ELEMENTS`: `svg`, `g`, `title`, `desc` and the basic
+ *   shapes (`path`, `rect`, `circle`, `ellipse`, `line`, `polyline`,
+ *   `polygon`), unprefixed and spelled exactly (SVG names are case-sensitive);
+ * - the attributes in `SVG_ATTRIBUTES`: geometry, `transform`, `id`, and fill,
+ *   stroke (without dashes) and opacity properties; `xmlns` only with the SVG
  *   namespace;
- * - a `style` attribute whose declarations are all presentation properties.
+ * - a `style` attribute whose declarations are all such presentation
+ *   properties (common in exported pictures);
+ * - functions only for colours (`rgb`, `rgba`, `hsl`, `hsla`) and transforms
+ *   (`matrix`, `translate`, `scale`, `rotate`, `skewX`, `skewY`).
  *
- * Refused, among others: `<script>`, `<style>`, `<foreignObject>`, `<image>`,
- * `<a>`, animation elements (they can rewrite `href`), event attributes
- * (`onload`, `onClick`, …), other namespaces and prefixes, DOCTYPE/ENTITY
- * declarations, CDATA sections, processing instructions such as
+ * Refused, among others: every reference — `href`, `xlink:href` and any
+ * `url(…)`, also `url(#id)` —, dashed strokes (`stroke-dasharray`,
+ * `stroke-dashoffset`), `<use>`, `<symbol>`, gradients, patterns,
+ * markers, masks, clip paths, filters and their primitives, text, `<script>`,
+ * `<style>`, `<foreignObject>`, `<image>`, `<a>`, animation elements, event
+ * attributes (`onload`, `onClick`, …), other namespaces and prefixes,
+ * DOCTYPE/ENTITY declarations, CDATA sections, processing instructions such as
  * `xml-stylesheet`, other encodings (a decoder escape could change how a
  * browser reads the bytes), control characters, comments an HTML parser would
  * end early (`<!-->`, `--` inside), unknown or unterminated character
- * references, CSS escapes (backslashes), functions other than colours,
- * transforms and `url(#id)` (image-set, cross-fade, … can load files), and
- * every reference that is not a fragment of the picture itself: `href` must be
- * `#id`, and `url(…)` must be `url(#id)`. Character
- * references are decoded and whitespace removed before these checks, so
- * `&#106;avascript:` or `java\tscript:` cannot hide; a reference beyond
- * U+10FFFF becomes U+FFFD, as in a browser, and never throws.
+ * references, CSS escapes (backslashes), and the CSS-wide and context keywords
+ * `inherit`, `unset`, `revert`, `revert-layer`, `context-fill` and
+ * `context-stroke` in presentation values. Character references are decoded
+ * before these checks, so `u&#x72;l(` or `&#106;avascript:` cannot hide; a
+ * reference beyond U+10FFFF becomes U+FFFD, as in a browser, and never throws.
+ *
+ * Whitespace: only the whitespace the parsers themselves skip counts — XML
+ * `[ \t\r\n]` in the markup, CSS `[ \t\n\r\f]` inside `style` and values.
+ * A function name is read up to its `(` across that whitespace, so `url (`
+ * is refused like `url(`.
+ *
+ * Complexity: one forward pass over the text; each attribute value is decoded
+ * once and scanned a constant number of times (function names, keywords,
+ * whitespace trimming and `style` declarations by index, no prefix scanned
+ * again): O(input size).
+ *
+ * Limits on purpose: the profile keeps out the constructs that were shown to
+ * multiply drawing work (references, reusable subgraphs, dashes). It does not
+ * bound sizes, numbers or the amount of geometry, so a large or detailed
+ * picture still costs what its geometry costs to draw.
  *
  * Pictures are shown with `<img>`/`<image>` anyway, where scripts never run;
- * the allowlist keeps the stored files clean as well.
+ * the profile keeps the stored files plain as well.
  */
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-const XLINK_NS = "http://www.w3.org/1999/xlink";
 
-const FILTER_PRIMITIVES = [
-  "feBlend", "feColorMatrix", "feComponentTransfer", "feComposite", "feConvolveMatrix", "feDiffuseLighting", "feDisplacementMap",
-  "feDistantLight", "feDropShadow", "feFlood", "feFuncA", "feFuncB", "feFuncG", "feFuncR", "feGaussianBlur", "feMerge", "feMergeNode",
-  "feMorphology", "feOffset", "fePointLight", "feSpecularLighting", "feSpotLight", "feTile", "feTurbulence",
-];
+/** Elements a picture may use: structure and the basic shapes. Nothing that refers to, copies or paints another part. */
+export const SVG_ELEMENTS: ReadonlySet<string> = new Set(["svg", "g", "title", "desc", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon"]);
 
-/** Elements a picture may use. Not here on purpose: script, style, foreignObject, image, feImage, a, animate*, set, switch, view, metadata. */
-export const SVG_ELEMENTS: ReadonlySet<string> = new Set([
-  "svg", "g", "defs", "symbol", "use", "title", "desc",
-  "path", "rect", "circle", "ellipse", "line", "polyline", "polygon",
-  "text", "tspan", "textPath",
-  "linearGradient", "radialGradient", "stop", "pattern", "clipPath", "mask", "marker", "filter",
-  ...FILTER_PRIMITIVES,
-]);
-
-/** Paint and presentation properties: allowed as attributes and inside `style`. */
+/**
+ * Paint and presentation properties: allowed as attributes and inside `style`. None of them can refer to anything here.
+ * Not here on purpose: `stroke-dasharray` and `stroke-dashoffset` (follow-up review 5: a dash of 0.001 on a few
+ * lines took seconds to draw in Chromium) — no picture of the project uses dashes.
+ */
 const PRESENTATION = [
   "fill", "fill-opacity", "fill-rule", "stroke", "stroke-width", "stroke-opacity", "stroke-linecap", "stroke-linejoin",
-  "stroke-miterlimit", "stroke-dasharray", "stroke-dashoffset", "opacity", "color", "display", "visibility", "clip-path",
-  "clip-rule", "mask", "filter", "marker-start", "marker-mid", "marker-end", "stop-color", "stop-opacity", "flood-color",
-  "flood-opacity", "lighting-color", "font-family", "font-size", "font-weight", "font-style", "font-variant", "text-anchor",
-  "dominant-baseline", "alignment-baseline", "baseline-shift", "letter-spacing", "word-spacing", "text-decoration",
-  "writing-mode", "shape-rendering", "text-rendering", "image-rendering", "color-interpolation", "color-interpolation-filters",
-  "mix-blend-mode", "isolation", "paint-order", "vector-effect", "overflow", "transform-origin",
+  "stroke-miterlimit", "opacity", "color", "display", "visibility", "shape-rendering", "vector-effect", "paint-order",
 ];
 
-/** Attributes a picture may use (case-sensitive). Event attributes (on…) are never here. */
+/** Attributes a picture may use (case-sensitive). Event attributes (on…) and references (href) are never here. */
 export const SVG_ATTRIBUTES: ReadonlySet<string> = new Set([
   ...PRESENTATION,
-  "id", "class", "style", "lang", "transform", "x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "fx", "fy", "fr",
-  "width", "height", "d", "points", "pathLength", "viewBox", "preserveAspectRatio", "version", "baseProfile", "href",
-  "offset", "gradientUnits", "gradientTransform", "spreadMethod", "patternUnits", "patternContentUnits", "patternTransform",
-  "clipPathUnits", "maskUnits", "maskContentUnits", "markerWidth", "markerHeight", "markerUnits", "refX", "refY", "orient",
-  "dx", "dy", "rotate", "textLength", "lengthAdjust", "startOffset", "method", "spacing", "side",
-  "filterUnits", "primitiveUnits", "in", "in2", "result", "stdDeviation", "mode", "type", "values", "operator",
-  "k1", "k2", "k3", "k4", "radius", "tableValues", "slope", "intercept", "amplitude", "exponent", "baseFrequency",
-  "numOctaves", "seed", "stitchTiles", "scale", "xChannelSelector", "yChannelSelector", "order", "kernelMatrix", "divisor",
-  "bias", "targetX", "targetY", "edgeMode", "kernelUnitLength", "preserveAlpha", "surfaceScale", "diffuseConstant",
-  "specularConstant", "specularExponent", "azimuth", "elevation", "z", "pointsAtX", "pointsAtY", "pointsAtZ",
-  "limitingConeAngle",
+  "id", "style", "transform", "x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "d", "points",
+  "pathLength", "viewBox", "preserveAspectRatio", "version",
 ]);
 
 const PRESENTATION_SET: ReadonlySet<string> = new Set(PRESENTATION);
-const PREFIXED_ATTRIBUTES: ReadonlySet<string> = new Set(["xlink:href", "xml:space", "xml:lang"]);
 const XML_ENTITIES: Readonly<Record<string, string>> = { lt: "<", gt: ">", amp: "&", quot: '"', apos: "'" };
 
-/** An id inside the picture: `#name`. */
-const FRAGMENT = /^#[A-Za-z_][\w.:-]*$/;
-const URL_FRAGMENT = /url\((["']?)#[A-Za-z_][\w.:-]*\1\)/iy;
+/** Control characters (also from a character reference): XML forbids most, and a browser could skip them. */
+const CONTROL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/;
+const isXmlSpace = (c: number): boolean => c === 32 || c === 9 || c === 10 || c === 13;
+const isCssSpace = (c: number): boolean => c === 32 || c === 9 || c === 10 || c === 13 || c === 12;
+
+/** Whether `s` is only XML whitespace: one scan by index. */
+function onlyXmlSpace(s: string): boolean {
+  for (let i = 0; i < s.length; i++) if (!isXmlSpace(s.charCodeAt(i))) return false;
+  return true;
+}
+
+/** CSS whitespace trimmed from both ends by index (each character looked at once, one copy). */
+function cssTrim(s: string): string {
+  let start = 0;
+  let end = s.length;
+  while (start < end && isCssSpace(s.charCodeAt(start))) start++;
+  while (end > start && isCssSpace(s.charCodeAt(end - 1))) end--;
+  return start === 0 && end === s.length ? s : s.slice(start, end);
+}
 
 const char = (cp: number): string => (Number.isInteger(cp) && cp <= 0x10ffff ? String.fromCodePoint(cp) : "�");
 
@@ -107,61 +120,92 @@ function decodeRefs(s: string): string | null {
   return bad ? null : out;
 }
 
+/** Functions a value may use: colours and transforms. `url` is not among them, nor anything that can load a file (image-set, src, …). */
+const FUNCTIONS: ReadonlySet<string> = new Set(["rgb", "rgba", "hsl", "hsla", "matrix", "translate", "scale", "rotate", "skewx", "skewy"]);
+
+/** Keywords refused in presentation values: CSS-wide keywords and context paint (they take paint from elsewhere). */
+const KEYWORDS: ReadonlySet<string> = new Set(["inherit", "unset", "revert", "revert-layer", "context-fill", "context-stroke"]);
+
+/** No allowed function name or refused keyword is longer; a longer run of letters is neither and is not copied. */
+const MAX_NAME = 14;
+const isNameChar = (c: number): boolean => (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c === 45;
+
 /**
- * Functions a value may use: colours, transforms and `url(#id)`. Anything else (image-set, cross-fade, src,
- * element, var, …) is refused, because some of them load files without `url(`.
+ * One forward scan (linear in the value): every `(` must follow a name on `FUNCTIONS` (only CSS whitespace
+ * between, as in `rotate (45)`); in a presentation value no run of name characters may be one of `KEYWORDS`.
  */
-const FUNCTIONS: ReadonlySet<string> = new Set(["url", "rgb", "rgba", "hsl", "hsla", "matrix", "translate", "scale", "rotate", "skewx", "skewy"]);
-
-/** Every function in a value must be on `FUNCTIONS`, and every `url(` must be `url(#id)`. */
-function functionProblem(compact: string): string | null {
-  for (let at = compact.indexOf("("); at >= 0; at = compact.indexOf("(", at + 1)) {
-    const name = (/[A-Za-z-]*$/.exec(compact.slice(0, at)) as RegExpExecArray)[0].toLowerCase();
-    if (!FUNCTIONS.has(name)) return `the function "${name}(" is not allowed (only colours, transforms and url(#id))`;
-    if (name !== "url") continue;
-    URL_FRAGMENT.lastIndex = at - 3;
-    if (!URL_FRAGMENT.test(compact)) return "only url(#id) references inside the picture are allowed";
+function valueProblem(value: string, presentation: boolean): string | null {
+  let runStart = -1; // start of the current run of name characters
+  let nameStart = -1; // the last complete run …
+  let nameEnd = -1; // … and where it ended; -1 once anything but whitespace followed it
+  for (let i = 0; i <= value.length; i++) {
+    const c = i < value.length ? value.charCodeAt(i) : -1;
+    if (isNameChar(c)) {
+      if (runStart < 0) runStart = i;
+      continue;
+    }
+    if (runStart >= 0) {
+      nameStart = runStart;
+      nameEnd = i;
+      runStart = -1;
+      if (presentation && i - nameStart <= MAX_NAME) {
+        const word = value.slice(nameStart, i).toLowerCase();
+        if (KEYWORDS.has(word)) return `the keyword "${word}" is not allowed (a value must not take paint or properties from elsewhere)`;
+      }
+    }
+    if (c < 0 || isCssSpace(c)) continue;
+    if (c === 40) {
+      const length = nameEnd < 0 ? 0 : nameEnd - nameStart;
+      const name = nameEnd < 0 || length > MAX_NAME ? "" : value.slice(nameStart, nameEnd).toLowerCase();
+      if (name === "url") return "url(…) is not allowed: a picture may not refer to anything";
+      if (!FUNCTIONS.has(name)) return `the function "${length > MAX_NAME ? value.slice(nameStart, nameStart + MAX_NAME) + "…" : name}(" is not allowed (only colours and transforms)`;
+    }
+    nameEnd = -1;
   }
   return null;
 }
 
-/** A `style` attribute: presentation properties only. */
+/** A `style` attribute: presentation properties only, each value checked like the attribute of that name. */
 function styleProblem(decoded: string): string | null {
-  if (/[@{}]|\/\*|expression\s*\(/i.test(decoded)) return "style attributes may only set presentation properties";
+  if (/[@{}]|\/\*/.test(decoded)) return "style attributes may only set presentation properties";
   for (const decl of decoded.split(";")) {
-    if (decl.trim() === "") continue;
     const colon = decl.indexOf(":");
-    const prop = (colon < 0 ? decl : decl.slice(0, colon)).trim().toLowerCase();
+    const prop = cssTrim(colon < 0 ? decl : decl.slice(0, colon)).toLowerCase();
+    if (colon < 0 && prop === "") continue;
     if (colon < 0 || !PRESENTATION_SET.has(prop)) return `style property "${prop}" is not allowed`;
+    const problem = valueProblem(decl.slice(colon + 1), true);
+    if (problem !== null) return problem;
   }
   return null;
 }
 
-/** One attribute: name on the allowlist, value without external or script references. */
-function attributeProblem(name: string, raw: string): string | null {
-  const value = decodeRefs(raw);
-  if (value === null) return `attribute "${name}" has an unknown or unterminated character reference`;
+/** One attribute (decoded value): name on the allowlist, value without references, scripts or foreign functions. */
+function attributeProblem(name: string, value: string): string | null {
   if (name === "xmlns") return value === SVG_NS ? null : "only the SVG namespace is allowed";
-  if (name === "xmlns:xlink") return value === XLINK_NS ? null : "xmlns:xlink must be the XLink namespace";
+  if (name === "href" || name === "xlink:href") return `"${name}" is not allowed: a picture may not refer to anything`;
   if (name.startsWith("xmlns")) return `namespace declaration "${name}" is not allowed`;
-  if (name.includes(":") ? !PREFIXED_ATTRIBUTES.has(name) : !SVG_ATTRIBUTES.has(name)) return `attribute "${name}" is not allowed`;
-  const compact = value.replace(/[\s\u0000-\u001f]+/g, "");
+  if (name.includes(":") || !SVG_ATTRIBUTES.has(name)) return `attribute "${name}" is not allowed`;
+  if (CONTROL.test(value)) return `attribute "${name}" contains a control character`;
   if (value.includes("\\")) return `attribute "${name}" contains a backslash (CSS escape)`;
-  // The whole value, only trimmed: "#a b" is not one id, and "java\tscript:" is no fragment either.
-  if (name === "href" || name === "xlink:href") return FRAGMENT.test(value.trim()) ? null : "href must point inside the picture (#id)";
-  if (/(java|vb)script:|data:|\/\//i.test(compact)) return `attribute "${name}" refers to a script or an external resource`;
-  return functionProblem(compact) ?? (name === "style" ? styleProblem(value) : null);
+  // A backstop only (the value check below decides): removing every kind of space finds more, never less.
+  const compact = value.replace(/[\s\u0000-\u001f]+/g, "");
+  if (/(java|vb)script:|data:|\/\//i.test(compact)) return `attribute "${name}" refers to a script or a resource`;
+  if (name === "style") return styleProblem(value);
+  return valueProblem(value, PRESENTATION_SET.has(name));
 }
 
 /** The only XML declaration: version 1.0, optionally UTF-8 (the text is checked as UTF-8) and standalone. */
-const XML_DECLARATION = /^<\?xml\s+version\s*=\s*(["'])1\.0\1(?:\s+encoding\s*=\s*(["'])utf-8\2)?(?:\s+standalone\s*=\s*(["'])(?:yes|no)\3)?\s*\?>$/i;
+const XML_DECLARATION = /^<\?xml[ \t\r\n]+version[ \t\r\n]*=[ \t\r\n]*(["'])1\.0\1(?:[ \t\r\n]+encoding[ \t\r\n]*=[ \t\r\n]*(["'])utf-8\2)?(?:[ \t\r\n]+standalone[ \t\r\n]*=[ \t\r\n]*(["'])(?:yes|no)\3)?[ \t\r\n]*\?>$/i;
 
-const START_TAG =/<([A-Za-z_][\w.-]*(?::[A-Za-z_][\w.-]*)?)((?:\s+[^\s=/<>"']+\s*=\s*(?:"[^"<]*"|'[^'<]*'))*)\s*(\/?)>/y;
-const ATTRIBUTE = /\s+([^\s=/<>"']+)\s*=\s*(?:"([^"<]*)"|'([^'<]*)')/g;
-const END_TAG = /<\/([A-Za-z_][\w.:-]*)\s*>/y;
+// XML whitespace only: a U+00A0 between attributes is no separator for an XML parser, so it is none here either.
+const START_TAG = /<([A-Za-z_][\w.-]*(?::[A-Za-z_][\w.-]*)?)((?:[ \t\r\n]+[^ \t\r\n=/<>"']+[ \t\r\n]*=[ \t\r\n]*(?:"[^"<]*"|'[^'<]*'))*)[ \t\r\n]*(\/?)>/y;
+const ATTRIBUTE = /[ \t\r\n]+([^ \t\r\n=/<>"']+)[ \t\r\n]*=[ \t\r\n]*(?:"([^"<]*)"|'([^'<]*)')/g;
+const END_TAG = /<\/([A-Za-z_][\w.:-]*)[ \t\r\n]*>/y;
 
-/** Why an SVG text is refused, or null when every part of it is on the allowlist. */
-export function svgProblem(text: string): string | null {
+/** Why an SVG text is refused, or null when every part of it is in the basic static profile. */
+export function svgProblem(file: string): string | null {
+  // One byte order mark at the very start is allowed (XML skips it); anywhere else it is no whitespace.
+  const text = file.startsWith("﻿") ? file.slice(1) : file;
   // XML forbids them, and an encoding escape (ISO-2022-JP ESC) could make a browser read the bytes differently.
   if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text)) return "control characters are not allowed";
   const open: string[] = [];
@@ -170,9 +214,11 @@ export function svgProblem(text: string): string | null {
   while (i < text.length) {
     const lt = text.indexOf("<", i);
     const chunk = lt < 0 ? text.slice(i) : text.slice(i, lt);
-    if (chunk.trim() !== "") {
+    if (!onlyXmlSpace(chunk)) {
       if (open.length === 0) return "text outside the <svg> element";
-      if (decodeRefs(chunk) === null) return "unknown or unterminated character reference in text";
+      const decoded = decodeRefs(chunk);
+      if (decoded === null) return "unknown or unterminated character reference in text";
+      if (CONTROL.test(decoded)) return "control character in text";
     }
     if (lt < 0) break;
     if (text.startsWith("<!--", lt)) {
@@ -187,7 +233,7 @@ export function svgProblem(text: string): string | null {
     if (text.startsWith("<?", lt)) {
       const end = text.indexOf("?>", lt);
       // Only the XML declaration, and only at the very start (xml-stylesheet and others are refused).
-      if (end < 0 || text.slice(0, lt).trim() !== "" || !XML_DECLARATION.test(text.slice(lt, end + 2))) return "processing instructions and XML declarations other than version 1.0 in UTF-8 are not allowed";
+      if (end < 0 || !onlyXmlSpace(text.slice(0, lt)) || !XML_DECLARATION.test(text.slice(lt, end + 2))) return "processing instructions and XML declarations other than version 1.0 in UTF-8 are not allowed";
       i = end + 2;
       continue;
     }
@@ -216,7 +262,9 @@ export function svgProblem(text: string): string | null {
       const attr = a[1] as string;
       if (seen.has(attr)) return `attribute "${attr}" appears twice`;
       seen.add(attr);
-      const problem = attributeProblem(attr, a[2] ?? (a[3] as string));
+      const value = decodeRefs(a[2] ?? (a[3] as string));
+      if (value === null) return `attribute "${attr}" has an unknown or unterminated character reference`;
+      const problem = attributeProblem(attr, value);
       if (problem !== null) return problem;
     }
     if (m[3] !== "/") open.push(name);

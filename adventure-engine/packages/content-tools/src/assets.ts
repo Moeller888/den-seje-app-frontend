@@ -41,7 +41,7 @@ export function detectAsset(name: string, bytes: Uint8Array): Detected | { reado
       return null;
     }
     if (!/<svg[\s>]/i.test(text)) return null;
-    // Allowlist (svg.ts): only plain local shapes, paint, text, gradients and #fragment references pass.
+    // Basic static profile (svg.ts): only plain shapes, groups, paint and transforms pass; nothing may refer to anything.
     const problem = svgProblem(text);
     if (problem !== null) return { forbidden: `SVG picture refused (only plain, self-contained pictures are imported): ${problem}` };
     return { ext, type: "image/svg+xml", kinds: IMAGE };

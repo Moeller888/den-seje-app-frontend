@@ -82,7 +82,7 @@ Første release-gennemgang:
 | Ubegrænset antal filer eller mapper | Samme grænser for mappeimport (File System Access og filvalg) og CLI-læsning. CLI'en følger ikke symlinks |
 | Falske endelser og MIME-typer | Typen afgøres af endelse **og** indhold; afsenderens MIME-type ignoreres |
 | SWF, XML, gemte spil, scripts | Afvises (`E-ASSET-FORBIDDEN`), også SWF genkendt på magic bytes |
-| Usikre SVG'er | **Allowlist** (§17): kun kendte elementer og attributter, kun `#id`- og `url(#id)`-referencer, ingen scripts, styles-elementer, `foreignObject`, event-attributter, fremmede navnerum, `DOCTYPE`, `ENTITY`, CDATA eller processing instructions. Visning sker kun via `<img>`/`<image>` |
+| Usikre SVG'er | **Basal statisk profil** (§17, fase 6 §8): kun `svg`, `g`, `title`, `desc` og de basale former med geometri, transformationer, farve-, streg- (uden stiplede streger) og opacitetsegenskaber. Ingen referencer overhovedet (`href`, `xlink:href`, `url(…)`), ingen `use`, gradienter, mønstre, markører, masker, clip paths, filtre, tekst, scripts, styles-elementer, `foreignObject`, event-attributter, fremmede navnerum, `DOCTYPE`, `ENTITY`, CDATA eller processing instructions. Visning sker kun via `<img>`/`<image>` |
 | HTML-injektion | Brugerflader sætter tekst med `textContent`. Den eneste `innerHTML` er faste ikon-SVG'er i spillet |
 | Prototype pollution | Nøglen `__proto__` afvises i projekt- og bundlefiler. Kanonisk skrivning bruger `defineProperty`. Opslag i tekst-tabeller bruger kun egne nøgler (rettet: en tekstnøgle som `constructor` kunne få loaderen til at kaste en `TypeError`) |
 | Nyere eller ukendte formater | Projekt (formatVersion > 1), bundle (const 1) og saves (nyere format) afvises med fejlkode |
@@ -251,7 +251,7 @@ En afsluttende read-only gennemgang af rettelserne i §15 fandt tre fund, der nu
 - **F4** (lav): en fejlet IndexedDB-transaktion udløser både `onerror` og `onabort`, så der kan komme to–tre fejlmeddelelser for ét gem. Flaget bag `flush()` er fælles for alle skrivninger: en fejlet indstillingsskrivning (`save/src/settings.ts`), der ikke selv kalder `flush()`, får det næste gem til at melde fejl, og `flush()`-kald uden brug af svaret (`restoreBackup`, import) nulstiller flaget. Fejlen vises stadig via `onError`, og der tabes ingen data.
 - **F5** (lav, testdækning): forbindelsen i `game.ts` er ikke unit-testet for M7 ("Gemt" først efter `flush()` → `true`) og M4 (spillet sender `devBuild` videre som `allowSaveChecksumMismatch`); `game.ts` er DOM-kode uden for Vitest-dækningen. Sletningen i `writeDirectory` er nu testet (`editor/test/io.test.ts`).
 
-## 17. Opfølgninger: F4, F5, slot-status og SVG-allowlist
+## 17. Opfølgninger: F4, F5, slot-status og SVG-profil
 
 Branch `fix/adventure-engine-followups` fra `origin/main` (`242d7eb`). Hvert fund blev først genskabt med en test, der fejlede på den gamle kode; Vite og Vitest er ikke opgraderet.
 
@@ -284,9 +284,42 @@ Branch `fix/adventure-engine-followups` fra `origin/main` (`242d7eb`). Hvert fun
 | **R5** (lav) "Fortsæt fra sikkerhedskopi" overskriver nu også et intakt, men uindlæseligt hovedsave | Bevidst: knappen siger "sikkerhedskopi", og spilleren vælger den selv. Dokumenteret nedenfor | – |
 | **R6** (lav) i et udviklingsbuild vises et save med forkert checksum stadig som beskadiget i slotlisten, selvom `engine.load` ville acceptere det | Uændret adfærd fra før (checksummen kontrolleres først); dokumenteret nedenfor | – |
 
+**Opfølgende reviewrunder (2–5).** Efter den første commit (`50cbaf6`) fandt fire uafhængige read-only reviews flere problemer. De blev genskabt, rettet og dækket af tests:
+
+| Runde | Fund | Behandling | Regressionstest |
+|---|---|---|---|
+| 2 | Et intakt, men uindlæseligt hovedsave gik tabt ved "Gendan"/"Fortsæt fra sikkerhedskopi" og ved et nyt gem | Det fortrængte save kopieres byte for byte til `<slot>.held` (kun det seneste); `.bak` er én generation (fase 5 §7) | `save-package.test.ts` (rotation, afbrydelse på hvert trin, retry), E2E `save.spec.ts` (`.held` = det erstattede save) |
+| 2–3 | En fejlet IndexedDB-commit efterlod spejlet med data, lageret ikke har, og `.held` kunne mistes | Rollback pr. nøgle med overdragelse til senere uafgjorte commits; request-`onerror`, `abort`, synkront kast og kastende callback (fase 5 §13) | `save-package.test.ts` (rollback-tests) |
+| 3 | Overlappende skrivninger til samme slot kunne planlægge rotationen ud fra en tilstand, der blev rullet tilbage | Én operation ad gangen pr. slot (`write`, `restoreBackup`, "Fortsæt fra sikkerhedskopi"); UI-status i rækkefølge (`statusOrder`) | `save-package.test.ts` (serialiseringstests), `saves-model.test.ts` |
+| 4 | En indlejret transaktion, der kastede, kunne committe en halv indre enhed | Kaster en indlejret callback, fejler og rulles hele den ydre batch tilbage | `save-package.test.ts` (indlejrede transaktioner) |
+| 2–4 | SVG-bomber via `<use>`, mønstre, markører, masker, clip paths, filtre og `inherit` (fx 4,1 KB → 15 s i Chromium); referencer skjult med Unicode-whitespace; kvadratisk scanning | Runde 2–4 byggede en referencegraf med ekspansionsbudget; runde 5 erstattede den med en **basal statisk profil uden referencer** (fase 6 §8). Referencegraf, ekspansions- og markørberegning er fjernet. Kontrollen er én lineær passage | `svg-allowlist.test.ts` (alle tidligere bomber afvises ved første element eller attribut uden for profilen; `href`/`xlink:href`/`url(…)` via attributter, `style`, entities og whitespace; nøgleord; 25 projekt-SVG'er; store input) |
+| 4 | Påstanden om, at autosave ved lukning starter IDB-transaktionen synkront, var forkert | Dokumentationen beskriver nu den asynkrone slotkø og commit-kæde (fase 5 §13) | – |
+| 5 | **B1:** en accepteret SVG med `stroke-dasharray="0.001"` på 100 linjer (2,7 KB) tog 14 s at tegne i Chromium (fandtes også i `50cbaf6`) | `stroke-dasharray` og `stroke-dashoffset` er fjernet fra profilen (attribut og `style`); ingen af de 25 SVG'er bruger dem. Profilens bevidste begrænsninger er dokumenteret (fase 6 §8) | `svg-allowlist.test.ts` ("dashed strokes are refused before rendering": den genskabte fil, attributter, `style`, store/små bogstaver, whitespace og entities) |
+| 5 | **B2 (regression):** `remove()` gik uden om køen pr. slot, så en skrivning i kø genskabte en slettet slot | `remove()` bruger samme kø som `write`, `restoreBackup` og "Fortsæt fra sikkerhedskopi" og sletter hovedsave, `.tmp`, `.bak` og `.held` i én transaktion; ny `SlotManager.flush()` venter på operationer i kø og deres commits (fase 5 §7) | `save-package.test.ts` ("remove() runs in the same per-slot queue", test 1–8) |
+
+**Afsluttende målrettet review (runde 5, kun B1 og B2):** ingen blokerende fund. Reviewet fandt ingen accepteret SVG, hvor en dash-egenskab når frem (25 stavemåder, også entities, store/små bogstaver og `style`). En fuzzer kørte 18.000 tilfældige forløb med write, restore og remove på to slots, hvor IndexedDB-commits fejlede tilfældigt. Den fandt 0 afvigelser: rækkefølgen svarer til kaldene, spejlet svarer til lageret, ingen tidligere operation genskaber en slettet slot, og `flush()` hverken fejler eller lækker. Ingen kode kalder `remove` ud over testene, så den ændrede returtype bryder intet.
+
+**Verifikation efter reviewrunderne (lokalt i worktree'en, endelig kode):**
+- Typecheck, lint og CR-02: grønne.
+- CR-01 obligatorisk (`REQUIRE_CLEAN_ROOM_DENYLIST=1`, den private liste): `CR-01: PASS (9588 denylist entries, no matches)`.
+- Unit og coverage: 508 bestået (42 filer), 99,51 % lines, 97,02 % branches, 99,8 % functions; alle tærskler opfyldt, 100 % for `svg.ts`, `storage.ts`, `slots.ts` og `saves.ts`.
+- Scenarier: 9/9 PASS, goldens uændrede.
+- Content-CLI på fixturen (validate, format `--check`, build, validate af bundle, schema `--check`): grøn.
+- Builds (spil, devtools-spil, editor) og `tools/check-build-boundary.mjs`: grønne.
+- Alle 25 SVG'er i repoet består den basale profil (ingen af dem bruger referencer eller stiplede streger).
+- E2E, én browser ad gangen i forgrunden med én worker: Chromium **47 bestået** (6,8 min), Firefox **41 bestået** + 6 skips (5,0 min), WebKit **41 bestået** + 6 skips (7,4 min); 0 fejl, ingen retries eller ændrede timeouts. De 6 skips er de Chromium-only skærmbilledtests.
+
+**Backlog (ikke blokerende, ikke indført af denne PR):**
+- `SlotManager.flush()` medregner kun operationer, der ikke er afgjort ved kaldet. En operation, der allerede er fejlet før kaldet, indgår ikke (den har sit eget `committed`).
+- `damage()`, enkelte `set`/`remove` direkte på lageret og en anden `SlotManager` på samme lager og indhold går uden om køen pr. slot; kun tests og scenarier gør det i dag.
+- `write` dokumenteres som "kaster aldrig", men kaster `RangeError` ved et ugyldigt slotnavn (ældre adfærd; `remove` gør det samme).
+- Den basale SVG-profil begrænser ikke størrelser, tal eller mængden af geometri (fase 6 §8).
+- En `.held`-kopi har endnu ingen brugerflade til gendannelse.
+
 **Kendte forhold efter opfølgningerne:**
-- "Fortsæt fra sikkerhedskopi" og "Gendan sikkerhedskopi" erstatter hovedsavet med `.bak`, også når hovedsavet er intakt, men ikke kan indlæses med det aktuelle indhold. Et sådant save kan derfor ikke senere indlæses af en rettet indholdsversion.
+- "Fortsæt fra sikkerhedskopi" og "Gendan sikkerhedskopi" erstatter hovedsavet med `.bak`, også når hovedsavet er intakt, men ikke kan indlæses med det aktuelle indhold. Det fortrængte save gemmes byte for byte i `<slot>.held` (kun det seneste), men der er endnu ingen brugerflade til at gendanne det.
 - I et udviklingsbuild vises et save med forkert checksum som beskadiget i slotlisten, selvom det kan importeres.
-- Spejlet i hukommelsen opdateres stadig før commit. En skrivning, der fejler i IndexedDB, vises derfor som gemt i slotlisten resten af sessionen (spilleren får fejlmeddelelsen, og "Gemt" vises ikke), men ikke efter en genindlæsning.
-- SVG'er fra tegneprogrammer med egne navnerum (fx `inkscape:`, `sodipodi:`, `<metadata>`) afvises nu og skal eksporteres som almindelig eller optimeret SVG.
+- Spejlet i hukommelsen opdateres før commit, men en fejlet commit rulles tilbage (se reviewrunderne nedenfor), så slotlisten viser det, IndexedDB har, når alle commits er afgjort.
+- Autosave ved lukning er asynkront (slotkø og commit-kæde) og kan nå ikke at blive committet, hvis siden lukkes eller processen dræbes; det seneste committede save og `.bak` er så intakte (fase 5 §13).
+- SVG'er fra tegneprogrammer med egne navnerum (fx `inkscape:`, `sodipodi:`, `<metadata>`) og SVG'er med referencer, gradienter, masker, filtre eller tekst afvises nu og skal eksporteres som almindelig, optimeret SVG med rene former (eller som PNG/WebP).
 - Dev-værktøjernes advisories (§10) er uændrede; opgraderingen af Vite/Vitest er en separat opgave.
