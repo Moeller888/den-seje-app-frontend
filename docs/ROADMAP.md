@@ -822,8 +822,13 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   - **Besvarelseshistorik (retning godkendt 2026-10-30, [D-266](decisions/D-266.md), ikke bygget):** en gentagelse genåbner elevens
     række i `question_instances` og sletter det første svar (36 tabte svar hos 1 elev 2026-10-30).
     Ejeren har valgt en separat `question_attempts`-tabel, der kun tilføjes til, og egne
-    bedømmelseshændelser for lærere. Ingen genskabelse og ingen backfill. Implementeringen og de åbne
-    beslutninger H1–H5 er ikke godkendt. Design og trinplan:
+    bedømmelseshændelser for lærere. Ingen genskabelse og ingen backfill. H5 er afgjort 2026-10-30
+    ([D-273](decisions/D-273.md)): variant C (serverstyret `round_no` + `submission_id` +
+    databasevagt) og M2 (aktivering ved håndhævelse i databasen uden for undervisningstiden), ikke
+    aktiveret. PR #488 (migration `20261030211428`) er merget og ikke anvendt; PR #494 (`round_no` i
+    `get-next-question`) er draft og ikke deployet; `process-event` (PR 3), `app.js` (PR 4) og
+    aktiveringen (PR 5) er ikke startet, og en mulig oprydning (PR 6) er ikke defineret. Hver
+    produktionsændring kræver ejerens særskilte GO. H1–H4 er ikke godkendt. Design og trinplan:
     [`question-attempts-design.md`](question-attempts-design.md). Loggen er ikke komplet, før lange svar
     og lærerbedømmelser også er dækket.
   - **Mulig dobbelt XP ved lærerbedømmelse (fundet i koden, ikke afprøvet, ikke startet):** RPC'en
