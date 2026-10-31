@@ -91,9 +91,10 @@ export function buildLayerSet({ P, origin, outfits, figureNames, planOf, compose
   return { files, itemTable, equivalence, nShadows };
 }
 
-/** Writes a layer set as lossless WebP (each decoded back to exactly its source pixels); refuses a directory holding anything else. */
-export function writeLayerSet(files, outDir, { cwebp, dwebp }) {
-  mkdirSync(outDir, { recursive: true }); for (const f of readdirSync(outDir)) if (!files[f] && f !== "manifest.json") throw new Error("unexpected file in " + outDir + ": " + f);
+/** Writes a layer set as lossless WebP (each decoded back to exactly its source pixels); refuses a directory holding anything else
+ *  than these files, the manifest and the files named in keep (left untouched). */
+export function writeLayerSet(files, outDir, { cwebp, dwebp, keep = [] }) {
+  mkdirSync(outDir, { recursive: true }); for (const f of readdirSync(outDir)) if (!files[f] && f !== "manifest.json" && !keep.includes(f)) throw new Error("unexpected file in " + outDir + ": " + f);
   const tmp = join(tmpdir(), "nsl-" + process.pid); mkdirSync(tmp, { recursive: true }); const entries = [];
   try { for (const [name, f] of Object.entries(files)) { const png = join(tmp, "in.png"), back = join(tmp, "back.png"), out = join(outDir, name);
       writeFileSync(png, encodePng(W, H, f.px)); execFileSync(cwebp, [...CWEBP_ARGS, "-quiet", png, "-o", out]); execFileSync(dwebp, ["-quiet", out, "-o", back]);
@@ -111,15 +112,19 @@ async function main() {
   const { P, origin } = loadItems(spec.items), K = Object.entries(L.NORTHSTAR_OUTFITS);
   const { files, itemTable, equivalence, nShadows } = buildLayerSet({ P, origin, outfits: K, figureNames: L.NORTHSTAR_FIGURE, planOf: (o, t) => L.northstarPlanFor(o, t), compose: L.northstarCompose });
   const shape = (it) => JSON.stringify({ category: it.category, layers: it.layers, shadows: it.shadows, closed: !!it.closed });
-  const mismatch = Object.keys(L.NORTHSTAR_ITEMS).filter((id) => !itemTable[id] || shape(L.NORTHSTAR_ITEMS[id]) !== shape(itemTable[id]));
+  // D-274/D-275: the print tees are not this build's items; their published layers and the manifest's D-274 extension are kept as they are
+  const printIds = new Set(Object.values(L.NORTHSTAR_PRINT_TEES).map((t) => t.item));
+  const mismatch = Object.keys(L.NORTHSTAR_ITEMS).filter((id) => !printIds.has(id) && (!itemTable[id] || shape(L.NORTHSTAR_ITEMS[id]) !== shape(itemTable[id])));
   if (mismatch.length) throw new Error("NORTHSTAR_ITEMS must be: " + JSON.stringify(Object.fromEntries(mismatch.map((id) => [id, itemTable[id]]))));
   if (Object.keys(files).length > MAX_FILES || nShadows > MAX_SHADOWS) throw new Error("over the authorised count: " + Object.keys(files).length + " files, " + nShadows + " shadows");
-  const entries = writeLayerSet(files, OUT_DIR, { cwebp: CWEBP, dwebp: DWEBP });
+  const previous = existsSync(join(OUT_DIR, "manifest.json")) ? JSON.parse(readFileSync(join(OUT_DIR, "manifest.json"), "utf8")) : { files: [] };
+  const kept = previous.files.filter((f) => f.origin && f.origin.decision === "D-274"), extensions = previous.extensions || [];
+  const entries = writeLayerSet(files, OUT_DIR, { cwebp: CWEBP, dwebp: DWEBP, keep: kept.map((f) => f.file) });
   const manifest = { decision: "D-242", authorisation: "owner 2026-10-28: at most 41 derived runtime layers tracked in the public repository and deployed under assets/avatar-northstar/ as a specific exception to D-127 §2 — not C, raw generations, reference sheets, review files or H1",
-    canvas: { width: W, height: H }, flag: "AVATAR_NORTHSTAR_WARDROBE (js/avatar-layers.js), false", counts: { files: entries.length, shadows: nShadows, maxFiles: MAX_FILES, maxShadows: MAX_SHADOWS },
+    canvas: { width: W, height: H }, flag: "AVATAR_NORTHSTAR_WARDROBE (js/avatar-layers.js), false", counts: { files: entries.length + kept.length, shadows: nShadows, maxFiles: MAX_FILES, maxShadows: MAX_SHADOWS, ...(kept.length ? { d242Files: entries.length, d274Files: kept.length } : {}) },
     outfits: Object.fromEntries(K.map(([k, o]) => [k, { ...o, reviewFullPngSha256: spec.reviewFullPngSha256[k] }])), knownFaulty: L.NORTHSTAR_KNOWN_FAULTY,
     equivalence: { what: "northstarCompose(northstarCanvasPlan(K)) — the browser's function — against the pipeline composite (layerProof + applyShadow), RGBA bytes that differ", outfits: equivalence },
-    files: entries };
+    ...(extensions.length ? { extensions } : {}), files: [...entries, ...kept].sort((a, b) => (a.file < b.file ? -1 : 1)) };
   writeFileSync(join(OUT_DIR, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
   console.log(JSON.stringify({ files: entries.length, shadows: nShadows, bytes: entries.reduce((s, e) => s + e.bytes, 0), outfitsIdenticalToPipeline: Object.values(equivalence).filter((e) => !e.bytesDiffering).length }));
 }

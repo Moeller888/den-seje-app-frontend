@@ -91,24 +91,31 @@ function webpInfo(b) {   // RIFF/WEBP with a single lossless VP8L chunk: 14-bit 
   const v = b.readUInt32LE(21); return { chunk, w: (v & 0x3fff) + 1, h: ((v >> 14) & 0x3fff) + 1, alpha: (v >> 28) & 1 };
 }
 
-test("D-242 runtime assets: at most 41 authorised files, every one in the manifest with purpose, origin and its sha256; lossless WebP 1024×1536", () => {
-  const onDisk = readdirSync(DIR).filter((f) => f !== "manifest.json").sort();
-  assert.deepEqual(onDisk, MAN.files.map((f) => f.file).sort(), "the directory holds exactly the manifest's files");
-  assert.ok(onDisk.length <= 41); assert.equal(MAN.decision, "D-242");
+test("D-242 runtime assets: at most 41 authorised files (plus exactly D-274's 32 published tee layers), every one in the manifest with purpose, origin and its sha256; lossless WebP 1024×1536", () => {
+  const all = readdirSync(DIR).filter((f) => f !== "manifest.json").sort();
+  assert.deepEqual(all, MAN.files.map((f) => f.file).sort(), "the directory holds exactly the manifest's files");
+  // D-274's publication permission covers exactly its own 32 tee layers; D-242's exception keeps its own limit
+  const d274 = MAN.files.filter((f) => f.origin && f.origin.decision === "D-274").map((f) => f.file).sort(), ext = MAN.extensions.find((e) => e.decision === "D-274");
+  assert.deepEqual(d274, [...ext.files].sort()); assert.equal(d274.length, 32); assert.ok(d274.every((f) => /^top-tee-hip-print-[a-z]+-[a-z]+-(top-body|sleeves)-v1\.webp$/.test(f)));
+  const onDisk = all.filter((f) => !d274.includes(f));
+  assert.ok(onDisk.length <= 41); assert.equal(MAN.decision, "D-242"); assert.deepEqual([MAN.counts.d242Files, MAN.counts.d274Files], [onDisk.length, 32]);
   const kinds = { figure: onDisk.filter((f) => f.startsWith("figure-")), hide: onDisk.filter((f) => f.startsWith("hide-")), shadow: onDisk.filter((f) => f.includes("-shadow-")) };
   kinds.item = onDisk.filter((f) => !kinds.figure.includes(f) && !kinds.hide.includes(f) && !kinds.shadow.includes(f));
   assert.deepEqual(kinds.figure, ["figure-arms-v1.webp", "figure-body-v1.webp", "figure-head-v1.webp"]); assert.equal(kinds.hide.length, 4);
-  assert.ok(kinds.item.length <= 14); assert.ok(kinds.shadow.length <= 20); assert.equal(MAN.counts.files, onDisk.length);
+  assert.ok(kinds.item.length <= 14); assert.ok(kinds.shadow.length <= 20); assert.equal(MAN.counts.files, all.length);
   for (const f of MAN.files) { const b = readFileSync(join(DIR, f.file)), info = webpInfo(b);
     assert.equal(sha(b), f.sha256, f.file); assert.equal(b.length, f.bytes, f.file); assert.ok(f.purpose && f.origin, f.file);
     assert.deepEqual([info.chunk, info.w, info.h], ["VP8L", 1024, 1536], f.file); }
-  for (const f of onDisk) assert.ok(!/(^|[^a-z])h1([^a-z]|$)|d202|raw|reference|review|base-figure/i.test(f), "not C, H1, a raw generation, a reference sheet or a review file: " + f);
+  for (const f of all) assert.ok(!/(^|[^a-z])h1([^a-z]|$)|d202|raw|reference|review|base-figure/i.test(f), "not C, H1, a raw generation, a reference sheet or a review file: " + f);
 });
 
-test("D-242 manifest ↔ module: every plan file exists, every file is used; the 19 outfits match; all 19 equal the pipeline byte for byte", () => {
+test("D-242 manifest ↔ module: every plan file exists, every file is used; the 19 outfits match; all 19 (and D-275's 144 print-tee outfits) equal the pipeline byte for byte", () => {
   const used = new Set(), files = new Set(MAN.files.map((f) => f.file));
-  for (const k of Object.keys(L.NORTHSTAR_OUTFITS)) for (const s of L.northstarCanvasPlan(k)) for (const src of [s.src, s.cut].filter(Boolean)) { const f = src.split("/").pop(); assert.ok(files.has(f), k + ": " + f); used.add(f); }
+  const plans = [...Object.keys(L.NORTHSTAR_OUTFITS).map((k) => [k, L.northstarCanvasPlan(k)]),
+    ...Object.keys(L.NORTHSTAR_PRINT_TEES).flatMap((t) => Object.keys(L.NORTHSTAR_OUTFITS).filter((k) => L.northstarTeeAllowed(k)).map((k) => [k + "+" + t, L.northstarPlanFor(L.northstarOutfitFor(k, t))]))];
+  for (const [k, p] of plans) for (const s of p) for (const src of [s.src, s.cut].filter(Boolean)) { const f = src.split("/").pop(); assert.ok(files.has(f), k + ": " + f); used.add(f); }
   assert.deepEqual([...files].filter((f) => !used.has(f)), []);
+  const eq = MAN.extensions.find((e) => e.decision === "D-274").equivalence; assert.deepEqual([eq.printOutfits, eq.outfitsDiffering], [144, 0]); assert.ok(eq.publishedFilesIdenticalToPipeline >= 32 + 9);
   assert.deepEqual(Object.fromEntries(Object.entries(MAN.outfits).map(([k, o]) => [k, { top: o.top, bottom: o.bottom, shoes: o.shoes }])), JSON.parse(JSON.stringify(L.NORTHSTAR_OUTFITS)));
   assert.deepEqual(MAN.knownFaulty, [...L.NORTHSTAR_KNOWN_FAULTY]);
   assert.deepEqual(Object.keys(MAN.equivalence.outfits), Object.keys(L.NORTHSTAR_OUTFITS)); for (const [k, e] of Object.entries(MAN.equivalence.outfits)) assert.equal(e.bytesDiffering, 0, k);
