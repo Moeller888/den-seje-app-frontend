@@ -5,6 +5,8 @@
 //    backend calls with their arguments and log lines, for every QUESTION_MIX_ENGINE mode, both
 //    subjects and five situations. The v179 side is tests/fixtures/gnq-v179-parity.json, written by
 //    `node tools/edge/gnq-release.mjs golden` from 21ec9ff through the same harness.
+//    The one reviewed difference is H5 PR 2's round_no (D-266): withoutRoundNo checks it is present and
+//    right, removes exactly it, and everything else must still be identical to v179.
 // 2. No floating import: every non-relative import in the deployed module graph names an exact version,
 //    and supabase-js is the pinned release version.
 // 3. The candidate manifest documented in the runbook is the manifest of this tree.
@@ -29,6 +31,36 @@ const read = workingTreeReader(ROOT);
 const loaded = loadHandler(join(ROOT, "supabase", ENTRY));
 loaded.catch(() => {});
 
+// H5 PR 2 (D-266): every served question carries round_no = repeat_count + 1 of the row served (the
+// harness rows: due-1 and new-inst 0, rep-1 1), and every question_instances read and the insert also
+// select repeat_count. This asserts both, then removes exactly that and nothing else.
+const ROUND_NO = Object.freeze({ "due-1": 1, "new-inst": 1, "rep-1": 2 });
+function withoutRoundNo(r, label) {
+  let body = r.body;
+  if (r.status === 200 && body.includes('"question_instance_id"')) {
+    const parsed = JSON.parse(body);
+    assert.equal(parsed.round_no, ROUND_NO[parsed.question_instance_id], `${label}: round_no`);
+    delete parsed.round_no;
+    body = JSON.stringify(parsed);
+  } else {
+    assert.equal(body.includes("round_no"), false, `${label}: round_no only on a served question`);
+  }
+  const calls = r.calls.map((c) => {
+    if (c.kind !== "from" || c.name !== "question_instances") return c;
+    const ops = c.ops.map((o) => {
+      // Only the reads that serve an instance (due, repeat) and the insert start with id; the format
+      // mix's history read does not, and stays compared unchanged.
+      if (o[0] !== "select" || !/^\s*id\b/.test(o[1])) return o;
+      assert.match(o[1], /\brepeat_count\b/, `${label}: question_instances select without repeat_count`);
+      const stripped = o[1] === "id, repeat_count" ? "id" : o[1].replace(/\n\s*repeat_count,/, "");
+      assert.equal(/repeat_count/.test(stripped), false, `${label}: repeat_count once per select`);
+      return [o[0], stripped];
+    });
+    return { ...c, ops };
+  });
+  return { ...r, body, calls };
+}
+
 const touchesLevelEngine = (r) => r.calls.some((c) => B_FUNCTIONS.includes(c.name) || LEVEL_TABLES.includes(c.name))
   || r.logs.some((l) => l.includes("LEVEL_ENGINE:"));
 
@@ -43,18 +75,18 @@ test("the golden file is v179's: 30 cases from 21ec9ff, covering every mix mode,
 
 test("the first request of a fresh isolate (key-source log included) matches v179's", async () => {
   const { warmup } = await loaded;
-  assert.deepEqual(warmup, GOLDEN.warmup);
+  assert.deepEqual(withoutRoundNo(warmup, "warmup"), GOLDEN.warmup);
   assert.ok(warmup.logs.some((l) => l.includes("[supabase-keys]")), "the once-per-isolate log is part of the comparison");
 });
 
-test("LEVEL_ENGINE off (missing, empty, false, true, 0, off, V1, \" v1\"): identical to v179 in status, body, calls and logs", async () => {
+test("LEVEL_ENGINE off (missing, empty, false, true, 0, off, V1, \" v1\"): identical to v179 in status, body, calls and logs, apart from round_no", async () => {
   const { handler } = await loaded;
   let runs = 0;
   for (const level of OFF_VALUES) for (const mix of MIX_VALUES) for (const subject of SUBJECTS) for (const s of SCENARIOS) {
     const c = { mix, level, subject, scenario: s };
     const got = await runCase(handler, c);
     const label = `LEVEL_ENGINE=${level === undefined ? "<missing>" : JSON.stringify(level)} ${caseKey(c)}`;
-    assert.deepEqual(got, GOLDEN.cases[caseKey(c)], label);
+    assert.deepEqual(withoutRoundNo(got, label), GOLDEN.cases[caseKey(c)], label);
     assert.ok(!got.calls.some((x) => B_FUNCTIONS.includes(x.name)), `${label}: a B function was called`);
     assert.ok(!got.calls.some((x) => LEVEL_TABLES.includes(x.name)), `${label}: a level table was read or written`);
     assert.ok(!got.logs.some((l) => l.includes("LEVEL_ENGINE:")), `${label}: level log line`);

@@ -161,12 +161,18 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat | dette repository | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
+| Kandidat | dette repository | 12 | `a52e2da432f61fb7cdcf38827529526a33e9b0d6ad123cc0a91095cb4d30ebc3` |
+| Version 180, som deployet 2026-10-31 | den tidligere kandidat (main før H5 PR 2) | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
 | Rollback | `21ec9ff` med låsningen (kun linje 2 i `index.ts` er ændret) | 11 | `ca21b993839e48ff4e5baf3189306860d6b349fdcc7eea12f65ab78a73e418c6` |
 | Version 179, som deployet | `21ec9ff` uændret | 11 | `c4414671f3a5aff1e8d5bc3cb57ec4e92bb0d70ef8008a7ade39a75730c81985` |
 
-Kandidaten adskiller sig fra version 179 i `index.ts` (niveaugrenen og låsningen) og den nye
-`level-flow.ts`. De øvrige 10 filer er byte-identiske. Unit-testen kræver, at kandidatmanifestet i
+Kandidaten adskiller sig fra version 179 i `index.ts` (niveaugrenen, låsningen og H5's `round_no`),
+`instance-insert.ts` (læser `repeat_count` tilbage, H5) og den nye `level-flow.ts`. De øvrige 9 filer
+er byte-identiske. Fra version 180 adskiller den sig kun ved H5's `round_no` (D-266, H5 PR 2): et nyt
+svarfelt og `repeat_count` i de tre læsninger, der udleverer en instans. Slukket-pariteten fjerner
+præcis den forskel efter at have kontrolleret den, og resten skal stadig være identisk med version 179.
+Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
+kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten
 gennemgås igen.
 
