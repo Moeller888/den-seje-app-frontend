@@ -385,7 +385,7 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Pants master v2 — D-279 (successor to D-276; offline; v1 kept; colour-only rules, no geometry change; nothing published or approved).**
+- **Pants master v2 — D-279 (successor to D-276; offline; v1 kept; colour-only rules, no geometry change; the owner approved the solid trousers (navy, sand) as candidates, not as items; nothing published).**
   - **Waistband.** It is taken only under the cut's top edge: 0 px outside the waist, against 209 in v1.
   - **Outer edge.** The cut's outer edge takes the outline's ink: the outline's own partial edge pixels and the partial fabric just outside it, 8,444 px, colour only.
     - This removes the double contour at laced black boots for every material: sand and stripe now pass all 8 combinations.
