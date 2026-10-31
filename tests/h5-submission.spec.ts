@@ -68,7 +68,8 @@ const legacyGraded = (status: string) => ({ status: 200, body: { status, correct
 const LEGACY_CORRECT = legacyGraded('correct');
 const INCOMPATIBLE = 'Lærlig kan ikke registrere svar sikkert lige nu';
 const STORAGE = 'Dit svar er ikke sendt: browseren kan ikke gemme det midlertidigt';
-// The connection is cut. `registered`: the server got it first (the reply is lost on the way back).
+// The connection is cut — 'before': the server never gets the request; 'after': the server gets it and
+// registers it, and the reply is lost on the way back.
 type Reply = { status?: number; body?: unknown; cut?: 'before' | 'after' };
 const CUT_BEFORE: Reply = { cut: 'before' };
 const CUT_AFTER: Reply = { cut: 'after' };
@@ -77,12 +78,33 @@ type Opts = { h5: boolean; questions: unknown[]; replies: Reply[]; init?: string
 
 // Logs the test pupil in with the checked-out quiz page and both answer-path calls intercepted on the
 // whole browser context (so a second tab sees the same fixtures).
+//
+// The process-event stand-in keeps three separate records:
+//   submitted   every request the browser sent (a retry is a request too)
+//   registered  every NEW answer the stand-in server registered — at most one per submission_id
+//   replayed    requests answered with the original result and no new registration (outcome "replay")
+// It SIMULATES the database's idempotency so the browser's behaviour can be checked against it; it is
+// not evidence of that idempotency. The database guarantees — one attempt per submission_id, the frozen
+// result on replay, round_closed / stale_round, rewards paid once, also under simultaneous sessions —
+// are proven against the real SQL in tests/unit/question-attempts-v2-migration-run.test.mjs (PGlite),
+// tests/unit/question-attempts-v2-concurrency.test.mjs (PostgreSQL 17) and, for Match par,
+// tests/unit/question-attempts-v2-match-grading.test.mjs.
+// scriptErrors catches a test whose scripted replies contradict that model (a second registration of
+// the same submission_id, or a replay of one that was never registered); every retry test (lost reply,
+// then replay) checks it is empty together with exactly one registration and one replay.
 async function openQuiz(page: any, { h5, questions, replies, init }: Opts) {
   const context = page.context();
-  const submitted: any[] = [];      // every process-event request the browser sent
-  const registered: any[] = [];     // the ones the "server" registered
+  const submitted: any[] = [];
+  const registered: any[] = [];
+  const replayed: any[] = [];
+  const scriptErrors: string[] = [];
   const calls: string[] = [];       // order of answer-path calls
   let served = 0;
+  const isRegistered = (id: unknown) => typeof id === 'string' && registered.some((r) => r.submission_id === id);
+  const register = (body: any) => {
+    if (isRegistered(body.submission_id)) scriptErrors.push(`second registration of ${body.submission_id}`);
+    else registered.push(body);
+  };
 
   if (init) await context.addInitScript(init);
 
@@ -115,11 +137,19 @@ async function openQuiz(page: any, { h5, questions, replies, init }: Opts) {
     submitted.push(body);
     const reply = replies[Math.min(submitted.length - 1, replies.length - 1)];
     if (reply.cut) {
-      if (reply.cut === 'after') registered.push(body);
+      if (reply.cut === 'after') register(body);
       await route.abort('failed');
       return;
     }
-    if (reply.status === 200) registered.push(body);
+    if (reply.status === 200) {
+      if ((reply.body as any)?.outcome === 'replay') {
+        if (!isRegistered(body.submission_id)) scriptErrors.push(`replay of unregistered ${body.submission_id}`);
+        replayed.push(body);
+      } else {
+        // recorded — or a backend without H5 that grades (and pays) the old way
+        register(body);
+      }
+    }
     await route.fulfill({ status: reply.status, headers: { ...CORS, 'content-type': 'application/json' }, body: JSON.stringify(reply.body) });
   });
 
@@ -130,7 +160,7 @@ async function openQuiz(page: any, { h5, questions, replies, init }: Opts) {
   await page.click('button');
   await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
   await page.goto(`${PROD}/index.html`, { waitUntil: 'domcontentloaded' });
-  return { submitted, registered, calls, feedbackLog: () => watchFeedback(page) };
+  return { submitted, registered, replayed, scriptErrors, calls, feedbackLog: () => watchFeedback(page) };
 }
 
 // Every text #feedback shows, in order (installed once per document).
@@ -224,6 +254,7 @@ test('ON: registered but the reply is lost — the retry gets the replay, shown 
   expect((await q.feedbackLog()).filter((t) => t === 'Ja! 🎯')).toHaveLength(1);
   expect(q.submitted[1].submission_id).toBe(q.submitted[0].submission_id);
   expect(await stored(page)).toBeNull();
+  expect({ registered: q.registered.length, replayed: q.replayed.length, scriptErrors: q.scriptErrors }).toEqual({ registered: 1, replayed: 1, scriptErrors: [] });
 });
 
 test('ON: reload with an unsettled submission — it is settled FIRST, before any new question', async ({ page }) => {
@@ -240,6 +271,7 @@ test('ON: reload with an unsettled submission — it is settled FIRST, before an
   expect(await stored(page)).toBeNull();
   await page.locator('#h5-continue-btn').click();
   await ready(page, TEXT);
+  expect({ registered: q.registered.length, replayed: q.replayed.length, scriptErrors: q.scriptErrors }).toEqual({ registered: 1, replayed: 1, scriptErrors: [] });
 });
 
 test('ON: reload while the server is still unreachable — no new question is fetched', async ({ page }) => {
@@ -463,9 +495,17 @@ test('ON: storage fails AFTER the first send — "Send igen" still sends the sam
   await page.evaluate(BREAK_SESSION_STORAGE);
   await page.locator('#h5-retry-btn').click();
   await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+  await expect.poll(() => q.calls.filter((c) => c === 'get-next-question').length).toBe(2);
+  // 1–2: exactly two requests, identical in everything that identifies the submission.
   expect(q.submitted).toHaveLength(2);
-  expect(q.submitted[1]).toMatchObject({ submission_id: pending.submission_id, answer: 'Paris', round_no: 1 });
-  expect(q.registered).toHaveLength(1);
+  expect(q.submitted[0]).toMatchObject({ submission_id: pending.submission_id, question_instance_id: MC.question_instance_id, answer: 'Paris', round_no: 1 });
+  expect(q.submitted[1]).toEqual({ ...q.submitted[0], question_shown_at: q.submitted[1].question_shown_at });
+  // 3–5: the first was registered (its reply lost), the second got the replay — one new answer only.
+  expect(q.registered).toEqual([q.submitted[0]]);
+  expect(q.replayed).toEqual([q.submitted[1]]);
+  expect(q.scriptErrors).toEqual([]);
+  // 6–7: the original result is shown once, and the quiz moves on once (no second answer, no extra progression).
+  expect((await q.feedbackLog()).filter((t) => t === 'Ja! 🎯')).toHaveLength(1);
 });
 
 test('ON: a stored copy older than the 12-hour limit does not freeze "Send igen" in an open tab', async ({ page }) => {
@@ -479,6 +519,7 @@ test('ON: a stored copy older than the 12-hour limit does not freeze "Send igen"
   await page.locator('#h5-retry-btn').click();
   await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
   expect(q.submitted.map((b) => b.submission_id)).toEqual([first, first]);
+  expect({ registered: q.registered.length, replayed: q.replayed.length, scriptErrors: q.scriptErrors }).toEqual({ registered: 1, replayed: 1, scriptErrors: [] });
 });
 
 test('ON: after a reload, storage that can be read but not written does not freeze recovery', async ({ page }) => {
@@ -493,4 +534,5 @@ test('ON: after a reload, storage that can be read but not written does not free
   await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(page.locator('#question')).toHaveText('Dit sidste svar er registreret: rigtigt! 🎯', { timeout: 20000 });
   expect(q.submitted[1]).toMatchObject({ submission_id: pending.submission_id, answer: 'Paris', round_no: 1 });
+  expect({ registered: q.registered.length, replayed: q.replayed.length, scriptErrors: q.scriptErrors }).toEqual({ registered: 1, replayed: 1, scriptErrors: [] });
 });
