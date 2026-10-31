@@ -159,12 +159,14 @@ test("the admin client is built in one place, from serviceKey(), with no headers
 });
 
 test("the admin client is used only by the grading read, the two privileged answer RPCs and the server-owned instance writes", () => {
-  // makeAdminClient is defined once and handed to exactly six call sites — the grading read
-  // (./instance-read.ts), the short-text award, the MC/number attempt, the long-answer save and the
-  // two misconception-signal writes (./instance-writes.ts). It is never invoked directly, so nothing
-  // else can run on it.
+  // makeAdminClient is defined once and handed to exactly eight call sites — the grading read
+  // (./instance-read.ts), the short-text award, the MC/number attempt, the long-answer save, the
+  // two misconception-signal writes (./instance-writes.ts) and the two H5 _v2 calls (D-273,
+  // ./text-answer-rpc.ts). It is never invoked directly, so nothing else can run on it.
   const uses = INDEX_CODE.match(/makeAdminClient/g) ?? [];
-  assert.equal(uses.length, 7, "one definition + six call sites");
+  assert.equal(uses.length, 9, "one definition + eight call sites");
+  assert.match(PATH_TEXT, /await callProcessTextAnswerV2\(\s*makeAdminClient,/);
+  assert.match(PATH_MC, /await callProcessQuestionAttemptV2\(\s*makeAdminClient,/);
   assert.match(INDEX_CODE, /await readInstanceForGrading\(\s*makeAdminClient,/);
   assert.match(PATH_TEXT, /await callProcessTextAnswer\(\s*makeAdminClient,/);
   assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,/);
