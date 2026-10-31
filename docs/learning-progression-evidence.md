@@ -4,6 +4,33 @@
 Notatet er udarbejdet 2026-10-31 ved webresearch og ændrer ingen kode. Designdokumentet bruger
 afsnit (c) som grundlag for sine FORSLAG. Afsnit (a) og (b) er forskningens egne fund og grænser.
 
+## Errata og supplement (revision 2, 2026-10-31)
+
+Kilderne bag de vigtigste designvalg er kontrolleret mod primærkilderne i
+[learning-progression-source-verification.md](learning-progression-source-verification.md). **Hvor dette
+bilag og verifikationen afviger, gælder verifikationen.** De vigtigste rettelser:
+
+| Påstand | Rettelse |
+|---|---|
+| Agarwal m.fl. 2021: "ingen studier fra indskolingen" | **Forkert.** 5 elementary og 12 middle school ud af 50 (rettet i teksten). |
+| Karpicke m.fl. 2016: "indskolingen" | 4. klasse, ca. 10 år, ordlister og kort forsinkelse (rettet i teksten). |
+| Genkaldelse slår genkendelse | Gælder kun i laboratoriet (Rowland 2014). I klasserum med feedback var der ingen forskel (Yang m.fl. 2021: 0,61 mod 0,54). |
+| Yang m.fl. 2021: g ≈ 0,50 | Mod alle kontroller. Mod genlæsning er g = 0,33. I elementary school er g = 0,33 (CI 0,09–0,57). |
+| Karpicke & Roediger 2007 og "første repetition næste dag" | Spredningen blev målt i forsøg inden for én session. Studiet støtter ikke en grænse i døgn eller timer. |
+| ≥ 20 t | Ingen kilde. Søvnforskningen støtter "mindst én nats søvn" (Gais m.fl. 2006; Backhaus m.fl. 2008, 9–12-årige). Tallet er en heuristik. |
+| Kelly m.fl. 2015 | Fire forfattere (med Heffernan). Fandt, at 3 i træk forudsagde næste opgave, og at højere N forudsagde transfer bedre. At "3 i træk er sårbart over for gæt", er vores egen beregning. |
+| Deci m.fl. 1999 | Også belønninger, der afhænger af præstation, svækkede den frie lyst (d = −0,28). Materielle belønninger var mere skadelige for børn. |
+| Prætest hos børn | Der findes fagfællebedømte studier: Carneiro, Lapa & Finn 2018 (gavn fra børnehaveklasse til 3. klasse på ordpar, ingen gavn i førskolealder) og Foo m.fl. 2025 (5–6-årige, delvis gavn). |
+| Marsh m.fl. 2007 | At feedback reducerer indlæring af forkerte svarmuligheder, stammer fra Butler & Roediger 2008. |
+| Hanghøj | Hanghøj & Brund er fra **2010**. "Spildidaktik" er ikke Hanghøjs begreb. Han skriver om "spilscenarier" og "scenariedidaktik". Dansk titel: "Spilscenarier i undervisningen – præsentation af en didaktisk model" (*Læring & Medier* nr. 9, 2012). "Spil i undervisningen" er temanummerets titel. |
+| Kulik m.fl. 1990: 0,52 | Tallet kunne ikke verificeres i primærkilden. Brug det ikke. |
+
+**Supplerende kilder** (verificeret, se verifikationsfilen for DOI):
+- Backhaus m.fl. 2008; Butler & Roediger 2008; Carneiro, Lapa & Finn 2018.
+- Chaudhry m.fl. 2018; Foo m.fl. 2025; Gais, Lucas & Born 2006.
+- Hanghøj 2012; Pelánek & Řihák 2017; Soderstrom & Bjork 2015.
+
+
 **Læsevejledning.** Hvert afsnit har tre strengt adskilte dele:
 
 - **(a) DOKUMENTEREDE FUND** – hvad forskningen robust viser (effektstørrelser hvor tilgængelige, med population/alder).
@@ -12,7 +39,7 @@ afsnit (c) som grundlag for sine FORSLAG. Afsnit (a) og (b) er forskningens egne
 
 **Om tal.** Effektstørrelser markeret med "(sekundær)" er hentet fra sekundære sammenfatninger og ikke kontrolleret mod artiklens tabeller. Tal uden markering er bekræftet i abstract eller primærkilde under søgningen. Se referencelisten for verificeringsstatus pr. kilde.
 
-**Gennemgående forbehold.** Langt hovedparten af den eksperimentelle hukommelsesforskning er lavet på universitetsstuderende. Agarwal, Nunes & Blunt (2021) fandt i deres systematiske review af anvendt klasserumsforskning *ingen* studier fra grundskolens yngste trin (primary school) blandt de 50 kodede eksperimenter. Lærligs målgruppe (1.–9. klasse) ligger altså delvist uden for, hvor evidensen er stærkest.
+**Gennemgående forbehold.** Langt hovedparten af den eksperimentelle hukommelsesforskning er lavet på universitetsstuderende. Agarwal, Nunes & Blunt (2021) fandt i deres systematiske review af anvendt klasserumsforskning kun 5 eksperimenter fra elementary school og 12 fra middle school blandt de 50 kodede eksperimenter (Tabel 2 i preprintet). *Rettet i revision 2; tidligere stod der "ingen".* Lærligs målgruppe (1.–9. klasse) ligger altså delvist uden for, hvor evidensen er stærkest.
 
 ---
 
@@ -21,7 +48,7 @@ afsnit (c) som grundlag for sine FORSLAG. Afsnit (a) og (b) er forskningens egne
 ### (a) Dokumenterede fund
 - **Testeffekten er robust.** Roediger & Karpicke (2006): at tage hukommelsestests forbedrer langtidsfastholdelse mere end gentaget læsning; fordelen viser sig især på forsinkede tests, mens genlæsning kan vinde på umiddelbare tests.
 - **Metaanalyser:** Rowland (2014, *Psychological Bulletin*): samlet g ≈ 0,50 for test vs. genlæsning (sekundær); større effekt når der gives feedback (g ≈ 0,73 vs. 0,39 uden; sekundær), ved opholdsinterval ≥ 1 dag, og ved genkaldelsestest (recall) frem for genkendelse. Adesope, Trevisan & Sundararajan (2017, *RER*): praksistests slår genlæsning og alle andre sammenligningsbetingelser; g ≈ 0,61 (fixed) / 0,70 (random) (sekundær); omfatter også grund- og gymnasieelever; effekterne modereres af testformat, deltagerkarakteristika m.m. Yang m.fl. (2021, *Psychological Bulletin*): i *klasserum* g = 0,499 på tværs af 222 studier og 48.478 elever.
-- **Børn:** Karpicke, Blunt & Smith (2016) fandt robuste genkaldelseseffekter hos elever i indskolingen/mellemtrinnet (elementary school) i alle eksperimenter, uden feedback. Rohrer m.fl. (2020) viste store effekter i 7. klasses matematik (se afsnit 2).
+- **Børn:** Karpicke, Blunt & Smith (2016) fandt robuste genkaldelseseffekter hos 4.-klasseelever (gennemsnit 10 år) i alle tre eksperimenter. Materialet var ordlister med kort forsinkelse og uden feedback. *Rettet i revision 2; tidligere stod der "indskolingen".* Rohrer m.fl. (2020) viste store effekter i 7. klasses matematik (se afsnit 2).
 - **Testformat og feedback:** Kang, McDermott & Roediger (2007): kortsvarsquiz *med* feedback gav bedst langtidsfastholdelse sammenlignet med multiple choice (MC) og genlæsning. Marsh m.fl. (2007): MC-tests hjælper generelt, men øger sandsynligheden for, at forkerte svarmuligheder (lures) senere gengives som svar ("negativ testeffekt"); feedback reducerer dette markant.
 - **Pretesting / fejlfuld generering:** Richland, Kornell & Kao (2009): at forsøge at besvare spørgsmål *før* man læser en tekst forbedrede senere læring – også for de spørgsmål, man svarede forkert på i pretesten. Kornell, Hays & Bjork (2009): mislykkede genkaldelsesforsøg forbedrer efterfølgende læring, når det korrekte svar gives straks bagefter. Pan & Carpenter (2023, *Educational Psychology Review*) sammenfatter prequestion-/pretesting-litteraturen som generelt positiv for de pretestede emner.
 - **Produktiv fejl:** Sinha & Kapur (2021, *RER*, 53 studier): problemløsning før instruktion kan give bedre konceptuel forståelse end instruktion først – men primært i STEM og primært for ældre elever.
@@ -31,7 +58,7 @@ afsnit (c) som grundlag for sine FORSLAG. Afsnit (a) og (b) er forskningens egne
 - **Pretesting virker bedst, når** feedback/korrekt svar følger hurtigt, materialet faktisk præsenteres bagefter, og spørgsmålene matcher indholdet. Effekten for *ikke-pretestede* emner i samme tekst er svagere og mere usikker (Pan & Carpenter 2023).
 - **Motivationel risiko:** Gentagne fejl på stof, man aldrig har mødt, kan være demotiverende for svage/yngre elever; Pan & Carpenter (2023) behandler motivationsspørgsmålet som åbent.
 - **Klassisk testeffekt kræver ofte succesfuld genkaldelse:** Rowland (2014) finder, at effekten afhænger af, at en del items kan genkaldes ved første test; uden feedback og ved lav første-genkaldelse er effekten mindre.
-- **Agarwal m.fl. (2021):** konkluderer bred fordel i skoler, men det anvendte evidensgrundlag er ~40 % gymnasie, ~40 % universitet, ~20 % medicin, og ingen indskoling (sekundær beskrivelse af fordelingen).
+- **Agarwal m.fl. (2021):** konkluderer bred fordel i skoler. Fordelingen på uddannelsesniveau (k = 50) er 5 elementary, 12 middle, 3 high school, 20 undergraduate og 10 medicinske studier (preprintets Tabel 2). *Rettet i revision 2.*
 - **Sinha & Kapur (2021):** forfatterne selv bemærker, at elever i indskolingen ofte har for lidt forhåndsviden til at drage nytte af problemløsning før instruktion, og at procedurer læres lige så godt med instruktion først.
 
 ### (c) Designimplikationer for Lærlig (implikation/antagelse)
@@ -160,7 +187,7 @@ afsnit (c) som grundlag for sine FORSLAG. Afsnit (a) og (b) er forskningens egne
 
 ### (a) Dokumenterede fund
 - **Hanghøj (2013)** "Game-based teaching: Practices, roles, and pedagogies": lærere skal skifte mellem interaktionsroller for at facilitere spilscenarier; der er få empiriske studier af, hvordan lærere faktisk bruger spil.
-- **Hanghøj & Brund (2010/2011):** lærerroller i spilbaseret undervisning (fx instruktør, playmaker m.fl.).
+- **Hanghøj & Brund (2010):** lærerroller i spilbaseret undervisning (fx instruktør, playmaker m.fl.).
 - **Hanghøj, Lieberoth & Misfeldt (2018, *BJET*):** samarbejdsspil (Torchlight II) i danske klasser øgede social deltagelse og trivsel for udsatte elever og reducerede oplevet ekstern regulering.
 - **Hanghøj, Kabel & Jensen (2022, *L1-ESLL*; dansk version i *Sprogforum* 2024):** systematisk review af digitale spil i L1/L2-undervisning (77 studier).
 - **Gamification:** Sailer & Homner (2020): små positive effekter på kognitive (g = 0,49), motivationelle (g = 0,36) og adfærdsmæssige (g = 0,25) udfald; den kognitive effekt var kun stabil i en delmængde af stringente studier; spilfiktion og social interaktion modererede.
@@ -222,7 +249,7 @@ Statuskoder: **V** = bekræftet via søgning i denne session (titel/tidsskrift/�
 19. Guskey, T. R. (2007). Closing achievement gaps: Revisiting Benjamin S. Bloom's "Learning for Mastery". *Journal of Advanced Academics*, 19(1), 8–31. — **V**
 20. Guzzetti, B. J., Snyder, T. E., Glass, G. V., & Gamas, W. S. (1993). Promoting conceptual change in science: A comparative meta-analysis of instructional interventions from reading education and science education. *Reading Research Quarterly*, 28(2), 116–159. — **V** (via sekundær referenceliste)
 21. Hanghøj, T. (2013). Game-based teaching: Practices, roles, and pedagogies. I S. de Freitas m.fl. (red.), *New Pedagogical Approaches in Game Enhanced Learning: Curriculum Integration* (s. 81–101). IGI Global. https://doi.org/10.4018/978-1-4666-3950-8.ch005 — **V** (sidetal ikke verificeret)
-22. Hanghøj, T., & Brund, C. E. (2010/2011). Teacher roles and positionings in relation to educational games. Konferenceproceedings / bogkapitel. — **V** (år varierer mellem kilder)
+22. Hanghøj, T., & Brund, C. E. (2010). Teacher roles and positionings in relation to educational games. *Proceedings of the 4th European Conference on Games Based Learning*, s. 115–122. — **V** (år og sider verificeret i revision 2)
 23. Hanghøj, T., Lieberoth, A., & Misfeldt, M. (2018). Can cooperative video games encourage social and motivational inclusion of at-risk students? *British Journal of Educational Technology*, 49(4), 775–799. https://doi.org/10.1111/bjet.12642 — **V**
 24. Hanghøj, T., Kabel, K., & Jensen, S. H. (2022). Digital games, literacy and language learning in L1 and L2: A comparative systematic review. *L1-Educational Studies in Language and Literature*, 22. https://doi.org/10.21248/l1esll.2022.22.2.363 — **V**
 25. Hattie, J., & Timperley, H. (2007). The power of feedback. *Review of Educational Research*, 77(1), 81–112. https://doi.org/10.3102/003465430298487 — **V**
@@ -232,7 +259,7 @@ Statuskoder: **V** = bekræftet via søgning i denne session (titel/tidsskrift/�
 29. Kang, S. H. K., McDermott, K. B., & Roediger, H. L. (2007). Test format and corrective feedback modify the effect of testing on long-term retention. *European Journal of Cognitive Psychology*, 19(4–5), 528–558. — **V**
 30. Karpicke, J. D., Blunt, J. R., & Smith, M. A. (2016). Retrieval-based learning: Positive effects of retrieval practice in elementary school children. *Frontiers in Psychology*, 7, 350. https://doi.org/10.3389/fpsyg.2016.00350 — **V**
 31. Karpicke, J. D., & Roediger, H. L. (2007). Expanding retrieval practice promotes short-term retention, but equally spaced retrieval enhances long-term retention. *JEP: Learning, Memory, and Cognition*, 33(4), 704–719. — **V**
-32. Kelly, K., Wang, Y., & Thompson, T. (2015). Defining mastery: Knowledge tracing versus N-consecutive correct responses. *EDM 2015 (poster)*. — **V**
+32. Kelly, K., Wang, Y., Thompson, T., & Heffernan, N. (2015). Defining mastery: Knowledge tracing versus N-consecutive correct responses. *EDM 2015 (poster)*. — **V**
 33. Kluger, A. N., & DeNisi, A. (1996). The effects of feedback interventions on performance. *Psychological Bulletin*, 119(2), 254–284. — **V-sek**
 34. Koedinger, K. R., & Aleven, V. (2007). Exploring the assistance dilemma in experiments with Cognitive Tutors. *Educational Psychology Review*, 19(3), 239–264. https://doi.org/10.1007/s10648-007-9049-0 — **V**
 35. Kornell, N., Hays, M. J., & Bjork, R. A. (2009). Unsuccessful retrieval attempts enhance subsequent learning. *JEP: Learning, Memory, and Cognition*, 35(4), 989–998. https://doi.org/10.1037/a0015729 — **V**
@@ -255,7 +282,7 @@ Statuskoder: **V** = bekræftet via søgning i denne session (titel/tidsskrift/�
 52. Sinha, T., & Kapur, M. (2021). When problem solving followed by instruction works: Evidence for productive failure. *Review of Educational Research*, 91(5), 761–798. https://doi.org/10.3102/00346543211019105 — **V-sek** (bind/sider K)
 53. Slavin, R. E. (1987). Mastery learning reconsidered. *Review of Educational Research*, 57(2), 175–213. — **V**
 54. Sweller, J. (2010). Element interactivity and intrinsic, extraneous, and germane cognitive load. *Educational Psychology Review*, 22, 123–138. https://doi.org/10.1007/s10648-010-9128-5 — **V**
-55. Tippett, C. D. (2010). Refutation text in science education: A review of two decades of research. *International Journal of Science and Mathematics Education*, 8(6), 951–970. — **K** (titlen ses citeret, men tidsskriftsdetaljer ikke bekræftet i denne session)
+55. Tippett, C. D. (2010). Refutation text in science education: A review of two decades of research. *International Journal of Science and Mathematics Education*, 8(6), 951–970. https://doi.org/10.1007/s10763-010-9203-x — **V** (bekræftet i revision 2)
 56. van der Kleij, F. M., Feskens, R. C. W., & Eggen, T. J. H. M. (2015). Effects of feedback in a computer-based learning environment on students' learning outcomes: A meta-analysis. *Review of Educational Research*, 85(4), 475–511. — **V**
 57. Vlach, H. A., & Sandhofer, C. M. (2012). Distributing learning over time: The spacing effect in children's acquisition and generalization of science concepts. *Child Development*, 83(4), 1137–1144. — **V**
 58. Wisniewski, B., Zierer, K., & Hattie, J. (2020). The power of feedback revisited: A meta-analysis of educational feedback research. *Frontiers in Psychology*, 10, 3087. https://doi.org/10.3389/fpsyg.2019.03087 — **V**
