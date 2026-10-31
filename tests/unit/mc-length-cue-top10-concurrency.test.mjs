@@ -15,8 +15,9 @@
 //   2. The migration holding its locks: a reopen through each of the three live repeat paths WAITS,
 //      and the reopened instance gets the NEW key — its key is read after the wait, not before.
 //   3. A new instance whose question was read BEFORE the migration (get-next-question reads, then
-//      inserts): the insert waits and lands with the earlier key. Grading uses the new key (aliases),
-//      the pupil is told the new key, and a re-run of the migration re-keys it.
+//      inserts): the insert waits and lands with the earlier key. That is not a fault state: the
+//      question is still valid, both the earlier and the new correct text are right (aliases), each
+//      pupil is paid exactly once, and nothing is re-run.
 //   4. An answer submitted while the migration holds its locks waits, and is graded as the pupil saw it.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -198,7 +199,7 @@ test("real PostgreSQL: D-280 under simultaneous pupil activity", { skip: SKIP, t
     });
   }
 
-  await t.test("3. a new instance read before the migration: graded and answered with the new key; a re-run re-keys it", async () => {
+  await t.test("3. an instance that lands with the earlier key after part 2: valid, both texts right, paid once, no re-run", async () => {
     const { connect, su, pupil } = await freshDatabase();
     const p1 = await pupil(), p2 = await pupil();
     const gnq = await connect("service_role"), migr = await connect();
@@ -207,7 +208,7 @@ test("real PostgreSQL: D-280 under simultaneous pupil activity", { skip: SKIP, t
     assert.equal(key, BEFORE[FLINT].content.correct);
     await migr.query("BEGIN");
     await migr.query(MIGRATION);
-    // … and inserts after the migration took its locks.
+    // … and inserts after the migration took its locks: both pupils land with the earlier key.
     const insert = (p) => settle(gnq.query(`INSERT INTO public.question_instances (student_id, question_id, correct_answer, answered, next_review_at)
       VALUES ($1, $2, $3, false, now()) RETURNING id`, [p, QID[FLINT], key]));
     const ins1 = insert(p1);
@@ -216,16 +217,29 @@ test("real PostgreSQL: D-280 under simultaneous pupil activity", { skip: SKIP, t
     const a = await ins1;
     assert.ok(!(a instanceof Error), String(a));
     const b = await insert(p2);
+    assert.ok(!(b instanceof Error), String(b));
     const [qa, qb] = [a.rows[0].id, b.rows[0].id];
-    // The pupil saw the old options: the old text is right, and so is the new one; the key shown is new.
-    const r = (await gnq.query(ATTEMPT, [p1, qa, BEFORE[FLINT].content.correct])).rows[0].r;
-    assert.deepEqual(r, { status: "correct", correct_answer: patchOf(FLINT).correct_after });
-    // A re-run of the migration (all ten already corrected) re-keys the instance still open.
-    assert.equal(await staleOpen(su), 1);
-    await migr.query(MIGRATION);
-    assert.equal(await staleOpen(su), 0);
-    const rb = (await su.query("SELECT correct_answer FROM public.question_instances WHERE id = $1", [qb])).rows[0];
-    assert.equal(rb.correct_answer, patchOf(FLINT).correct_after);
+    assert.equal(await staleOpen(su), 2, "two open instances hold the earlier key — and that is allowed");
+
+    // The question it points at is valid: active MC, the new correct option exactly once among four.
+    const q = (await su.query("SELECT is_active, answer_format, content FROM public.questions WHERE id = $1", [QID[FLINT]])).rows[0];
+    assert.equal(q.is_active, true); assert.equal(q.answer_format, "mc");
+    assert.equal(q.content.options.length, 4);
+    assert.equal(q.content.options.filter((o) => o === q.content.correct).length, 1);
+    assert.equal(q.content.correct, patchOf(FLINT).correct_after);
+
+    // The earlier correct text (what the pupil saw) and the new one are both right; the key shown is new.
+    const r1 = (await gnq.query(ATTEMPT, [p1, qa, BEFORE[FLINT].content.correct])).rows[0].r;
+    const r2 = (await gnq.query(ATTEMPT, [p2, qb, patchOf(FLINT).correct_after])).rows[0].r;
+    for (const r of [r1, r2]) assert.deepEqual(r, { status: "correct", correct_answer: patchOf(FLINT).correct_after });
+    // A second submission of the same instance pays nothing more.
+    const again = (await gnq.query(ATTEMPT, [p1, qa, BEFORE[FLINT].content.correct])).rows[0].r;
+    assert.equal(again.status, "correct");
+    for (const p of [p1, p2]) {
+      const pr = (await su.query("SELECT xp, coins, correct_answers, total_correct_answers FROM public.student_progress WHERE student_id = $1", [p])).rows[0];
+      assert.deepEqual(pr, { xp: 110, coins: 55, correct_answers: 8, total_correct_answers: 8 }, "exactly one reward");
+    }
+    // No re-run of the migration anywhere in this scenario.
   });
 
   await t.test("4. an answer submitted while the migration holds its locks waits and is graded as the pupil saw it", async () => {

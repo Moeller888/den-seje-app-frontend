@@ -486,6 +486,47 @@ test("a new instance takes the new key and is graded and rewarded like any first
   }
 });
 
+test("an instance landing with the earlier key after part 2: valid question, both texts right, one reward, no re-run", async () => {
+  const db = await chainDb();
+  await seedPreflightState(db);
+  await migrate(db);
+  const changed = (await db.query("SELECT count(*)::int AS n FROM public.questions")).rows[0].n;
+  for (const [i] of BEFORE.entries()) {
+    const p = patchOf(i);
+    // get-next-question read the question just before the lock: the instance carries the earlier key.
+    const q = (await db.query("SELECT is_active, answer_format, content FROM public.questions WHERE id = $1", [QID[i]])).rows[0];
+    assert.equal(q.is_active, true); assert.equal(q.answer_format, "mc");
+    assert.equal(q.content.options.filter((o) => o === q.content.correct).length, 1, "a valid question");
+    for (const text of [p.correct_before, p.correct_after]) {
+      const pupil = await addPupil(db);
+      const qi = await instance(db, pupil, QID[i], p.correct_before);
+      const r = (await as(db, "service_role", "SELECT public.process_question_attempt($1, $2, $3, 0) AS r", [pupil, qi, text]))[0].r;
+      assert.deepEqual(r, { status: "correct", correct_answer: p.correct_after }, `${p.question_after}: "${text}"`);
+      assert.equal(await grade(db, pupil, qi, text), "correct", "a second submission replays");
+      const pr = (await db.query("SELECT xp, coins, correct_answers AS c, total_correct_answers AS t FROM public.student_progress WHERE student_id = $1", [pupil])).rows[0];
+      assert.deepEqual(pr, { xp: 110, coins: 55, c: 8, t: 8 }, "exactly one reward");
+    }
+  }
+  assert.equal((await db.query("SELECT count(*)::int AS n FROM public.questions")).rows[0].n, changed, "nothing re-run");
+});
+
+test("an earlier key on an answered instance is replaced by an ordinary reopen, no migration needed", async () => {
+  const db = await chainDb();
+  await migrate(db);
+  const flint = idx("Hvad lavede folk redskaber af i Stenalderen?");
+  const pupil = await addPupil(db);
+  for (const i of PREHISTORIC) {
+    const wrong = i === flint;
+    await instance(db, pupil, QID[i], BEFORE[i].content.correct,
+      { answered: true, wasCorrect: !wrong, answer: wrong ? "Kridt" : patchOf(i).correct_after });
+  }
+  const id = (await as(db, "service_role",
+    "SELECT public.request_repeat_question_for_student($1, 9::smallint, ARRAY['prehistoric_denmark']) AS id", [pupil]))[0].id;
+  const row = (await db.query("SELECT question_id, correct_answer FROM public.question_instances WHERE id = $1", [id])).rows[0];
+  assert.equal(row.question_id, QID[flint]);
+  assert.equal(row.correct_answer, patchOf(flint).correct_after);
+});
+
 // ── The three live repeat paths ──────────────────────────────────────────────
 
 const PREHISTORIC = BEFORE.map((r, i) => [r, i]).filter(([r]) => r.learning_objective === "prehistoric_denmark").map(([, i]) => i);

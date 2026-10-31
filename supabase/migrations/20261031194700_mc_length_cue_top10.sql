@@ -22,9 +22,14 @@
 --
 -- Spørgsmålene findes på deres (unikke) spørgsmålstekst og kontrolleres mod md5 af content og
 -- metadata fra read-only preflight i produktion 2026-10-31. Enhver afvigelse — også en åben
--- besvarelse med et facit, der ikke er gennemgået — afbryder hele migrationen. Er alle ti allerede
--- rettet, sættes kun eventuelle gamle facit på åbne besvarelser til det nye (se D-280 om en ny
--- besvarelse, der læste spørgsmålet lige før låsen).
+-- besvarelse med et facit, der ikke er gennemgået — afbryder hele migrationen. Migrationen er
+-- idempotent: er alle ti allerede rettet, ændres spørgsmålene ikke igen.
+--
+-- En besvarelse, som get-next-question oprettede ud fra en læsning af spørgsmålet lige før låsen,
+-- kan lande med det tidligere facit efter commit. Det er ikke en fejltilstand: eleven så de
+-- tidligere svarmuligheder, aliaserne gør både den tidligere og den nye rigtige tekst korrekt, og
+-- eleven får det nye facit vist. Facit følger spørgsmålet ved næste genåbning. Der skal ikke køres
+-- noget igen.
 --
 -- IKKE anvendt i produktion. Må KUN anvendes via apply_migration med særskilt ejer-autorisation
 -- (D-110, docs/migration-workflow-policy.md).
@@ -86,7 +91,7 @@ BEGIN
   PERFORM set_config('lock_timeout', '5s', true);
   -- Korte skrivelåse: ingen besvarelse kan oprettes, besvares eller genåbnes mellem kontrol og
   -- skrivning. (En læsning af spørgsmålet, der skete FØR låsen, kan stadig ende som en ny besvarelse
-  -- med det tidligere facit efter commit; aliaserne bedømmer den mod det nye facit, se D-280.)
+  -- med det tidligere facit efter commit; den bedømmes korrekt via aliaserne — se headeren.)
   LOCK TABLE public.questions IN SHARE ROW EXCLUSIVE MODE;
   LOCK TABLE public.question_instances IN SHARE ROW EXCLUSIVE MODE;
 
