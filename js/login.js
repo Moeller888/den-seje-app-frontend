@@ -6,6 +6,12 @@ import { maybeShowConsentBanner } from "./analytics-consent.js";
 initAnalytics();
 maybeShowConsentBanner();
 
+// H5 (D-273): every logout ends on this page, so a pending answer submission left in this tab is
+// dropped here — the next pupil to sign in never inherits it. A no-op when there is none. The key is
+// js/answer-submission.js's PENDING_STORAGE_KEY (pinned by tests/unit/answer-submission.test.mjs); it
+// is not imported so the login page never depends on another module loading.
+try { sessionStorage.removeItem("laerlig_h5_pending_v1"); } catch (_e) { /* storage blocked: nothing stored either */ }
+
 const emailInput    = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const message       = document.getElementById("message");
