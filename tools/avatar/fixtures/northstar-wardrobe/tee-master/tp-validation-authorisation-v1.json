@@ -1,0 +1,136 @@
+{
+  "decision": "D-270",
+  "experiment": "independent validation of large central tee prints (three compact motifs, separate deliveries)",
+  "status": "AUTHORISED by D-270 (D-270 TP-VALIDATION: 3 CALLS AUTHORISED): THREE single-use calls; no earlier permission is reused; not executed",
+  "meta": {
+    "authorisesImageRequest": false,
+    "why": "authorisation is the exact token in D-270's decision status plus this file's unspent entries, never a general boolean",
+    "kind": "a bounded validation: no catalogue, no runtime, no activation, no item approval"
+  },
+  "budget": {
+    "authorised": 3,
+    "reserve": 0,
+    "retries": 0,
+    "fallback": false,
+    "reusesEarlierPermissions": false,
+    "automaticExtension": false,
+    "separateFrom": "every earlier budget (D-255, D-258, D-267 and the rest)",
+    "enforcedLimit": "the call count (one one-shot claim per call); the price is an estimate",
+    "price": {
+      "verifiedAt": "2026-10-31",
+      "source": "https://developers.openai.com/api/docs/pricing (Standard, gpt-image-2.5-sunburst: text input $5.00, image input $8.00, image output $30.00 per 1M tokens; no per-image price is given)",
+      "perCallEstimate": 0.054,
+      "totalEstimate": 0.162,
+      "basis": "no image input; about 300 text tokens in per prompt ($0.0015); 1,756 image output tokens as measured for 1024x1024 high on D-267's TMG-1 and TMG-2 ($0.0527)",
+      "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
+    }
+  },
+  "privacy": {
+    "cSentToApi": "never: no image and no reference is sent",
+    "publishOrTrack": "never: the raw results and every review sheet stay outside both clones (D-127 §2)",
+    "h1": "never used"
+  },
+  "frozen": {
+    "plan": {
+      "file": "tools/avatar/fixtures/northstar-wardrobe/tee-master/tp-validation-plan-v1.json",
+      "sha256": "bceb20392a8026973ae9a3209c608fa09d752dacb78b542a2576a0f8136072e0"
+    },
+    "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026",
+    "production": "d240 (unchanged; this is not the production method)"
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/generations",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png"
+    },
+    "fieldOrder": [
+      "model",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "image",
+      "image[]",
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation",
+      "user"
+    ],
+    "images": []
+  },
+  "stopRules": [
+    "three single calls: no retry, no reserve, no fallback, no replacement call, no other model",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome — never resent, and no later call is sent",
+    "an HTTP error (credit, access, moderation or request shape) on any call stops every later call",
+    "a format reject at receipt (TECHNICAL_REJECT) does not stop the later calls; the deliveries are independent",
+    "the executor's stop file TPV-STOP.json"
+  ],
+  "calls": [
+    {
+      "callId": "TPV-1-tee-print-animal-fox",
+      "order": 1,
+      "delivery": "print-animal",
+      "background": "transparent",
+      "prompt": {
+        "sha256": "84956a3316911ea93d31238694f912bc310aefaf8ab0cc88084fcdbbd225ba63"
+      },
+      "claim": {
+        "identity": "TPV-1-tee-print-animal-fox-claim",
+        "filename": "TPV-1-tee-print-animal-fox.claim.json",
+        "eventsFilename": "TPV-1-tee-print-animal-fox.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "TPV-2-tee-print-object-teapot",
+      "order": 2,
+      "delivery": "print-object",
+      "background": "transparent",
+      "prompt": {
+        "sha256": "bdd76078a36d6f85b2cda50bdd82c9d14af5c93cf3a0236dc97f8c72d7d152e5"
+      },
+      "claim": {
+        "identity": "TPV-2-tee-print-object-teapot-claim",
+        "filename": "TPV-2-tee-print-object-teapot.claim.json",
+        "eventsFilename": "TPV-2-tee-print-object-teapot.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "TPV-3-tee-print-emblem-shield",
+      "order": 3,
+      "delivery": "print-emblem",
+      "background": "transparent",
+      "prompt": {
+        "sha256": "c4202266905fc69c70880c4ddb7052946b53a1a2c6f880c6975d921a0fda164e"
+      },
+      "claim": {
+        "identity": "TPV-3-tee-print-emblem-shield-claim",
+        "filename": "TPV-3-tee-print-emblem-shield.claim.json",
+        "eventsFilename": "TPV-3-tee-print-emblem-shield.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    }
+  ],
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-tee-print-validation-d270.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-270",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}
