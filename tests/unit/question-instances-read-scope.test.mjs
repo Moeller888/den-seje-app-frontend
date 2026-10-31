@@ -304,12 +304,16 @@ const REVIEWED_LATER_READERS = {
     "service_role only (process-event after auth.getUser() and the ownership check), never anon or " +
     "authenticated. No policy, RLS or table privilege on question_instances is touched (proven in " +
     "question-attempts-v2-migration-run.test.mjs).",
+  "20261031194600_mc_length_cue_answer_paths.sql":
+    "D-280 part 1: process_question_attempt and the three repeat functions keep their reads exactly " +
+    "(one instance by id and student_id; the pupil's own answered instances); after a reopen a second " +
+    "statement sets that one MC instance's correct_answer to its question's content.correct, never " +
+    "returned to anyone but the grader. EXECUTE stays service_role only. No policy, RLS or table " +
+    "privilege on question_instances is touched (proven in mc-length-cue-top10-migration-run.test.mjs).",
   "20261031194700_mc_length_cue_top10.sql":
-    "D-280: process_question_attempt and the three repeat functions keep their reads exactly (one " +
-    "instance by id and student_id; the pupil's own answered instances); a reopen now also sets an MC " +
-    "correct_answer to the question's content.correct, never returned to anyone but the grader. The " +
-    "owner-run DO block counts and re-keys the open instances of ten questions by question_id and " +
-    "returns nothing. No policy, RLS or table privilege on question_instances is touched (proven in " +
+    "D-280 part 2: an owner-run DO block locks the open instances of ten questions by question_id, " +
+    "checks their keys against the reviewed set and re-keys them; it returns nothing but a count in a " +
+    "NOTICE. No policy, RLS or table privilege on question_instances is touched (proven in " +
     "mc-length-cue-top10-migration-run.test.mjs).",
 };
 
@@ -443,6 +447,7 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261029150000_teacher_stats_from_answers.sql",
      "20261029170000_mc_grading_compensation.sql",
      "20261030211428_question_attempts_v2.sql",
+     "20261031194600_mc_length_cue_answer_paths.sql",
      "20261031194700_mc_length_cue_top10.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges

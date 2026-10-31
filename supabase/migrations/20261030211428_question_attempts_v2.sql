@@ -98,14 +98,6 @@ DECLARE
     'public.request_repeat_question_for_student(uuid,smallint,text[])',          'b27c917b9225bca58ad756e7952c49db',
     'public.request_repeat_question_servable_for_student(uuid,smallint,text[])', 'e31009c5924d0fbe4f11731df7f94290',
     'public.request_repeat_level_question_for_student(uuid,text[])',             'ee153327dae5a5686e9c5efd247d27c0');
-  -- The same four functions after 20261031194700 (D-280), reviewed against the round guard: aliases may
-  -- hold two or more versions, and a reopen also sets an MC correct_answer to content.correct. The
-  -- reopen still writes answered = false and repeat_count + 1 exactly as before.
-  v_after_d280 CONSTANT jsonb := jsonb_build_object(
-    'public.process_question_attempt(uuid,uuid,text,bigint)',                    '328ea8f9a4fd260407b582dcecb7dfdf',
-    'public.request_repeat_question_for_student(uuid,smallint,text[])',          '9cae1869428170353842aeea7c20b478',
-    'public.request_repeat_question_servable_for_student(uuid,smallint,text[])', '8d3bd29f6a10c0ed2015242163891d83',
-    'public.request_repeat_level_question_for_student(uuid,text[])',             '56604915f7750b3ff8c8923b62487b46');
   r      record;
   v_hash text;
 BEGIN
@@ -114,7 +106,7 @@ BEGIN
     IF v_hash IS NULL THEN
       RAISE EXCEPTION 'H5 PR 1: % findes ikke — migrationen er analyseret mod en anden database', r.key;
     END IF;
-    IF v_hash IS DISTINCT FROM r.value AND v_hash IS DISTINCT FROM v_after_d280 ->> r.key THEN
+    IF v_hash IS DISTINCT FROM r.value THEN
       RAISE EXCEPTION 'H5 PR 1: % er ændret siden analysen 2026-10-30 (md5 %, forventet %) — gennemgå rundevagten og _v2 igen', r.key, v_hash, r.value;
     END IF;
   END LOOP;
@@ -337,13 +329,12 @@ BEGIN
     RETURN jsonb_build_object('outcome', 'round_closed');
   END IF;
 
-  -- Only reviewed earlier versions of this question's correct option are aliases: an old spelling
-  -- and/or an earlier wording, two or more entries (20261031194700, D-280), as in the live function.
+  -- Only the reviewed old/new spellings of this question's correct option are aliases.
   v_aliases := v_metadata -> 'danish_orthography_correct_aliases';
   IF jsonb_typeof(v_aliases) IS DISTINCT FROM 'array' THEN
     v_aliases := '[]'::jsonb;
   END IF;
-  IF jsonb_array_length(v_aliases) >= 2
+  IF jsonb_array_length(v_aliases) = 2
      AND v_aliases ? v_instance.correct_answer
      AND v_aliases ? (v_content ->> 'correct') THEN
     v_key := v_content ->> 'correct';

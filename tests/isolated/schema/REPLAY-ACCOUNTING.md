@@ -52,10 +52,11 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** `20261031194700_mc_length_cue_top10` (D-280). Den ændrer
-  `process_question_attempt` og de tre gentagelsesfunktioner, som produktionen kører, og dens datadel
-  retter ti produktionsspørgsmål. CI spejler produktionen, så den afspilles ikke, før den er anvendt og
-  verificeret; da flyttes funktionsdelen til `SCHEMA_PART`. A, B og kommentarrettelsen er anvendt og
+- **Ikke anvendt i produktionen:** `20261031194600_mc_length_cue_answer_paths` og
+  `20261031194700_mc_length_cue_top10` (D-280). Den første ændrer `process_question_attempt` og de tre
+  gentagelsesfunktioner, som produktionen kører; den anden retter ti produktionsspørgsmål. CI spejler
+  produktionen, så ingen af dem afspilles, før de er anvendt og verificeret; da afspilles den første,
+  og den anden behandles som data efter planens regler. A, B og kommentarrettelsen er anvendt og
   verificeret og anvendes derfor også her (se "Anvendt i produktionen efter planens første version").
 
 ## Anvendt i produktionen efter planens første version
