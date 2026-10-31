@@ -385,7 +385,60 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Generated material on the tee master — D-267 (prepared and authorised: 2 single-use calls; NOT executed; 0 calls sent).**
+- **Tee print family, approval pack — D-272 (owner approval PENDING: 0 of 18; no call, no integration).**
+  - **Candidates.** 16 advisory candidates (ChatGPT's selection, not an owner approval) with stable IDs `TP-<FOX|TEA|SHD>-<CRM|HTH|NAV|COR|FOR|MUS>`.
+    The 2 non-candidates are shown apart with their reason: TP-FOX-COR and TP-FOX-MUS.
+  - **Inputs.** D-271's 18 results are kept unchanged; the candidate fixture is `tp-approval-candidates-v1.json`.
+  - **Pack.** `northstar-tee-print-approval-pack.mjs` writes a private pack.
+    - `manifest.json` keeps the technical, advisory and owner statuses separate.
+    - `index.html` has a local-only review with nothing pre-selected.
+  - **Owner decision.** The owner replies `D-272 GODKENDT: …` / `D-272 AFVIST: …`.
+  - **Next.** The integration plan (approved IDs only; needs a public-asset permission) is in `docs/decisions/D-272.md`.
+- **Independent validation of large central prints, result — D-271 (all three D-270 calls sent once and received; D-270 closed; no further call).**
+  - **Yield.** 3 of 3 delivered, and all three passed the delivery checks.
+  - **Placement.** OK in 18 of 18 combinations; nothing is cut or touches the neck, seams or armpits.
+  - **Visual.**
+    - The teapot and the shield are recognised at 110×165 on all six shirt colours and work as marks at 52×78.
+    - The fox is recognised on 4 of 6; it is weak on coral and mustard, close to its own orange.
+  - **Contrast check.** The classes agree with the visual review in 15 of 18 combinations. It misses a frame drawn in another colour (teapot on heather, shield on coral and mustard).
+  - **Known limits.** The master's limits show in close-up.
+  - **Recommendation.** Keep chest-center and D-269's rule. Next is an owner visual review of the private preview; no call is authorised. See `docs/decisions/D-271.md`.
+- **Independent validation of large central prints — D-270 (3 single-use calls authorised; executed and closed by D-271: 3 spent and received).**
+  - **The three calls.** Each is `images/generations` with a transparent background, 1024², one compact motif per call; no image or reference is sent:
+    - TPV-1: a fox (animal);
+    - TPV-2: a teapot (object);
+    - TPV-3: a shield with a lightning bolt (emblem).
+  - **Unchanged.** D-269's chest-center box and size rule on the locked D-264 master; the modules and the fingerprint are pinned.
+  - **Delivery checks.** D-267's print checks, plus single shape, compact format and no broad decoration.
+  - **Contrast check.** It is advisory and uses OKLab separation of the motif's fill and edge from the shirt. Results are clear, borderline (to visual review) or weak (a poor combination); clear is not a pass.
+  - **Shirt colours.** Six fixed colours: cream, heather, navy, coral, forest, mustard.
+  - **Reporting.** Yield and quality are reported apart. Every result is kept.
+  - **Execution.** Done on a separate owner instruction and recorded in D-271. See `docs/decisions/D-270.md`.
+- **Print family on the tee master — D-269 (offline study; no call; the D-264 master unchanged; nothing approved).**
+  - **Placements.** Two fixed boxes on the body panel, as fractions of the cut, inside a safe area at least 10 px from the rib bands, armhole seams, contour and arms:
+    - `chest-left` (0.30 × 0.30 body widths at the master's anchor);
+    - `chest-center` (0.58 × 0.52 at 0.39 of the cut height).
+  - **Size rule.** The motif's visible content (alpha ≥ 8 box, never the canvas) is scaled as large as the box allows, capped at 50% of the box area in ink.
+    The whole illustration is kept, with one constant and no per-motif parameters.
+  - **Result.** 48/48 renders pass the automatic checks; the alpha is unchanged and the print path is byte-identical to the master's at the anchor.
+    - Visually, only `chest-center` gives a legible shape at 110×165 (the planet about 16×11 px) and a recognisable figure at 52×78.
+    - `chest-left` stays a small mark in the app.
+    - Large prints reveal the master's displacement (slightly wavy outlines, nearest-sample steps) and its flat chest.
+    - Coral shows that the family needs a colour-contrast rule.
+  - **Recommendation.** `chest-center` with the size rule. The next step is a visual owner review of the private preview. See `docs/decisions/D-269.md`.
+- **Generated material on the tee master, result — D-268 (both D-267 calls sent once and received; D-267 closed; no further call).**
+  - **Automatic.** Both images passed every material check, and the master check on C held: fingerprint matched, 0 holes, fit OK, outfits 8/8.
+    Both were classified as requiring visual review.
+  - **Visual: TMG-1 swatch.** It is clean and seamless with 4×4 repeats.
+    On the master it is practically identical to the local twin; the only difference is a faint woven grain, visible only in close-ups.
+    The wavy, stepped band edges, the neck-rib line showing through and the dark ticks at the cuffs appear on the twin too, so they are mapping faults (D-264).
+    Answer: no visible value over the local pattern.
+  - **Visual: TMG-2 print.** It is clean and transparent, with no halo or shadow, and in Northstar's cartoon style.
+    It reads as a planet at full size and at 110×165, but the face is lost at app size and it is a spot at 52×78.
+    Answer: a usable new design, with the anchor's size as its limit.
+  - **Recommendation.** Leave patterned fabric to local patterns. Keep GPT for prints and other illustrated details.
+    The next step is an owner decision about a small print family. No call is authorised. See `docs/decisions/D-268.md`.
+- **Generated material on the tee master — D-267 (2 single-use calls authorised; executed and closed by D-268: 2 spent and received).**
   - **The two calls.** Both are `images/generations` with no image or reference sent (C is never sent):
     - TMG-1: a seamless gingham swatch, 4×4 repeats, opaque;
     - TMG-2: a standalone chest print on a transparent background.
@@ -399,7 +452,7 @@ art layer behind them can be upgraded without a rewrite.
     They were tested on SYNTHETIC positive and negative examples.
   - **Local twin.** A gingham through the same master separates material faults from mapping faults.
   - **Visual criteria.** These are never automatic.
-  - **Execution.** Needs a separate owner instruction. See `docs/decisions/D-267.md`.
+  - **Execution.** Done on a separate owner instruction and recorded in D-268. See `docs/decisions/D-267.md`.
 - **Tee master — D-264 (offline prototype; no call; recommendation 1: promising enough for a later generated-material test).**
   - **What.** `northstar-tee-master.mjs`: one-time data for the tee-hip cut. It has:
     - a panel map split at the drawn armhole seams, not at C's arm mask;

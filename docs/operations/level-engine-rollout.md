@@ -133,11 +133,113 @@ FROM public.questions WHERE metadata ? 'level_batch' GROUP BY 1 ORDER BY 1;
 | Niveaumotoren opfører sig forkert | Fjern Edge-secret'en `LEVEL_ENGINE` | Øjeblikkeligt tilbage til den hidtidige udvælgelse, uden deploy. `student_subject_level` og `student_level_fold_log` bliver liggende (læses ikke) |
 | Formatblandingen opfører sig forkert | Fjern `QUESTION_MIX_ENGINE` | Tilbage til `v1` uden deploy |
 | Et aktiveret indholdsportion har fejl | `UPDATE public.questions SET is_active = false WHERE metadata->>'level_batch' = '<portion>'` | Opgaverne serveres ikke længere. Allerede besvarede instanser bevares |
-| Ny Edge-kode skal ud | Redeploy den forrige version af `get-next-question` | Kræver, at flagene er slået fra først |
+| Ny Edge-kode skal ud | Deploy rollback-kilden for `get-next-question` (§3.1) | Kræver, at flagene er slået fra først |
 | Migration B skal fjernes (kun hvis nødvendigt) | `DROP FUNCTION public.request_repeat_level_question_for_student(uuid, text[]); DROP FUNCTION public.get_level_questions_for_student(uuid, integer, text[], integer); DROP FUNCTION public.advance_student_level(uuid, text, smallint); DROP INDEX public.idx_qi_student_answered; DROP TABLE public.student_level_fold_log;` | Kun med `LEVEL_ENGINE` slået fra. Fold-loggen går tabt. Niveauerne i `student_subject_level` bevares |
 | Migration A skal fjernes (kun før indhold er indsat) | `DROP TABLE public.student_subject_level; DROP INDEX public.idx_questions_objective_level; ALTER TABLE public.questions DROP CONSTRAINT questions_difficulty_level_check; ALTER TABLE public.questions DROP COLUMN difficulty_level; DROP FUNCTION public.difficulty_level_from_grade_band(integer, integer);` | Forudsætter, at B og indholdet ikke er anvendt. Ellers er det en datamigration, der kræver sin egen plan |
 
 Al tilbagerulning af skema kræver ejerens godkendelse ligesom anvendelsen.
+
+### 3.1 Release-gate for `get-next-question`: deploy med motoren slukket
+**Status:** deploy er **ikke** godkendt. Proceduren her skal være merget, før nogen deploy, og hvert
+trin kræver ejerens godkendelse ligesom resten af runbooken.
+
+**Afhængigheden er låst.** `index.ts` importerer `https://esm.sh/@supabase/supabase-js@2.118.0`
+(supabase-js@2.118.0, ejerbeslutning 2026-10-30) og ikke længere `@2`, som opløses til den nyeste 2.x,
+når funktionen bundles eller køres.
+- **Hvilken version `@2` hidtil gav:** 2.118.0 blev udgivet på npm 2026-10-15 kl. 12:57 UTC og er
+  stadig den nyeste 2.x (`dist-tags.latest`, kontrolleret 2026-10-30). esm.sh svarer i dag Deno på
+  `@2` med en 302 til `@2.118.0`, og de to svar er byte-identiske. Version 179 blev deployet
+  2026-10-22, og de grønne CI-kørsler 2026-10-30 (PR #485 og main `242d7eb`) kørte efter 2026-10-15.
+  De har derfor opløst 2.118.0. Det er udledt af udgivelsestidspunkterne: CI-loggene og den deployede
+  bundle navngiver ikke versionen.
+- **Det, låsningen ikke dækker:** esm.sh bygger selv modulet, og Supabase bygger bundlen. Bundlens hash
+  (`ezbr_sha256`) kan derfor ikke forudsiges lokalt. Det, der verificeres, er kilden: manifestet herunder.
+
+**Manifester.** `node tools/edge/gnq-release.mjs manifest` skriver én linje `<sha256>  <sti>` pr. fil
+i modulgrafen fra `index.ts` (relative imports) plus `deno.json`, sorteret. Manifestet er sha256 af
+de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy.
+
+| | Kilde | Filer | Manifest |
+|---|---|---|---|
+| Kandidat | dette repository | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
+| Rollback | `21ec9ff` med låsningen (kun linje 2 i `index.ts` er ændret) | 11 | `ca21b993839e48ff4e5baf3189306860d6b349fdcc7eea12f65ab78a73e418c6` |
+| Version 179, som deployet | `21ec9ff` uændret | 11 | `c4414671f3a5aff1e8d5bc3cb57ec4e92bb0d70ef8008a7ade39a75730c81985` |
+
+Kandidaten adskiller sig fra version 179 i `index.ts` (niveaugrenen og låsningen) og den nye
+`level-flow.ts`. De øvrige 10 filer er byte-identiske. Unit-testen kræver, at kandidatmanifestet i
+tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten
+gennemgås igen.
+
+**Rollback-kilde: `21ec9ff`** (2026-10-20, "fix(opgaveformer): ret fallback, serverniveau og
+repeat-pulje …").
+- **Lig med version 179:** commit'ens modulgraf er byte for byte de 11 filer, `get_edge_function`
+  viste for version 179 (kontrolleret 2026-10-30).
+- **I main-historikken:** `git merge-base --is-ancestor 21ec9ff origin/main` er sand (2026-10-30), så
+  der er ikke brug for et tag.
+- **Filerne skrives med:** `node tools/edge/gnq-release.mjs materialize-rollback <mappe>`. Det kræver
+  den fulde historik, ikke en shallow clone.
+- **Opførsel:** kørt gennem samme harness som unit-testen opfører den låste rollback-kilde sig som
+  version 179 i alle 241 tilfælde (lokalt, 2026-10-30).
+
+**Slukket-paritet** (`tests/unit/get-next-question-release-gate.test.mjs`, i unit-CI).
+- **Hvad testen kører:** den rigtige `index.ts` i Node mod en registrerende supabase-js-stand-in.
+- **Flagværdier:** `LEVEL_ENGINE` mangler eller er `""`, `"false"`, `"true"`, `"0"`, `"off"`,
+  `"V1"` eller `" v1"`.
+- **Variationer:** alle tre `QUESTION_MIX_ENGINE`-tilstande, historie og engelsk, og fem situationer
+  (forfalden, ny, gentagelse, ingen opgaver, RPC-fejl).
+- **Krav:** status, svar, alle backend-kald med argumenter og loglinjer skal være identiske med
+  `tests/fixtures/gnq-v179-parity.json`. Filen er skrevet fra `21ec9ff` med
+  `node tools/edge/gnq-release.mjs golden`.
+- **Ingen niveaumotor:** ingen af B's funktioner kaldes, ingen niveautabel læses eller skrives, og der
+  kommer ingen `LEVEL_ENGINE:`-linje.
+- **Negativ kontrol:** `"v1"` fanges af samme sammenligning.
+- **Vagt mod flydende imports:** enhver ekstern import i grafen skal have en præcis version
+  (`x.y.z`). Supabase-js skal være den låste version, og ingen import må gå gennem `deno.json`.
+
+**Før deploy** (læsende; alle punkter skal holde, ellers stop):
+1. Ejerens særskilte godkendelse af deploy med en navngiven commit og kandidatmanifestet ovenfor.
+2. **Rent checkout af den commit:** `node tools/edge/gnq-release.mjs manifest` viser kandidatmanifestet
+   ovenfor, og `21ec9ff` er forfader til `origin/main`. Main-CI er grøn på commit'en.
+3. **Secret-navne:** `supabase secrets list --project-ref tjzbehwfagiwpwodsgwg` (kun navnene læses).
+   - `LEVEL_ENGINE` må ikke findes. Findes navnet, kan værdien ikke læses sikkert, og tilstanden er
+     ukendt: deploy er blokeret.
+   - Kontrol 2026-10-30: 11 navne, `LEVEL_ENGINE` findes ikke. `QUESTION_MIX_ENGINE` findes, men
+     dens værdi er ikke læst. Pariteten dækker alle tre tilstande.
+4. **Live-tilstand:** `get_edge_function get-next-question` er version 179, og dens filer giver
+   manifestet `c4414671…`. Afviger det, har nogen deployet siden: stop.
+5. **Rollback klar:** rollback-filerne er skrevet, og deres manifest er `ca21b993…`.
+
+**Deploy:** Supabase-pluginets `deploy_edge_function` med disse parametre:
+- `name` `get-next-question`;
+- `entrypoint_path` `functions/get-next-question/index.ts`;
+- `import_map_path` `functions/get-next-question/deno.json`;
+- `verify_jwt` `false`, ellers fejler browserens OPTIONS-preflight;
+- præcis de 12 filer i kandidatmanifestet, med stierne som i manifestet.
+
+Ingen secret ændres.
+
+**Efter deploy** (læsende):
+1. `get_edge_function`: en ny version, `ACTIVE`, `verify_jwt` false, og filerne giver
+   kandidatmanifestet. `ezbr_sha256` noteres; den kan ikke forudsiges.
+2. `OPTIONS https://tjzbehwfagiwpwodsgwg.supabase.co/functions/v1/get-next-question` giver 200 `ok`.
+3. Production Smoke er grøn. En manuel kørsel kræver sin egen godkendelse.
+4. Edge-logs viser `WAVE:`, `GRADE:` og `DOMAINS:` som før, **ingen** `LEVEL_ENGINE:`, og 5xx som før.
+5. `SELECT count(*) FROM public.student_subject_level;` og
+   `SELECT count(*) FROM public.student_level_fold_log;` er begge 0, også efter et døgn.
+6. Secret-navnene er uændrede.
+
+**Rollback** (ved en afvigelse: stop, rapportér, og ejeren beslutter):
+- **Udførelse:** deploy rollback-filerne (11 filer, manifest `ca21b993…`) med samme parametre.
+- **Efterkontrol:**
+  - filerne giver rollback-manifestet;
+  - `level-flow.ts` findes ikke;
+  - `verify_jwt` er false;
+  - OPTIONS giver 200 `ok`;
+  - Production Smoke er grøn;
+  - der er ingen `LEVEL_ENGINE:`-linjer.
+- **Det, rollback ikke kan:** versionsnummeret bliver nyt, for version 179 kan ikke genaktiveres som
+  sådan. `ezbr_sha256` vil afvige fra version 179's `cf25886c…`.
+- **Ingen side-ændringer:** rollback ændrer hverken database eller secrets.
 
 ---
 
