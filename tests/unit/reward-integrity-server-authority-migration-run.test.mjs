@@ -3,7 +3,9 @@
 // built from the repository's own definitions:
 //   * weekly_quests + student_weekly_quest_progress, their policies and seeds, verbatim from
 //     20260524000000_weekly_quests.sql, plus update_weekly_quest_progress_for_answer and
-//     claim_weekly_quest_reward from the same file;
+//     claim_weekly_quest_reward from the same file — then 20260925000000_weekly_quest_progress_read_scope.sql
+//     verbatim, which replaced the teacher SELECT policy with "super_admins read all weekly quest
+//     progress". The resulting four policies are exactly production's (read-only catalog 2026-10-31);
 //   * set_night_correct / update_best_session_streak verbatim from 20260518000500_hidden_achievements.sql;
 //   * production's open grants (full table privileges and function EXECUTE for PUBLIC, anon,
 //     authenticated, service_role — read from the production catalog 2026-10-31).
@@ -33,6 +35,16 @@ const MIG = (f) => read(join("supabase", "migrations", f));
 const FILE = "20261031190000_reward_integrity_server_authority.sql";
 const WEEKLY = "20260524000000_weekly_quests.sql";
 const HIDDEN = "20260518000500_hidden_achievements.sql";
+const READ_SCOPE = "20260925000000_weekly_quest_progress_read_scope.sql";
+// Production before the migration (read-only catalog 2026-10-31).
+const PROD_POLICIES_BEFORE = [
+  { policyname: "super_admins read all weekly quest progress", cmd: "SELECT", roles: "{authenticated}" },
+  { policyname: "weekly_progress_insert_own", cmd: "INSERT", roles: "{public}" },
+  { policyname: "weekly_progress_select_own", cmd: "SELECT", roles: "{public}" },
+  { policyname: "weekly_progress_update_own", cmd: "UPDATE", roles: "{public}" },
+];
+const PROD_PROSRC_MD5 = { set_night_correct: "fc2cb97c4f147625fa170abe404f9f28",
+                          update_best_session_streak: "9b748ad15766feb2b649671ebbaa0aca" };
 
 function fnStatement(file, name) {
   const src = MIG(file);
@@ -104,6 +116,7 @@ async function freshDb() {
   const db = new PGlite();
   await db.exec(FIXTURE);
   await db.exec(weeklyTablesAndSeeds());
+  await db.exec(MIG(READ_SCOPE));
   await db.exec(fnStatement(WEEKLY, "update_weekly_quest_progress_for_answer"));
   await db.exec(fnStatement(WEEKLY, "claim_weekly_quest_reward"));
   await db.exec(fnStatement(HIDDEN, "set_night_correct"));
@@ -215,8 +228,8 @@ test("pupil still SELECTs own weekly progress only; the policy set is exactly th
   const pol = (await db.query(`SELECT policyname, cmd FROM pg_policies
     WHERE schemaname = 'public' AND tablename = 'student_weekly_quest_progress' ORDER BY 1`)).rows;
   assert.deepEqual(pol, [
+    { policyname: "super_admins read all weekly quest progress", cmd: "SELECT" },
     { policyname: "weekly_progress_select_own", cmd: "SELECT" },
-    { policyname: "weekly_progress_select_teacher", cmd: "SELECT" },
   ]);
   for (const role of ["anon", "authenticated"]) {
     for (const priv of ["INSERT", "UPDATE", "DELETE"]) {
@@ -259,10 +272,16 @@ test("best_session_streak is counted by the server; p_count is ignored", async (
   assert.equal((await progress(db, P1)).best_session_streak, 5);
 });
 
-test("a wrong answer ends the run, answers older than 2 hours do not count, and the best never decreases", async () => {
+test("the fixture's policies before the migration are exactly production's four", async () => {
+  const db = await freshDb();
+  const pol = (await db.query(`SELECT policyname, cmd, roles::text AS roles FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'student_weekly_quest_progress' ORDER BY 1`)).rows;
+  assert.deepEqual(pol, PROD_POLICIES_BEFORE);
+});
+
+test("a wrong answer ends the run, and the best never decreases", async () => {
   const db = await migrated();
   await answers(db, P1, [
-    { ok: true, ago: "5 hours" }, { ok: true, ago: "4 hours" }, { ok: true, ago: "3 hours" },  // outside the window
     { ok: true, ago: "50 minutes" }, { ok: false, ago: "40 minutes" },                          // run broken here
     { ok: true, ago: "30 minutes" }, { ok: true, ago: "20 minutes" },
   ]);
@@ -275,6 +294,44 @@ test("a wrong answer ends the run, answers older than 2 hours do not count, and 
   await db.query(`INSERT INTO public.question_instances (student_id, answered) VALUES ('${P1}', false)`);
   await api(db, AS(P1), "SELECT public.update_best_session_streak(1)");
   assert.equal((await progress(db, P1)).best_session_streak, 7);
+});
+
+test("session = no pause over 2 hours between answers: a long, steady session is not lost; a long pause ends it", async () => {
+  // A slow but continuous session over 7.5 hours (pauses of 1.5 h) keeps its full run of 6 —
+  // the client would count 6 as long as the page stayed open.
+  const steady = await migrated();
+  await answers(steady, P1, ["450", "360", "270", "180", "90", "1"].map((m) => ({ ok: true, ago: `${m} minutes` })));
+  await api(steady, AS(P1), "SELECT public.update_best_session_streak(6)");
+  assert.equal((await progress(steady, P1)).best_session_streak, 6);
+  // A pause of more than 2 hours ends the session: only the 2 answers after it count.
+  const paused = await migrated();
+  await answers(paused, P1, [
+    { ok: true, ago: "5 hours" }, { ok: true, ago: "4 hours" }, { ok: true, ago: "3 hours" },
+    { ok: true, ago: "50 minutes" }, { ok: true, ago: "30 minutes" },                           // 2 h 10 min pause before these
+  ]);
+  await api(paused, AS(P1), "SELECT public.update_best_session_streak(5)");
+  assert.equal((await progress(paused, P1)).best_session_streak, 2);
+});
+
+test("a page reload inside a session does not lose the run (the server counts answers, not page loads)", async () => {
+  // The client counter restarts on reload; 3 answers before and 2 after a reload are one server run.
+  const db = await migrated();
+  await answers(db, P1, [{ ok: true, ago: "12 minutes" }, { ok: true, ago: "10 minutes" }, { ok: true, ago: "8 minutes" },
+                         { ok: true, ago: "3 minutes" }, { ok: true, ago: "1 minute" }]);
+  await api(db, AS(P1), "SELECT public.update_best_session_streak(2)");
+  assert.equal((await progress(db, P1)).best_session_streak, 5);
+});
+
+test("KNOWN LIMIT until question_attempts (D-266): a repeat re-opens the same row, so it counts once", async () => {
+  // Pool exhausted → request_repeat_* re-opens the SAME question_instances row and overwrites
+  // answered_at. Four distinct questions + a repeat of one of them = 5 client answers, 4 rows.
+  const db = await migrated();
+  await answers(db, P1, [{ ok: true, ago: "9 minutes" }, { ok: true, ago: "7 minutes" },
+                         { ok: true, ago: "5 minutes" }, { ok: true, ago: "3 minutes" }]);
+  await db.query(`UPDATE public.question_instances SET answered_at = now() - interval '1 minute', was_correct = true
+    WHERE id = (SELECT id FROM public.question_instances WHERE student_id = '${P1}' ORDER BY answered_at LIMIT 1)`);
+  await api(db, AS(P1), "SELECT public.update_best_session_streak(5)");
+  assert.equal((await progress(db, P1)).best_session_streak, 4, "documented limit; resolved by the append-only log");
 });
 
 test("one pupil's answers never count for another pupil", async () => {
@@ -377,6 +434,22 @@ test("idempotent: applying the file twice gives the same catalog state", async (
 });
 
 // ── 5. Rollback ─────────────────────────────────────────────────────────────────────────────────────
+
+test("the rollback's function bodies are byte-identical to production's (md5 of prosrc, catalog 2026-10-31)", async () => {
+  const db = await migrated();
+  await db.exec(rollbackSql());
+  const rows = (await db.query(`SELECT p.proname, md5(p.prosrc) AS m, l.lanname, p.proconfig
+    FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace JOIN pg_language l ON l.oid = p.prolang
+    WHERE n.nspname = 'public' AND p.proname IN ('set_night_correct', 'update_best_session_streak') ORDER BY 1`)).rows;
+  for (const r of rows) {
+    assert.equal(r.m, PROD_PROSRC_MD5[r.proname], r.proname);
+    assert.equal(r.lanname, "sql", r.proname);
+    assert.deepEqual(r.proconfig, ["search_path=public"], r.proname);
+  }
+  const pol = (await db.query(`SELECT policyname, cmd, roles::text AS roles FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'student_weekly_quest_progress' ORDER BY 1`)).rows;
+  assert.deepEqual(pol, PROD_POLICIES_BEFORE, "after rollback: production's four policies");
+});
 
 test("the documented rollback restores the pre-migration definitions, policies and ACLs exactly", async () => {
   const state = async (db) => (await db.query(`

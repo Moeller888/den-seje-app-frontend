@@ -18,22 +18,32 @@
 --
 -- WHAT CHANGES (and nothing else)
 --   1. student_weekly_quest_progress: drop the two pupil write policies; revoke INSERT, UPDATE and
---      DELETE from anon and authenticated. SELECT (own rows, teachers) is unchanged. The server
---      functions run as their owner and are unaffected.
+--      DELETE from anon and authenticated. The two SELECT policies (weekly_progress_select_own and
+--      "super_admins read all weekly quest progress") are unchanged. The server functions run as
+--      their owner and are unaffected.
 --   2. update_best_session_streak(p_count integer): same signature (app.js is unchanged); p_count is
---      IGNORED. The server counts the caller's own consecutive correct answers, newest first, among
---      answers given in the last 2 hours (a "session"), and stores GREATEST(stored, counted).
+--      IGNORED. The server counts the caller's own CURRENT run of consecutive correct answers, newest
+--      first. A "session" is a sequence of answers with no pause longer than 2 hours between two
+--      consecutive answers; a wrong answer or such a pause ends the run. It stores
+--      GREATEST(stored, counted). Known limit until question_attempts is applied (D-266): a repeat
+--      re-opens the SAME question_instances row, so a question answered twice in one run counts once.
 --   3. set_night_correct(): same signature; sets the flag only if the caller has a correct answer
---      given between 00:00 and 03:59 Danish time (Europe/Copenhagen).
+--      given between 00:00 and 03:59 Danish time (Europe/Copenhagen) — any such answer in the
+--      caller's history (the achievement is "answer correctly at night"; see D-278 for why the
+--      historical rule, not "just now", is the correct one).
 --   4. Both functions: EXECUTE revoked from PUBLIC and anon (authenticated and service_role keep it);
 --      an unauthenticated call raises 'not_authenticated' instead of silently doing nothing.
 -- Existing flags, achievements and coins are NOT changed or revoked by this file. Whether existing
 -- awards are reviewed is a separate owner decision (D-278).
 --
--- PRODUCTION BEFORE THIS FILE (read-only catalog, 2026-10-31; md5 of pg_get_functiondef):
---   update_best_session_streak  c504fe3b971db6ce53aab5bd0d50ac89  (= 20260518000500 body)
---   set_night_correct           2d5ce06e1bb3c2593555e03e38eb1a08  (= 20260518000500 body)
---   policies weekly_progress_insert_own / weekly_progress_update_own present (= 20260524000000)
+-- PRODUCTION BEFORE THIS FILE (read-only catalog, 2026-10-31):
+--   update_best_session_streak  md5(prosrc) 9b748ad15766feb2b649671ebbaa0aca, LANGUAGE sql,
+--                               search_path=public (= 20260518000500 body, byte for byte)
+--   set_night_correct           md5(prosrc) fc2cb97c4f147625fa170abe404f9f28, same
+--   both: ACL {=X, postgres=X, anon=X, authenticated=X, service_role=X}
+--   student_weekly_quest_progress policies: weekly_progress_select_own (SELECT, public),
+--     "super_admins read all weekly quest progress" (SELECT, authenticated; = 20260925000000),
+--     weekly_progress_insert_own (INSERT, public), weekly_progress_update_own (UPDATE, public)
 --
 -- ROLLBACK: docs/operations/reward-integrity-rollback.md (restores the three objects exactly).
 -- ============================================================================
@@ -56,26 +66,30 @@ SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
 DECLARE
-  v_uid UUID    := auth.uid();
-  v_run INTEGER := 0;
-  r     RECORD;
+  v_uid  UUID        := auth.uid();
+  v_run  INTEGER     := 0;
+  v_prev TIMESTAMPTZ := NULL;
+  r      RECORD;
 BEGIN
   -- p_count is kept for the client contract and deliberately ignored.
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'not_authenticated';
   END IF;
 
+  -- The current run: newest answer first, until a wrong answer or a pause of more than 2 hours
+  -- between two consecutive answers (the end of a session).
   FOR r IN
-    SELECT qi.was_correct
+    SELECT qi.was_correct, qi.answered_at
     FROM   public.question_instances qi
     WHERE  qi.student_id  = v_uid
       AND  qi.answered    = true
       AND  qi.answered_at IS NOT NULL
-      AND  qi.answered_at >= now() - interval '2 hours'
     ORDER  BY qi.answered_at DESC, qi.id DESC
   LOOP
     EXIT WHEN r.was_correct IS NOT TRUE;
-    v_run := v_run + 1;
+    EXIT WHEN v_prev IS NOT NULL AND v_prev - r.answered_at > interval '2 hours';
+    v_run  := v_run + 1;
+    v_prev := r.answered_at;
   END LOOP;
 
   UPDATE public.student_progress

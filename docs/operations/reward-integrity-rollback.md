@@ -11,17 +11,32 @@ godkendelse (D-110, [migration-workflow-policy.md](../migration-workflow-policy.
 
 Hvert punkt skal holde. Ellers stoppes der.
 
-1. **Funktionernes md5** (`md5(pg_get_functiondef(oid))`) er stadig som ved kontrollen 2026-10-31:
-   - `update_best_session_streak(integer)`: `c504fe3b971db6ce53aab5bd0d50ac89`;
-   - `set_night_correct()`: `2d5ce06e1bb3c2593555e03e38eb1a08`.
+1. **Funktionskroppene er uændrede.** `md5(prosrc)` er stadig som ved kontrollen 2026-10-31:
+   - `update_best_session_streak(integer)`: `9b748ad15766feb2b649671ebbaa0aca`;
+   - `set_night_correct()`: `fc2cb97c4f147625fa170abe404f9f28`.
 
-   Er de ændret, har nogen ændret funktionerne siden kontrollen. Rollbacken nedenfor er da ikke
-   længere den rigtige.
-2. **Policies:** `pg_policies` for `student_weekly_quest_progress` viser præcis
-   - `weekly_progress_select_own`,
-   - `weekly_progress_select_teacher`,
-   - `weekly_progress_insert_own` og
-   - `weekly_progress_update_own`.
+   Begge er `LANGUAGE sql`, `SECURITY DEFINER` og `search_path=public`. ACL er
+   `{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}`.
+
+   Er noget ændret, har nogen ændret funktionerne siden kontrollen. Så er rollbacken nedenfor ikke
+   længere den rigtige, og der stoppes. Tilbagerulningens funktionskroppe har præcis disse md5. Det
+   kræver unit-testen.
+
+   *Rettelse 2026-10-31:* Den første version angav md5 af `pg_get_functiondef`. Den værdi afhænger af
+   serverversionens formatering og kan ikke sammenlignes på tværs. `md5(prosrc)` er selve kroppen.
+2. **Policies.** `pg_policies` for `student_weekly_quest_progress` viser præcis disse fire:
+
+   | Navn | Kommando | Roller |
+   |---|---|---|
+   | `super_admins read all weekly quest progress` | SELECT | `{authenticated}` |
+   | `weekly_progress_insert_own` | INSERT | `{public}` |
+   | `weekly_progress_select_own` | SELECT | `{public}` |
+   | `weekly_progress_update_own` | UPDATE | `{public}` |
+
+   *Rettelse 2026-10-31:* Den første version forventede `weekly_progress_select_teacher`. Den policy
+   blev erstattet af `super_admins read all weekly quest progress` i
+   `20260925000000_weekly_quest_progress_read_scope.sql`. Det er bekræftet read-only i produktionen.
+   Migrationen og tilbagerulningen rører ingen af de to SELECT-policies.
 3. **Kolonner:** `question_instances` har kolonnerne `student_id`, `answered`, `answered_at`,
    `was_correct` og `id`, som de nye funktioner læser.
 4. **Ingen kollision:** `list_migrations` viser ingen version med samme tidsstempel eller navn.
@@ -36,7 +51,9 @@ Hvert punkt skal holde. Ellers stoppes der.
 
 ## 3. Efter anvendelse (kun læsning)
 
-1. `pg_policies` for `student_weekly_quest_progress` viser kun de to SELECT-policies.
+1. `pg_policies` for `student_weekly_quest_progress` viser præcis `super_admins read all weekly quest
+   progress` (SELECT, `{authenticated}`) og `weekly_progress_select_own` (SELECT, `{public}`), med
+   uændret `qual`.
 2. `information_schema.role_table_grants` viser hverken INSERT, UPDATE eller DELETE for `anon` eller
    `authenticated` på tabellen.
 3. Begge funktioner er `SECURITY DEFINER` med `search_path=public, pg_temp`. Deres ACL indeholder
@@ -96,8 +113,9 @@ GRANT EXECUTE ON FUNCTION public.update_best_session_streak(integer) TO PUBLIC, 
 ```
 
 **Efterkontrol:**
-1. Funktionernes md5 er igen `c504fe3b…` og `2d5ce06e…`.
-2. Policies og rettigheder er som under §1 punkt 2.
+1. `md5(prosrc)` er igen `9b748ad1…` og `fc2cb97c…`, og ACL'erne er som under §1 punkt 1.
+2. De fire policies er som under §1 punkt 2.
+3. Tabellens ACL giver igen `anon` og `authenticated` INSERT, UPDATE og DELETE.
 
 Unit-testen afspiller selve tilbagerulningen og kræver, at funktionsdefinitionerne og ACL'erne er
 identiske med tilstanden før migrationen.
