@@ -7,10 +7,12 @@
   },
   "flag": "AVATAR_NORTHSTAR_WARDROBE (js/avatar-layers.js), false",
   "counts": {
-    "files": 31,
+    "files": 63,
     "shadows": 12,
     "maxFiles": 41,
-    "maxShadows": 20
+    "maxShadows": 20,
+    "d242Files": 31,
+    "d274Files": 32
   },
   "outfits": {
     "K01": {
@@ -852,6 +854,940 @@
       "width": 1024,
       "height": 1536,
       "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-fox-cream-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-fox-cream (owner-approved TP-FOX-CRM, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-FOX-CRM",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "a7b321204599be347a790224974836adf88090d4d6cf847e062577da2003c219",
+          "callId": "TPV-1-tee-print-animal-fox",
+          "colour": "cream",
+          "rgb": [
+            254,
+            241,
+            213
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "80b15d689f1b824969561fed1c2d91b218210fc9f0d8824d8259c90c6f1ba052",
+      "bytes": 7234,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-fox-cream-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-fox-cream (owner-approved TP-FOX-CRM, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-FOX-CRM",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "a7b321204599be347a790224974836adf88090d4d6cf847e062577da2003c219",
+          "callId": "TPV-1-tee-print-animal-fox",
+          "colour": "cream",
+          "rgb": [
+            254,
+            241,
+            213
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "c9e73f4c31ca4b8e21d46088b1e9e326723238dc1ca4dd61d4768735c3a303ff",
+      "bytes": 52480,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-fox-forest-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-fox-forest (owner-approved TP-FOX-FOR, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-FOX-FOR",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "a7b321204599be347a790224974836adf88090d4d6cf847e062577da2003c219",
+          "callId": "TPV-1-tee-print-animal-fox",
+          "colour": "forest",
+          "rgb": [
+            46,
+            94,
+            62
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "702b1336db512d32ed7f986ef88960f5d23da0c13af57852d7188ba9b2a87a8a",
+      "bytes": 5030,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-fox-forest-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-fox-forest (owner-approved TP-FOX-FOR, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-FOX-FOR",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "a7b321204599be347a790224974836adf88090d4d6cf847e062577da2003c219",
+          "callId": "TPV-1-tee-print-animal-fox",
+          "colour": "forest",
+          "rgb": [
+            46,
+            94,
+            62
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "9a6eb63fe87ec3080f2ab26d89c2e27523461d69e3933b6d467d192064f4e816",
+      "bytes": 37176,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-fox-heather-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-fox-heather (owner-approved TP-FOX-HTH, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-FOX-HTH",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "a7b321204599be347a790224974836adf88090d4d6cf847e062577da2003c219",
+          "callId": "TPV-1-tee-print-animal-fox",
+          "colour": "heather",
+          "rgb": [
+            158,
+            160,
+            164
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "2c3c9e61381f60a83831dfd5fd7fb60591c845e83433c26655f63e4260292976",
+      "bytes": 5544,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-fox-heather-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-fox-heather (owner-approved TP-FOX-HTH, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-FOX-HTH",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "a7b321204599be347a790224974836adf88090d4d6cf847e062577da2003c219",
+          "callId": "TPV-1-tee-print-animal-fox",
+          "colour": "heather",
+          "rgb": [
+            158,
+            160,
+            164
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "ddba3a8567cacfda1c9169ab447e77783b608bf03f4dec094492f53f2aa7505a",
+      "bytes": 43472,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-fox-navy-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-fox-navy (owner-approved TP-FOX-NAV, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-FOX-NAV",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "a7b321204599be347a790224974836adf88090d4d6cf847e062577da2003c219",
+          "callId": "TPV-1-tee-print-animal-fox",
+          "colour": "navy",
+          "rgb": [
+            38,
+            50,
+            92
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "91d3cbcc8e3540cf9dd03bdab62d92a760d53e1cbe55eda16cb6c1e129e8d87c",
+      "bytes": 4616,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-fox-navy-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-fox-navy (owner-approved TP-FOX-NAV, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-FOX-NAV",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "a7b321204599be347a790224974836adf88090d4d6cf847e062577da2003c219",
+          "callId": "TPV-1-tee-print-animal-fox",
+          "colour": "navy",
+          "rgb": [
+            38,
+            50,
+            92
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "d355def05540832af251b9777eac40a1024e458d66cb0b31648253791908e8d3",
+      "bytes": 35692,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-coral-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-shield-coral (owner-approved TP-SHD-COR, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-COR",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "coral",
+          "rgb": [
+            214,
+            96,
+            82
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "86ad7c16cb90282d4c73a2ded31113da1854be99207baa603b2e3e27f32e550d",
+      "bytes": 7076,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-coral-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-shield-coral (owner-approved TP-SHD-COR, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-COR",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "coral",
+          "rgb": [
+            214,
+            96,
+            82
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "8b287894ff3e5b83f59dd3420ac0aaa8fb4b3dfd780b1141adc9a2cb3c686ce7",
+      "bytes": 52450,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-cream-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-shield-cream (owner-approved TP-SHD-CRM, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-CRM",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "cream",
+          "rgb": [
+            254,
+            241,
+            213
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "80b15d689f1b824969561fed1c2d91b218210fc9f0d8824d8259c90c6f1ba052",
+      "bytes": 7234,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-cream-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-shield-cream (owner-approved TP-SHD-CRM, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-CRM",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "cream",
+          "rgb": [
+            254,
+            241,
+            213
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "35e89d3314fc711319e53c36b77e2418a9c57103bc1b92445d9c681db3671c1f",
+      "bytes": 54530,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-forest-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-shield-forest (owner-approved TP-SHD-FOR, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-FOR",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "forest",
+          "rgb": [
+            46,
+            94,
+            62
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "702b1336db512d32ed7f986ef88960f5d23da0c13af57852d7188ba9b2a87a8a",
+      "bytes": 5030,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-forest-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-shield-forest (owner-approved TP-SHD-FOR, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-FOR",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "forest",
+          "rgb": [
+            46,
+            94,
+            62
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "56e998a02316b6576b95b924aeb94cecb831e8040c60a006cad2dbc5f9cf48af",
+      "bytes": 39308,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-heather-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-shield-heather (owner-approved TP-SHD-HTH, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-HTH",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "heather",
+          "rgb": [
+            158,
+            160,
+            164
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "2c3c9e61381f60a83831dfd5fd7fb60591c845e83433c26655f63e4260292976",
+      "bytes": 5544,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-heather-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-shield-heather (owner-approved TP-SHD-HTH, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-HTH",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "heather",
+          "rgb": [
+            158,
+            160,
+            164
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "f3fadc1b629dfa4fb6cd824af8e8de7eb7f4dcdf0715cf06be4615bacae047b4",
+      "bytes": 45752,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-mustard-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-shield-mustard (owner-approved TP-SHD-MUS, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-MUS",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "mustard",
+          "rgb": [
+            222,
+            172,
+            58
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "446609540ce7dede9e9e33f19a69c0b1fe7891fce621ac93293d8c25d59ce938",
+      "bytes": 7330,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-mustard-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-shield-mustard (owner-approved TP-SHD-MUS, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-MUS",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "mustard",
+          "rgb": [
+            222,
+            172,
+            58
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "c6ee2f327dd5ad6baffdc4bdc2db64fa4649deeb072c21d25b61d93d89ecc52a",
+      "bytes": 53240,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-navy-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-shield-navy (owner-approved TP-SHD-NAV, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-NAV",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "navy",
+          "rgb": [
+            38,
+            50,
+            92
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "91d3cbcc8e3540cf9dd03bdab62d92a760d53e1cbe55eda16cb6c1e129e8d87c",
+      "bytes": 4616,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-shield-navy-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-shield-navy (owner-approved TP-SHD-NAV, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-SHD-NAV",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "7c54fc034c684be061e1a0d73a8c659c5beeded07018312b3f4c787eeeaf7a31",
+          "callId": "TPV-3-tee-print-emblem-shield",
+          "colour": "navy",
+          "rgb": [
+            38,
+            50,
+            92
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "4c848316a49ab813d3de12c34552a7961b7ccf857822e0fb25e66bc709152a25",
+      "bytes": 38236,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-coral-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-teapot-coral (owner-approved TP-TEA-COR, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-COR",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "coral",
+          "rgb": [
+            214,
+            96,
+            82
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "86ad7c16cb90282d4c73a2ded31113da1854be99207baa603b2e3e27f32e550d",
+      "bytes": 7076,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-coral-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-teapot-coral (owner-approved TP-TEA-COR, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-COR",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "coral",
+          "rgb": [
+            214,
+            96,
+            82
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "9f1d862dfa2979d79fa5b4d7f44b7f2f4cd152014f80c8c31e9e30b66f96100c",
+      "bytes": 53372,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-cream-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-teapot-cream (owner-approved TP-TEA-CRM, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-CRM",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "cream",
+          "rgb": [
+            254,
+            241,
+            213
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "80b15d689f1b824969561fed1c2d91b218210fc9f0d8824d8259c90c6f1ba052",
+      "bytes": 7234,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-cream-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-teapot-cream (owner-approved TP-TEA-CRM, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-CRM",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "cream",
+          "rgb": [
+            254,
+            241,
+            213
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "4a43f926e306d1a57923f50f4a64e60fc6b64bd2fed3fd9f896d8336cc404d17",
+      "bytes": 55150,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-forest-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-teapot-forest (owner-approved TP-TEA-FOR, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-FOR",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "forest",
+          "rgb": [
+            46,
+            94,
+            62
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "702b1336db512d32ed7f986ef88960f5d23da0c13af57852d7188ba9b2a87a8a",
+      "bytes": 5030,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-forest-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-teapot-forest (owner-approved TP-TEA-FOR, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-FOR",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "forest",
+          "rgb": [
+            46,
+            94,
+            62
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "b19d7a39f8e8e13a90dc632a085370d1d20272c179f245de685dc097c2db1158",
+      "bytes": 40164,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-heather-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-teapot-heather (owner-approved TP-TEA-HTH, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-HTH",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "heather",
+          "rgb": [
+            158,
+            160,
+            164
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "2c3c9e61381f60a83831dfd5fd7fb60591c845e83433c26655f63e4260292976",
+      "bytes": 5544,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-heather-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-teapot-heather (owner-approved TP-TEA-HTH, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-HTH",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "heather",
+          "rgb": [
+            158,
+            160,
+            164
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "8e8439a6c76d4bde45099e65281f853be183b782dd7763d0e1d8bf72c89379f7",
+      "bytes": 46032,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-mustard-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-teapot-mustard (owner-approved TP-TEA-MUS, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-MUS",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "mustard",
+          "rgb": [
+            222,
+            172,
+            58
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "446609540ce7dede9e9e33f19a69c0b1fe7891fce621ac93293d8c25d59ce938",
+      "bytes": 7330,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-mustard-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-teapot-mustard (owner-approved TP-TEA-MUS, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-MUS",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "mustard",
+          "rgb": [
+            222,
+            172,
+            58
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "f4491544274ef2d7c4deca67943ce22c91b3c4a70139450a814d940de4fc18d3",
+      "bytes": 55036,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-navy-sleeves-v1.webp",
+      "purpose": "the tee layer sleeves of top-tee-hip-print-teapot-navy (owner-approved TP-TEA-NAV, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-NAV",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "navy",
+          "rgb": [
+            38,
+            50,
+            92
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "91d3cbcc8e3540cf9dd03bdab62d92a760d53e1cbe55eda16cb6c1e129e8d87c",
+      "bytes": 4616,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-print-teapot-navy-top-body-v1.webp",
+      "purpose": "the tee layer top-body of top-tee-hip-print-teapot-navy (owner-approved TP-TEA-NAV, D-274)",
+      "origin": {
+        "decision": "D-274",
+        "source": "the item's extraction (method D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1)",
+        "item": {
+          "approval": "D-274 TP-TEA-NAV",
+          "method": "D-271 render: tee-master-v1 + D-269 chest-center rule (tee-print-v1), evaluator tpv-v1",
+          "motifSha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+          "callId": "TPV-2-tee-print-object-teapot",
+          "colour": "navy",
+          "rgb": [
+            38,
+            50,
+            92
+          ],
+          "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026"
+        },
+        "publishedBy": "D-275"
+      },
+      "sha256": "b2a11fae6351baed22dc424bae9b159f1bbd00c19228155be1655bb4ec32f928",
+      "bytes": 38384,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    }
+  ],
+  "extensions": [
+    {
+      "decision": "D-274",
+      "publishedBy": "D-275",
+      "authorisation": "owner 2026-10-31: D-274 OFFENTLIGGØRELSE GODKENDT — the 32 tee layers of D-274's file list, with exactly their registered sha256, may be committed and published under assets/avatar-northstar/ as an extension of D-242's exception to D-127 §2; only these derived tee layers",
+      "files": [
+        "top-tee-hip-print-fox-cream-sleeves-v1.webp",
+        "top-tee-hip-print-fox-cream-top-body-v1.webp",
+        "top-tee-hip-print-fox-forest-sleeves-v1.webp",
+        "top-tee-hip-print-fox-forest-top-body-v1.webp",
+        "top-tee-hip-print-fox-heather-sleeves-v1.webp",
+        "top-tee-hip-print-fox-heather-top-body-v1.webp",
+        "top-tee-hip-print-fox-navy-sleeves-v1.webp",
+        "top-tee-hip-print-fox-navy-top-body-v1.webp",
+        "top-tee-hip-print-shield-coral-sleeves-v1.webp",
+        "top-tee-hip-print-shield-coral-top-body-v1.webp",
+        "top-tee-hip-print-shield-cream-sleeves-v1.webp",
+        "top-tee-hip-print-shield-cream-top-body-v1.webp",
+        "top-tee-hip-print-shield-forest-sleeves-v1.webp",
+        "top-tee-hip-print-shield-forest-top-body-v1.webp",
+        "top-tee-hip-print-shield-heather-sleeves-v1.webp",
+        "top-tee-hip-print-shield-heather-top-body-v1.webp",
+        "top-tee-hip-print-shield-mustard-sleeves-v1.webp",
+        "top-tee-hip-print-shield-mustard-top-body-v1.webp",
+        "top-tee-hip-print-shield-navy-sleeves-v1.webp",
+        "top-tee-hip-print-shield-navy-top-body-v1.webp",
+        "top-tee-hip-print-teapot-coral-sleeves-v1.webp",
+        "top-tee-hip-print-teapot-coral-top-body-v1.webp",
+        "top-tee-hip-print-teapot-cream-sleeves-v1.webp",
+        "top-tee-hip-print-teapot-cream-top-body-v1.webp",
+        "top-tee-hip-print-teapot-forest-sleeves-v1.webp",
+        "top-tee-hip-print-teapot-forest-top-body-v1.webp",
+        "top-tee-hip-print-teapot-heather-sleeves-v1.webp",
+        "top-tee-hip-print-teapot-heather-top-body-v1.webp",
+        "top-tee-hip-print-teapot-mustard-sleeves-v1.webp",
+        "top-tee-hip-print-teapot-mustard-top-body-v1.webp",
+        "top-tee-hip-print-teapot-navy-sleeves-v1.webp",
+        "top-tee-hip-print-teapot-navy-top-body-v1.webp"
+      ],
+      "approval": "tools/avatar/fixtures/northstar-wardrobe/tee-master/tp-owner-approval-v1.json",
+      "shadowsReused": {
+        "body": {
+          "publishedFile": "assets/avatar-northstar/top-tee-hip-cream-shadow-body-v1.webp",
+          "sha256": "b1632268d54946e60595848143c4e0189487f1f3ec4fd2f18a79f4b3a2c81c47",
+          "identicalForAll": true
+        },
+        "arms": {
+          "publishedFile": "assets/avatar-northstar/top-tee-hip-cream-shadow-arms-v1.webp",
+          "sha256": "1e267616e12c0d418f36791edd07da6627426349905249a89faa8862f515ba7b",
+          "identicalForAll": true
+        }
+      },
+      "stagedManifestSha256": "f97f0b468b057963420b8eeef523e135e06fa02a022c10b27f8504b2014a3c2e",
+      "equivalence": {
+        "what": "northstarCompose(northstarPlanFor(outfit)) on the published files against the pipeline composite (layerProof + applyShadow), RGBA bytes that differ; K01–K09 and each approved print tee in place of their top",
+        "outfits": 153,
+        "printOutfits": 144,
+        "outfitsDiffering": 0,
+        "publishedFilesIdenticalToPipeline": 55,
+        "partners": [
+          "bottom-skirt-sand",
+          "shoes-sneakers-beige",
+          "shoes-boots-laceup-black",
+          "shoes-sneakers-white",
+          "bottom-shorts-navy",
+          "bottom-capri-lightblue"
+        ]
+      }
     }
   ]
 }

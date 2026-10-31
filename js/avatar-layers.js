@@ -830,7 +830,29 @@ export const NORTHSTAR_SURFACES = Object.freeze(["quiz", "hub", "avatar"]);
 export const NORTHSTAR_SUPPORTED_COSMETIC_SLOTS = Object.freeze(["aura", "back"]);
 // The figure's own layers (C's body with an empty torso, forearms and hands, the head).
 export const NORTHSTAR_FIGURE = Object.freeze({ body: "figure-body-v1.webp", arms: "figure-arms-v1.webp", head: "figure-head-v1.webp" });
-// The ten items: their layers and their skin-shadow parts (multiply; on C's body, on C's arms).
+// D-274/D-275: the 16 owner-approved print tees (D-274's approval file; TP-FOX-COR and TP-FOX-MUS are not approved). Each is the
+// cream tee's cut with a chest print: the same layers, and the cream tee's own published skin shadow (shadowsOf).
+export const NORTHSTAR_PRINT_TEE_BASE = "top-tee-hip-cream";
+const _PT = (motif, colour, label) => Object.freeze({ item: "top-tee-hip-print-" + motif + "-" + colour, label });
+export const NORTHSTAR_PRINT_TEES = Object.freeze({
+  "TP-TEA-CRM": _PT("teapot", "cream", "Tekande · creme"),
+  "TP-TEA-HTH": _PT("teapot", "heather", "Tekande · grå"),
+  "TP-TEA-NAV": _PT("teapot", "navy", "Tekande · navy"),
+  "TP-TEA-COR": _PT("teapot", "coral", "Tekande · koral"),
+  "TP-TEA-FOR": _PT("teapot", "forest", "Tekande · skovgrøn"),
+  "TP-TEA-MUS": _PT("teapot", "mustard", "Tekande · sennep"),
+  "TP-SHD-CRM": _PT("shield", "cream", "Skjold · creme"),
+  "TP-SHD-HTH": _PT("shield", "heather", "Skjold · grå"),
+  "TP-SHD-NAV": _PT("shield", "navy", "Skjold · navy"),
+  "TP-SHD-COR": _PT("shield", "coral", "Skjold · koral"),
+  "TP-SHD-FOR": _PT("shield", "forest", "Skjold · skovgrøn"),
+  "TP-SHD-MUS": _PT("shield", "mustard", "Skjold · sennep"),
+  "TP-FOX-CRM": _PT("fox", "cream", "Ræv · creme"),
+  "TP-FOX-HTH": _PT("fox", "heather", "Ræv · grå"),
+  "TP-FOX-NAV": _PT("fox", "navy", "Ræv · navy"),
+  "TP-FOX-FOR": _PT("fox", "forest", "Ræv · skovgrøn"),
+});
+// The ten items: their layers and their skin-shadow parts (multiply; on C's body, on C's arms); then the print tees.
 export const NORTHSTAR_ITEMS = Object.freeze({
   "top-tee-hip-cream":            { category: "top",    layers: ["top-body", "sleeves"], shadows: ["body", "arms"] },
   "top-tee-hip-blue":             { category: "top",    layers: ["top-body", "sleeves"], shadows: ["arms"] },
@@ -842,6 +864,7 @@ export const NORTHSTAR_ITEMS = Object.freeze({
   "shoes-boots-laceup-black":     { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
   "shoes-sneakers-white":         { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
   "shoes-ankleboots-brown":       { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
+  ...Object.fromEntries(Object.values(NORTHSTAR_PRINT_TEES).map((t) => [t.item, Object.freeze({ category: "top", layers: ["top-body", "sleeves"], shadows: ["body", "arms"], shadowsOf: NORTHSTAR_PRINT_TEE_BASE })])),
 });
 // The 19 ready outfits (technically OK, no open finding; the assistant's review found them fit as a
 // visual prototype and the owner approved the prototype's overall look — not production).
@@ -887,6 +910,23 @@ export function northstarSelectedOutfit() {
   const k = _nsStorage(NORTHSTAR_OUTFIT_KEY);
   return typeof k === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_OUTFITS, k) ? k : null;
 }
+// D-275: the print tee stored in this browser — one of the 16 approved IDs, or null.
+export const NORTHSTAR_TEE_KEY = "avatar_northstar_tee";
+export function northstarSelectedTee() {
+  const t = _nsStorage(NORTHSTAR_TEE_KEY);
+  return typeof t === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_PRINT_TEES, t) ? t : null;
+}
+// A print tee replaces the top only of an outfit whose top is the cream tee (K01–K09): the partners the cut was checked with.
+export function northstarTeeAllowed(key) {
+  return typeof key === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_OUTFITS, key) && NORTHSTAR_OUTFITS[key].top === NORTHSTAR_PRINT_TEE_BASE;
+}
+// The outfit actually shown for a K number and a stored print tee (the tee is ignored where it is not allowed), or null.
+export function northstarOutfitFor(key, tee) {
+  if (typeof key !== "string" || !Object.prototype.hasOwnProperty.call(NORTHSTAR_OUTFITS, key)) return null;
+  const o = NORTHSTAR_OUTFITS[key];
+  if (typeof tee === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_PRINT_TEES, tee) && northstarTeeAllowed(key)) return Object.freeze({ ...o, top: NORTHSTAR_PRINT_TEES[tee].item });
+  return o;
+}
 const _nsSrc = (file) => NORTHSTAR_BASE_PATH + "/" + file;
 // The ordered canvas plan for one K outfit, or null when it is not a complete, ready outfit (top AND
 // bottom are mandatory — C's body layer has an empty torso). "draw" steps are the stack, bottom first
@@ -917,7 +957,7 @@ export function northstarPlanFor(o, itemTable = NORTHSTAR_ITEMS, basePath = NORT
     figure(NORTHSTAR_FIGURE.arms),
     ...items[0].layers.filter((l) => l === "sleeves").map((l) => layer(o.top, l)),   // a sleeveless top has none
     { op: "draw", src: _nsSrc(NORTHSTAR_FIGURE.head) },
-    ...ids.flatMap((id, k) => items[k].shadows.map((part) => ({ op: "shade", src: _nsSrc(id + "-shadow-" + part + "-v1.webp") }))),
+    ...ids.flatMap((id, k) => items[k].shadows.map((part) => ({ op: "shade", src: _nsSrc((items[k].shadowsOf || id) + "-shadow-" + part + "-v1.webp") }))),
   ];
 }
 // Executes a plan on straight-alpha RGBA pixel arrays of n pixels (pixelsOf(src) → Uint8ClampedArray),
@@ -959,8 +999,11 @@ export function northstarCompose(plan, pixelsOf, n) {
 export function northstarRenderFor(surface, cosmetics) {
   if (!isNorthstarWardrobeOn()) return null;
   if (NORTHSTAR_SURFACES.indexOf(surface) === -1) return null;
-  const key = northstarSelectedOutfit(), plan = northstarCanvasPlan(key);
+  const outfitKey = northstarSelectedOutfit(), outfit = northstarOutfitFor(outfitKey, northstarSelectedTee());
+  const plan = outfit ? northstarPlanFor(outfit) : null;
   if (!plan) return null;
+  // the figure cache is keyed by what is drawn: "K01", or "K01+TP-TEA-CRM" with an allowed print tee
+  const tee = outfit.top !== NORTHSTAR_OUTFITS[outfitKey].top ? northstarSelectedTee() : null, key = tee ? outfitKey + "+" + tee : outfitKey;
   const list = Array.isArray(cosmetics) ? cosmetics : [];
   const out = [];
   for (const c of list) {
@@ -968,5 +1011,5 @@ export function northstarRenderFor(surface, cosmetics) {
     if (NORTHSTAR_SUPPORTED_COSMETIC_SLOTS.indexOf(c.slot) === -1) return null;
     out.push({ src: c.src, z: C2_LAYER_Z[c.slot] ?? c.z, isBase: false, inline: false, marker: "northstar-cosmetic" });
   }
-  return { key, plan, cosmetics: out };
+  return { key, outfit: outfitKey, tee, plan, cosmetics: out };
 }
