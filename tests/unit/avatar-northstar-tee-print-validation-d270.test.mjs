@@ -30,9 +30,13 @@ const KEY_READ = "process.env." + "OPENAI_API" + "_KEY";   // spelt in parts so 
 const CHILD_ENV = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/API_?KEY/i.test(k)));
 const isInside = (c, p) => { const r = relative(p, c); return r === "" || (!r.startsWith("..") && !isAbsolute(r)); };
 
-test("D-270 authorisation: three one-shot calls, a separate budget, no reserve, retry, fallback or earlier permission; the token in D-270's status; no image and no C sent", () => {
+test("D-270 authorisation: three one-shot calls (spent and received, D-271), a separate budget, no reserve, retry, fallback or earlier permission; the token in D-270's status; no image and no C sent", () => {
   assert.deepEqual([AUTH.decision, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions], ["D-270", false, 3, 0, 0, false, false]);
-  assert.deepEqual(AUTH.calls.map((e) => [e.callId, e.order, e.delivery, e.background, e.mandateState, e.outcome]), [[ID1, 1, "print-animal", "transparent", "UNSPENT", "NOT YET ATTEMPTED"], [ID2, 2, "print-object", "transparent", "UNSPENT", "NOT YET ATTEMPTED"], [ID3, 3, "print-emblem", "transparent", "UNSPENT", "NOT YET ATTEMPTED"]]);
+  assert.deepEqual(AUTH.calls.map((e) => [e.callId, e.order, e.delivery, e.background]), [[ID1, 1, "print-animal", "transparent"], [ID2, 2, "print-object", "transparent"], [ID3, 3, "print-emblem", "transparent"]]);
+  // the recorded execution and closure (D-271): each call spent once and received; nothing open
+  for (const e of AUTH.calls) { assert.deepEqual([e.mandateState, e.outcome, e.result.httpStatus, e.recordedBy], ["SPENT", "RECEIVED_FOR_CHECK", 200, "D-271"]);
+    assert.match(e.result.imageSha256, /^[0-9a-f]{64}$/); assert.match(e.result.evaluation, /^requires visual review/); }
+  assert.deepEqual([AUTH.budget.actuallySent, AUTH.budget.closed.by, AUTH.budget.closed.spent, AUTH.budget.closed.uncertain, AUTH.budget.closed.refusedBeforeSend, AUTH.budget.closed.closedUnused], [3, "D-271", 3, 0, 0, 0]);
   // no earlier permission is known here, and every earlier one is closed
   for (const old of ["tm-material-authorisation-v1.json"]) { const o = json(FX + old); for (const e of o.calls) { assert.ok(!SRC.includes(e.callId), e.callId + " is not known here"); assert.notEqual(e.mandateState, "UNSPENT"); } }
   assert.equal(AUTH.frozen.plan.sha256, sha256(readFileSync(repoFile(PLAN_REL)))); assert.equal(PLAN.authorisesImageRequest, false);
@@ -115,6 +119,9 @@ function sandbox({ base: mod } = {}) {
   sb.out = join(sb.home, "Documents", "DenSejeApp-artefacts", "tp-validation-calls"); for (const d of [sb.repo, sb.state, sb.tmp, sb.home]) mkdirSync(d, { recursive: true });
   writeFileSync(sb.gitconfig, "[core]\n\tautocrlf = false\n[init]\n\tdefaultBranch = main\n"); writeFileSync(sb.mock, MOCK_SRC); writeFileSync(sb.log, ""); writeFileSync(sb.png, png(1024, 1024));
   for (const rel of TRACKED) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  // the sandbox starts from the authorisation as merged by D-270: the recorded execution (D-271) is undone in the copy only
+  { const cp = join(sb.repo, ...AUTH_REL.split("/")), c = JSON.parse(readFileSync(cp, "utf8")); delete c.budget.actuallySent; delete c.budget.closed;
+    for (const e of c.calls) { e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; delete e.result; delete e.recordedBy; } writeFileSync(cp, JSON.stringify(c, null, 2) + "\n"); }
   if (mod) mod(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb; }
@@ -148,4 +155,9 @@ test("an uncertain dispatch or an HTTP error is spent, never resent, and stops e
 test("a format reject does not stop the later calls: the deliveries are independent", () => {
   const sb = sandbox(); writeFileSync(sb.png, png(512, 512)); const r1 = run(sb, [...argsOf(ID1), ...SEND], KEY); assert.equal(r1.status, 0, r1.out); assert.match(r1.out, /TECHNICAL_REJECT/);
   writeFileSync(sb.png, png(1024, 1024)); for (const id of [ID2, ID3]) { const r = run(sb, [...argsOf(id), ...SEND], KEY); assert.equal(r.status, 0, r.out); } assert.equal(fetchLog(sb).length, 3);
+});
+
+test("after D-271 the spent calls are refused before any claim: the authorisation as recorded admits no further send", () => {
+  const sb = sandbox({ base: (x) => copyFileSync(repoFile(AUTH_REL), join(x.repo, ...AUTH_REL.split("/"))) });
+  refused(sb, run(sb, [...argsOf(ID1), ...SEND], KEY), "authorisation"); refused(sb, run(sb, argsOf(ID1)), "authorisation");
 });

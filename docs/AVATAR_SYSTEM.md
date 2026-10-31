@@ -385,7 +385,16 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Independent validation of large central prints — D-270 (prepared and authorised: 3 single-use calls; NOT executed; 0 calls sent).**
+- **Independent validation of large central prints, result — D-271 (all three D-270 calls sent once and received; D-270 closed; no further call).**
+  - **Yield.** 3 of 3 delivered, and all three passed the delivery checks.
+  - **Placement.** OK in 18 of 18 combinations; nothing is cut or touches the neck, seams or armpits.
+  - **Visual.**
+    - The teapot and the shield are recognised at 110×165 on all six shirt colours and work as marks at 52×78.
+    - The fox is recognised on 4 of 6; it is weak on coral and mustard, close to its own orange.
+  - **Contrast check.** The classes agree with the visual review in 15 of 18 combinations. It misses a frame drawn in another colour (teapot on heather, shield on coral and mustard).
+  - **Known limits.** The master's limits show in close-up.
+  - **Recommendation.** Keep chest-center and D-269's rule. Next is an owner visual review of the private preview; no call is authorised. See `docs/decisions/D-271.md`.
+- **Independent validation of large central prints — D-270 (3 single-use calls authorised; executed and closed by D-271: 3 spent and received).**
   - **The three calls.** Each is `images/generations` with a transparent background, 1024², one compact motif per call; no image or reference is sent:
     - TPV-1: a fox (animal);
     - TPV-2: a teapot (object);
@@ -395,7 +404,7 @@ art layer behind them can be upgraded without a rewrite.
   - **Contrast check.** It is advisory and uses OKLab separation of the motif's fill and edge from the shirt. Results are clear, borderline (to visual review) or weak (a poor combination); clear is not a pass.
   - **Shirt colours.** Six fixed colours: cream, heather, navy, coral, forest, mustard.
   - **Reporting.** Yield and quality are reported apart. Every result is kept.
-  - **Execution.** Needs a separate owner instruction. See `docs/decisions/D-270.md`.
+  - **Execution.** Done on a separate owner instruction and recorded in D-271. See `docs/decisions/D-270.md`.
 - **Print family on the tee master — D-269 (offline study; no call; the D-264 master unchanged; nothing approved).**
   - **Placements.** Two fixed boxes on the body panel, as fractions of the cut, inside a safe area at least 10 px from the rib bands, armhole seams, contour and arms:
     - `chest-left` (0.30 × 0.30 body widths at the master's anchor);
