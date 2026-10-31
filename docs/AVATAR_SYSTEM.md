@@ -385,7 +385,14 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Pants master on trousers-square — D-276 (offline prototype; no call; nothing published or approved).**
+- **Pants master v2 — D-279 (successor to D-276; offline; v1 kept; colour-only rules, no geometry change; the owner approved the solid trousers (navy, sand) as candidates, not as items; nothing published).**
+  - **Waistband.** It is taken only under the cut's top edge: 0 px outside the waist, against 209 in v1.
+  - **Outer edge.** The cut's outer edge takes the outline's ink: the outline's own partial edge pixels and the partial fabric just outside it, 8,444 px, colour only.
+    - This removes the double contour at laced black boots for every material: sand and stripe now pass all 8 combinations.
+    - A hem geometry change was compared: it did not fix the contour and made navy worse.
+  - **Readiness.** Solid trousers are candidates for the owner's visual review. Patterns stay technical samples (flat over the folds, small steps in the check).
+  - See `docs/decisions/D-279.md`.
+- **Pants master on trousers-square — D-276 (offline prototype; no call; nothing published or approved; succeeded by D-279).**
   - **Method.** D-264's master carried over to R1's bottom cut (K17/K18, the only cut reaching the shoes).
     - Per-cut data: a straight centre seam to the crotch point (511, 893), a 6 px waistband, two leg panels each along its own (normalised) axis from the crotch.
     - The tee master's `render` and `seamLine` are reused unchanged; folds and shading are carried by the same ratio.
