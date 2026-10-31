@@ -354,9 +354,13 @@ test('ON: logout drops the pending submission; back navigation does not bring it
   await option(page, 'Paris').click();
   await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
   expect(await stored(page)).not.toBeNull();
-  await page.locator('#logout-btn').click();
-  await page.waitForURL(/login\.html/);
-  expect(await stored(page)).toBeNull();
+  // A pupil logs out from the hub (the quiz page's #logout-btn is hidden). Same tab, so the same
+  // sessionStorage: every logout ends on login.html, which drops it.
+  await page.goto(`${PROD}/hub.html`, { waitUntil: 'domcontentloaded' });
+  expect(await stored(page), 'still there on the hub — only a logout or a pupil switch drops it').not.toBeNull();
+  await page.locator('#logoutBtn').click();
+  await page.waitForURL(/login\.html/, { timeout: 20000 });
+  await expect.poll(() => stored(page)).toBeNull();
   await page.goBack();
   await page.waitForURL(/login\.html/, { timeout: 20000 });
   expect(await stored(page)).toBeNull();
