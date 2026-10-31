@@ -4,8 +4,10 @@ import { publishableKey, serviceKey, serviceKeySource } from "../_shared/supabas
 import { isTextAnswerCorrect } from "../_shared/answer-evaluation.ts";
 import { canonicalMatchAnswer } from "../_shared/match-pairs.ts";
 import { ADMIN_CLIENT_OPTIONS, isInstanceOwner, callProcessTextAnswer, callProcessQuestionAttempt } from "./text-answer-rpc.ts";
+import { callProcessTextAnswerV2, callProcessQuestionAttemptV2, LEGACY_ANSWER_RPCS } from "./text-answer-rpc.ts";
 import { updateOwnInstance, recordMisconceptionSignal, type InstanceWriteResult } from "./instance-writes.ts";
 import { readInstanceForGrading } from "./instance-read.ts";
+import { answerMode, replyForV2, isRevokedLegacyRpc, errorCodeOf, CLIENT_OUTDATED, UNEXPECTED_RESULT } from "./answer-v2.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -92,6 +94,17 @@ serve(async (req) => {
       })
     }
 
+    // H5 (D-273, ./answer-v2.ts): round_no + submission_id select the protected _v2 path; neither
+    // selects the legacy path, unchanged. One field alone, or a malformed one, is rejected here —
+    // before anything is read or written, and never downgraded to the legacy path.
+    const mode = answerMode(body)
+    if (mode.kind === "invalid") {
+      return new Response(JSON.stringify({ outcome: "invalid_request", reason: mode.reason, error: "Invalid request" }), {
+        status: 400, headers: corsHeaders
+      })
+    }
+    const h5 = mode.kind === "h5" ? mode : null
+
     // ── Fetch instance + question meta ───────────────────────────────────────
     // A backend read (./instance-read.ts): the answer key and the question content are server-only.
     // Nothing from the row is used or returned before the ownership check below.
@@ -112,6 +125,12 @@ serve(async (req) => {
 
     if (instanceError || !instanceData) {
       console.error("INSTANCE ERROR:", instanceError)
+      // H5: a missing instance is the not_found outcome. A read error stays the 500 below.
+      if (h5 && !instanceError) {
+        return new Response(JSON.stringify({ outcome: "not_found", error: "Instance not found" }), {
+          status: 404, headers: corsHeaders
+        })
+      }
       return new Response(JSON.stringify({ error: "Instance not found" }), {
         status: 500, headers: corsHeaders
       })
@@ -139,6 +158,8 @@ serve(async (req) => {
     console.log("DEBUG META:", { format, answerType, hasReviewText: !!reviewText, misconceptionType })
 
     // ── PATH 1: Long answer → save for teacher, no auto-grade ───────────────
+    // Also with valid H5 fields: long answers are not covered by the answer history yet (H4 is open),
+    // so they keep this teacher path unchanged and the fields are not used.
     if (answerType === "long") {
 
       const words = countWords(answer)
@@ -199,6 +220,48 @@ serve(async (req) => {
       const isCorrect = isTextAnswerCorrect(answer, correct_answer, questionContent?.accepted_answers)
       console.log("FLOW: SHORT TEXT →", isCorrect ? "correct" : "incorrect")
 
+      // H5: process_text_answer_v2 checks the round and the submission, registers the attempt and
+      // writes next_review_at and the misconception signal in ONE transaction — so nothing is written
+      // here afterwards, and a replay changes nothing.
+      if (h5) {
+        let v2Data: unknown
+        let v2Error: unknown
+        try {
+          ({ data: v2Data, error: v2Error } = await callProcessTextAnswerV2(
+            makeAdminClient,
+            {
+              instanceId:        question_instance_id,
+              userId:            user.id,
+              answer,
+              isCorrect,
+              roundNo:           h5.roundNo,
+              submissionId:      h5.submissionId,
+              reviewText,
+              misconceptionType,
+            }
+          ))
+        } catch (keyError: any) {
+          // serviceKey()'s messages name the variables, never their values.
+          console.error("ADMIN CLIENT ERROR:", keyError?.message ?? keyError)
+          return new Response(JSON.stringify({ error: "Server configuration error" }), {
+            status: 500, headers: corsHeaders
+          })
+        }
+
+        if (v2Error) {
+          // No fallback to process_text_answer, and no database detail in the response.
+          console.error("PROCESS TEXT ANSWER V2 ERROR:", JSON.stringify({ instance_id: question_instance_id, code: errorCodeOf(v2Error) }))
+          return new Response(JSON.stringify(UNEXPECTED_RESULT), { status: 500, headers: corsHeaders })
+        }
+
+        const reply = replyForV2(v2Data, h5.roundNo)
+        if (reply.problem) {
+          console.error("PROCESS TEXT ANSWER V2 UNEXPECTED:", JSON.stringify({ instance_id: question_instance_id, problem: reply.problem }))
+        }
+        console.log("FLOW: SHORT TEXT V2 →", reply.body.outcome ?? "error")
+        return new Response(JSON.stringify(reply.body), { status: reply.status, headers: corsHeaders })
+      }
+
       // process_text_answer: atomically sets answered=true, was_correct,
       // next_review_at, and awards XP+coins if correct — with a CAS guard
       // on answered=false so rewards cannot be given twice even on retry.
@@ -223,6 +286,13 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: "Server configuration error" }), {
           status: 500, headers: corsHeaders
         })
+      }
+
+      // M2: once EXECUTE is revoked, a request without H5 fields comes from an outdated client.
+      // The privilege check ran before the function body, so nothing was registered.
+      if (rpcError && isRevokedLegacyRpc(rpcError, LEGACY_ANSWER_RPCS.text)) {
+        console.error("LEGACY ANSWER PATH CLOSED:", JSON.stringify({ fn: LEGACY_ANSWER_RPCS.text }))
+        return new Response(JSON.stringify(CLIENT_OUTDATED), { status: 426, headers: corsHeaders })
       }
 
       if (rpcError) {
@@ -277,6 +347,56 @@ serve(async (req) => {
     }
 
     // ── PATH 3: MC / number / match → process_question_attempt RPC ──────────
+
+    // H5: process_question_attempt_v2 grades, checks the round and the submission, registers the
+    // attempt and writes the misconception signal in ONE transaction, so process-event writes nothing
+    // afterwards — not on a replay, a refusal or an error either.
+    // Match par: the shape check above runs first on both paths, and _v2 gets the same canonical
+    // gradedAnswer as the legacy function — the same connections always give the same string, so a
+    // technical retry replays and changed connections are a submission_conflict.
+    // next_review_at: neither the legacy function nor _v2 sets it for MC/number. The legacy path's own
+    // write below goes through the pupil's client and question_instances has no UPDATE policy, so it
+    // changes no row (verified 2026-10-31); it is not repeated here. Reviving spaced repetition belongs
+    // in the database transaction and is a separate decision. question_shown_at is not a _v2 parameter.
+    if (h5) {
+      console.log("FLOW: MC/NUMBER/MATCH → process_question_attempt_v2")
+      let v2Data: unknown
+      let v2Error: unknown
+      try {
+        ({ data: v2Data, error: v2Error } = await callProcessQuestionAttemptV2(
+          makeAdminClient,
+          {
+            studentId:         user.id,
+            instanceId:        question_instance_id,
+            answer:            gradedAnswer,
+            roundNo:           h5.roundNo,
+            submissionId:      h5.submissionId,
+            reviewText,
+            misconceptionType,
+          }
+        ))
+      } catch (keyError: any) {
+        // serviceKey()'s messages name the variables, never their values.
+        console.error("ADMIN CLIENT ERROR:", keyError?.message ?? keyError)
+        return new Response(JSON.stringify({ error: "Server configuration error" }), {
+          status: 500, headers: corsHeaders
+        })
+      }
+
+      if (v2Error) {
+        // No fallback to process_question_attempt, and no database detail in the response.
+        console.error("RPC V2 ERROR:", JSON.stringify({ instance_id: question_instance_id, code: errorCodeOf(v2Error) }))
+        return new Response(JSON.stringify(UNEXPECTED_RESULT), { status: 500, headers: corsHeaders })
+      }
+
+      const reply = replyForV2(v2Data, h5.roundNo)
+      if (reply.problem) {
+        console.error("RPC V2 UNEXPECTED:", JSON.stringify({ instance_id: question_instance_id, problem: reply.problem }))
+      }
+      console.log("DEBUG MC V2 RESULT:", { outcome: reply.body.outcome ?? "error" })
+      return new Response(JSON.stringify(reply.body), { status: reply.status, headers: corsHeaders })
+    }
+
     console.log("FLOW: MC/NUMBER/MATCH → process_question_attempt")
 
     // process_question_attempt evaluates the answer itself and awards XP/coins, streak and quests
@@ -302,6 +422,12 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Server configuration error" }), {
         status: 500, headers: corsHeaders
       })
+    }
+
+    // M2: see the short-text path above.
+    if (rpcError && isRevokedLegacyRpc(rpcError, LEGACY_ANSWER_RPCS.mc)) {
+      console.error("LEGACY ANSWER PATH CLOSED:", JSON.stringify({ fn: LEGACY_ANSWER_RPCS.mc }))
+      return new Response(JSON.stringify(CLIENT_OUTDATED), { status: 426, headers: corsHeaders })
     }
 
     if (rpcError) {
