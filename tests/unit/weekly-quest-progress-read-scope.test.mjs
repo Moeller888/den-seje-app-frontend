@@ -187,9 +187,44 @@ test("the migration is re-runnable", () => {
     "the old teacher policy and the new super_admin policy are each dropped IF EXISTS");
 });
 
+// Later migrations that touch this table ONLY to narrow WRITE access (drop the pupil's own
+// INSERT/UPDATE policies, revoke INSERT/UPDATE/DELETE). They cannot widen who READS rows, which is
+// what this file guards. Each entry names the file and why; the test below proves that every
+// statement the file runs on this table is one of those narrowing forms — a reviewed decision,
+// never a loosened pattern (same approach as question-instances-read-scope.test.mjs).
+const REVIEWED_LATER_WRITE_NARROWING = {
+  "20261031190000_reward_integrity_server_authority.sql":
+    "D-278: drops weekly_progress_insert_own and weekly_progress_update_own and revokes INSERT, " +
+    "UPDATE and DELETE from anon and authenticated, so only the SECURITY DEFINER server functions " +
+    "write progress. Both SELECT policies, RLS and SELECT privileges are untouched (proven in " +
+    "reward-integrity-server-authority-migration-run.test.mjs).",
+};
+
+test("reviewed later write-narrowing migrations only drop write policies and revoke writes", () => {
+  const dir = join(REPO, "supabase", "migrations");
+  assert.deepEqual(Object.keys(REVIEWED_LATER_WRITE_NARROWING),
+    ["20261031190000_reward_integrity_server_authority.sql"],
+    "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
+  for (const [name, reason] of Object.entries(REVIEWED_LATER_WRITE_NARROWING)) {
+    assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
+    const body = readFileSync(join(dir, name), "utf8")
+      .split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
+    const onTable = body.split(";").map((x) => x.replace(/\s+/g, " ").trim())
+      .filter((x) => /student_weekly_quest_progress/i.test(x));
+    assert.ok(onTable.length > 0, `${name} no longer touches the table — remove the stale exception`);
+    for (const st of onTable) {
+      const ok =
+        /^DROP POLICY IF EXISTS "weekly_progress_(insert|update)_own" ON public\.student_weekly_quest_progress$/i.test(st) ||
+        /^REVOKE INSERT, UPDATE, DELETE ON public\.student_weekly_quest_progress FROM anon, authenticated$/i.test(st);
+      assert.ok(ok, `${name}: not a write-narrowing statement: ${st.slice(0, 120)}`);
+    }
+  }
+});
+
 test("the migration sorts after every migration that touches this table", () => {
   // Deliberately NOT "last file in the directory": that would encode "nothing has been added
   // since" and break on the next unrelated migration. "Touches" means in executable SQL.
+  // A reviewed later write-narrowing migration (above) cannot widen the read scope and is exempt.
   const dir = join(REPO, "supabase", "migrations");
   const executable = (body) => body
     .split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -197,6 +232,7 @@ test("the migration sorts after every migration that touches this table", () => 
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
     .filter((n) => /student_weekly_quest_progress/i.test(
       executable(readFileSync(join(dir, n), "utf8"))))
+    .filter((n) => !Object.hasOwn(REVIEWED_LATER_WRITE_NARROWING, n))
     .sort();
   assert.ok(touching.includes("20260925000000_weekly_quest_progress_read_scope.sql"));
   assert.equal(touching[touching.length - 1],

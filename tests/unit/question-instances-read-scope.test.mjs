@@ -304,6 +304,13 @@ const REVIEWED_LATER_READERS = {
     "service_role only (process-event after auth.getUser() and the ownership check), never anon or " +
     "authenticated. No policy, RLS or table privilege on question_instances is touched (proven in " +
     "question-attempts-v2-migration-run.test.mjs).",
+  "20261031190000_reward_integrity_server_authority.sql":
+    "D-278: re-creates update_best_session_streak and set_night_correct (SECURITY DEFINER, search_path " +
+    "public, pg_temp, EXECUTE revoked from PUBLIC and anon). Each reads only the CALLER's own answered " +
+    "rows (student_id = auth.uid(): was_correct, answered_at) to decide a flag on the caller's own " +
+    "student_progress row, and returns void — no instance data reaches anyone. No policy, RLS or table " +
+    "privilege on question_instances is touched (proven in " +
+    "reward-integrity-server-authority-migration-run.test.mjs).",
   "20261031194600_mc_length_cue_answer_paths.sql":
     "D-280 part 1: process_question_attempt and the three repeat functions keep their reads exactly " +
     "(one instance by id and student_id; the pupil's own answered instances); after a reopen a second " +
@@ -447,6 +454,7 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261029150000_teacher_stats_from_answers.sql",
      "20261029170000_mc_grading_compensation.sql",
      "20261030211428_question_attempts_v2.sql",
+     "20261031190000_reward_integrity_server_authority.sql",
      "20261031194600_mc_length_cue_answer_paths.sql",
      "20261031194700_mc_length_cue_top10.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");

@@ -28,7 +28,25 @@ export const SPEC = Object.freeze({
   hemStitch: 17,                                        // the drawn hem stitch, px above each leg's bottom edge (carried by the shading, measured)
   warp: Object.freeze({ cylinder: 0.10, foldMaxPx: 3, foldBlur: 14 }),
 });
+/** D-279: the successor (v1 above stays as D-276 recorded it). Two general construction rules, the same for every material:
+ *   waistTopSpan — the waistband is taken only under the cut's TOP edge (columns whose top lies within waistTopSpan px of the cut's
+ *                  top; the waist edge measures 34 px of slope), so the band no longer follows the legs' outer flare (v1: 213 px);
+ *   outerEdgeInk — the cut's outer edge is the outline's ink: the outline's own partial edge pixels take the outline's colour (v1 mixed
+ *                  the fabric in under them), and the partial fabric pixels just outside the outline (an empty neighbour, within 2 px
+ *                  of a solid outline pixel) take the nearest outline colour. Colour only: the alpha — the geometry — is untouched. */
+export const SPEC_V2 = Object.freeze({ ...SPEC, revision: "pants-master-v2", waistTopSpan: 40, outerEdgeInk: true });
 const lumOf = (P, i) => 0.299 * P[i * 4] + 0.587 * P[i * 4 + 1] + 0.114 * P[i * 4 + 2];
+
+/** The outer-edge pixels and their outline colour (v2's outerEdgeInk), from the cut alone. */
+export function outerEdge(t) {
+  const idx = [], rgb = [];
+  for (let i = 0; i < N; i++) { const a = t.alpha[i]; if (!a || a >= 255) continue; const ca = t.contour[i * 4 + 3], x = i % W, y = (i / W) | 0;
+    if (ca > 0 && ca === a) { idx.push(i); rgb.push(t.contour[i * 4], t.contour[i * 4 + 1], t.contour[i * 4 + 2]); continue; } if (ca > 0) continue;
+    let ext = false; for (let dy = -1; dy <= 1 && !ext; dy++) for (let dx = -1; dx <= 1; dx++) { const j = (y + dy) * W + x + dx; if (j < 0 || j >= N || !t.alpha[j]) { ext = true; break; } } if (!ext) continue;
+    let best = -1, bd = 9; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const j = (y + dy) * W + x + dx, d = Math.max(Math.abs(dx), Math.abs(dy)); if (j >= 0 && j < N && t.contour[j * 4 + 3] >= 128 && d < bd) { bd = d; best = j; } }
+    if (best >= 0) { idx.push(i); rgb.push(t.contour[best * 4], t.contour[best * 4 + 1], t.contour[best * 4 + 2]); } }
+  return { idx: Int32Array.from(idx), rgb: Uint8ClampedArray.from(rgb) };
+}
 const union = (layers) => { const u = new Uint8ClampedArray(N * 4); for (const L of Object.values(layers)) for (let i = 0; i < N; i++) if (L[i * 4 + 3]) u.set(L.subarray(i * 4, i * 4 + 4), i * 4); return u; };
 
 /** The master for the cut. t: the cut (R1 template), src: its item. */
@@ -38,7 +56,8 @@ export function buildPantsMaster(t, src, spec = SPEC) {
   const line = TM.seamLine(item, core, spec.center, { search: 0, extend: 0 }), barrier = new Uint8Array(N);
   for (const [x, y] of line) for (const d of [0, 1]) { const i = y * W + x + d; if (i >= 0 && i < N) barrier[i] = 1; }
   // the waistband: within waistBand px under the column's top edge
-  const waist = new Uint8Array(N); for (let x = 0; x < W; x++) { let top = -1; for (let y = 0; y < H; y++) if (core[y * W + x]) { top = y; break; } if (top < 0) continue; for (let y = top; y < top + spec.waistBand && y < H; y++) if (core[y * W + x]) waist[y * W + x] = 1; }
+  const g0 = S1.geometry(core), waistLimit = spec.waistTopSpan ? g0.bbox[1] + spec.waistTopSpan : Infinity;
+  const waist = new Uint8Array(N); for (let x = 0; x < W; x++) { let top = -1; for (let y = 0; y < H; y++) if (core[y * W + x]) { top = y; break; } if (top < 0 || top > waistLimit) continue; for (let y = top; y < top + spec.waistBand && y < H; y++) if (core[y * W + x]) waist[y * W + x] = 1; }
   // the legs: the components of the core minus the barrier and the waistband; left and right by the crotch point
   const comp = new Int32Array(N).fill(-1), sizes = [], cx = [];
   for (let s = 0; s < N; s++) { if (!core[s] || barrier[s] || waist[s] || comp[s] >= 0) continue; const id = sizes.length, q = [s]; comp[s] = id; let n = 0, sx = 0;
@@ -71,7 +90,7 @@ export function buildPantsMaster(t, src, spec = SPEC) {
     const mx = sx / n, my = sy / n, raw = 0.5 * Math.atan2(2 * (xy / n - mx * my), xx / n - mx * mx - (yy / n - my * my)), angle = ((raw % Math.PI) + Math.PI) % Math.PI;
     return { angle, origin: [spec.crotch[0], spec.crotch[1]], px: n }; });
   const count = (k) => { let n = 0; for (let i = 0; i < N; i++) if (panel[i] === k) n++; return n; };
-  return { revision: REVISION, spec, seam: line, panel, ratio, disp, axes, base, waist, sizes: { waistband: count(0), left: count(1), right: count(2) } };
+  return { revision: spec.revision || REVISION, spec, seam: line, panel, ratio, disp, axes, base, waist, edge: spec.outerEdgeInk ? outerEdge(t) : null, sizes: { waistband: count(0), left: count(1), right: count(2) } };
 }
 
 /** The material's coordinates at every pixel, exactly as TM.render computes them (for the continuity and orientation checks). */
@@ -112,6 +131,7 @@ export function materials() {
 
 /** The pants layer of a design (the tee master's render, unchanged; its full layer is the bottom's one layer). */
 export function renderPants(master, t, base, design) {
-  const r = TM.render(master, t, base, master.waist, design);
-  return { layer: r.layer, layers: { pants: r.layer } };
+  const r = TM.render(master, t, base, master.waist, design), L = r.layer;
+  if (master.edge) { const { idx, rgb } = master.edge; for (let k = 0; k < idx.length; k++) { const i = idx[k]; L[i * 4] = rgb[k * 3]; L[i * 4 + 1] = rgb[k * 3 + 1]; L[i * 4 + 2] = rgb[k * 3 + 2]; } }
+  return { layer: L, layers: { pants: L } };
 }
