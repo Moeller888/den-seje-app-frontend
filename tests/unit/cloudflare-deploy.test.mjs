@@ -194,7 +194,9 @@ test("HOSTING.md names this script as the deploy command for every branch", () =
   assert.match(doc, /^Non-production branch deploy command:\s+node tools\/cloudflare-deploy\.mjs$/m);
 });
 
-test("HOSTING.md does not claim the dashboard change has already been made", () => {
+test("HOSTING.md dates the dashboard change correctly and no longer calls it pending", () => {
   const doc = readFileSync(join(REPO, "docs", "HOSTING.md"), "utf8");
   assert.doesNotMatch(doc, /indført 2026-10-22/);
+  assert.doesNotMatch(doc, /IKKE ændret endnu/);
+  assert.match(doc, /\*\*Status \(2026-10-31\): aktiv og verificeret\.\*\*/);
 });
