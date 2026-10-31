@@ -848,9 +848,9 @@ efter at D-278 er anvendt.
 
 | System | Konsekvens (FORSLAG) |
 |---|---|
-| **Niveaumotoren** (`LEVEL_ENGINE`, 1–10.000) | Bruges fortsat til at vælge *niveau*: opgaver inden for et mål og målets niveauinterval. **Regel (§4.5):** Folden må kun bruge svar i `tjek`, `repetition` og `anvendelse` uden hints. Diagnostik må kun hæve startniveauet. I dag folder motoren alle første svar. Det er uproblematisk, så længe der ikke findes diagnostik og øvelse, men folden skal ændres i samme PR som diagnostikken (LP-5). |
+| **Niveaumotoren** (`LEVEL_ENGINE`, 1–10.000) | **Revision (Q1):** Skelnen mellem *arbejdsniveau* og *fagligt niveau* står i [L1-kontrakter](learning-progression-l1-contracts.md) K7. Den byggede motor bør deles i de to, før den aktiveres. Bruges fortsat til at vælge *niveau*: opgaver inden for et mål og målets niveauinterval. **Regel (§4.5):** Folden må kun bruge svar i `tjek`, `repetition` og `anvendelse` uden hints. Diagnostik må kun hæve startniveauet. I dag folder motoren alle første svar. Det er uproblematisk, så længe der ikke findes diagnostik og øvelse, men folden skal ændres i samme PR som diagnostikken (LP-5). |
 | **Måle-spørgsmål pr. fag** (P1–P9) | Bliver diagnostik på emneniveau (§4.5). Placering påvirker niveau, ikke mestring. Ejerens krav "et fag må ikke påvirke et andet" gælder også tilstanden pr. mål, fordi den er pr. fag og mål. |
-| **Elevhistorik** (`question_attempts`, D-266) | Er fundamentet. FAKTA (read-only 2026-10-31): migrationen `20261030211428` er merget, men **ikke anvendt**. Tabellen findes ikke i produktionen. H5 PR 3 (`process-event` til `_v2`) er merget (#498), men ikke deployet. **LP-3:** `mode`, `hints_used`, `response_ms` og `objective_ids` tilføjes i en følgemigration, der anvendes *sammen med* PR 1, før den første række skrives. Den mergede migrationsfil ændres ikke. Gentagelsens `round_no` (H5) bevares. |
+| **Elevhistorik** (`question_attempts`, D-266) | Er fundamentet. FAKTA (read-only 2026-10-31): migrationen `20261030211428` er merget, men **ikke anvendt**. Tabellen findes ikke i produktionen. H5 PR 3 (`process-event` til `_v2`) er merget (#498), men ikke deployet. **LP-3:** `mode`, `hints_used`, `server_interval_ms` og `objective_ids` tilføjes i en følgemigration, der anvendes *sammen med* PR 1, før den første række skrives. Den mergede migrationsfil ændres ikke. Gentagelsens `round_no` (H5) bevares. |
 | **Format-mix** (`QUESTION_MIX_ENGINE`) | Bliver underordnet progressionen. Formen vælges efter fasens evidensbehov, og mix-kvoterne bruges kun til variation inden for øvelsen. v2 forbliver NO-GO uden ejerens godkendelse. |
 | **Bølgefaser** | Erstattes af tilstandene. `recovery` svarer til "undervis igen" og `deep_challenge` til "anvendelse". Bølgesorteringen kan bruges som tie-break inden for en fase i overgangen. |
 | **Lærerreview** (lange svar) | Lærerens vurdering bliver evidensen `forklaring`. `get-reviewed-answers` skal have en UI, så feedbacken når eleven. Dobbelt-XP-fejlen i `review-answer` rettes før (kendt i ROADMAP). |
@@ -888,7 +888,7 @@ efter at D-278 er anvendt.
 | `learning_content` | id, objective_id, kind (tekst/eksempel/kilde/billede/lyd), body, oplæsningsnøgle, version, is_active | Ikke-scoret. Medieindhold i Storage/R2. |
 | `question_objectives` | question_id, objective_id, evidence_kind | Mange-til-mange. |
 | `questions.content` (udvidet) | `hints[]` (H1–H3), feedback og `misconception` pr. svarmulighed | Udvides bevidst i DTO'en. Facit og misopfattelseskobling bliver på serveren. |
-| `question_attempts` (D-266, **udvidet før anvendelse**) | + `mode`, `hints_used`, `response_ms`, `objective_ids` | LP-3. |
+| `question_attempts` (D-266, **udvidet før anvendelse**) | + `mode`, `hints_used`, `server_interval_ms`, `objective_ids` | LP-3. |
 | `content_exposures` | elev, objective_id, content_version, kilde (app/lærer), tidspunkt | Append-only. |
 | `objective_events` | lærervurdering, nulstilling, "gennemgået i klassen" | Append-only. |
 | `student_objective_state` | elev, objective_id, tilstand, flag, sidste evidens, næste repetition, forklaring | **Cache**, genberegnes fra logs. Kan læses af eleven selv og elevens lærer. |
@@ -898,7 +898,9 @@ efter at D-278 er anvendt.
   holdes på dataminimum: ingen fri tekst ud over svar, ingen deling uden for skolen.
 - Tilstanden må aldrig alene bruges til en beslutning med retsvirkning (GDPR art. 22). Det er heller
   ikke hensigten.
-- `response_ms` er en ny oplysning. Den har kun ét formål, at fange gæt, og skal begrundes i
+- `server_interval_ms` er et *teknisk tidsinterval* (fra serverens oprettelse af instansen til svaret), ikke
+  elevens svartid. Det kan kun *tilbageholde* positiv evidens og må aldrig alene give en negativ vurdering
+  ([L1-kontrakter](learning-progression-l1-contracts.md) K1, K9). Det har kun ét formål, at fange gæt, og skal begrundes i
   privatlivsdokumentationen.
 
 ### 8.3 Forløb (skitse)
@@ -927,7 +929,7 @@ hub → vælg fag → get-next-activity (gnq udvidet, bag flag)
 | Mestring | Død | Tilstandsmotor (§4.3), deterministisk og forklarlig | Ny motor (fold) + skyggetilstand | Log, mål |
 | Repetition | Kun "puljen er brugt op" | Planlagt pr. mål | Repetitionsplan i tilstanden | Motor |
 | Niveau | Klientbånd, klassetrin som loft | Niveaumotor pr. fag, klassetrin = start | `LEVEL_ENGINE`-aktivering + fold uden diagnostik | LP-5 |
-| Svartid | Smides væk | Logges som gættesignal | `response_ms` | LP-3 |
+| Svartid | Smides væk | Logges som gættesignal | `server_interval_ms` | LP-3 |
 | Bedømmelse | `[a-z0-9]`-strip | Korrekt for æøå og tal | Evaluator-rettelse | — |
 | Belønning | Volumen og korrekt førstegangssvar | R1–R10 | Ændring af RPC'er og quests | Motor live |
 | Lærerindsigt | %, trend, bånd | Varmekort, misopfattelser, eksponering, tilsidesættelse | UI + RPC'er | Motor |
@@ -955,7 +957,7 @@ Hvert trin er sin egen sektion med audit, PR, tests og ejergodkendelse (CLAUDE_W
 | **L8** | **Evaluering (§12)** og kalibrering (intervaller, kriterier, evt. HLR/Elo). | L5 + ≥ 6 ugers data | Evalueringsrapport. Beslutning om bredere udrulning. |
 
 **Hvorfor L1 først:** Uden en log kan ingen mestring, repetition eller evaluering beregnes. Felterne
-`mode`, `hints_used` og `response_ms` er billige at tilføje nu, fordi migrationen ikke er anvendt
+`mode`, `hints_used` og `server_interval_ms` er billige at tilføje nu, fordi migrationen ikke er anvendt
 endnu. Bagefter kræver de en ny migration og giver huller i historikken.
 
 ---
@@ -977,7 +979,7 @@ migrationer eller E2E).
 | A8 | Tilstanden er en ren funktion af loggen: replay af samme hændelser giver identisk tilstand. En ændret regel giver ny tilstand uden at slette noget. | Unit (replay) |
 | A9 | Evidens i ét fag ændrer aldrig tilstand eller niveau i et andet fag. | Unit + PGlite |
 | A10 | Lærerens "gennemgået i klassen" registrerer eksponering. Appen tilbyder så ikke introduktionen igen. | E2E |
-| A11 | Diagnostik giver 0 XP og 0 mønter. Ingen XP afhænger af `response_ms`. | PGlite |
+| A11 | Diagnostik giver 0 XP og 0 mønter. Ingen XP afhænger af `server_interval_ms`. | PGlite |
 | A12 | Neutralitet: den hurtige rute giver mindst lige så meget XP pr. minut som den fulde rute (simuleret elev). Se også A22. | Unit (simulation) |
 | A13 | Tre fejl i samme mål i én session giver `brug_for_hjælp` og skift til et andet mål. Der er aldrig en blindgyde. | Unit + E2E |
 | A14 | En repetition kommer tidligst efter intervallet og senest ved næste session efter forfaldsdatoen, hvis eleven arbejder i faget. | Unit |
@@ -1096,7 +1098,7 @@ fordi klasserne er forskellige, men retfærdigt.
 
 | # | Beslutning | Hvorfor nu | Anbefaling |
 |---|---|---|---|
-| **LP-3** | Skal svarloggen fra første række gemme `mode`, `hints_used`, `response_ms` og `objective_ids`? | `question_attempts` er ikke anvendt endnu (FAKTA, read-only 2026-10-31). Tilføjes felterne senere, mangler de i historikken for alle tidlige svar. | Ja. En følgemigration anvendes sammen med PR 1, og `_v2`-RPC'erne og `process-event` tager felterne med. `response_ms` får ét formål (gættesignal) og skrives ind i privatlivsdokumentationen. |
+| **LP-3** | Skal svarloggen fra første række gemme `mode`, `hints_used`, `server_interval_ms` og `objective_ids`? | `question_attempts` er ikke anvendt endnu (FAKTA, read-only 2026-10-31). Tilføjes felterne senere, mangler de i historikken for alle tidlige svar. | Ja. En følgemigration anvendes sammen med PR 1, og `_v2`-RPC'erne og `process-event` tager felterne med. `server_interval_ms` får ét formål (gættesignal) og skrives ind i privatlivsdokumentationen. |
 | **LP-5** | Princip: må niveaumotorens fold kun bruge svar i `tjek`, `repetition` og `anvendelse` uden hints, og må diagnostik kun hæve startniveauet? | Niveaumotoren venter på aktivering. Princippet skal være kendt, før motoren aktiveres og før `mode` lander i loggen. | Ja. Implementeringen sker i samme PR som diagnostikken. |
 | **LP-15** *(ny)* | Skal bedømmelsen i `process_question_attempt` rettes (numerisk evaluator og bevarede æøå), og skal den statiske validering af opgaver bygges i L1? | Uden rettelsen kan tal og `force_text` ikke bruges som evidens, og MC-opgaver med kolliderende svarmuligheder bedømmes forkert. | Ja. Det er sin egen PR i L1 med en migrationstest. Først rapporteres, hvor mange aktive opgaver der rammes (read-only). |
 | **LP-16** *(ny)* | Afklares D-266's åbne H1–H4 som en del af L1? | L1 kan ikke færdiggøres uden dem. | Ja. H1–H4 behandles i deres eget D-266-spor. Dette dokument forudsætter dem kun. |
