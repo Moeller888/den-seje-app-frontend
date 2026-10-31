@@ -34,6 +34,19 @@ function mapAnswerFormat(format: string | null) {
   return "mc";
 }
 
+// The round the pupil is answering (D-266, H5): round_no = question_instances.repeat_count + 1 of the
+// row this response serves, read from the database, never from the request. Every reopen raises
+// repeat_count by exactly 1 (round guard, migration 20261030211428), so the first round is 1, a
+// reopened instance gets the next number and fetching an open round again gives the same number.
+// A row without a valid repeat_count is a server fault: it throws (500) instead of inventing a round.
+function roundNoOf(instance: { id?: unknown; repeat_count?: unknown } | null | undefined): number {
+  const repeatCount = instance?.repeat_count;
+  if (typeof repeatCount !== "number" || !Number.isInteger(repeatCount) || repeatCount < 0) {
+    throw new Error(`Invalid repeat_count on question instance ${String(instance?.id ?? "?")}`);
+  }
+  return repeatCount + 1;
+}
+
 // SERVER-SIDE ONLY. Validates the stored content and extracts the answer key that becomes
 // question_instances.correct_answer. Its result must never be sent to the browser — the response is
 // built from toPublicQuestion (../_shared/question-dto.ts) instead.
@@ -175,6 +188,7 @@ serve(async (req) => {
       .from("question_instances")
       .select(`
         id,
+        repeat_count,
         next_review_at,
         questions (
           content,
@@ -208,6 +222,8 @@ serve(async (req) => {
     for (const instance of sortedDue) {
       const q = instance.questions;
       if (!q) continue;
+      // Outside the try: an invalid round fails loud instead of being skipped like bad content.
+      const roundNo = roundNoOf(instance);
 
       try {
         const format = wireFormat(q);
@@ -218,6 +234,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             question_instance_id: instance.id,
+            round_no: roundNo,
             content: pub.content,
             answer_format: format,
             answer_type: q.answer_type || "short",
@@ -405,6 +422,7 @@ serve(async (req) => {
           .from("question_instances")
           .select(`
             id,
+            repeat_count,
             questions (
               content,
               answer_format,
@@ -436,6 +454,8 @@ serve(async (req) => {
           } | null | undefined;
 
           if (rq && rq.is_active !== false) {
+            // The reopened round, read back after the reopen (outside the try, so it fails loud).
+            const roundNo = roundNoOf(repeatRow);
             try {
               const format = wireFormat(rq);
               if (format === null) throw new Error(`Unservable format: ${rq.answer_format}`);
@@ -445,6 +465,7 @@ serve(async (req) => {
               return new Response(
                 JSON.stringify({
                   question_instance_id: repeatRow.id,
+                  round_no: roundNo,
                   content: pub.content,
                   answer_format: format,
                   answer_type: rq.answer_type || "short",
@@ -479,9 +500,13 @@ serve(async (req) => {
       );
     }
 
+    // The new instance's round, from the row the insert returned (repeat_count's default, 0 → round 1).
+    const roundNo = roundNoOf(inserted.instance as { id?: unknown; repeat_count?: unknown });
+
     return new Response(
       JSON.stringify({
         question_instance_id: inserted.instance.id,
+        round_no: roundNo,
         content: inserted.pub.content,
         answer_format: inserted.format,
         answer_type: inserted.question?.answer_type || "short",
