@@ -63,6 +63,11 @@ const graded = (outcome: string, status = 'correct', round_no = 1) => ({
 });
 const RECORDED = graded('recorded');
 const REPLAY = graded('replay');
+// What process-event version 34 (no H5) answers: graded, no outcome.
+const legacyGraded = (status: string) => ({ status: 200, body: { status, correct_answer: 'Paris', review_text: status === 'incorrect' ? 'Husk: Paris.' : null, misconception_type: null } });
+const LEGACY_CORRECT = legacyGraded('correct');
+const INCOMPATIBLE = 'Lærlig kan ikke registrere svar sikkert lige nu';
+const STORAGE = 'Dit svar er ikke sendt: browseren kan ikke gemme det midlertidigt';
 // The connection is cut. `registered`: the server got it first (the reply is lost on the way back).
 type Reply = { status?: number; body?: unknown; cut?: 'before' | 'after' };
 const CUT_BEFORE: Reply = { cut: 'before' };
@@ -154,7 +159,7 @@ const UNCERTAIN = /Forbindelsen svigtede/;
 
 // ── H5 OFF (the shipped default) ─────────────────────────────────────────────────────────────────
 test('OFF: the request is exactly the legacy one, nothing is stored, the result shows as before', async ({ page }) => {
-  const q = await openQuiz(page, { h5: false, questions: [MC], replies: [RECORDED] });
+  const q = await openQuiz(page, { h5: false, questions: [MC], replies: [LEGACY_CORRECT] });
   await ready(page, MC);
   await option(page, 'Paris').click();
   await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
@@ -371,16 +376,68 @@ test('ON: two tabs answering the same round — one is graded, the other is refu
   expect(q.registered).toHaveLength(1);
 });
 
-test('ON: sessionStorage that refuses writes never blocks answering; the in-page retry still works', async ({ page }) => {
+test('ON: storage that refuses the write — nothing is sent or graded, the typed answer stays editable', async ({ page }) => {
   const init = `(() => { const orig = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) {
     if (this === window.sessionStorage && k === ${JSON.stringify(KEY)}) throw new DOMException('full', 'QuotaExceededError');
     return orig.call(this, k, v); }; })();`;
-  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [CUT_AFTER, REPLAY], init });
+  const q = await openQuiz(page, { h5: true, questions: [TEXT], replies: [RECORDED], init });
+  await ready(page, TEXT);
+  const input = page.locator('#short-answer-input');
+  await input.fill('blåbær');
+  await input.press('Enter');
+  await expect(page.locator('#feedback')).toContainText(STORAGE);
+  expect(q.submitted, 'no request leaves without a stored, re-findable submission').toHaveLength(0);
+  await expect(input).toBeEnabled();
+  await expect(input).toHaveValue('blåbær');
+  const log = await q.feedbackLog();
+  expect(log.some((t) => /Ja!|Ikke helt|Svaret er/.test(t)), 'a storage fault is never a wrong answer').toBe(false);
+  expect(await stored(page)).toBeNull();
+});
+
+for (const status of ['correct', 'incorrect'] as const) {
+  test(`ON: a backend without H5 answers 200 ${status} without outcome — not shown as graded, blocked, not resent after reload`, async ({ page }) => {
+    const q = await openQuiz(page, { h5: true, questions: [MC, TEXT], replies: [legacyGraded(status)] });
+    await ready(page, MC);
+    await option(page, 'Paris').click();
+    await expect(page.locator('#feedback')).toContainText(INCOMPATIBLE);
+    await expect(page.locator('#go-hub-btn')).toBeVisible();
+    await expect(page.locator('#h5-retry-btn')).toHaveCount(0);
+    await expect(option(page, 'Paris')).toBeDisabled();
+    const log = await q.feedbackLog();
+    expect(log.some((t) => /Ja!|Ikke helt|Svaret er/.test(t)), 'never counted as right or wrong').toBe(false);
+    const kept = JSON.parse(await stored(page));
+    expect(kept).toMatchObject({ blocked: 'incompatible_backend', answer: 'Paris', submission_id: q.submitted[0].submission_id, round_no: 1 });
+    const gnq = q.calls.filter((c) => c === 'get-next-question').length;
+    expect(gnq, 'no automatic next question').toBe(1);
+
+    const before = q.calls.length;
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#question')).toHaveText('Dit sidste svar kunne ikke registreres sikkert.', { timeout: 20000 });
+    await expect(page.locator('#feedback')).toContainText(INCOMPATIBLE);
+    expect(q.calls.slice(before), 'after the reload: no resend, no new question').toEqual([]);
+    expect(JSON.parse(await stored(page)).submission_id).toBe(kept.submission_id);
+  });
+}
+
+test('ON: a recorded result for another round is not trusted — blocked, not shown as graded', async ({ page }) => {
+  const q = await openQuiz(page, { h5: true, questions: [MC], replies: [graded('recorded', 'correct', 2)] });
   await ready(page, MC);
   await option(page, 'Paris').click();
-  await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
-  expect(await stored(page)).toBeNull();
-  await page.locator('#h5-retry-btn').click();
-  await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
-  expect(q.submitted[1].submission_id).toBe(q.submitted[0].submission_id);
+  await expect(page.locator('#feedback')).toContainText(INCOMPATIBLE);
+  expect((await q.feedbackLog()).includes('Ja! 🎯')).toBe(false);
+  expect(JSON.parse(await stored(page)).blocked).toBe('incompatible_backend');
 });
+
+for (const [status, body] of [[400, { error: 'Missing required fields' }], [403, { error: 'Forbidden' }], [404, { error: 'Requested function was not found' }]] as const) {
+  test(`ON: a generic ${status} without H5's outcome is uncertain — kept, resent with the same UUID by hand`, async ({ page }) => {
+    const q = await openQuiz(page, { h5: true, questions: [MC], replies: [{ status, body }, RECORDED] });
+    await ready(page, MC);
+    await option(page, 'Paris').click();
+    await expect(page.locator('#feedback')).toHaveText(UNCERTAIN);
+    expect(JSON.parse(await stored(page)).submission_id).toBe(q.submitted[0].submission_id);
+    expect(q.calls.filter((c) => c === 'get-next-question').length, 'not skipped to a new question').toBe(1);
+    await page.locator('#h5-retry-btn').click();
+    await expect.poll(() => q.feedbackLog()).toContain('Ja! 🎯');
+    expect(q.submitted[1].submission_id).toBe(q.submitted[0].submission_id);
+  });
+}

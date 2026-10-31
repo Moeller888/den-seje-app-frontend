@@ -8,9 +8,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   ENABLE_H5_SUBMISSIONS, isH5SubmissionsEnabled, isH5Eligible, isValidRoundNo, isUuid,
-  createSubmission, parseRecord, savePending, loadPending, clearPending, h5RequestBody,
-  classifyResponse, isClientOutdatedError, PENDING_STORAGE_KEY, PENDING_MAX_AGE_MS, MAX_ANSWER_LENGTH,
-  REFUSED_OUTCOMES, REFUSAL_TEXT,
+  createSubmission, parseRecord, savePending, persistAndVerify, loadPending, clearPending, h5RequestBody,
+  blockRecord, BLOCKED_INCOMPATIBLE, classifyResponse, isClientOutdatedError, PENDING_STORAGE_KEY,
+  PENDING_MAX_AGE_MS, MAX_ANSWER_LENGTH, REFUSED_OUTCOMES, REFUSAL_STATUS, REFUSAL_TEXT,
 } from "../../js/answer-submission.js";
 
 const read = (p) => readFileSync(new URL(p, import.meta.url), "utf8");
@@ -183,7 +183,7 @@ test("corrupt, incomplete, padded, future or expired data is discarded, never us
   assert.equal(parseRecord(JSON.stringify(record), NOW).submission_id, SUB);
 });
 
-test("a failing or missing sessionStorage never throws and never blocks answering", () => {
+test("the storage helpers never throw on a failing or missing sessionStorage", () => {
   const { record } = make();
   assert.deepEqual(savePending(memoryStorage({ failSet: true }), record), { ok: false, error: "QuotaExceededError" });
   assert.equal(savePending(null, record).ok, false);
@@ -193,72 +193,133 @@ test("a failing or missing sessionStorage never throws and never blocks answerin
   assert.equal(clearPending(null), true);
 });
 
-// ── What process-event's reply means ─────────────────────────────────────────────────────────────
-const graded = (outcome, status = "correct") => ({ outcome, status, correct_answer: "Paris", review_text: null, misconception_type: null, round_no: 1, xp_awarded: 10, coins_awarded: 5 });
-
-test("200 recorded and replay are graded results; replay is the original, frozen one", async () => {
-  assert.deepEqual(await classifyResponse({ data: graded("recorded"), error: null }), { kind: "graded", replay: false, data: graded("recorded") });
-  assert.deepEqual(await classifyResponse({ data: graded("replay", "incorrect"), error: null }), { kind: "graded", replay: true, data: graded("replay", "incorrect") });
-  assert.deepEqual((await classifyResponse({ data: JSON.stringify(graded("recorded")), error: null })).kind, "graded");
+// ── Storage before sending: stored AND found again, or not sent ──────────────────────────────────
+test("persistAndVerify: a submission counts as stored only when it reads back identically", () => {
+  const { record } = make();
+  const ok = memoryStorage();
+  assert.deepEqual(persistAndVerify(ok, record, NOW), { ok: true });
+  assert.deepEqual(loadPending(ok, STUDENT, NOW).record, record);
+  assert.deepEqual(persistAndVerify(memoryStorage({ failSet: true }), record, NOW), { ok: false, error: "QuotaExceededError" });
+  assert.equal(persistAndVerify(memoryStorage({ failGet: true }), record, NOW).ok, false);
+  assert.equal(persistAndVerify(null, record, NOW).ok, false);
+  // A storage that accepts the write but keeps nothing (or something else) is caught by the read-back.
+  const blackHole = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+  assert.deepEqual(persistAndVerify(blackHole, record, NOW), { ok: false, error: "readback_mismatch" });
+  const mangler = { getItem: () => JSON.stringify({ ...record, answer: "Rom" }), setItem: () => {}, removeItem: () => {} };
+  assert.deepEqual(persistAndVerify(mangler, record, NOW), { ok: false, error: "readback_mismatch" });
 });
 
-test("409 / 404 / 400 refusals are read from the error's Response, never treated as graded", async () => {
-  const cases = [
-    [409, { outcome: "round_closed", error: "Round already closed" }],
-    [409, { outcome: "stale_round", error: "Answer belongs to an earlier round" }],
-    [409, { outcome: "submission_conflict", error: "Submission id already used" }],
-    [404, { outcome: "not_found", error: "Instance not found" }],
-    [400, { outcome: "invalid_request", error: "Invalid request", reason: "round_ahead" }],
-  ];
-  for (const [status, body] of cases) {
-    const r = await classifyResponse(httpError(status, body));
-    assert.equal(r.kind, "refused", `${status} ${body.outcome}`);
-    assert.equal(r.outcome, body.outcome);
-    assert.ok(REFUSAL_TEXT[r.outcome], "a pupil-facing text exists");
-    assert.doesNotMatch(REFUSAL_TEXT[r.outcome], /rigtig|forkert|korrekt/i, "a refusal never says right or wrong");
+test("a blocked submission keeps its identity, survives storage, and only the known marker is accepted", () => {
+  const { record } = make();
+  const blocked = blockRecord(record);
+  assert.deepEqual({ ...blocked }, { ...record, blocked: BLOCKED_INCOMPATIBLE });
+  assert.ok(Object.isFrozen(blocked));
+  const s = memoryStorage();
+  assert.deepEqual(persistAndVerify(s, blocked, NOW), { ok: true });
+  assert.equal(loadPending(s, STUDENT, NOW).record.blocked, BLOCKED_INCOMPATIBLE);
+  s.map.set(PENDING_STORAGE_KEY, JSON.stringify({ ...record, blocked: "anything" }));
+  assert.deepEqual(loadPending(s, STUDENT, NOW), { record: null, discarded: "invalid" });
+});
+
+// ── What process-event's reply means (strict) ────────────────────────────────────────────────────
+const RECORD = make({ roundNo: 2 }).record;
+const graded = (outcome, status = "correct", over = {}) => ({ outcome, status, correct_answer: "Paris", review_text: null, misconception_type: null, round_no: 2, xp_awarded: status === "correct" ? 10 : 0, coins_awarded: status === "correct" ? 5 : 0, ...over });
+const classify = (r) => classifyResponse(r, RECORD);
+
+test("only a complete recorded / replay for THIS round is a protected success", async () => {
+  assert.deepEqual(await classify({ data: graded("recorded"), error: null }), { kind: "graded", replay: false, data: graded("recorded") });
+  assert.deepEqual(await classify({ data: graded("replay", "incorrect"), error: null }), { kind: "graded", replay: true, data: graded("replay", "incorrect") });
+  assert.equal((await classify({ data: JSON.stringify(graded("recorded")), error: null })).kind, "graded");
+});
+
+test("a recorded / replay with a wrong, missing or invalid round_no, or broken fields, is not trusted", async () => {
+  for (const over of [{ round_no: 1 }, { round_no: 3 }, { round_no: undefined }, { round_no: "2" }, { round_no: 0 },
+    { status: "pending" }, { status: undefined }, { xp_awarded: -1 }, { coins_awarded: 1.5 }, { xp_awarded: undefined },
+    { correct_answer: 7 }, { review_text: {} }]) {
+    for (const outcome of ["recorded", "replay"]) {
+      const r = await classify({ data: graded(outcome, "correct", over), error: null });
+      assert.deepEqual(r, { kind: "incompatible_backend", reason: `${outcome}_contract` }, `${outcome} ${JSON.stringify(over)}`);
+    }
+  }
+  assert.equal((await classifyResponse({ data: graded("recorded"), error: null }, undefined)).kind, "incompatible_backend", "no locked submission to compare with");
+});
+
+test("H5 on + 200 correct / incorrect / pending WITHOUT outcome (a backend without H5) is incompatible, never a success", async () => {
+  for (const status of ["correct", "incorrect", "pending", "already_answered"]) {
+    const legacy = { status, correct_answer: "Paris", review_text: null, misconception_type: null };
+    assert.deepEqual(await classify({ data: legacy, error: null }), { kind: "incompatible_backend", reason: "no_outcome" }, status);
+  }
+  for (const outcome of ["round_closed", "stale_round", "not_found", "weird"]) {
+    assert.deepEqual(await classify({ data: { outcome }, error: null }), { kind: "incompatible_backend", reason: "outcome_on_200" }, outcome);
+  }
+});
+
+test("refusals count only with process-event's own outcome AND status", async () => {
+  for (const [outcome, status] of Object.entries(REFUSAL_STATUS)) {
+    const r = await classify(httpError(status, { outcome, error: "x" }));
+    assert.equal(r.kind, "refused", outcome);
+    assert.equal(r.outcome, outcome);
+    assert.ok(REFUSAL_TEXT[outcome]);
+    assert.doesNotMatch(REFUSAL_TEXT[outcome], /rigtig|forkert|korrekt/i, "a refusal never says right or wrong");
+    const other = status === 409 ? 400 : 409;
+    assert.equal((await classify(httpError(other, { outcome, error: "x" }))).kind, "uncertain", `${outcome} with ${other}`);
   }
   assert.deepEqual([...REFUSED_OUTCOMES].sort(), Object.keys(REFUSAL_TEXT).sort());
-  // A Response body can be read again by the next reader (the classifier clones it).
+  // The classifier clones the Response: the body can still be read afterwards.
   const e = httpError(409, { outcome: "round_closed" });
-  await classifyResponse(e);
+  await classify(e);
   assert.equal((await e.error.context.json()).outcome, "round_closed");
 });
 
-test("Match par's 400 { status: 'invalid' } is an answer to change, not a transport failure", async () => {
-  assert.deepEqual(await classifyResponse(httpError(400, { status: "invalid", error: "Forbind alle par, før du sender." })),
+test("generic 400 / 403 / 404 / 405 / 429 without H5's outcome are uncertain, never a safe refusal", async () => {
+  for (const [status, body] of [[400, { error: "Missing required fields" }], [400, { error: "Invalid JSON body" }], [403, { error: "Forbidden" }],
+    [404, { error: "Instance not found" }], [404, "Requested function was not found"], [405, ""], [429, { message: "rate limited" }]]) {
+    assert.deepEqual(await classify(httpError(status, body)), { kind: "uncertain", reason: `http_${status}` }, `${status} ${JSON.stringify(body)}`);
+  }
+});
+
+test("Match par's 400 { status: 'invalid', error } is an answer to change, and only exactly that shape", async () => {
+  assert.deepEqual(await classify(httpError(400, { status: "invalid", error: "Forbind alle par, før du sender." })),
     { kind: "invalid_answer", message: "Forbind alle par, før du sender." });
+  assert.equal((await classify(httpError(400, { status: "invalid" }))).kind, "uncertain", "without its message");
+  assert.equal((await classify(httpError(422, { status: "invalid", error: "x" }))).kind, "uncertain", "another status");
 });
 
-test("426 client_outdated, 401, 403 and other 4xx are definite; 5xx, network and relay errors are uncertain", async () => {
-  assert.deepEqual(await classifyResponse(httpError(426, { outcome: "client_outdated", error: "Client outdated" })), { kind: "client_outdated" });
-  assert.deepEqual(await classifyResponse(httpError(401, { error: "Unauthorized" })), { kind: "unauthorized" });
-  assert.deepEqual(await classifyResponse(httpError(403, { error: "Forbidden" })), { kind: "refused", outcome: "not_found", reason: "forbidden" });
-  assert.deepEqual(await classifyResponse(httpError(400, { error: "Missing required fields" })), { kind: "refused", outcome: "invalid_request", reason: null });
+test("426 client_outdated and 401 are definite; 5xx, network, relay and unreadable replies are uncertain", async () => {
+  assert.deepEqual(await classify(httpError(426, { outcome: "client_outdated", error: "Client outdated" })), { kind: "client_outdated" });
+  assert.equal((await classify(httpError(426, { error: "x" }))).kind, "uncertain", "426 without the outcome is not trusted");
+  assert.deepEqual(await classify(httpError(401, { error: "Unauthorized" })), { kind: "unauthorized" });
   for (const status of [500, 502, 503, 504, 546]) {
-    assert.deepEqual(await classifyResponse(httpError(status, { error: "Could not process answer" })), { kind: "uncertain", reason: `http_${status}` });
+    assert.deepEqual(await classify(httpError(status, { error: "Could not process answer" })), { kind: "uncertain", reason: `http_${status}` });
   }
-  assert.equal((await classifyResponse(httpError(426, { error: "something else" }))).kind, "uncertain", "426 without the outcome is not trusted");
-  assert.deepEqual(await classifyResponse(fetchError()), { kind: "uncertain", reason: "FunctionsFetchError" });
-  assert.deepEqual(await classifyResponse(relayError()), { kind: "uncertain", reason: "FunctionsRelayError" });
-  assert.deepEqual(await classifyResponse(httpError(409, "not json")), { kind: "uncertain", reason: "http_409" });
-});
-
-test("a 200 the client cannot place is uncertain — never invented as saved or not saved", async () => {
-  for (const data of [null, undefined, "", "{", [], {}, { outcome: "recorded", status: "pending" }, { outcome: "weird" }, { status: "weird" }]) {
-    assert.equal((await classifyResponse({ data, error: null })).kind, "uncertain", JSON.stringify(data));
+  assert.deepEqual(await classify(fetchError()), { kind: "uncertain", reason: "FunctionsFetchError" });
+  assert.deepEqual(await classify(relayError()), { kind: "uncertain", reason: "FunctionsRelayError" });
+  assert.deepEqual(await classify(httpError(409, "not json")), { kind: "uncertain", reason: "http_409" });
+  for (const data of [null, undefined, "", "{", [], {}]) {
+    assert.equal((await classify({ data, error: null })).kind, "uncertain", JSON.stringify(data));
   }
 });
 
-test("a backend without H5 (process-event v34) grades without outcome: authoritative, flagged as unprotected", async () => {
-  const legacy = { status: "correct", correct_answer: "Paris", review_text: null, misconception_type: null };
-  assert.deepEqual(await classifyResponse({ data: legacy, error: null }), { kind: "graded_unprotected", data: legacy });
-  assert.deepEqual(await classifyResponse({ data: { status: "pending", correct_answer: null, review_text: null }, error: null }),
-    { kind: "pending", data: { status: "pending", correct_answer: null, review_text: null } });
-});
-
-test("legacy path: only process-event's exact 426 client_outdated counts as an outdated client", async () => {
+test("legacy path (H5 off): only process-event's exact 426 client_outdated counts as an outdated client", async () => {
   assert.equal(await isClientOutdatedError(httpError(426, { outcome: "client_outdated" }).error), true);
   for (const e of [httpError(426, { error: "x" }).error, httpError(500, { error: "x" }).error, fetchError().error, null, undefined]) {
     assert.equal(await isClientOutdatedError(e), false);
+  }
+});
+
+test("app.js: storage is verified before every send, an incompatible backend blocks, and only confirmed outcomes settle", () => {
+  assert.match(APP, /if \(!readyToSend\(record\)\) return \{ handled: true \};\s*sentSubmissions\.add\(record\.submission_id\);\s*setAnswerControlsDisabled\(true\);\s*const outcome = await sendSubmission\(record\);/);
+  assert.match(APP, /if \(!readyToSend\(record\)\) \{\s*questionElement\.textContent = "Dit sidste svar er ikke afsluttet endnu\.";\s*return false;\s*\}\s*const outcome = await sendSubmission\(record\);/);
+  assert.equal((APP.match(/await sendSubmission\(record\)/g) ?? []).length, 2, "two sends, both behind readyToSend");
+  assert.equal((APP.match(/readyToSend\(record\)/g) ?? []).length, 3, "defined once, used before both sends");
+  // A blocked submission is never sent: checked before a send and on recovery, before any network call.
+  assert.match(APP, /if \(pendingSubmission && pendingSubmission\.blocked\) \{\s*showIncompatible\(\);\s*return \{ handled: true \};\s*\}/);
+  assert.match(APP, /if \(record\.blocked\) \{[\s\S]{0,200}?showIncompatible\(\);\s*return false;\s*\}/);
+  assert.doesNotMatch(APP, /graded_unprotected|outcome\.kind === "pending"/);
+  // settleSubmission (which drops the stored submission) follows only a confirmed outcome or a pupil switch.
+  const contexts = [...APP.matchAll(/settleSubmission\(\);/g)].map((m) => APP.slice(Math.max(0, m.index - 260), m.index));
+  assert.ok(contexts.length >= 6);
+  for (const ctx of contexts) {
+    assert.match(ctx, /outcome\.kind === "(graded|refused|invalid_answer|client_outdated)"|owner === "other"/, ctx.slice(-140));
   }
 });

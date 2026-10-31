@@ -21,9 +21,9 @@ import { attachReadAloudControl, attachOptionReadAloudControl, stopReadAloud } f
 import { installFlagDiagnostics } from "./js/flags.js";
 // H5 PR 4 (D-266, D-273): OFF by default and not switchable from the browser — see the module header.
 import {
-  isH5SubmissionsEnabled, isH5Eligible, createSubmission, savePending, loadPending, clearPending,
-  h5RequestBody, classifyResponse, isClientOutdatedError,
-  REFUSAL_TEXT, UNCERTAIN_TEXT, CLIENT_OUTDATED_TEXT, MISSING_ROUND_TEXT,
+  isH5SubmissionsEnabled, isH5Eligible, createSubmission, savePending, persistAndVerify, loadPending, clearPending,
+  blockRecord, h5RequestBody, classifyResponse, isClientOutdatedError,
+  REFUSAL_TEXT, UNCERTAIN_TEXT, CLIENT_OUTDATED_TEXT, MISSING_ROUND_TEXT, STORAGE_TEXT, INCOMPATIBLE_TEXT,
 } from "./js/answer-submission.js";
 
 window.__sb = supabase;
@@ -835,6 +835,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   // session (counters, wave, band, sounds, analytics) at most once per page.
   let pendingSubmission = null;
   const handledSubmissions = new Set();
+  // Submissions that have left this page at least once (or came back from storage after a reload): the
+  // server may have them, so they are never dropped without a confirmed answer.
+  const sentSubmissions = new Set();
 
   function setAnswerControlsDisabled(disabled) {
     optionsContainer.querySelectorAll("button, input, textarea").forEach(el => { el.disabled = disabled; });
@@ -875,31 +878,90 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (uiState === UI_STATES.SUBMITTING_ANSWER) setUIState(UI_STATES.AWAITING_ANSWER);
   }
 
-  async function sessionIsStillThisPupil() {
+  // A backend that answered outside H5's contract (classifyResponse "incompatible_backend"): the
+  // submission is kept, marked blocked in storage, and never sent again from this tab — not by a retry
+  // and not after a reload. The pupil is told plainly and sent to the hub; nothing is graded here.
+  function showIncompatible() {
+    feedback.textContent = INCOMPATIBLE_TEXT;
+    feedback.className = "feedback-error";
+    setAnswerControlsDisabled(true);
+    document.getElementById("h5-retry-btn")?.remove();
+    if (!document.getElementById("go-hub-btn")) {
+      const hubBtn = document.createElement("button");
+      hubBtn.id = "go-hub-btn";
+      hubBtn.textContent = "Gå til hub";
+      hubBtn.className = "submit-btn";
+      hubBtn.onclick = () => { window.location.href = "hub.html"; };
+      optionsContainer.appendChild(hubBtn);
+    }
+    if (uiState === UI_STATES.SUBMITTING_ANSWER) setUIState(UI_STATES.AWAITING_ANSWER);
+  }
+
+  function enterIncompatible(record, reason) {
+    const blocked = blockRecord(record);
+    pendingSubmission = blocked;
+    const saved = savePending(safeSessionStorage(), blocked);
+    logError("H5_INCOMPATIBLE_BACKEND", { reason, submission_id: record.submission_id, marker_stored: saved.ok });
+    showIncompatible();
+  }
+
+  // "same" | "other" (a different pupil is signed in: the submission is not theirs) | "none".
+  async function sessionOwner() {
     try {
       const { data } = await supabase.auth.getSession();
-      return data?.session?.user?.id === studentId;
+      const id = data?.session?.user?.id;
+      return !id ? "none" : id === studentId ? "same" : "other";
     } catch (_e) {
-      return false;
+      return "none";
     }
   }
 
   async function sendSubmission(record) {
     try {
       const result = await supabase.functions.invoke("process-event", { body: h5RequestBody(record, questionShownAt) });
-      return await classifyResponse(result);
+      return await classifyResponse(result, record);
     } catch (e) {
       logError("H5_SUBMIT_THREW", e);
       return { kind: "uncertain", reason: "threw" };
     }
   }
 
+  // The rule before EVERY send: the locked submission must be stored and read back. Returns true when
+  // it may be sent; otherwise the pupil is told, and nothing is sent or graded.
+  function readyToSend(record) {
+    const persisted = persistAndVerify(safeSessionStorage(), record);
+    if (persisted.ok) return true;
+    const sentBefore = sentSubmissions.has(record.submission_id);
+    logError("H5_STORAGE_UNAVAILABLE", { error: persisted.error, sent_before: sentBefore });
+    if (!sentBefore) {
+      // Never sent: there is nothing to settle. The answer stays in the controls, unlocked.
+      pendingSubmission = null;
+      clearPending(safeSessionStorage());
+      feedback.textContent = STORAGE_TEXT;
+      feedback.className = "feedback-error";
+      setAnswerControlsDisabled(false);
+      if (uiState === UI_STATES.SUBMITTING_ANSWER) setUIState(UI_STATES.AWAITING_ANSWER);
+      return false;
+    }
+    // Sent before: the server may have it. It stays locked; the pupil can try again.
+    showUncertain(() => { submitAnswer(record.answer); });
+    feedback.textContent = STORAGE_TEXT;
+    return false;
+  }
+
   // Sends the locked submission of the question on screen. Returns { handled: true } when the reply has
   // been dealt with here, or { handled: false, data } with a graded result for submitAnswer to show.
   async function submitH5(userAnswer) {
-    if (!(await sessionIsStillThisPupil())) {
-      settleSubmission();
+    const owner = await sessionOwner();
+    if (owner !== "same") {
+      // Another pupil: the submission is not theirs. No session: the login page clears it.
+      if (owner === "other") settleSubmission();
       window.location.replace("login.html");
+      return { handled: true };
+    }
+
+    if (pendingSubmission && pendingSubmission.blocked) {
+      showIncompatible();
       return { handled: true };
     }
 
@@ -924,17 +986,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       record = created.record;
       pendingSubmission = record;
-      const stored = savePending(safeSessionStorage(), record);
-      // Without storage only reload recovery is lost; the in-page retry still works.
-      if (!stored.ok) logEvent("H5_PENDING_NOT_STORED", { error: stored.error });
     }
+
+    // Not one byte leaves before the submission can be found again after a reload.
+    if (!readyToSend(record)) return { handled: true };
+    sentSubmissions.add(record.submission_id);
 
     setAnswerControlsDisabled(true);
     const outcome = await sendSubmission(record);
 
-    if (outcome.kind === "graded" || outcome.kind === "graded_unprotected" || outcome.kind === "pending") {
-      if (outcome.kind === "graded_unprotected") logError("H5_OUTCOME_MISSING", { submission_id: record.submission_id });
-      if (outcome.kind === "graded" && outcome.replay) logEvent("H5_REPLAY", { submission_id: record.submission_id });
+    if (outcome.kind === "graded") {
+      if (outcome.replay) logEvent("H5_REPLAY", { submission_id: record.submission_id });
       settleSubmission();
       if (handledSubmissions.has(record.submission_id)) {
         setUIState(UI_STATES.TRANSITIONING);
@@ -974,8 +1036,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (outcome.kind === "unauthorized") {
-      settleSubmission();
+      // Nothing was processed. Kept until the login page clears it.
       window.location.replace("login.html");
+      return { handled: true };
+    }
+
+    if (outcome.kind === "incompatible_backend") {
+      enterIncompatible(record, outcome.reason);
       return { handled: true };
     }
 
@@ -994,19 +1061,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!record) return true;
 
     pendingSubmission = record;
-    questionElement.textContent = "Vi afslutter dit sidste svar …";
+    // It came back from storage: it may have reached the server before the reload.
+    sentSubmissions.add(record.submission_id);
     optionsContainer.innerHTML = "";
     feedback.textContent = "";
     feedback.className = "";
 
-    if (!(await sessionIsStillThisPupil())) {
-      settleSubmission();
+    if (record.blocked) {
+      // The backend already answered outside H5's contract: shown again, never sent again.
+      questionElement.textContent = "Dit sidste svar kunne ikke registreres sikkert.";
+      showIncompatible();
+      return false;
+    }
+
+    questionElement.textContent = "Vi afslutter dit sidste svar …";
+    const owner = await sessionOwner();
+    if (owner !== "same") {
+      if (owner === "other") settleSubmission();
       window.location.replace("login.html");
+      return false;
+    }
+    if (!readyToSend(record)) {
+      questionElement.textContent = "Dit sidste svar er ikke afsluttet endnu.";
       return false;
     }
     const outcome = await sendSubmission(record);
 
-    if (outcome.kind === "graded" || outcome.kind === "graded_unprotected" || outcome.kind === "pending") {
+    if (outcome.kind === "graded") {
       settleSubmission();
       handledSubmissions.add(record.submission_id);
       const d = outcome.data;
@@ -1032,8 +1113,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (outcome.kind === "unauthorized") {
-      settleSubmission();
       window.location.replace("login.html");
+      return false;
+    }
+
+    if (outcome.kind === "incompatible_backend") {
+      questionElement.textContent = "Dit sidste svar kunne ikke registreres sikkert.";
+      enterIncompatible(record, outcome.reason);
       return false;
     }
 

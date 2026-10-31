@@ -91,13 +91,27 @@ export function createSubmission({ studentId, instanceId, roundNo, answer, now =
   };
 }
 
+// A submission the backend answered in a way H5 cannot trust (see classifyResponse,
+// "incompatible_backend") is kept, marked, and never sent again from this tab: the marker survives a
+// reload, so the page shows the fault instead of calling the backend again.
+export const BLOCKED_INCOMPATIBLE = "incompatible_backend";
+
+/** The same locked submission, marked as blocked. */
+export function blockRecord(record, reason = BLOCKED_INCOMPATIBLE) {
+  return Object.freeze({ ...record, blocked: reason });
+}
+
+const RECORD_KEYS = "answer,created_at,question_instance_id,round_no,student_id,submission_id,v";
+const BLOCKED_RECORD_KEYS = "answer,blocked,created_at,question_instance_id,round_no,student_id,submission_id,v";
+
 /** A stored value back to a record, or null when it is anything but a complete, current record. */
 export function parseRecord(raw, now = Date.now()) {
   let r;
   try { r = typeof raw === "string" ? JSON.parse(raw) : null; } catch (_e) { return null; }
   if (!r || typeof r !== "object" || Array.isArray(r)) return null;
   const keys = Object.keys(r).sort().join(",");
-  if (keys !== "answer,created_at,question_instance_id,round_no,student_id,submission_id,v") return null;
+  if (keys !== RECORD_KEYS && keys !== BLOCKED_RECORD_KEYS) return null;
+  if (keys === BLOCKED_RECORD_KEYS && r.blocked !== BLOCKED_INCOMPATIBLE) return null;
   if (r.v !== 1 || !isNonEmptyString(r.student_id) || !isNonEmptyString(r.question_instance_id)) return null;
   if (!isValidRoundNo(r.round_no) || !isUuid(r.submission_id)) return null;
   if (!isNonEmptyString(r.answer) || r.answer.length > MAX_ANSWER_LENGTH) return null;
@@ -106,7 +120,7 @@ export function parseRecord(raw, now = Date.now()) {
   return Object.freeze(r);
 }
 
-/** Stores the pending submission. Never throws: a full or blocked storage only loses reload recovery. */
+/** Stores the pending submission. Never throws. */
 export function savePending(storage, record) {
   try {
     storage.setItem(PENDING_STORAGE_KEY, JSON.stringify(record));
@@ -114,6 +128,21 @@ export function savePending(storage, record) {
   } catch (e) {
     return { ok: false, error: e && e.name ? e.name : "storage_error" };
   }
+}
+
+/**
+ * Stores the submission and proves it can be found again: it is read back and must parse to exactly
+ * the same record. A submission is sent ONLY after this succeeds — otherwise a lost reply plus a reload
+ * would leave a possibly registered answer that this tab can no longer identify. Never throws.
+ */
+export function persistAndVerify(storage, record, now = Date.now()) {
+  const saved = savePending(storage, record);
+  if (!saved.ok) return saved;
+  let raw;
+  try { raw = storage.getItem(PENDING_STORAGE_KEY); } catch (e) { return { ok: false, error: e && e.name ? e.name : "storage_error" }; }
+  const back = parseRecord(raw, now);
+  if (!back || JSON.stringify(back) !== JSON.stringify(record)) return { ok: false, error: "readback_mismatch" };
+  return { ok: true };
 }
 
 /** Removes the pending submission. Never throws. */
@@ -153,8 +182,12 @@ export function h5RequestBody(record, questionShownAt) {
   };
 }
 
-// process-event's refusals (H5 PR 3): the answer was NOT registered and NOT paid.
-export const REFUSED_OUTCOMES = Object.freeze(["round_closed", "stale_round", "submission_conflict", "not_found", "invalid_request"]);
+// process-event's refusals (H5 PR 3) with the HTTP status it sends each one with: the answer was NOT
+// registered and NOT paid. Only this exact pair counts as a confirmed refusal.
+export const REFUSAL_STATUS = Object.freeze({
+  round_closed: 409, stale_round: 409, submission_conflict: 409, not_found: 404, invalid_request: 400,
+});
+export const REFUSED_OUTCOMES = Object.freeze(Object.keys(REFUSAL_STATUS));
 
 async function readErrorBody(error) {
   const ctx = error && error.context;
@@ -169,19 +202,29 @@ async function readErrorBody(error) {
 }
 
 const isGradedStatus = (s) => s === "correct" || s === "incorrect";
+const isTextOrNull = (v) => v === null || typeof v === "string";
+const isCount = (v) => typeof v === "number" && Number.isInteger(v) && v >= 0;
 
 /**
- * What one process-event call means, from the { data, error } supabase.functions.invoke returned.
- *   graded            200 recorded / replay: show the result (replay = the original, frozen result)
- *   graded_unprotected 200 correct/incorrect WITHOUT outcome: a backend without H5 graded it — authoritative
- *   pending           200 long answer saved for the teacher
- *   refused           the server refused the submission; nothing was registered or paid
- *   invalid_answer    400 { status: "invalid" } (e.g. an incomplete Match par): change the answer
- *   client_outdated   426: the legacy answer path is closed (M2); reload the page
- *   unauthorized      401: the session is gone
- *   uncertain         no reply, a 5xx, or an unreadable reply: resend the SAME submission
+ * What one process-event call means for the locked submission `record`, from the { data, error }
+ * supabase.functions.invoke returned. Strict: anything not explicitly confirmed is never treated as a
+ * success or as a refusal.
+ *   graded               200 recorded / replay for THIS round, complete and well-formed: show it
+ *                        (replay = the original, frozen result). The only protected success.
+ *   incompatible_backend 200 that is not H5's contract: a graded or pending answer WITHOUT outcome
+ *                        (a process-event that ignored round_no / submission_id and may already have
+ *                        registered and paid it the old way), a recorded/replay for another or no round,
+ *                        or a refusal sent as 200. Not shown as right or wrong, and not sent again.
+ *   refused              a refusal outcome with process-event's own status (409 / 404 / 400): confirmed
+ *                        not registered, not paid
+ *   invalid_answer       400 { status: "invalid", error } — process-event's shape check (e.g. an
+ *                        incomplete Match par) before any RPC: change the answer
+ *   client_outdated      426 { outcome: "client_outdated" }: the legacy answer path is closed (M2)
+ *   unauthorized         401: the session is gone (nothing was processed)
+ *   uncertain            everything else — no reply, 5xx, a gateway or unknown 4xx without H5's outcome,
+ *                        an unreadable body: keep the submission and resend the SAME one by hand
  */
-export async function classifyResponse(result) {
+export async function classifyResponse(result, record) {
   const data = result ? result.data : undefined;
   const error = result ? result.error : undefined;
 
@@ -194,13 +237,12 @@ export async function classifyResponse(result) {
     if (status === 426 && body && body.outcome === "client_outdated") return { kind: "client_outdated" };
     if (status === 401) return { kind: "unauthorized" };
     if (body && REFUSED_OUTCOMES.includes(body.outcome)) {
+      if (REFUSAL_STATUS[body.outcome] !== status) return { kind: "uncertain", reason: `http_${status}_${body.outcome}` };
       return { kind: "refused", outcome: body.outcome, reason: typeof body.reason === "string" ? body.reason : null };
     }
-    if (status === 400 && body && body.status === "invalid") {
-      return { kind: "invalid_answer", message: typeof body.error === "string" ? body.error : null };
+    if (status === 400 && body && body.outcome === undefined && body.status === "invalid" && typeof body.error === "string") {
+      return { kind: "invalid_answer", message: body.error };
     }
-    if (status === 403) return { kind: "refused", outcome: "not_found", reason: "forbidden" };
-    if (status === 400 || status === 404) return { kind: "refused", outcome: status === 404 ? "not_found" : "invalid_request", reason: null };
     return { kind: "uncertain", reason: `http_${status}` };
   }
 
@@ -210,12 +252,18 @@ export async function classifyResponse(result) {
   }
   if (!body || typeof body !== "object" || Array.isArray(body)) return { kind: "uncertain", reason: "empty" };
 
-  if ((body.outcome === "recorded" || body.outcome === "replay") && isGradedStatus(body.status)) {
+  if (body.outcome === "recorded" || body.outcome === "replay") {
+    const ok = isGradedStatus(body.status)
+      && isValidRoundNo(body.round_no) && !!record && body.round_no === record.round_no
+      && isTextOrNull(body.correct_answer) && isTextOrNull(body.review_text) && isTextOrNull(body.misconception_type)
+      && isCount(body.xp_awarded) && isCount(body.coins_awarded);
+    if (!ok) return { kind: "incompatible_backend", reason: `${body.outcome}_contract` };
     return { kind: "graded", replay: body.outcome === "replay", data: body };
   }
-  if (REFUSED_OUTCOMES.includes(body.outcome)) return { kind: "refused", outcome: body.outcome, reason: null };
-  if (body.outcome === undefined && isGradedStatus(body.status)) return { kind: "graded_unprotected", data: body };
-  if (body.outcome === undefined && body.status === "pending") return { kind: "pending", data: body };
+  if (body.outcome === undefined && typeof body.status === "string") {
+    return { kind: "incompatible_backend", reason: "no_outcome" };
+  }
+  if (typeof body.outcome === "string") return { kind: "incompatible_backend", reason: "outcome_on_200" };
   return { kind: "uncertain", reason: "unexpected_response" };
 }
 
@@ -240,3 +288,5 @@ export const REFUSAL_TEXT = Object.freeze({
 export const UNCERTAIN_TEXT = "⚠️ Forbindelsen svigtede, så vi ved ikke, om dit svar nåede frem. Tryk «Send igen» — det samme svar sendes, og det tæller kun én gang.";
 export const CLIENT_OUTDATED_TEXT = "Lærlig er blevet opdateret. Genindlæs siden for at fortsætte.";
 export const MISSING_ROUND_TEXT = "⚠️ Spørgsmålet kunne ikke sendes sikkert. Genindlæs siden og prøv igen.";
+export const STORAGE_TEXT = "⚠️ Dit svar er ikke sendt: browseren kan ikke gemme det midlertidigt, og så kan vi ikke sikre, at det kun tæller én gang. Prøv igen, eller brug en almindelig (ikke privat) fane.";
+export const INCOMPATIBLE_TEXT = "⚠️ Lærlig kan ikke registrere svar sikkert lige nu. Dit svar er ikke vist som rigtigt eller forkert. Gå til hubben, og sig det til din lærer.";
