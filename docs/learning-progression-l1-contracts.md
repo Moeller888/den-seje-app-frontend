@@ -1,4 +1,4 @@
-# Læringsprogression L1: kontrakter og acceptkriterier (udkast, revision 3)
+# Læringsprogression L1: kontrakter og acceptkriterier (udkast, revision 4)
 
 **Status:** UDKAST.
 - **Godkendt som principper:** LP-3, LP-5, LP-15 og LP-16 ([D-282](decisions/D-282.md)).
@@ -177,6 +177,26 @@ Et estimat vises aldrig som "eleven kan …".
 | **Aldrig** | Vist for læreren eller eleven som et niveau. Med i rapporter, statistik eller lærerens overblik. Gemt som vurdering. Brugt til at ændre det faglige niveau. |
 | Navngivning | Hedder internt `working_level` og i al dokumentation "opgavetilpasning". |
 
+#### K7.2a Start uden påvist niveau (revision 4)
+
+Har eleven endnu intet påvist niveau i faget, starter opgavetilpasningen på **startestimatet**. Det er
+et praktisk udgangspunkt for at vælge den første opgave og **ikke et kompetencebevis**.
+
+| Situation | Udgangspunkt for opgavetilpasningen | Mærkning (lærervisning) |
+|---|---|---|
+| Klassetrin kendt, ingen placering | Klassetrinnets serverafledte start (i dag `GRADE_START_BAND` → niveau) | "Startestimat: klassetrin N, ikke påvist" |
+| Historie med gennemført placering | Placeringsbåndet (`placement_sessions`, serverejet) → niveau | "Startestimat: placering, ikke påvist". Placeringen er en kort MC-test og derfor også et estimat. |
+| Intet klassetrin | En fast standardstart (i dag bånd 2) | "Standardstart, ikke påvist" |
+| Startestimatet ligger over indholdets loft (fx engelsk for klassetrin 6–9) | Det højeste tilgængelige indhold | "Startestimat over indholdets loft" (en indholdsmangel) |
+
+**I den første session** varierer opgavetilpasningen rundt om startestimatet (± 1 celle, HEURISTIK)
+for hurtigt at samle evidens i begge retninger. Det er kun opgavevalg:
+- korrekte svar kan påvise et niveau efter K7.3;
+- forkerte svar flytter kun opgavetilpasningen og **aldrig startestimatet eller det påviste niveau**.
+
+**Startestimatet ændres ikke af elevens svar.** Det erstattes af det påviste niveau, når der findes
+evidens. Ændres klassetrinnet eller placeringen, er det et nyt *estimat* og stadig ikke et bevis.
+
 ### K7.3 Hvornår det faglige niveau må ændres
 
 | Retning | Tilladt ud fra | Aldrig ud fra |
@@ -216,6 +236,22 @@ derfor i to trin. Det faglige niveau rører man kun som det sidste:
 | **Historie** | Placeringstest (estimat), ellers klassetrinnets start | En 6.-klasseelev fejler 4 vikingespørgsmål. Klassen har endnu ikke haft vikingetiden. | Opgavetilpasningen giver lettere vikingespørgsmål i sessionen. Det faglige niveau er uændret, og læreren ser stadig "startestimat (placering)". Næste dag starter eleven på det faglige niveau igen. | Det varige niveau falder. |
 | **Engelsk** | Klassetrinnets start. Indholdet dækker kun klassetrin 3–5. | En 8.-klasseelev fejler 2 opgaver på klassetrin 4. | Opgavetilpasningen sker inden for det tilgængelige indhold, og det faglige niveau falder ikke. Læreren ser "startestimat over indholdets loft", altså en **indholdsmangel, ikke en elevmangel**. | Niveauet falder mod klassetrin 3–4. |
 | **Dansk** | Klassetrinnets start. Placeringen udelukker dansk. | En 5.-klasseelev fejler 3 tegnsætningsopgaver. | Opgavetilpasningen falder i sessionen. Det faglige niveau stiger kun ved påvist viden. Først efter introduktion, repetition og genintroduktion kan gentagne fejl revidere det (K7.4). | Niveauet falder, og den lille pulje gør faldet svært at komme op fra. |
+
+### K7.5a Pilotparametre i K7 (samlet)
+
+Alle tærskler i K7 er **pilotparametre (HEURISTIK)**. De kalibreres efter D-277 §4.9 og ændres kun med
+en ny D-fil:
+
+| Parameter | Startværdi | Afsnit |
+|---|---|---|
+| Opjustering: forskellige korrekte svar over niveauet | 2 | K7.3 |
+| Usikkerhed "underbygget" | ≥ 3 svar fra ≥ 2 sessioner | K7.1 |
+| Opgavetilpasningens nedre grænse Δ | 2 celler (≈ 560) | K7.2 |
+| Variation i første session | ± 1 celle | K7.2a |
+| Session | ingen pause over 2 timer | K7.2 |
+| Nedrevision: antal mål i `genopfrisk` | ≥ 3 | K7.4 |
+| Nedrevision: forskellige dage | ≥ 2 | K7.4 |
+| Nedrevision: skridt | 1 celle (≈ 280) | K7.4 |
 
 ### K7.6 Konsekvens for den byggede niveaumotor (FAKTA) og Q1a
 
@@ -308,6 +344,8 @@ hurtigt", aldrig til "for langsomt".
 | L1-A17 | K7.1 (A): Et niveau, der kun hviler på startestimatet (klassetrin eller placering), vises altid som "startestimat" med kilde og aldrig som påvist kompetence. Påvist niveau vises med usikkerhed. | Unit (visningsmodel) |
 | L1-A18 | K7.4 (D): Det faglige niveau revideres ét trin ned kun når alle betingelser i K7.4 holder (≥ 3 mål, efter repetition og genintroduktion, kun `review`/`check` med eksponering, ≥ 2 dage). Fjernes én betingelse i testdata, sker ingen revision. Revisionen logges, kan tilsidesættes og sletter ingen historik. | Unit (ren fold) |
 | L1-A19 | K7.4: En fejlet repetition giver `genopfrisk` på målet, men ændrer ikke det faglige niveau alene. | Unit |
+| L1-A20 | K7.2a: Uden påvist niveau starter opgavetilpasningen på startestimatet (klassetrin, placering, standardstart eller indholdets loft) med korrekt mærkning. Forkerte svar ændrer aldrig startestimatet eller det påviste niveau. | Unit (ren funktion + visningsmodel) |
+| L1-A21 | K7.5a: Alle K7-parametre læses fra én versioneret konfiguration. En ændret parameter kræver en ny version og giver en genberegning, der kan spores. | Unit |
 
 ## Ikke i L1
 
@@ -320,7 +358,7 @@ særskilt beslutning (se nedenfor). K9 hører til L3 eller L5.
 | # | Beslutning | Anbefaling |
 |---|---|---|
 | **Q1** | Opdelingen i arbejdsniveau og fagligt niveau | Støttet principielt af ejeren 2026-11-01. Præciseret i revision 3 (A–D). |
-| **Q1a (til endelig beslutning)** | Deles niveaumotoren i *opgavetilpasning* og *påvist niveau* med startestimat og usikkerhed (K7.1–K7.4), og venter `LEVEL_ENGINE` på det (K7.6)? | **Ja.** Uændret aktivering ville sænke det varige niveau af `quiz_v1`-svar og vise estimater som kompetence. |
+| **Q1a** | Deles niveaumotoren i *opgavetilpasning* og *påvist niveau* med startestimat og usikkerhed (K7.1–K7.4), og venter `LEVEL_ENGINE` på det (K7.6)? | **Støttet som arkitekturretning af ejeren 2026-11-01 ([D-288](decisions/D-288.md)).** Kontrakterne og tærsklerne er stadig udkast. |
 | Q2 | Versionsstyret afledt kobling (K8), kun som påvisning | Indarbejdet som ønsket. Godkendes sammen med L2. |
 | Q3 | H2 og H4 i D-266-sporet før anvendelse af K1 | Accepteret principielt. Blokerer ikke K3–K5 og K7–K9. |
 | Q4 | `server_interval_ms` som teknisk interval, kun tilbageholdende (K1), og K9 senere | Indarbejdet som ønsket. |
