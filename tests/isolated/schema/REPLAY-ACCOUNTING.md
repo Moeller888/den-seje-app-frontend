@@ -58,6 +58,12 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   produktionen, så ingen af dem afspilles, før de er anvendt og verificeret; da afspilles den første,
   og den anden behandles som data efter planens regler. A, B og kommentarrettelsen er anvendt og
   verificeret og anvendes derfor også her (se "Anvendt i produktionen efter planens første version").
+- **Ikke anvendt i produktionen (fortsat):** `20261031230000_claim_daily_reward_exactly_once` (D-284) og
+  `20261101120000_night_owl_stop_new_awards` (D-286). Begge er merget, men produktionen kører stadig
+  funktionerne fra før (læst 2026-11-01: `claim_daily_reward` md5 `80273d5d…`, `evaluate_achievements`
+  md5 `9bd9a5d5…`, `authenticated` har stadig EXECUTE på `set_night_correct`). De blev ved en fejl ikke
+  skrevet på listen, da de blev merget, og blev derfor afspillet her. CI spejler produktionen, så de
+  afspilles først, når de er anvendt og verificeret.
 
 ## Anvendt i produktionen efter planens første version
 En fil fjernes fra `NOT_IN_PRODUCTION`, først når den er anvendt **og** verificeret i produktionen.
