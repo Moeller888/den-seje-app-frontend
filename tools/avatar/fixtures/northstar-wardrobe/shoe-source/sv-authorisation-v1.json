@@ -1,0 +1,137 @@
+{
+  "decision": "D-300",
+  "experiment": "SV (D-299): one independent validation of D-297's locked method on one new tight shoe source for the low sneaker, drawn at K = 4 and judged by the locked validation evaluator",
+  "status": "AUTHORISATION PREPARED by D-300; NOT EXECUTED: the send needs the exact token in D-300's status (merged) AND a separate owner execution instruction; no earlier permission is reused",
+  "meta": {
+    "authorisesImageRequest": false,
+    "why": "authorisation is the exact token in D-300's decision status plus this file's unspent entry, never a general boolean",
+    "kind": "a bounded validation experiment: no catalogue, no runtime, no activation, no item approval, no publication"
+  },
+  "budget": {
+    "authorised": 1,
+    "reserve": 0,
+    "retries": 0,
+    "fallback": false,
+    "reusesEarlierPermissions": false,
+    "automaticExtension": false,
+    "separateFrom": "every earlier budget (D-295's SS-1 included: spent and closed by D-296)",
+    "enforcedLimit": "the call count (one one-shot claim); the price is an estimate",
+    "price": {
+      "verifiedAt": "2026-11-01",
+      "source": "https://developers.openai.com/api/docs/pricing (Standard, gpt-image-2.5-sunburst: text input $5.00, image input $8.00, image output $30.00 per 1M tokens; cached input applies only to the Responses API; no per-image table and no separate snapshot price on the page)",
+      "perCallEstimate": 0.06,
+      "perCallUpperEstimate": 0.07,
+      "totalEstimate": 0.06,
+      "basis": "SS-1's measured usage for the same request shape (1,536 image-input, 350 text-input, 1,372 image-output tokens = $0.0552) with the prompt 206 bytes longer (about 70 more text tokens): expected about $0.056; at most about $0.07 with 600 text tokens and the largest measured image output (1,756 tokens, TPV-1)",
+      "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
+    },
+    "actuallySent": 0
+  },
+  "privacy": {
+    "cSentToApi": "never: C is not part of this call",
+    "referenceSentToApi": "the layout reference only: derived from the published low sneaker layer (assets/avatar-northstar/shoes-sneakers-beige-shoes-v1.webp), enlarged; byte-identical to D-294's reference",
+    "publishOrTrack": "never: the raw result, the placed layers and every review sheet stay outside both clones (D-127 §2)",
+    "h1": "never used"
+  },
+  "frozen": {
+    "plan": {
+      "file": "tools/avatar/fixtures/northstar-wardrobe/shoe-source/sv-plan-v1.json",
+      "sha256": "360f6e86dcfe2b909e420d1588126a96ee6e0a416bc7adf9a5c3c45fad23f627"
+    },
+    "prompt": {
+      "sha256": "5362d91b277d83881f8f6e724964676673edbbb847f3c182c417e8d34c25aa9a"
+    },
+    "method": "shoe-master-v4-line",
+    "methodFiles": {
+      "tools/avatar/northstar-shoe-master.mjs": "fb8f284c6bfc65e222da2f7fbbe090c881018e6bdd0e5bb3b78319e8a5183d0e",
+      "tools/avatar/northstar-shoe-eval-v2.mjs": "93a6872d858706322f17f17c99c7476f79fe7a08a4419fc9332e8cab87044ab0",
+      "tools/avatar/northstar-shoe-source.mjs": "0e0bbb4a0e2f0db88a6825aa1221b58abcc4fca9311a85133c2f64f618520e40",
+      "tools/avatar/northstar-shoe-validation-evaluate.mjs": "082e43a875cb0460e72afb1c1c1b692cbbb3ce37d78d60dfc4deb07329fa1a77",
+      "tools/avatar/northstar-shoe-master-study.mjs": "9a9ba9bf859f9d22f0c37cb3e14b833cb010ada37c9fa5c7f4472af5f02c431f",
+      "tools/avatar/northstar-shoe-edge-study.mjs": "ded062b36ecf8ee5be4ec7829b735dacbe6fd7c69f4550976a7b65ac92b6d6f9",
+      "tools/avatar/northstar-r1-garment.mjs": "d6702ffb808c06f199e2437c76fab54dfea8c68b7a1e0d6842b10eb019e41906"
+    },
+    "evaluation": "tools/avatar/northstar-shoe-validation-evaluate.mjs: check, chain, outfits, views, browser, verdict (every phase runs; nothing is repaired)",
+    "noChangeDuringTheExperiment": "the reference, prompt, crop, K, downscale, placement, master, rules and their thresholds and the evaluator are not changed after receipt; any later correction is a new version and a new validation"
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1536x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "what": "the layout reference (request.canvases)"
+      }
+    ],
+    "canvases": {
+      "sneaker-low-k4": {
+        "name": "sv-1-layout-image-1.png",
+        "bytes": 802060,
+        "sha256": "145a8633653fea9fe368e7a2f5611848a928c8568ad47913e3f547526c8680d3",
+        "tracked": false
+      }
+    },
+    "canvasLocation": "<Documents>/DenSejeApp-artefacts/sv-calls/references/sneaker-low-k4/sv-1-layout-image-1.png",
+    "canvasGenerator": "a byte-identical copy of D-294's reference (northstar-shoe-source.mjs layoutCanvas from the published layer, deterministic)"
+  },
+  "acceptance": {
+    "plan": "sv-plan-v1.json acceptance (source, variant, combination, method); the owner's visual review is recorded beside the automatic classes and never turns an automatic FAIL into PASS"
+  },
+  "stopRules": [
+    "a single call: no retry, no reserve, no fallback, no other model",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome — never resent",
+    "any HTTP error, moderation block or format error ends the experiment with that outcome",
+    "the executor's stop file SV-STOP.json"
+  ],
+  "calls": [
+    {
+      "callId": "SV-1-shoes-sneakers-low-tight-k4",
+      "order": 1,
+      "category": "shoes",
+      "cut": "sneaker-low-k4",
+      "canvas": "145a8633653fea9fe368e7a2f5611848a928c8568ad47913e3f547526c8680d3",
+      "prompt": {
+        "sha256": "5362d91b277d83881f8f6e724964676673edbbb847f3c182c417e8d34c25aa9a"
+      },
+      "claim": {
+        "identity": "SV-1-shoes-sneakers-low-tight-k4-claim",
+        "filename": "SV-1-shoes-sneakers-low-tight-k4.claim.json",
+        "eventsFilename": "SV-1-shoes-sneakers-low-tight-k4.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    }
+  ],
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-shoe-validation-d300.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-300",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}
