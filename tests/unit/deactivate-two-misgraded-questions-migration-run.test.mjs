@@ -5,7 +5,8 @@
 // Cases: it deactivates exactly the two questions and nothing else; each guard aborts the whole file
 // and changes nothing — the open-round guard included (one already inactive, changed content, changed
 // metadata, an open instance); a re-run aborts without change; the documented reactivation restores
-// exactly the two rows; the open-round guard refuses a new open round on an inactive question and
+// exactly the two rows; the documented guard rollback removes only the trigger and the function, and
+// with the reactivation restores the state before the migration exactly; the open-round guard refuses a new open round on an inactive question and
 // leaves every other write alone; the guard function is no API; the file is no longer data-only, so
 // the isolated replay skips it as not applied in production. The interleavings with simultaneous
 // sessions are proven on a real PostgreSQL in deactivate-two-misgraded-questions-concurrency.test.mjs.
@@ -28,11 +29,15 @@ const OTHER = "00000000-0000-4000-8000-0000000000f1";
 const PUPIL = "00000000-0000-4000-8000-0000000000a1";
 const lit = (s) => `'${s.replace(/'/g, "''")}'`;
 
-function reactivateSql() {
-  const m = /```sql\n([\s\S]*?)```/.exec(read("docs/operations/deactivate-two-misgraded-questions.md"));
-  assert.ok(m && /REACTIVATE D-290/.test(m[1]));
-  return m[1];
+// A ```sql block of the runbook, found by its marker line — executed verbatim.
+function runbookSql(marker) {
+  const blocks = [...read("docs/operations/deactivate-two-misgraded-questions.md").matchAll(/```sql\n([\s\S]*?)```/g)]
+    .map((m) => m[1]).filter((b) => b.includes(marker));
+  assert.equal(blocks.length, 1, `exactly one runbook block marked ${marker}`);
+  return blocks[0];
 }
+const reactivateSql = () => runbookSql("REACTIVATE D-290");
+const rollbackGuardSql = () => runbookSql("ROLLBACK D-290 GUARD");
 async function db({ open = false, inactive = false, content = null, metadata = null } = {}) {
   const d = new PGlite();
   await d.exec(`
@@ -111,6 +116,37 @@ test("the documented reactivation restores exactly the two rows; the open-round 
   assert.deepEqual(after.q, before.q);
   assert.deepEqual(after.i, before.i);
   assert.deepEqual([after.fn, after.tg], [1, 1]);
+});
+
+test("the documented guard rollback removes only the trigger and the function; no row changes", async () => {
+  const d = await db();
+  await d.exec(read(FILE));
+  const applied = JSON.parse(await snap(d));
+  await d.exec(rollbackGuardSql());
+  const after = JSON.parse(await snap(d));
+  assert.deepEqual([after.fn, after.tg], [0, 0], "guard gone");
+  assert.deepEqual(after.q, applied.q, "questions unchanged (both stay inactive)");
+  assert.deepEqual(after.i, applied.i, "instances unchanged");
+  // Behaviour as before the migration: an open round on an inactive question is no longer refused.
+  await d.query(`INSERT INTO public.question_instances (student_id, question_id, answered) VALUES ($1, $2, false)`, [PUPIL, A]);
+  // The migration header names the same two statements.
+  const statements = rollbackGuardSql().split("\n").filter((l) => /^DROP /.test(l));
+  assert.equal(statements.length, 2);
+  for (const st of statements) assert.ok(read(FILE).includes(`--   ${st}`), `header: ${st}`);
+  // Without the guard present the block fails and changes nothing.
+  const d2 = await db();
+  const before = await snap(d2);
+  await assert.rejects(d2.exec(rollbackGuardSql()), /does not exist/);
+  assert.equal(await snap(d2), before);
+});
+
+test("guard rollback + reactivation restore the state before the migration exactly", async () => {
+  const d = await db();
+  const before = await snap(d);
+  await d.exec(read(FILE));
+  await d.exec(rollbackGuardSql());
+  await d.exec(reactivateSql());
+  assert.equal(await snap(d), before);
 });
 
 test("open-round guard: refuses a NEW open round on an inactive question, nothing else", async () => {

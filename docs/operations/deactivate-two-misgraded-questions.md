@@ -62,3 +62,26 @@ WHERE  id IN ('08c1770e-b9e6-4a14-a5e0-6420337ba052', '3213c5be-71b8-4dab-817f-2
 Værnet fra migrationens del 1 bliver stående ved en genaktivering. Det gælder alle spørgsmål: en ny
 åben runde kan kun oprettes på et aktivt spørgsmål. Fjernelse står i migrationens header og kræver
 særskilt godkendelse.
+
+## 5. Tilbagerulning af værnet (migrationens del 1)
+
+Fjerner kun værnet: triggeren `open_round_requires_active_question` og funktionen
+`public.guard_open_round_requires_active_question()`. Ingen række i `questions` eller
+`question_instances` ændres. Det kræver ejerens særskilte godkendelse og køres som én transaktion.
+
+```sql
+-- ROLLBACK D-290 GUARD — removes the open-round guard (part 1) only; changes no row.
+DROP TRIGGER open_round_requires_active_question ON public.question_instances;
+DROP FUNCTION public.guard_open_round_requires_active_question();
+```
+
+**Før:** Kontrollér, at både funktionen og triggeren findes. Findes en af dem ikke, fejler blokken og
+ændrer intet.
+
+**Efterkontrol:** Hverken funktionen eller triggeren findes. Antallet af instanser og spørgsmål og
+alle `is_active`-værdier er uændrede.
+
+**Virkning:** Nye åbne runder kontrolleres igen ikke mod `is_active`, som før migrationen. Er de to
+opgaver stadig inaktive, åbner det kapløbet igen for genbrugsvejene, fordi deres 9 besvarede instanser
+kan genåbnes. Rul derfor kun værnet tilbage sammen med genaktiveringen i afsnit 4 eller efter en ny
+vurdering. Del 2 (deaktiveringen) rulles tilbage med afsnit 4 alene.
