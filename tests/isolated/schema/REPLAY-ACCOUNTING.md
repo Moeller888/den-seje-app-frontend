@@ -71,6 +71,15 @@ Filen selv ændres aldrig.
 
 Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i produktionen, og senere D-280 del 1 i versionsorden.
 
+**H5 i afspilningen og i produktionen.** Afspilningen anvender H5 (`20261030211428`) før D-278 og D-280
+del 1, i filnavnsorden. Produktionen fik D-280 del 1 og D-278 først (2026-11-01), og der afviser
+`20261030211428` sig selv: dens md5-vagt kender ikke D-280's funktionskroppe. Filen ændres ikke.
+`20261101140000_question_attempts_v2_bootstrap` fører begge veje til samme H5-skema — i afspilningen
+kontrollerer den blot, at alt findes præcis som H5 skaber det — og
+`20261101140100_question_attempts_v2_align_d280` giver `process_question_attempt_v2` D-280's aliasregel
+i begge. `tests/unit/question-attempts-v2-bootstrap.test.mjs` viser, at de to veje ender i identisk
+skema (PGlite), og `question-attempts-v2-bootstrap-concurrency.test.mjs` gør det samme på PostgreSQL 17.
+
 ## Repositoryet er foran produktionen (anvendes alligevel)
 Ejerbeslutning 2026-10-28 (mulighed B): den isolerede CI tester repositoryets kode mod det skema,
 koden selv erklærer. Den skal ikke kopiere produktionens historiske afvigelser.
