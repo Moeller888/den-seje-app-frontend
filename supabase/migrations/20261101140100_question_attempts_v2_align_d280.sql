@@ -21,6 +21,9 @@
 -- have D-280 part 1's body, process_text_answer_v2 its 20261030211428 body, and
 -- process_question_attempt_v2 either its 20261030211428 body or this file's (a second run changes
 -- nothing). Anything else stops the migration. The result is checked afterwards.
+-- ATOMIC: guard, replacement, EXECUTE rights and the check are ONE statement (one DO block; the
+-- function is created by EXECUTE of the statement verbatim), so a failed check keeps the previous
+-- _v2 whether or not the runner wraps the file in a transaction.
 --
 -- No row is written or changed. Nothing calls _v2 before H5 is activated.
 -- ROLLBACK (before activation): recreate the function from 20261030211428 (section 5a). After
@@ -28,7 +31,7 @@
 -- Applying this file to production needs its own owner authorisation (D-110): apply_migration only,
 -- never `supabase db push`.
 
-DO $h5_align_guard$
+DO $h5_align$
 DECLARE
   v_hash text;
 BEGIN
@@ -47,10 +50,8 @@ BEGIN
   IF v_hash IS NULL OR v_hash NOT IN ('943d03820fe4756f5a72c6f0a5d77d7d', 'adbecf897a64eeace416e1cff9d021a9') THEN
     RAISE EXCEPTION 'H5 alignment: process_question_attempt_v2 har en ukendt krop (md5 %)', v_hash;
   END IF;
-END
-$h5_align_guard$;
 
-CREATE OR REPLACE FUNCTION public.process_question_attempt_v2(
+  EXECUTE $h5_align_ddl$CREATE OR REPLACE FUNCTION public.process_question_attempt_v2(
   p_student_id           uuid,
   p_question_instance_id uuid,
   p_answer               text,
@@ -248,15 +249,12 @@ BEGIN
     'coins_awarded',      v_attempt.coins_awarded,
     'round_no',           v_attempt.attempt_no);
 END;
-$function$;
+$function$;$h5_align_ddl$;
+  EXECUTE $h5_align_ddl$REVOKE ALL ON FUNCTION public.process_question_attempt_v2(uuid, uuid, text, integer, uuid, text, text)
+  FROM PUBLIC, anon, authenticated, service_role;$h5_align_ddl$;
+  EXECUTE $h5_align_ddl$GRANT EXECUTE ON FUNCTION public.process_question_attempt_v2(uuid, uuid, text, integer, uuid, text, text)
+  TO service_role;$h5_align_ddl$;
 
-REVOKE ALL ON FUNCTION public.process_question_attempt_v2(uuid, uuid, text, integer, uuid, text, text)
-  FROM PUBLIC, anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.process_question_attempt_v2(uuid, uuid, text, integer, uuid, text, text)
-  TO service_role;
-
-DO $h5_align_verify$
-BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_proc p
                  WHERE p.oid = to_regprocedure('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)') AND md5(p.prosrc) = 'adbecf897a64eeace416e1cff9d021a9'
                    AND p.prosecdef AND p.proconfig = ARRAY['search_path=""']
@@ -266,4 +264,4 @@ BEGIN
     RAISE EXCEPTION 'H5 alignment: process_question_attempt_v2 blev ikke som forventet';
   END IF;
 END
-$h5_align_verify$;
+$h5_align$;

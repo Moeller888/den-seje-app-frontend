@@ -26,10 +26,15 @@
 --        ALL present — then nothing is created. Anything in between stops the migration.
 --   2. Creation: the statements of sections 1–6 of 20261030211428, byte for byte (each one EXECUTEd
 --      verbatim; tests/unit/question-attempts-v2-bootstrap.test.mjs proves the identity).
---   3. Final check, in BOTH states: every H5 object exactly as 20261030211428 creates it — function
+--   3. Final check, in BOTH states, after the creation and inside the same block: every H5 object exactly as 20261030211428 creates it — function
 --      bodies (md5), SECURITY DEFINER, search_path, EXECUTE, columns, named constraints, the foreign
 --      key, the index, RLS without policies, table privileges and exactly the two triggers. A
 --      database that does not match stops here.
+-- ATOMIC: the state check, the creation and the final check are ONE statement (one DO block). A
+-- failure anywhere — also in the final check, after every object was created — rolls back the whole
+-- block, whether the runner wraps the file in a transaction or runs each statement on its own
+-- (tests/unit/question-attempts-v2-bootstrap.test.mjs proves both). A failed run leaves nothing to
+-- clean up and can simply be run again once the cause is fixed.
 -- process_question_attempt_v2 keeps the original grading here (aliases only with EXACTLY two
 -- entries); 20261101140100 changes it to D-280's rule. Nothing calls either _v2 function before H5
 -- is activated (process-event in production is version 34, ENABLE_H5_SUBMISSIONS = false).
@@ -49,7 +54,7 @@
 -- Applying this file to production needs its own owner authorisation (D-110): apply_migration only,
 -- never `supabase db push`.
 
--- ── 1–2. State check and creation ─────────────────────────────────────────────────────────────────
+-- ── 1–3. State check, creation and final check: one block, so all of it or nothing ───────────────
 DO $h5_bootstrap$
 DECLARE
   v_expected CONSTANT jsonb := jsonb_build_object(
@@ -63,6 +68,8 @@ DECLARE
   r         record;
   v_hash    text;
   v_present integer;
+  v_cols    text;
+  v_cons    text;
 BEGIN
   FOR r IN SELECT key, value FROM jsonb_each_text(v_expected) LOOP
     SELECT md5(p.prosrc) INTO v_hash FROM pg_catalog.pg_proc p WHERE p.oid = to_regprocedure(r.key);
@@ -584,16 +591,8 @@ $function$;$h5_ddl_15$;
   ELSE
     RAISE EXCEPTION 'H5 bootstrap: H5-skemaet findes kun delvist (% af 9 objekter) — ukendt tilstand, intet ændres', v_present;
   END IF;
-END
-$h5_bootstrap$;
 
--- ── 3. Final check (both states) ─────────────────────────────────────────────────────────────────
-DO $h5_bootstrap_verify$
-DECLARE
-  r       record;
-  v_cols  text;
-  v_cons  text;
-BEGIN
+  -- ── 3. Final check (both states) ──────────────────────────────────────────────────────────────
   -- Function bodies (md5 of prosrc is the body text verbatim: the same on every PostgreSQL version),
   -- SECURITY DEFINER and search_path exactly as 20261030211428 creates them.
   FOR r IN SELECT * FROM (VALUES
@@ -704,4 +703,4 @@ BEGIN
     RAISE EXCEPTION 'H5 bootstrap: triggerne på question_attempts og question_instances er ikke præcis de to H5-triggere';
   END IF;
 END
-$h5_bootstrap_verify$;
+$h5_bootstrap$;

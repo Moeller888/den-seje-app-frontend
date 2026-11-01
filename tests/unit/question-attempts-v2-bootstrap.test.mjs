@@ -120,14 +120,20 @@ test("the bootstrap executes 20261030211428's sections 1–6 byte for byte, in o
   assert.equal(ORIGINAL_DDL.length, 19);
   assert.deepEqual(embedded.map((m) => Number(m[2])), ORIGINAL_DDL.map((_, i) => i + 1));
   embedded.forEach((m, i) => assert.equal(m[3], ORIGINAL_DDL[i], `statement ${i + 1}`));
-  // Outside the EXECUTEd statements there is no DDL: only the state check and the final check.
+  // Outside the EXECUTEd statements there is no DDL: the state check and the final check, and the
+  // whole file is ONE statement (one DO block) — see the atomicity tests below.
   const rest = splitStatements(src.replace(/EXECUTE (\$h5_ddl_\d\d\$)[\s\S]*?\1;/g, "NULL;"));
-  assert.deepEqual(rest.map((s) => s.slice(0, 3)), ["DO ", "DO "]);
+  assert.deepEqual(rest.map((s) => s.slice(0, 3)), ["DO "]);
 });
 
 test("the alignment changes process_question_attempt_v2 in exactly the alias rule (and its comment)", () => {
   const original = ORIGINAL_DDL.find((s) => s.startsWith("CREATE FUNCTION public.process_question_attempt_v2("));
-  const aligned = splitStatements(SQL(ALIGN)).find((s) => s.startsWith("CREATE OR REPLACE FUNCTION public.process_question_attempt_v2("));
+  // The whole file is ONE DO block; the function is EXECUTEd verbatim, and so are REVOKE and GRANT.
+  assert.deepEqual(splitStatements(SQL(ALIGN)).map((s) => s.slice(0, 3)), ["DO "]);
+  const executed = [...SQL(ALIGN).matchAll(/EXECUTE \$h5_align_ddl\$([\s\S]*?)\$h5_align_ddl\$;/g)].map((m) => m[1]);
+  assert.deepEqual(executed.slice(1), ORIGINAL_DDL.filter((s) => /^(REVOKE|GRANT)/.test(s) && s.includes("process_question_attempt_v2(")));
+  const aligned = executed[0];
+  assert.ok(aligned.startsWith("CREATE OR REPLACE FUNCTION public.process_question_attempt_v2("));
   const a = original.split("\n");
   const b = aligned.split("\n");
   const removed = a.filter((l) => !b.includes(l));
@@ -229,18 +235,71 @@ test("the bootstrap refuses every unknown state and changes nothing", async () =
   }
 });
 
-test("atomic without a surrounding transaction: a failure mid-creation leaves no partial H5 schema", async () => {
-  // Each statement of the file run on its own (autocommit), as a runner without a transaction would.
-  // An index named like the attempts table's round key makes statement 2 (CREATE TABLE) fail after
-  // statement 1 (the unique key on question_instances) already ran inside the same DO block.
-  const db = await migrated([D280_PATHS, D278]);
-  await db.exec("CREATE INDEX question_attempts_round_key ON public.profiles (id);");
-  const before = await fingerprint(db);
-  const statements = splitStatements(SQL(BOOTSTRAP));
-  assert.equal(statements.length, 2, "the creation is ONE statement (a DO block), the final check another");
-  await assert.rejects(db.exec(statements[0]), /question_attempts_round_key/);
-  assert.deepEqual(await fingerprint(db), before, "statement 1 rolled back with the rest: nothing kept");
-  assert.deepEqual(await h5Objects(db), NONE);
+// ── Atomicity: a failed run keeps nothing, in either transaction model ─────────────────────────
+// Supabase does not document whether apply_migration wraps a file in one transaction, so each file
+// is ONE statement (one DO block) and must leave nothing behind both when the runner wraps the file
+// in a transaction and when it runs each statement on its own (autocommit).
+const MODELS = {
+  "one transaction for the file": async (db, sql) => {
+    await db.exec("BEGIN");
+    try { await db.exec(sql); await db.exec("COMMIT"); } catch (e) { await db.exec("ROLLBACK"); throw e; }
+  },
+  "each statement on its own (autocommit)": async (db, sql) => {
+    for (const statement of splitStatements(sql)) await db.exec(statement);
+  },
+};
+
+test("each file is a single statement, so no runner can commit part of it", () => {
+  assert.equal(splitStatements(SQL(BOOTSTRAP)).length, 1);
+  assert.equal(splitStatements(SQL(ALIGN)).length, 1);
+});
+
+test("atomic: a failure mid-creation leaves no partial H5 schema", async () => {
+  // An index named like the attempts table's round key makes CREATE TABLE fail after the unique key
+  // on question_instances was already added inside the same block.
+  for (const [model, run] of Object.entries(MODELS)) {
+    const db = await migrated([D280_PATHS, D278]);
+    await db.exec("CREATE INDEX question_attempts_round_key ON public.profiles (id);");
+    const before = await fingerprint(db);
+    await assert.rejects(run(db, SQL(BOOTSTRAP)), /question_attempts_round_key/, model);
+    assert.deepEqual(await fingerprint(db), before, `${model}: the unique key rolled back with the rest`);
+    assert.deepEqual(await h5Objects(db), NONE, model);
+  }
+});
+
+test("atomic: when every object is created but the final check fails, nothing is kept and a fixed rerun succeeds", async () => {
+  // Run as a role that is a member of the owner (so every statement is allowed) but is not the owner
+  // itself: all 19 statements succeed and every H5 object is created, owned by that role; only the
+  // final owner check fails.
+  for (const [model, run] of Object.entries(MODELS)) {
+    const db = await migrated([D280_PATHS, D278]);
+    await db.exec("CREATE ROLE h5_migrator; GRANT postgres TO h5_migrator;");
+    const before = await fingerprint(db);
+    await db.exec("SET ROLE h5_migrator");
+    await assert.rejects(run(db, SQL(BOOTSTRAP)), /H5-objekterne ejes ikke af samme rolle/, model);
+    await db.exec("RESET ROLE");
+    assert.deepEqual(await fingerprint(db), before, `${model}: nothing of the creation is kept`);
+    assert.deepEqual(await h5Objects(db), NONE, model);
+    // The failure left no state behind, so the same file runs again unchanged once the cause is gone.
+    await run(db, SQL(BOOTSTRAP));
+    await run(db, SQL(ALIGN));
+    assert.deepEqual(await fingerprint(db), await fingerprint(await migrated(PROD_ORDER)), `${model}: rerun ends in the full schema`);
+  }
+});
+
+test("atomic: when the alignment's final check fails, the previous _v2 is kept", async () => {
+  // An event trigger changes the new function's search_path right after CREATE OR REPLACE succeeded,
+  // so only the alignment's final check fails.
+  for (const [model, run] of Object.entries(MODELS)) {
+    const db = await migrated([D280_PATHS, D278, BOOTSTRAP]);
+    await db.exec(`CREATE FUNCTION public.h5_tamper() RETURNS event_trigger LANGUAGE plpgsql AS $$
+      BEGIN EXECUTE 'ALTER FUNCTION ${MC_V2} SET search_path = public'; END $$;
+      CREATE EVENT TRIGGER h5_tamper ON ddl_command_end WHEN TAG IN ('CREATE FUNCTION') EXECUTE FUNCTION public.h5_tamper();`);
+    const before = await fingerprint(db);
+    await assert.rejects(run(db, SQL(ALIGN)), /process_question_attempt_v2 blev ikke som forventet/, model);
+    assert.deepEqual(await fingerprint(db), before, `${model}: nothing changed`);
+    assert.equal(await md5Of(db, MC_V2), MD5.mcV2Original, model);
+  }
 });
 
 test("the alignment refuses without H5, without D-280, or with an unknown _v2 — and a second run changes nothing", async () => {
