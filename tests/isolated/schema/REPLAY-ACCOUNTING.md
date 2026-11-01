@@ -52,7 +52,9 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** ingen lige nu. A, B, kommentarrettelsen og D-280's to filer er
+- **Ikke anvendt i produktionen:** `20261101150000_grading_meaningful_characters` (D-290 G1). Den
+  genskaber `process_question_attempt`, som produktionen stadig kører i D-280 del 1's udgave; den
+  afspilles først, når den er anvendt og verificeret. A, B, kommentarrettelsen og D-280's to filer er
   anvendt og verificeret og står derfor ikke længere her (se "Anvendt i produktionen efter planens
   første version").
 

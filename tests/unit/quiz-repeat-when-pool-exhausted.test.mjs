@@ -408,11 +408,16 @@ test("the reviewed spelling migration is the only later definition of the repeat
   // sets an MC key to content.correct; part 2 only names these functions in its guard. The runtime
   // suite (mc-length-cue-top10-migration-run) proves the rewards, the repeat amount and the reopen
   // order unchanged.
+  // D-290 G1 changes ONLY the three grading lines of process_question_attempt (normalisation of the
+  // answer and the key). Its runtime suite (grading-meaningful-characters-migration-run) proves the
+  // body is D-280's byte for byte outside those lines — rewards, repeat award, reopen, lock and CAS
+  // included — and that first and repeat answers pay exactly as before.
   assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
     ["20261018143726_fix_danish_question_bank_text.sql",
      "20261027120000_repeat_answer_coin_reward.sql",
      "20261031194600_mc_length_cue_answer_paths.sql",
-     "20261031194700_mc_length_cue_top10.sql"]);
+     "20261031194700_mc_length_cue_top10.sql",
+     "20261101150000_grading_meaningful_characters.sql"]);
 });
 
 test("the migration version is not shared with any other migration", () => {
