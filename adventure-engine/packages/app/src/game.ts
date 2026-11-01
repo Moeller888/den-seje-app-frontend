@@ -42,8 +42,8 @@ import type { Texture } from "pixi.js";
 import { BrowserAdapter } from "./adapter.ts";
 import { cursorView } from "./model/cursor.ts";
 import { sceneHotspots } from "./model/hotspots.ts";
-import { continueChoice, formatPlayTime, savePlayerScene, slotInfo, type SlotInfo } from "./model/saves.ts";
-import { format, type AppSettings } from "./model/settings.ts";
+import { continueChoice, formatPlayTime, saveLoadable, savePlayerScene, slotInfo, statusOrder, writeFeedback, type SlotInfo } from "./model/saves.ts";
+import { engineDevOptions, format, type AppSettings } from "./model/settings.ts";
 import { CutsceneView } from "./ui/cutscene.ts";
 import { DialogView } from "./ui/dialog.ts";
 import { byId, el } from "./ui/dom.ts";
@@ -65,7 +65,7 @@ export interface SaveServices {
   readonly storage: SaveStorage;
   /** "indexeddb" | "localstorage" | "memory", mirrored as data-storage. */
   readonly kind: string;
-  /** Resolves when every write so far has finished: true when they all reached the store. */
+  /** Resolves when the store commits pending at this call have finished: true when they all succeeded. Slot operations still queued behind an earlier one on their slot are not included (`SlotManager.flush` waits for those). */
   flush(): Promise<boolean>;
 }
 
@@ -89,6 +89,7 @@ export class Game {
   /** A menu save whose `game.save` logic is still running: the clock keeps going until it ends. */
   private saveInFlight = false;
   private saveSeq = 0;
+  private readonly saveStatus = statusOrder();
   private lastSignal = "";
   private rafId = 0;
   private destroyed = false;
@@ -125,19 +126,20 @@ export class Game {
     this.engine = new Engine(this.content, {
       seed: settings.seed,
       adapter: this.adapter,
-      devMode: settings.dev,
       // Only a development build may load saves with a wrong checksum; ?dev=1 never can.
-      allowSaveChecksumMismatch: settings.devBuild,
+      ...engineDevOptions(settings),
       // Save timestamps are real time in the browser; core itself never reads a clock.
       wallClock: () => new Date().toISOString(),
       ...(settings.language !== null ? { language: settings.language } : {}),
     });
     const contentId = this.content.pkg.game.id;
-    this.slots = new SlotManager(store.storage, contentId);
+    // A slot is "ok" only when this content can load it, not merely when its checksum matches.
+    this.slots = new SlotManager(store.storage, contentId, { loadable: saveLoadable(this.content, settings.devBuild) });
     this.settingsStore = new SettingsStore(store.storage, contentId);
     this.autosaver = new Autosaver(this.engine, this.slots);
     this.autosaver.onSaved = (_reason, result) => this.afterWrite("auto", result, false);
     if (store.storage instanceof IndexedDbMirror) {
+      // Only writes nobody waits for (settings) arrive here; slot writes report through their own result.
       store.storage.onError = (err) => {
         console.error("[save] IndexedDB write failed", err);
         this.showNotice(format(this.engine.text.t("ui.save_failed"), { reason: err instanceof Error ? err.message : String(err) }), false);
@@ -401,28 +403,23 @@ export class Game {
         if (!Number.isNaN(d.getTime())) parts.push(d.toLocaleString(this.engine.text.language, { dateStyle: "short", timeStyle: "short" }));
       }
       if (i.playTimeMs !== null) parts.push(format(this.engine.text.t("ui.playtime"), { time: formatPlayTime(i.playTimeMs) }));
-      return { slot: i.slot, label: this.slotLabel(i.slot), state: i.state, details: parts.join(" · "), backup: i.backup };
+      return { slot: i.slot, label: this.slotLabel(i.slot), state: i.state, details: parts.join(" · "), backup: i.backup, reason: i.reason };
     });
   }
 
-  /** After a slot write: report failures, and mirror data-last-save once the write reached the store. */
+  /** After a slot write: "Gemt" and data-last-save only once this write's own commit is confirmed (writeFeedback). */
   private afterWrite(slot: string, result: WriteResult, announce: boolean): void {
-    if (!result.ok) {
-      this.root.dataset["lastSave"] = `${slot}:failed`;
-      this.showNotice(format(this.engine.text.t("ui.save_failed"), { reason: result.message }), false);
-      return;
-    }
-    const seq = ++this.saveSeq;
-    this.menu.refresh();
-    // "Gemt" only once the write really reached the store; a failed commit is reported as failed.
-    void this.store.flush().then((ok) => {
-      if (!ok) {
-        this.root.dataset["lastSave"] = `${slot}:failed`;
-        this.showNotice(format(this.engine.text.t("ui.save_failed"), { reason: "storage" }), false);
-        return;
-      }
-      this.root.dataset["lastSave"] = `${slot}:${seq}`;
-      if (announce) this.showNotice(this.engine.text.t("ui.saved"), false);
+    const seq = result.ok ? ++this.saveSeq : 0;
+    const ticket = this.saveStatus.ticket();
+    if (result.ok) this.menu.refresh();
+    void writeFeedback(slot, result, seq, announce).then((f) => {
+      // A queued write changes the slot list only when it runs; show what the store holds now.
+      if (result.ok) this.menu.refresh();
+      const latest = this.saveStatus.isLatest(ticket);
+      // An older result never overwrites a newer one; a failure is reported in any case.
+      if (latest) this.root.dataset["lastSave"] = f.lastSave;
+      if (f.notice === null || (f.notice.kind === "saved" && !latest)) return;
+      this.showNotice(f.notice.kind === "saved" ? this.engine.text.t("ui.saved") : format(this.engine.text.t("ui.save_failed"), { reason: f.notice.reason }), false);
     });
   }
 
@@ -454,10 +451,15 @@ export class Game {
       this.showNotice(format(this.engine.text.t("ui.save_failed"), { reason: r.message }), false);
       return;
     }
-    void this.store.flush();
-    this.showNotice(this.engine.text.t("ui.backup_restored"), false);
     this.menu.refresh();
     if (!this.started) this.renderTitle();
+    // "Restored" only once the restore is stored; a failed commit is reported once, here. The list is
+    // shown again then: a queued restore (or a rolled-back one) changes it only when it has settled.
+    void r.committed.then((ok) => {
+      this.menu.refresh();
+      if (!this.started) this.renderTitle();
+      this.showNotice(ok ? this.engine.text.t("ui.backup_restored") : format(this.engine.text.t("ui.save_failed"), { reason: "storage" }), false);
+    });
   }
 
   /**
@@ -507,15 +509,22 @@ export class Game {
   private async continueGame(): Promise<void> {
     const choice = continueChoice(this.slotInfos());
     if (choice === null) return;
+    const s = this.slots.read(choice.slot);
     if (choice.fromBackup) {
+      if (s.state !== "corrupt" || s.backup === null) return;
+      const backup = s.backup;
       const r = this.slots.restoreBackup(choice.slot);
       if (!r.ok) {
         this.showNotice(format(this.engine.text.t("ui.save_failed"), { reason: r.message }), false);
         return;
       }
-      void this.store.flush();
+      // The game loads the chosen backup now (queued or not); a failed commit only means it is not stored yet.
+      void r.committed.then((ok) => {
+        if (!ok) this.showNotice(format(this.engine.text.t("ui.save_failed"), { reason: "storage" }), false);
+      });
+      await this.loadRaw(backup);
+      return;
     }
-    const s = this.slots.read(choice.slot);
     if (s.state === "ok") await this.loadRaw(s.raw);
   }
 
