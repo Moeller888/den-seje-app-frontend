@@ -19,6 +19,12 @@ import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 import { attachReadAloudControl, attachOptionReadAloudControl, stopReadAloud } from "./js/read-aloud/adapters/quiz.js";
 import { installFlagDiagnostics } from "./js/flags.js";
+// H5 PR 4 (D-266, D-273): OFF by default and not switchable from the browser — see the module header.
+import {
+  isH5SubmissionsEnabled, isH5Eligible, createSubmission, savePending, persistAndVerify, loadPending, clearPending,
+  blockRecord, h5RequestBody, classifyResponse, isClientOutdatedError,
+  REFUSAL_TEXT, UNCERTAIN_TEXT, CLIENT_OUTDATED_TEXT, MISSING_ROUND_TEXT, STORAGE_TEXT, INCOMPATIBLE_TEXT,
+} from "./js/answer-submission.js";
 
 window.__sb = supabase;
 
@@ -112,9 +118,18 @@ let blinkEngine   = null;
 
 let studentId = null;
 let currentInstanceId = null;
+// H5: the round the server issued with the question on screen, and its answer type (long answers keep
+// the teacher path). Only read when H5 is on.
+let currentRoundNo = null;
+let currentAnswerType = null;
 let questionShownAt = null;
 let lastKnownXp = 0;
 let lastKnownCoins = 0;
+
+// sessionStorage, or null where the browser blocks it (the accessor itself can throw).
+function safeSessionStorage() {
+  try { return typeof sessionStorage !== "undefined" ? sessionStorage : null; } catch (_e) { return null; }
+}
 
 async function checkAuthAndRole() {
   const { data: sessionData } = await supabase.auth.getSession();
@@ -166,9 +181,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   const logoutBtn = document.getElementById("logout-btn");
 
   logoutBtn.onclick = async () => {
+    // H5: a pending submission belongs to this pupil only (a no-op when there is none / H5 is off).
+    clearPending(safeSessionStorage());
     await supabase.auth.signOut();
     window.location.replace("login.html");
   };
+
+  // H5: signing out — here or in another tab — or a different pupil signing in drops this tab's
+  // pending submission. The pupil binding in loadPending() is the second line of defence.
+  try {
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || (session?.user?.id && session.user.id !== studentId)) {
+        clearPending(safeSessionStorage());
+      }
+    });
+  } catch (_e) { /* fail-soft: the pupil binding still applies */ }
 
   // Hidden achievement tracking — session-scoped, resets on page load.
   let sessionCorrectStreak = 0;
@@ -801,6 +828,317 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadAndRenderQuestion();
   };
 
+  // ── H5 (D-266, D-273): locked submissions — used only when isH5SubmissionsEnabled() ──────────────
+  // pendingSubmission is the one submission of the question on screen whose result is not settled. It
+  // is locked: a retry sends exactly it (same submission_id, round, instance and answer), and no new
+  // question is fetched while it exists. handledSubmissions makes sure a result is applied to the
+  // session (counters, wave, band, sounds, analytics) at most once per page.
+  let pendingSubmission = null;
+  const handledSubmissions = new Set();
+  // Submissions that have left this page at least once (or came back from storage after a reload): the
+  // server may have them, so they are never dropped without a confirmed answer.
+  const sentSubmissions = new Set();
+
+  function setAnswerControlsDisabled(disabled) {
+    optionsContainer.querySelectorAll("button, input, textarea").forEach(el => { el.disabled = disabled; });
+  }
+
+  function settleSubmission() {
+    pendingSubmission = null;
+    clearPending(safeSessionStorage());
+  }
+
+  function showClientOutdated() {
+    feedback.textContent = CLIENT_OUTDATED_TEXT;
+    feedback.className = "feedback-error";
+    setAnswerControlsDisabled(true);
+    document.getElementById("reload-page-btn")?.remove();
+    const reloadBtn = document.createElement("button");
+    reloadBtn.id = "reload-page-btn";
+    reloadBtn.className = "submit-btn";
+    reloadBtn.textContent = "Genindlæs";
+    reloadBtn.onclick = () => window.location.reload();
+    optionsContainer.appendChild(reloadBtn);
+    if (uiState === UI_STATES.SUBMITTING_ANSWER) setUIState(UI_STATES.AWAITING_ANSWER);
+  }
+
+  // The reply was lost or unreadable: the answer may or may not be registered. The answer controls stay
+  // locked; the only way on is to send the SAME submission again.
+  function showUncertain(onRetry) {
+    feedback.textContent = UNCERTAIN_TEXT;
+    feedback.className = "feedback-error";
+    setAnswerControlsDisabled(true);
+    document.getElementById("h5-retry-btn")?.remove();
+    const retryBtn = document.createElement("button");
+    retryBtn.id = "h5-retry-btn";
+    retryBtn.className = "submit-btn";
+    retryBtn.textContent = "Send igen";
+    retryBtn.onclick = () => { retryBtn.remove(); onRetry(); };
+    optionsContainer.appendChild(retryBtn);
+    if (uiState === UI_STATES.SUBMITTING_ANSWER) setUIState(UI_STATES.AWAITING_ANSWER);
+  }
+
+  // A backend that answered outside H5's contract (classifyResponse "incompatible_backend"): the
+  // submission is kept, marked blocked in storage, and never sent again from this tab — not by a retry
+  // and not after a reload. The pupil is told plainly and sent to the hub; nothing is graded here.
+  function showIncompatible() {
+    feedback.textContent = INCOMPATIBLE_TEXT;
+    feedback.className = "feedback-error";
+    setAnswerControlsDisabled(true);
+    document.getElementById("h5-retry-btn")?.remove();
+    if (!document.getElementById("go-hub-btn")) {
+      const hubBtn = document.createElement("button");
+      hubBtn.id = "go-hub-btn";
+      hubBtn.textContent = "Gå til hub";
+      hubBtn.className = "submit-btn";
+      hubBtn.onclick = () => { window.location.href = "hub.html"; };
+      optionsContainer.appendChild(hubBtn);
+    }
+    if (uiState === UI_STATES.SUBMITTING_ANSWER) setUIState(UI_STATES.AWAITING_ANSWER);
+  }
+
+  function enterIncompatible(record, reason) {
+    const blocked = blockRecord(record);
+    pendingSubmission = blocked;
+    const saved = savePending(safeSessionStorage(), blocked);
+    logError("H5_INCOMPATIBLE_BACKEND", { reason, submission_id: record.submission_id, marker_stored: saved.ok });
+    showIncompatible();
+  }
+
+  // "same" | "other" (a different pupil is signed in: the submission is not theirs) | "none".
+  async function sessionOwner() {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const id = data?.session?.user?.id;
+      return !id ? "none" : id === studentId ? "same" : "other";
+    } catch (_e) {
+      return "none";
+    }
+  }
+
+  async function sendSubmission(record) {
+    try {
+      const result = await supabase.functions.invoke("process-event", { body: h5RequestBody(record, questionShownAt) });
+      return await classifyResponse(result, record);
+    } catch (e) {
+      logError("H5_SUBMIT_THREW", e);
+      return { kind: "uncertain", reason: "threw" };
+    }
+  }
+
+  // Before every send the locked submission is stored and read back.
+  //   * FIRST send: if that fails, nothing is sent — the pupil is told, the answer stays editable.
+  //   * a submission that has already left this page (or came back from storage after a reload): it is
+  //     sent anyway. The server may have it, and resending the SAME submission_id is the only way to
+  //     settle it and can never register it twice. Refusing would leave a "Send igen" that never sends
+  //     — for as long as the storage fails, once the stored copy is older than PENDING_MAX_AGE_MS, or
+  //     on the recovery screen, where submitAnswer() is not reachable. Only reload recovery is lost,
+  //     and that went with the storage.
+  function readyToSend(record) {
+    const persisted = persistAndVerify(safeSessionStorage(), record);
+    if (persisted.ok) return true;
+    const sentBefore = sentSubmissions.has(record.submission_id);
+    logError("H5_STORAGE_UNAVAILABLE", { error: persisted.error, sent_before: sentBefore });
+    if (sentBefore) return true;
+    // Never sent: there is nothing to settle. The answer stays in the controls, unlocked.
+    pendingSubmission = null;
+    clearPending(safeSessionStorage());
+    feedback.textContent = STORAGE_TEXT;
+    feedback.className = "feedback-error";
+    setAnswerControlsDisabled(false);
+    if (uiState === UI_STATES.SUBMITTING_ANSWER) setUIState(UI_STATES.AWAITING_ANSWER);
+    return false;
+  }
+
+  // Sends the locked submission of the question on screen. Returns { handled: true } when the reply has
+  // been dealt with here, or { handled: false, data } with a graded result for submitAnswer to show.
+  async function submitH5(userAnswer) {
+    const owner = await sessionOwner();
+    if (owner !== "same") {
+      // Another pupil: the submission is not theirs. No session: the login page clears it.
+      if (owner === "other") settleSubmission();
+      window.location.replace("login.html");
+      return { handled: true };
+    }
+
+    if (pendingSubmission && pendingSubmission.blocked) {
+      showIncompatible();
+      return { handled: true };
+    }
+
+    let record = pendingSubmission;
+    if (record && record.question_instance_id !== currentInstanceId) {
+      // Not reachable: no question is loaded while a submission is unsettled. Never dropped — sent.
+      logError("H5_PENDING_OTHER_INSTANCE", { pending: record.question_instance_id, current: currentInstanceId });
+    }
+    if (!record) {
+      // round_no comes only from the server's question. Without a valid one there is no submission
+      // and no legacy fallback.
+      const created = createSubmission({ studentId, instanceId: currentInstanceId, roundNo: currentRoundNo, answer: userAnswer });
+      if (!created.ok) {
+        logError("H5_SUBMISSION_NOT_CREATED", { reason: created.reason });
+        feedback.textContent = created.reason === "answer_too_long" ? "⚠️ Svaret er for langt."
+          : created.reason === "empty_answer" ? "⚠️ Skriv et svar først."
+          : MISSING_ROUND_TEXT;
+        feedback.className = "feedback-error";
+        optionsContainer.querySelectorAll("button").forEach(btn => btn.disabled = false);
+        setUIState(UI_STATES.AWAITING_ANSWER);
+        return { handled: true };
+      }
+      record = created.record;
+      pendingSubmission = record;
+    }
+
+    // Not one byte leaves before the submission can be found again after a reload.
+    if (!readyToSend(record)) return { handled: true };
+    sentSubmissions.add(record.submission_id);
+
+    setAnswerControlsDisabled(true);
+    const outcome = await sendSubmission(record);
+
+    if (outcome.kind === "graded") {
+      if (outcome.replay) logEvent("H5_REPLAY", { submission_id: record.submission_id });
+      settleSubmission();
+      if (handledSubmissions.has(record.submission_id)) {
+        setUIState(UI_STATES.TRANSITIONING);
+        loadAndRenderQuestion();
+        return { handled: true };
+      }
+      handledSubmissions.add(record.submission_id);
+      return { handled: false, data: outcome.data };
+    }
+
+    if (outcome.kind === "refused") {
+      // Not registered, not graded: never shown as right or wrong.
+      settleSubmission();
+      logEvent("H5_REFUSED", { outcome: outcome.outcome, reason: outcome.reason });
+      feedback.textContent = REFUSAL_TEXT[outcome.outcome] ?? REFUSAL_TEXT.invalid_request;
+      feedback.className = "feedback-pending";
+      setUIState(UI_STATES.TRANSITIONING);
+      setTimeout(() => { loadAndRenderQuestion(); }, 2500);
+      return { handled: true };
+    }
+
+    if (outcome.kind === "invalid_answer") {
+      // Definitively refused before anything was recorded (e.g. an incomplete Match par): the pupil
+      // may change the answer, which then becomes a new submission.
+      settleSubmission();
+      feedback.textContent = "⚠️ " + (outcome.message ?? "Svaret kunne ikke bruges — prøv igen.");
+      feedback.className = "feedback-error";
+      setAnswerControlsDisabled(false);
+      setUIState(UI_STATES.AWAITING_ANSWER);
+      return { handled: true };
+    }
+
+    if (outcome.kind === "client_outdated") {
+      settleSubmission();
+      showClientOutdated();
+      return { handled: true };
+    }
+
+    if (outcome.kind === "unauthorized") {
+      // Nothing was processed. Kept until the login page clears it.
+      window.location.replace("login.html");
+      return { handled: true };
+    }
+
+    if (outcome.kind === "incompatible_backend") {
+      enterIncompatible(record, outcome.reason);
+      return { handled: true };
+    }
+
+    logError("H5_SUBMIT_UNCERTAIN", { reason: outcome.reason, submission_id: record.submission_id });
+    showUncertain(() => { submitAnswer(record.answer); });
+    return { handled: true };
+  }
+
+  // Before the first question is fetched: settle a submission this tab left unresolved (sent, the reply
+  // lost, the page reloaded). Until it is settled nothing new is loaded, so it cannot be overwritten or
+  // forgotten. The result is shown, but it is NOT applied to this session's counters, wave or band —
+  // the page that sent it may already have. Returns true when the quiz may load its next question.
+  async function recoverPendingSubmission() {
+    const { record, discarded } = loadPending(safeSessionStorage(), studentId);
+    if (discarded) logEvent("H5_PENDING_DISCARDED", { reason: discarded });
+    if (!record) return true;
+
+    pendingSubmission = record;
+    // It came back from storage: it may have reached the server before the reload.
+    sentSubmissions.add(record.submission_id);
+    optionsContainer.innerHTML = "";
+    feedback.textContent = "";
+    feedback.className = "";
+
+    if (record.blocked) {
+      // The backend already answered outside H5's contract: shown again, never sent again.
+      questionElement.textContent = "Dit sidste svar kunne ikke registreres sikkert.";
+      showIncompatible();
+      return false;
+    }
+
+    questionElement.textContent = "Vi afslutter dit sidste svar …";
+    const owner = await sessionOwner();
+    if (owner !== "same") {
+      if (owner === "other") settleSubmission();
+      window.location.replace("login.html");
+      return false;
+    }
+    if (!readyToSend(record)) {
+      questionElement.textContent = "Dit sidste svar er ikke afsluttet endnu.";
+      return false;
+    }
+    const outcome = await sendSubmission(record);
+
+    if (outcome.kind === "graded") {
+      settleSubmission();
+      handledSubmissions.add(record.submission_id);
+      const d = outcome.data;
+      const key = typeof d.correct_answer === "string" && !/^\d:\d(,\d:\d)+$/.test(d.correct_answer) ? d.correct_answer : null;
+      questionElement.textContent = d.status === "correct" ? "Dit sidste svar er registreret: rigtigt! 🎯"
+        : d.status === "incorrect" ? "Dit sidste svar er registreret: ikke helt rigtigt." + (key ? " Svaret er " + key + "." : "")
+        : "Dit sidste svar er gemt.";
+      await fetchProgress();
+      const nextBtn = document.createElement("button");
+      nextBtn.id = "h5-continue-btn";
+      nextBtn.className = "submit-btn";
+      nextBtn.textContent = "Næste spørgsmål";
+      nextBtn.onclick = () => { nextBtn.remove(); loadAndRenderQuestion(); };
+      optionsContainer.appendChild(nextBtn);
+      return false;
+    }
+
+    if (outcome.kind === "client_outdated") {
+      settleSubmission();
+      questionElement.textContent = "";
+      showClientOutdated();
+      return false;
+    }
+
+    if (outcome.kind === "unauthorized") {
+      window.location.replace("login.html");
+      return false;
+    }
+
+    if (outcome.kind === "incompatible_backend") {
+      questionElement.textContent = "Dit sidste svar kunne ikke registreres sikkert.";
+      enterIncompatible(record, outcome.reason);
+      return false;
+    }
+
+    if (outcome.kind === "refused" || outcome.kind === "invalid_answer") {
+      // Settled: nothing was registered. The next question may load.
+      settleSubmission();
+      logEvent("H5_RECOVERY_REFUSED", { kind: outcome.kind, outcome: outcome.outcome ?? null });
+      return true;
+    }
+
+    logError("H5_RECOVERY_UNCERTAIN", { reason: outcome.reason, submission_id: record.submission_id });
+    questionElement.textContent = "Dit sidste svar er ikke afsluttet endnu.";
+    showUncertain(async () => {
+      if (await recoverPendingSubmission()) loadAndRenderQuestion();
+    });
+    return false;
+  }
+
   async function submitAnswer(userAnswer, clickedBtn = null) {
 
     if (uiState !== UI_STATES.AWAITING_ANSWER) return;
@@ -812,20 +1150,37 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     console.log("SUBMIT:", { studentId, currentInstanceId, userAnswer });
 
-    const { data, error } = await supabase.functions.invoke(
-      "process-event",
-      {
-        body: {
-          student_id: studentId,
-          question_instance_id: currentInstanceId,
-          answer: userAnswer,
-          question_shown_at: questionShownAt
+    let data;
+    let error;
+    if (isH5SubmissionsEnabled() && isH5Eligible(currentAnswerType)) {
+      const h5 = await submitH5(userAnswer);
+      if (h5.handled) return;
+      data = h5.data;
+      error = null;
+    } else {
+      // H5 off (the default), or a long answer: exactly the request this page always sent.
+      ({ data, error } = await supabase.functions.invoke(
+        "process-event",
+        {
+          body: {
+            student_id: studentId,
+            question_instance_id: currentInstanceId,
+            answer: userAnswer,
+            question_shown_at: questionShownAt
+          }
         }
-      }
-    );
+      ));
+    }
 
     if (error) {
       logError("SUBMIT_ERROR", error);
+
+      // M2 (H5): once the legacy answer path is closed, process-event answers an old request with 426
+      // client_outdated. Only that exact reply is handled here; every other error is unchanged.
+      if (await isClientOutdatedError(error)) {
+        showClientOutdated();
+        return;
+      }
 
       feedback.textContent = "⚠️ Fejl ved svar – prøv igen";
       feedback.className = "feedback-error";
@@ -1030,6 +1385,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     currentInstanceId = parsed.question_instance_id ?? null;
+    currentRoundNo = parsed.round_no ?? null;
+    currentAnswerType = parsed.answer_type ?? null;
 
     console.log("INSTANCE ID:", currentInstanceId);
 
@@ -1357,6 +1714,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // so the composite is final. Deterministic wait point for golden screenshots.
     await markAvatarRendered(avatarDisplay);
   }
+  // H5 (off by default): an unresolved submission is settled before anything new is fetched.
+  if (isH5SubmissionsEnabled() && !(await recoverPendingSubmission())) return;
   await loadAndRenderQuestion();
 });
 

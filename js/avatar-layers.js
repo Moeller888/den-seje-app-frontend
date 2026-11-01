@@ -852,7 +852,20 @@ export const NORTHSTAR_PRINT_TEES = Object.freeze({
   "TP-FOX-NAV": _PT("fox", "navy", "Ræv · navy"),
   "TP-FOX-FOR": _PT("fox", "forest", "Ræv · skovgrøn"),
 });
-// The ten items: their layers and their skin-shadow parts (multiply; on C's body, on C's arms); then the print tees.
+// D-281/D-283: the 2 owner-approved solid trousers (D-281's approval file). Each is the olive trousers' cut (trousers-square) in a
+// solid colour through pants-master-v2: the same layer, and the olive trousers' own published skin shadow (shadowsOf).
+export const NORTHSTAR_SOLID_PANTS_BASE = "bottom-trousers-square-olive";
+const _SP = (colour, label) => Object.freeze({ item: "bottom-trousers-square-" + colour, label });
+export const NORTHSTAR_SOLID_PANTS = Object.freeze({
+  "TS-NAV": _SP("navy", "Lige bukser · navy"),
+  "TS-SND": _SP("sand", "Lige bukser · sand"),
+});
+// The tops and shoes D-281 checked the trousers with (outfit check and runtime equivalence): a pair outside these is never offered.
+export const NORTHSTAR_SOLID_PANTS_CHECKED = Object.freeze({
+  tops: Object.freeze(["top-tee-hip-blue", "top-tee-hip-cream", ...Object.values(NORTHSTAR_PRINT_TEES).map((t) => t.item)]),
+  shoes: Object.freeze(["shoes-sneakers-white", "shoes-ankleboots-brown", "shoes-sneakers-beige", "shoes-boots-laceup-black"]),
+});
+// The ten items: their layers and their skin-shadow parts (multiply; on C's body, on C's arms); then the print tees and the trousers.
 export const NORTHSTAR_ITEMS = Object.freeze({
   "top-tee-hip-cream":            { category: "top",    layers: ["top-body", "sleeves"], shadows: ["body", "arms"] },
   "top-tee-hip-blue":             { category: "top",    layers: ["top-body", "sleeves"], shadows: ["arms"] },
@@ -865,6 +878,7 @@ export const NORTHSTAR_ITEMS = Object.freeze({
   "shoes-sneakers-white":         { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
   "shoes-ankleboots-brown":       { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
   ...Object.fromEntries(Object.values(NORTHSTAR_PRINT_TEES).map((t) => [t.item, Object.freeze({ category: "top", layers: ["top-body", "sleeves"], shadows: ["body", "arms"], shadowsOf: NORTHSTAR_PRINT_TEE_BASE })])),
+  ...Object.fromEntries(Object.values(NORTHSTAR_SOLID_PANTS).map((p) => [p.item, Object.freeze({ category: "bottom", layers: ["pants"], shadows: ["body"], shadowsOf: NORTHSTAR_SOLID_PANTS_BASE })])),
 });
 // The 19 ready outfits (technically OK, no open finding; the assistant's review found them fit as a
 // visual prototype and the owner approved the prototype's overall look — not production).
@@ -920,11 +934,29 @@ export function northstarSelectedTee() {
 export function northstarTeeAllowed(key) {
   return typeof key === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_OUTFITS, key) && NORTHSTAR_OUTFITS[key].top === NORTHSTAR_PRINT_TEE_BASE;
 }
-// The outfit actually shown for a K number and a stored print tee (the tee is ignored where it is not allowed), or null.
-export function northstarOutfitFor(key, tee) {
+// D-283: the solid trousers stored in this browser — one of the 2 approved IDs, or null.
+export const NORTHSTAR_PANTS_KEY = "avatar_northstar_pants";
+export function northstarSelectedPants() {
+  const p = _nsStorage(NORTHSTAR_PANTS_KEY);
+  return typeof p === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_SOLID_PANTS, p) ? p : null;
+}
+// The trousers replace the bottom only where the outfit's top (after an allowed print tee) and shoes are a checked pair.
+export function northstarPantsAllowed(key, tee) {
+  const o = _nsWithTee(key, tee);
+  return !!o && NORTHSTAR_SOLID_PANTS_CHECKED.tops.indexOf(o.top) !== -1 && NORTHSTAR_SOLID_PANTS_CHECKED.shoes.indexOf(o.shoes) !== -1;
+}
+function _nsWithTee(key, tee) {
   if (typeof key !== "string" || !Object.prototype.hasOwnProperty.call(NORTHSTAR_OUTFITS, key)) return null;
   const o = NORTHSTAR_OUTFITS[key];
   if (typeof tee === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_PRINT_TEES, tee) && northstarTeeAllowed(key)) return Object.freeze({ ...o, top: NORTHSTAR_PRINT_TEES[tee].item });
+  return o;
+}
+// The outfit actually shown for a K number, a stored print tee and stored trousers (each ignored where it is not allowed), or null.
+// Without an allowed choice it is the K outfit itself, so removing the choice returns to the outfit's own top and bottom.
+export function northstarOutfitFor(key, tee, pants) {
+  const o = _nsWithTee(key, tee);
+  if (!o) return null;
+  if (typeof pants === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_SOLID_PANTS, pants) && northstarPantsAllowed(key, tee)) return Object.freeze({ ...o, bottom: NORTHSTAR_SOLID_PANTS[pants].item });
   return o;
 }
 const _nsSrc = (file) => NORTHSTAR_BASE_PATH + "/" + file;
@@ -999,11 +1031,13 @@ export function northstarCompose(plan, pixelsOf, n) {
 export function northstarRenderFor(surface, cosmetics) {
   if (!isNorthstarWardrobeOn()) return null;
   if (NORTHSTAR_SURFACES.indexOf(surface) === -1) return null;
-  const outfitKey = northstarSelectedOutfit(), outfit = northstarOutfitFor(outfitKey, northstarSelectedTee());
+  const outfitKey = northstarSelectedOutfit(), outfit = northstarOutfitFor(outfitKey, northstarSelectedTee(), northstarSelectedPants());
   const plan = outfit ? northstarPlanFor(outfit) : null;
   if (!plan) return null;
-  // the figure cache is keyed by what is drawn: "K01", or "K01+TP-TEA-CRM" with an allowed print tee
-  const tee = outfit.top !== NORTHSTAR_OUTFITS[outfitKey].top ? northstarSelectedTee() : null, key = tee ? outfitKey + "+" + tee : outfitKey;
+  // the figure cache is keyed by what is drawn: "K01", "K01+TP-TEA-CRM" with an allowed print tee, "K01+TP-TEA-CRM+TS-NAV" or
+  // "K01+TS-NAV" with allowed trousers
+  const tee = outfit.top !== NORTHSTAR_OUTFITS[outfitKey].top ? northstarSelectedTee() : null, pants = outfit.bottom !== NORTHSTAR_OUTFITS[outfitKey].bottom ? northstarSelectedPants() : null;
+  const key = outfitKey + (tee ? "+" + tee : "") + (pants ? "+" + pants : "");
   const list = Array.isArray(cosmetics) ? cosmetics : [];
   const out = [];
   for (const c of list) {
@@ -1011,5 +1045,5 @@ export function northstarRenderFor(surface, cosmetics) {
     if (NORTHSTAR_SUPPORTED_COSMETIC_SLOTS.indexOf(c.slot) === -1) return null;
     out.push({ src: c.src, z: C2_LAYER_Z[c.slot] ?? c.z, isBase: false, inline: false, marker: "northstar-cosmetic" });
   }
-  return { key, outfit: outfitKey, tee, plan, cosmetics: out };
+  return { key, outfit: outfitKey, tee, pants, plan, cosmetics: out };
 }
