@@ -52,9 +52,13 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** `20261101150000_grading_meaningful_characters` (D-290 G1). Den
-  genskaber `process_question_attempt`, som produktionen stadig kører i D-280 del 1's udgave; den
-  afspilles først, når den er anvendt og verificeret. A, B, kommentarrettelsen og D-280's to filer er
+- **Ikke anvendt i produktionen:** `20261031230000_claim_daily_reward_exactly_once` (D-284),
+  `20261101120000_night_owl_stop_new_awards` (D-286) og `20261101150000_grading_meaningful_characters`
+  (D-290 G1). Alle tre er merget, men produktionen kører stadig funktionerne fra før (læst 2026-11-01:
+  `claim_daily_reward` md5 `80273d5d…`, `evaluate_achievements` md5 `9bd9a5d5…`, `authenticated` har
+  stadig EXECUTE på `set_night_correct`, `process_question_attempt` er D-280 del 1's udgave). D-284 og
+  D-286 blev ved en fejl ikke skrevet på listen, da de blev merget, og blev derfor afspillet her. CI
+  spejler produktionen, så de afspilles først, når de er anvendt og verificeret. A, B, kommentarrettelsen og D-280's to filer er
   anvendt og verificeret og står derfor ikke længere her (se "Anvendt i produktionen efter planens
   første version").
 
