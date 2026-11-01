@@ -155,7 +155,10 @@ test("the files: unique versions after the newest migration on main, in order, D
     assert.equal(files.filter((x) => x.startsWith(f.slice(0, 15))).length, 1, `${f}: version is unique`);
   }
   assert.ok(PATHS_FILE < FILE, "the answer paths sort first");
-  assert.ok(files.every((f) => f === FILE || f === PATHS_FILE || f.slice(0, 14) < "20261031194600"), "newest when written");
+  // the pair sorts after the newest migration on main when it was merged (20261031190000, D-278); a migration merged later may sort
+  // after it, but none may sort between the two files: the data file follows the answer paths directly
+  assert.ok(PATHS_FILE.slice(0, 14) > "20261031190000", "after the newest migration on main when written");
+  assert.deepEqual(files.filter((f) => f > PATHS_FILE && f < FILE), [], "nothing sorts between the answer paths and the data file");
   const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
   for (const sql of [FUNCTIONS, MIGRATION]) {
     assert.match(sql, /IKKE anvendt i produktion\. Må KUN anvendes via apply_migration med særskilt ejer-autorisation/);
