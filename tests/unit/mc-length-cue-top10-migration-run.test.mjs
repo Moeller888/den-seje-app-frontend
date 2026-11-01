@@ -156,6 +156,11 @@ test("the files: unique versions after the newest migration on main, in order, D
   }
   assert.ok(PATHS_FILE < FILE, "the answer paths sort first");
   assert.ok(PATHS_FILE.slice(0, 14) > "20261030211428", "after the newest migration on main when written");
+  // Part 2 must follow part 1 directly: no other migration may sort between them. (Originally
+  // "newest in the directory", which encoded "nothing has been added since" and failed on the next
+  // unrelated migration — the same defect class question-instances-read-scope.test.mjs documents.)
+  assert.ok(files.every((f) => f === FILE || f === PATHS_FILE || f.slice(0, 14) < "20261031194600" || f.slice(0, 14) > "20261031194700"),
+    "nothing sorts between part 1 and part 2");
   const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
   for (const sql of [FUNCTIONS, MIGRATION]) {
     assert.match(sql, /IKKE anvendt i produktion\. Må KUN anvendes via apply_migration med særskilt ejer-autorisation/);
