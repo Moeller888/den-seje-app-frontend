@@ -74,6 +74,15 @@ BEGIN
     END IF;
   END LOOP;
 
+  -- The same bodies with another security mode are another database: production runs six of the
+  -- seven as SECURITY DEFINER and request_repeat_level_question_for_student as SECURITY INVOKER.
+  FOR r IN SELECT key FROM jsonb_each_text(v_expected) LOOP
+    IF (SELECT p.prosecdef FROM pg_catalog.pg_proc p WHERE p.oid = to_regprocedure(r.key))
+       IS DISTINCT FROM (r.key <> 'public.request_repeat_level_question_for_student(uuid,text[])') THEN
+      RAISE EXCEPTION 'H5 bootstrap: % har ikke produktionens SECURITY DEFINER/INVOKER', r.key;
+    END IF;
+  END LOOP;
+
   FOR r IN
     SELECT p.oid::regprocedure::text AS sig
     FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
@@ -620,6 +629,18 @@ BEGIN
   IF has_function_privilege('service_role', 'public.question_attempts_reject_update()', 'EXECUTE')
      OR has_function_privilege('service_role', 'public.question_instances_round_guard()', 'EXECUTE') THEN
     RAISE EXCEPTION 'H5 bootstrap: triggerfunktionerne må ikke kunne kaldes af service_role';
+  END IF;
+
+  -- Owner: SECURITY DEFINER runs as the owner, so the H5 objects must belong to the role that owns
+  -- the answer path (process_question_attempt) and question_instances — compared, never named.
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_proc p
+             WHERE p.oid IN (to_regprocedure('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)'), to_regprocedure('public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)'),
+                             to_regprocedure('public.question_attempts_reject_update()'),
+                             to_regprocedure('public.question_instances_round_guard()'))
+               AND p.proowner IS DISTINCT FROM (SELECT proowner FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_question_attempt(uuid,uuid,text,bigint)')))
+     OR (SELECT relowner FROM pg_catalog.pg_class WHERE oid = to_regclass('public.question_attempts'))
+        IS DISTINCT FROM (SELECT relowner FROM pg_catalog.pg_class WHERE oid = 'public.question_instances'::regclass) THEN
+    RAISE EXCEPTION 'H5 bootstrap: H5-objekterne ejes ikke af samme rolle som svarvejen og question_instances';
   END IF;
 
   -- The table: columns (name, type, NOT NULL) and its named constraints. NOT NULL constraints that

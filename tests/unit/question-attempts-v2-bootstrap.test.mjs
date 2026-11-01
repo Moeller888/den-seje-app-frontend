@@ -213,6 +213,12 @@ test("the bootstrap refuses every unknown state and changes nothing", async () =
     ["the round guard narrowed to one column", [H5, D280_PATHS], `DROP TRIGGER question_instances_round_guard ON public.question_instances;
       CREATE TRIGGER question_instances_round_guard BEFORE UPDATE OF answered ON public.question_instances
       FOR EACH ROW EXECUTE FUNCTION public.question_instances_round_guard();`, /ikke præcis de to H5-triggere/],
+    ["the right body under another security mode (wrong database version)", [D280_PATHS],
+      `ALTER FUNCTION ${PQA} SECURITY INVOKER;`, /process_question_attempt\(uuid,uuid,text,bigint\) har ikke produktionens SECURITY DEFINER\/INVOKER/],
+    ["the round-guard function as SECURITY DEFINER", [H5, D280_PATHS],
+      "ALTER FUNCTION public.question_instances_round_guard() SECURITY DEFINER;", /har ikke den forventede krop, SECURITY DEFINER eller search_path/],
+    ["an H5 function owned by another role", [H5, D280_PATHS],
+      `CREATE ROLE h5_other; ALTER FUNCTION ${MC_V2} OWNER TO h5_other;`, /ejes ikke af samme rolle/],
   ];
   for (const [label, order, tamper, error] of cases) {
     const db = await migrated(order);
@@ -221,6 +227,20 @@ test("the bootstrap refuses every unknown state and changes nothing", async () =
     await assert.rejects(db.exec(SQL(BOOTSTRAP)), error, label);
     assert.deepEqual(await fingerprint(db), before, `${label}: nothing changed`);
   }
+});
+
+test("atomic without a surrounding transaction: a failure mid-creation leaves no partial H5 schema", async () => {
+  // Each statement of the file run on its own (autocommit), as a runner without a transaction would.
+  // An index named like the attempts table's round key makes statement 2 (CREATE TABLE) fail after
+  // statement 1 (the unique key on question_instances) already ran inside the same DO block.
+  const db = await migrated([D280_PATHS, D278]);
+  await db.exec("CREATE INDEX question_attempts_round_key ON public.profiles (id);");
+  const before = await fingerprint(db);
+  const statements = splitStatements(SQL(BOOTSTRAP));
+  assert.equal(statements.length, 2, "the creation is ONE statement (a DO block), the final check another");
+  await assert.rejects(db.exec(statements[0]), /question_attempts_round_key/);
+  assert.deepEqual(await fingerprint(db), before, "statement 1 rolled back with the rest: nothing kept");
+  assert.deepEqual(await h5Objects(db), NONE);
 });
 
 test("the alignment refuses without H5, without D-280, or with an unknown _v2 — and a second run changes nothing", async () => {
