@@ -5,6 +5,7 @@
  * the menu only renders and handles focus and keyboard.
  */
 
+import { corruptStatus } from "../model/saves.ts";
 import { el } from "./dom.ts";
 
 export type MenuMode = "closed" | "pause" | "save" | "load";
@@ -12,10 +13,11 @@ export type MenuMode = "closed" | "pause" | "save" | "load";
 export interface SlotRow {
   readonly slot: string;
   readonly label: string;
-  /** "ok": details; "empty"; "corrupt": damaged main file (backup offered when `backup`). */
+  /** "ok": details; "empty"; "corrupt": damaged or unloadable main file (backup offered when `backup`). */
   readonly state: "ok" | "empty" | "corrupt";
   readonly details: string;
   readonly backup: boolean;
+  readonly reason: "damaged" | "unloadable" | null;
 }
 
 export interface MenuDeps {
@@ -136,7 +138,7 @@ export class GameMenu {
       const list = el("ul", { class: "slot-list" });
       for (const row of this.d.slots()) {
         if (this.mode_ === "save" && row.slot === "auto") continue;
-        const status = row.state === "ok" ? row.details : t(row.state === "empty" ? "ui.empty" : "ui.corrupt");
+        const status = row.state === "ok" ? row.details : row.state === "empty" ? t("ui.empty") : corruptStatus(row, t);
         const main =
           this.mode_ === "save"
             ? this.button(`${row.label} – ${status}`, () => this.d.save(row.slot), { "data-slot": row.slot })
