@@ -322,6 +322,12 @@ const REVIEWED_LATER_READERS = {
     "checks their keys against the reviewed set and re-keys them; it returns nothing but a count in a " +
     "NOTICE. No policy, RLS or table privilege on question_instances is touched (proven in " +
     "mc-length-cue-top10-migration-run.test.mjs).",
+  "20261101140000_deactivate_two_misgraded_questions.sql":
+    "D-290 G2: an owner-run DO block — no function, nothing a client can call. It reads " +
+    "question_instances only as count(*) of the open instances of two named questions (a guard that " +
+    "must find 0), returns nothing to anyone and writes only questions.is_active. No policy, RLS, " +
+    "table privilege or row of question_instances is touched (proven in " +
+    "deactivate-two-misgraded-questions-migration-run.test.mjs).",
   "20261101190000_question_attempts_v2_bootstrap.sql":
     "H5 integration: creates (on a database without H5) or verifies (on one with it) exactly the objects " +
     "of 20261030211428 — its sections 1–6 EXECUTEd byte for byte — so it reads question_instances exactly " +
@@ -467,6 +473,7 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261031190000_reward_integrity_server_authority.sql",
      "20261031194600_mc_length_cue_answer_paths.sql",
      "20261031194700_mc_length_cue_top10.sql",
+     "20261101140000_deactivate_two_misgraded_questions.sql",
      "20261101190000_question_attempts_v2_bootstrap.sql",
      "20261101190100_question_attempts_v2_align_d280.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
