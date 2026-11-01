@@ -20,6 +20,9 @@
 //      every pupil can open a round on an active question afterwards. With the guard installed, a later
 //      deactivation waits for an insert that holds the question row (FOR SHARE).
 //   5. The migration changes only questions.is_active of the two approved questions.
+//   6. A round opened before the migration on an active question is answered afterwards through the real
+//      process_question_attempt: accepted, closed correctly, paid exactly once (a repeated call pays
+//      nothing), and the guard still refuses a new open round on an inactive question.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -251,6 +254,47 @@ test("real PostgreSQL: D-290 deactivation under simultaneous pupil activity", { 
     assert.equal(await waitsOnLock(watcher, su.pid), true, "a deactivation waits for the insert (FOR SHARE)");
     await gnq[2].query("COMMIT");
     assert.ok(!((await later) instanceof Error));
+  });
+
+  await t.test("6. an answer through process_question_attempt after the migration: accepted, paid once; the guard still refuses", async () => {
+    const { connect, su, pupil } = await freshDatabase();
+    const p = await pupil();
+    // An open round on an active question that is NOT deactivated, opened before the migration.
+    const id = (await su.query(`INSERT INTO public.question_instances (student_id, question_id, correct_answer, answered, next_review_at)
+      VALUES ($1, $2, 'is', false, now()) RETURNING id`, [p, OTHER[0]])).rows[0].id;
+    const migr = await connect();
+    const outcome = await settle(migr.query(MIGRATION));
+    assert.ok(!(outcome instanceof Error), String(outcome));
+    assert.deepEqual(await state(su), { active: [{ id: A, a: false }, { id: B, a: false }], fn: 1, tg: 1 });
+
+    const progress = async () => (await su.query(`SELECT xp, coins, correct_answers, total_correct_answers
+      FROM public.student_progress WHERE student_id = $1`, [p])).rows[0];
+    const instance = async () => (await su.query(`SELECT answered, was_correct, user_answer, repeat_count,
+      answered_at IS NOT NULL AS has_answered_at FROM public.question_instances WHERE id = $1`, [id])).rows[0];
+    const before = await progress();
+    const gnq = await connect("service_role");
+    const ATTEMPT = "SELECT public.process_question_attempt($1, $2, $3, 0) AS r";
+
+    const first = await settle(gnq.query(ATTEMPT, [p, id, "is"]));
+    assert.ok(!(first instanceof Error), `the answer is accepted, not refused by the guard: ${first}`);
+    assert.deepEqual(first.rows[0].r, { status: "correct", correct_answer: "is" });
+    assert.deepEqual(await instance(), { answered: true, was_correct: true, user_answer: "is", repeat_count: 0, has_answered_at: true },
+      "the round is closed correctly");
+    const paid = await progress();
+    assert.deepEqual(paid, { xp: before.xp + 10, coins: before.coins + 5,
+      correct_answers: before.correct_answers + 1, total_correct_answers: before.total_correct_answers + 1 },
+      "exactly one reward and one increment of each counter");
+
+    const closed = await instance();
+    const again = await settle(gnq.query(ATTEMPT, [p, id, "is"]));
+    assert.ok(!(again instanceof Error), String(again));
+    assert.equal(again.rows[0].r.status, "correct", "a repeated call reports the same result");
+    assert.deepEqual(await progress(), paid, "a repeated call pays nothing more");
+    assert.deepEqual(await instance(), closed, "and changes nothing on the instance");
+
+    // The guard still refuses a new open round on an inactive question for the same pupil.
+    assert.ok(refused(await settle(gnq.query(INSERT_OPEN, [p, A]))), "still refused on an inactive question");
+    assert.equal(await stuck(su), 0);
   });
 
   await t.test("5. the migration changes only questions.is_active of the two approved questions", async () => {
