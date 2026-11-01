@@ -111,6 +111,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "H5 integration 1/2, not applied in production (no question_attempts there, catalog 2026-11-01); it requires G1 (20261101150000) first, which is not applied either",
   "20261101190100_question_attempts_v2_align_grading.sql":
     "H5 integration 2/2, not applied in production (no process_question_attempt_v2 there, catalog 2026-11-01); it requires G1 and 20261101190000 first",
+  "20261101220000_l1_k1_attempt_context.sql":
+    "L1 K1, not applied in production: it extends H5's question_attempts (not there either) with mode, hints and content fingerprint",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision

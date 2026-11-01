@@ -104,7 +104,9 @@ async function effects(db, pupil) {
 // are not refused for their timestamp alone. G1 (D-290) was reviewed: it changes only the grading of
 // process_question_attempt; the bootstrap pins its body and the alignment gives _v2 its grading.
 const H5_SURFACE = /\bFUNCTION\s+public\.(process_question_attempt|process_text_answer|release_open_question_outside|request_repeat_\w+)\s*\(|\bquestion_attempts\b|question_instances_round_guard|question_instances_id_student_id_key|\bUPDATE\s+(public\.)?question_instances\b[\s\S]{0,400}?\b(answered|repeat_count)\b/i;
-const REVIEWED_H5_SURFACE_AFTER_D280 = Object.freeze([G1, BOOTSTRAP, ALIGN]);
+// L1 K1 (20261101220000) was reviewed: it requires the aligned _v2 (md5 pinned in its guard), adds
+// columns to question_attempts and re-creates only the two _v2 functions (l1-k1-attempt-context-migration-run).
+const REVIEWED_H5_SURFACE_AFTER_D280 = Object.freeze([G1, BOOTSTRAP, ALIGN, "20261101220000_l1_k1_attempt_context.sql"]);
 
 test("the two files: unique versions, after their prerequisites, adjacent; later H5-surface changes need review", () => {
   const files = readdirSync(join(ROOT, "supabase", "migrations")).filter((f) => /^\d{14}_.+\.sql$/.test(f)).sort();

@@ -107,6 +107,12 @@ export const LEGACY_ANSWER_RPCS = Object.freeze({ mc: "process_question_attempt"
 
 export type V2Submission ={ roundNo: number; submissionId: string; reviewText: string | null; misconceptionType: string | null };
 
+// L1 K1 (migration 20261101220000, docs/learning-progression-l1-contracts.md §K1): the activity mode
+// and the hints used are decided by the SERVER and are constants here until L3 (hints) and L5 (modes
+// recorded on the instance). They are never read from the request body: a client that sends fields
+// with these names is ignored, because nothing in this module takes them as arguments.
+export const L1_ATTEMPT_CONTEXT = Object.freeze({ mode: "quiz_v1", hintsUsed: 0 });
+
 export async function callProcessQuestionAttemptV2(
   makeAdminClient: () => RpcClient,
   attempt: Omit<QuestionAttempt, "questionShownAt"> & V2Submission,
@@ -120,6 +126,8 @@ export async function callProcessQuestionAttemptV2(
     p_submission_id: attempt.submissionId,
     p_review_text: attempt.reviewText,
     p_misconception_type: attempt.misconceptionType,
+    p_mode: L1_ATTEMPT_CONTEXT.mode,
+    p_hints_used: L1_ATTEMPT_CONTEXT.hintsUsed,
   });
 }
 
@@ -137,5 +145,7 @@ export async function callProcessTextAnswerV2(
     p_submission_id: award.submissionId,
     p_review_text: award.reviewText,
     p_misconception_type: award.misconceptionType,
+    p_mode: L1_ATTEMPT_CONTEXT.mode,
+    p_hints_used: L1_ATTEMPT_CONTEXT.hintsUsed,
   });
 }

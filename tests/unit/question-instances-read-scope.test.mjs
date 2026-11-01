@@ -346,6 +346,12 @@ const REVIEWED_LATER_READERS = {
     "G1's comparison (normalize_choice_answer / normalize_number_answer) only; its read is unchanged (one " +
     "instance by id and student_id), EXECUTE is service_role only. No policy, RLS or table privilege on " +
     "question_instances is touched (proven in question-attempts-v2-bootstrap.test.mjs).",
+  "20261101220000_l1_k1_attempt_context.sql":
+    "L1 K1: re-creates the two _v2 functions with mode and hints; their read of question_instances is " +
+    "unchanged (one instance by id AND student_id, FOR UPDATE) — the only new use is that row's created_at " +
+    "for the technical interval, stored in the pupil's own attempt. EXECUTE is service_role only. No " +
+    "policy, RLS or table privilege on question_instances is touched (proven in " +
+    "l1-k1-attempt-context-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -484,7 +490,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261101140000_deactivate_two_misgraded_questions.sql",
      "20261101150000_grading_meaningful_characters.sql",
      "20261101190000_question_attempts_v2_bootstrap.sql",
-     "20261101190100_question_attempts_v2_align_grading.sql"],
+     "20261101190100_question_attempts_v2_align_grading.sql",
+     "20261101220000_l1_k1_attempt_context.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
