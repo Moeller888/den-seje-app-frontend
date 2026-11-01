@@ -323,11 +323,13 @@ const REVIEWED_LATER_READERS = {
     "NOTICE. No policy, RLS or table privilege on question_instances is touched (proven in " +
     "mc-length-cue-top10-migration-run.test.mjs).",
   "20261101140000_deactivate_two_misgraded_questions.sql":
-    "D-290 G2: an owner-run DO block — no function, nothing a client can call. It reads " +
-    "question_instances only as count(*) of the open instances of two named questions (a guard that " +
-    "must find 0), returns nothing to anyone and writes only questions.is_active. No policy, RLS, " +
-    "table privilege or row of question_instances is touched (proven in " +
-    "deactivate-two-misgraded-questions-migration-run.test.mjs).",
+    "D-290 G2: an owner-run DO block reads question_instances only as count(*) of the open instances " +
+    "of two named questions (a guard that must find 0), returns nothing to anyone and writes only " +
+    "questions.is_active. The open-round guard is a BEFORE INSERT/UPDATE trigger on question_instances " +
+    "whose SECURITY DEFINER function (EXECUTE revoked from every role, so nothing a client can call) " +
+    "reads one questions row's is_active FOR SHARE and returns the row being written or refuses it; it " +
+    "reads no instance and returns no data. No policy, RLS, table privilege or existing row of " +
+    "question_instances is touched (proven in deactivate-two-misgraded-questions-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from

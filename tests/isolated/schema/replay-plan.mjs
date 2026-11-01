@@ -104,7 +104,10 @@ export function extractSchemaPart(file, sql) {
 // Merged in the repository but NOT applied in production, on catalog evidence (read-only metadata,
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
-export const NOT_IN_PRODUCTION = Object.freeze({});
+export const NOT_IN_PRODUCTION = Object.freeze({
+  "20261101140000_deactivate_two_misgraded_questions.sql":
+    "D-290, not applied in production: it creates the open-round guard (guard_open_round_requires_active_question and its trigger on question_instances), which production does not have, and the two questions are still active",
+});
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
 // (2026-10-28, option B): the isolated CI tests the repository's code against the schema that code

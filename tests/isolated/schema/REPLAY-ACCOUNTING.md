@@ -52,9 +52,10 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** ingen lige nu. A, B, kommentarrettelsen og D-280's to filer er
-  anvendt og verificeret og står derfor ikke længere her (se "Anvendt i produktionen efter planens
-  første version").
+- **Ikke anvendt i produktionen:** `20261101140000_deactivate_two_misgraded_questions.sql` (D-290). Den
+  opretter siden rettelsen 2026-11-01 en funktion og en trigger og er derfor ikke længere ren data. A, B,
+  kommentarrettelsen og D-280's to filer er anvendt og verificeret og står derfor ikke længere her (se
+  "Anvendt i produktionen efter planens første version").
 
 ## Anvendt i produktionen efter planens første version
 En fil fjernes fra `NOT_IN_PRODUCTION`, først når den er anvendt **og** verificeret i produktionen.
