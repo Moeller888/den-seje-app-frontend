@@ -123,7 +123,8 @@ test("after the file: function hashes, SECURITY INVOKER and EXECUTE grants uncha
   assert.deepEqual(now.fns.map((f) => [f.proname, f.m]), [
     ["advance_student_level", "4147c559353946a64c3ea1c791d19635"],
     ["get_level_questions_for_student", "9e5862b287f6f41066eb876667c426a7"],
-    ["request_repeat_level_question_for_student", "ee153327dae5a5686e9c5efd247d27c0"],
+    // D-280 part 1 (20261031194600, remote 20261101101401) later replaced it; the replay includes that.
+    ["request_repeat_level_question_for_student", "db8280ddee20254e876be7fb1fc57e4d"],
   ]);
   for (const f of now.fns) {
     assert.equal(f.prosecdef, false, `${f.proname} is SECURITY INVOKER`);
