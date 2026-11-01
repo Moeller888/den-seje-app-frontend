@@ -347,6 +347,11 @@ const REVIEWED_LATER_REPEAT_USERS = {
   "20261101190100_question_attempts_v2_align_grading.sql":
     "H5 integration: re-creates only process_question_attempt_v2 (D-280's alias rule); it redefines none " +
     "of this migration's functions and does not touch question_instances.",
+  "20261101220000_l1_k1_attempt_context.sql":
+    "L1 K1: adds six columns to question_attempts and re-creates only process_question_attempt_v2 and " +
+    "process_text_answer_v2 with two more parameters (mode, hints) whose bodies are the previous ones plus " +
+    "K1's lines (proven in l1-k1-attempt-context-migration-run.test.mjs: same outcomes, amounts, streak and " +
+    "quests). It redefines none of this migration's functions and has no question_instances statement.",
 };
 
 // The only question_instances statements a reviewed later user may contain, each exactly once.
@@ -366,7 +371,7 @@ test("reviewed later repeat users redefine none of this migration's functions", 
     ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql",
       "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql",
       "20261030211428_question_attempts_v2.sql", "20261101190000_question_attempts_v2_bootstrap.sql",
-      "20261101190100_question_attempts_v2_align_grading.sql"],
+      "20261101190100_question_attempts_v2_align_grading.sql", "20261101220000_l1_k1_attempt_context.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
