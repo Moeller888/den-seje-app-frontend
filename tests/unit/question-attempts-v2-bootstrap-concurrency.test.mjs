@@ -1,4 +1,4 @@
-// REAL PostgreSQL 17 proof for the H5 integration (20261101140000 bootstrap + 20261101140100 align)
+// REAL PostgreSQL 17 proof for the H5 integration (20261101190000 bootstrap + 20261101190100 align)
 // — what PGlite (PostgreSQL 18, one connection) cannot show:
 //
 //   0. On PostgreSQL 17, the repository history and production's history end in the SAME public schema

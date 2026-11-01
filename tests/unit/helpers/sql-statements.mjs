@@ -4,7 +4,7 @@
 // statement's text runs from its first non-comment character to its ';', verbatim.
 //
 // Used to prove that a migration that replays another migration's DDL (H5 bootstrap,
-// 20261101140000) carries exactly the same statements, byte for byte.
+// 20261101190000) carries exactly the same statements, byte for byte.
 export function splitStatements(sql) {
   const out = [];
   let i = 0;

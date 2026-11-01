@@ -12,7 +12,7 @@
 --   repository replay   20261030211428 → D-278 → D-280 part 1 → THIS FILE (verifies, changes nothing)
 --   production          D-280 part 1 + D-278 → THIS FILE (creates the H5 schema)
 --
--- and 20261101140100 then aligns process_question_attempt_v2 with D-280's grading in both.
+-- and 20261101190100 then aligns process_question_attempt_v2 with D-280's grading in both.
 --
 -- HOW (no condition is ever skipped silently)
 --   1. State check, before anything is changed:
@@ -36,7 +36,7 @@
 -- (tests/unit/question-attempts-v2-bootstrap.test.mjs proves both). A failed run leaves nothing to
 -- clean up and can simply be run again once the cause is fixed.
 -- process_question_attempt_v2 keeps the original grading here (aliases only with EXACTLY two
--- entries); 20261101140100 changes it to D-280's rule. Nothing calls either _v2 function before H5
+-- entries); 20261101190100 changes it to D-280's rule. Nothing calls either _v2 function before H5
 -- is activated (process-event in production is version 34, ENABLE_H5_SUBMISSIONS = false).
 --
 -- WHAT THIS FILE DOES NOT DO

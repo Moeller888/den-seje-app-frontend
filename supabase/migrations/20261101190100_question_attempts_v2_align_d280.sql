@@ -17,7 +17,7 @@
 -- normalisation (lower-case, [a-z0-9] only), the same exact alias match, the same key returned.
 -- process_text_answer_v2 is unchanged: D-280 does not change process_text_answer.
 --
--- GUARD: H5's schema must exist (20261030211428 or 20261101140000), process_question_attempt must
+-- GUARD: H5's schema must exist (20261030211428 or 20261101190000), process_question_attempt must
 -- have D-280 part 1's body, process_text_answer_v2 its 20261030211428 body, and
 -- process_question_attempt_v2 either its 20261030211428 body or this file's (a second run changes
 -- nothing). Anything else stops the migration. The result is checked afterwards.
@@ -36,7 +36,7 @@ DECLARE
   v_hash text;
 BEGIN
   IF to_regclass('public.question_attempts') IS NULL THEN
-    RAISE EXCEPTION 'H5 alignment: question_attempts findes ikke — anvend 20261030211428 eller 20261101140000 først';
+    RAISE EXCEPTION 'H5 alignment: question_attempts findes ikke — anvend 20261030211428 eller 20261101190000 først';
   END IF;
   SELECT md5(prosrc) INTO v_hash FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_question_attempt(uuid,uuid,text,bigint)');
   IF v_hash IS DISTINCT FROM '328ea8f9a4fd260407b582dcecb7dfdf' THEN

@@ -2,9 +2,9 @@
 // D-280), for tests/unit/question-attempts-v2-bootstrap*.test.mjs.
 //
 //   REPO_ORDER   the repository's own order (file names), which the isolated E2E replays:
-//                20261030211428 (H5) → D-278 → D-280 part 1 → 20261101140000 → 20261101140100
+//                20261030211428 (H5) → D-278 → D-280 part 1 → 20261101190000 → 20261101190100
 //   PROD_ORDER   what production actually did and will do: D-280 part 1 (applied 2026-11-01 as
-//                20261101101401) → D-278 (20261101101441) → 20261101140000 → 20261101140100
+//                20261101101401) → D-278 (20261101101441) → 20261101190000 → 20261101190100
 //
 // Both start from production's answer chain before D-280 (helpers/answer-chain-schema.mjs pins every
 // md5) plus the two hidden-achievement functions D-278 replaces, with the EXECUTE production had
@@ -22,8 +22,8 @@ export const H5 = ATTEMPTS_MIGRATION_FILE;
 export const D278 = "20261031190000_reward_integrity_server_authority.sql";
 export const D280_PATHS = "20261031194600_mc_length_cue_answer_paths.sql";
 export const D280_TOP10 = "20261031194700_mc_length_cue_top10.sql";
-export const BOOTSTRAP = "20261101140000_question_attempts_v2_bootstrap.sql";
-export const ALIGN = "20261101140100_question_attempts_v2_align_d280.sql";
+export const BOOTSTRAP = "20261101190000_question_attempts_v2_bootstrap.sql";
+export const ALIGN = "20261101190100_question_attempts_v2_align_d280.sql";
 export const REPO_ORDER = Object.freeze([H5, D278, D280_PATHS, BOOTSTRAP, ALIGN]);
 export const PROD_ORDER = Object.freeze([D280_PATHS, D278, BOOTSTRAP, ALIGN]);
 
@@ -96,7 +96,7 @@ SELECT jsonb_build_object(
   'attempts_comment', obj_description(to_regclass('public.question_attempts'), 'pg_class')
 ) AS f`;
 
-// The rollback before activation, as 20261030211428's header states it (20261101140000 refers to it).
+// The rollback before activation, as 20261030211428's header states it (20261101190000 refers to it).
 export const ROLLBACK_SQL = `
   DROP FUNCTION public.process_question_attempt_v2(uuid, uuid, text, integer, uuid, text, text);
   DROP FUNCTION public.process_text_answer_v2(uuid, uuid, text, boolean, integer, uuid, text, text);

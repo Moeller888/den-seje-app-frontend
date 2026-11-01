@@ -1,5 +1,5 @@
-// H5 integration (D-266, D-273, D-278, D-280): 20261101140000_question_attempts_v2_bootstrap.sql and
-// 20261101140100_question_attempts_v2_align_d280.sql, executed UNMODIFIED on PGlite with every merged
+// H5 integration (D-266, D-273, D-278, D-280): 20261101190000_question_attempts_v2_bootstrap.sql and
+// 20261101190100_question_attempts_v2_align_d280.sql, executed UNMODIFIED on PGlite with every merged
 // migration they meet, in both histories:
 //
 //   repository   20261030211428 → D-278 → D-280 part 1 → bootstrap → align   (isolated E2E replay)
@@ -93,13 +93,24 @@ async function effects(db, pupil) {
 }
 
 // ── The files ────────────────────────────────────────────────────────────────────────────────────
-test("the two files: unique versions after every merged migration; the merged ones are untouched", () => {
+// Migrations after D-280 part 1 (whose bodies the bootstrap pins) that touch H5's surface: the seven
+// writers, the H5 objects, or answered/repeat_count of question_instances. Each must be reviewed
+// against the bootstrap's guards and listed here; an unlisted one fails. Unrelated later migrations
+// are not refused for their timestamp alone.
+const H5_SURFACE = /\bFUNCTION\s+public\.(process_question_attempt|process_text_answer|release_open_question_outside|request_repeat_\w+)\s*\(|\bquestion_attempts\b|question_instances_round_guard|question_instances_id_student_id_key|\bUPDATE\s+(public\.)?question_instances\b[\s\S]{0,400}?\b(answered|repeat_count)\b/i;
+const REVIEWED_H5_SURFACE_AFTER_D280 = Object.freeze([BOOTSTRAP, ALIGN]);
+
+test("the two files: unique versions, after their prerequisites, adjacent; later H5-surface changes need review", () => {
   const files = readdirSync(join(ROOT, "supabase", "migrations")).filter((f) => /^\d{14}_.+\.sql$/.test(f)).sort();
   for (const f of [BOOTSTRAP, ALIGN]) {
     assert.ok(files.includes(f), f);
     assert.equal(files.filter((x) => x.slice(0, 14) === f.slice(0, 14)).length, 1, `${f}: version unique`);
   }
-  assert.deepEqual(files.slice(-2), [BOOTSTRAP, ALIGN], "the newest two");
+  for (const f of [H5, D278, D280_PATHS, D280_TOP10]) assert.ok(f < BOOTSTRAP, `${f} sorts before the bootstrap`);
+  assert.equal(files.indexOf(ALIGN), files.indexOf(BOOTSTRAP) + 1, "nothing sorts between the bootstrap and the alignment");
+  const touching = files.filter((f) => f > D280_TOP10 && H5_SURFACE.test(SQL(f).replace(/^\s*--.*$/gm, "")));
+  assert.deepEqual(touching, [...REVIEWED_H5_SURFACE_AFTER_D280],
+    "a migration after D-280 changes H5's surface: review it against the bootstrap's guards, then list it");
   assert.deepEqual([...REPO_ORDER], [H5, D278, D280_PATHS, BOOTSTRAP, ALIGN].sort(), "REPO_ORDER is file-name order");
   for (const f of [BOOTSTRAP, ALIGN]) {
     const code = SQL(f).replace(/--.*$/gm, "");

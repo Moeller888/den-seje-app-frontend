@@ -322,13 +322,13 @@ const REVIEWED_LATER_READERS = {
     "checks their keys against the reviewed set and re-keys them; it returns nothing but a count in a " +
     "NOTICE. No policy, RLS or table privilege on question_instances is touched (proven in " +
     "mc-length-cue-top10-migration-run.test.mjs).",
-  "20261101140000_question_attempts_v2_bootstrap.sql":
+  "20261101190000_question_attempts_v2_bootstrap.sql":
     "H5 integration: creates (on a database without H5) or verifies (on one with it) exactly the objects " +
     "of 20261030211428 — its sections 1–6 EXECUTEd byte for byte — so it reads question_instances exactly " +
     "as that file's _v2 functions do (one instance by id and student_id, service_role only). Its state " +
     "check reads only the catalog. No policy, RLS or table privilege on question_instances is touched " +
     "(proven in question-attempts-v2-bootstrap.test.mjs: both histories end in the same public schema).",
-  "20261101140100_question_attempts_v2_align_d280.sql":
+  "20261101190100_question_attempts_v2_align_d280.sql":
     "H5 integration: re-creates process_question_attempt_v2 with D-280's alias rule only (= 2 becomes >= 2); " +
     "its read is unchanged (one instance by id and student_id), EXECUTE stays service_role only. No policy, " +
     "RLS or table privilege on question_instances is touched (proven in question-attempts-v2-bootstrap.test.mjs).",
@@ -467,8 +467,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261031190000_reward_integrity_server_authority.sql",
      "20261031194600_mc_length_cue_answer_paths.sql",
      "20261031194700_mc_length_cue_top10.sql",
-     "20261101140000_question_attempts_v2_bootstrap.sql",
-     "20261101140100_question_attempts_v2_align_d280.sql"],
+     "20261101190000_question_attempts_v2_bootstrap.sql",
+     "20261101190100_question_attempts_v2_align_d280.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
