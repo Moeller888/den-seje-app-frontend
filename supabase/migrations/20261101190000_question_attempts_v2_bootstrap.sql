@@ -25,15 +25,38 @@
 --        process_question_attempt (328ea8f9…), i.e. G1 not yet applied — stops the migration;
 --      * no other function may update answered or repeat_count (the same scan as 20261030211428,
 --        which also knows the two _v2 functions once they exist);
+--      * D-290 G2's guard (20261101140000) is either absent, or present EXACTLY as reviewed (see
+--        "D-290 G2" below); anything else under its trigger or function name stops the migration;
 --      * the H5 objects (table, index, unique key, four functions, two triggers) must be either ALL
---        absent — then nothing else may trigger on question_instances, and the schema is created — or
---        ALL present — then nothing is created. Anything in between stops the migration.
+--        absent — then nothing else may trigger on question_instances except G2's reviewed guard, and
+--        the schema is created — or ALL present — then nothing is created. Anything in between stops
+--        the migration.
 --   2. Creation: the statements of sections 1–6 of 20261030211428, byte for byte (each one EXECUTEd
 --      verbatim; tests/unit/question-attempts-v2-bootstrap.test.mjs proves the identity).
 --   3. Final check, in BOTH states, after the creation and inside the same block: every H5 object exactly as 20261030211428 creates it — function
 --      bodies (md5), SECURITY DEFINER, search_path, EXECUTE, columns, named constraints, the foreign
---      key, the index, RLS without policies, table privileges and exactly the two triggers. A
---      database that does not match stops here.
+--      key, the index, RLS without policies, table privileges and exactly the two triggers (plus
+--      G2's reviewed guard when it was present at the start). A database that does not match stops
+--      here.
+--
+-- D-290 G2 (compatibility fix, 2026-11-01; owner: G2 must be applicable before H5)
+-- G2 (20261101140000) adds ONE trigger on question_instances: open_round_requires_active_question,
+-- which refuses a NEW open round on an inactive question. The order of G2 and this file must not
+-- matter, so this file accepts that trigger — and only it — when every reviewed property holds:
+--   trigger    name open_round_requires_active_question on public.question_instances, not internal,
+--              BEFORE INSERT OR UPDATE OF answered, question_id FOR EACH ROW (tgtype 23, columns by
+--              NAME), enabled, no arguments, no WHEN clause, not a constraint trigger;
+--   function   public.guard_open_round_requires_active_question(): plpgsql, RETURNS trigger,
+--              md5(prosrc) e5627de108be67869a4615490a6857a2 (20261101140000 as merged in #529,
+--              file SHA-256 801d9ba6…), SECURITY DEFINER, search_path '' and nothing else, owned by
+--              the owner of process_question_attempt, EXECUTE for no API role (PUBLIC, anon,
+--              authenticated, service_role).
+-- The trigger and its function exist together or not at all. Anything else under either name — or
+-- any other trigger on question_instances — stops the migration as before. The two guards check
+-- different things and both stay in force: G2's guard only NEW open rounds (insert, or answered
+-- true → false) on an inactive question; H5's round guard that a reopen raises repeat_count by one.
+-- On a reopen both fire (PostgreSQL runs BEFORE triggers in name order: G2's first); on _v2's
+-- UPDATE ... SET answered = true G2's guard returns at once and takes no lock.
 -- ATOMIC: the state check, the creation and the final check are ONE statement (one DO block). A
 -- failure anywhere — also in the final check, after every object was created — rolls back the whole
 -- block, whether the runner wraps the file in a transaction or runs each statement on its own
@@ -80,6 +103,7 @@ DECLARE
   v_present integer;
   v_cols    text;
   v_cons    text;
+  v_g2_oid  oid;
 BEGIN
   FOR r IN SELECT key, value FROM jsonb_each_text(v_expected) LOOP
     SELECT md5(p.prosrc) INTO v_hash FROM pg_catalog.pg_proc p WHERE p.oid = to_regprocedure(r.key);
@@ -113,6 +137,39 @@ BEGIN
     RAISE EXCEPTION 'H5 bootstrap: en ukendt funktion opdaterer answered/repeat_count i question_instances: % — rundevagten er ikke vurderet mod den', r.sig;
   END LOOP;
 
+  -- D-290 G2's guard: absent, or exactly as reviewed (see the header). v_g2_oid is its trigger.
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_trigger t WHERE t.tgname = 'open_round_requires_active_question')
+     OR EXISTS (SELECT 1 FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+                WHERE p.proname = 'guard_open_round_requires_active_question') THEN
+    SELECT t.oid INTO v_g2_oid
+      FROM pg_catalog.pg_trigger t
+      JOIN pg_catalog.pg_proc p ON p.oid = t.tgfoid
+     WHERE t.tgname = 'open_round_requires_active_question'
+       AND t.tgrelid = 'public.question_instances'::regclass
+       AND NOT t.tgisinternal
+       AND t.tgfoid = to_regprocedure('public.guard_open_round_requires_active_question()')
+       AND t.tgtype = 23 AND t.tgenabled = 'O' AND t.tgnargs = 0 AND t.tgqual IS NULL AND t.tgconstraint = 0
+       AND (SELECT array_agg(a.attname ORDER BY a.attname) FROM unnest(t.tgattr::int2[]) k(attnum)
+            JOIN pg_catalog.pg_attribute a ON a.attrelid = t.tgrelid AND a.attnum = k.attnum) = ARRAY['answered', 'question_id']::name[]
+       AND md5(p.prosrc) = 'e5627de108be67869a4615490a6857a2'
+       AND p.prolang = (SELECT l.oid FROM pg_catalog.pg_language l WHERE l.lanname = 'plpgsql')
+       AND p.prorettype = 'pg_catalog.trigger'::regtype
+       AND p.prosecdef
+       AND p.proconfig = ARRAY['search_path=""']
+       AND p.proowner = (SELECT q.proowner FROM pg_catalog.pg_proc q WHERE q.oid = to_regprocedure('public.process_question_attempt(uuid,uuid,text,bigint)'))
+       AND p.proacl IS NOT NULL
+       AND NOT EXISTS (SELECT 1 FROM unnest(p.proacl::text[]) a
+                       WHERE a LIKE '=%' OR a LIKE 'anon=%' OR a LIKE 'authenticated=%' OR a LIKE 'service_role=%')
+       AND NOT has_function_privilege('anon', p.oid, 'EXECUTE')
+       AND NOT has_function_privilege('authenticated', p.oid, 'EXECUTE')
+       AND NOT has_function_privilege('service_role', p.oid, 'EXECUTE');
+    IF v_g2_oid IS NULL
+       OR (SELECT count(*) FROM pg_catalog.pg_trigger t WHERE t.tgname = 'open_round_requires_active_question') <> 1
+       OR (SELECT count(*) FROM pg_catalog.pg_proc p WHERE p.proname = 'guard_open_round_requires_active_question') <> 1 THEN
+      RAISE EXCEPTION 'H5 bootstrap: D-290 G2-værnet findes, men ikke præcis som gennemgået (20261101140000) — rundevagten er ikke vurderet mod det';
+    END IF;
+  END IF;
+
   SELECT (to_regclass('public.question_attempts') IS NOT NULL)::int
        + (to_regclass('public.question_attempts_student_answered_idx') IS NOT NULL)::int
        + (EXISTS (SELECT 1 FROM pg_catalog.pg_constraint WHERE conname = 'question_instances_id_student_id_key'
@@ -131,8 +188,9 @@ BEGIN
     RAISE NOTICE 'H5 bootstrap: H5-skemaet findes (20261030211428 er anvendt) — intet oprettes, alt kontrolleres';
   ELSIF v_present = 0 THEN
     IF EXISTS (SELECT 1 FROM pg_catalog.pg_trigger t
-               WHERE t.tgrelid = 'public.question_instances'::regclass AND NOT t.tgisinternal) THEN
-      RAISE EXCEPTION 'H5 bootstrap: question_instances har allerede en trigger — rundevagten er analyseret uden';
+               WHERE t.tgrelid = 'public.question_instances'::regclass AND NOT t.tgisinternal
+                 AND t.oid IS DISTINCT FROM v_g2_oid) THEN
+      RAISE EXCEPTION 'H5 bootstrap: question_instances har allerede en trigger, som ikke er D-290 G2-værnet — rundevagten er analyseret uden';
     END IF;
     RAISE NOTICE 'H5 bootstrap: H5-skemaet oprettes (sektion 1–6 fra 20261030211428, uændret)';
 
@@ -706,8 +764,12 @@ $function$;$h5_ddl_15$;
 
   -- Exactly the two H5 triggers: BEFORE UPDATE FOR EACH ROW (tgtype 19); the round guard only on
   -- UPDATE OF answered, repeat_count (checked by column NAME — attribute numbers differ per database).
+  -- Besides them only G2's guard, and only when the state check verified it (the same trigger).
   IF (SELECT count(*) FROM pg_catalog.pg_trigger t WHERE NOT t.tgisinternal
-        AND t.tgrelid IN (to_regclass('public.question_attempts'), to_regclass('public.question_instances'))) <> 2
+        AND t.tgrelid IN (to_regclass('public.question_attempts'), to_regclass('public.question_instances'))
+        AND t.oid IS DISTINCT FROM v_g2_oid) <> 2
+     OR (v_g2_oid IS NOT NULL AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_trigger t WHERE t.oid = v_g2_oid
+                                                AND t.tgrelid = to_regclass('public.question_instances')))
      OR NOT EXISTS (SELECT 1 FROM pg_catalog.pg_trigger t
                     WHERE t.tgname = 'question_attempts_append_only' AND t.tgrelid = to_regclass('public.question_attempts')
                       AND t.tgfoid = to_regprocedure('public.question_attempts_reject_update()') AND t.tgtype = 19
