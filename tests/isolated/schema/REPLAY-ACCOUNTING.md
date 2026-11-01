@@ -52,8 +52,12 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** ingen lige nu. A, B og kommentarrettelsen er anvendt og verificeret
-  og anvendes derfor også her (se "Anvendt i produktionen efter planens første version").
+- **Ikke anvendt i produktionen:** `20261031194600_mc_length_cue_answer_paths` og
+  `20261031194700_mc_length_cue_top10` (D-280). Den første ændrer `process_question_attempt` og de tre
+  gentagelsesfunktioner, som produktionen kører; den anden retter ti produktionsspørgsmål. CI spejler
+  produktionen, så ingen af dem afspilles, før de er anvendt og verificeret; da afspilles den første,
+  og den anden behandles som data efter planens regler. A, B og kommentarrettelsen er anvendt og
+  verificeret og anvendes derfor også her (se "Anvendt i produktionen efter planens første version").
 
 ## Anvendt i produktionen efter planens første version
 En fil fjernes fra `NOT_IN_PRODUCTION`, først når den er anvendt **og** verificeret i produktionen.

@@ -96,13 +96,34 @@ test("this migration does not count as a (re)definition of process_question_atte
   // definition; its runtime suite pins the old reward body and proves preserved EXECUTE grants.
   // D-211 then re-creates it with only the repeat award changed (1 coin + 2 XP); its runtime suite
   // (repeat-answer-coin-reward-migration-run) proves EXECUTE stays service_role only, not PUBLIC.
+  // D-280 (20261031194600, reviewed) re-creates it with only the alias count changed (two or more);
+  // the test below pins its header, and its runtime suite (mc-length-cue-top10-migration-run) proves
+  // owner, EXECUTE, SECURITY DEFINER, search_path and return type unchanged.
   const defining = readdirSync(join(REPO, "supabase", "migrations")).filter((f) => f.endsWith(".sql")).sort()
     .filter((f) => /CREATE\s+(OR\s+REPLACE\s+)?FUNCTION\s+public\.process_question_attempt\s*\(/i
       .test(readFileSync(join(REPO, "supabase", "migrations", f), "utf8")));
   assert.equal(defining.includes(FILE), false);
   assert.deepEqual(defining.filter(f => f > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
     ["20261018143726_fix_danish_question_bank_text.sql",
-     "20261027120000_repeat_answer_coin_reward.sql"]);
+     "20261027120000_repeat_answer_coin_reward.sql",
+     "20261031194600_mc_length_cue_answer_paths.sql"]);
+});
+
+test("D-280's redefinition keeps the locked-down shape: signature, SECURITY DEFINER, search_path, owner, EXECUTE", () => {
+  const d280 = readFileSync(join(REPO, "supabase", "migrations", "20261031194600_mc_length_cue_answer_paths.sql"), "utf8");
+  const code = d280.replace(/--.*$/gm, "");
+  const creates = [...code.matchAll(/CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\.process_question_attempt\s*\(/gi)];
+  assert.equal(creates.length, 1, "exactly one redefinition");
+  const header = code.slice(creates[0].index, code.indexOf("AS $function$", creates[0].index));
+  assert.equal(header.replace(/\s+/g, " ").trim(),
+    "CREATE OR REPLACE FUNCTION public.process_question_attempt(p_student_id uuid, p_question_instance_id uuid, " +
+    "p_answer text, p_question_shown_at bigint) RETURNS json LANGUAGE plpgsql SECURITY DEFINER " +
+    "SET search_path TO 'public', 'pg_temp'");
+  // CREATE OR REPLACE keeps owner and EXECUTE; nothing in the file may change either.
+  assert.equal(/OWNER\s+TO|ALTER\s+FUNCTION/i.test(code), false, "owner unchanged");
+  assert.equal(/\b(GRANT|REVOKE)\b[^;]*process_question_attempt/i.test(code), false, "EXECUTE unchanged (service_role only)");
+  assert.equal(/SECURITY\s+INVOKER/i.test(header), false);
+  assert.equal(/DROP\s+FUNCTION/i.test(code), false, "a DROP would reset owner and grants");
 });
 
 // ── The caller chain this lockdown relies on ────────────────────────────────────────────────────

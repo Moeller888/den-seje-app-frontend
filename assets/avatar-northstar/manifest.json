@@ -7,12 +7,13 @@
   },
   "flag": "AVATAR_NORTHSTAR_WARDROBE (js/avatar-layers.js), false",
   "counts": {
-    "files": 63,
+    "files": 65,
     "shadows": 12,
     "maxFiles": 41,
     "maxShadows": 20,
     "d242Files": 31,
-    "d274Files": 32
+    "d274Files": 32,
+    "d281Files": 2
   },
   "outfits": {
     "K01": {
@@ -350,6 +351,25 @@
       "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
     },
     {
+      "file": "bottom-trousers-square-navy-pants-v1.webp",
+      "purpose": "the pants layer of bottom-trousers-square-navy (TS-NAV, owner-approved candidate D-279; prepared D-281)",
+      "origin": {
+        "decision": "D-281",
+        "source": "pants-master-v2 (D-279) renderPants, solid colour",
+        "item": {
+          "decision": "D-281 TS-NAV",
+          "method": "pants-master-v2 (D-279) renderPants, solid [48,66,110]",
+          "layerPngSha256": "1787e386c352f7341e0450eea377fab71015330eda2b2e3b381c894a1537fcb3"
+        },
+        "publishedBy": "D-283"
+      },
+      "sha256": "1fdf0d8c70d073db17d1f83aeacb8b195955fdcf01a92ed690fec279a24f146a",
+      "bytes": 69254,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
       "file": "bottom-trousers-square-olive-pants-v1.webp",
       "purpose": "the item layer pants of bottom-trousers-square-olive, unchanged from its run",
       "origin": {
@@ -388,6 +408,25 @@
       },
       "sha256": "9a29ccce089a839cddf5cd8f8125742c26fc9ff6909571825088db74c570ee76",
       "bytes": 1694,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "bottom-trousers-square-sand-pants-v1.webp",
+      "purpose": "the pants layer of bottom-trousers-square-sand (TS-SND, owner-approved candidate D-279; prepared D-281)",
+      "origin": {
+        "decision": "D-281",
+        "source": "pants-master-v2 (D-279) renderPants, solid colour",
+        "item": {
+          "decision": "D-281 TS-SND",
+          "method": "pants-master-v2 (D-279) renderPants, solid [214,190,140]",
+          "layerPngSha256": "a41cdd20de338866fa8099993fc18abd21686ffcf197ab04a66a6a8b77f4dc99"
+        },
+        "publishedBy": "D-283"
+      },
+      "sha256": "aed3c6c907ab2136cf28d4a8252b0fbd933a11cb993f1adc8a3ff4efb837f33d",
+      "bytes": 78918,
       "width": 1024,
       "height": 1536,
       "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
@@ -1787,6 +1826,75 @@
           "bottom-shorts-navy",
           "bottom-capri-lightblue"
         ]
+      }
+    },
+    {
+      "decision": "D-281",
+      "publishedBy": "D-283",
+      "authorisation": "owner 2026-10-31: D-281 GODKENDT: TS-NAV og TS-SND fra pants-master-v2 er godkendt som items, inklusive de fem beskrevne farvepar med lav kontrast. De to bukselag i D-281's filliste, med præcis de registrerede sha256-hashes, må committes og offentliggøres under assets/avatar-northstar/ som udvidelse af D-242's undtagelse fra D-127 §2. Tilladelsen omfatter kun disse to lag.",
+      "files": [
+        "bottom-trousers-square-navy-pants-v1.webp",
+        "bottom-trousers-square-sand-pants-v1.webp"
+      ],
+      "approval": "tools/avatar/fixtures/northstar-wardrobe/pants-master/ps-owner-approval-v1.json",
+      "itemTable": {
+        "bottom-trousers-square-navy": {
+          "category": "bottom",
+          "layers": [
+            "pants"
+          ],
+          "shadows": [
+            "body"
+          ],
+          "shadowsOf": "bottom-trousers-square-olive"
+        },
+        "bottom-trousers-square-sand": {
+          "category": "bottom",
+          "layers": [
+            "pants"
+          ],
+          "shadows": [
+            "body"
+          ],
+          "shadowsOf": "bottom-trousers-square-olive"
+        }
+      },
+      "shadowsReused": {
+        "body": {
+          "publishedFile": "assets/avatar-northstar/bottom-trousers-square-olive-shadow-body-v1.webp",
+          "sha256": "9a29ccce089a839cddf5cd8f8125742c26fc9ff6909571825088db74c570ee76",
+          "identicalForAll": true
+        }
+      },
+      "stagedManifestSha256": "4831fbe230f9eb81fe3a2299d9bf49e9dd78318bfcbf931e873992f8d0d45380",
+      "checked": {
+        "tops": "top-tee-hip-blue, top-tee-hip-cream and the 16 approved print tees",
+        "shoes": "the four shoes",
+        "outfitChecks": {
+          "TS-NAV": {
+            "plainTops": "8/8",
+            "printTees": "64/64"
+          },
+          "TS-SND": {
+            "plainTops": "8/8",
+            "printTees": "64/64"
+          }
+        },
+        "stagedEquivalence": {
+          "what": "northstarCompose(northstarPlanFor({ top, candidate, shoes })) against the pipeline composite (layerProof + applyShadow), RGBA bytes that differ; every top the opt-in can show (blue, cream, the 16 approved print tees) x the four shoes",
+          "outfits": 144,
+          "outfitsDiffering": 0
+        }
+      },
+      "equivalence": {
+        "what": "northstarCompose(northstarPlanFor(outfit)) on the published files against the pipeline composite (layerProof + applyShadow), RGBA bytes that differ; every distinct outfit the opt-in can show with the approved trousers",
+        "reachableOutfits": 110,
+        "outfitsDiffering": 0,
+        "reachableTopShoePairs": 55,
+        "allReachableChecked": true,
+        "notReachableButChecked": 17,
+        "publishedFilesIdenticalToPipeline": 58,
+        "trousersShadowIsOlives": true
       }
     }
   ]

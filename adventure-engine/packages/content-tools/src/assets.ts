@@ -4,11 +4,13 @@
  * checks of the stored files; references from content to assets.
  *
  * Never imported: Flash (SWF), XML documents other than SVG pictures, and saves
- * or other JSON; SVG pictures with scripts are refused as well, so a preview
- * can never run foreign script code (pictures are shown with <img> anyway).
+ * or other JSON. SVG pictures must pass an allowlist (svg.ts): anything
+ * scripted, styled, external or unknown is refused, so a preview can never run
+ * foreign script code (pictures are shown with <img> anyway).
  */
 
 import { sha256Bytes } from "@adventure-engine/core";
+import { svgProblem } from "./svg.ts";
 import { ASSET_ID, IMPORT_LIMITS } from "./limits.ts";
 import { ProjectCode, decodeText, type AssetKind, type Problem, type Project, type ProjectAsset, type ProjectFiles } from "./project.ts";
 
@@ -39,16 +41,9 @@ export function detectAsset(name: string, bytes: Uint8Array): Detected | { reado
       return null;
     }
     if (!/<svg[\s>]/i.test(text)) return null;
-    // Character references are decoded and whitespace removed first, so "&#106;avascript:" or "java\tscript:" cannot hide.
-    // A reference beyond U+10FFFF (or too long to be a number) becomes U+FFFD, as in a browser, and never throws.
-    const char = (cp: number): string => (Number.isInteger(cp) && cp <= 0x10ffff ? String.fromCodePoint(cp) : "�");
-    const plain = text.replace(/&#x([0-9a-f]+);?/gi, (_, h: string) => char(Number.parseInt(h, 16))).replace(/&#([0-9]+);?/g, (_, d: string) => char(Number(d)));
-    const compact = plain.replace(/[\s\u0000-\u001f]+/g, "");
-    if (/<([\w.-]+:)?script\b|\bon[a-z]+\s*=|<([\w.-]+:)?foreignObject\b/i.test(plain) || /(java|vb)script:|data:text\/html/i.test(compact)) {
-      return { forbidden: "SVG pictures with scripts, event handlers or embedded HTML are not imported" };
-    }
-    // DOCTYPE/ENTITY declarations allow entity expansion ("billion laughs"); pictures never need them.
-    if (/<!DOCTYPE|<!ENTITY/i.test(text)) return { forbidden: "SVG pictures with DOCTYPE or ENTITY declarations are not imported" };
+    // Basic static profile (svg.ts): only plain shapes, groups, paint and transforms pass; nothing may refer to anything.
+    const problem = svgProblem(text);
+    if (problem !== null) return { forbidden: `SVG picture refused (only plain, self-contained pictures are imported): ${problem}` };
     return { ext, type: "image/svg+xml", kinds: IMAGE };
   }
   if (ext === "png" && starts(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return { ext, type: "image/png", kinds: IMAGE };
