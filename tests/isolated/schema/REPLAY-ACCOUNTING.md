@@ -53,7 +53,8 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
 - **Ikke anvendt i produktionen:** `20261031230000_claim_daily_reward_exactly_once` (D-284),
-  `20261101120000_night_owl_stop_new_awards` (D-286) og `20261101150000_grading_meaningful_characters`
+  `20261101120000_night_owl_stop_new_awards` (D-286), `20261101140000_deactivate_two_misgraded_questions`
+  (D-290 G2; de to spørgsmål er stadig aktive) og `20261101150000_grading_meaningful_characters`
   (D-290 G1). Alle tre er merget, men produktionen kører stadig funktionerne fra før (læst 2026-11-01:
   `claim_daily_reward` md5 `80273d5d…`, `evaluate_achievements` md5 `9bd9a5d5…`, `authenticated` har
   stadig EXECUTE på `set_night_correct`, `process_question_attempt` er D-280 del 1's udgave). D-284 og
@@ -101,3 +102,16 @@ Se hovedet af `ci-function-stubs.sql`. Kort fortalt:
 - **Kolonneværdier ud over tabellens standardværdier** i `ensure_student_progress` modelleres ikke.
 
 Isoleret E2E kan derfor ikke bevise disse effekter. De kan kun verificeres mod den rigtige implementering.
+
+## Fuldstændigt regnskab (fra 2026-11-01)
+Hver migration med version fra `ACCOUNTED_FROM` (`20261020000000`) skal stå i præcis én liste i
+`replay-plan.mjs`: `NOT_IN_PRODUCTION` (merget, ikke anvendt — også rene datafiler),
+`REPO_AHEAD_OF_PRODUCTION` (ikke anvendt, afspilles efter ejerbeslutning B) eller
+`APPLIED_IN_PRODUCTION` (anvendt og verificeret, med produktionens ledger-version).
+`tests/unit/replay-accounting-complete.test.mjs` fejler, hvis en ny migration ikke er registreret, så en
+merge ikke længere kan afspille en uanvendt fil ved en forglemmelse. En fil flyttes først til
+`APPLIED_IN_PRODUCTION`, når anvendelsen er verificeret.
+
+`20261030211428_question_attempts_v2` (H5) er ikke anvendt i produktionen, men repositoryets
+`process-event` kalder v2-funktionerne bag H5-kontakten. Den står derfor i `REPO_AHEAD_OF_PRODUCTION`
+(uændret afspilning) som åben produktionsopgave under D-266/D-273.
