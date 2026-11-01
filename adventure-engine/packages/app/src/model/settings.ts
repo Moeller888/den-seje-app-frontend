@@ -33,6 +33,15 @@ export function readSettings(search: string, env: { readonly dev: boolean; reado
   };
 }
 
+/**
+ * The engine options that follow from the settings (review M4, follow-up F5):
+ * ?dev=1 gives dev behaviour, but only a development build may load saves
+ * with a wrong checksum.
+ */
+export function engineDevOptions(settings: AppSettings): { readonly devMode: boolean; readonly allowSaveChecksumMismatch: boolean } {
+  return { devMode: settings.dev, allowSaveChecksumMismatch: settings.devBuild };
+}
+
 /** Replace `{name}` placeholders; unknown names stay visible so that mistakes are noticed. */
 export function format(template: string, values: Readonly<Record<string, string>>): string {
   return template.replace(/\{([a-z]+)\}/g, (m, name: string) => values[name] ?? m);
