@@ -52,16 +52,23 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** `20261031230000_claim_daily_reward_exactly_once` (D-284),
-  `20261101120000_night_owl_stop_new_awards` (D-286), `20261101140000_deactivate_two_misgraded_questions`
-  (D-290 G2; de to spørgsmål er stadig aktive) og `20261101150000_grading_meaningful_characters`
-  (D-290 G1). Alle tre er merget, men produktionen kører stadig funktionerne fra før (læst 2026-11-01:
-  `claim_daily_reward` md5 `80273d5d…`, `evaluate_achievements` md5 `9bd9a5d5…`, `authenticated` har
-  stadig EXECUTE på `set_night_correct`, `process_question_attempt` er D-280 del 1's udgave). D-284 og
-  D-286 blev ved en fejl ikke skrevet på listen, da de blev merget, og blev derfor afspillet her. CI
-  spejler produktionen, så de afspilles først, når de er anvendt og verificeret. A, B, kommentarrettelsen og D-280's to filer er
-  anvendt og verificeret og står derfor ikke længere her (se "Anvendt i produktionen efter planens
-  første version").
+- **Ikke anvendt i produktionen** (alle merget; produktionen kører stadig det, der var før — læst
+  2026-11-01):
+  - `20261031230000_claim_daily_reward_exactly_once` (D-284): `claim_daily_reward` har md5 `80273d5d…`.
+  - `20261101120000_night_owl_stop_new_awards` (D-286): `evaluate_achievements` har md5 `9bd9a5d5…`, og
+    `authenticated` har stadig EXECUTE på `set_night_correct`.
+  - `20261101140000_deactivate_two_misgraded_questions` (D-290 G2): de to spørgsmål er stadig aktive.
+  - `20261101150000_grading_meaningful_characters` (D-290 G1): `process_question_attempt` er D-280 del
+    1's udgave.
+  - `20261101190000_question_attempts_v2_bootstrap` og
+    `20261101190100_question_attempts_v2_align_grading` (H5-integrationen). Produktionen har hverken
+    `question_attempts` eller `_v2`-funktionerne (katalog, 2026-11-01), og begge filer kræver G1 først.
+
+  D-284 og D-286 blev ved en fejl ikke skrevet på listen, da de blev merget, og blev derfor afspillet
+  her. Hver fil afspilles først, når den er anvendt og verificeret, og i den rækkefølge filerne selv
+  håndhæver: G1, derefter bootstrappen, derefter alignmentet. A, B, kommentarrettelsen og D-280's to
+  filer er anvendt og verificeret og står derfor ikke længere her (se "Anvendt i produktionen efter
+  planens første version").
 
 ## Anvendt i produktionen efter planens første version
 En fil fjernes fra `NOT_IN_PRODUCTION`, først når den er anvendt **og** verificeret i produktionen.
@@ -77,6 +84,33 @@ Filen selv ændres aldrig.
 | `20261031194700_mc_length_cue_top10.sql` | `20261101102339 mc_length_cue_top10` | 2026-11-01 via `apply_migration`, filen ordret fra `main` `7523ec2` (SHA-256 `fc94f7c0e5fff7c85147e4220813c92ef268b5ccc3dae8c5cc884e14088501a9`; den gemte sætning md5-identisk med filen; ejergodkendt). Header historisk, ændres ikke | Ja, læsende 2026-11-01: de ti spørgsmål med de godkendte efter-hashes; 5 åbne besvarelser med nyt facit, ellers byte-identiske; 197 afsluttede besvarelser byte-identiske | **Springes over** som ren data (ingen skema-token); de ti produktionsspørgsmål findes ikke i den isolerede database |
 
 Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i produktionen, og senere D-280 del 1 i versionsorden.
+
+**H5 og G1: forskellen mellem repository og produktion.**
+
+| | Repository (filnavnsorden) | Produktion | Isoleret afspilning i dag |
+|---|---|---|---|
+| `20261030211428` (H5 PR 1) | anvendt | ikke anvendt; filen afviser sig selv efter D-280 del 1 | **anvendes** (som før #522) |
+| D-278, D-280 del 1 | anvendt | anvendt 2026-11-01 | anvendes |
+| D-280 del 2 | anvendt | anvendt 2026-11-01 | springes over (ren data) |
+| `20261101150000` (G1) | anvendt | **ikke anvendt** | springes over (`NOT_IN_PRODUCTION`) |
+| `20261101190000` (bootstrap) | verificerer H5, fratager `service_role` EXECUTE på `process_question_attempt_v2` | **ikke anvendt**; skal opbygge H5 efter G1 | springes over (`NOT_IN_PRODUCTION`) |
+| `20261101190100` (alignment) | giver `_v2` bedømmelsen fra D-280 og G1 og giver `service_role` EXECUTE tilbage | **ikke anvendt** | springes over (`NOT_IN_PRODUCTION`) |
+
+- **Den isolerede database har i dag H5-skemaet fra `20261030211428`.** Dens
+  `process_question_attempt_v2` er den oprindelige: aliaser kun ved præcis to poster, kun `[a-z0-9]`
+  sammenlignes, og `service_role` har EXECUTE. Det er en kendt afvigelse fra produktionen, som slet
+  ikke har H5. Den er uændret fra før #522.
+  - Intet i den isolerede E2E kalder `_v2`: `tests/h5-submission.spec.ts` opsnapper `process-event`.
+  - Afvigelsen forsvinder, når G1 og de to H5-filer er anvendt i produktionen og fjernet fra
+    `NOT_IN_PRODUCTION`.
+- **Produktionens eneste vej til H5** er: G1 → `20261101190000` → `20261101190100`. Uden G1 afviser
+  både bootstrappen og alignmentet sig selv, og intet ændres.
+  - Mellem de to H5-filer kan ingen API-rolle kalde den gamle `_v2`.
+  - Alignmentet kontrollerer G1's to hjælpefunktioner: krop, `IMMUTABLE`, `search_path`, ejer og at
+    ingen API-rolle har EXECUTE.
+- **Bevis.** `tests/unit/question-attempts-v2-bootstrap.test.mjs` (PGlite) viser, at
+  repositoryets rækkefølge og produktionens rækkefølge ender i identisk skema og bedømmer ens med G1.
+  `question-attempts-v2-bootstrap-concurrency.test.mjs` viser det samme på PostgreSQL 17.
 
 ## Repositoryet er foran produktionen (anvendes alligevel)
 Ejerbeslutning 2026-10-28 (mulighed B): den isolerede CI tester repositoryets kode mod det skema,

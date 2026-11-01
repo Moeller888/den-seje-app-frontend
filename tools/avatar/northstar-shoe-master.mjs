@@ -61,6 +61,13 @@ export const SPEC_V2 = Object.freeze({ ...SPEC, revision: "shoe-master-v2", mode
  *                  8-neighbours), so the outline does not switch rule from one pixel to the next.
  *  No blur: each pixel keeps its own source lightness; only the decisions that were binary are made continuous. The alpha is unchanged. */
 export const SPEC_V3 = Object.freeze({ ...SPEC_V2, revision: "shoe-master-v3-edge", edge: Object.freeze({ inkSoft: [0.95, 0.6], blendRadius: 5 }) });
+/** D-297 PROTOTYPE: v3's edge rules with ONE change at a border between two materials. v3 gave a line's core the DARKER material's line
+ *  lightness on both sides (no split, but a white lace on navy got a navy-dark outline: heavier). A plain mix across the line (tried
+ *  first) lightened the seams on the dark side. v4: each side of the line keeps ITS OWN material's line (lightness and hue), and the
+ *  border between the two sides follows the line's geometric middle — the pixel takes the material of the NEARER field (t > 0.5: the
+ *  other one), with a narrow smooth step (t from 0.35 to 0.65) — instead of the order in which the breadth-first labelling reached it,
+ *  which made the colour flip ALONG the line. v1–v3 stay as recorded. */
+export const SPEC_V4 = Object.freeze({ ...SPEC_V3, revision: "shoe-master-v4-line", lineBlend: "nearer", lineStep: Object.freeze([0.35, 0.65]) });
 export const GROUPS = Object.freeze(["upper", "toe", "sole", "laces", "tongue"]);
 /** sRGB ↔ OKLab (D-291). */
 export function oklab(rgb) { const [r, g, b] = rgb.map((v) => toLin(v)), l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), q = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
@@ -168,9 +175,10 @@ function renderShoeV3(master, src, d) {
   const coreL = (i, m) => m.Le + Math.min((Ls[i] - m.b) / Math.max(w[i], 0.05) * m.down, -lineMin);
   const chroma = (L, Lref, M, hl) => { const f = hl ? Math.max(0, 1 - (L - Lref) / Math.max(1e-6, 1 - Lref)) : Math.min(1, L / Math.max(1e-6, M)); return f; };
   for (let i = 0; i < N; i++) { const a = src[i * 4 + 3]; if (!a) continue; const g = master.group[i]; out[i * 4 + 3] = a; if (g < 0) { out.set(src.subarray(i * 4, i * 4 + 3), i * 4); continue; }
-    const m = mats[g], g2 = other[i], wi = w[i], tw = g2 >= 0 ? t[i] * wi : 0, dlf = fieldDl(i, m); let lab;
+    const m = mats[g], g2 = other[i], wi = w[i], nearer = master.spec.lineBlend === "nearer", st = nearer && g2 >= 0 ? (() => { const [a0, a1] = master.spec.lineStep, z = Math.max(0, Math.min(1, (t[i] - a0) / (a1 - a0))); return z * z * (3 - 2 * z); })() : 0;
+    const tw = g2 >= 0 ? (nearer ? st : t[i]) * wi : 0, dlf = fieldDl(i, m); let lab;
     if (!wi) { const L = Math.max(0.02, Math.min(1, m.Le + dlf)), f = chroma(L, m.Le, m.M[0], dlf > 0); lab = [L, m.M[1] * f, m.M[2] * f]; }   // a field pixel: v2's
-    else { const core = g2 >= 0 ? Math.min(coreL(i, m), coreL(i, mats[g2])) : coreL(i, m), L = Math.max(0.02, Math.min(1, (1 - wi) * (m.Le + dlf) + wi * core));
+    else { const core = g2 < 0 ? coreL(i, m) : nearer ? coreL(i, m) * (1 - st) + coreL(i, mats[g2]) * st : Math.min(coreL(i, m), coreL(i, mats[g2])), L = Math.max(0.02, Math.min(1, (1 - wi) * (m.Le + dlf) + wi * core));
       const Ma = m.M[1] * (1 - tw) + (g2 >= 0 ? mats[g2].M[1] * tw : 0), Mb = m.M[2] * (1 - tw) + (g2 >= 0 ? mats[g2].M[2] * tw : 0), Mref = m.M[0] * (1 - tw) + (g2 >= 0 ? mats[g2].M[0] * tw : 0), f = chroma(L, Mref, Mref, false);
       lab = [L, Ma * f, Mb * f]; }
     let rgb = fromOklab(lab);
