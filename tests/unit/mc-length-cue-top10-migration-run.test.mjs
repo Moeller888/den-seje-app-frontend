@@ -155,7 +155,7 @@ test("the files: unique versions after the newest migration on main, in order, D
     assert.equal(files.filter((x) => x.startsWith(f.slice(0, 15))).length, 1, `${f}: version is unique`);
   }
   assert.ok(PATHS_FILE < FILE, "the answer paths sort first");
-  assert.ok(files.every((f) => f === FILE || f === PATHS_FILE || f.slice(0, 14) < "20261031194600"), "newest when written");
+  assert.ok(PATHS_FILE.slice(0, 14) > "20261030211428", "after the newest migration on main when written");
   const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
   for (const sql of [FUNCTIONS, MIGRATION]) {
     assert.match(sql, /IKKE anvendt i produktion\. Må KUN anvendes via apply_migration med særskilt ejer-autorisation/);
@@ -173,12 +173,14 @@ test("the files: unique versions after the newest migration on main, in order, D
   assert.deepEqual(DATA_GUARD, AFTER_MD5, "the data file requires exactly the answer paths of the first file");
 });
 
-test("isolated E2E mirrors production: neither file is replayed until it is applied there", () => {
+test("isolated E2E mirrors production after the 2026-11-01 application: part 1 replays, part 2 is data", () => {
   const files = readdirSync(join(ROOT, "supabase", "migrations")).filter((f) => /^\d{14}_.+\.sql$/.test(f));
-  for (const f of [PATHS_FILE, FILE]) {
-    assert.equal(planReplay(files, readMigration).plan.find((p) => p.file === f).action, "skip", f);
-    assert.match(NOT_IN_PRODUCTION[f], /not applied in production/);
-  }
+  const plan = planReplay(files, readMigration).plan;
+  for (const f of [PATHS_FILE, FILE]) assert.equal(NOT_IN_PRODUCTION[f], undefined, f);
+  assert.equal(plan.find((p) => p.file === PATHS_FILE).action, "apply", "the answer paths production now runs");
+  const data = plan.find((p) => p.file === FILE);
+  assert.equal(data.action, "skip");
+  assert.match(data.reason, /data-only/, "the ten production questions are not in the isolated database");
 });
 
 test("the data file refuses to run before the answer paths, with zero changes", async () => {
