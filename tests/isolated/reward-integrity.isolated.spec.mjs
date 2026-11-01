@@ -96,7 +96,10 @@ async function serveAndAnswer(request, p, q, correct) {
   const wrong = q.content.options.find((o) => o !== q.content.correct);
   const res = await request.post(`${SUPA}/functions/v1/process-event`, {
     headers: asPupil(p),
-    data: { student_id: p.id, question_instance_id: instanceId, answer: correct ? q.content.correct : wrong, question_shown_at: new Date().toISOString() },
+    data: { student_id: p.id, question_instance_id: instanceId, answer: correct ? q.content.correct : wrong,
+      // As the real client (app.js: questionShownAt = Date.now()): epoch milliseconds. process_question_attempt
+      // takes p_question_shown_at bigint.
+      question_shown_at: Date.now() },
   });
   expect(res.status(), await res.text()).toBe(200);
   expect((await res.json()).status).toBe(correct ? "correct" : "incorrect");
