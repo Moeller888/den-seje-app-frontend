@@ -48,6 +48,19 @@ export const SPEC = Object.freeze({
  *    colour      — the material's own hue; its chroma scaled with the lightness in shadows and toward white in highlights.
  *  The outer contour, its fringe and the alpha are as in v1. */
 export const SPEC_V2 = Object.freeze({ ...SPEC, revision: "shoe-master-v2", model: "oklab", lineMin: 0.08, volumeRadius: 6, maxGain: 3 });
+/** D-293 PROTOTYPE: v2 plus three EDGE rules, the same for every design (v1 and v2 stay as recorded). v1/v2 decide three things per
+ *  pixel with a hard yes/no where the source itself is antialiased, which makes edges step:
+ *    inkness     — a line is not a yes/no: w = clamp((inkSoft[0] − r) / (inkSoft[0] − inkSoft[1]), 0, 1) from the pixel's ratio r to the
+ *                  brightest pixel within inkRadius, so a line's antialiased flank is darkened in proportion (v2: only r < inkRatio, by
+ *                  lineMin, its flank not at all);
+ *    group blend — a pixel INSIDE a drawn line (weighted by its inkness) takes a mix of its own group's and the nearest other group's
+ *                  material's HUE by its distances to their fields (within blendRadius), and the darker of the two line lightnesses, so
+ *                  the colour changes inside the line and smoothly, instead of flipping between two materials pixel by pixel where the
+ *                  breadth-first labelling met (a field's own flank is not blended: no light halo beside a dark line);
+ *    outline     — the "never lighter than drawn" cap of the outer contour is applied with a weight (1 on the contour, 0.5 on its
+ *                  8-neighbours), so the outline does not switch rule from one pixel to the next.
+ *  No blur: each pixel keeps its own source lightness; only the decisions that were binary are made continuous. The alpha is unchanged. */
+export const SPEC_V3 = Object.freeze({ ...SPEC_V2, revision: "shoe-master-v3-edge", edge: Object.freeze({ inkSoft: [0.95, 0.6], blendRadius: 5 }) });
 export const GROUPS = Object.freeze(["upper", "toe", "sole", "laces", "tongue"]);
 /** sRGB ↔ OKLab (D-291). */
 export function oklab(rgb) { const [r, g, b] = rgb.map((v) => toLin(v)), l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), q = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
@@ -63,10 +76,10 @@ export function buildShoeMaster(src, t, spec = SPEC) {
   const P = src, A = (i) => P[i * 4 + 3];
   // the ink: a thin-line detector against the local brightest pixel; partial pixels are edge, not field
   const L = new Float32Array(N); for (let i = 0; i < N; i++) if (A(i)) L[i] = lum(P, i);
-  const ink = new Uint8Array(N), r = spec.inkRadius;
+  const ink = new Uint8Array(N), r = spec.inkRadius, ratio = spec.edge ? new Float32Array(N).fill(1) : null;
   for (let i = 0; i < N; i++) { if (!A(i)) continue; if (A(i) < 128) { ink[i] = 1; continue; } const x = i % W, y = (i / W) | 0; let mx = 0;
     for (let dy = -r; dy <= r; dy++) { const yy = y + dy; if (yy < 0 || yy >= H) continue; for (let dx = -r; dx <= r; dx++) { const xx = x + dx; if (xx < 0 || xx >= W) continue; const j = yy * W + xx; if (A(j) >= 128 && L[j] > mx) mx = L[j]; } }
-    if (mx > 0 && L[i] / mx < spec.inkRatio) ink[i] = 1; }
+    if (mx > 0 && L[i] / mx < spec.inkRatio) ink[i] = 1; if (ratio && mx > 0) ratio[i] = L[i] / mx; }
   // the fields: connected non-ink pixels; a seed labels the field it lies in
   const comp = new Int32Array(N).fill(-1); let nComp = 0;
   for (let s = 0; s < N; s++) { if (!A(s) || ink[s] || comp[s] >= 0) continue; const id = nComp++, q = [s]; comp[s] = id;
@@ -103,14 +116,25 @@ export function buildShoeMaster(src, t, spec = SPEC) {
       const box = (A, x0, y0, x1, y1) => A[y1 * (W + 1) + x1] - A[y0 * (W + 1) + x1] - A[y1 * (W + 1) + x0] + A[y0 * (W + 1) + x0];
       for (let i = 0; i < N; i++) { if (group[i] !== k || !A(i)) continue; const x = i % W, y = (i / W) | 0, x0 = Math.max(0, x - R), y0 = Math.max(0, y - R), x1 = Math.min(W, x + R + 1), y1 = Math.min(H, y + R + 1), c = box(C, x0, y0, x1, y1); dLow[i] = c ? box(S, x0, y0, x1, y1) / c : 0; } }
     v2 = { Ls, baseL, reach, dLow }; }
+  // D-293 (v3 only): the inkness, the nearest other group and the blend weight, the outline weight
+  let edge = null; if (spec.edge) { const [s0, s1] = spec.edge.inkSoft, R = spec.edge.blendRadius, w = new Float32Array(N), other = new Int8Array(N).fill(-1), t = new Float32Array(N), wc = new Float32Array(N);
+    for (let i = 0; i < N; i++) { if (!A(i)) continue; w[i] = A(i) < 128 ? 1 : Math.max(0, Math.min(1, (s0 - ratio[i]) / (s0 - s1)));
+      if (field[i] && !w[i]) continue; const x = i % W, y = (i / W) | 0, best = new Array(GROUPS.length).fill(Infinity);   // a line's field-side flank too (its own field at distance 0: no hue mix)
+      for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { const j = (y + dy) * W + x + dx; if (j < 0 || j >= N || !field[j]) continue; const dd = Math.hypot(dx, dy); if (dd < best[group[j]]) best[group[j]] = dd; }
+      const g = group[i]; let g2 = -1; for (let k = 0; k < GROUPS.length; k++) if (k !== g && best[k] < Infinity && (g2 < 0 || best[k] < best[g2])) g2 = k;
+      if (g2 >= 0) { const d1 = field[i] ? 0 : Math.min(best[g], R + 1), d2 = best[g2]; other[i] = g2; t[i] = d1 / (d1 + d2); } }
+    for (let i = 0; i < N; i++) { if (!A(i)) continue; if (contour[i]) { wc[i] = 1; continue; } const x = i % W, y = (i / W) | 0;
+      for (let dy = -1; dy <= 1 && !wc[i]; dy++) for (let dx = -1; dx <= 1; dx++) { const j = (y + dy) * W + x + dx; if (j >= 0 && j < N && contour[j]) { wc[i] = 0.5; break; } } }
+    edge = { w, other, t, wc }; }
   const count = (k) => { let n = 0; for (let i = 0; i < N; i++) if (group[i] === k) n++; return n; };
-  return { revision: spec.revision || REVISION, spec, v2, ink, group, field, base, shade, light, contour, fringe: Int32Array.from(fringe), unassigned, fields: nComp, seededFields: seeded.size,
+  return { revision: spec.revision || REVISION, spec, v2, edge, ink, group, field, base, shade, light, contour, fringe: Int32Array.from(fringe), unassigned, fields: nComp, seededFields: seeded.size,
     sizes: Object.fromEntries(GROUPS.map((g, k) => [g, count(k)])), inkPx: ink.reduce((s, v) => s + v, 0), contourPx: contour.reduce((s, v) => s + v, 0) };
 }
 
 /** A design's shoe layer: { upper, toe, sole, laces, tongue } (sRGB triples; tongue defaults to upper). The alpha is the source's. */
 export function renderShoe(master, src, design) {
   const d = { ...design, tongue: design.tongue || design.upper }; for (const g of GROUPS) if (!Array.isArray(d[g])) throw new Error("the design has no " + g);
+  if (master.edge) return renderShoeV3(master, src, d);
   if (master.v2) return renderShoeV2(master, src, d);
   const M = GROUPS.map((g) => d[g].map(toLin)), out = new Uint8ClampedArray(N * 4);
   for (let i = 0; i < N; i++) { const a = src[i * 4 + 3]; if (!a) continue; const k = master.group[i]; out[i * 4 + 3] = a; if (k < 0) { out.set(src.subarray(i * 4, i * 4 + 3), i * 4); continue; }
@@ -130,6 +154,28 @@ function renderShoeV2(master, src, d) {
     if (master.ink[i]) dl = Math.min(d0 > 0 ? d0 : d0 * down, -lineMin);
     const L = Math.max(0.02, Math.min(1, Le + dl)), f = dl > 0 ? Math.max(0, 1 - (L - Le) / Math.max(1e-6, 1 - Le)) : Math.min(1, L / Math.max(1e-6, M[0]));
     out.set(fromOklab([L, M[1] * f, M[2] * f]), i * 4); }
+  const f = master.fringe; for (let q = 0; q < f.length; q += 2) { const i = f[q], j = f[q + 1]; out[i * 4] = out[j * 4]; out[i * 4 + 1] = out[j * 4 + 1]; out[i * 4 + 2] = out[j * 4 + 2]; }
+  return out;
+}
+
+/** D-293: the edge prototype's render (SPEC_V3): v2's rule per material, the three edge rules above. */
+function renderShoeV3(master, src, d) {
+  const { Ls, baseL, reach, dLow } = master.v2, { w, other, t, wc } = master.edge, { lineMin, maxGain } = master.spec, out = new Uint8ClampedArray(N * 4);
+  const mats = GROUPS.map((g, k) => { const M = oklab(d[g]), Le = Math.min(M[0], 1 - reach[k]); return { M, Le, up: Math.min(maxGain, Math.max(1, Math.sqrt((1 - Le) / Math.max(1e-6, 1 - baseL[k])))), down: Math.min(1, Math.sqrt(Le / baseL[k])), b: baseL[k] }; }), Mlin = GROUPS.map((g) => d[g].map(toLin));
+  // per material: the field's lightness (v2's volume, and its grain outside the line) and the line core's lightness (the
+  // source's line darkness at full inkness, at least lineMin under the material); a pixel is (1 − w) field + w line core
+  const fieldDl = (i, m) => { const d0 = Ls[i] - m.b, lo = dLow[i]; return (lo > 0 ? lo * m.up : lo * m.down) + (w[i] ? 0 : (d0 - lo) * m.down); };   // on a line pixel the darkness is the line's (w), not grain
+  const coreL = (i, m) => m.Le + Math.min((Ls[i] - m.b) / Math.max(w[i], 0.05) * m.down, -lineMin);
+  const chroma = (L, Lref, M, hl) => { const f = hl ? Math.max(0, 1 - (L - Lref) / Math.max(1e-6, 1 - Lref)) : Math.min(1, L / Math.max(1e-6, M)); return f; };
+  for (let i = 0; i < N; i++) { const a = src[i * 4 + 3]; if (!a) continue; const g = master.group[i]; out[i * 4 + 3] = a; if (g < 0) { out.set(src.subarray(i * 4, i * 4 + 3), i * 4); continue; }
+    const m = mats[g], g2 = other[i], wi = w[i], tw = g2 >= 0 ? t[i] * wi : 0, dlf = fieldDl(i, m); let lab;
+    if (!wi) { const L = Math.max(0.02, Math.min(1, m.Le + dlf)), f = chroma(L, m.Le, m.M[0], dlf > 0); lab = [L, m.M[1] * f, m.M[2] * f]; }   // a field pixel: v2's
+    else { const core = g2 >= 0 ? Math.min(coreL(i, m), coreL(i, mats[g2])) : coreL(i, m), L = Math.max(0.02, Math.min(1, (1 - wi) * (m.Le + dlf) + wi * core));
+      const Ma = m.M[1] * (1 - tw) + (g2 >= 0 ? mats[g2].M[1] * tw : 0), Mb = m.M[2] * (1 - tw) + (g2 >= 0 ? mats[g2].M[2] * tw : 0), Mref = m.M[0] * (1 - tw) + (g2 >= 0 ? mats[g2].M[0] * tw : 0), f = chroma(L, Mref, Mref, false);
+      lab = [L, Ma * f, Mb * f]; }
+    let rgb = fromOklab(lab);
+    if (wc[i] > 0) { const cap = [0, 1, 2].map((c) => Math.min(src[i * 4 + c], toSrgb(Math.min(1, Mlin[g][c] * master.shade[i] + master.light[i])), rgb[c])); rgb = rgb.map((v, c) => Math.round(v * (1 - wc[i]) + cap[c] * wc[i])); }
+    out.set(rgb, i * 4); }
   const f = master.fringe; for (let q = 0; q < f.length; q += 2) { const i = f[q], j = f[q + 1]; out[i * 4] = out[j * 4]; out[i * 4 + 1] = out[j * 4 + 1]; out[i * 4 + 2] = out[j * 4 + 2]; }
   return out;
 }
