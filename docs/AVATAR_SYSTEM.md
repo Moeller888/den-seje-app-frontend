@@ -385,6 +385,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **SV-1 result — D-301 (one call sent and received; REJECTED SOURCE by the locked evaluation; D-300 closed; method INCOMPLETE pending the owner's visual review; no shoe approved).**
+  - **Passed.** The independent source passed every quality and processing rule: detail 1 px, line inventory 0.89–1.04×, volume ≥ 0.75×, antialiasing 99 %, no halo left. The chain kept the lines in all five colours.
+  - **Rejected.** The collar check v2 rejected it: a band 3 px over the ankle (limit 2) and 6 px of foot exposed inside the shoe. Every variant is therefore NOT USABLE. Outfits: 27 technical PASS, 3 COMBO-2 (KNOWN_D291, charcoal × trousers).
+  - **Separate findings.** A possible false alarm: the collar reads naturally at 1:1. A possible missed alarm: a colour line at the three-field toe corner in the contrast designs (v2 and v4).
+  - See `docs/decisions/D-301.md`.
 - **Shoe validation prepared — D-299 (method lock and plan) and D-300 (authorisation of one call SV-1; prepared, NOT executed; 0 image calls; no shoe approved).**
   - **Lock.** D-297's method is pinned by sha256 in `sv-plan-v1.json`: master v4, evaluation v2, the K-source geometry, the new evaluator `northstar-shoe-validation-evaluate.mjs`, the measures and the unchanged outfit check. Its parameters are tested against the code, and the adapter refuses a send if any file differs on origin/main.
   - **New rules.** Painted volume: upper, toe cap and sole must keep ≥ 0.7× the published drawing's. Antialiasing is measured on the source, ≥ 50 % of the silhouette edge, because the 4× downscale alone makes partial alpha.
