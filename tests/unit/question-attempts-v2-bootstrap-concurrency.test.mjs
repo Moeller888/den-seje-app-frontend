@@ -24,7 +24,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
-  D280_TOP10, REPO_ORDER, PROD_ORDER, MC_V2, PQA, MD5, TOP10_BEFORE, TOP10_ID, uid, baseSql, migrationSql, FINGERPRINT_SQL,
+  withTop10, REPO_ORDER, PROD_ORDER, MC_V2, PQA, MD5, TOP10_BEFORE, TOP10_ID, uid, baseSql, migrationSql, FINGERPRINT_SQL,
 } from "./helpers/h5-integration-chain.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -59,8 +59,7 @@ async function createDb(order, { top10 = false } = {}) {
   const url = u.toString();
   const c = await connect(url, false);
   for (const sql of baseSql({ realServer: true })) await c.query(sql);
-  for (const f of order) await c.query(migrationSql(f));
-  if (top10) await c.query(migrationSql(D280_TOP10));
+  for (const f of top10 ? withTop10(order) : order) await c.query(migrationSql(f));
   return { url, su: c };
 }
 async function connect(url, asService = true) {
@@ -99,7 +98,7 @@ test("real PostgreSQL 17: H5 bootstrap + alignment — same schema on both histo
     const fp = (await prod.su.query(FINGERPRINT_SQL)).rows[0].f;
     assert.deepEqual(fp, fr);
     assert.equal(fp.functions[MC_V2.replace("public.", "")][0], MD5.mcV2Aligned);
-    assert.equal(fp.functions[PQA.replace("public.", "")][0], MD5.pqaD280);
+    assert.equal(fp.functions[PQA.replace("public.", "")][0], MD5.pqaG1);
     await done(repo.su, prod.su);
   });
 

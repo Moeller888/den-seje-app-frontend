@@ -1,4 +1,5 @@
--- H5 integration 1 of 2 (D-266, D-273): the H5 schema on a database that already runs D-280 part 1.
+-- H5 integration 1 of 2 (D-266, D-273): the H5 schema on a database that already runs D-280 part 1
+-- and D-290 G1.
 --
 -- WHY THIS FILE EXISTS
 -- 20261030211428_question_attempts_v2 creates the H5 schema and refuses to run unless
@@ -9,16 +10,19 @@
 -- applied there — by design. It is not edited (merged migrations are append-only). This file brings
 -- BOTH histories to the same, verified H5 schema:
 --
---   repository replay   20261030211428 → D-278 → D-280 part 1 → THIS FILE (verifies, changes nothing)
---   production          D-280 part 1 + D-278 → THIS FILE (creates the H5 schema)
+--   repository   20261030211428 → D-278 → D-280 part 1 → G1 → THIS FILE (verifies; only takes
+--                EXECUTE on process_question_attempt_v2 from service_role, see below)
+--   production   D-280 part 1 + D-278 → G1 → THIS FILE (creates the H5 schema)
 --
--- and 20261101190100 then aligns process_question_attempt_v2 with D-280's grading in both.
+-- and 20261101190100 then aligns process_question_attempt_v2 with the grading of D-280 and G1 in both.
+-- G1 (20261101150000, D-290) must be applied first: process_question_attempt must have G1's body.
 --
 -- HOW (no condition is ever skipped silently)
 --   1. State check, before anything is changed:
 --      * the seven functions that update question_instances.answered / repeat_count must have
---        exactly the bodies production runs after D-280 part 1 (md5 below; read 2026-11-01); any
---        other body stops the migration;
+--        exactly the bodies production runs after D-280 part 1 (md5 below; read 2026-11-01), with
+--        process_question_attempt in G1's version (2e05e769…); any other body — also D-280 part 1's
+--        process_question_attempt (328ea8f9…), i.e. G1 not yet applied — stops the migration;
 --      * no other function may update answered or repeat_count (the same scan as 20261030211428,
 --        which also knows the two _v2 functions once they exist);
 --      * the H5 objects (table, index, unique key, four functions, two triggers) must be either ALL
@@ -36,8 +40,14 @@
 -- (tests/unit/question-attempts-v2-bootstrap.test.mjs proves both). A failed run leaves nothing to
 -- clean up and can simply be run again once the cause is fixed.
 -- process_question_attempt_v2 keeps the original grading here (aliases only with EXACTLY two
--- entries); 20261101190100 changes it to D-280's rule. Nothing calls either _v2 function before H5
--- is activated (process-event in production is version 34, ENABLE_H5_SUBMISSIONS = false).
+-- entries, only [a-z0-9] compared); 20261101190100 changes it to the grading of D-280 and G1. Until
+-- then no API role may call it: after the creation (or the verification) this block takes EXECUTE on
+-- process_question_attempt_v2 from service_role, and the final check requires that. 20261101190100
+-- grants it back together with the aligned body, so _v2 can never be called with the old grading.
+-- This is the only change on the repository history, where 20261030211428 had granted it.
+-- process_text_answer_v2 keeps service_role's EXECUTE: it does not grade (process-event passes the
+-- verdict). Nothing calls either _v2 function before H5 is activated (process-event in production is
+-- version 34; js/answer-submission.js ENABLE_H5_SUBMISSIONS = false).
 --
 -- WHAT THIS FILE DOES NOT DO
 --   No row is written or changed: question_attempts starts empty; question_instances only gains the
@@ -58,7 +68,7 @@
 DO $h5_bootstrap$
 DECLARE
   v_expected CONSTANT jsonb := jsonb_build_object(
-    'public.process_question_attempt(uuid,uuid,text,bigint)',                  '328ea8f9a4fd260407b582dcecb7dfdf',
+    'public.process_question_attempt(uuid,uuid,text,bigint)',                  '2e05e769a102f61ffef0ea4dd550c55b',
     'public.process_text_answer(uuid,uuid,text,boolean)',                      'e80727ea87ffdc64988e5a09dcb20356',
     'public.release_open_question_outside(text[])',                            '7b7693b3bff869a113e8e97e16bb456a',
     'public.request_repeat_question(smallint,text[])',                         '54ab9354d309c014e94e902fd6f885f4',
@@ -77,7 +87,7 @@ BEGIN
       RAISE EXCEPTION 'H5 bootstrap: % findes ikke', r.key;
     END IF;
     IF v_hash IS DISTINCT FROM r.value THEN
-      RAISE EXCEPTION 'H5 bootstrap: % har ikke D-280 del 1''s krop (md5 %, forventet %) — gennemgå rundevagten og _v2 igen', r.key, v_hash, r.value;
+      RAISE EXCEPTION 'H5 bootstrap: % har ikke den gennemgåede krop efter D-280 del 1 og D-290 G1 (md5 %, forventet %) — gennemgå rundevagten og _v2 igen', r.key, v_hash, r.value;
     END IF;
   END LOOP;
 
@@ -592,6 +602,11 @@ $function$;$h5_ddl_15$;
     RAISE EXCEPTION 'H5 bootstrap: H5-skemaet findes kun delvist (% af 9 objekter) — ukendt tilstand, intet ændres', v_present;
   END IF;
 
+  -- process_question_attempt_v2 still grades as before D-280 and G1: no API role may call it until
+  -- 20261101190100 has aligned it (both states; the final check below requires it).
+  EXECUTE $h5_hold$REVOKE EXECUTE ON FUNCTION public.process_question_attempt_v2(uuid, uuid, text, integer, uuid, text, text)
+  FROM service_role;$h5_hold$;
+
   -- ── 3. Final check (both states) ──────────────────────────────────────────────────────────────
   -- Function bodies (md5 of prosrc is the body text verbatim: the same on every PostgreSQL version),
   -- SECURITY DEFINER and search_path exactly as 20261030211428 creates them.
@@ -612,10 +627,13 @@ $function$;$h5_ddl_15$;
     END IF;
   END LOOP;
 
-  -- EXECUTE: the two answer functions for service_role only; the trigger functions for no API role.
-  IF NOT has_function_privilege('service_role', 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)', 'EXECUTE')
-     OR NOT has_function_privilege('service_role', 'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)', 'EXECUTE') THEN
-    RAISE EXCEPTION 'H5 bootstrap: service_role mangler EXECUTE på _v2';
+  -- EXECUTE: process_text_answer_v2 for service_role only; process_question_attempt_v2 (old grading)
+  -- and the trigger functions for no API role.
+  IF NOT has_function_privilege('service_role', 'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'H5 bootstrap: service_role mangler EXECUTE på process_text_answer_v2';
+  END IF;
+  IF has_function_privilege('service_role', 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'H5 bootstrap: process_question_attempt_v2 kan kaldes af service_role før 20261101190100 har tilpasset bedømmelsen';
   END IF;
   FOR r IN SELECT p.oid::regprocedure::text AS sig, p.proacl::text[] AS acl FROM pg_catalog.pg_proc p
            WHERE p.oid IN (to_regprocedure('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)'), to_regprocedure('public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)'),

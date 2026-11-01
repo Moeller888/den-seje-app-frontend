@@ -344,7 +344,7 @@ const REVIEWED_LATER_REPEAT_USERS = {
     "(proven in question-attempts-v2-bootstrap.test.mjs); on one with H5 it only verifies them. It " +
     "redefines none of this migration's functions (its state check only reads their md5) and carries " +
     "exactly the same two question_instances statements as 20261030211428, pinned below.",
-  "20261101190100_question_attempts_v2_align_d280.sql":
+  "20261101190100_question_attempts_v2_align_grading.sql":
     "H5 integration: re-creates only process_question_attempt_v2 (D-280's alias rule); it redefines none " +
     "of this migration's functions and does not touch question_instances.",
 };
@@ -366,7 +366,7 @@ test("reviewed later repeat users redefine none of this migration's functions", 
     ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql",
       "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql",
       "20261030211428_question_attempts_v2.sql", "20261101190000_question_attempts_v2_bootstrap.sql",
-      "20261101190100_question_attempts_v2_align_d280.sql"],
+      "20261101190100_question_attempts_v2_align_grading.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);

@@ -338,12 +338,14 @@ const REVIEWED_LATER_READERS = {
     "H5 integration: creates (on a database without H5) or verifies (on one with it) exactly the objects " +
     "of 20261030211428 — its sections 1–6 EXECUTEd byte for byte — so it reads question_instances exactly " +
     "as that file's _v2 functions do (one instance by id and student_id, service_role only). Its state " +
-    "check reads only the catalog. No policy, RLS or table privilege on question_instances is touched " +
+    "check reads only the catalog; it also takes EXECUTE on process_question_attempt_v2 from service_role until " +
+    "20261101190100 aligns the grading. No policy, RLS or table privilege on question_instances is touched " +
     "(proven in question-attempts-v2-bootstrap.test.mjs: both histories end in the same public schema).",
-  "20261101190100_question_attempts_v2_align_d280.sql":
-    "H5 integration: re-creates process_question_attempt_v2 with D-280's alias rule only (= 2 becomes >= 2); " +
-    "its read is unchanged (one instance by id and student_id), EXECUTE stays service_role only. No policy, " +
-    "RLS or table privilege on question_instances is touched (proven in question-attempts-v2-bootstrap.test.mjs).",
+  "20261101190100_question_attempts_v2_align_grading.sql":
+    "H5 integration: re-creates process_question_attempt_v2 with D-280's alias rule (= 2 becomes >= 2) and " +
+    "G1's comparison (normalize_choice_answer / normalize_number_answer) only; its read is unchanged (one " +
+    "instance by id and student_id), EXECUTE is service_role only. No policy, RLS or table privilege on " +
+    "question_instances is touched (proven in question-attempts-v2-bootstrap.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -482,7 +484,7 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261101140000_deactivate_two_misgraded_questions.sql",
      "20261101150000_grading_meaningful_characters.sql",
      "20261101190000_question_attempts_v2_bootstrap.sql",
-     "20261101190100_question_attempts_v2_align_d280.sql"],
+     "20261101190100_question_attempts_v2_align_grading.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

@@ -1,10 +1,13 @@
 // The two histories that must end in the same H5 schema (H5 integration, D-266 / D-273 / D-278 /
-// D-280), for tests/unit/question-attempts-v2-bootstrap*.test.mjs.
+// D-280 / D-290 G1), for tests/unit/question-attempts-v2-bootstrap*.test.mjs.
 //
-//   REPO_ORDER   the repository's own order (file names), which the isolated E2E replays:
-//                20261030211428 (H5) → D-278 → D-280 part 1 → 20261101190000 → 20261101190100
-//   PROD_ORDER   what production actually did and will do: D-280 part 1 (applied 2026-11-01 as
-//                20261101101401) → D-278 (20261101101441) → 20261101190000 → 20261101190100
+//   REPO_ORDER   the repository's own order (file names):
+//                20261030211428 (H5) → D-278 → D-280 part 1 → G1 → 20261101190000 → 20261101190100
+//   PROD_ORDER   what production did and must do: D-280 part 1 (applied 2026-11-01 as
+//                20261101101401) → D-278 (20261101101441) → G1 (not applied yet) → 20261101190000
+//                → 20261101190100
+// The isolated E2E replays only what production has (tests/isolated/schema/replay-plan.mjs): today
+// 20261030211428, D-278 and D-280 part 1; G1 and the two H5 integration files once applied there.
 //
 // Both start from production's answer chain before D-280 (helpers/answer-chain-schema.mjs pins every
 // md5) plus the two hidden-achievement functions D-278 replaces, with the EXECUTE production had
@@ -22,20 +25,34 @@ export const H5 = ATTEMPTS_MIGRATION_FILE;
 export const D278 = "20261031190000_reward_integrity_server_authority.sql";
 export const D280_PATHS = "20261031194600_mc_length_cue_answer_paths.sql";
 export const D280_TOP10 = "20261031194700_mc_length_cue_top10.sql";
+export const G1 = "20261101150000_grading_meaningful_characters.sql";
 export const BOOTSTRAP = "20261101190000_question_attempts_v2_bootstrap.sql";
-export const ALIGN = "20261101190100_question_attempts_v2_align_d280.sql";
-export const REPO_ORDER = Object.freeze([H5, D278, D280_PATHS, BOOTSTRAP, ALIGN]);
-export const PROD_ORDER = Object.freeze([D280_PATHS, D278, BOOTSTRAP, ALIGN]);
+export const ALIGN = "20261101190100_question_attempts_v2_align_grading.sql";
+export const REPO_ORDER = Object.freeze([H5, D278, D280_PATHS, G1, BOOTSTRAP, ALIGN]);
+export const PROD_ORDER = Object.freeze([D280_PATHS, D278, G1, BOOTSTRAP, ALIGN]);
+// D-280 part 2 at its place in either history: just before G1. Its guard requires D-280 part 1's
+// process_question_attempt, so it cannot follow G1; production applied it on 2026-11-01 (after D-278),
+// and in the repository it sorts before G1 as well.
+export function withTop10(order) {
+  const i = order.indexOf(G1);
+  if (i < 0) throw new Error("withTop10: the order has no G1");
+  return [...order.slice(0, i), D280_TOP10, ...order.slice(i)];
+}
 
 export const MC_V2 = "public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)";
 export const TEXT_V2 = "public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)";
 export const PQA = "public.process_question_attempt(uuid,uuid,text,bigint)";
 export const MD5 = Object.freeze({
   mcV2Original: "943d03820fe4756f5a72c6f0a5d77d7d",
-  mcV2Aligned: "adbecf897a64eeace416e1cff9d021a9",
+  mcV2Aligned: "8a7696147df978e250918b2c93e20577",
   textV2: "f880984680d52b20d07c628a9dfae474",
   pqaD280: "328ea8f9a4fd260407b582dcecb7dfdf",
+  pqaG1: "2e05e769a102f61ffef0ea4dd550c55b",
+  normalizeChoice: "281addc21850a8c6b9f40f6bd8609ad9",
+  normalizeNumber: "3dadb6e137855796327637872ee32395",
 });
+export const NORMALIZE_CHOICE = "public.normalize_choice_answer(text)";
+export const NORMALIZE_NUMBER = "public.normalize_number_answer(text)";
 
 const HIDDEN = "20260518000500_hidden_achievements.sql";
 // D-278's two functions as production had them before D-278 (= 20260518000500, byte for byte), with
