@@ -105,6 +105,8 @@ export function extractSchemaPart(file, sql) {
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
 export const NOT_IN_PRODUCTION = Object.freeze({
+  "20261101140000_deactivate_two_misgraded_questions.sql":
+    "D-290, not applied in production: it creates the open-round guard (guard_open_round_requires_active_question and its trigger on question_instances), which production does not have, and the two questions are still active",
   "20261101150000_grading_meaningful_characters.sql":
     "D-290 G1, not applied in production: it re-creates process_question_attempt, whose production body is still D-280 part 1's (md5 328ea8f9…)",
   "20261101190000_question_attempts_v2_bootstrap.sql":

@@ -53,6 +53,8 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
 - **Ikke anvendt i produktionen:**
+  - `20261101140000_deactivate_two_misgraded_questions.sql` (D-290 G2). Den opretter siden rettelsen
+    2026-11-01 en funktion og en trigger og er derfor ikke længere ren data.
   - `20261101150000_grading_meaningful_characters` (D-290 G1). Den genskaber
     `process_question_attempt`, som produktionen stadig kører i D-280 del 1's udgave.
   - `20261101190000_question_attempts_v2_bootstrap` og
