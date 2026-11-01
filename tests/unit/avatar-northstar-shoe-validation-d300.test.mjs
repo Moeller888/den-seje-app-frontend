@@ -70,13 +70,16 @@ test("D-299 antialiasing is measured on the source: a binary-alpha drawing fails
   const p = SS.place(SS.downscale(bin)); assert.ok(E2.haloInAvatar(p, p).edgeAntialiased > 0.5, "the downscale alone makes partial alpha");
 });
 
-test("D-300 authorisation: one unspent one-shot call of the locked plan, its own budget, no reserve, retry, fallback or earlier permission; C never sent", () => {
-  assert.deepEqual([AUTH.decision, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions, AUTH.budget.actuallySent], ["D-300", false, 1, 0, 0, false, false, 0]);
-  assert.deepEqual(AUTH.calls.map((e) => [e.callId, e.order, e.mandateState, e.outcome]), [[ID, 1, "UNSPENT", "NOT YET ATTEMPTED"]]);
+test("D-300 authorisation: one one-shot call of the locked plan (spent and received, D-301), its own budget, no reserve, retry, fallback or earlier permission; C never sent", () => {
+  assert.deepEqual([AUTH.decision, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions, AUTH.budget.actuallySent], ["D-300", false, 1, 0, 0, false, false, 1]);
+  assert.deepEqual(AUTH.calls.map((e) => [e.callId, e.order, e.mandateState, e.outcome, e.recordedBy]), [[ID, 1, "SPENT", "RECEIVED_FOR_BF_CHECK", "D-301"]]);
+  // the recorded execution and closure (D-301): spent once, received, rejected by the locked evaluation; nothing open
+  assert.deepEqual([AUTH.calls[0].result.httpStatus, AUTH.calls[0].result.fetches, AUTH.budget.closed.by, AUTH.budget.closed.spent, AUTH.budget.closed.uncertain], [200, 1, "D-301", 1, 0]);
+  assert.match(AUTH.calls[0].result.imageSha256, /^[0-9a-f]{64}$/); assert.match(AUTH.calls[0].result.evaluation, /^REJECTED SOURCE by the locked D-299 evaluation/);
   assert.equal(AUTH.frozen.plan.sha256, sha256(readFileSync(repoFile(PLAN_REL)))); assert.equal(AUTH.frozen.prompt.sha256, PLAN.call.prompt.sha256); assert.deepEqual(AUTH.frozen.methodFiles, PLAN.method.files);
   assert.deepEqual([AUTH.request.model, AUTH.request.parameters.size, AUTH.request.images.length, AUTH.calls[0].canvas], [MODEL, "1536x1024", 1, LAYOUT.sha256]);
   assert.match(AUTH.privacy.cSentToApi, /^never/); assert.ok(!/d202-base-figure/.test(SRC), "the adapter never names C");
-  const status = /^status: (.*)$/m.exec(DECISION)[1]; assert.ok(status.split(" — ").map((x) => x.trim()).includes("D-300 SV: 1 CALL AUTHORISED")); assert.match(status, /NOT EXECUTED/);
+  const status = /^status: (.*)$/m.exec(DECISION)[1]; assert.ok(status.split(" — ").map((x) => x.trim()).includes("D-300 SV: 1 CALL AUTHORISED")); assert.match(status, /CLOSED BY D-301/);
   for (const n of [ID, "--owner-approval=D-300", MODEL, ADAPTER_REL, AUTH.frozen.prompt.sha256, AUTH.frozen.plan.sha256, "1536x1024", LAYOUT.sha256]) assert.ok(DECISION.includes(n), n);
   for (const id of ["D-299", "D-300"]) assert.ok(!readFileSync(repoFile(LEGACY_REL), "utf8").split("\n").some((l) => l.startsWith("| **" + id + "** |")));
   for (const t of [JSON.stringify(AUTH), JSON.stringify(PLAN), SRC]) assert.ok(!/fitting-base|H1\.png/.test(t), "no H1");
@@ -120,6 +123,9 @@ function sandbox({ base: mod, layout } = {}) {
   writeFileSync(sb.gitconfig, "[core]\n\tautocrlf = false\n[init]\n\tdefaultBranch = main\n"); writeFileSync(sb.mock, MOCK_SRC); writeFileSync(sb.log, ""); writeFileSync(sb.png, png(1536, 1024));
   const rd = join(sb.out, "references", "sneaker-low-k4"); mkdirSync(rd, { recursive: true }); writeFileSync(join(rd, LAYOUT.name), layout || readFileSync(LAYOUT_FILE));
   for (const rel of TRACKED) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  // the sandbox starts from the authorisation as merged by D-300: the recorded execution (D-301) is undone in the copy only
+  { const cp = join(sb.repo, ...AUTH_REL.split("/")), c = JSON.parse(readFileSync(cp, "utf8")); c.budget.actuallySent = 0; delete c.budget.closed;
+    for (const e of c.calls) { e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; delete e.result; delete e.recordedBy; } writeFileSync(cp, JSON.stringify(c, null, 2) + "\n"); }
   if (mod) mod(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb; }
@@ -145,4 +151,9 @@ test("a changed method file, an uncertain dispatch, the stop file, a changed ref
   const wrong = sandbox({ layout: png(1536, 1024) }); refused(wrong, run(wrong, [...argsOf(ID), ...SEND], KEY), "reference-canvas");
   const noToken = sandbox({ base: (s) => { const p = join(s.repo, ...DECISION_REL.split("/")); writeFileSync(p, readFileSync(p, "utf8").replace("D-300 SV: 1 CALL AUTHORISED", "D-300 SV: PREPARED")); } }); refused(noToken, run(noToken, [...argsOf(ID), ...SEND], KEY), "decision");
   const noFlag = sandbox(); refused(noFlag, run(noFlag, [...argsOf(ID), "--send"], KEY), "arguments");
+});
+
+test("after D-301 the spent call is refused before any claim: the authorisation as recorded admits no further send", { skip: SKIP }, () => {
+  const sb = sandbox({ base: (x) => copyFileSync(repoFile(AUTH_REL), join(x.repo, ...AUTH_REL.split("/"))) });
+  refused(sb, run(sb, [...argsOf(ID), ...SEND], KEY), "authorisation");
 });
