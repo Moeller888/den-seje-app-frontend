@@ -49,8 +49,10 @@ test("the replayed schema has production's key objects", async () => {
   }
   // 20261027120000 (D-211) replaced process_question_attempt only because the schema part of
   // 20261018143726 left exactly production's body (its md5 guard): the chain is byte-faithful.
+  // 20261031194600 (D-280 part 1, applied as remote 20261101101401 on 2026-11-01) then replaced it
+  // again, behind its own md5 guard; this is the body production reported after that.
   const pqa = await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.process_question_attempt(uuid,uuid,text,bigint)'::regprocedure`);
-  assert.equal(pqa.m, "8f698c5b45ecfe9a1988215dd8849d67");
+  assert.equal(pqa.m, "328ea8f9a4fd260407b582dcecb7dfdf");
   // 20260826000000's schema part: 'cancelled' is a valid job status.
   const chk = await one(db, `SELECT pg_get_constraintdef(oid) d FROM pg_constraint WHERE conname = 'generation_jobs_status_valid'`);
   assert.match(chk.d, /cancelled/);
@@ -86,7 +88,8 @@ test("B as production has it: fold log, indexes, the three functions, INVOKER, A
   assert.deepEqual(fns.map((f) => [f.proname, f.m]), [
     ["advance_student_level", "4147c559353946a64c3ea1c791d19635"],
     ["get_level_questions_for_student", "9e5862b287f6f41066eb876667c426a7"],
-    ["request_repeat_level_question_for_student", "ee153327dae5a5686e9c5efd247d27c0"],
+    // D-280 part 1 (20261031194600, remote 20261101101401) replaced it; production's body after that.
+    ["request_repeat_level_question_for_student", "db8280ddee20254e876be7fb1fc57e4d"],
   ]);
   for (const f of fns) {
     assert.equal(f.prosecdef, false, `${f.proname} is SECURITY INVOKER`);
