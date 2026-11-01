@@ -385,6 +385,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Shoe master on the low sneaker — D-289 (offline prototype `shoe-master-v1`; no call; nothing published, offered or approved).**
+  - **Cut.** `shoes-sneakers-beige`, chosen for source quality: 2 % clipped, against 62 % for the white sneakers; the black and brown boots are 81–90 % dark. It has no findings and five K outfits.
+  - **Method.** The drawing's own ink lines split the shoe into fields, labelled once per cut by 22 seed points. The shading is carried in linear light: shadows are multiplied and highlights added. The alpha is never changed, so fit and covering stay the cut's. A design is one colour per field (upper, toe, sole, laces, tongue).
+  - **Results.** Four SYNTHETIC samples, with 0 colour residue. Mid tones and panel contrasts are strongest. A very dark material amplifies the painted grain and trips `COMBO-2` under long trousers (laces under the hem, D-253's sensitivity). A very light material flattens the sole's highlight.
+  - **Recommendation.** One general `shoe-master-v2` highlight rule before any candidate. Boots need their own cut. See `docs/decisions/D-289.md`.
 - **Solid trousers in the opt-in — D-283 (the owner approved TS-NAV and TS-SND as items and their 2 layers for publication; flag false).**
   - **Published.** `bottom-trousers-square-{navy,sand}-pants-v1.webp` with D-281's sha256; the olive trousers' published shadow is reused through `shadowsOf`; the manifest has a D-281 extension (65 files).
   - **Choice.** A "Bukser" row in the panel (`avatar_northstar_pants`), and "Outfittets egen underdel" returns to the outfit's own bottom. The trousers are offered only on checked top × shoe pairs (`NORTHSTAR_SOLID_PANTS_CHECKED`); all 55 reachable pairs are checked, so all 19 K outfits allow them.
