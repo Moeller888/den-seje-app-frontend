@@ -6,7 +6,7 @@ import { demoManifest } from "../src/demo/manifest.ts";
 import { ChoiceMenuModel, confirmsSay } from "../src/model/choice-menu.ts";
 import { cursorView } from "../src/model/cursor.ts";
 import { sceneHotspots } from "../src/model/hotspots.ts";
-import { format, readSettings } from "../src/model/settings.ts";
+import { engineDevOptions, format, readSettings } from "../src/model/settings.ts";
 import { placeBubble, regionOf } from "../src/model/speech.ts";
 
 describe("choice menu keyboard model (spec 04 D6.4, TS-D11)", () => {
@@ -68,6 +68,38 @@ describe("settings and formatting", () => {
     expect(readSettings("", { dev: true, prefersReducedMotion: false }, ["da"])).toMatchObject({ dev: true, devBuild: true });
     expect(readSettings("?lang=fr&zones=1&seed=", env, ["da", "en"])).toMatchObject({ language: null, zones: false, seed: "demo" });
     expect(readSettings("", { dev: true, prefersReducedMotion: true }, ["da"])).toMatchObject({ dev: true, reducedMotion: true });
+  });
+
+  it("follow-up F5 / M4: only a development build lets the engine load a save with a wrong checksum", () => {
+    const urlDev = readSettings("?dev=1", env, ["da"]);
+    const devBuild = readSettings("", { dev: true, prefersReducedMotion: false }, ["da"]);
+    expect(engineDevOptions(readSettings("", env, ["da"]))).toEqual({ devMode: false, allowSaveChecksumMismatch: false });
+    expect(engineDevOptions(urlDev)).toEqual({ devMode: true, allowSaveChecksumMismatch: false });
+    expect(engineDevOptions(devBuild)).toEqual({ devMode: true, allowSaveChecksumMismatch: true });
+    // The options really reach the engine: a changed save loads only in a development build.
+    const make = (s: typeof urlDev): Engine =>
+      new Engine(loadContent(demoContent), {
+        seed: "demo",
+        wallClock: () => "2026-10-30T09:00:00.000Z",
+        adapter: { onCommand: (c) => (c.type === "Say" ? { kind: "await" } : { kind: "auto", afterMs: 0 }) },
+        ...engineDevOptions(s),
+      });
+    const source = make(urlDev);
+    source.newGame();
+    for (let i = 0; i < 10000 && !source.canSave(); i++) {
+      const say = source.pendingCommands().find((p) => p.type === "Say");
+      if (say !== undefined) source.reply(say.cmdId, { kind: "done" });
+      else source.advanceTicks(1);
+    }
+    let json = "";
+    source.requestSave((o) => {
+      if (o.ok) json = o.json;
+    });
+    const tampered = json.replace('"savedAt":"2026-10-30T09:00:00.000Z"', '"savedAt":"2026-10-30T09:00:01.000Z"');
+    expect(tampered).not.toBe(json);
+    const refused = make(urlDev).load(tampered);
+    expect(refused.ok ? null : refused.error.kind).toBe("checksum");
+    expect(make(devBuild).load(tampered).ok).toBe(true);
   });
 
   it("format replaces known placeholders and keeps unknown ones visible", () => {

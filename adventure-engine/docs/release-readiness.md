@@ -1,6 +1,6 @@
 # Release-readiness – version 0.1 (fase 1–6)
 
-Gennemgang 2026-10-30. Rapporten er en teknisk vurdering. Clean-room-kontrollerne er tekniske kontroller, ikke juridisk rådgivning eller en juridisk godkendelse.
+Gennemgang 2026-10-30, opdateret med opfølgningerne i §17. Rapporten er en teknisk vurdering. Clean-room-kontrollerne er tekniske kontroller, ikke juridisk rådgivning eller en juridisk godkendelse.
 
 ## 1. Scope
 
@@ -33,7 +33,7 @@ content-tools, app (Game), save ← editor (separat webapp; preview kører Game)
 
 | Område | Hvordan | Resultat |
 |---|---|---|
-| Unit og property (Vitest + fast-check) | `pnpm test` / `pnpm coverage` | **444 bestået** (41 filer) |
+| Unit og property (Vitest + fast-check) | `pnpm test` / `pnpm coverage` | **470 bestået** (42 filer) efter opfølgningerne i §17 (før: 444 i 41 filer) |
 | Scenarier med goldens | `pnpm scenarios` | **9/9 PASS** |
 | Content-CLI | validate, build, `--check`, format, schema i unit-tests og manuelt på fixturen | grøn |
 | Clean-room-script, build-grænse og editorens mappe-skrivning | `tools/test/clean-room.test.mjs` (syntetisk denylist), `tools/test/build-boundary.test.mjs` og `packages/editor/test/io.test.ts` (mappe uden forskel på store/små bogstaver) | 13/13 |
@@ -44,15 +44,17 @@ content-tools, app (Game), save ← editor (separat webapp; preview kører Game)
 
 ## 4. Coverage
 
-`pnpm coverage`: **99,50 % lines, 96,88 % branches, 99,79 % functions**. Alle tærskler i `vitest.config.ts` er opfyldt.
+`pnpm coverage` efter §17: **99,51 % lines, 96,97 % branches, 99,79 % functions** (før: 96,88 % branches). Alle tærskler i `vitest.config.ts` er opfyldt.
 
-- 100 % for runtime, scheduler, expression, modal, geometri, media, audio, save-pakken, save-format, schema, JSON Schema-validator og polygon/nav-preview.
+- 100 % for runtime, scheduler, expression, modal, geometri, media, audio, save-pakken, save-format, schema, JSON Schema-validator, polygon/nav-preview og SVG-allowlisten (`content-tools/src/svg.ts`, ny tærskel i §17).
 - `content-tools` samlet: 99,2 % lines og 95,6 % branches.
 - UI-koden (renderer, app-UI, editor-UI, devtools) dækkes af Playwright.
 
 ## 5. Browserresultater
 
 Efter rettelserne fra kodegennemgangen (§15) og den afsluttende gennemgang (§16), kørt i den isolerede worktree på PR-branchen (et frisk LF-checkout): Chromium **45 bestået**, Firefox **39 bestået** + 6 skips, WebKit **39 bestået** + 6 skips, uden fejl, retries eller ændrede timeouts.
+
+Efter opfølgningerne i §17 (endelig kode, én browser ad gangen): Chromium **47 bestået**, Firefox **41 bestået** + 6 skips, WebKit **41 bestået** + 6 skips, uden fejl.
 
 Første release-gennemgang:
 
@@ -80,7 +82,7 @@ Første release-gennemgang:
 | Ubegrænset antal filer eller mapper | Samme grænser for mappeimport (File System Access og filvalg) og CLI-læsning. CLI'en følger ikke symlinks |
 | Falske endelser og MIME-typer | Typen afgøres af endelse **og** indhold; afsenderens MIME-type ignoreres |
 | SWF, XML, gemte spil, scripts | Afvises (`E-ASSET-FORBIDDEN`), også SWF genkendt på magic bytes |
-| Usikre SVG'er | `<script>`, event-handlere, `javascript:`, `foreignObject`, `DOCTYPE` og `ENTITY` afvises. Visning sker kun via `<img>`/`<image>` |
+| Usikre SVG'er | **Basal statisk profil** (§17, fase 6 §8): kun `svg`, `g`, `title`, `desc` og de basale former med geometri, transformationer, farve-, streg- (uden stiplede streger) og opacitetsegenskaber. Ingen referencer overhovedet (`href`, `xlink:href`, `url(…)`), ingen `use`, gradienter, mønstre, markører, masker, clip paths, filtre, tekst, scripts, styles-elementer, `foreignObject`, event-attributter, fremmede navnerum, `DOCTYPE`, `ENTITY`, CDATA eller processing instructions. Visning sker kun via `<img>`/`<image>` |
 | HTML-injektion | Brugerflader sætter tekst med `textContent`. Den eneste `innerHTML` er faste ikon-SVG'er i spillet |
 | Prototype pollution | Nøglen `__proto__` afvises i projekt- og bundlefiler. Kanonisk skrivning bruger `defineProperty`. Opslag i tekst-tabeller bruger kun egne nøgler (rettet: en tekstnøgle som `constructor` kunne få loaderen til at kaste en `TypeError`) |
 | Nyere eller ukendte formater | Projekt (formatVersion > 1), bundle (const 1) og saves (nyere format) afvises med fejlkode |
@@ -169,7 +171,7 @@ Se `docs/decisions/phase-4.md` §22, `phase-5.md` §13 og §15 samt `phase-6.md`
 
 ## 12. Release blockers
 
-- **Ingen tekniske blockers for en lokal commit.** Fundene fra kodegennemgangen af PR #469 er rettet (§15), og F1–F3 fra den afsluttende gennemgang er rettet (§16).
+- **Ingen tekniske blockers for en lokal commit.** Fundene fra kodegennemgangen af PR #469 er rettet (§15), og F1–F3 fra den afsluttende gennemgang er rettet (§16). F4, F5 og de to lave fund (slot-status og SVG-allowlist) er rettet i §17.
 - **CI:** den nye workflow har kørt grønt på GitHub (`check` og `e2e (chromium)` for `20b1868`). Dens E2E-job kører på Linux uden skærmbilledtests (baselines er lavet på Windows); Firefox og WebKit køres kun ved manuel start og er endnu ikke kørt i CI.
 - **Før en offentlig udgivelse:**
   1. CR-01 er PASS lokalt mod 9.588 eksterne poster (§9). `cr01`-jobbet i CI skal også vise PASS, ikke SKIP; resultatet står i PR #469.
@@ -217,9 +219,9 @@ En uafhængig read-only gennemgang af PR #469 fandt nedenstående. Alle fund er 
 | Lav: negative format-versioner sprang checksummen over | Negative versioner er skade; kun format 0 er uden checksum | `save.test.ts` |
 | Lav: migration slog omdøbninger op via prototypen; ambient-volumen ukontrolleret | Egne nøgler; volumen klampes til [0, 1] | `save.test.ts` |
 
-**Ikke rettet (lave):**
-- En gemmeplads vises som "ok", når checksummen passer, også hvis indholdet ikke længere kan indlæses (fx efter en indholdsopdatering). Indlæsning afviser stadig sikkert.
-- SVG kontrolleres med en blokliste, ikke en allowlist. Visning sker altid via `<img>`/`<image>`, så scripts kører ikke.
+**Ikke rettet her (lave), rettet senere i §17:**
+- En gemmeplads blev vist som "ok", når checksummen passede, også hvis indholdet ikke længere kunne indlæses (fx efter en indholdsopdatering). Indlæsning afviste stadig sikkert.
+- SVG blev kontrolleret med en blokliste, ikke en allowlist. Visning sker altid via `<img>`/`<image>`, så scripts kører ikke.
 
 **CI-workflow (`.github/workflows/adventure-engine.yml`):**
 - **Udløses af:** ændringer i `adventure-engine/` eller selve workflowen.
@@ -245,6 +247,79 @@ En afsluttende read-only gennemgang af rettelserne i §15 fandt tre fund, der nu
 | **F2** (middel, datatab, fandtes før rettelserne) En omdøbning, der kun ændrer store/små bogstaver (`attic` → `Attic`, `en-GB` → `en-gb`), slettede filen ved Gem på Windows og macOS | `writeDirectory` sletter aldrig en sti, der lige er skrevet med andre store/små bogstaver. `rename`, `addGraph`, "Opret scene" og sprogfeltet afviser id'er, der kun adskiller sig ved store/små bogstaver fra et andet id. `readProject` afviser projekter med sådanne filer | `editor/test/io.test.ts`, `content-tools/test/review-fixes.test.ts` |
 | **F3** (lav) En meget lang taltegnreference i en SVG (`&#x` + 300 × `f`) fik import og validering til at kaste `RangeError` | Referencer ud over U+10FFFF bliver U+FFFD, som i en browser; der kastes aldrig | `review-fixes.test.ts` |
 
-**Senere opfølgninger (ikke rettet her):**
+**Senere opfølgninger (ikke rettet her; rettet i §17):**
 - **F4** (lav): en fejlet IndexedDB-transaktion udløser både `onerror` og `onabort`, så der kan komme to–tre fejlmeddelelser for ét gem. Flaget bag `flush()` er fælles for alle skrivninger: en fejlet indstillingsskrivning (`save/src/settings.ts`), der ikke selv kalder `flush()`, får det næste gem til at melde fejl, og `flush()`-kald uden brug af svaret (`restoreBackup`, import) nulstiller flaget. Fejlen vises stadig via `onError`, og der tabes ingen data.
 - **F5** (lav, testdækning): forbindelsen i `game.ts` er ikke unit-testet for M7 ("Gemt" først efter `flush()` → `true`) og M4 (spillet sender `devBuild` videre som `allowSaveChecksumMismatch`); `game.ts` er DOM-kode uden for Vitest-dækningen. Sletningen i `writeDirectory` er nu testet (`editor/test/io.test.ts`).
+
+## 17. Opfølgninger: F4, F5, slot-status og SVG-profil
+
+Branch `fix/adventure-engine-followups` fra `origin/main` (`242d7eb`). Hvert fund blev først genskabt med en test, der fejlede på den gamle kode; Vite og Vitest er ikke opgraderet.
+
+| Fund | Genskabt | Rettelse | Regressionstest |
+|---|---|---|---|
+| **F4** IndexedDB-fejl rapporteres flere gange og hos den forkerte operation | Med en browser-lignende fake (`error` og derefter `abort`): 2 fejl for én transaktion; en fejlet indstillingsskrivning fik det næste vellykkede gem til at svare `false`; et ignoreret `flush()` fik et fejlet gem til at svare `true` | Hver commit har sit eget resultat. `transaction(fn)` svarer med netop den batchs resultat, og `SlotManager.write`/`restoreBackup` giver det videre som `committed`. Kun enkeltskrivninger uden ventende kalder (indstillinger) går til `onError`. `error`/`abort` tæller én gang. `flush()` har ingen tilstand: den venter på de commits, der er i gang ved kaldet. Spillet bruger ikke længere `flush()` til gem | `save/test/save-package.test.ts` (fire F4-tests), E2E `save.spec.ts` (fejlet IndexedDB-skrivning: én meddelelse, det næste gem bekræftes for sig selv) |
+| **F5** forbindelserne i `game.ts` var ikke testet | – (manglende dækning) | "Gemt" og `data-last-save` afgøres i `writeFeedback` (`app/src/model/saves.ts`) ud fra skrivningens egen `committed`; `devBuild` → `allowSaveChecksumMismatch` i `engineDevOptions` (`app/src/model/settings.ts`). `game.ts` bruger begge | `app/test/saves-model.test.ts` ("Gemt" først efter bekræftelse; fejl viser aldrig "Gemt"; to samtidige skrivninger får hver sit resultat), `app/test/models.test.ts` (kun et udviklingsbuild indlæser et save med forkert checksum, med en rigtig `Engine`), E2E-testen ovenfor. Editorens sletteadfærd: `editor/test/io.test.ts` er uændret og grøn |
+| **Slot-status** en slot var "ok", når checksummen passede | Et intakt save, som indholdet ikke kan indlæse, blev vist som `ok` | `SlotManager` tager en `loadable`-kontrol; spillet sender `parseSave` mod det aktuelle indhold (`saveLoadable`). Sådan en slot er `corrupt` med `reason: "unloadable"` ("kan ikke indlæses"), `.bak` tilbydes kun, når den kan indlæses, og status viser "sikkerhedskopi kan gendannes". Vurderingen caches pr. tekst (højst 32), så samme save ikke parses eller migreres igen ved hver visning. Et uindlæseligt save flyttes aldrig til `.bak` over en gyldig | `save-package.test.ts` (status, backup, cache, grænse), `saves-model.test.ts` (rigtig validering: andet spil, forkert checksum), E2E `save.spec.ts` (save fra "et andet spil" med korrekt checksum → "kan ikke indlæses – sikkerhedskopi kan gendannes" → gendan → indlæst) |
+| **SVG** blokliste i stedet for allowlist | Den gamle kontrol accepterede bl.a. `<style>`, `<svg:rect>`, `Fill=`, `url(http://…)`, `href="other.svg#s"` og `&#x23;x&#x3A;//evil` | Ny `content-tools/src/svg.ts`: en streng tokenizer uden ny afhængighed med dokumenterede allowlists for elementer og attributter; `href` kun `#id`, `url()` kun `url(#id)`; `style` kun præsentationsegenskaber; alt ukendt afvises | `content-tools/test/svg-allowlist.test.ts` (tilladte former, farver, paths, tekst, gradienter, mønstre, filtre og fragmentreferencer; afviste scripts, `foreignObject`, styles, billeder, links, animationer, event-attributter, navnerumspræfikser, store/små bogstaver, tegnreferencer, CSS-URL'er og eksterne ressourcer; DOCTYPE, CDATA, PI og fejlformede dokumenter). F3-testen er tilpasset, fordi `<a>` nu afvises; den kontrollerer stadig, at ingen tegnreference kaster. 100 %-tærskel for `svg.ts` |
+
+**Verifikation (lokalt i worktree'en):**
+- Typecheck, lint og CR-02: grønne.
+- CR-01 obligatorisk (`REQUIRE_CLEAN_ROOM_DENYLIST=1`, den private liste): `CR-01: PASS (9588 denylist entries, no matches)`.
+- Unit og coverage: 470 bestået (42 filer), 99,51 % lines, 96,97 % branches, 99,79 % functions; alle tærskler opfyldt.
+- Scenarier: 9/9 PASS, goldens uændrede.
+- Content-CLI på fixturen (validate, format `--check`, build, validate af bundle, schema `--check`): grøn.
+- Builds (spil, devtools-spil, editor) og `tools/check-build-boundary.mjs`: grønne.
+- Alle 25 SVG'er i repoet består allowlisten.
+- E2E på den endelige kode (efter reviewrettelserne), én browser ad gangen med én worker: Chromium **47 bestået** (4,3 min), Firefox **41 bestået** + 6 skips (3,9 min), WebKit **41 bestået** + 6 skips (7,3 min); 0 fejl, ingen retries eller ændrede timeouts. De 6 skips er de Chromium-only skærmbilledtests. De to nye tests (fejlet IndexedDB-skrivning og uindlæseligt save med sikkerhedskopi) består i alle tre browsere.
+
+**Uafhængig gennemgang af diffen (read-only reviewagent uden kendskab til konklusionerne):** IndexedDB-, spil- og testændringerne blev fundet korrekte. Bekræftede fund og deres behandling:
+
+| Fund | Behandling | Regressionstest |
+|---|---|---|
+| **R1** (høj) En `<?xml … encoding="ISO-2022-JP"?>`-erklæring plus en ESC-sekvens fik browseren til at læse en `onload`-attribut, som kontrollen (der læser UTF-8) ikke så. Bekræftet i Chromium og Firefox | Kun `version="1.0"`, eventuelt `encoding="UTF-8"` og `standalone`; kontroltegn (undtagen tab, LF, CR) afvises overalt | `svg-allowlist.test.ts` ("only a UTF-8 XML declaration …") |
+| **R2** (middel) `image-set('evil.png' 1x)` i `mask` eller `style` hentede en relativ fil uden `url(` | Kun funktionerne `rgb`, `rgba`, `hsl`, `hsla`, transformationer og `url(#id)` er tilladt | `svg-allowlist.test.ts` ("CSS functions other than …") |
+| **R3** (lav) `<!-->` er én kommentar i XML, men slutter straks i en HTML-parser (relevant, hvis et billede nogensinde indsættes med `innerHTML`) | Kommentarer med `--` indeni, `<!-->`, `<!--->` og en afsluttende `-` afvises (XML forbyder dem også) | `svg-allowlist.test.ts` ("comments that an HTML parser would end early …") |
+| **R4** (lav) pladsholder i denne rapport | Udfyldt | – |
+| Mistanke: en `loadable`-kontrol, der kaster, kunne gøre titelskærmen død og få nye gem til at fejle | Fanges i `SlotManager`; tæller som "kan ikke indlæses" | `save-package.test.ts` ("a loadable check that throws …") |
+| **R5** (lav) "Fortsæt fra sikkerhedskopi" overskriver nu også et intakt, men uindlæseligt hovedsave | Bevidst: knappen siger "sikkerhedskopi", og spilleren vælger den selv. Dokumenteret nedenfor | – |
+| **R6** (lav) i et udviklingsbuild vises et save med forkert checksum stadig som beskadiget i slotlisten, selvom `engine.load` ville acceptere det | Uændret adfærd fra før (checksummen kontrolleres først); dokumenteret nedenfor | – |
+
+**Opfølgende reviewrunder (2–5).** Efter den første commit (`50cbaf6`) fandt fire uafhængige read-only reviews flere problemer. De blev genskabt, rettet og dækket af tests:
+
+| Runde | Fund | Behandling | Regressionstest |
+|---|---|---|---|
+| 2 | Et intakt, men uindlæseligt hovedsave gik tabt ved "Gendan"/"Fortsæt fra sikkerhedskopi" og ved et nyt gem | Det fortrængte save kopieres byte for byte til `<slot>.held` (kun det seneste); `.bak` er én generation (fase 5 §7) | `save-package.test.ts` (rotation, afbrydelse på hvert trin, retry), E2E `save.spec.ts` (`.held` = det erstattede save) |
+| 2–3 | En fejlet IndexedDB-commit efterlod spejlet med data, lageret ikke har, og `.held` kunne mistes | Rollback pr. nøgle med overdragelse til senere uafgjorte commits; request-`onerror`, `abort`, synkront kast og kastende callback (fase 5 §13) | `save-package.test.ts` (rollback-tests) |
+| 3 | Overlappende skrivninger til samme slot kunne planlægge rotationen ud fra en tilstand, der blev rullet tilbage | Én operation ad gangen pr. slot (`write`, `restoreBackup`, "Fortsæt fra sikkerhedskopi"); UI-status i rækkefølge (`statusOrder`) | `save-package.test.ts` (serialiseringstests), `saves-model.test.ts` |
+| 4 | En indlejret transaktion, der kastede, kunne committe en halv indre enhed | Kaster en indlejret callback, fejler og rulles hele den ydre batch tilbage | `save-package.test.ts` (indlejrede transaktioner) |
+| 2–4 | SVG-bomber via `<use>`, mønstre, markører, masker, clip paths, filtre og `inherit` (fx 4,1 KB → 15 s i Chromium); referencer skjult med Unicode-whitespace; kvadratisk scanning | Runde 2–4 byggede en referencegraf med ekspansionsbudget; runde 5 erstattede den med en **basal statisk profil uden referencer** (fase 6 §8). Referencegraf, ekspansions- og markørberegning er fjernet. Kontrollen er én lineær passage | `svg-allowlist.test.ts` (alle tidligere bomber afvises ved første element eller attribut uden for profilen; `href`/`xlink:href`/`url(…)` via attributter, `style`, entities og whitespace; nøgleord; 25 projekt-SVG'er; store input) |
+| 4 | Påstanden om, at autosave ved lukning starter IDB-transaktionen synkront, var forkert | Dokumentationen beskriver nu den asynkrone slotkø og commit-kæde (fase 5 §13) | – |
+| 5 | **B1:** en accepteret SVG med `stroke-dasharray="0.001"` på 100 linjer (2,7 KB) tog 14 s at tegne i Chromium (fandtes også i `50cbaf6`) | `stroke-dasharray` og `stroke-dashoffset` er fjernet fra profilen (attribut og `style`); ingen af de 25 SVG'er bruger dem. Profilens bevidste begrænsninger er dokumenteret (fase 6 §8) | `svg-allowlist.test.ts` ("dashed strokes are refused before rendering": den genskabte fil, attributter, `style`, store/små bogstaver, whitespace og entities) |
+| 5 | **B2 (regression):** `remove()` gik uden om køen pr. slot, så en skrivning i kø genskabte en slettet slot | `remove()` bruger samme kø som `write`, `restoreBackup` og "Fortsæt fra sikkerhedskopi" og sletter hovedsave, `.tmp`, `.bak` og `.held` i én transaktion; ny `SlotManager.flush()` venter på operationer i kø og deres commits (fase 5 §7) | `save-package.test.ts` ("remove() runs in the same per-slot queue", test 1–8) |
+
+**Afsluttende målrettet review (runde 5, kun B1 og B2):** ingen blokerende fund. Reviewet fandt ingen accepteret SVG, hvor en dash-egenskab når frem (25 stavemåder, også entities, store/små bogstaver og `style`). En fuzzer kørte 18.000 tilfældige forløb med write, restore og remove på to slots, hvor IndexedDB-commits fejlede tilfældigt. Den fandt 0 afvigelser: rækkefølgen svarer til kaldene, spejlet svarer til lageret, ingen tidligere operation genskaber en slettet slot, og `flush()` hverken fejler eller lækker. Ingen kode kalder `remove` ud over testene, så den ændrede returtype bryder intet.
+
+**Verifikation efter reviewrunderne (lokalt i worktree'en, endelig kode):**
+- Typecheck, lint og CR-02: grønne.
+- CR-01 obligatorisk (`REQUIRE_CLEAN_ROOM_DENYLIST=1`, den private liste): `CR-01: PASS (9588 denylist entries, no matches)`.
+- Unit og coverage: 508 bestået (42 filer), 99,51 % lines, 97,02 % branches, 99,8 % functions; alle tærskler opfyldt, 100 % for `svg.ts`, `storage.ts`, `slots.ts` og `saves.ts`.
+- Scenarier: 9/9 PASS, goldens uændrede.
+- Content-CLI på fixturen (validate, format `--check`, build, validate af bundle, schema `--check`): grøn.
+- Builds (spil, devtools-spil, editor) og `tools/check-build-boundary.mjs`: grønne.
+- Alle 25 SVG'er i repoet består den basale profil (ingen af dem bruger referencer eller stiplede streger).
+- E2E, én browser ad gangen i forgrunden med én worker: Chromium **47 bestået** (6,8 min), Firefox **41 bestået** + 6 skips (5,0 min), WebKit **41 bestået** + 6 skips (7,4 min); 0 fejl, ingen retries eller ændrede timeouts. De 6 skips er de Chromium-only skærmbilledtests.
+
+**Backlog (ikke blokerende, ikke indført af denne PR):**
+- `SlotManager.flush()` medregner kun operationer, der ikke er afgjort ved kaldet. En operation, der allerede er fejlet før kaldet, indgår ikke (den har sit eget `committed`).
+- `damage()`, enkelte `set`/`remove` direkte på lageret og en anden `SlotManager` på samme lager og indhold går uden om køen pr. slot; kun tests og scenarier gør det i dag.
+- `write` dokumenteres som "kaster aldrig", men kaster `RangeError` ved et ugyldigt slotnavn (ældre adfærd; `remove` gør det samme).
+- Den basale SVG-profil begrænser ikke størrelser, tal eller mængden af geometri (fase 6 §8).
+- En `.held`-kopi har endnu ingen brugerflade til gendannelse.
+
+**Kendte forhold efter opfølgningerne:**
+- "Fortsæt fra sikkerhedskopi" og "Gendan sikkerhedskopi" erstatter hovedsavet med `.bak`, også når hovedsavet er intakt, men ikke kan indlæses med det aktuelle indhold. Det fortrængte save gemmes byte for byte i `<slot>.held` (kun det seneste), men der er endnu ingen brugerflade til at gendanne det.
+- I et udviklingsbuild vises et save med forkert checksum som beskadiget i slotlisten, selvom det kan importeres.
+- Spejlet i hukommelsen opdateres før commit, men en fejlet commit rulles tilbage (se reviewrunderne nedenfor), så slotlisten viser det, IndexedDB har, når alle commits er afgjort.
+- Autosave ved lukning er asynkront (slotkø og commit-kæde) og kan nå ikke at blive committet, hvis siden lukkes eller processen dræbes; det seneste committede save og `.bak` er så intakte (fase 5 §13).
+- SVG'er fra tegneprogrammer med egne navnerum (fx `inkscape:`, `sodipodi:`, `<metadata>`) og SVG'er med referencer, gradienter, masker, filtre eller tekst afvises nu og skal eksporteres som almindelig, optimeret SVG med rene former (eller som PNG/WebP).
+- Dev-værktøjernes advisories (§10) er uændrede; opgraderingen af Vite/Vitest er en separat opgave.

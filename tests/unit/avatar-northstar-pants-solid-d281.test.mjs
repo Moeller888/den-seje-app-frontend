@@ -32,10 +32,10 @@ test("D-281 the build refuses a changed master, a pattern, the olive item or ano
   assert.throws(() => PS.candidatesOf(C, { ...pins, studyLayers: { "solid navy (SYNTHETIC)": { sha256: "y", alphaEqualsCut: true } } }), /not D-279's rendering/);
 });
 
-test("D-281 the proposed item entry is the olive trousers' shape; the new items are not in the runtime", () => {
+test("D-281 the proposed item entry is the olive trousers' shape (D-283 integrates exactly it, with the olive trousers' shadow)", () => {
   const olive = AL.NORTHSTAR_ITEMS[PS.SHADOW_OF];
   assert.deepEqual(PS.ITEM_SHAPE, { category: olive.category, layers: olive.layers, shadows: olive.shadows });
-  for (const k of Object.values(C.candidates)) assert.equal(AL.NORTHSTAR_ITEMS[k.item], undefined, k.item + " is not integrated");
+  for (const k of Object.values(C.candidates)) assert.deepEqual({ ...AL.NORTHSTAR_ITEMS[k.item] }, { ...PS.ITEM_SHAPE, shadowsOf: PS.SHADOW_OF }, k.item);
   assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
 });
 

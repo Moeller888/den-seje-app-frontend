@@ -385,11 +385,24 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Solid trousers as items — D-281 (prepared offline; 2 layers staged privately, not published; no item approved; runtime unchanged).**
+- **Shoe master v2 — D-291 (successor to D-289; offline; v1 kept and verified pixel for pixel; nothing published, offered or approved).**
+  - **Rule.** One general rule in OKLab lightness. The painting is split into volume (smoothed) and grain. Volume gets the room the material has above and below its base; grain is never enlarged. A too-light material's base is fitted so its highlights fit. Inner lines stay at least 0.08 L darker than their field.
+  - **Result.** On charcoal the grain falls from 0.061 to 0.017 (source 0.021) and the line contrast rises from 0.12 to 0.21. The chalk sole's volume is restored to the source's. The original colour reproduces the source.
+  - **COMBO-2 under long trousers.** Charcoal and navy+white fail as in v1, and burgundy+gum now also fails, because its lines are darker by design. The check's own flagged pixels are the shoe's drawn inner lines (lace edges, the eyelet seam, the tongue line) 1–3 px under the hem. There is 0 px of the shoe's outer contour among them and the highlights are minor. The results stay FAIL; the assisted diagnosis is recorded apart and the owner decides. See `docs/decisions/D-291.md`.
+- **Shoe master on the low sneaker — D-289 (offline prototype `shoe-master-v1`; no call; nothing published, offered or approved).**
+  - **Cut.** `shoes-sneakers-beige`, chosen for source quality: 2 % clipped, against 62 % for the white sneakers; the black and brown boots are 81–90 % dark. It has no findings and five K outfits.
+  - **Method.** The drawing's own ink lines split the shoe into fields, labelled once per cut by 22 seed points. The shading is carried in linear light: shadows are multiplied and highlights added. The alpha is never changed, so fit and covering stay the cut's. A design is one colour per field (upper, toe, sole, laces, tongue).
+  - **Results.** Four SYNTHETIC samples, with 0 colour residue. Mid tones and panel contrasts are strongest. A very dark material amplifies the painted grain and trips `COMBO-2` under long trousers (laces under the hem, D-253's sensitivity). A very light material flattens the sole's highlight.
+  - **Recommendation.** One general `shoe-master-v2` highlight rule before any candidate. Boots need their own cut. See `docs/decisions/D-289.md`.
+- **Solid trousers in the opt-in — D-283 (the owner approved TS-NAV and TS-SND as items and their 2 layers for publication; flag false).**
+  - **Published.** `bottom-trousers-square-{navy,sand}-pants-v1.webp` with D-281's sha256; the olive trousers' published shadow is reused through `shadowsOf`; the manifest has a D-281 extension (65 files).
+  - **Choice.** A "Bukser" row in the panel (`avatar_northstar_pants`), and "Outfittets egen underdel" returns to the outfit's own bottom. The trousers are offered only on checked top × shoe pairs (`NORTHSTAR_SOLID_PANTS_CHECKED`); all 55 reachable pairs are checked, so all 19 K outfits allow them.
+  - **Verified.** 110 reachable outfits are byte-identical to the pipeline on the published files. In Chromium: 21 pages are unchanged without a choice; the figure is within 2 levels of the reference; choice, reload, switching, return and the missing-layer fallback all work. See `docs/decisions/D-283.md`.
+- **Solid trousers as items — D-281 (prepared offline; 2 layers staged privately; the owner then approved both as items, see D-283).**
   - **Candidates.** `TS-NAV` (`bottom-trousers-square-navy`, [48, 66, 110]) and `TS-SND` (`bottom-trousers-square-sand`, [214, 190, 140]) through `pants-master-v2`, pinned in `tools/avatar/fixtures/northstar-wardrobe/pants-master/ps-candidates-v1.json`.
   - **Checks.** The layers equal D-279's rendering, and their alpha equals the olive trousers'. The olive trousers' published shadow is reused. Runtime equivalence and the outfit check pass 144/144: both candidates × blue, cream and the 16 print tees × four shoes.
   - **Print tees.** Geometry is clean with every print tee. Five colour pairs are advisory-weak: navy on navy, and mustard on sand.
-  - **Pending.** Item approval and publication of the two layers need the owner's decision. See `docs/decisions/D-281.md`.
+  - **Decided.** The owner approved both, including the five low-contrast pairs. See `docs/decisions/D-281.md`.
 - **Pants master v2 — D-279 (successor to D-276; offline; v1 kept; colour-only rules, no geometry change; the owner approved the solid trousers (navy, sand) as candidates, not as items; nothing published).**
   - **Waistband.** It is taken only under the cut's top edge: 0 px outside the waist, against 209 in v1.
   - **Outer edge.** The cut's outer edge takes the outline's ink: the outline's own partial edge pixels and the partial fabric just outside it, 8,444 px, colour only.
