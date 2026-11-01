@@ -21,19 +21,34 @@ export function legacyNormalize(value: unknown): string {
 }
 
 // ── Choices (multiple choice, force_text) ─────────────────────────────────────────────────────────
+//
+// SQL twin: public.normalize_choice_answer (D-290, G1). Every step below is mirrored there character
+// for character, so the two give the same result whatever the database collation is:
+//   NFC → typographic apostrophes to ' → no-break / thin spaces to ' ' → the upper-case letters in
+//   UPPER to their lower-case pair, then lower case → runs of [ \t\n\r] to one space → trim [ \t\n\r].
 
 const APOSTROPHES = /[‘’ʼ′`´]/g; // ‘ ’ ʼ ′ ` ´ → '
+const SPACES = /[   ]/g;                   // no-break, narrow no-break, thin → ' '
+export const UPPER = "ÆØÅÄÖÜÉÈÊËÁÀÂÍÌÎÏÓÒÔÚÙÛÑÇ";
+export const LOWER = "æøåäöüéèêëáàâíìîïóòôúùûñç";
+const WS_RUN = /[ \t\n\r]+/g;
+const WS_EDGE = /^[ \t\n\r]+|[ \t\n\r]+$/g;
 
-// NFC, typographic apostrophes → ', lower case, whitespace runs → one space, trimmed.
+function lowerExplicit(s: string): string {
+  let out = "";
+  for (const ch of s) {
+    const i = UPPER.indexOf(ch);
+    out += i >= 0 ? LOWER[i] : ch;
+  }
+  return out.toLowerCase();
+}
+
 // Nothing else is removed: letters (æ, ø, å …), digits, apostrophes and punctuation all count.
 export function normalizeChoice(value: unknown): string {
   if (typeof value !== "string") return "";
-  return value
-    .normalize("NFC")
-    .replace(APOSTROPHES, "'")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
+  return lowerExplicit(value.normalize("NFC").replace(APOSTROPHES, "'").replace(SPACES, " "))
+    .replace(WS_RUN, " ")
+    .replace(WS_EDGE, "");
 }
 
 // The answer is correct when it normalises to the key, or is one of the reviewed Danish spellings
@@ -46,24 +61,26 @@ export function isChoiceCorrect(answer: unknown, correct: unknown, aliases?: unk
 }
 
 // ── Numbers ───────────────────────────────────────────────────────────────────────────────────────
+//
+// SQL twin: public.normalize_number_answer (D-290, G1), mirrored step for step. Digits are [0-9] only.
 
 const MINUS = /[−–—]/g; // − – — → -
-const THOUSANDS = /^-?\d{1,3}( \d{3})+([.,]\d+)?$/; // "1 000", "12 345,5"
-const PLAIN = /^-?\d+([.,]\d+)?$/;
+const THOUSANDS = /^-?[0-9]{1,3}( [0-9]{3})+([.,][0-9]+)?$/; // "1 000", "12 345,5"
+const PLAIN = /^-?[0-9]+([.,][0-9]+)?$/;
 
 // The canonical decimal string of a number answer, or null when it is not a number.
 // "1,5" → "1.5", "−5" → "-5", "1 000" → "1000", "007" → "7", "2,50" → "2.5", "-0" → "0".
 // Fractions ("1/2"), units ("5 kr") and words are NOT numbers here: they are wrong, never an error.
 export function normalizeNumber(value: unknown): string | null {
   if (typeof value !== "string" && typeof value !== "number") return null;
-  let s = String(value).normalize("NFC").trim().replace(MINUS, "-").replace(/ | /g, " ");
+  let s = String(value).normalize("NFC").replace(MINUS, "-").replace(SPACES, " ").replace(WS_EDGE, "");
   if (THOUSANDS.test(s)) s = s.replace(/ /g, "");
   if (!PLAIN.test(s)) return null;
   s = s.replace(",", ".");
   let negative = s.startsWith("-");
   if (negative) s = s.slice(1);
   let [int, frac = ""] = s.split(".");
-  int = int.replace(/^0+(?=\d)/, "");
+  int = int.replace(/^0+(?=[0-9])/, "");
   frac = frac.replace(/0+$/, "");
   if (int === "0" && frac === "") negative = false;
   return `${negative ? "-" : ""}${int}${frac ? "." + frac : ""}`;

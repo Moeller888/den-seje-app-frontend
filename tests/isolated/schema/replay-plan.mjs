@@ -109,6 +109,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
   "20261101120000_night_owl_stop_new_awards.sql":
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
+  "20261101150000_grading_meaningful_characters.sql":
+    "D-290 G1, not applied in production: it re-creates process_question_attempt, whose production body is still D-280 part 1's (md5 328ea8f9…)",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
