@@ -7,6 +7,19 @@
 //      a completed quest is claimed exactly once, and the real streak is stored.
 // The isolated replay applies 20261031190000_reward_integrity_server_authority.sql (it is applied in
 // production). Synthetic pupils and the synthetic question seed only; nothing reaches production.
+//
+// WHAT IS A service_role FIXTURE AND WHAT IS VERIFIED AS THE PUPIL (kept apart on purpose):
+//   service_role fixtures (setup only, never the behaviour under test):
+//     * the Auth user and the profile; the progress row comes from trigger_ensure_student_progress and
+//       is only created here if it is genuinely missing (makePupil);
+//     * served question instances (serveAndAnswer) — the same backend-owned insert get-next-question does;
+//     * answers RECORDED at a fixed past time (recordedAnswer) — answered_at is server-written, so a time
+//       before or after 04:00 Copenhagen time can only be placed this way;
+//     * every read of the outcome (progressOf, weeklyOf).
+//   verified through the pupil's own authenticated session (the behaviour under test):
+//     * answering through process-event; update_best_session_streak and set_night_correct with the
+//       pupil's token; the refused direct INSERT/UPDATE/DELETE on student_weekly_quest_progress; the
+//       pupil reading their own rows; claim_weekly_quest_reward; and the refusal without a session.
 import { test, expect } from "@playwright/test";
 import { createHash } from "node:crypto";
 import { assertIsolated, SYNTHETIC_EMAIL_DOMAIN } from "./isolation-guard.mjs";
@@ -34,12 +47,20 @@ async function makePupil(request, tag) {
     data: { id, role: "student", full_name: `Syntetisk belønningselev ${tag}`, selected_grade: 7, equipped_slots: {}, active_theme: "default" },
   });
   expect(profile.status(), await profile.text()).toBe(201);
-  // The progress row exists for every real pupil (account creation writes it; the answer and reward
-  // functions only UPDATE it) — created here as the seed's primary-account.mjs does.
-  const progress = await request.post(`${SUPA}/rest/v1/student_progress`, {
-    headers: { ...svc, ...json, prefer: "return=minimal" }, data: { student_id: id },
-  });
-  expect(progress.status(), await progress.text()).toBe(201);
+  // The progress row: the trigger trigger_ensure_student_progress (AFTER INSERT ON profiles, role
+  // 'student'; the same trigger exists in production) creates it with the table defaults when the profile
+  // is inserted. The answer and reward functions only UPDATE it. Use the existing row; create it only if
+  // it is genuinely missing — never reset or overwrite it.
+  const existing = await request.get(`${SUPA}/rest/v1/student_progress?select=student_id&student_id=eq.${id}`, { headers: svc });
+  expect(existing.status(), await existing.text()).toBe(200);
+  if ((await existing.json()).length === 0) {
+    const progress = await request.post(`${SUPA}/rest/v1/student_progress`, {
+      headers: { ...svc, ...json, prefer: "return=minimal" }, data: { student_id: id },
+    });
+    expect(progress.status(), await progress.text()).toBe(201);
+  }
+  const row = await (await request.get(`${SUPA}/rest/v1/student_progress?select=coins,best_session_streak,night_correct&student_id=eq.${id}`, { headers: svc })).json();
+  expect(row.length, "exactly one progress row for the new pupil").toBe(1);
   const signIn = await request.post(`${SUPA}/auth/v1/token?grant_type=password`, { headers: { apikey: ANON }, data: { email, password } });
   expect(signIn.status()).toBe(200);
   return { id, token: (await signIn.json()).access_token };
