@@ -109,6 +109,10 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-290, not applied in production: it creates the open-round guard (guard_open_round_requires_active_question and its trigger on question_instances), which production does not have, and the two questions are still active",
   "20261101150000_grading_meaningful_characters.sql":
     "D-290 G1, not applied in production: it re-creates process_question_attempt, whose production body is still D-280 part 1's (md5 328ea8f9…)",
+  "20261101190000_question_attempts_v2_bootstrap.sql":
+    "H5 integration 1/2, not applied in production (no question_attempts there, catalog 2026-11-01); it requires G1 (20261101150000) first, which is not applied either",
+  "20261101190100_question_attempts_v2_align_grading.sql":
+    "H5 integration 2/2, not applied in production (no process_question_attempt_v2 there, catalog 2026-11-01); it requires G1 and 20261101190000 first",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision

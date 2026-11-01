@@ -1,0 +1,325 @@
+{
+  "decision": "D-299",
+  "kind": "the plan of ONE independent validation call (SV-1) of D-297's locked method on a new tight shoe source; it never authorises by itself (D-300 is the authorisation)",
+  "authorisesImageRequest": false,
+  "purpose": "test the locked rules on a source they were not developed on; the source is not approved beforehand, approval is a possible result after the evaluation; SS-1 stays rejected and development material",
+  "call": {
+    "callId": "SV-1-shoes-sneakers-low-tight-k4",
+    "category": "shoes",
+    "cut": "sneaker-low-k4",
+    "prompt": {
+      "text": "Image 1 is a LAYOUT reference: a pair of low-top lace-up sneakers in a front three-quarter view, exactly as a cartoon avatar wears them, enlarged from a small picture, so it is blurry.\nRedraw this same pair of sneakers as a crisp, clean, high-detail 2D cartoon illustration that uses the full resolution of the canvas, keeping EXACTLY what Image 1 fixes:\n- the same two shoes in the same places, at the same size and angle, with the same outer outlines: the left shoe on the left, the right shoe on the right; do not move, rotate, enlarge, shrink, re-pose or re-proportion them;\n- the same collar line: the top edge of each shoe's opening follows Image 1's collar line exactly, neither higher up the ankle nor lower into the shoe, and that edge is one unbroken line all the way round;\n- the same construction: a low collar with the tongue showing, four horizontal laces on each shoe, a rounded toe cap separated from the upper by a seam line, a thick sole with a bevelled top edge;\n- the same colours: warm beige upper and toe cap, light beige sole and laces, a dark brown outline.\nStyle: the same cartoon style as Image 1, with smooth dark brown outlines of even weight and clean anti-aliased edges, thin brown seam lines, and soft painted shading and highlights. No texture noise, no photographic detail, no logos, no text, and no stripes or decorations that Image 1 does not have.\nThe shoes are worn: each ankle goes into its shoe, so the opening at the top of each shoe is EMPTY and fully transparent, with no inner lining, no sock, no foot, no skin and no leg.\nNo ground, no cast shadow and no background: everything outside the two shoes is fully transparent.",
+      "sha256": "5362d91b277d83881f8f6e724964676673edbbb847f3c182c417e8d34c25aa9a"
+    },
+    "promptChange": {
+      "from": {
+        "decision": "D-294",
+        "sha256": "3dca35b1709893a6dc1583b675a14d24e2d23252613cf7a8b2f94097efc7260e"
+      },
+      "change": "one added bullet after the placement bullet: \"- the same collar line: the top edge of each shoe's opening follows Image 1's collar line exactly, neither higher up the ankle nor lower into the shoe, and that edge is one unbroken line all the way round;\"",
+      "why": "SS-1's only failed rules were the collar's (D-296, D-297: a local 5 px deviation exposing C's foot inside the shoe); every other sentence is D-294's word for word, so the source, size, construction, colours, style, transparency and opening instructions are unchanged. The rules, thresholds and master are not touched by the prompt."
+    }
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1536x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "images": [
+      {
+        "role": "Image 1",
+        "what": "the layout reference: the published low sneaker layer's CROP enlarged x4 (bilinear, premultiplied), transparent outside the shoes; built by northstar-shoe-source.mjs layoutCanvas from assets/avatar-northstar/shoes-sneakers-beige-shoes-v1.webp; derived from a published asset, never C",
+        "name": "sv-1-layout-image-1.png",
+        "bytes": 802060,
+        "sha256": "145a8633653fea9fe368e7a2f5611848a928c8568ad47913e3f547526c8680d3",
+        "location": "<Documents>/DenSejeApp-artefacts/sv-calls/references/sneaker-low-k4/ (byte-identical copy of D-294's reference; the same sha256)"
+      }
+    ],
+    "notSent": [
+      "C (the base figure)",
+      "any other reference",
+      "a mask",
+      "input_fidelity"
+    ]
+  },
+  "geometry": {
+    "crop": {
+      "x0": 320,
+      "y0": 1270,
+      "w": 384,
+      "h": 256
+    },
+    "k": 4,
+    "sourceSize": {
+      "w": 1536,
+      "h": 1024
+    },
+    "mapping": "avatar (x, y) <- source (K (x − crop.x0) + i, K (y − crop.y0) + j), i, j in 0..K−1",
+    "downscale": "premultiplied K x K area average (colour weighted by alpha)",
+    "placement": "at CROP; one global integer translation from the registration (|dx|, |dy| <= 2); never a scale, rotation, warp or per-shoe move",
+    "shoes": "both shoes as in the published layer: left in x < 512, right in x >= 512 (avatar px); the same size, angle and place relative to each other",
+    "fill": "the shoes span about 92 % of the source's width and 84 % of its height (352 x 214 of 384 x 256 avatar px)"
+  },
+  "method": {
+    "revision": "shoe-master-v4-line",
+    "decision": "D-297",
+    "files": {
+      "tools/avatar/northstar-shoe-master.mjs": "fb8f284c6bfc65e222da2f7fbbe090c881018e6bdd0e5bb3b78319e8a5183d0e",
+      "tools/avatar/northstar-shoe-eval-v2.mjs": "93a6872d858706322f17f17c99c7476f79fe7a08a4419fc9332e8cab87044ab0",
+      "tools/avatar/northstar-shoe-source.mjs": "0e0bbb4a0e2f0db88a6825aa1221b58abcc4fca9311a85133c2f64f618520e40",
+      "tools/avatar/northstar-shoe-validation-evaluate.mjs": "082e43a875cb0460e72afb1c1c1b692cbbb3ce37d78d60dfc4deb07329fa1a77",
+      "tools/avatar/northstar-shoe-master-study.mjs": "9a9ba9bf859f9d22f0c37cb3e14b833cb010ada37c9fa5c7f4472af5f02c431f",
+      "tools/avatar/northstar-shoe-edge-study.mjs": "ded062b36ecf8ee5be4ec7829b735dacbe6fd7c69f4550976a7b65ac92b6d6f9",
+      "tools/avatar/northstar-r1-garment.mjs": "d6702ffb808c06f199e2437c76fab54dfea8c68b7a1e0d6842b10eb019e41906"
+    },
+    "parameters": {
+      "SPEC_V4": {
+        "cut": "sneaker-low",
+        "source": "shoes-sneakers-beige",
+        "inkRatio": 0.8,
+        "inkRadius": 4,
+        "seeds": {
+          "sole": [
+            [
+              404,
+              1465
+            ],
+            [
+              618,
+              1465
+            ]
+          ],
+          "toe": [
+            [
+              387,
+              1445
+            ],
+            [
+              634,
+              1445
+            ]
+          ],
+          "upper": [
+            [
+              439,
+              1410
+            ],
+            [
+              377,
+              1404
+            ],
+            [
+              583,
+              1410
+            ],
+            [
+              645,
+              1405
+            ]
+          ],
+          "tongue": [
+            [
+              416,
+              1365
+            ],
+            [
+              605,
+              1365
+            ],
+            [
+              408,
+              1384
+            ],
+            [
+              402,
+              1400
+            ],
+            [
+              613,
+              1384
+            ],
+            [
+              620,
+              1401
+            ]
+          ],
+          "laces": [
+            [
+              413,
+              1377
+            ],
+            [
+              407,
+              1392
+            ],
+            [
+              400,
+              1410
+            ],
+            [
+              396,
+              1421
+            ],
+            [
+              609,
+              1377
+            ],
+            [
+              614,
+              1393
+            ],
+            [
+              621,
+              1410
+            ],
+            [
+              626,
+              1421
+            ]
+          ]
+        },
+        "revision": "shoe-master-v4-line",
+        "model": "oklab",
+        "lineMin": 0.08,
+        "volumeRadius": 6,
+        "maxGain": 3,
+        "edge": {
+          "inkSoft": [
+            0.95,
+            0.6
+          ],
+          "blendRadius": 5
+        },
+        "lineBlend": "nearer",
+        "lineStep": [
+          0.35,
+          0.65
+        ]
+      },
+      "DETAIL_RULE": {
+        "maxAlphaTransitionPx": 2,
+        "maxLineTransitionPx": 2
+      },
+      "GEOMETRY_RULE_SHAPE": {
+        "maxShiftPx": 2,
+        "minShoeIoU": 0.95,
+        "sizeRatio": [
+          0.96,
+          1.04
+        ],
+        "maxCentroidOffsetPx": 2,
+        "shoeComponents": 2,
+        "maxSkinPx": 3
+      },
+      "SKIN_DE": 0.04,
+      "COLLAR_RULE": {
+        "maxP95OffsetPx": 2,
+        "maxOffsetPx": 3,
+        "maxAnkleBandPx": 2,
+        "maxExposedBandPx": 2,
+        "maxInsideExposedPx": 0,
+        "maxGapPx": 0,
+        "maxCoveringChange": 0.01
+      },
+      "COLLAR_ZONE": {
+        "y0": 1340,
+        "y1": 1400
+      },
+      "HALO_RULE": {
+        "kind": "distance",
+        "keepPx": 3
+      },
+      "LINE_RULE": {
+        "inventoryMin": 0.8,
+        "chainContrastMin": 0.9,
+        "chainInventoryMin": 0.9,
+        "weightBand": [
+          0.75,
+          1.35
+        ],
+        "grainMax": 1.3,
+        "splitExcessMax": 0.1
+      },
+      "VOLUME_RULE": {
+        "fields": [
+          "upper",
+          "toe",
+          "sole"
+        ],
+        "sourceMin": 0.7,
+        "chainMin": 0.9
+      },
+      "AA_RULE": {
+        "minEdgeShare": 0.5,
+        "maxHaloPx": 0
+      }
+    },
+    "notUsed": "D-294's pixel counts for the ankle (40 px), the exposed foot (20 px) and its smoothing guard on the published drawing's line positions: replaced by collarCheck (D-297) and sourceLineCheck/chainLineCheck on the drawing's own lines",
+    "evaluator": "tools/avatar/northstar-shoe-validation-evaluate.mjs: check, chain, outfits, views, browser, verdict (every phase runs; nothing is repaired)"
+  },
+  "acceptance": {
+    "source": {
+      "automatic": {
+        "detail": "drawn at K: transitions at most 2 source px after the halo rule",
+        "halo": "partial alpha more than 3 source px from the solid shoe is dropped before anything else (method, not repair); no glow px left in the avatar",
+        "antialiasing": "at least 50 % of the source's silhouette edge pixels have partial alpha",
+        "shape": "per shoe IoU >= 0.95, size ratio 0.96–1.04, centre <= 2 px, two pieces, one global shift <= 2 px",
+        "skin": "at most 3 px of C's ankle skin colour",
+        "collar": "collarCheck: p95 <= 2 px, max <= 3 px, ankle band <= 2 px, exposed band <= 2 px, no foot exposed inside the shoe, no background inside the shoe, covering change <= 1 %",
+        "seeds": "the cut's 22 seeds land in fields at K and at 1x",
+        "lines": "each field keeps >= 80 % of the published drawing's share of line pixels (sharp seams kept; high contrast alone never passes)",
+        "volume": "upper, toe cap and sole keep >= 0.7 x the published drawing's painted volume"
+      },
+      "usable": "every automatic source rule passes AND the owner's visual review of the source is OK",
+      "visual": [
+        "the same pair as the published low sneaker: construction, proportions, angle",
+        "real drawn detail at 1:1 and at a labelled 4x nearest view, not an enlargement",
+        "seams crisp and continuous; laces and eyelets readable, four per shoe",
+        "painted volume kept: soft shading on upper, toe cap and sole, no flat fills",
+        "collar: a clean antialiased edge against the ankle; no skin, no lining, no light rim, no glow"
+      ]
+    },
+    "variant": {
+      "designs": [
+        "original colour",
+        "light chalk (SYNTHETIC)",
+        "dark charcoal (SYNTHETIC)",
+        "contrast navy + white (SYNTHETIC)",
+        "contrast burgundy + gum (SYNTHETIC)"
+      ],
+      "automatic": "the source is usable automatically; the original colour keeps the drawing's line contrast (>= 0.9 x) and line inventory (>= 0.9 x) and its painted volume (>= 0.9 x in upper, toe, sole); the design passes chainLineCheck: line weight 0.75–1.35 x of v2 at K on the same drawing for laces, toe, upper and sole, grain <= 1.3 x v2's + 0.002, no split along lines beyond the drawing's own + 0.1",
+      "usable": "automatic PASS AND the owner's visual OK for that design (1:1, 4x nearest, browser at 110x165 and 300x450, DPR 1–3)"
+    },
+    "combination": {
+      "automatic": "the variant is usable automatically AND R1.checkOutfit passes UNCHANGED with the cream tee over that bottom (six bottoms)",
+      "combo2": {
+        "known": [
+          "dark charcoal (SYNTHETIC) | bottom-trousers-square-olive",
+          "dark charcoal (SYNTHETIC) | bottom-trousers-square-navy",
+          "dark charcoal (SYNTHETIC) | bottom-trousers-square-sand",
+          "contrast navy + white (SYNTHETIC) | bottom-trousers-square-olive",
+          "contrast navy + white (SYNTHETIC) | bottom-trousers-square-navy",
+          "contrast navy + white (SYNTHETIC) | bottom-trousers-square-sand",
+          "contrast burgundy + gum (SYNTHETIC) | bottom-trousers-square-olive",
+          "contrast burgundy + gum (SYNTHETIC) | bottom-trousers-square-navy",
+          "contrast burgundy + gum (SYNTHETIC) | bottom-trousers-square-sand"
+        ],
+        "rule": "a COMBO-2 failure on a known pair is labelled KNOWN_D291 and stays FAIL; a failure on any other pair is labelled NEW and stays FAIL; neither is ignored or presented as the other"
+      },
+      "visualDiagnosis": "the owner may record a visual diagnosis (e.g. 'laces and seams read correctly under the hem') per combination in visual-review.json; it is stored beside the automatic FAIL and never turns it into PASS; a change of the outfit check is a separate decision outside this validation",
+      "usable": "automatic PASS AND the owner's visual OK"
+    },
+    "method": "METHOD CONFIRMED when the owner's visual verdicts agree with the automatic classes for the source and the five variants; METHOD DISAGREES (the rules named) otherwise; INCOMPLETE without the visual review",
+    "rawImageIsNotAMaster": "a good raw image is not an approved master: only the classes above, after the owner's visual review, can make a source, a variant or a combination usable; approving a shoe as an item is a separate owner decision"
+  },
+  "frozen": {
+    "noChangeAfterReceipt": "no rule, threshold, parameter, master or evaluator file changes after receipt within this validation; any correction is a new version and a new validation",
+    "noRepair": "no repair, retouch, free deformation, mask, per-shoe move, retry, reserve or fallback; a failed result ends the validation and is documented",
+    "excluded": "SS-1 (adf02a0a…2fc5) is development material and is never evaluated as this validation's source"
+  }
+}
