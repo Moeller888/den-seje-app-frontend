@@ -74,9 +74,9 @@ Reparationer gives som runtime-advarslen `W-SAVE-REPAIRED` med en af disse typer
 ## 7. Lagring (spec 05 E5)
 
 - **Grænsefladen er synkron** (`get`, `set`, `remove`, `keys` og en valgfri `transaction`). Dermed deler motoren, den headless scenarie-runner og browseren én slotimplementering.
-- **I browseren** åbnes `IndexedDbMirror` én gang (asynkront) og læser alle poster ind i hukommelsen. Derefter er læsninger synkrone. Hver `transaction` (fx én slotskrivning) commit'es som én IDB-transaktion. Fejl meldes gennem `onError` og vises i UI'et.
+- **I browseren** åbnes `IndexedDbMirror` én gang (asynkront) og læser alle poster ind i hukommelsen. Derefter er læsninger synkrone. Hver `transaction` (fx én slotskrivning) commit'es som én IDB-transaktion. En fejlet `transaction` meldes kun gennem sit eget resultat (`committed` for en slotoperation), og spillet viser den. `onError` kaldes kun for enkeltskrivninger uden for en transaktion, som ingen kalder venter på (indstillinger). Se §13.
 - **Fallback:** `localStorage` (`WebStorage`) og ellers kun hukommelse. Den valgte lagring spejles som `data-storage`.
-- **Nøgler:** `engine:<contentId>:<slot>` med `.tmp` og `.bak`; indstillinger ligger under `engine:<contentId>:settings`.
+- **Nøgler:** `engine:<contentId>:<slot>` med `.tmp`, `.bak` og `.held`; indstillinger ligger under `engine:<contentId>:settings`.
 - **Atomisk skrivning:**
   1. `.tmp` skrives og læses tilbage;
   2. det forrige gyldige hovedsave bliver `.bak`;
@@ -85,7 +85,20 @@ Reparationer gives som runtime-advarslen `W-SAVE-REPAIRED` med en af disse typer
 
   En afbrydelse på et hvilket som helst trin efterlader det forrige save eller `.bak` intakt (TS-E09 med fejlindsprøjtning på hvert trin).
 - **Første save i en slot:** `.bak` får en verificeret kopi af det nye save. Dermed tilbyder en beskadiget slot altid en gyldig sikkerhedskopi, når den først er skrevet én gang.
-- `saveIntegrity(raw)` kontrollerer parse, format og checksum uden at kende indholdet. Den bruges til slotlister og til at vælge sikkerhedskopi.
+- `saveIntegrity(raw)` kontrollerer parse, format og checksum uden at kende indholdet.
+- **Gyldig slot (opfølgning, `docs/release-readiness.md` §17):** en passende checksum er ikke nok. Spillet giver `SlotManager` en `loadable`-kontrol, der kører `parseSave` mod det aktuelle indhold (samme validering og migration som et rigtigt load). Et intakt save, som indholdet ikke kan indlæse (fx efter en indholdsopdatering), vises som `corrupt` med `reason: "unloadable"` ("kan ikke indlæses"), og `.bak` tilbydes kun, når den kan indlæses. Status og knappen viser tydeligt "sikkerhedskopi kan gendannes".
+  - Vurderingen caches pr. gemt tekst (højst 32), så en slotliste ikke parser eller migrerer det samme save igen ved hver opdatering.
+  - Et save, der ikke kan indlæses, flyttes aldrig til `.bak` over en sikkerhedskopi, der kan.
+  - **Rotation (anden opfølgning, §17).** Garantien er afgrænset: det hovedsave, som den aktuelle operation fortrænger, mistes ikke lydløst under den operation. Det er ikke en ubegrænset historik. Før hovedsavet erstattes – af et nyt save, af "Gendan sikkerhedskopi" eller af "Fortsæt" fra en sikkerhedskopi – gælder:
+    - et hovedsave, der kan indlæses, bliver `.bak`. `.bak` er én generation almindelig sikkerhedskopi, så den ældre `.bak` udgår – også når den er intakt, men ikke kan indlæses;
+    - et intakt hovedsave, som indholdet ikke kan indlæse (fx skrevet af et nyere build), kopieres byte for byte til `<slot>.held`, og `.bak` bliver stående;
+    - et beskadiget hovedsave gemmes ikke (dets bytes er ikke længere et save).
+  - `.held` rummer kun det senest fortrængte sådanne save; en senere inkompatibel rotation erstatter det. Kopien læses tilbage, før hovedsavet røres, og alle skrivninger sker som én enhed, hvor lageret har transaktioner; en fejlet IndexedDB-commit rulles tilbage i spejlet (§13). En afbrydelse på et hvilket som helst trin efterlader derfor det fortrængte save i hovedsavet eller i `.held`.
+  - `.held` vises ikke i slotlisten og har endnu ingen brugerflade til gendannelse, fordi dette indhold ikke kan indlæse det. Den bliver liggende til et build, der kan, og `remove` sletter den sammen med slotten. Slotlisten tæller en slot én gang, uanset nøgle. Ingen migration er nødvendig: ældre builds kender ikke `.held` og lader den ligge.
+  - **Én operation ad gangen pr. slot (tredje og femte opfølgning):** `write`, `restoreBackup` (også brugt af "Fortsæt" fra en sikkerhedskopi) og `remove` køres efter hinanden pr. slot, i den rækkefølge de kaldes. Har slotten en commit, der ikke er afgjort, venter den næste operation og læser først hovedsave, `.bak` og `.held` og planlægger sin rotation, når den forrige er committet eller rullet tilbage. En fejlet operation blokerer ikke køen. Forskellige slots er uafhængige, og et synkront lager venter aldrig. En operation i kø svarer `ok` med det samme; dens `committed` bliver `false`, hvis den afvises eller fejler, når den kører. "Gemt" og `data-last-save` vises kun for en bekræftet commit, og et ældre resultat overskriver aldrig status fra et nyere (`statusOrder` i `app/src/model/saves.ts`). En fejl meldes altid.
+  - **Sletning:** `remove` sletter hovedsave, `.tmp`, `.bak` og `.held` i én transaktion og står i samme kø. Når en sletning er committet, kan ingen tidligere operation genskabe slotten; en senere `write` må skrive slotten igen. En fejlet sletning rulles tilbage i spejlet, og lageret beholder alle fire nøgler.
+  - **`flush()`:** `SlotManager.flush()` venter på alle slotoperationer, der er startet eller sat i kø før kaldet, inklusive deres commit, og svarer `true`, når de alle er committet. Lagerets egen `IndexedDbMirror.flush()` (og `SaveServices.flush` i spillet) er smallere: den venter kun på commits, der allerede er sendt til IndexedDB, ikke på slotoperationer, der stadig venter i en slotkø.
+  - Scenarie-runneren bruger stadig kun checksummen (ingen `loadable`), så dens goldens er uændrede.
 
 ## 8. Autosave (spec 05 E3.2)
 
@@ -169,8 +182,18 @@ Der autogemmes i slot `auto`:
     - Klassen sættes synkront i `pointerdown`-håndteringen, så klikkets tidsstempel ligger altid før feedbackens start. Nedre grænse holder derfor uden at afhænge af maskinens hastighed. En feedback, der allerede er slut før Playwrights næste polling, bliver stadig registreret.
     - Produktets 200 ms, timeouts og retries er uændrede, og der er ingen sleeps eller skips.
     - Gentagne kørsler med én worker: Chromium 10/10, Firefox 3/3, WebKit 3/3.
+- **IndexedDB-fejl (opfølgning F4, `docs/release-readiness.md` §17):** hver commit har sit eget resultat. En slot-skrivning (en batch) svarer med `committed` til den, der skrev, og "Gemt" vises kun efter netop den skrivnings bekræftelse. Enkeltskrivninger uden en ventende kalder (indstillinger) rapporteres via `onError`. `error` og `abort` for samme transaktion tæller kun én gang, og `flush()` har ingen tilstand, så et ignoreret kald hverken skjuler eller flytter en fejl.
+  - **Rollback (anden og tredje opfølgning):** spejlet i hukommelsen opdateres med det samme. Hver commit husker for hver nøgle, den skriver, værdien før sin første skrivning til nøglen (eller at nøglen ikke fandtes).
+    - Når en commit fejler, sættes disse værdier tilbage, både ved `set` og ved `delete`. Det gælder ved fejl i et request, i transaktionen, ved `abort`, ved et synkront kast (så afbrydes transaktionen også, så intet af den committes) og når callbacken kaster.
+    - Har en senere, uafgjort commit skrevet samme nøgle, beholder spejlet den senere værdi. Den senere commit arver den ældre værdi som sin egen "før"-værdi, så en senere fejl også går tilbage til det, lageret faktisk har.
+    - Når alle commits er afgjort, viser spejlet derfor præcis det, IndexedDB har.
+  - **Indlejrede transaktioner:** en indlejret `transaction` deler den ydre batch og dens "før"-værdier. Kaster en indlejret callback, fejler hele den ydre batch – også selv om den ydre callback fanger fejlen. Den rulles tilbage og committes ikke, så ingen halv indre enhed når lageret.
 - **IndexedDB og flere faner:** to åbne faner har hver sin hukommelseskopi. Den sidste skrivning pr. nøgle vinder. Der er ingen synkronisering mellem faner.
-- **Autosave ved lukning:** IDB-transaktionen startes synkront ved `visibilitychange`. Browseren gennemfører den normalt, men det kan ikke garanteres, hvis processen dræbes.
+- **Autosave ved lukning:** ved `visibilitychange` → `hidden` beder spillet om et autosave. Er motoren ikke idle, venter forespørgslen til næste idle-punkt (`tick()` pr. frame, som browseren kan sætte på pause i en skjult fane). Selve skrivningen er asynkron:
+  - slotkøen venter på en tidligere, uafgjort commit til samme slot, før den planlægger rotationen og skriver i spejlet;
+  - IndexedDB-transaktionen startes i commit-kæden, dvs. tidligst i en mikroopgave efter skrivningen og først når alle tidligere commits er afgjort.
+
+  Browseren gennemfører normalt en påbegyndt transaktion, men det er ikke garanteret, at autosavet når at starte eller blive committet, hvis siden lukkes eller processen dræbes. En transaktion, der ikke committes, ændrer intet i lageret, så det seneste committede save og dets `.bak` er stadig intakte.
 
 ## 14. Clean-room
 
