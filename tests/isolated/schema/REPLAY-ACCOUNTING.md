@@ -58,6 +58,9 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   produktionen, så ingen af dem afspilles, før de er anvendt og verificeret; da afspilles den første,
   og den anden behandles som data efter planens regler. A, B og kommentarrettelsen er anvendt og
   verificeret og anvendes derfor også her (se "Anvendt i produktionen efter planens første version").
+- **Ikke anvendt i produktionen (D-292):** `20261101170000_achievement_reward_exactly_once` ændrer
+  `grant_achievement_rewards` (belønningen indløses atomisk, præcis én gang) og fjerner EXECUTE for
+  `PUBLIC` og `anon`. Den afspilles ikke, før den er anvendt og verificeret i produktionen.
 
 ## Anvendt i produktionen efter planens første version
 En fil fjernes fra `NOT_IN_PRODUCTION`, først når den er anvendt **og** verificeret i produktionen.
