@@ -57,7 +57,9 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   - `20261031230000_claim_daily_reward_exactly_once` (D-284): `claim_daily_reward` har md5 `80273d5d…`.
   - `20261101120000_night_owl_stop_new_awards` (D-286): `evaluate_achievements` har md5 `9bd9a5d5…`, og
     `authenticated` har stadig EXECUTE på `set_night_correct`.
-  - `20261101140000_deactivate_two_misgraded_questions` (D-290 G2): de to spørgsmål er stadig aktive.
+  - `20261101140000_deactivate_two_misgraded_questions` (D-290 G2): de to spørgsmål er stadig aktive,
+    og produktionen har ikke værnet `guard_open_round_requires_active_question` med dets trigger på
+    `question_instances`. Filen er derfor ikke længere ren data.
   - `20261101150000_grading_meaningful_characters` (D-290 G1): `process_question_attempt` er D-280 del
     1's udgave.
   - `20261101190000_question_attempts_v2_bootstrap` og
