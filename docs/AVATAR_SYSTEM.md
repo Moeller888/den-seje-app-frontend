@@ -385,11 +385,15 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Solid trousers as items — D-281 (prepared offline; 2 layers staged privately, not published; no item approved; runtime unchanged).**
+- **Solid trousers in the opt-in — D-283 (the owner approved TS-NAV and TS-SND as items and their 2 layers for publication; flag false).**
+  - **Published.** `bottom-trousers-square-{navy,sand}-pants-v1.webp` with D-281's sha256; the olive trousers' published shadow is reused through `shadowsOf`; the manifest has a D-281 extension (65 files).
+  - **Choice.** A "Bukser" row in the panel (`avatar_northstar_pants`), and "Outfittets egen underdel" returns to the outfit's own bottom. The trousers are offered only on checked top × shoe pairs (`NORTHSTAR_SOLID_PANTS_CHECKED`); all 55 reachable pairs are checked, so all 19 K outfits allow them.
+  - **Verified.** 110 reachable outfits are byte-identical to the pipeline on the published files. In Chromium: 21 pages are unchanged without a choice; the figure is within 2 levels of the reference; choice, reload, switching, return and the missing-layer fallback all work. See `docs/decisions/D-283.md`.
+- **Solid trousers as items — D-281 (prepared offline; 2 layers staged privately; the owner then approved both as items, see D-283).**
   - **Candidates.** `TS-NAV` (`bottom-trousers-square-navy`, [48, 66, 110]) and `TS-SND` (`bottom-trousers-square-sand`, [214, 190, 140]) through `pants-master-v2`, pinned in `tools/avatar/fixtures/northstar-wardrobe/pants-master/ps-candidates-v1.json`.
   - **Checks.** The layers equal D-279's rendering, and their alpha equals the olive trousers'. The olive trousers' published shadow is reused. Runtime equivalence and the outfit check pass 144/144: both candidates × blue, cream and the 16 print tees × four shoes.
   - **Print tees.** Geometry is clean with every print tee. Five colour pairs are advisory-weak: navy on navy, and mustard on sand.
-  - **Pending.** Item approval and publication of the two layers need the owner's decision. See `docs/decisions/D-281.md`.
+  - **Decided.** The owner approved both, including the five low-contrast pairs. See `docs/decisions/D-281.md`.
 - **Pants master v2 — D-279 (successor to D-276; offline; v1 kept; colour-only rules, no geometry change; the owner approved the solid trousers (navy, sand) as candidates, not as items; nothing published).**
   - **Waistband.** It is taken only under the cut's top edge: 0 px outside the waist, against 209 in v1.
   - **Outer edge.** The cut's outer edge takes the outline's ink: the outline's own partial edge pixels and the partial fabric just outside it, 8,444 px, colour only.

@@ -5,7 +5,9 @@
 // and engine starts on the chosen path. "Nuværende avatar" removes the stored outfit.
 // D-275: a second row offers the 16 owner-approved print tees (D-274) for the outfits whose top is the
 // cream tee (K01–K09); stored the same way (avatar_northstar_tee), ignored for every other outfit.
-import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PRINT_TEES, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarTeeAllowed } from "./avatar-layers.js";
+// D-283: a third row offers the 2 owner-approved solid trousers (D-281) in place of the outfit's bottom wherever the top and shoes are
+// a pair D-281 checked; stored the same way (avatar_northstar_pants). "Outfittets egen underdel" returns to the outfit's own bottom.
+import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarTeeAllowed, northstarPantsAllowed } from "./avatar-layers.js";
 
 function store(key, value) {
   try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch (_e) { return false; }
@@ -15,13 +17,14 @@ export function applyNorthstarUrlOptIn(search) {
   let v = null;
   try { v = new URLSearchParams(search || "").get("northstar"); } catch (_e) { v = null; }
   if (v === "1") store(NORTHSTAR_OPT_IN_KEY, "1");
-  else if (v === "0") { store(NORTHSTAR_OPT_IN_KEY, null); store(NORTHSTAR_OUTFIT_KEY, null); store(NORTHSTAR_TEE_KEY, null); }
+  else if (v === "0") { store(NORTHSTAR_OPT_IN_KEY, null); store(NORTHSTAR_OUTFIT_KEY, null); store(NORTHSTAR_TEE_KEY, null); store(NORTHSTAR_PANTS_KEY, null); }
   return v;
 }
 
 export function mountNorthstarPanel(panel, preview) {
   if (!panel || !isNorthstarWardrobeOn()) return false;
   const current = northstarSelectedOutfit(), tee = northstarSelectedTee(), teeOk = northstarTeeAllowed(current), shown = teeOk && tee ? tee : null;
+  const pants = northstarSelectedPants(), pantsOk = northstarPantsAllowed(current, shown), shownPants = pantsOk && pants ? pants : null;
   panel.textContent = "";
   const title = document.createElement("div");
   title.className = "panel-title";
@@ -50,7 +53,14 @@ export function mountNorthstarPanel(panel, preview) {
   const tees = row("northstar-tee-list");
   for (const [id, t] of Object.entries(NORTHSTAR_PRINT_TEES)) button(tees, t.label, NORTHSTAR_TEE_KEY, id, id === shown, !teeOk);
   button(tees, "Outfittets egen T-shirt", NORTHSTAR_TEE_KEY, null, teeOk && !shown, !teeOk);
-  const what = () => (current ? current + (shown ? " med " + NORTHSTAR_PRINT_TEES[shown].label : "") : "");
+  const pantsTitle = document.createElement("div");
+  pantsTitle.className = "northstar-subtitle";
+  pantsTitle.textContent = "Bukser";
+  const pantsList = row("northstar-pants-list");
+  for (const [id, p] of Object.entries(NORTHSTAR_SOLID_PANTS)) button(pantsList, p.label, NORTHSTAR_PANTS_KEY, id, id === shownPants, !pantsOk);
+  button(pantsList, "Outfittets egen underdel", NORTHSTAR_PANTS_KEY, null, pantsOk && !shownPants, !pantsOk);
+  const what = () => { const parts = [shown ? NORTHSTAR_PRINT_TEES[shown].label : null, shownPants ? NORTHSTAR_SOLID_PANTS[shownPants].label : null].filter(Boolean);
+    return current ? current + (parts.length ? " med " + parts.join(" og ") : "") : ""; };
   const describe = () => {
     const path = preview && preview.dataset ? preview.dataset.avatarRenderPath : null;
     if (!current) status.textContent = "Vælg et outfit for at se den nye figur. Valget gemmes kun i denne browser.";
@@ -63,6 +73,8 @@ export function mountNorthstarPanel(panel, preview) {
   panel.appendChild(list);
   panel.appendChild(teeTitle);
   panel.appendChild(tees);
+  panel.appendChild(pantsTitle);
+  panel.appendChild(pantsList);
   panel.appendChild(status);
   panel.hidden = false;
   return true;
