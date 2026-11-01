@@ -385,6 +385,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Shoe evaluation v2 and shoe master v4 — D-297 (offline; 0 image calls; SS-1 stays rejected; v1–v3 unchanged; no shoe approved).**
+  - **Collar.** `collarCheck` replaces pixel counts with the 2-D distance to the reference collar plus the consequence on C (band over the ankle, exposed band, foot exposed inside the shoe, background inside the shoe). It is right on all 9 known good/bad cases, where D-294's counts were wrong on 4. SS-1 still fails (a local 5 px deviation).
+  - **Halo.** D-296's 611 px counted the new drawing's own outline; the real glow in the avatar is 39 px at alpha ≈ 1. A fixed alpha floor of 16 is rejected (it leaves a stronger glow and cuts real antialiasing). The rule is to drop partial alpha more than 3 source px from the solid shoe; a glow closer than that is caught by the detail rule.
+  - **Lines.** The line measures now run on each drawing's own lines, and `splitAlong` tells a zigzag along a line (0.553) from a drawing (0.035). Master v4 (`lineBlend: "nearer"`) keeps each side's own line, with no heavier laces or extra grain. At 1× the published 2 px lines limit the gain; COMBO-2 with long trousers is unchanged (D-291).
+  - **Recommendation.** The method (K-source, halo distance + detail rule, collar check v2, source/chain line checks, master v4) is ready for later independent validation. The blocker is that no accepted source exists. See `docs/decisions/D-297.md`.
 - **SS-1 result — D-296 (one call sent and received; REJECTED by the D-294 check; D-295 closed; no shoe approved; the raster problem not solved).**
   - **Source.** Really drawn at 4× (1 px transitions), with the right size and place (IoU 0.97, shift −1,1), an antialiased collar and no skin.
   - **Rejection.** The collar line deviates 1–2 px: 96 px over the ankle (limit 40) and 41 px of exposed ankle (limit 20). There is also a faint glow (611 px at mean alpha 26).
