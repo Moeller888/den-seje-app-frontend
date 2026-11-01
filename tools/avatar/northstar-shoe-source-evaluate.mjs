@@ -14,7 +14,9 @@
 //              110x165 and 300x450 CSS px, DPR 1, 2, 3 (shoe crops at device pixels).
 // Field seeds at K: the cut's seeds mapped (seedsFor); each must land in a field of the new drawing (the build refuses otherwise:
 // a new drawing whose fields do not match needs its seeds entered once — reported, not guessed).
-// Usage: node --expose-gc tools/avatar/northstar-shoe-source-evaluate.mjs --source <png> --out <dir> --phase check|chain|outfits|views|browser [--rehearsal] [--dwebp <dwebp.exe>]
+// D-296: --diagnostic-after-reject runs the later phases on a source the check REJECTED, to show what it does; every output carries
+// the rejection (the verdict is never changed, no rule, threshold, master or post-processing differs).
+// Usage: node --expose-gc tools/avatar/northstar-shoe-source-evaluate.mjs --source <png> --out <dir> --phase check|chain|outfits|views|browser [--rehearsal | --diagnostic-after-reject] [--dwebp <dwebp.exe>]
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -40,6 +42,7 @@ const sha = (b) => createHash("sha256").update(b).digest("hex"), rss = () => Mat
 export const SMOOTHING_GUARD = 0.9;
 export const DESIGNS = Object.freeze(["original colour", "light chalk (SYNTHETIC)", "dark charcoal (SYNTHETIC)", "contrast navy + white (SYNTHETIC)", "contrast burgundy + gum (SYNTHETIC)"]);
 export const ROUTES = Object.freeze({ "published v2 at 1x": "the published source through master v2 at avatar resolution (D-291)", "new source v2 at K": "the new source through master v2 at K, downscaled (SOURCE EFFECT against the first)", "new source v3 at K": "the new source through the v3 edge rules at K, downscaled (MASTER EFFECT against the second)" });
+let MODE = "normal";   // "rehearsal" (a stand-in) or "diagnostic-after-reject" (a real source the check rejected)
 const slug = (s) => s.split(" (")[0].replace(/[^a-z0-9]+/gi, "-").toLowerCase();
 const savePng = (f, im) => writeFileSync(f, encodePng(im.w, im.h, im.px)), loadPng = (f) => { const d = decodePng(readFileSync(f)); return { w: d.header.w, h: d.header.h, px: Uint8ClampedArray.from(d.px) }; };
 const tpl = (L) => R1.templateFromLayers({ shoes: L }, { category: "shoes", covering: "closed-footwear", cut: SM.SPEC.cut });
@@ -82,7 +85,7 @@ function phaseChain(OUT, SRC, rehearsal) {
   // source's (v2 at 1x): softer edges bought by losing the seams are not an improvement
   const guard = {}; for (const n of DESIGNS) { const a = res[slug("published v2 at 1x") + "--" + slug(n)], b = res[slug("new source v2 at K") + "--" + slug(n)], lost = [];
     for (const g of Object.keys(a.lineContrast)) if (a.lineContrast[g] && b.lineContrast[g] < SMOOTHING_GUARD * a.lineContrast[g]) lost.push(g + " " + a.lineContrast[g] + " -> " + b.lineContrast[g]); guard[n] = { ok: !lost.length, linesLost: lost }; }
-  writeFileSync(join(OUT, "chain.json"), JSON.stringify({ rehearsal: !!rehearsal, routes: ROUTES, results: res, smoothingGuard: guard, memory: mem }, null, 2) + "\n");
+  writeFileSync(join(OUT, "chain.json"), JSON.stringify({ rehearsal: !!rehearsal, mode: MODE, verdictOfTheCheck: c.verdict, routes: ROUTES, results: res, smoothingGuard: guard, memory: mem }, null, 2) + "\n");
   console.log(JSON.stringify({ phase: "chain", smoothingGuard: guard, results: Object.fromEntries(Object.entries(res).map(([k, v]) => [k, v.edges["outline flank"] + "/" + v.edges["inner line flank"] + " split " + v.splitLines + " collar " + v.collar.partialShare])), peakMB: Math.max(...mem.map((m) => m[1])) }));
 }
 
@@ -100,7 +103,7 @@ function phaseOutfits(OUT, DWEBP, rehearsal, onlyRoutes) {
     savePng(join(OUT, "crops", key + "--hem.png"), crop(fl, [336, 1290, 688, 1504], 1)); savePng(join(OUT, "crops", key + "--app110.png"), down(fl, 110, 165)); savePng(join(OUT, "crops", key + "--app52.png"), down(fl, 52, 78));
     if (b === "bottom-shorts-navy" || b === "bottom-trousers-square-sand") writeFileSync(join(OUT, "composites", key + ".png"), encodePng(W, H, fl));
     units[key] = u; c = null; shoes = null; gc(); mem.push([key, rss()]); }
-  writeFileSync(join(OUT, "outfits.json"), JSON.stringify({ rehearsal: !!rehearsal, units, memory: mem }, null, 2) + "\n");
+  writeFileSync(join(OUT, "outfits.json"), JSON.stringify({ rehearsal: !!rehearsal, mode: MODE, units, memory: mem }, null, 2) + "\n");
   console.log(JSON.stringify({ phase: "outfits", units: Object.keys(units).length, failed: Object.entries(units).filter(([, u]) => !u.ok).map(([k, u]) => k + ":" + u.failed.join("|")), peakMB: Math.max(...mem.map((m) => m[1])) }));
 }
 
@@ -112,7 +115,7 @@ function phaseViews(OUT, rehearsal) {
     savePng(join(OUT, "ev-" + slug(r) + "--" + bn + "--1to1.png"), grid(t, routes.length, 4)); savePng(join(OUT, "ev-" + slug(r) + "--" + bn + "--x4-nearest.png"), grid(t.map((im) => big(im, 4)), routes.length, 6)); savePng(join(OUT, "ev-" + slug(r) + "--" + bn + "--x4-interpolated.png"), grid(t.map((im) => bilinear(im, 4)), routes.length, 6)); }
   if (existsSync(join(OUT, "outfits.json"))) for (const b of BOTTOMS) { const hr = routes.filter((ro) => existsSync(join(OUT, "crops", slug(ro) + "--" + slug(DESIGNS[0]) + "--" + b.replace("bottom-", "") + "--hem.png")));
     if (hr.length) savePng(join(OUT, "ev-hems--" + b.replace("bottom-", "") + ".png"), grid(DESIGNS.flatMap((n) => hr.map((ro) => C(slug(ro) + "--" + slug(n) + "--" + b.replace("bottom-", "") + "--hem.png"))), hr.length, 6)); }
-  const label = rehearsal ? "GENERALPRØVE PÅ EN STAND-IN (en forstørret kopi af den publicerede sko, ikke en ny kilde)" : "Ny kilde";
+  const label = MODE === "diagnostic-after-reject" ? "AFVIST — DIAGNOSTISK VISNING EFTER AFVISNING (ikke en godkendelse; reglerne er uændrede)" : rehearsal ? "GENERALPRØVE PÅ EN STAND-IN (en forstørret kopi af den publicerede sko, ikke en ny kilde)" : "Ny kilde";
   writeFileSync(join(OUT, "index.html"), '<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Skokilde: evaluering</title><style>body{margin:0;padding:16px;font:14px/1.45 system-ui,sans-serif;background:#f4f2ee;color:#1d1d1f}@media (prefers-color-scheme:dark){body{background:#18181a;color:#eee}}img{max-width:100%;height:auto;image-rendering:pixelated;border:1px solid #d9d5cc}figcaption{font-size:12px;opacity:.75}.note{border:1px solid #d9d5cc;border-radius:8px;padding:10px;max-width:72em}</style></head><body>'
     + "<h1>Skokilde (D-294) — " + label + "</h1><p class=\"note\">Privat; viser C. Kolonner: " + routes.join(" | ") + "; rækker: " + DESIGNS.join(", ") + ". Afgørelse: <b>" + c.verdict + "</b>" + (c.problems.length ? ": " + c.problems.join("; ") : "") + ". Ingen sko er godkendt.</p>"
     + Object.keys(REGIONS).map((r) => "<h2>" + r + "</h2>" + ["light", "dark"].map((bn) => ["1to1", "x4-nearest", "x4-interpolated"].map((v) => '<figure><img src="ev-' + slug(r) + "--" + bn + "--" + v + '.png"><figcaption>' + ({ "1to1": "1:1 (faktiske pixels)", "x4-nearest": "4× NÆRMESTE NABO", "x4-interpolated": "4× INTERPOLERET (visningshjælp, ingen ny detalje)" })[v] + " — " + bn + "</figcaption></figure>").join("")).join("")).join("")
@@ -135,7 +138,8 @@ async function phaseBrowser(OUT) {
 }
 
 async function main() {
-  const args = process.argv.slice(2), at = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null), OUT = outDir(at("--out")), phase = at("--phase"), SRC = at("--source"), rehearsal = args.includes("--rehearsal");
+  const args = process.argv.slice(2), at = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null), OUT = outDir(at("--out")), phase = at("--phase"), SRC = at("--source"), diag = args.includes("--diagnostic-after-reject"), rehearsal = args.includes("--rehearsal") || diag;
+  if (args.includes("--rehearsal") && diag) throw new Error("--rehearsal and --diagnostic-after-reject exclude each other"); MODE = diag ? "diagnostic-after-reject" : args.includes("--rehearsal") ? "rehearsal" : "normal";
   if (phase !== "browser" && phase !== "views" && (!SRC || !existsSync(SRC))) throw new Error("--source <the 1536x1024 PNG>");
   if (phase === "check") return phaseCheck(OUT, SRC, rehearsal); if (phase === "chain") return phaseChain(OUT, SRC, rehearsal); if (phase === "outfits") return phaseOutfits(OUT, at("--dwebp"), rehearsal, at("--routes") ? at("--routes").split(",") : null);
   if (phase === "views") return phaseViews(OUT, rehearsal); if (phase === "browser") return phaseBrowser(OUT);

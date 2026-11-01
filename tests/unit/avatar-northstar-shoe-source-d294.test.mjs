@@ -74,3 +74,9 @@ test("D-294 the evaluator refuses an --out inside the repository and a source of
   const a = spawnSync(process.execPath, [ev, "--out", join(REPO, "tools/avatar/build/d294"), "--phase", "check", "--source", join(REPO, "package.json")], { encoding: "utf8", env: CHILD_ENV }); assert.equal(a.status, 1); assert.match(a.stderr, /REFUSED: --out must be outside the repository/);
   const src = readFileSync(ev, "utf8"); assert.match(src, /the source must be a/); assert.match(src, /SMOOTHING_GUARD/); assert.match(src, /REJECTED/);
 });
+
+test("D-296 the evaluator's --diagnostic-after-reject only labels: it excludes --rehearsal and every later output carries the check's rejection", () => {
+  const src = readFileSync(join(REPO, "tools/avatar/northstar-shoe-source-evaluate.mjs"), "utf8");
+  assert.match(src, /--rehearsal and --diagnostic-after-reject exclude each other/); assert.match(src, /verdictOfTheCheck: c\.verdict/); assert.match(src, /AFVIST — DIAGNOSTISK VISNING EFTER AFVISNING/);
+  for (const k of ["maxPaintOverAnklePx: 40", "maxNewlyExposedFootPx: 20", "maxSkinPx: 3", "minShoeIoU: 0.95"]) assert.match(readFileSync(join(REPO, "tools/avatar/northstar-shoe-source.mjs"), "utf8"), new RegExp(k.replace(".", "\.")), "the D-294 rule is unchanged: " + k);
+});

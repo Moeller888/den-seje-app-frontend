@@ -385,6 +385,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **SS-1 result — D-296 (one call sent and received; REJECTED by the D-294 check; D-295 closed; no shoe approved; the raster problem not solved).**
+  - **Source.** Really drawn at 4× (1 px transitions), with the right size and place (IoU 0.97, shift −1,1), an antialiased collar and no skin.
+  - **Rejection.** The collar line deviates 1–2 px: 96 px over the ankle (limit 40) and 41 px of exposed ankle (limit 20). There is also a faint glow (611 px at mean alpha 26).
+  - **Evaluation and master.** The locked chain measures used the old drawing's line positions, which is invalid for a new drawing. Measured on its own lines, there is no smoothing loss, but the master's colour-border fault persists (navy 57 %).
+  - **Next.** Rule decisions (collar distance, alpha floor, own-line measures) and the master border must be settled before any new call. See .
 - **A tight shoe source at K = 4 — D-294 plan and evaluation, D-295 authorisation of at most one call (prepared, NOT executed; 0 image calls; no shoe to approval; the raster problem not recorded as solved).**
   - **Geometry.** CROP x 320–704, y 1270–1526 at K = 4 gives one 1536×1024 `images/edits` call. Its one reference is the published sneaker's crop enlarged ×4, and C is never sent. The source maps to the avatar by a premultiplied 4×4 area average and one global shift of at most 2 px; no scale, warp, per-shoe move or retouch.
   - **Rejection.** A source fails on detail (transitions ≤ 2 source px, so an enlargement fails), per-shoe IoU ≥ 0.95, size ratio 0.96–1.04 (R1's problem), skin ≤ 3 px, paint over the ankle, covering change, and seeds that do not land in fields.
