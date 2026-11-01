@@ -189,9 +189,12 @@ describe("final review F2: ids that differ only in case would be one file on Win
 describe("final review F3: SVG character references never throw", () => {
   it("references beyond U+10FFFF or too long to be a number become U+FFFD instead of a RangeError", () => {
     for (const ref of [`&#x${"f".repeat(300)};`, `&#${"9".repeat(400)};`, "&#x110000;", "&#1114112;"]) {
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg"><a href="${ref}"><rect width="1" height="1"/></a></svg>`;
+      // (<a> is no longer on the SVG allowlist, so the references sit in text and in an allowed attribute.)
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg"><desc>${ref}</desc><rect id="r${ref}" width="1" height="1"/></svg>`;
       expect(() => detectAsset("x.svg", encodeText(svg)), ref).not.toThrow();
       expect(detectAsset("x.svg", encodeText(svg)), ref).toMatchObject({ type: "image/svg+xml" });
+      // In a reference it is refused, still without throwing.
+      expect(detectAsset("x.svg", encodeText(`<svg><use href="${ref}"/></svg>`)), ref).toHaveProperty("forbidden");
     }
     // The decoding itself still works for real references.
     expect(detectAsset("x.svg", encodeText('<svg><a href="&#x10FFFF;&#106;avascript:x">x</a></svg>'))).toHaveProperty("forbidden");

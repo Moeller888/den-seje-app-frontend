@@ -61,6 +61,8 @@ export default defineConfig({
         "packages/content-tools/src/schema.ts": FULL,
         "packages/content-tools/src/polygon.ts": FULL,
         "packages/content-tools/src/nav.ts": FULL,
+        // Follow-up: the SVG allowlist is security code and fully covered.
+        "packages/content-tools/src/svg.ts": FULL,
         "packages/content-tools/src/*.ts": { lines: 97, statements: 97, functions: 100, branches: 90 },
         // One defensive guard is unreachable while the membership invariant holds (docs/decisions/phase-2.md §11).
         "packages/core/src/navigator.ts": { ...FULL, branches: 99 },
