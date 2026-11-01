@@ -105,12 +105,8 @@ export function extractSchemaPart(file, sql) {
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
 export const NOT_IN_PRODUCTION = Object.freeze({
-  "20261031194600_mc_length_cue_answer_paths.sql":
-    "D-280 part 1, not applied in production: it changes process_question_attempt and the three repeat functions production runs",
-  "20261031194700_mc_length_cue_top10.sql":
-    "D-280 part 2, not applied in production: it rewrites ten production questions and the keys of their open instances, and requires part 1",
   "20261101150000_grading_meaningful_characters.sql":
-    "D-290 G1, not applied in production: it re-creates process_question_attempt from D-280 part 1's body (guarded on its md5), which this replay does not apply",
+    "D-290 G1, not applied in production: it re-creates process_question_attempt, whose production body is still D-280 part 1's (md5 328ea8f9…)",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
