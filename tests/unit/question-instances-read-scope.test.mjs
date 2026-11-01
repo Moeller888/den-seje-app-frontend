@@ -330,6 +330,12 @@ const REVIEWED_LATER_READERS = {
     "reads one questions row's is_active FOR SHARE and returns the row being written or refuses it; it " +
     "reads no instance and returns no data. No policy, RLS, table privilege or existing row of " +
     "question_instances is touched (proven in deactivate-two-misgraded-questions-migration-run.test.mjs).",
+  "20261101150000_grading_meaningful_characters.sql":
+    "D-290 G1: re-creates process_question_attempt from D-280's body with only its three grading lines " +
+    "changed; the single read of question_instances (one instance by id AND student_id) is unchanged and " +
+    "its result reaches only the grader. The two new helpers read no table. EXECUTE stays service_role " +
+    "only. No policy, RLS or table privilege on question_instances is touched (proven in " +
+    "grading-meaningful-characters-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -465,7 +471,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261031190000_reward_integrity_server_authority.sql",
      "20261031194600_mc_length_cue_answer_paths.sql",
      "20261031194700_mc_length_cue_top10.sql",
-     "20261101140000_deactivate_two_misgraded_questions.sql"],
+     "20261101140000_deactivate_two_misgraded_questions.sql",
+     "20261101150000_grading_meaningful_characters.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

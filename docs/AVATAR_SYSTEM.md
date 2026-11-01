@@ -385,6 +385,17 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **SS-1 result — D-296 (one call sent and received; REJECTED by the D-294 check; D-295 closed; no shoe approved; the raster problem not solved).**
+  - **Source.** Really drawn at 4× (1 px transitions), with the right size and place (IoU 0.97, shift −1,1), an antialiased collar and no skin.
+  - **Rejection.** The collar line deviates 1–2 px: 96 px over the ankle (limit 40) and 41 px of exposed ankle (limit 20). There is also a faint glow (611 px at mean alpha 26).
+  - **Evaluation and master.** The locked chain measures used the old drawing's line positions, which is invalid for a new drawing. Measured on its own lines, there is no smoothing loss, but the master's colour-border fault persists (navy 57 %).
+  - **Next.** Rule decisions (collar distance, alpha floor, own-line measures) and the master border must be settled before any new call. See .
+- **A tight shoe source at K = 4 — D-294 plan and evaluation, D-295 authorisation of at most one call (prepared, NOT executed; 0 image calls; no shoe to approval; the raster problem not recorded as solved).**
+  - **Geometry.** CROP x 320–704, y 1270–1526 at K = 4 gives one 1536×1024 `images/edits` call. Its one reference is the published sneaker's crop enlarged ×4, and C is never sent. The source maps to the avatar by a premultiplied 4×4 area average and one global shift of at most 2 px; no scale, warp, per-shoe move or retouch.
+  - **Rejection.** A source fails on detail (transitions ≤ 2 source px, so an enlargement fails), per-shoe IoU ≥ 0.95, size ratio 0.96–1.04 (R1's problem), skin ≤ 3 px, paint over the ankle, covering change, and seeds that do not land in fields.
+  - **Evaluation.** `northstar-shoe-source-evaluate.mjs` keeps source and master apart (published v2 at 1× | new v2 at K | new v3 at K) and adds a smoothing guard: line contrast must stay at least 0.9× the published source's. A rehearsal on the enlarged copy is rejected, and its smoother edge numbers are shown to come from lost seams.
+  - **Master at K.** Running the master at K softens line flanks, but does not fix split lines at colour borders: that is a master decision (v3's rule fixes it but darkens the seams).
+  - See `docs/decisions/D-294.md` and `docs/decisions/D-295.md`.
 - **Shoe raster and steps — D-293 (offline analysis; prototype `shoe-master-v3-edge` not recommended as is; the D-291 approval direction is stopped; no shoe approved).**
   - **Source.** The shoe is drawn at its own resolution: about 140 px per shoe, 2 px lines. The silhouette is antialiased, but the collar top is binary (59.5 % full-alpha edge, from the extraction cut at C's ankle). The inner lines already have 37 % hard steps in the source itself.
   - **Review chain.** The D-289/D-291 sheets enlarged with nearest neighbour, which showed the source's own pixels as steps. Chromium at 110×165 and 300×450, DPR 1–3, shows clean edges.

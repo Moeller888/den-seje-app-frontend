@@ -1,0 +1,180 @@
+{
+  "decision": "D-295",
+  "experiment": "SS (D-294): one tight shoe source for the low sneaker, drawn at K = 4 for the avatar's feet region, judged by a fixed placement and a locked evaluation",
+  "status": "AUTHORISED by D-295 (D-295 SS: 1 CALL AUTHORISED): ONE single-use call; EXECUTED on the owner's instruction; no earlier permission is reused; the plan ss-plan-v1.json stays the unauthorised plan it is; CLOSED by D-296: 1 spent and received (SS-1, rejected by the D-294 check)",
+  "meta": {
+    "authorisesImageRequest": false,
+    "why": "authorisation is the exact token in D-295's decision status plus this file's unspent entry, never a general boolean",
+    "kind": "a bounded source experiment: no catalogue, no runtime, no activation, no item approval, no publication"
+  },
+  "budget": {
+    "authorised": 1,
+    "reserve": 0,
+    "retries": 0,
+    "fallback": false,
+    "reusesEarlierPermissions": false,
+    "automaticExtension": false,
+    "separateFrom": "every earlier budget (D-255, D-258, D-267, D-270 included)",
+    "enforcedLimit": "the call count (one one-shot claim); the price is an estimate",
+    "price": {
+      "verifiedAt": "2026-11-01",
+      "source": "https://developers.openai.com/api/docs/pricing (Standard, gpt-image-2.5-sunburst: text input $5.00, image input $8.00, image output $30.00 per 1M tokens; no per-image table and no separate snapshot price on the page)",
+      "perCallEstimate": 0.06,
+      "perCallUpperEstimate": 0.08,
+      "totalEstimate": 0.06,
+      "basis": "image input at most 3,072 tokens (measured for two input images on R1-1 and R1C-1; this call sends one), text input about 500 tokens (the prompt is 1,459 bytes, at 3 bytes per token), image output 1,372 tokens (measured for 1024x1536 high; 1536x1024 has the same pixel count) and at most 1,756 (the largest measured, TPV-1): expected about $0.06, at most about $0.08",
+      "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
+    },
+    "actuallySent": 1,
+    "closed": {
+      "by": "D-296",
+      "reason": "the one authorised call was sent once and received",
+      "spent": 1,
+      "received": 1,
+      "uncertain": 0,
+      "refusedBeforeSend": 0,
+      "closedUnused": 0,
+      "reopen": "never automatically; only a new owner decision"
+    }
+  },
+  "privacy": {
+    "cSentToApi": "never: C is not part of this call",
+    "referenceSentToApi": "the layout reference only: derived from the published low sneaker layer (assets/avatar-northstar/shoes-sneakers-beige-shoes-v1.webp), enlarged",
+    "publishOrTrack": "never: the raw result, the placed layers and every review sheet stay outside both clones (D-127 §2)",
+    "h1": "never used"
+  },
+  "frozen": {
+    "plan": {
+      "file": "tools/avatar/fixtures/northstar-wardrobe/shoe-source/ss-plan-v1.json",
+      "sha256": "79c1b038559c2eae61224b2eefcb749c7453f6a37da04b05f914329b08a0c6f1"
+    },
+    "prompt": {
+      "sha256": "3dca35b1709893a6dc1583b675a14d24e2d23252613cf7a8b2f94097efc7260e"
+    },
+    "method": "shoe-master-v2",
+    "production": "d240",
+    "evaluation": "tools/avatar/northstar-shoe-source-evaluate.mjs (check, chain, outfits, views, browser)",
+    "noChangeDuringTheExperiment": "the reference, prompt, crop, K, downscale, placement, rules and their thresholds are not changed after receipt; any later correction is a new version"
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1536x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "what": "the layout reference (request.canvases)"
+      }
+    ],
+    "canvases": {
+      "sneaker-low-k4": {
+        "name": "ss-1-layout-image-1.png",
+        "bytes": 802060,
+        "sha256": "145a8633653fea9fe368e7a2f5611848a928c8568ad47913e3f547526c8680d3",
+        "tracked": false
+      }
+    },
+    "canvasLocation": "<Documents>/DenSejeApp-artefacts/ss-calls/references/sneaker-low-k4/ss-1-layout-image-1.png",
+    "canvasGenerator": "northstar-shoe-source.mjs layoutCanvas from the published layer (deterministic)"
+  },
+  "placement": {
+    "rule": "the fixed mapping of D-294 (CROP 384x256 at K = 4; premultiplied K x K area average) and one global integer translation from the registration, |dx|, |dy| <= 2 avatar px",
+    "noDeformation": "never a scale, a rotation, a warp, a per-shoe move, a retouch or a mask; a source that needs one is reported as such"
+  },
+  "acceptance": {
+    "automatic": {
+      "detail": "the silhouette's and the inner lines' transitions at most 2 source px wide (median): drawn at K, not an enlargement",
+      "geometry": "each shoe's IoU >= 0.95 with the published shoe, size ratio 0.96–1.04, centre within 2 px; exactly two painted pieces; at most 3 px of C's ankle skin colour; at most 40 px painted over C's ankle where the shoe is open; the covering changes by at most 1 % and exposes at most 20 px of C's foot",
+      "seeds": "the cut's 22 seeds land in fields of the new drawing (else its fields need entering once; reported)",
+      "smoothing": "per design and field, the line contrast at K >= 0.9 x the published source's at 1x",
+      "outfits": "the cream tee over the six bottoms; COMBO-2 is reported as it is"
+    },
+    "visual": [
+      "the same pair as the published low sneaker: construction, proportions, angle",
+      "the collar top: clean antialiased edge against the ankle, no skin, no light rim, no lining",
+      "outlines and seams: crisp, even weight, soft antialiased flanks; not blurred",
+      "laces and eyelets: four laces per shoe, readable",
+      "upper and toe cap: one continuous seam line",
+      "sole: its curve and bevel",
+      "Northstar quality at 1:1, at a labelled 4x and in the browser at 110x165 and 300x450"
+    ],
+    "visualIsNeverAutomatic": true,
+    "classes": {
+      "acceptedForTheChain": "every automatic check passed; the visual review follows and decides nothing automatically",
+      "rejected": "detail, geometry or seeds failed; reported, not repaired",
+      "requiresManualDecision": "anything else; it does not count as passed"
+    },
+    "scope": "one result shows whether a tight K = 4 source gives real extra detail that survives the chain; it approves no shoe"
+  },
+  "stopRules": [
+    "a single call: no retry, no reserve, no fallback, no other model",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome — never resent",
+    "any HTTP error, moderation block or format error ends the experiment with that outcome",
+    "the executor's stop file SS-STOP.json"
+  ],
+  "calls": [
+    {
+      "callId": "SS-1-shoes-sneakers-low-tight-k4",
+      "order": 1,
+      "category": "shoes",
+      "cut": "sneaker-low-k4",
+      "canvas": "145a8633653fea9fe368e7a2f5611848a928c8568ad47913e3f547526c8680d3",
+      "prompt": {
+        "sha256": "3dca35b1709893a6dc1583b675a14d24e2d23252613cf7a8b2f94097efc7260e"
+      },
+      "claim": {
+        "identity": "SS-1-shoes-sneakers-low-tight-k4-claim",
+        "filename": "SS-1-shoes-sneakers-low-tight-k4.claim.json",
+        "eventsFilename": "SS-1-shoes-sneakers-low-tight-k4.events.jsonl"
+      },
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "recordedBy": "D-296",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_6d960ea76574418fb4bad3a49f530864",
+        "imageSha256": "adf02a0ae4f1414920b9c774d340ead8b93a90c812a3a2a75c2cf36f91482fc5",
+        "sentAt": "2026-11-01",
+        "fetches": 1,
+        "usage": {
+          "imageInputTokens": 1536,
+          "textInputTokens": 350,
+          "imageOutputTokens": 1372
+        },
+        "listPriceUsd": 0.0552,
+        "evaluation": "rejected by the D-294 check: 96 px painted over C's ankle where the shoe is open (> 40) and 41 px of C's foot newly exposed (> 20), both 1–2 px bands along the collar line; detail, size, place, skin and pieces passed"
+      }
+    }
+  ],
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-shoe-source-d295.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-295",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}
