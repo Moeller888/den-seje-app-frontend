@@ -109,6 +109,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-280 part 1, not applied in production: it changes process_question_attempt and the three repeat functions production runs",
   "20261031194700_mc_length_cue_top10.sql":
     "D-280 part 2, not applied in production: it rewrites ten production questions and the keys of their open instances, and requires part 1",
+  "20261101150000_grading_meaningful_characters.sql":
+    "D-290 G1, not applied in production: it re-creates process_question_attempt from D-280 part 1's body (guarded on its md5), which this replay does not apply",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
