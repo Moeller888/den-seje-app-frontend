@@ -27,6 +27,21 @@ art layer behind them can be upgraded without a rewrite.
 
 ## 2. Current state (the honest picture)
 
+- **Northstar test wardrobe (browser opt-in only) — status after D-314, owner-tested and approved in the app (2026-11-02).**
+  - **What works in the opt-in** (`avatar.html?northstar=1`, `localStorage` only; `AVATAR_NORTHSTAR_WARDROBE = false`; no shop, catalogue, ordinary pupil activation or flag change):
+    - **Tops:** the cream and blue tees, and 16 print tees (teapot and shield in six colours, fox in four; D-274/D-275).
+    - **Bottoms:** sand skirt, navy shorts, light-blue capri, olive trousers, and the solid navy and sand trousers (D-281/D-283).
+    - **Shoes:** the four original items (beige and white sneakers, black lace-up boots, brown ankle boots) and the four SV1-V5 low sneakers (chalk, charcoal, navy/white, burgundy/gum; D-305/D-308).
+    - **Base:** the 19 ready K outfits.
+  - **SV1-V5 shoe combinations:** 326 approved (D-305's 21 + D-314's 305; `NORTHSTAR_SV1_SHOE_COMBOS`), 323 reachable in the current panel. The 3 cream tee + olive trousers combinations are approved but unreachable: no K outfit pairs them, and none was added for it.
+  - **Remaining limits:**
+    - Every choice is gated by explicit lists over the whole effective outfit: print tees only on the cream-tee outfits K01–K09; trousers only on D-281's checked top/shoe pairs; SV1 shoes only on the 326.
+    - Charcoal with long trousers (37) is excluded (COMBO-2 at leg/shoe; a separate decision), and the blue tee + skirt is a known fault.
+    - The figure has a neutral expression and does not blink; equipped cosmetics other than aura/back fall back to today's avatar.
+    - SV-1 is a rejected source by D-299's original rules, and master v5 is not independently validated (the approval covers the concrete items shown).
+    - The old reference sneaker's stroke tip is unfixed.
+  - **Not documented:** mass production across new cuts. Every working item family so far is one cut with colour or print variants. A new cut (another top, bottom or shoe shape) needs its own source, master and checks before variants can follow.
+  - See `docs/decisions/D-314.md` and the D-242 … D-314 entries below.
 - **`AVATAR_V2 = true` is LIVE in production** (`js/avatar-layers.js:230`, commit `52f8365`,
   2026-06-25). The C2 render path is the default for users.
 - **But the art is a placeholder.** The live render loads **flat hand-authored SVGs**
