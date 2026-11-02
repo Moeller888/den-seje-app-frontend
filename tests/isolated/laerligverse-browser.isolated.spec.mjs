@@ -237,6 +237,48 @@ test("the game cannot grant XP or coins, nor answer another pupil's instance", a
   void f;
 });
 
+test("two tabs of the same pupil commit the same instance at the same moment: two requests, ONE registration, ONE reward", async ({ browser, request, browserName }) => {
+  // Gap closed (F3 review): the in-page dedup cannot help across tabs — only the database can.
+  const pupil = await makePupil(request, "twotabs", browserName);
+  const before = await progress(request, pupil);
+  const [ctxA, ctxB] = [await browser.newContext(), await browser.newContext()];
+  try {
+    const [pa, pb] = [await ctxA.newPage(), await ctxB.newPage()];
+    const fa = await openTask(pa, pupil);
+    const fb = await openTask(pb, pupil); // get-next-question serves the SAME open instance to the second tab
+    expect(await instances(request, pupil)).toHaveLength(1);
+    await fa.locator(`#options [data-option="${await optionId(request, pupil, fa, true)}"]`).click();
+    await fb.locator(`#options [data-option="${await optionId(request, pupil, fb, true)}"]`).click();
+    await Promise.all([fa.locator("#commit").click(), fb.locator("#commit").click()]);
+    await expect(fa.locator("body")).toHaveAttribute("data-task", "correct", { timeout: 30_000 });
+    await expect(fb.locator("body")).toHaveAttribute("data-task", "correct", { timeout: 30_000 });
+    // Each tab's host sent its own request; the database's CAS on answered=false let only one register and pay.
+    expect([...(await processEventCalls(pa)), ...(await processEventCalls(pb))]).toEqual(["true:200", "true:200"]);
+    expect(await instances(request, pupil)).toMatchObject([{ answered: true, was_correct: true }]);
+    expect(await progress(request, pupil)).toEqual({ xp: before.xp + 10, coins: before.coins + 5, correct_answers: before.correct_answers + 1 });
+  } finally {
+    await ctxA.close();
+    await ctxB.close();
+  }
+});
+
+test("a REAL logout (session revoked on the server) while the game is open: the revoked token is refused, nothing recorded", async ({ page, request, browserName }) => {
+  // Gap closed (F3 review): the other expiry test replaces the token with garbage; this one uses the pupil's
+  // real, signed token after the server revoked its session.
+  const pupil = await makePupil(request, "logout", browserName);
+  const before = await progress(request, pupil);
+  const f = await openTask(page, pupil);
+  const out = await request.post(`${SUPA}/auth/v1/logout?scope=global`, { headers: { apikey: ANON, authorization: `Bearer ${pupil.token}` } });
+  expect([200, 204]).toContain(out.status());
+  await f.locator(`#options [data-option="${await optionId(request, pupil, f, true)}"]`).click();
+  await f.locator("#commit").click();
+  await expect(f.locator("body")).toHaveAttribute("data-error", "session_expired", { timeout: 30_000 });
+  expect(await processEventCalls(page)).toEqual(["true:401"]);
+  expect(await instances(request, pupil)).toMatchObject([{ answered: false }]);
+  expect(await progress(request, pupil)).toEqual(before);
+  await expect(f.locator("body")).toHaveAttribute("data-cabinet", "default");
+});
+
 test("the game's origin cannot read the host's session, and the game is served no host or adapter code", async ({ page, request, browserName }) => {
   const pupil = await makePupil(request, "isolation", browserName);
   await openTask(page, pupil);
