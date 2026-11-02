@@ -152,6 +152,21 @@ describe("Arkivskabet v2 — the learning sequence as data (D-322)", () => {
     expect(parseSourceBack("bare en almindelig sætning")).toBeNull();
   });
 
+  it("no surface cues: labels name only the KIND of source (no year, no date), the right one is never uniquely the longest, and it moves", () => {
+    const positions = new Set<number>();
+    for (const item of ARCHIVE_ITEMS) {
+      const options = item.options ?? [];
+      // The date and the sender belong on the back; a label that repeats the claim's year is a match, not sourcing.
+      for (const o of options) expect(o.label, `${item.id}/${o.id}`).not.toMatch(/\d{4}|april|maj|kongen|regeringen/i);
+      const right = options.find((o) => o.id === item.answer);
+      expect(right, item.id).toBeDefined();
+      const longer = options.filter((o) => o.id !== item.answer && o.label.length >= (right?.label.length ?? 0));
+      expect(longer.length, `${item.id}: the right label must not be the uniquely longest (length cue, cf. D-280)`).toBeGreaterThan(0);
+      positions.add(options.findIndex((o) => o.id === item.answer));
+    }
+    expect(positions.size, "the right answer must not always sit in the same place").toBeGreaterThan(2);
+  });
+
   it("every wrong option has its own refutation that names a field to look at", () => {
     for (const item of ARCHIVE_ITEMS) {
       for (const o of item.options ?? []) {

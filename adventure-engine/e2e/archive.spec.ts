@@ -83,8 +83,13 @@ async function choose(f: FrameLocator, option: string, reason = "hvem"): Promise
 }
 
 /** Phase 2: open the descriptions of the first `n` sources. */
-async function investigate(f: FrameLocator, n = 2): Promise<void> {
-  for (let i = 0; i < n; i++) await f.locator(".lv-inspect").nth(i).click();
+/** Step 2: turn over every document that is still face up (D-322 QA: all of them are required). */
+async function investigate(f: FrameLocator): Promise<void> {
+  const n = await f.locator(".lv-inspect").count();
+  for (let i = 0; i < n; i++) {
+    const b = f.locator(".lv-inspect").nth(i);
+    if ((await b.getAttribute("aria-expanded")) === "false") await b.click();
+  }
 }
 
 async function openTask(page: Page): Promise<FrameLocator> {
@@ -143,7 +148,7 @@ test.describe("Arkivskabet — a meaningful action in the world, graded through 
     await investigate(f);
     await choose(f, "kilde_d");
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "incorrect");
-    await expect(f.locator("#lv-correct")).toContainText("Proklamation, 9. april 1940");
+    await expect(f.locator("#lv-correct")).toHaveText("Det rigtige svar: Proklamation");
     // Phase 5: the explanation refutes THIS choice, not just "wrong".
     await expect(f.locator("#lv-feedback-text")).toContainText("bladet er lavet fire år senere");
     await f.locator("#lv-close").click();
@@ -215,7 +220,7 @@ test.describe("Arkivskabet — the learning sequence (D-310)", () => {
   test("investigation shows who, when and to whom; the own reason comes back next to the explanation", async ({ page }) => {
     const f = await openTask(page);
     await expect(f.locator("#lv-material")).toBeVisible();
-    await expect(f.locator("#lv-guide")).toContainText("Vend mindst 2 dokumenter");
+    await expect(f.locator("#lv-guide")).toContainText("Vend alle 4 dokumenter");
     await f.locator('[data-inspect="kilde_b"]').click();
     // D-322 step 2: the back of the document — sender, time, recipient, purpose, context.
     const back = f.locator("#lv-detail-kilde_b");
@@ -226,6 +231,11 @@ test.describe("Arkivskabet — the learning sequence (D-310)", () => {
     await f.locator('[data-inspect="kilde_a"]').click();
     await f.locator('.lv-card[data-option="kilde_a"]').click();
     await f.locator('[data-reason="hvem"]').click();
+    // D-322 QA: two turned documents are not enough — the back of EVERY source must be read.
+    await expect(f.locator("#lv-guide")).toContainText("(2 af 4)");
+    await expect(f.locator("#lv-commit")).toBeDisabled();
+    await investigate(f);
+    await expect(f.locator("#lv-commit")).toBeEnabled();
     await f.locator("#lv-commit").click();
     await expect(f.locator("#lv-own-reason")).toContainText("hvem der lavede kilden");
   });
@@ -239,7 +249,7 @@ test.describe("Arkivskabet — the learning sequence (D-310)", () => {
     await useCabinet(page);
     await confirmLine(page, "line.drawer");
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "open");
-    await expect(f.locator("#lv-prompt")).toContainText("almindelige danskere");
+    await expect(f.locator("#lv-prompt")).toContainText("almindelig dansker i København");
     await expect(f.locator("#lv-mode")).toHaveText("Selvstændig opgave · uden hints");
     await expect(f.locator("#lv-hint")).toBeHidden();
     await investigate(f);
@@ -273,7 +283,7 @@ test.describe("Arkivskabet v2 — the full learning sequence (D-322)", () => {
     await choose(f, "kilde_b", "hvornaar");
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "incorrect");
     // Step 4: the feedback points at the relevant information — the right source's back is shown.
-    await expect(f.locator('.lv-source[data-relevant="true"] .lv-card')).toHaveText("Proklamation, 9. april 1940");
+    await expect(f.locator('.lv-source[data-relevant="true"] .lv-card')).toHaveText("Proklamation");
     await expect(f.locator("#lv-detail-kilde_a")).toBeVisible();
     await expect(f.locator("#lv-relevant")).toContainText("afsender, tid, modtager og formål");
     // Step 5: the revise button takes focus; the keyboard alone continues.

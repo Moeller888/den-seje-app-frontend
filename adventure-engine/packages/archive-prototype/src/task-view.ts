@@ -265,6 +265,8 @@ export class TaskView {
     this.reviseBtn.hidden = !(r.outcome === "incorrect" && this.allowRevision);
     this.refresh();
     (this.reviseBtn.hidden ? this.closeBtn : this.reviseBtn).focus();
+    // The explanation sits below the buttons; on a small sheet it must not stay out of sight (D-322 QA).
+    this.feedback.scrollIntoView?.({ block: "nearest" });
   }
 
   error(text: string): void {
@@ -276,10 +278,13 @@ export class TaskView {
     this.closeBtn.focus();
   }
 
-  /** How many sources must be opened before choosing (phase 2). 0 when the backend sends no descriptions. */
+  /**
+   * How many sources must be turned over before choosing (step 2). EVERY source with a back (D-322 QA): with
+   * "at least two" a pupil could turn two wrong ones and never read the back of the one that decides it.
+   * 0 when the backend sends no descriptions.
+   */
   private investigationNeeded(): number {
-    const n = (this.task?.stimulus.options ?? []).filter((o) => o.detail !== undefined).length;
-    return Math.min(2, n);
+    return (this.task?.stimulus.options ?? []).filter((o) => o.detail !== undefined).length;
   }
 
   private renderReasons(show: boolean): void {
@@ -336,7 +341,7 @@ export class TaskView {
     const reasonNeeded = !this.reasons.hidden && this.reason === null;
     this.guide.textContent =
       need === 0 || this.outcome !== null ? ""
-        : missing > 0 ? `Vend mindst ${need} dokumenter, før du vælger (${this.inspected.size} af ${need}).`
+        : missing > 0 ? `Vend alle ${need} dokumenter, før du vælger (${this.inspected.size} af ${need}).`
           : this.selected === null ? "Vælg den kilde, der bedst kan undersøge påstanden."
             : reasonNeeded ? "Vælg, hvad der afgjorde dit valg." : "Klar: læg kilden i skabet.";
     this.root.dataset["investigated"] = String(this.inspected.size);
