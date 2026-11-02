@@ -7,13 +7,14 @@
   },
   "flag": "AVATAR_NORTHSTAR_WARDROBE (js/avatar-layers.js), false",
   "counts": {
-    "files": 65,
+    "files": 73,
     "shadows": 12,
     "maxFiles": 41,
     "maxShadows": 20,
     "d242Files": 31,
     "d274Files": 32,
-    "d281Files": 2
+    "d281Files": 2,
+    "d305Files": 8
   },
   "outfits": {
     "K01": {
@@ -543,6 +544,66 @@
       "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
     },
     {
+      "file": "hide-shoes-sneakers-low-sv1-burgundygum-v1.webp",
+      "purpose": "what the closed shoe SV1-V5-BURGUNDYGUM hides of C's foot (D-218 covering)",
+      "origin": {
+        "candidate": "SV1-V5-BURGUNDYGUM",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tool": "northstar-base-figure-c.mjs closedFootwearHidden",
+        "decision": "D-305"
+      },
+      "sha256": "89dca922cc815e4e8774b419a451dfb7bd3370daa2351aca07dcdb176474ac64",
+      "bytes": 634,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "hide-shoes-sneakers-low-sv1-chalk-v1.webp",
+      "purpose": "what the closed shoe SV1-V5-CHALK hides of C's foot (D-218 covering)",
+      "origin": {
+        "candidate": "SV1-V5-CHALK",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tool": "northstar-base-figure-c.mjs closedFootwearHidden",
+        "decision": "D-305"
+      },
+      "sha256": "89dca922cc815e4e8774b419a451dfb7bd3370daa2351aca07dcdb176474ac64",
+      "bytes": 634,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "hide-shoes-sneakers-low-sv1-charcoal-v1.webp",
+      "purpose": "what the closed shoe SV1-V5-CHARCOAL hides of C's foot (D-218 covering)",
+      "origin": {
+        "candidate": "SV1-V5-CHARCOAL",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tool": "northstar-base-figure-c.mjs closedFootwearHidden",
+        "decision": "D-305"
+      },
+      "sha256": "89dca922cc815e4e8774b419a451dfb7bd3370daa2351aca07dcdb176474ac64",
+      "bytes": 634,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "hide-shoes-sneakers-low-sv1-navywhite-v1.webp",
+      "purpose": "what the closed shoe SV1-V5-NAVYWHITE hides of C's foot (D-218 covering)",
+      "origin": {
+        "candidate": "SV1-V5-NAVYWHITE",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tool": "northstar-base-figure-c.mjs closedFootwearHidden",
+        "decision": "D-305"
+      },
+      "sha256": "89dca922cc815e4e8774b419a451dfb7bd3370daa2351aca07dcdb176474ac64",
+      "bytes": 634,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
       "file": "hide-shoes-sneakers-white-v1.webp",
       "purpose": "what the closed shoe hides of C's foot (D-218 covering); cut out of C's body before the shoe is drawn",
       "origin": {
@@ -690,6 +751,66 @@
       },
       "sha256": "045524c04dae0e675b936d868f6e2d28f4d29a67e3927db285a80ef0f9aeee10",
       "bytes": 39078,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-sneakers-low-sv1-burgundygum-shoes-v1.webp",
+      "purpose": "the owner-approved shoe SV1-V5-BURGUNDYGUM (D-305), the locked D-304 layer unchanged",
+      "origin": {
+        "candidate": "SV1-V5-BURGUNDYGUM",
+        "layerSha256": "7db5bfb8085280f146698aad844db68b5740eefb7264fa9a8f3787be65138d20",
+        "package": "sv1-v5-candidates-v1",
+        "decision": "D-305"
+      },
+      "sha256": "1363624ae8cc838e91c004495336726627558be9b7d3aef038739503df295b4f",
+      "bytes": 33766,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-sneakers-low-sv1-chalk-shoes-v1.webp",
+      "purpose": "the owner-approved shoe SV1-V5-CHALK (D-305), the locked D-304 layer unchanged",
+      "origin": {
+        "candidate": "SV1-V5-CHALK",
+        "layerSha256": "18e982a6c8ab0bdd3a591bd56a10dc8192b51777568ebaf9c65c17fcc8ba86c2",
+        "package": "sv1-v5-candidates-v1",
+        "decision": "D-305"
+      },
+      "sha256": "917921f24e8b8093f24d2266bf3116ed7ce2c992b213acbc63b95c9bd2637cc7",
+      "bytes": 33100,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-sneakers-low-sv1-charcoal-shoes-v1.webp",
+      "purpose": "the owner-approved shoe SV1-V5-CHARCOAL (D-305), the locked D-304 layer unchanged",
+      "origin": {
+        "candidate": "SV1-V5-CHARCOAL",
+        "layerSha256": "42570ca9eaf922b19369885d482abe76654f5f73a599e9766e46819a8944c543",
+        "package": "sv1-v5-candidates-v1",
+        "decision": "D-305"
+      },
+      "sha256": "7f75aa7eb25d4e79b6b045f271f7c3cf3d200f81a081b159ad564d062a2eee33",
+      "bytes": 23364,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-sneakers-low-sv1-navywhite-shoes-v1.webp",
+      "purpose": "the owner-approved shoe SV1-V5-NAVYWHITE (D-305), the locked D-304 layer unchanged",
+      "origin": {
+        "candidate": "SV1-V5-NAVYWHITE",
+        "layerSha256": "31303fbb664fdec2064fc56f1f251e9e6ccf62dcd10f9a53a8ece021bcc6c8f8",
+        "package": "sv1-v5-candidates-v1",
+        "decision": "D-305"
+      },
+      "sha256": "15a7e348694be940807b1cca97057ac5d95ec7c24ed81b493ec4b397798ae553",
+      "bytes": 32542,
       "width": 1024,
       "height": 1536,
       "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
@@ -1895,6 +2016,116 @@
         "notReachableButChecked": 17,
         "publishedFilesIdenticalToPipeline": 58,
         "trousersShadowIsOlives": true
+      }
+    },
+    {
+      "decision": "D-305",
+      "publishedBy": "D-308",
+      "authorisation": "owner 2026-11-02: D-305 OFFENTLIGGØRELSE OG OPT-IN-INTEGRATION GODKENDT. De otte runtime-filer i D-305's filliste—fire skolag og fire dækningsmasker—med præcis de registrerede sha256-hashes må committes og offentliggøres under assets/avatar-northstar/ som udvidelse af D-242's undtagelse fra D-127 §2. Integrér SV1-V5-skoene i Northstar-opt-in efter D-305's plan, begrænset til de 21 godkendte kombinationer. Tilladelsen omfatter kun disse filer og denne testintegration.",
+      "files": [
+        "hide-shoes-sneakers-low-sv1-burgundygum-v1.webp",
+        "hide-shoes-sneakers-low-sv1-chalk-v1.webp",
+        "hide-shoes-sneakers-low-sv1-charcoal-v1.webp",
+        "hide-shoes-sneakers-low-sv1-navywhite-v1.webp",
+        "shoes-sneakers-low-sv1-burgundygum-shoes-v1.webp",
+        "shoes-sneakers-low-sv1-chalk-shoes-v1.webp",
+        "shoes-sneakers-low-sv1-charcoal-shoes-v1.webp",
+        "shoes-sneakers-low-sv1-navywhite-shoes-v1.webp"
+      ],
+      "approval": "tools/avatar/fixtures/northstar-wardrobe/shoe-source/sv1-v5-owner-approval-v1.json",
+      "itemTable": {
+        "shoes-sneakers-low-sv1-chalk": {
+          "category": "shoes",
+          "layers": [
+            "shoes"
+          ],
+          "shadows": [
+            "body"
+          ],
+          "closed": true,
+          "shadowsOf": "shoes-sneakers-beige"
+        },
+        "shoes-sneakers-low-sv1-charcoal": {
+          "category": "shoes",
+          "layers": [
+            "shoes"
+          ],
+          "shadows": [
+            "body"
+          ],
+          "closed": true,
+          "shadowsOf": "shoes-sneakers-beige"
+        },
+        "shoes-sneakers-low-sv1-navywhite": {
+          "category": "shoes",
+          "layers": [
+            "shoes"
+          ],
+          "shadows": [
+            "body"
+          ],
+          "closed": true,
+          "shadowsOf": "shoes-sneakers-beige"
+        },
+        "shoes-sneakers-low-sv1-burgundygum": {
+          "category": "shoes",
+          "layers": [
+            "shoes"
+          ],
+          "shadows": [
+            "body"
+          ],
+          "closed": true,
+          "shadowsOf": "shoes-sneakers-beige"
+        }
+      },
+      "combinations": [
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-low-sv1-chalk",
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-sneakers-low-sv1-chalk",
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-sneakers-low-sv1-chalk",
+        "top-tee-hip-cream+bottom-trousers-square-olive+shoes-sneakers-low-sv1-chalk",
+        "top-tee-hip-cream+bottom-trousers-square-navy+shoes-sneakers-low-sv1-chalk",
+        "top-tee-hip-cream+bottom-trousers-square-sand+shoes-sneakers-low-sv1-chalk",
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-low-sv1-navywhite",
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-sneakers-low-sv1-navywhite",
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-sneakers-low-sv1-navywhite",
+        "top-tee-hip-cream+bottom-trousers-square-olive+shoes-sneakers-low-sv1-navywhite",
+        "top-tee-hip-cream+bottom-trousers-square-navy+shoes-sneakers-low-sv1-navywhite",
+        "top-tee-hip-cream+bottom-trousers-square-sand+shoes-sneakers-low-sv1-navywhite",
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-low-sv1-burgundygum",
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-sneakers-low-sv1-burgundygum",
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-sneakers-low-sv1-burgundygum",
+        "top-tee-hip-cream+bottom-trousers-square-olive+shoes-sneakers-low-sv1-burgundygum",
+        "top-tee-hip-cream+bottom-trousers-square-navy+shoes-sneakers-low-sv1-burgundygum",
+        "top-tee-hip-cream+bottom-trousers-square-sand+shoes-sneakers-low-sv1-burgundygum",
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-low-sv1-charcoal",
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-sneakers-low-sv1-charcoal",
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-sneakers-low-sv1-charcoal"
+      ],
+      "shadowsReused": {
+        "body": {
+          "publishedFile": "assets/avatar-northstar/shoes-sneakers-beige-shadow-body-v1.webp",
+          "sha256": "dc4e0a36f4c625a2a618fe8762fd51d4035a777221567f579ddf8f509aa589f9",
+          "identicalForAll": true
+        }
+      },
+      "stagedManifestSha256": "eb9cc7ad69807efc41b0bf4f4453f3374f59a78df592ab8abbe1ca5ded0c44a6",
+      "stagedEquivalence": {
+        "approvedCombinations": 21,
+        "differing": 0
+      },
+      "equivalence": {
+        "what": "northstarCompose(northstarPlanFor(outfit)) on the published files against the owner-approved D-304 rendering, RGBA bytes that differ; every distinct outfit the opt-in can show with an SV1-V5 shoe",
+        "reachableOutfits": 18,
+        "outfitsDiffering": 0,
+        "approvedNotReachable": [
+          "top-tee-hip-cream+bottom-trousers-square-olive+shoes-sneakers-low-sv1-burgundygum",
+          "top-tee-hip-cream+bottom-trousers-square-olive+shoes-sneakers-low-sv1-chalk",
+          "top-tee-hip-cream+bottom-trousers-square-olive+shoes-sneakers-low-sv1-navywhite"
+        ],
+        "allReachableApproved": true,
+        "shoeShadowIsBeigeSneakers": true,
+        "publishedFilesEqualStaged": 8
       }
     }
   ]

@@ -87,6 +87,11 @@ export const SCHEMA_PART = Object.freeze({
     end: "DO $mc_grading_compensation$",
     reason: "data part compensates two production attempts (D-254) and raises when they are absent; its schema part — the locked public.progress_corrections table (RLS, REVOKE ALL) — is applied verbatim",
   },
+  "20261101140000_deactivate_two_misgraded_questions.sql": {
+    start: "DROP FUNCTION public.guard_open_round_requires_active_question();",
+    end: "DO $g2$",
+    reason: "data part (D-290 G2) deactivates two production questions and raises unless both exist with the reviewed content md5; its schema part — the open-round guard (guard_open_round_requires_active_question, its REVOKE and its trigger on question_instances) — is applied verbatim",
+  },
 });
 
 // The schema part of a SCHEMA_PART file, verbatim. Throws unless both markers occur exactly once.
@@ -109,12 +114,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
   "20261101120000_night_owl_stop_new_awards.sql":
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
-  "20261101140000_deactivate_two_misgraded_questions.sql":
-    "D-290, not applied in production: it creates the open-round guard (guard_open_round_requires_active_question and its trigger on question_instances), which production does not have, and the two questions are still active",
-  "20261101150000_grading_meaningful_characters.sql":
-    "D-290 G1, not applied in production: it re-creates process_question_attempt, whose production body is still D-280 part 1's (md5 328ea8f9…)",
   "20261101190000_question_attempts_v2_bootstrap.sql":
-    "H5 integration 1/2, not applied in production (no question_attempts there, catalog 2026-11-01); it requires G1 (20261101150000) first, which is not applied either",
+    "H5 integration 1/2, not applied in production (no question_attempts there, catalog 2026-11-01); it requires G1 (20261101150000) first, applied in production since 2026-11-02 (20261102064630)",
   "20261101190100_question_attempts_v2_align_grading.sql":
     "H5 integration 2/2, not applied in production (no process_question_attempt_v2 there, catalog 2026-11-01); it requires G1 and 20261101190000 first",
 });
@@ -158,6 +159,10 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261031190000_reward_integrity_server_authority.sql": "20261101101441",
   "20261031194600_mc_length_cue_answer_paths.sql": "20261101101401",
   "20261031194700_mc_length_cue_top10.sql": "20261101102339",
+  "20261101140000_deactivate_two_misgraded_questions.sql": "20261102071826",
+  "20261101150000_grading_meaningful_characters.sql": "20261102064630",
+  "20261101170000_achievement_reward_exactly_once.sql": "20261102073618",
+  "20261102100000_release_open_rounds_on_inactive_questions.sql": "20261102123618",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),

@@ -50,9 +50,35 @@ test("the replayed schema has production's key objects", async () => {
   // 20261027120000 (D-211) replaced process_question_attempt only because the schema part of
   // 20261018143726 left exactly production's body (its md5 guard): the chain is byte-faithful.
   // 20261031194600 (D-280 part 1, applied as remote 20261101101401 on 2026-11-01) then replaced it
-  // again, behind its own md5 guard; this is the body production reported after that.
+  // again, behind its own md5 guard. 20261101150000 (D-290 G1, applied as remote 20261102064630 on
+  // 2026-11-02) replaced it once more; this is the body production reported after that.
   const pqa = await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.process_question_attempt(uuid,uuid,text,bigint)'::regprocedure`);
-  assert.equal(pqa.m, "328ea8f9a4fd260407b582dcecb7dfdf");
+  assert.equal(pqa.m, "2e05e769a102f61ffef0ea4dd550c55b");
+  // 20261101140000's schema part (D-290 G2, applied as remote 20261102071826 on 2026-11-02): the
+  // open-round guard exactly as production reported it — body, SECURITY DEFINER, search_path, no API
+  // EXECUTE — and its trigger.
+  const g2 = await one(db, `SELECT md5(p.prosrc) m, p.prosecdef s, p.proconfig c, p.proacl::text[] a
+    FROM pg_proc p WHERE p.oid = 'public.guard_open_round_requires_active_question()'::regprocedure`);
+  assert.deepEqual(g2, { m: "e5627de108be67869a4615490a6857a2", s: true, c: ['search_path=""'], a: ["postgres=X/postgres"] });
+  const g2t = await one(db, `SELECT pg_get_triggerdef(t.oid) d FROM pg_trigger t WHERE t.tgname = 'open_round_requires_active_question'
+    AND t.tgrelid = 'public.question_instances'::regclass`);
+  assert.match(g2t.d, /BEFORE INSERT OR UPDATE OF answered, question_id ON public\.question_instances FOR EACH ROW EXECUTE FUNCTION/);
+  // 20261101170000 (D-292, applied as remote 20261102073618 on 2026-11-02): grant_achievement_rewards
+  // claims before it pays. NOT the old body production had before (63b8347d…, pays twice under
+  // overlapping calls), and no EXECUTE for PUBLIC or anon — exactly as production reported it.
+  const gar = await one(db, `SELECT md5(p.prosrc) m, p.prosecdef s, p.proconfig c, p.proacl::text[] a,
+      (SELECT count(*)::int FROM pg_proc q WHERE q.proname = 'grant_achievement_rewards') n,
+      has_function_privilege('anon', p.oid, 'EXECUTE') anon, has_function_privilege('authenticated', p.oid, 'EXECUTE') auth,
+      has_function_privilege('service_role', p.oid, 'EXECUTE') svc
+    FROM pg_proc p WHERE p.oid = 'public.grant_achievement_rewards(text[])'::regprocedure`);
+  // 20261102100000 (D-316, applied as remote 20261102123618 on 2026-11-02): release_open_question_outside
+  // also releases an open round on an inactive question, with the history guard — the body production
+  // reported after the application.
+  const rel = await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.release_open_question_outside(text[])'::regprocedure`);
+  assert.equal(rel.m, "b80c1c7857ecc90bdbd7b6175b65c78f");
+  assert.notEqual(gar.m, "63b8347dd4d72d40ced43e8728b5ab87", "the replay must not carry the old, double-paying body");
+  assert.deepEqual(gar, { m: "fc8d729f8b0166815fe2647805ce2e60", s: true, c: ["search_path=public"],
+    a: ["postgres=X/postgres", "authenticated=X/postgres", "service_role=X/postgres"], n: 1, anon: false, auth: true, svc: true });
   // 20260826000000's schema part: 'cancelled' is a valid job status.
   const chk = await one(db, `SELECT pg_get_constraintdef(oid) d FROM pg_constraint WHERE conname = 'generation_jobs_status_valid'`);
   assert.match(chk.d, /cancelled/);
@@ -212,7 +238,12 @@ test("SCHEMA_PART: markers occur exactly once; the applied part is the schema st
     const sql = readMigration(file);
     const got = extractSchemaPart(file, sql);
     assert.ok(sql.includes(got.trim().replace(/;$/, "")), file);
-    assert.match(got.replace(/--[^\n]*/g, "").trim(), /^(CREATE OR REPLACE FUNCTION|alter table|CREATE TABLE IF NOT EXISTS)/i, file);
+    assert.match(got.replace(/--[^\n]*/g, "").trim(), /^(CREATE OR REPLACE FUNCTION|CREATE FUNCTION|alter table|CREATE TABLE IF NOT EXISTS)/i, file);
+    if (file === "20261101140000_deactivate_two_misgraded_questions.sql") {
+      // D-290 G2: only the guard — never the DO block that deactivates production's two questions.
+      assert.doesNotMatch(got, /\bDO \$|UPDATE public\.questions|is_active = false/i, `${file}: no data part`);
+      assert.match(got, /CREATE TRIGGER open_round_requires_active_question/, `${file}: the trigger`);
+    }
     assert.doesNotMatch(got, /\bfrom public\.avatar_generation_jobs\b|_d107_targets/i, `${file}: no data part`);
     if (file === "20261029170000_mc_grading_compensation.sql") {
       // D-254: only the locked table — never the DO block that writes student_progress and the audit rows.
@@ -322,4 +353,22 @@ test("reserve_password_help: reservation, cooldown, daily cap — each audited �
   await assert.rejects(db.query(`SELECT * FROM public.reserve_password_help('${pupil}', '${teacher}', -1, 3)`), /invalid rate-limit parameters/);
   await assert.rejects(db.query(`SELECT * FROM public.reserve_password_help('${pupil}', '${teacher}', 60, 0)`), /invalid rate-limit parameters/);
   assert.equal((await rows()).length, 4, "a refused call writes nothing");
+});
+
+// The replayed state — H5 PR 1 (20261030211428, replayed by owner decision), D-280 part 1, G1 and G2's
+// guard, as production now has G1 and G2 — still satisfies the two H5 integration files' guards. They
+// stay NOT_IN_PRODUCTION; this only proves their prerequisites accept it. Run inside a transaction that
+// is rolled back, so no other test sees the change.
+test("H5's bootstrap and alignment accept the replayed G1 + G2 state (rolled back)", async () => {
+  const before = await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)'::regprocedure`);
+  await db.exec("BEGIN");
+  try {
+    await db.exec(readMigration("20261101190000_question_attempts_v2_bootstrap.sql"));
+    await db.exec(readMigration("20261101190100_question_attempts_v2_align_grading.sql"));
+    const aligned = await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)'::regprocedure`);
+    assert.equal(aligned.m, "8a7696147df978e250918b2c93e20577", "the aligned _v2 (G1's grading)");
+  } finally {
+    await db.exec("ROLLBACK");
+  }
+  assert.deepEqual(await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)'::regprocedure`), before);
 });
