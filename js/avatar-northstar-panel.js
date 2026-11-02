@@ -9,8 +9,9 @@
 // a pair D-281 checked; stored the same way (avatar_northstar_pants). "Outfittets egen underdel" returns to the outfit's own bottom.
 // D-308: a fourth row offers the 4 owner-approved SV1-V5 shoes (D-305) only where the whole effective outfit is one of the 21 approved
 // combinations; an unavailable shoe is disabled and the reason is written under the row. Stored the same way (avatar_northstar_shoes);
-// "Outfittets egne sko" returns to the outfit's own shoes.
-import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SV1_SHOES, NORTHSTAR_PRINT_TEE_BASE, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarOutfitFor } from "./avatar-layers.js";
+// "Outfittets egne sko" returns to the outfit's own shoes. D-314: the list now holds 326 combinations (also the blue tee and the 16 print
+// tees); the reasons name what is still not approved.
+import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SV1_SHOES, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarOutfitFor } from "./avatar-layers.js";
 
 function store(key, value) {
   try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch (_e) { return false; }
@@ -96,12 +97,11 @@ export function mountNorthstarPanel(panel, preview) {
   return true;
 }
 
-// Why an SV1-V5 shoe cannot be chosen for this outfit (the owner approved 21 concrete combinations: the cream tee without a print over
-// the skirt, shorts, capri or long trousers; charcoal not with long trousers).
+// Why an SV1-V5 shoe cannot be chosen for this outfit (the owner approved 326 concrete combinations — the cream, blue and 16 print tees
+// over the bottoms each was checked with; charcoal never with long trousers).
 function shoeReason(key, tee, pants) {
   const o = northstarOutfitFor(key, tee, pants);
   if (!o) return "Vælg først et outfit.";
-  if (o.top !== NORTHSTAR_PRINT_TEE_BASE) return "Skoene er kun godkendt med den cremefarvede T-shirt uden tryk (K01–K09).";
   if (/trousers/.test(o.bottom)) return "Koks er ikke godkendt med lange bukser.";
   return "Kombinationen er ikke godkendt.";
 }

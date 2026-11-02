@@ -36,6 +36,7 @@ test("D-305 published by D-308 exactly as staged: the 8 files with D-305's hashe
   const doc = readFileSync(join(ROOT, "docs", "decisions", "D-305.md"), "utf8");
   for (const [f, [h, n]] of Object.entries(FILES)) { const b = readFileSync(join(ROOT, "assets", "avatar-northstar", f)); assert.deepEqual([sha(b), b.length], [h, n], f); assert.ok(doc.includes(h), f + ": the hash D-305 listed"); }
   for (const [id, item] of Object.entries(P.RUNTIME_ITEMS)) { assert.equal(AL.NORTHSTAR_SV1_SHOES[id].item, item); assert.deepEqual({ ...AL.NORTHSTAR_ITEMS[item], layers: [...AL.NORTHSTAR_ITEMS[item].layers], shadows: [...AL.NORTHSTAR_ITEMS[item].shadows] }, { ...P.RUNTIME_ITEM_SHAPE, layers: [...P.RUNTIME_ITEM_SHAPE.layers], shadows: [...P.RUNTIME_ITEM_SHAPE.shadows] }); }
-  assert.deepEqual([...AL.NORTHSTAR_SV1_SHOE_COMBOS].sort(), A.combinations.map((c) => c.top + "+" + c.bottom + "+" + P.RUNTIME_ITEMS[c.candidate]).sort());
+  const d305 = A.combinations.map((c) => c.top + "+" + c.bottom + "+" + P.RUNTIME_ITEMS[c.candidate]); assert.ok(d305.every((k) => AL.NORTHSTAR_SV1_SHOE_COMBOS.includes(k)), "D-305's 21 stay approved");
+  assert.equal(AL.NORTHSTAR_SV1_SHOE_COMBOS.length, 21 + 305, "D-314 added exactly D-312's 305 candidates");
   assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false); assert.deepEqual(Object.keys(P.RUNTIME_ITEMS), Object.keys(M.candidates));
 });
