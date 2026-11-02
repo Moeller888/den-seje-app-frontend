@@ -228,7 +228,7 @@ test("an incorrect answer, committed three times at once: ONE process-event, gra
   await expect(f.locator("body")).toHaveAttribute("data-cabinet", "default");
 });
 
-test("a repeat (D-211) through the host page: the reopened instance resumes and pays the REPEAT amount (2 XP, 1 coin), not a first reward", async ({ page, request, browserName }) => {
+test("a repeat (D-211) through the host page: the reopened instance is served again and pays the REPEAT amount (2 XP, 1 coin), not a first reward", async ({ page, request, browserName }) => {
   const pupil = await makePupil(request, "repeat", browserName);
   const f = await signInAndOpenTask(page, pupil);
   await f.locator(`#options [data-option="${await optionId(request, pupil, f, true)}"]`).click();
@@ -241,8 +241,14 @@ test("a repeat (D-211) through the host page: the reopened instance resumes and 
     headers: { ...svc, "content-type": "application/json", prefer: "return=minimal" }, data: { answered: false, repeat_count: 1, user_answer: null },
   });
   expect(reopen.status(), await reopen.text()).toBe(204);
+  // A fresh game document (memory-only world: the cabinet is locked again). The repeat is not "resumed" by the
+  // handshake (that is only the host's own unanswered instance); it is served the normal way, by get-next-question.
   await page.evaluate(() => { const fr = document.getElementById("lv-game"); fr.src = `${fr.src.split("?")[0]}?reload=repeat`; });
-  await expect(f.locator("body")).toHaveAttribute("data-resumed", "true", { timeout: 30_000 });
+  // The old document said data-task="correct"; wait for the NEW document before using it.
+  await expect(f.locator("body")).toHaveAttribute("data-task", "none", { timeout: 30_000 });
+  await expect(f.locator("body")).toHaveAttribute("data-bridge", "ready", { timeout: 30_000 });
+  await f.locator("#use-cabinet").click();
+  await expect(f.locator("body")).toHaveAttribute("data-task", "open", { timeout: 30_000 });
   await f.locator(`#options [data-option="${await optionId(request, pupil, f, true)}"]`).click();
   await f.locator("#commit").click();
   await expect(f.locator("body")).toHaveAttribute("data-task", "correct", { timeout: 30_000 });
