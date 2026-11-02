@@ -400,6 +400,10 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Shoe cut kit — D-318 (offline; 0 image calls; no asset, runtime or flag change).**
+  - **Contracts and method.** One contract per shoe cut (`fixtures/northstar-wardrobe/shoe-cuts/sneaker-low.json`, `ankle-boot.json`) holds crop, K, seeds and fields, the opening, covering, placement, bottoms and review regions. The shared method is `northstar-shoe-cut-kit.mjs`; the locked files are unchanged.
+  - **Results.** The kit reproduces the four approved SV1-V5 layers and their covering masks byte for byte. The new opening check (collar or shaft) classifies overlap and skin in the opening versus material on the shin, foot through the shoe and holes; it gets 15/15 real and negative cases right. Its tolerances are not yet independently validated.
+  - **Ankle boot.** The rehearsal on the existing dark source is technically clean (18/18 outfits) but visually limited by the source: stroke tips and a ragged shaft top. See `docs/decisions/D-318.md`.
 - **326 SV1-V5 shoe combinations in the opt-in — D-314 (the owner approved D-312's 305 candidates; no asset changed; flag false).**
   - **Runtime.** `NORTHSTAR_SV1_SHOE_COMBOS` = D-305's 21 + D-314's 305 (`sv1-shoe-tee-owner-approval-v1.json`): the cream, blue and 16 print tees. 323 reachable, all byte-identical to the approved renderings. Charcoal with long trousers (37) stays refused on every top, also after a reload or a change.
   - **Panel.** Only two reasons remain: "Vælg først et outfit." and "Koks er ikke godkendt med lange bukser." See `docs/decisions/D-314.md`.
