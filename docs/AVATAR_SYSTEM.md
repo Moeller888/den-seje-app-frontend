@@ -400,6 +400,16 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Robust field labelling — D-325 (offline development study on AB-1; 0 image calls; contract v3 developed WITH knowledge of AB-1, so NOT independently validated; D-324's verdict and D-320's closure unchanged; no item approved).**
+  - **Cause.** v2's fixed sole seed (y 1488) sat in the old drawing's 2 px welt band; AB-1 draws the sole 2 px higher, so that row is a line.
+  - **Rule `zone-v1`.** `northstar-shoe-cut-seeds.mjs` and `ankle-boot-v3.json` find each field in a fixed zone by its safe pixels (at least 2 px from any line). Missing, ambiguous and merged fields are refused, and every choice is logged. At K, the fields decided at 1x are followed (`zone-v1-k-follows-1x`).
+  - **Locked files unchanged.** The D-318/D-319 files, contract v2 and the sneaker stay as they were.
+  - **Chain on AB-1.**
+    - All fields resolve, and the outfits pass 18/18.
+    - Technically, the original colour's ΔE p95 is 0.057 (limit 0.045), and line contrast is below 0.2 (the dark sole; the ink rule counts painted shading as line).
+    - Visually, the original colour and light sand look finished at app size and may go to owner review with the caveat visible. Black + gum is not finished (stepped heel edge, dark welt fragments).
+  - **Adapter.** The adapter's "next" hint now names the D-319 evaluator; no guard changed.
+  - See `docs/decisions/D-325.md`.
 - **AB-1 result — D-324 (one call sent and received, about $0.0564; REJECTED SOURCE by the locked D-319 evaluation; D-320 closed; no item approved).**
   - **Rejected on one rule.** The source passed every quality and fit rule: detail at K, no stroke tips, no skin remnants, no glow, a closed separate rim band, shape, covering and opening. The contract's sole seeds (y 1488) lie on a drawn line between a welt band and the sole, so the fields could not be built. The chain, the designs and the outfits were therefore not measurable.
   - **Possible false alarm.** The seed placement is recorded separately as a possible false alarm. The verdict stands. See `docs/decisions/D-324.md`.
