@@ -13,8 +13,10 @@
 -- WHAT CHANGES (and nothing else)
 --   The two foreign keys are re-created with the same name, the same column and the same target, with
 --   ON DELETE RESTRICT instead of ON DELETE CASCADE. No row is read for the answer history, changed or
---   deleted. A question WITHOUT answer history can still be deleted; one WITH history raises
---   restrict_violation (23001) and must be archived with is_active = false.
+--   deleted. A question WITHOUT answer history can still be deleted; one WITH history is refused and
+--   must be archived with is_active = false. The refusal's SQLSTATE depends on the server version:
+--   PostgreSQL 17 (production) reports 23503 foreign_key_violation ("update or delete on table
+--   "questions" violates foreign key constraint ..."); PostgreSQL 18 reports 23001 restrict_violation.
 --
 -- GUARD: each constraint must be exactly production's CASCADE definition (read-only catalog
 -- 2026-11-01) or already this file's RESTRICT definition (re-run: no change). Anything else aborts.

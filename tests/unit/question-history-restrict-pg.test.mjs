@@ -8,14 +8,18 @@
 //
 // What this proves on a real server:
 //   1. Production's CASCADE (the fixture) deletes answer history with the question — the defect.
-//   2. After the migration: deleting a question with history fails with SQLSTATE 23001
-//      (restrict_violation) and every history row stays; archiving (is_active = false) works; a question
-//      without history can still be deleted.
+//   2. After the migration: deleting a question with history is refused and every history row stays;
+//      archiving (is_active = false) works; a question without history can still be deleted.
+//      SQLSTATE: PostgreSQL 17 — production's version — reports an ON DELETE RESTRICT refusal as 23503
+//      (foreign_key_violation, "update or delete on table ... violates foreign key constraint"); PostgreSQL
+//      18 (PGlite, question-history-restrict-migration-run) reports 23001 (restrict_violation). The
+//      assertions pin the code, the constraint name and the message kind, so a refused DELETE cannot be
+//      confused with a refused INSERT (also 23503).
 //   3. lock_timeout: while another session holds a lock on question_instances, the migration aborts with
 //      SQLSTATE 55P03 (lock_not_available) within seconds and changes NOTHING (still CASCADE); run again
 //      after the lock is gone, it succeeds.
 //   4. The documented rollback restores CASCADE exactly, no row changed.
-//   5. Concurrency: a delete racing with a new answer waits and then fails with 23001 (history kept);
+//   5. Concurrency: a delete racing with a new answer waits and then is refused (history kept);
 //      a late answer to a question deleted first fails with 23503 (no orphan).
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -102,6 +106,13 @@ const defs = async (c) => (await c.query(`SELECT conrelid::regclass::text AS t, 
 const counts = async (c) => (await c.query(`SELECT (SELECT count(*) FROM public.questions)::int AS q,
   (SELECT count(*) FROM public.question_instances)::int AS i, (SELECT count(*) FROM public.student_answers)::int AS a`)).rows[0];
 const sqlstate = async (p) => { try { await p; return null; } catch (e) { return e.code; } };
+// The refusal of a DELETE on questions by ON DELETE RESTRICT, as PostgreSQL 17 reports it: SQLSTATE 23503,
+// the referencing constraint named, and the "update or delete" form (an INSERT refusal says "insert or update").
+const deleteRefused = async (p) => {
+  try { await p; return null; } catch (e) {
+    return { code: e.code, constraint: e.constraint, deleteForm: /^update or delete on table "questions" violates foreign key constraint/.test(e.message) };
+  }
+};
 
 test("real PostgreSQL: H2 RESTRICT, SQLSTATEs, lock_timeout and rollback", { skip: SKIP, timeout: 120000 }, async (t) => {
   t.after(teardown);
@@ -113,13 +124,15 @@ test("real PostgreSQL: H2 RESTRICT, SQLSTATEs, lock_timeout and rollback", { ski
     assert.equal((await counts(c)).i, 0);
   });
 
-  await t.test("2. after the migration: 23001 and history kept; archiving works; no-history delete works", async () => {
+  await t.test("2. after the migration: the delete is refused (PG17: 23503) and history kept; archiving works; no-history delete works", async () => {
     const c = await newDb();
     await apply(c, read(FILE));
     assert.deepEqual(await defs(c), [RESTRICT, RESTRICT]);
     const before = await counts(c);
-    assert.equal(await sqlstate(c.query(`DELETE FROM public.questions WHERE id = '${Q_HIST}'`)), "23001");
-    assert.equal(await sqlstate(c.query(`DELETE FROM public.questions WHERE id = '${Q_ANS}'`)), "23001");
+    assert.deepEqual(await deleteRefused(c.query(`DELETE FROM public.questions WHERE id = '${Q_HIST}'`)),
+      { code: "23503", constraint: "question_instances_question_id_fkey", deleteForm: true });
+    assert.deepEqual(await deleteRefused(c.query(`DELETE FROM public.questions WHERE id = '${Q_ANS}'`)),
+      { code: "23503", constraint: "student_answers_question_id_fkey", deleteForm: true });
     assert.deepEqual(await counts(c), before, "every history row stays");
     await c.query(`UPDATE public.questions SET is_active = false WHERE id IN ('${Q_HIST}', '${Q_ANS}')`);
     await c.query(`DELETE FROM public.questions WHERE id = '${Q_FREE}'`);
@@ -144,21 +157,22 @@ test("real PostgreSQL: H2 RESTRICT, SQLSTATEs, lock_timeout and rollback", { ski
   await t.test("5. concurrency: a delete racing with a new answer on the same question never loses history", async () => {
     // A question with no history yet. Session A serves it (uncommitted instance); session B deletes the
     // question. B must wait for A's row (the foreign-key check takes a KEY SHARE lock on the question),
-    // then — A committed — fail with 23001 and leave the new history in place.
+    // then — A committed — be refused (PG17: 23503, update-or-delete form) and leave the new history in place.
     const c = await newDb();
     await apply(c, read(FILE));
     const a = await connect();
     const b = await connect();
     await a.query("BEGIN");
     await a.query(`INSERT INTO public.question_instances (question_id) VALUES ('${Q_FREE}')`);
-    const deleting = sqlstate(b.query(`DELETE FROM public.questions WHERE id = '${Q_FREE}'`));
+    const deleting = deleteRefused(b.query(`DELETE FROM public.questions WHERE id = '${Q_FREE}'`));
     for (let i = 0; i < 200; i++) {
       const w = (await c.query(`SELECT count(*)::int AS n FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock'`)).rows[0].n;
       if (w >= 1) break;
       await new Promise((r) => setTimeout(r, 25));
     }
     await a.query("COMMIT");
-    assert.equal(await deleting, "23001", "the delete is refused once the answer exists");
+    assert.deepEqual(await deleting, { code: "23503", constraint: "question_instances_question_id_fkey", deleteForm: true },
+      "the delete is refused once the answer exists");
     assert.equal((await c.query(`SELECT count(*)::int AS n FROM public.question_instances WHERE question_id = '${Q_FREE}'`)).rows[0].n, 1);
     // The other order: the delete of a question WITHOUT history commits first; the late insert then fails
     // (23503) instead of creating an orphan.

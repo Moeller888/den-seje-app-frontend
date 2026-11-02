@@ -68,7 +68,7 @@ test("after: both keys are RESTRICT with the same names; no row is changed", asy
   assert.deepEqual(await snapshot(db), before);
 });
 
-test("a question with answer history cannot be deleted (restrict_violation 23001); it is archived instead", async () => {
+test("a question with answer history cannot be deleted (PGlite = PostgreSQL 18: restrict_violation 23001; production PostgreSQL 17 reports 23503, see -pg); it is archived instead", async () => {
   const db = await migrated();
   for (const id of [Q_HIST, Q_ANS]) {
     await assert.rejects(db.exec(`DELETE FROM public.questions WHERE id = '${id}'`), (e) => e.code === "23001", id);
