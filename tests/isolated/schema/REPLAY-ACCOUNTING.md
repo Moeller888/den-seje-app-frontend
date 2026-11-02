@@ -104,6 +104,13 @@ Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i p
   - Mellem de to H5-filer kan ingen API-rolle kalde den gamle `_v2`.
   - Alignmentet kontrollerer G1's to hjælpefunktioner: krop, `IMMUTABLE`, `search_path`, ejer og at
     ingen API-rolle har EXECUTE.
+- **G2 (`20261101140000`) er uafhængig af H5-rækkefølgen.** Bootstrappen accepterer G2's værn
+  `open_round_requires_active_question`, men kun præcis som gennemgået: funktionens md5, triggerens
+  form og kolonner, `SECURITY DEFINER`, `search_path`, ejer og ingen EXECUTE for API-roller. Alle
+  andre ekstra triggere afvises stadig. G2 kan derfor anvendes før G1, mellem G1 og bootstrappen,
+  mellem de to H5-filer eller efter dem. Alle rækkefølger ender i samme skema
+  (`question-attempts-v2-g2-compat.test.mjs`, og på PostgreSQL 17
+  `question-attempts-v2-g2-compat-pg.test.mjs`).
 - **Bevis.** `tests/unit/question-attempts-v2-bootstrap.test.mjs` (PGlite) viser, at
   repositoryets rækkefølge og produktionens rækkefølge ender i identisk skema og bedømmer ens med G1.
   `question-attempts-v2-bootstrap-concurrency.test.mjs` viser det samme på PostgreSQL 17.
