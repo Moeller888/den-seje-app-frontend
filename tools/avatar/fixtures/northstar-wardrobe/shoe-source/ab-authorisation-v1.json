@@ -22,7 +22,17 @@
       "basis": "SV-1's measured usage for the same request shape (1,536 image-input, 397 text-input, 1,372 image-output tokens = $0.0554); this prompt is about 40 % longer (about 560 text tokens): expected about $0.056; at most about $0.07 with 800 text tokens and the largest measured image output (1,756 tokens, TPV-1)",
       "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
     },
-    "actuallySent": 0
+    "actuallySent": 1,
+    "closed": {
+      "by": "D-324",
+      "reason": "the one authorised call was sent once and received",
+      "spent": 1,
+      "received": 1,
+      "uncertain": 0,
+      "refusedBeforeSend": 0,
+      "closedUnused": 0,
+      "reopen": "never automatically; only a new owner decision"
+    }
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -108,8 +118,8 @@
       "category": "shoes",
       "cut": "ankle-boot-k4",
       "order": 1,
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED",
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
       "claim": {
         "identity": "AB-1-shoes-ankleboot-tight-k4-claim",
         "filename": "AB-1-shoes-ankleboot-tight-k4.claim.json",
@@ -118,7 +128,22 @@
       "prompt": {
         "sha256": "8e0f21250ed041a7956de984535f9949114e35ee658ff1de6d7c7cdd7de0f7e1"
       },
-      "canvas": "ff023bf235a48ee89ae21fb8a3835a34815d3cb45a7314dcefa0f2425b3fabbf"
+      "canvas": "ff023bf235a48ee89ae21fb8a3835a34815d3cb45a7314dcefa0f2425b3fabbf",
+      "recordedBy": "D-324",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_634eff68b30d420bbe1b49366aebb82e",
+        "fetches": 1,
+        "imageSha256": "9edfa6c2a6050aad8671eb684e16360cdcb566669b8e65bf9d4e887792526126",
+        "usage": {
+          "imageInputTokens": 1536,
+          "textInputTokens": 586,
+          "imageOutputTokens": 1372
+        },
+        "listPriceUsd": 0.0564,
+        "evaluation": "REJECTED SOURCE by the locked D-319 evaluation: fields — the sole seeds (400,1488 and 623,1488) lie on a drawn line, not in a field; every other check rule passed; chain not measurable, so no design or outfit result"
+      }
     }
-  ]
+  ],
+  "status": "AUTHORISED by D-320 (D-320 AB: 1 CALL AUTHORISED): ONE single-use call; EXECUTED on the owner's instruction; no earlier permission is reused; CLOSED by D-324: 1 spent and received (AB-1, REJECTED SOURCE by the locked D-319 evaluation: the contract's sole seeds do not lie in a field)"
 }
