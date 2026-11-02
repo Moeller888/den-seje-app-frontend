@@ -1,0 +1,34 @@
+[
+  {
+    "id": "08c1770e-b9e6-4a14-a5e0-6420337ba052",
+    "type": "mc_single",
+    "question_type": "auto",
+    "learning_objective": "english",
+    "answer_format": "mc",
+    "answer_type": "short",
+    "difficulty": 3,
+    "target_grade": 4,
+    "difficulty_band": 3,
+    "difficulty_level": 2143,
+    "content": "{\"correct\": \"'s\", \"options\": [\"s'\", \"s\", \"es\", \"'s\"], \"question\": \"Hvilket ord mangler? 'This is my sister___ room.' (min søsters værelse)\", \"review_text\": \"Ejefald får apostrof + s: my sister's room.\", \"accepted_answers\": [\"'s\"]}",
+    "metadata": "{\"domain\": \"english\", \"concepts\": [\"grammatik\"], \"insight_type\": \"reframing\", \"challenge_role\": \"challenge\", \"cognitive_skill\": \"application\", \"difficulty_type\": \"applied\", \"misconception_type\": \"overgeneralization\"}",
+    "content_md5": "004cbd99947f484a842d9210564915ab",
+    "metadata_md5": "4a7dd45f217fd26ccb10beeae257a356"
+  },
+  {
+    "id": "3213c5be-71b8-4dab-817f-26a1deca5cb5",
+    "type": "mc_single",
+    "question_type": "auto",
+    "learning_objective": "english",
+    "answer_format": "mc",
+    "answer_type": "short",
+    "difficulty": 4,
+    "target_grade": 4,
+    "difficulty_band": 4,
+    "difficulty_level": 2429,
+    "content": "{\"correct\": \"My father's car is red.\", \"options\": [\"My father's car is red.\", \"My fathers car is red.\", \"My father car's is red.\", \"My fathers' car are red.\"], \"question\": \"Hvilken sætning med ejefald er rigtig?\", \"review_text\": \"Ejefald: my father's car = min fars bil.\", \"accepted_answers\": [\"My father's car is red.\"]}",
+    "metadata": "{\"domain\": \"english\", \"concepts\": [\"grammatik\"], \"insight_type\": \"reframing\", \"challenge_role\": \"challenge\", \"cognitive_skill\": \"application\", \"difficulty_type\": \"applied\", \"misconception_type\": \"overgeneralization\"}",
+    "content_md5": "47577cb7bbc5839859dbb3caaad0d538",
+    "metadata_md5": "4a7dd45f217fd26ccb10beeae257a356"
+  }
+]

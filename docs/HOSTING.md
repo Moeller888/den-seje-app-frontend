@@ -163,7 +163,7 @@ Cloudflare læser `_redirects` som konfiguration og serverer den aldrig som fil.
 CLOUDFLARE DASHBOARD — PRÆCISE VÆRDIER
 ----------------------------------------
 
-Målværdier, som de skal stå, når PR #378 er merget og ejeren har ændret dashboardet:
+Værdierne, som de står i dashboardet i dag:
 
 ```
 Production branch:   main
@@ -173,11 +173,19 @@ Non-production branch deploy command:      node tools/cloudflare-deploy.mjs
 Build variable:      SKIP_DEPENDENCY_INSTALL=1
 ```
 
-**Status (2026-10-31): dashboardet er IKKE ændret endnu.** Det står stadig på de gamle kommandoer:
-`npx --yes wrangler@4.118.0 deploy` for main og Cloudflares standard `npx wrangler versions upload`
-for alle andre branches. De to deploy-kommandoer må først sættes til `node tools/cloudflare-deploy.mjs`
-**efter** merge, ellers fejler main-buildet, fordi scriptet ikke findes på main endnu. Opdatér denne
-statuslinje, når ændringen er foretaget og verificeret.
+**Status (2026-10-31): aktiv og verificeret.** PR #378 blev merget 2026-10-30 (`2d6dbaf`), og
+ejeren satte begge deploy-kommandoer til `node tools/cloudflare-deploy.mjs` 2026-10-31. Før det stod
+der `npx --yes wrangler@4.118.0 deploy` for main og Cloudflares standard `npx wrangler versions
+upload` for alle andre branches. Verificeret samme dag:
+
+- **main:** ejeren har læst loggen for den seneste main-build; den viser
+  `all 3 required secrets present` både før og efter udrulningen.
+- **andre branches:** ingen branch-upload siden ændringen. Alle versioner fra 16:23 til 22:29 UTC er
+  udrullede main-versioner uden branch-alias, selvom flere PR-branches blev pushet i det tidsrum.
+- **produktion:** den udrullede version har alle tre secret-navne (kun navne er læst).
+
+Rækkefølgen betød noget: kommandoerne måtte først ændres **efter** merge, ellers var main-buildet
+fejlet, fordi scriptet ikke fandtes på main.
 
 Workeren bruger Cloudflares **ældre preview-model** for andre branches end main: hver branch-build
 bliver en version af produktions-Workeren med produktionens indstillinger. Den nyere model (Worker
