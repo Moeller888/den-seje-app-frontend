@@ -1,3 +1,4 @@
+import { parseSourceBack } from "./sequence.ts";
 import type { Action, PresentBody, TaskResultMsg } from "@adventure-engine/learning-bridge";
 
 /**
@@ -14,7 +15,23 @@ export interface TaskViewHandlers {
   readonly hint: (level: number) => void;
   readonly retry: () => void;
   readonly close: (outcome: TaskResultMsg["outcome"] | "error") => void;
+  /** D-322 step 5: after an incorrect verdict, ask for a NEW task on the same objective. */
+  readonly revise?: () => void;
 }
+
+/** What the pupil sees about the activity (D-322 sequence.ts): its class and what it counts for. */
+export interface ActivityBadge {
+  readonly cls: string;
+  readonly label: string;
+}
+
+const REASONS = [
+  ["hvem", "Hvem der lavede kilden"],
+  ["hvornaar", "Hvornår den blev lavet"],
+  ["til", "Hvem den var til"],
+  ["hvorfor", "Hvorfor den blev lavet"],
+  ["gaet", "Jeg gættede"],
+] as const;
 
 type El = HTMLElement;
 
@@ -50,6 +67,9 @@ export class TaskView {
   private readonly retryBtn: HTMLButtonElement;
   private readonly closeBtn: HTMLButtonElement;
   private readonly modeTag: El;
+  private readonly activityTag: El;
+  private readonly reviseBtn: HTMLButtonElement;
+  private allowRevision = false;
 
   constructor(host: El, handlers: TaskViewHandlers) {
     this.h = handlers;
@@ -60,6 +80,8 @@ export class TaskView {
     head.append(el("h2", { id: "lv-title" }, "Hylden i arkivskabet"));
     this.modeTag = el("span", { id: "lv-mode", class: "lv-mode" });
     head.append(this.modeTag);
+    this.activityTag = el("span", { id: "lv-activity", class: "lv-activity" });
+    head.append(this.activityTag);
     this.prompt = el("p", { id: "lv-prompt", class: "lv-prompt" });
     this.cards = el("div", { id: "lv-cards", class: "lv-cards", role: "group", "aria-labelledby": "lv-prompt" });
     this.textInput = el("input", { id: "lv-text", type: "text", maxlength: "200", autocomplete: "off", "aria-labelledby": "lv-prompt" });
@@ -73,8 +95,9 @@ export class TaskView {
     this.feedback = el("div", { id: "lv-feedback", class: "lv-feedback", "aria-live": "polite" });
     this.retryBtn = el("button", { id: "lv-retry", type: "button", class: "lv-primary" }, "Send mit svar igen");
     this.closeBtn = el("button", { id: "lv-close", type: "button" }, "Tilbage til arkivet");
+    this.reviseBtn = el("button", { id: "lv-revise", type: "button", class: "lv-primary" }, "Revidér din vurdering");
     const actions = el("div", { class: "lv-actions" });
-    actions.append(this.commitBtn, this.hintBtn, this.retryBtn, this.closeBtn);
+    actions.append(this.commitBtn, this.hintBtn, this.retryBtn, this.reviseBtn, this.closeBtn);
     sheet.append(head, this.prompt, this.guide, this.cards, this.textInput, this.reasons, this.hints, actions, this.status, this.feedback, this.note);
     this.root.append(sheet);
     host.append(this.root);
@@ -93,14 +116,19 @@ export class TaskView {
       this.h.retry();
     });
     this.closeBtn.addEventListener("click", () => this.h.close(this.outcome ?? "error"));
+    this.reviseBtn.addEventListener("click", () => this.h.revise?.());
   }
 
   get isOpen(): boolean {
     return !this.root.hidden;
   }
 
-  show(task: PresentBody): void {
+  show(task: PresentBody, opts: { activity?: ActivityBadge; allowRevision?: boolean } = {}): void {
     this.task = task;
+    this.allowRevision = opts.allowRevision === true && this.h.revise !== undefined;
+    this.activityTag.textContent = opts.activity?.label ?? "";
+    this.activityTag.hidden = opts.activity === undefined;
+    this.root.dataset["activity"] = opts.activity?.cls ?? "";
     this.selected = null;
     this.hintsShown = 0;
     this.outcome = null;
@@ -120,16 +148,27 @@ export class TaskView {
       });
       box.append(card);
       if (o.detail !== undefined) {
-        // Phase 2: the description is part of the stimulus (who, when, to whom) — never a hint about correctness.
-        const detail = el("p", { class: "lv-detail", id: `lv-detail-${o.id}` }, o.detail);
+        // Step 2 (exploration): turning the document over shows its archive back — sender, time, recipient,
+        // purpose, context. Part of the stimulus; never a hint about correctness.
+        const back = parseSourceBack(o.detail);
+        let detail: HTMLElement;
+        if (back === null) {
+          detail = el("p", { class: "lv-detail", id: `lv-detail-${o.id}` }, o.detail);
+        } else {
+          detail = el("dl", { class: "lv-detail lv-back", id: `lv-detail-${o.id}`, "aria-label": `Bagsiden af ${o.label}` });
+          for (const f of back) detail.append(el("dt", {}, f.field), el("dd", { "data-field": f.field.toLowerCase() }, f.value));
+        }
         detail.hidden = true;
-        const inspect = el("button", { type: "button", class: "lv-inspect", "data-inspect": o.id, "aria-expanded": "false", "aria-controls": `lv-detail-${o.id}` }, "Undersøg kilden");
+        const inspect = el("button", { type: "button", class: "lv-inspect", "data-inspect": o.id, "aria-expanded": "false", "aria-controls": `lv-detail-${o.id}` }, "Vend dokumentet");
         inspect.addEventListener("click", () => {
           detail.hidden = !detail.hidden;
           inspect.setAttribute("aria-expanded", String(!detail.hidden));
+          inspect.textContent = detail.hidden ? "Vend dokumentet" : "Vend tilbage";
+          box.dataset["side"] = detail.hidden ? "front" : "back";
           this.inspected.add(o.id);
           this.refresh();
         });
+        box.dataset["side"] = "front";
         box.append(inspect, detail);
       }
       this.cards.append(box);
@@ -144,6 +183,7 @@ export class TaskView {
     this.status.textContent = "";
     this.feedback.replaceChildren();
     this.retryBtn.hidden = true;
+    this.reviseBtn.hidden = true;
     this.closeBtn.hidden = true;
     this.root.hidden = false;
     this.root.dataset["state"] = "open";
@@ -203,15 +243,28 @@ export class TaskView {
     }
     this.status.textContent = r.outcome === "correct" ? "Rigtigt." : r.outcome === "incorrect" ? "Ikke rigtigt." : "Dit svar er afleveret til læreren.";
     if (r.feedback.text !== null) this.feedback.append(el("p", { id: "lv-feedback-text" }, r.feedback.text));
-    if (r.feedback.correctAnswer !== null) this.feedback.append(el("p", { id: "lv-correct" }, `Det rigtige svar: ${r.feedback.correctAnswer}`));
+    if (r.feedback.correctAnswer !== null) {
+      this.feedback.append(el("p", { id: "lv-correct" }, `Det rigtige svar: ${r.feedback.correctAnswer}`));
+      // Step 4: point at the information that mattered — the right source's back, now that the answer is known.
+      const card = [...this.cards.querySelectorAll<HTMLElement>(".lv-source")].find((b) => b.querySelector(".lv-card")?.textContent === r.feedback.correctAnswer);
+      const back = card?.querySelector<HTMLElement>(".lv-back");
+      if (card !== undefined && back !== null && back !== undefined) {
+        card.dataset["relevant"] = "true";
+        back.hidden = false;
+        card.dataset["side"] = "back";
+        this.feedback.append(el("p", { id: "lv-relevant" }, `Læg mærke til bagsiden af »${r.feedback.correctAnswer}«: afsender, tid, modtager og formål afgør, hvad kilden kan bruges til.`));
+      }
+    }
     // Self-explanation shown back next to the explanation, so the pupil compares their reason with it.
     if (this.reason !== null) this.feedback.append(el("p", { id: "lv-own-reason" }, `Din begrundelse: ${this.reason.toLowerCase()}. Sammenlign den med forklaringen ovenfor.`));
     // Display only: the server decided what this answer counts as.
     const counts = r.evidence === "evidence" ? "Tæller som selvstændig opgave." : r.evidence === "practice" ? "Tæller som øvelse." : "";
     if (counts !== "") this.feedback.append(el("p", { id: "lv-evidence", "data-evidence": r.evidence }, counts));
     this.closeBtn.hidden = false;
+    // Step 5: a wrong assessment can be revised on a NEW task after reading the feedback.
+    this.reviseBtn.hidden = !(r.outcome === "incorrect" && this.allowRevision);
     this.refresh();
-    this.closeBtn.focus();
+    (this.reviseBtn.hidden ? this.closeBtn : this.reviseBtn).focus();
   }
 
   error(text: string): void {
@@ -233,13 +286,14 @@ export class TaskView {
     this.reasons.replaceChildren();
     this.reasons.hidden = !show;
     if (!show) return;
-    this.reasons.append(el("p", { id: "lv-reasons-title", class: "lv-card-title" }, "Hvad afgjorde dit valg? (valgfrit, bliver ikke bedømt)"));
-    for (const [key, label] of [["hvem", "Hvem der lavede kilden"], ["hvornaar", "Hvornår den blev lavet"], ["til", "Hvem den var til"], ["gaet", "Jeg gættede"]] as const) {
+    this.reasons.append(el("p", { id: "lv-reasons-title", class: "lv-card-title" }, "Hvad afgjorde dit valg? Vælg det spørgsmål, du brugte (bliver ikke bedømt)."));
+    for (const [key, label] of REASONS) {
       const b = el("button", { type: "button", class: "lv-reason", "data-reason": key, "aria-pressed": "false" }, label);
       b.addEventListener("click", () => {
         if (this.locked()) return;
         this.reason = this.reason === label ? null : label;
         for (const other of this.reasons.querySelectorAll<HTMLElement>(".lv-reason")) other.setAttribute("aria-pressed", String(other.textContent === this.reason));
+        this.refresh();
       });
       this.reasons.append(b);
     }
@@ -278,9 +332,15 @@ export class TaskView {
     for (const b of this.reasons.querySelectorAll<HTMLButtonElement>(".lv-reason")) b.disabled = locked;
     const need = this.investigationNeeded();
     const missing = Math.max(0, need - this.inspected.size);
-    this.guide.textContent = need === 0 || this.outcome !== null ? "" : missing > 0 ? `Undersøg mindst ${need} kilder, før du vælger (${this.inspected.size} af ${need}).` : "Vælg den kilde, der bedst kan undersøge påstanden.";
+    // Step 3: a hypothesis is an assessment WITH a reason — the pupil names the question that decided it.
+    const reasonNeeded = !this.reasons.hidden && this.reason === null;
+    this.guide.textContent =
+      need === 0 || this.outcome !== null ? ""
+        : missing > 0 ? `Vend mindst ${need} dokumenter, før du vælger (${this.inspected.size} af ${need}).`
+          : this.selected === null ? "Vælg den kilde, der bedst kan undersøge påstanden."
+            : reasonNeeded ? "Vælg, hvad der afgjorde dit valg." : "Klar: læg kilden i skabet.";
     this.root.dataset["investigated"] = String(this.inspected.size);
-    this.commitBtn.disabled = locked || this.current() === null || missing > 0;
+    this.commitBtn.disabled = locked || this.current() === null || missing > 0 || reasonNeeded;
     // After any verdict (also "aborted") the answer is committed: only "send again" or "close" remain.
     this.commitBtn.hidden = this.outcome !== null;
     this.hintBtn.hidden = (this.task?.hintsAvailable ?? 0) === 0 || locked;

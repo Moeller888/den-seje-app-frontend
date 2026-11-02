@@ -16,7 +16,7 @@ export const INTRO_CARDS: readonly IntroCard[] = [
   },
   {
     title: "Sådan spørger man en kilde",
-    text: "En kilde er et spor fra fortiden: et brev, en avis, en dagbog. Før du bruger en kilde, stiller du tre spørgsmål. Hvem har lavet den? Hvornår? Til hvem? Svarene viser, hvad kilden kan fortælle om. En kilde fra selve dagen kan noget andet end én, der er skrevet mange år senere. Og den bedste kilde afhænger af, hvad du vil undersøge.",
+    text: "En kilde er et spor fra fortiden: et brev, en avis, en dagbog. Før du bruger en kilde, stiller du fire spørgsmål. Hvem har lavet den? Hvornår? Til hvem? Og hvorfor? Svarene viser, hvad kilden kan fortælle om, og hvad den måske ikke fortæller. En kilde fra selve dagen kan noget andet end én, der er skrevet mange år senere. Den bedste kilde afhænger af, hvad du vil undersøge.",
   },
 ];
 
