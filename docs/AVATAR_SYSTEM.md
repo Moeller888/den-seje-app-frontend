@@ -385,6 +385,9 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **SV1-V5 shoes × blue and print tees — D-312 (offline check; candidates NOT approved; runtime list unchanged at 21).**
+  - **Checked.** 342 new combinations the opt-in can already compose. 305 technical PASS, all byte-identical in the runtime with no missing assets. 37 FAIL, exactly charcoal × long trousers (COMBO-2, held out).
+  - **Recommendation.** Extend the approval list with the 305 candidates in `sv1-shoe-tee-candidates-v1.json` (blue tee 17, print tees 288). This needs the owner's approval before `NORTHSTAR_SV1_SHOE_COMBOS` changes. See `docs/decisions/D-312.md`.
 - **SV1-V5 shoes in the Northstar opt-in — D-308 (the 8 D-305 files published with exact hashes; a shoe choice is shown only on the 21 approved combinations; flag false).**
   - **Runtime.** `NORTHSTAR_SV1_SHOES` (4 shoes) and `NORTHSTAR_SV1_SHOE_COMBOS` (the 21 combinations). `northstarShoeAllowed` judges the whole effective outfit after the print-tee and trousers choices. Anything else keeps the outfit's own shoes, and the stored choice stays untouched. 18 combinations are reachable; the 3 olive ones are not, and no outfit was added. The panel has a "Sko" row with a reason for every unavailable choice.
   - **Verified.** On the published files the result is byte-identical to the 18 approved D-304 renderings. In Chromium, 27 baseline pages are identical to main and choice, reload, return, blocked state and asset fallback all pass. See `docs/decisions/D-308.md`.
