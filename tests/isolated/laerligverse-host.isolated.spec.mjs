@@ -306,7 +306,7 @@ test("viewports 320–1280 px: the game gets real room, nothing scrolls sideways
   await expect(page.locator("#lv-live")).toContainText("Du er logget ud");
 });
 
-test("after logout the pupil can sign in again on the same page; the game reconnects and the open instance resumes", async ({ page, request, browserName }) => {
+test("after logout the pupil can sign in again on the same page; the game reconnects and the SAME open instance is served again", async ({ page, request, browserName }) => {
   const pupil = await makePupil(request, "relogin", browserName);
   const f = await signInAndOpenTask(page, pupil);
   await page.locator("#lv-logout").click();
@@ -317,7 +317,13 @@ test("after logout the pupil can sign in again on the same page; the game reconn
   await page.locator("#lv-login-submit").click();
   await expect(page.locator("body")).toHaveAttribute("data-session", "active");
   await expect(page.locator("#lv-link")).toHaveText("forbundet", { timeout: 30_000 });
-  await expect(f.locator("body")).toHaveAttribute("data-resumed", "true", { timeout: 30_000 });
+  // A new sign-in is a new host: openTask() makes no network call (get-next-question has no side-effect-free
+  // peek), so the open instance is not resumed at the handshake but served FIRST on the next task request.
+  await expect(f.locator("body")).toHaveAttribute("data-bridge", "ready", { timeout: 30_000 });
+  await expect(f.locator("body")).toHaveAttribute("data-task", "none");
+  await f.locator("#use-cabinet").click();
+  await expect(f.locator("body")).toHaveAttribute("data-task", "open", { timeout: 30_000 });
+  // The SAME server instance, not a second one.
   expect(await instances(request, pupil)).toHaveLength(1);
   await f.locator(`#options [data-option="${await optionId(request, pupil, f, true)}"]`).click();
   await f.locator("#commit").click();
