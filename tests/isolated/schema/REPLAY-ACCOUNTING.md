@@ -62,6 +62,9 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
     `question_instances`. Filen er derfor ikke længere ren data.
   - `20261101150000_grading_meaningful_characters` (D-290 G1): `process_question_attempt` er D-280 del
     1's udgave.
+  - `20261101170000_achievement_reward_exactly_once` (D-292): ændrer `grant_achievement_rewards`, så
+    belønningen indløses atomisk og præcis én gang, og fjerner EXECUTE for `PUBLIC` og `anon`.
+    Produktionen kører stadig den tidligere udgave.
   - `20261101190000_question_attempts_v2_bootstrap` og
     `20261101190100_question_attempts_v2_align_grading` (H5-integrationen). Produktionen har hverken
     `question_attempts` eller `_v2`-funktionerne (katalog, 2026-11-01), og begge filer kræver G1 først.
