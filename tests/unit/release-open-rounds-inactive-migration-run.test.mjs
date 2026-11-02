@@ -30,7 +30,7 @@ import { G2, G2_SEED_SQL } from "./helpers/g2-h5-orders.mjs";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const FIX = "20261102100000_release_open_rounds_on_inactive_questions.sql";
 const OLD_MD5 = "7b7693b3bff869a113e8e97e16bb456a";
-const NEW_MD5 = "ecbaa6bcce3940f4a8607526f5fd756a";
+const NEW_MD5 = "b80c1c7857ecc90bdbd7b6175b65c78f";
 const SIG = "public.release_open_question_outside(text[])";
 const read = (p) => readFileSync(join(ROOT, p), "utf8").split("\r\n").join("\n");
 function rollbackSql() {
@@ -211,4 +211,53 @@ test("5. H5 history: releasing a reopened repeat on an inactive question closes 
   assert.deepEqual(await attempts(), history, "every attempt kept; nothing cascades");
   // G2: a new open round on the inactive question is still refused.
   await assert.rejects(open(db, p, q), /open round refused/);
+});
+
+// ── History guard: a round-1 instance that carries H5 history is never deleted ─────────────────────
+// The H5 invariant makes the state impossible for every API path; it is forced here past the triggers
+// (session_replication_role = replica, superuser only) to prove the release function never removes an
+// attempt even then. Negative control: the OLD body (restored by the rollback) deletes the row on a
+// subject switch, and the attempts' ON DELETE CASCADE removes the history with it.
+async function inconsistentRound1WithHistory(db) {
+  const q = TOP10_ID[6];
+  const key = (await db.query("SELECT content->>'correct' AS k FROM public.questions WHERE id = $1", [q])).rows[0].k;
+  const p = await addPupil(db);
+  const qi = (await db.query(`INSERT INTO public.question_instances (student_id, question_id, correct_answer, next_review_at)
+    VALUES ($1, $2, $3, now()) RETURNING id`, [p, q, key])).rows[0].id;
+  await db.exec("SET ROLE service_role");
+  assert.equal((await db.query("SELECT public.process_question_attempt_v2($1, $2, $3, 1, $4, NULL, NULL) AS r", [p, qi, key, randomUUID()])).rows[0].r.outcome, "recorded");
+  await db.exec("RESET ROLE");
+  await db.exec("SET session_replication_role = replica");
+  await db.query("UPDATE public.question_instances SET answered = false, user_answer = NULL WHERE id = $1", [qi]);
+  await db.exec("SET session_replication_role = DEFAULT");
+  assert.deepEqual(await row(db, qi), { answered: false, repeat_count: 0, user_answer: null, was_correct: true, at: true }, "forced: open round 1 with history");
+  return { p, q, qi };
+}
+const attemptsOf = async (db, p) => (await db.query("SELECT to_jsonb(a)::text AS a FROM public.question_attempts a WHERE student_id = $1 ORDER BY attempt_no", [p])).rows;
+
+test("history guard: an open round 1 that carries H5 attempts is closed, never deleted — also on a subject switch", async () => {
+  const db = await chain([D280_PATHS, D278, G1, BOOTSTRAP, ALIGN, FIX]);
+  for (const how of ["inactive question", "subject switch"]) {
+    const { p, q, qi } = await inconsistentRound1WithHistory(db);
+    const history = await attemptsOf(db, p);
+    assert.equal(history.length, 1);
+    let domains = [await loOf(db, q)];
+    if (how === "inactive question") await deactivate(db, q); else domains = ["et_andet_fag"];
+    assert.equal(await release(db, p, domains), 1, `${how}: the pupil is released`);
+    assert.deepEqual(await row(db, qi), { answered: true, repeat_count: 0, user_answer: null, was_correct: true, at: true },
+      `${how}: closed, not deleted`);
+    assert.deepEqual(await attemptsOf(db, p), history, `${how}: every attempt kept`);
+    assert.equal(await release(db, p, domains), 0, `${how}: idempotent`);
+  }
+});
+
+test("negative control: without the guard (old body) the same state loses its history through the cascade", async () => {
+  const db = await chain([D280_PATHS, D278, G1, BOOTSTRAP, ALIGN, FIX]);
+  await db.exec(rollbackSql());
+  assert.equal(await md5(db), OLD_MD5);
+  const { p, qi } = await inconsistentRound1WithHistory(db);
+  assert.equal((await attemptsOf(db, p)).length, 1);
+  assert.equal(await release(db, p, ["et_andet_fag"]), 1);
+  assert.equal(await row(db, qi), null, "the old body deletes the round");
+  assert.deepEqual(await attemptsOf(db, p), [], "and the cascade removes the attempt — the risk the guard closes");
 });

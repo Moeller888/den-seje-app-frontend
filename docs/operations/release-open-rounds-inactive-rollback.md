@@ -20,7 +20,7 @@ lukkede. H5-bootstrappen accepterer begge kroppe.
 DO $rollback$
 BEGIN
   IF (SELECT md5(prosrc) FROM pg_catalog.pg_proc
-      WHERE oid = to_regprocedure('public.release_open_question_outside(text[])')) IS DISTINCT FROM 'ecbaa6bcce3940f4a8607526f5fd756a' THEN
+      WHERE oid = to_regprocedure('public.release_open_question_outside(text[])')) IS DISTINCT FROM 'b80c1c7857ecc90bdbd7b6175b65c78f' THEN
     RAISE EXCEPTION 'ROLLBACK D-316: release_open_question_outside does not have D-316''s body; nothing changed';
   END IF;
 END

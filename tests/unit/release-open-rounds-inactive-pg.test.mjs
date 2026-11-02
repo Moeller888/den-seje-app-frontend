@@ -12,6 +12,8 @@
 //      answer's documented outcome.
 //   4. H5 history: a reopened repeat on an inactive question is closed by release; every
 //      question_attempts row stays; G2 still refuses a new open round on the inactive question (23514).
+//   4b. NEGATIVE: an open round 1 forced (past the triggers) to carry H5 attempts is CLOSED by release,
+//      never deleted — no attempt is removed through the ON DELETE CASCADE.
 //   5. The documented rollback restores the old body (md5 7b7693b3…).
 //
 // Runs only when LEVEL_ENGINE_PG_URL points at a disposable PostgreSQL server; otherwise SKIPPED —
@@ -120,10 +122,27 @@ test("real PostgreSQL 17: D-316 with H5 and G2 — both orders, refusals, concur
   { skip: SKIP, timeout: 300000 }, async (t) => {
     t.after(teardown);
 
-    await t.test("0. D-316 before H5 and H5 before D-316 (with G2) end in the same schema", async () => {
+    await t.test("0. G2 → D-316 → H5 and G2 → H5 → D-316 end in the same schema; D-316 after H5 keeps existing attempts", async () => {
       const a = await createDb([D280_PATHS, D278, G1, G2, FIX, BOOTSTRAP, ALIGN]);
-      const b = await createDb([D280_PATHS, D278, G1, G2, BOOTSTRAP, ALIGN, FIX]);
+      const b = await createDb([D280_PATHS, D278, G1, G2, BOOTSTRAP, ALIGN]);
+      // History written BEFORE D-316 on the H5-first database.
+      const q = TOP10_ID[7];
+      const key = (await b.su.query("SELECT content->>'correct' AS k FROM public.questions WHERE id = $1", [q])).rows[0].k;
+      const p = await pupil(b.su);
+      const qi = (await b.su.query(`INSERT INTO public.question_instances (student_id, question_id, correct_answer, next_review_at)
+        VALUES ($1, $2, $3, now()) RETURNING id`, [p, q, key])).rows[0].id;
+      const svc = await connect(b.url);
+      await svc.query("SET ROLE service_role");
+      assert.equal((await svc.query("SELECT public.process_question_attempt_v2($1, $2, $3, 1, $4, NULL, NULL) AS r", [p, qi, key, randomUUID()])).rows[0].r.outcome, "recorded");
+      const before = (await b.su.query("SELECT to_jsonb(x)::text AS a FROM public.question_attempts x ORDER BY id")).rows;
+      assert.equal(before.length, 1);
+      await b.su.query(migrationSql(FIX));
+      assert.deepEqual((await b.su.query("SELECT to_jsonb(x)::text AS a FROM public.question_attempts x ORDER BY id")).rows, before,
+        "D-316 keeps existing attempts");
+      // The same schema either way (the fingerprint is schema only).
       assert.deepEqual(await fingerprint(a.su), await fingerprint(b.su));
+      assert.equal((await a.su.query(`SELECT md5(prosrc) AS m FROM pg_proc WHERE oid = to_regprocedure('${SIG}')`)).rows[0].m,
+        "b80c1c7857ecc90bdbd7b6175b65c78f");
     });
 
     await t.test("1. an unreviewed body: D-316 and the H5 bootstrap both refuse (P0001), nothing changed", async () => {
@@ -223,6 +242,30 @@ test("real PostgreSQL 17: D-316 with H5 and G2 — both orders, refusals, concur
       const g2 = await failure(su.query(`INSERT INTO public.question_instances (student_id, question_id, correct_answer, next_review_at)
         VALUES ($1, $2, 'x', now())`, [p, q]));
       assert.equal(g2?.code, "23514");
+    });
+
+    await t.test("4b. history guard: an open round 1 forced to carry H5 attempts is closed, never deleted (negative test)", async () => {
+      const q = TOP10_ID[6];
+      const key = (await su.query("SELECT content->>'correct' AS k FROM public.questions WHERE id = $1", [q])).rows[0].k;
+      const p = await pupil(su);
+      const qi = (await su.query(`INSERT INTO public.question_instances (student_id, question_id, correct_answer, next_review_at)
+        VALUES ($1, $2, $3, now()) RETURNING id`, [p, q, key])).rows[0].id;
+      const svc = await connect(url);
+      await svc.query("SET ROLE service_role");
+      assert.equal((await svc.query("SELECT public.process_question_attempt_v2($1, $2, $3, 1, $4, NULL, NULL) AS r", [p, qi, key, randomUUID()])).rows[0].r.outcome, "recorded");
+      const history = (await su.query("SELECT to_jsonb(a)::text AS a FROM public.question_attempts a WHERE student_id = $1", [p])).rows;
+      assert.equal(history.length, 1);
+      // The inconsistent state, reachable only past the triggers (superuser, replica mode).
+      await su.query("SET session_replication_role = replica");
+      await su.query("UPDATE public.question_instances SET answered = false, user_answer = NULL WHERE id = $1", [qi]);
+      await su.query("SET session_replication_role = DEFAULT");
+      await su.query("UPDATE public.questions SET is_active = false WHERE id = $1", [q]);
+      const me = await asPupil(url, p);
+      assert.equal((await me.query(RELEASE, [[await loOf(su, q)]])).rows[0].n, 1, "the pupil is released");
+      assert.deepEqual((await su.query("SELECT answered, repeat_count FROM public.question_instances WHERE id = $1", [qi])).rows[0],
+        { answered: true, repeat_count: 0 }, "closed, not deleted");
+      assert.deepEqual((await su.query("SELECT to_jsonb(a)::text AS a FROM public.question_attempts a WHERE student_id = $1", [p])).rows, history,
+        "no attempt removed");
     });
 
     await t.test("5. the documented rollback restores the old body", async () => {
