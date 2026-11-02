@@ -52,7 +52,8 @@
 .lv-sort-row[data-ok="true"] select { border: 2px solid #2d6a3e; }
 .lv-why { grid-column: 1 / -1; margin: 0; font-size: 15px; }
 .lv-why[hidden] { display: none; }
-#lv-reflection-text { width: 100%; box-sizing: border-box; padding: 10px; font: inherit; font-size: 17px; }
+#lv-reflection-text { width: 100%; box-sizing: border-box; padding: 10px; font: inherit; font-size: 17px; background: #fffaf0; color: #1f1a12; border: 1px solid #6d5d3b; border-radius: 6px; }
+#lv-reflection-text[readonly] { background: #fbf5e6; border-style: dashed; }
 .lv-sheet select:focus-visible, #lv-reflection-text:focus-visible { outline: 3px solid #1d5fd1; outline-offset: 2px; }
 .lv-feedback[hidden] { display: none; }
 /* Small screens: one column, full-width actions, touch-sized targets. */

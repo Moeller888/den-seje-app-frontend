@@ -157,7 +157,7 @@ export class ReflectionView {
 
   show(): Promise<void> {
     this.text.value = "";
-    this.text.disabled = false;
+    this.text.readOnly = false;
     this.model.hidden = true;
     this.model.replaceChildren();
     this.next.hidden = true;
@@ -179,7 +179,7 @@ export class ReflectionView {
   }
 
   private reveal(): void {
-    this.text.disabled = true;
+    this.text.readOnly = true;
     this.model.replaceChildren(el("h3", { class: "lv-card-title" }, "Arkivarens svar"), el("p", { id: "lv-reflection-answer" }, REFLECTION.model));
     const list = el("ul", { id: "lv-reflection-selfcheck", "aria-label": "Tjek dit eget svar" });
     for (const q of REFLECTION.selfCheck) list.append(el("li", {}, q));
