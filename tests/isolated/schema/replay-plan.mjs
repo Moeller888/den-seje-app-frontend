@@ -114,8 +114,6 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
   "20261101120000_night_owl_stop_new_awards.sql":
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
-  "20261101170000_achievement_reward_exactly_once.sql":
-    "D-292, not applied in production: it changes grant_achievement_rewards (exactly-once claim) and revokes its PUBLIC/anon EXECUTE",
   "20261101190000_question_attempts_v2_bootstrap.sql":
     "H5 integration 1/2, not applied in production (no question_attempts there, catalog 2026-11-01); it requires G1 (20261101150000) first, applied in production since 2026-11-02 (20261102064630)",
   "20261101190100_question_attempts_v2_align_grading.sql":
@@ -163,6 +161,7 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261031194700_mc_length_cue_top10.sql": "20261101102339",
   "20261101140000_deactivate_two_misgraded_questions.sql": "20261102071826",
   "20261101150000_grading_meaningful_characters.sql": "20261102064630",
+  "20261101170000_achievement_reward_exactly_once.sql": "20261102073618",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),
