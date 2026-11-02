@@ -400,6 +400,14 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **AB-1 result — D-324 (one call sent and received, about $0.0564; REJECTED SOURCE by the locked D-319 evaluation; D-320 closed; no item approved).**
+  - **Rejected on one rule.** The source passed every quality and fit rule: detail at K, no stroke tips, no skin remnants, no glow, a closed separate rim band, shape, covering and opening. The contract's sole seeds (y 1488) lie on a drawn line between a welt band and the sole, so the fields could not be built. The chain, the designs and the outfits were therefore not measurable.
+  - **Possible false alarm.** The seed placement is recorded separately as a possible false alarm. The verdict stands. See `docs/decisions/D-324.md`.
+- **Ankle-boot source attempt prepared — D-319 (locked plan) and D-320 (authorisation of one call AB-1; prepared, NOT executed; 0 image calls; no item approved).**
+  - **Lock.** `ab-plan-v1.json` pins contract v2 (upper, rim and sole fields), the cut kit, the cut evaluator and the reference builder, master v5, the prompt, the model and parameters, three designs, the evaluation and `ACCEPT`.
+  - **Image 1.** A guide layer (stroke tips and skin specks dropped in the opening band). It is guidance, not image quality.
+  - **Clarified before the lock.** The original colour's ΔE p95 is master-bound (sneaker 0.032, boot 0.038), not a source fault. The boot's line contrast is only 0.047, so line and volume floors are absolute. Skin remnants are measured on the source at K.
+  - **Rehearsal.** The whole chain was rehearsed on the old source, which is rejected as expected. Estimate about $0.06, at most about $0.07. See `docs/decisions/D-319.md` and `D-320.md`.
 - **Shoe cut kit — D-318 (offline; 0 image calls; no asset, runtime or flag change).**
   - **Contracts and method.** One contract per shoe cut (`fixtures/northstar-wardrobe/shoe-cuts/sneaker-low.json`, `ankle-boot.json`) holds crop, K, seeds and fields, the opening, covering, placement, bottoms and review regions. The shared method is `northstar-shoe-cut-kit.mjs`; the locked files are unchanged.
   - **Results.** The kit reproduces the four approved SV1-V5 layers and their covering masks byte for byte. The new opening check (collar or shaft) classifies overlap and skin in the opening versus material on the shin, foot through the shoe and holes; it gets 15/15 real and negative cases right. Its tolerances are not yet independently validated.
