@@ -211,3 +211,110 @@ test("the host page is keyboard-operable and exposes its structure to assistive 
   await expect(page.getByRole("region", { name: "Lærligverse-spillet" })).toBeVisible();
   await expect(page.locator("#lv-game")).toHaveAttribute("title", "Lærligverse: Arkivskabet");
 });
+
+// ---- F3 final QA additions (D-321): incorrect answer, repeat reward, wrong window, viewports ----
+
+test("an incorrect answer, committed three times at once: ONE process-event, graded incorrect, nothing paid, the cabinet stays locked", async ({ page, request, browserName }) => {
+  const pupil = await makePupil(request, "wrong", browserName);
+  const calls = trackRequests(page);
+  const before = await progress(request, pupil);
+  const f = await signInAndOpenTask(page, pupil);
+  await f.locator(`#options [data-option="${await optionId(request, pupil, f, false)}"]`).click();
+  await f.locator("#commit").evaluate((b) => { b.click(); b.click(); b.click(); });
+  await expect(f.locator("body")).toHaveAttribute("data-task", "incorrect", { timeout: 30_000 });
+  expect(calls).toEqual(["get-next-question", "process-event"]);
+  expect(await instances(request, pupil)).toMatchObject([{ answered: true, was_correct: false }]);
+  expect(await progress(request, pupil)).toEqual(before);
+  await expect(f.locator("body")).toHaveAttribute("data-cabinet", "default");
+});
+
+test("a repeat (D-211) through the host page: the reopened instance resumes and pays the REPEAT amount (2 XP, 1 coin), not a first reward", async ({ page, request, browserName }) => {
+  const pupil = await makePupil(request, "repeat", browserName);
+  const f = await signInAndOpenTask(page, pupil);
+  await f.locator(`#options [data-option="${await optionId(request, pupil, f, true)}"]`).click();
+  await f.locator("#commit").click();
+  await expect(f.locator("body")).toHaveAttribute("data-task", "correct", { timeout: 30_000 });
+  const first = await progress(request, pupil);
+  const [row] = await instances(request, pupil);
+  // Reopen the round the way the repeat functions do (answered true → false, repeat_count + 1, answer cleared).
+  const reopen = await request.patch(`${SUPA}/rest/v1/question_instances?id=eq.${row.id}`, {
+    headers: { ...svc, "content-type": "application/json", prefer: "return=minimal" }, data: { answered: false, repeat_count: 1, user_answer: null },
+  });
+  expect(reopen.status(), await reopen.text()).toBe(204);
+  await page.evaluate(() => { const fr = document.getElementById("lv-game"); fr.src = `${fr.src.split("?")[0]}?reload=repeat`; });
+  await expect(f.locator("body")).toHaveAttribute("data-resumed", "true", { timeout: 30_000 });
+  await f.locator(`#options [data-option="${await optionId(request, pupil, f, true)}"]`).click();
+  await f.locator("#commit").click();
+  await expect(f.locator("body")).toHaveAttribute("data-task", "correct", { timeout: 30_000 });
+  const after = await progress(request, pupil);
+  expect({ xp: after.xp - first.xp, coins: after.coins - first.coins }).toEqual({ xp: 2, coins: 1 });
+  expect(await instances(request, pupil)).toHaveLength(1);
+});
+
+test("a second window on the GAME origin (not the registered iframe) is refused by source, and changes nothing", async ({ page, request, browserName }) => {
+  const pupil = await makePupil(request, "window", browserName);
+  const calls = trackRequests(page);
+  const f = await signInAndOpenTask(page, pupil);
+  // CSP allows framing the game origin, so a second game frame can exist; the host must still only trust ITS iframe.
+  await page.evaluate((src) => {
+    const other = document.createElement("iframe");
+    other.id = "lv-intruder";
+    other.src = `${src.split("?")[0]}?intruder=1`;
+    document.body.append(other);
+  }, await page.locator("#lv-game").getAttribute("src"));
+  await expect(page.locator("body")).toHaveAttribute("data-last-reject", "source", { timeout: 30_000 });
+  await expect(f.locator("body")).toHaveAttribute("data-task", "open");
+  expect(calls).toEqual(["get-next-question"]);
+  expect(await instances(request, pupil)).toHaveLength(1);
+});
+
+test("viewports 320–1280 px: the game gets real room, nothing scrolls sideways, status says the game is ready, logout stays reachable", async ({ page, request, browserName }) => {
+  const pupil = await makePupil(request, "viewport", browserName);
+  await page.setViewportSize({ width: 1280, height: 860 });
+  const f = await signInAndOpenTask(page, pupil);
+  await expect(page.locator("#lv-live")).toHaveText("Spillet er klar.");
+  await expect(page.locator("#lv-link")).toHaveText("forbundet");
+  for (const [width, height] of [[320, 640], [360, 740], [375, 812], [390, 844], [768, 1024], [1280, 860]]) {
+    await page.setViewportSize({ width, height });
+    const m = await page.evaluate(() => {
+      const fr = document.getElementById("lv-game").getBoundingClientRect();
+      const out = document.getElementById("lv-logout").getBoundingClientRect();
+      return { sideways: document.documentElement.scrollWidth - window.innerWidth, frameW: fr.width, frameH: fr.height, logoutW: out.width, logoutH: out.height };
+    });
+    expect(m.sideways, `${width}px: horizontal scroll`).toBeLessThanOrEqual(0);
+    expect(m.frameW, `${width}px: frame width`).toBeLessThanOrEqual(width);
+    // Phones: most of the screen height (the 16:9 frame was ~180 px at 360 px before 707380fb).
+    if (width <= 560) expect(m.frameH, `${width}px: frame height`).toBeGreaterThanOrEqual(Math.min(0.75 * height, 480));
+    else expect(m.frameH, `${width}px: frame height`).toBeGreaterThanOrEqual(300);
+    expect(m.logoutW * m.logoutH, `${width}px: logout visible`).toBeGreaterThan(0);
+    // The game inside stays usable at every width.
+    await expect(f.locator("#commit")).toBeVisible();
+  }
+  await expect(page.locator("#lv-logout")).toBeVisible();
+  await page.locator("#lv-logout").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("body")).toHaveAttribute("data-session", "signed-out");
+  // After logout the link must not look active, and the pupil is not stuck: the login form is back.
+  await expect(page.locator("#lv-link")).toHaveText("afbrudt (logget ud)");
+  await expect(page.locator("#lv-login-form")).toBeVisible();
+  await expect(page.locator("#lv-live")).toContainText("Du er logget ud");
+});
+
+test("after logout the pupil can sign in again on the same page; the game reconnects and the open instance resumes", async ({ page, request, browserName }) => {
+  const pupil = await makePupil(request, "relogin", browserName);
+  const f = await signInAndOpenTask(page, pupil);
+  await page.locator("#lv-logout").click();
+  await expect(page.locator("body")).toHaveAttribute("data-session", "signed-out");
+  await expect(page.locator("#lv-link")).toHaveText("afbrudt (logget ud)");
+  await page.locator("#lv-email").fill(pupil.email);
+  await page.locator("#lv-password").fill(pupil.password);
+  await page.locator("#lv-login-submit").click();
+  await expect(page.locator("body")).toHaveAttribute("data-session", "active");
+  await expect(page.locator("#lv-link")).toHaveText("forbundet", { timeout: 30_000 });
+  await expect(f.locator("body")).toHaveAttribute("data-resumed", "true", { timeout: 30_000 });
+  expect(await instances(request, pupil)).toHaveLength(1);
+  await f.locator(`#options [data-option="${await optionId(request, pupil, f, true)}"]`).click();
+  await f.locator("#commit").click();
+  await expect(f.locator("body")).toHaveAttribute("data-task", "correct", { timeout: 30_000 });
+  expect(await instances(request, pupil)).toMatchObject([{ answered: true, was_correct: true }]);
+});
