@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { forbiddenMigrationTokens } from "../../.github/ci/classify-changes.mjs";
-import { planReplay, NOT_IN_PRODUCTION } from "../isolated/schema/replay-plan.mjs";
+import { planReplay, NOT_IN_PRODUCTION, APPLIED_IN_PRODUCTION, extractSchemaPart } from "../isolated/schema/replay-plan.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8").split("\r\n").join("\n");
@@ -195,10 +195,35 @@ test("the guard function is no API: SECURITY DEFINER, empty search_path, no role
   assert.match(t.def, /BEFORE INSERT OR UPDATE OF answered, question_id ON public\.question_instances FOR EACH ROW/);
 });
 
-test("not data-only any more: the isolated replay skips it as not applied in production", () => {
+test("applied in production (20261102071826): the isolated replay applies its schema part verbatim, not its data part", () => {
   assert.ok(forbiddenMigrationTokens(read(FILE)).length > 0, "it creates a function and a trigger");
-  assert.match(NOT_IN_PRODUCTION[NAME], /not applied in production/);
+  assert.equal(NOT_IN_PRODUCTION[NAME], undefined, "applied and verified in production 2026-11-02");
+  assert.equal(APPLIED_IN_PRODUCTION[NAME], "20261102071826");
   const files = readdirSync(join(ROOT, "supabase", "migrations")).filter((f) => /^\d{14}_.+\.sql$/.test(f));
   const step = planReplay(files, (f) => read(`supabase/migrations/${f}`)).plan.find((p) => p.file === NAME);
-  assert.equal(step?.action, "skip");
+  assert.equal(step?.action, "apply");
+  assert.equal(step?.part, true, "only the schema part: the data part needs production's two questions");
+  const part = extractSchemaPart(NAME, read(FILE));
+  assert.match(part, /CREATE FUNCTION public\.guard_open_round_requires_active_question\(\)/);
+  assert.match(part, /REVOKE ALL ON FUNCTION public\.guard_open_round_requires_active_question\(\) FROM PUBLIC, anon, authenticated, service_role;/);
+  assert.match(part, /CREATE TRIGGER open_round_requires_active_question/);
+  assert.doesNotMatch(part, /DO \$g2\$|UPDATE public\.questions|is_active = false/, "no data statement is replayed");
+});
+
+test("the replayed schema part creates exactly production's guard, and it works on synthetic rows", async () => {
+  const d = await db();
+  await d.exec(extractSchemaPart(NAME, read(FILE)));
+  const f = (await d.query(`SELECT md5(prosrc) AS m, prosecdef AS s, proconfig AS c, proacl::text[] AS a
+    FROM pg_proc WHERE oid = to_regprocedure('public.guard_open_round_requires_active_question()')`)).rows[0];
+  // The same body production runs (read 2026-11-02 after the application) and D-303's bootstrap pins.
+  assert.deepEqual(f, { m: "e5627de108be67869a4615490a6857a2", s: true, c: ['search_path=""'], a: ["postgres=X/postgres"] });
+  const t = (await d.query(`SELECT tgtype FROM pg_trigger WHERE tgname = 'open_round_requires_active_question'`)).rows[0];
+  assert.equal(t.tgtype, 23);
+  // Synthetic data: an open round on an inactive question is refused; on an active one it is allowed.
+  await d.exec(`UPDATE public.questions SET is_active = false WHERE id = '${OTHER}'`);
+  await assert.rejects(d.exec(`INSERT INTO public.question_instances (student_id, question_id, answered) VALUES ('${PUPIL}', '${OTHER}', false)`),
+    /open round refused/);
+  await d.exec(`INSERT INTO public.question_instances (student_id, question_id, answered) VALUES ('${PUPIL}', '${FIXTURE[0].id}', false)`);
+  // The data part did not run: both reviewed questions are still active in the throwaway database.
+  assert.equal((await d.query(`SELECT count(*)::int AS n FROM public.questions WHERE is_active AND id = ANY ($1)`, [FIXTURE.map((q) => q.id)])).rows[0].n, 2);
 });

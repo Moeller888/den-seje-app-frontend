@@ -57,17 +57,10 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   - `20261031230000_claim_daily_reward_exactly_once` (D-284): `claim_daily_reward` har md5 `80273d5d…`.
   - `20261101120000_night_owl_stop_new_awards` (D-286): `evaluate_achievements` har md5 `9bd9a5d5…`, og
     `authenticated` har stadig EXECUTE på `set_night_correct`.
-  - `20261101140000_deactivate_two_misgraded_questions` (D-290 G2): de to spørgsmål er stadig aktive,
-    og produktionen har ikke værnet `guard_open_round_requires_active_question` med dets trigger på
-    `question_instances`. Filen er derfor ikke længere ren data.
-  - `20261101150000_grading_meaningful_characters` (D-290 G1): `process_question_attempt` er D-280 del
-    1's udgave.
-  - `20261101170000_achievement_reward_exactly_once` (D-292): ændrer `grant_achievement_rewards`, så
-    belønningen indløses atomisk og præcis én gang, og fjerner EXECUTE for `PUBLIC` og `anon`.
-    Produktionen kører stadig den tidligere udgave.
   - `20261101190000_question_attempts_v2_bootstrap` og
     `20261101190100_question_attempts_v2_align_grading` (H5-integrationen). Produktionen har hverken
-    `question_attempts` eller `_v2`-funktionerne (katalog, 2026-11-01), og begge filer kræver G1 først.
+    `question_attempts` eller `_v2`-funktionerne (katalog, 2026-11-02). Begge filer kræver G1 først,
+    og G1 er anvendt.
 
   D-284 og D-286 blev ved en fejl ikke skrevet på listen, da de blev merget, og blev derfor afspillet
   her.
@@ -81,9 +74,9 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
 
   Når D-286 er anvendt og fjernet fra listen, skal den nye kontrakt testes særskilt: eleven kan ikke
   længere kalde `set_night_correct`. Hver fil afspilles først, når den er anvendt og verificeret, og i den rækkefølge filerne selv
-  håndhæver: G1, derefter bootstrappen, derefter alignmentet. A, B, kommentarrettelsen og D-280's to
-  filer er anvendt og verificeret og står derfor ikke længere her (se "Anvendt i produktionen efter
-  planens første version").
+  håndhæver: bootstrappen, derefter alignmentet. A, B, kommentarrettelsen og D-280's to
+  filer er anvendt og verificeret og står derfor ikke længere her. Det samme gælder G1 og G2 (se
+  "Anvendt i produktionen efter planens første version").
 
 ## Anvendt i produktionen efter planens første version
 En fil fjernes fra `NOT_IN_PRODUCTION`, først når den er anvendt **og** verificeret i produktionen.
@@ -97,18 +90,21 @@ Filen selv ændres aldrig.
 
 | `20261031194600_mc_length_cue_answer_paths.sql` | `20261101101401 mc_length_cue_answer_paths` | 2026-11-01 via `apply_migration`, filen ordret fra `main` `7523ec2` (SHA-256 `f334ae136d9603661b8af6028dbbc43dd715a67ecf54b2a092f74c88551a9a05`; den gemte sætning md5-identisk med filen; ejergodkendt). Filens header siger stadig "IKKE anvendt"; den er historisk og ændres ikke | Ja, læsende 2026-11-01: de fire funktioner med filens md5; signatur, ejer, returtype, SECURITY, `search_path` og EXECUTE (kun `postgres` og `service_role`) uændrede | **Anvendes**, D-280 del 1 |
 | `20261031194700_mc_length_cue_top10.sql` | `20261101102339 mc_length_cue_top10` | 2026-11-01 via `apply_migration`, filen ordret fra `main` `7523ec2` (SHA-256 `fc94f7c0e5fff7c85147e4220813c92ef268b5ccc3dae8c5cc884e14088501a9`; den gemte sætning md5-identisk med filen; ejergodkendt). Header historisk, ændres ikke | Ja, læsende 2026-11-01: de ti spørgsmål med de godkendte efter-hashes; 5 åbne besvarelser med nyt facit, ellers byte-identiske; 197 afsluttede besvarelser byte-identiske | **Springes over** som ren data (ingen skema-token); de ti produktionsspørgsmål findes ikke i den isolerede database |
+| `20261101140000_deactivate_two_misgraded_questions.sql` (D-290 G2) | `20261102071826 deactivate_two_misgraded_questions` | 2026-11-02 via ét `apply_migration`, filen ordret fra `main` `85e3128` (SHA-256 `801d9ba6eafee8ba741334ab8f7a0babac0fcb50ceba7502f3aa4e070ccba891`; den gemte sætning md5-identisk med filen, `0ed24c38…`; ejergodkendt) | Ja, læsende 2026-11-02 lige efter: begge spørgsmål inaktive med uændrede hashes; aktive spørgsmål 2101 → 2099; instanser (5912) og XP/mønter uændrede (kontrolhashes); værnet med md5 `e5627de1…`, `SECURITY DEFINER`, `search_path=""`, ingen EXECUTE for API-roller; triggeren `BEFORE INSERT OR UPDATE OF answered, question_id` (tgtype 23); ingen nye åbne runder på inaktive spørgsmål | **Kun skemadelen anvendes, ordret** (`SCHEMA_PART`): værnets funktion, dens `REVOKE` og triggeren. Datadelen kræver produktionens to spørgsmål med de gennemgåede hashes og springes over; dens vagter og deaktivering er bevist på syntetiske rækker i `deactivate-two-misgraded-questions-*.test.mjs` |
+| `20261101150000_grading_meaningful_characters.sql` (D-290 G1) | `20261102064630 grading_meaningful_characters` | 2026-11-02 af en anden session via `apply_migration` (filens SHA-256 `406933134b95fb2f72591eb5a0f99e4a3a9c57a5decceabdca9edaa507e6299f`; den gemte sætning md5-identisk med filen, `9c6ad814…`) | Ja, læsende 2026-11-02: `process_question_attempt` md5 `2e05e769…` (G1's krop), `SECURITY DEFINER`, EXECUTE kun `postgres` og `service_role`; `normalize_choice_answer` `281addc2…` og `normalize_number_answer` `3dadb6e1…`, begge `IMMUTABLE`, `search_path=""`, kun ejeren har EXECUTE | **Anvendes**, efter D-280 del 1 |
+| `20261101170000_achievement_reward_exactly_once.sql` (D-292) | `20261102073618 achievement_reward_exactly_once` | 2026-11-02 via ét `apply_migration`, filen ordret fra `main` `5e28917` (SHA-256 `a8f582b0f634e92876f9ba45bf04b9e1ba0c342d2eae664d7c49886d3712e70b`; den gemte sætning md5-identisk med filen, `34a8b4df…`; ejergodkendt) | Ja, læsende 2026-11-02 lige efter: `grant_achievement_rewards` md5 `fc8d729f…`, `SECURITY DEFINER`, `search_path=public`, ejer `postgres`, EXECUTE kun `postgres`, `authenticated` og `service_role` (ikke `PUBLIC` eller `anon`); `user_achievements` (146 rækker, 11 uindløste), mønter/XP og genstande uændrede (kontrolhashes) | **Anvendes**. `isolated-schema-replay.test.mjs` kræver den nye krop og rettighederne og afviser den gamle (`63b8347d…`) |
 
 Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i produktionen, og senere D-280 del 1 i versionsorden.
 
-**H5 og G1: forskellen mellem repository og produktion.**
+**H5 og G1: forskellen mellem repository og produktion** (G1 anvendt 2026-11-02).
 
 | | Repository (filnavnsorden) | Produktion | Isoleret afspilning i dag |
 |---|---|---|---|
 | `20261030211428` (H5 PR 1) | anvendt | ikke anvendt; filen afviser sig selv efter D-280 del 1 | **anvendes** (som før #522) |
 | D-278, D-280 del 1 | anvendt | anvendt 2026-11-01 | anvendes |
 | D-280 del 2 | anvendt | anvendt 2026-11-01 | springes over (ren data) |
-| `20261101150000` (G1) | anvendt | **ikke anvendt** | springes over (`NOT_IN_PRODUCTION`) |
-| `20261101190000` (bootstrap) | verificerer H5, fratager `service_role` EXECUTE på `process_question_attempt_v2` | **ikke anvendt**; skal opbygge H5 efter G1 | springes over (`NOT_IN_PRODUCTION`) |
+| `20261101150000` (G1) | anvendt | anvendt 2026-11-02 (`20261102064630`) | **anvendes** |
+| `20261101190000` (bootstrap) | verificerer H5, fratager `service_role` EXECUTE på `process_question_attempt_v2` | **ikke anvendt**; skal opbygge H5 (G1 er på plads) | springes over (`NOT_IN_PRODUCTION`) |
 | `20261101190100` (alignment) | giver `_v2` bedømmelsen fra D-280 og G1 og giver `service_role` EXECUTE tilbage | **ikke anvendt** | springes over (`NOT_IN_PRODUCTION`) |
 
 - **Den isolerede database har i dag H5-skemaet fra `20261030211428`.** Dens
@@ -116,7 +112,7 @@ Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i p
   sammenlignes, og `service_role` har EXECUTE. Det er en kendt afvigelse fra produktionen, som slet
   ikke har H5. Den er uændret fra før #522.
   - Intet i den isolerede E2E kalder `_v2`: `tests/h5-submission.spec.ts` opsnapper `process-event`.
-  - Afvigelsen forsvinder, når G1 og de to H5-filer er anvendt i produktionen og fjernet fra
+  - Afvigelsen forsvinder, når de to H5-filer er anvendt i produktionen og fjernet fra
     `NOT_IN_PRODUCTION`.
 - **Produktionens eneste vej til H5** er: G1 → `20261101190000` → `20261101190100`. Uden G1 afviser
   både bootstrappen og alignmentet sig selv, og intet ændres.
