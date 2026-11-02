@@ -23,6 +23,8 @@ export interface FakeItem {
   readonly feedbackCorrect: string;
   readonly feedbackIncorrect: string;
   readonly hints: readonly string[];
+  /** Why each wrong option is wrong (refutation per option; LPD §5.2). Host side only, sent after grading. */
+  readonly optionFeedback?: Readonly<Record<string, string>>;
 }
 
 export type InjectedFailure = "network" | "server" | "hang" | "forbidden";
@@ -119,7 +121,7 @@ export class FakeTaskService implements TaskService {
     const evidence: Evidence = !EVIDENCE_MODES.includes(inst.mode) ? "practice" : inst.hintsUsed > 0 ? "practice" : "evidence";
     const result: ServiceResult = {
       outcome: correct ? "correct" : "incorrect",
-      feedbackText: correct ? inst.item.feedbackCorrect : inst.item.feedbackIncorrect,
+      feedbackText: correct ? inst.item.feedbackCorrect : refutation(inst.item, s.action) ?? inst.item.feedbackIncorrect,
       correctAnswer: inst.item.correctLabel,
       evidence,
       replay: false,
@@ -163,6 +165,12 @@ export class FakeTaskService implements TaskService {
     if (f === "server") return Promise.reject(new ServiceError("server", true));
     return Promise.reject(new ServiceError("forbidden", false));
   }
+}
+
+function refutation(item: FakeItem, action: Action): string | null {
+  if (action.kind !== "choice") return null;
+  const own = item.optionFeedback?.[action.payload.optionId];
+  return own === undefined ? null : `${own} ${item.feedbackIncorrect}`;
 }
 
 function grade(item: FakeItem, action: Action): boolean {

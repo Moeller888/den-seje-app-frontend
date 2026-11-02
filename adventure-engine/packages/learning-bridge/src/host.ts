@@ -312,7 +312,8 @@ export class BridgeHost {
     return {
       instanceToken: entry.token,
       kind: t.kind,
-      stimulus: { prompt: t.prompt, options: t.options === null ? null : t.options.map((o) => ({ id: o.id, label: o.label })) },
+      // Only whitelisted fields are copied: id, label and an optional detail. Never anything else a backend adds.
+      stimulus: { prompt: t.prompt, options: t.options === null ? null : t.options.map((o) => (o.detail === undefined ? { id: o.id, label: o.label } : { id: o.id, label: o.label, detail: o.detail })) },
       mode: t.mode,
       hintsAvailable: t.hintsAvailable,
       contextKey: t.contextKey,

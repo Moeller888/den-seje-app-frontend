@@ -32,6 +32,13 @@ export class TaskView {
   private selected: string | null = null;
   private hintsShown = 0;
   private outcome: TaskResultMsg["outcome"] | "error" | null = null;
+  /** Option ids whose description the pupil has opened (phase 2, investigation). Local only. */
+  private readonly inspected = new Set<string>();
+  /** The pupil's own reason (phase 3, self-explanation). Never graded, never sent: shown back with the verdict. */
+  private reason: string | null = null;
+  private readonly reasons: El;
+  private readonly guide: El;
+  private readonly note: El;
   private readonly prompt: El;
   private readonly cards: El;
   private readonly textInput: HTMLInputElement;
@@ -60,12 +67,15 @@ export class TaskView {
     this.hintBtn = el("button", { id: "lv-hint", type: "button" }, "Bed arkivaren om et hint");
     this.hints = el("ol", { id: "lv-hints", class: "lv-hints" });
     this.status = el("p", { id: "lv-status", class: "lv-status", role: "status", "aria-live": "polite" });
+    this.guide = el("p", { id: "lv-guide", class: "lv-guide" });
+    this.reasons = el("div", { id: "lv-reasons", class: "lv-reasons", role: "group", "aria-labelledby": "lv-reasons-title" });
+    this.note = el("p", { id: "lv-material", class: "lv-note" }, "Kildebeskrivelserne er konstrueret undervisningsmateriale, ikke citater.");
     this.feedback = el("div", { id: "lv-feedback", class: "lv-feedback", "aria-live": "polite" });
     this.retryBtn = el("button", { id: "lv-retry", type: "button", class: "lv-primary" }, "Send mit svar igen");
     this.closeBtn = el("button", { id: "lv-close", type: "button" }, "Tilbage til arkivet");
     const actions = el("div", { class: "lv-actions" });
     actions.append(this.commitBtn, this.hintBtn, this.retryBtn, this.closeBtn);
-    sheet.append(head, this.prompt, this.cards, this.textInput, this.hints, actions, this.status, this.feedback);
+    sheet.append(head, this.prompt, this.guide, this.cards, this.textInput, this.reasons, this.hints, actions, this.status, this.feedback, this.note);
     this.root.append(sheet);
     host.append(this.root);
 
@@ -95,17 +105,37 @@ export class TaskView {
     this.hintsShown = 0;
     this.outcome = null;
     this.prompt.textContent = task.stimulus.prompt;
-    this.modeTag.textContent = task.mode === "practice" ? "Øvelse" : "Selvstændig opgave";
+    this.modeTag.textContent = task.mode === "practice" ? "Øvelse · hints tilladt" : task.mode === "quiz_v1" ? "Lærlig-opgave" : "Selvstændig opgave · uden hints";
+    this.inspected.clear();
+    this.reason = null;
     this.cards.replaceChildren();
+    const withDetail = (task.stimulus.options ?? []).filter((o) => o.detail !== undefined).length;
     for (const o of task.stimulus.options ?? []) {
+      const box = el("div", { class: "lv-source", "data-source": o.id });
       const card = el("button", { type: "button", class: "lv-card", "data-option": o.id, "aria-pressed": "false" }, o.label);
       card.addEventListener("click", () => {
         if (this.locked()) return;
         this.selected = o.id;
         this.refresh();
       });
-      this.cards.append(card);
+      box.append(card);
+      if (o.detail !== undefined) {
+        // Phase 2: the description is part of the stimulus (who, when, to whom) — never a hint about correctness.
+        const detail = el("p", { class: "lv-detail", id: `lv-detail-${o.id}` }, o.detail);
+        detail.hidden = true;
+        const inspect = el("button", { type: "button", class: "lv-inspect", "data-inspect": o.id, "aria-expanded": "false", "aria-controls": `lv-detail-${o.id}` }, "Undersøg kilden");
+        inspect.addEventListener("click", () => {
+          detail.hidden = !detail.hidden;
+          inspect.setAttribute("aria-expanded", String(!detail.hidden));
+          this.inspected.add(o.id);
+          this.refresh();
+        });
+        box.append(inspect, detail);
+      }
+      this.cards.append(box);
     }
+    this.note.hidden = withDetail === 0;
+    this.renderReasons(task.kind === "choice" && withDetail > 0);
     this.cards.hidden = task.kind !== "choice";
     this.textInput.hidden = task.kind !== "short_text";
     this.textInput.value = "";
@@ -174,6 +204,8 @@ export class TaskView {
     this.status.textContent = r.outcome === "correct" ? "Rigtigt." : r.outcome === "incorrect" ? "Ikke rigtigt." : "Dit svar er afleveret til læreren.";
     if (r.feedback.text !== null) this.feedback.append(el("p", { id: "lv-feedback-text" }, r.feedback.text));
     if (r.feedback.correctAnswer !== null) this.feedback.append(el("p", { id: "lv-correct" }, `Det rigtige svar: ${r.feedback.correctAnswer}`));
+    // Self-explanation shown back next to the explanation, so the pupil compares their reason with it.
+    if (this.reason !== null) this.feedback.append(el("p", { id: "lv-own-reason" }, `Din begrundelse: ${this.reason.toLowerCase()}. Sammenlign den med forklaringen ovenfor.`));
     // Display only: the server decided what this answer counts as.
     const counts = r.evidence === "evidence" ? "Tæller som selvstændig opgave." : r.evidence === "practice" ? "Tæller som øvelse." : "";
     if (counts !== "") this.feedback.append(el("p", { id: "lv-evidence", "data-evidence": r.evidence }, counts));
@@ -189,6 +221,28 @@ export class TaskView {
     this.closeBtn.hidden = false;
     this.refresh();
     this.closeBtn.focus();
+  }
+
+  /** How many sources must be opened before choosing (phase 2). 0 when the backend sends no descriptions. */
+  private investigationNeeded(): number {
+    const n = (this.task?.stimulus.options ?? []).filter((o) => o.detail !== undefined).length;
+    return Math.min(2, n);
+  }
+
+  private renderReasons(show: boolean): void {
+    this.reasons.replaceChildren();
+    this.reasons.hidden = !show;
+    if (!show) return;
+    this.reasons.append(el("p", { id: "lv-reasons-title", class: "lv-card-title" }, "Hvad afgjorde dit valg? (valgfrit, bliver ikke bedømt)"));
+    for (const [key, label] of [["hvem", "Hvem der lavede kilden"], ["hvornaar", "Hvornår den blev lavet"], ["til", "Hvem den var til"], ["gaet", "Jeg gættede"]] as const) {
+      const b = el("button", { type: "button", class: "lv-reason", "data-reason": key, "aria-pressed": "false" }, label);
+      b.addEventListener("click", () => {
+        if (this.locked()) return;
+        this.reason = this.reason === label ? null : label;
+        for (const other of this.reasons.querySelectorAll<HTMLElement>(".lv-reason")) other.setAttribute("aria-pressed", String(other.textContent === this.reason));
+      });
+      this.reasons.append(b);
+    }
   }
 
   private locked(): boolean {
@@ -221,7 +275,12 @@ export class TaskView {
       card.disabled = locked;
     }
     this.textInput.disabled = locked;
-    this.commitBtn.disabled = locked || this.current() === null;
+    for (const b of this.reasons.querySelectorAll<HTMLButtonElement>(".lv-reason")) b.disabled = locked;
+    const need = this.investigationNeeded();
+    const missing = Math.max(0, need - this.inspected.size);
+    this.guide.textContent = need === 0 || this.outcome !== null ? "" : missing > 0 ? `Undersøg mindst ${need} kilder, før du vælger (${this.inspected.size} af ${need}).` : "Vælg den kilde, der bedst kan undersøge påstanden.";
+    this.root.dataset["investigated"] = String(this.inspected.size);
+    this.commitBtn.disabled = locked || this.current() === null || missing > 0;
     // After any verdict (also "aborted") the answer is committed: only "send again" or "close" remain.
     this.commitBtn.hidden = this.outcome !== null;
     this.hintBtn.hidden = (this.task?.hintsAvailable ?? 0) === 0 || locked;

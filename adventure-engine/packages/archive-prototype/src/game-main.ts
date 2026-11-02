@@ -7,8 +7,19 @@ import { gameReady } from "@adventure-engine/app/ready";
 import { BridgeClient, BridgeError, type Action, type ClientStatus, type PresentBody } from "@adventure-engine/learning-bridge";
 import { MemoryStorage } from "@adventure-engine/save";
 import { HOST_ORIGIN, randomId } from "./config.ts";
-import { CONTEXT_KEY, RESULT_ACTION, TASK_REQUEST_GLOBAL, archiveContent, archiveManifest } from "./content.ts";
+import { CONTEXT_KEY, DRAWER_KEY, DRAWER_RESULT_ACTION, RESULT_ACTION, TASK_REQUEST_GLOBAL, archiveContent, archiveManifest } from "./content.ts";
+import { IntroView } from "./intro-view.ts";
 import { TaskView } from "./task-view.ts";
+
+/**
+ * D-310: the world's two decision points and what they ask the host for. The cabinet is guided practice
+ * (hints allowed, never evidence); the drawer is a new application without hints. The server — here the
+ * test adapter — decides what an answer counts as; the game only says which kind of situation it is.
+ */
+const DECISION_POINTS: Readonly<Record<string, { purpose: "practice" | "check"; resultAction: string }>> = {
+  [CONTEXT_KEY]: { purpose: "practice", resultAction: RESULT_ACTION },
+  [DRAWER_KEY]: { purpose: "check", resultAction: DRAWER_RESULT_ACTION },
+};
 
 /**
  * Game page of the Arkivskabet prototype (D-307), loaded in an iframe on its own origin.
@@ -70,6 +81,7 @@ async function boot(): Promise<void> {
   );
 
   let current: PresentBody | null = null;
+  let context: string = CONTEXT_KEY;
   let lastAction: Action | null = null;
   let busy = false;
 
@@ -80,7 +92,8 @@ async function boot(): Promise<void> {
     lastAction = null;
     busy = false;
     // The world reacts to the verdict; it never computes one.
-    if (outcome === "correct" || outcome === "incorrect" || outcome === "aborted") game.engine.event("cabinet", RESULT_ACTION, { $outcome: outcome });
+    const point = DECISION_POINTS[context] ?? DECISION_POINTS[CONTEXT_KEY];
+    if ((outcome === "correct" || outcome === "incorrect" || outcome === "aborted") && point !== undefined) game.engine.event("cabinet", point.resultAction, { $outcome: outcome });
   };
 
   const send = async (action: Action): Promise<void> => {
@@ -113,8 +126,10 @@ async function boot(): Promise<void> {
     close: (outcome) => finish(outcome),
   });
 
+  const intro = new IntroView(document.body);
   const open = (task: PresentBody): void => {
     current = task;
+    context = task.contextKey;
     root.inert = true;
     view.show(task);
   };
@@ -128,7 +143,7 @@ async function boot(): Promise<void> {
   client
     .connect()
     .then((openTask) => {
-      if (openTask !== null && openTask.contextKey === CONTEXT_KEY) resume = openTask;
+      if (openTask !== null && DECISION_POINTS[openTask.contextKey] !== undefined) resume = openTask;
     })
     .catch((err: unknown) => console.error("[bridge] handshake failed", err));
 
@@ -143,15 +158,25 @@ async function boot(): Promise<void> {
       return;
     }
     const req = game.engine.globals.get(TASK_REQUEST_GLOBAL);
-    if (req !== CONTEXT_KEY) return;
+    const point = typeof req === "string" ? DECISION_POINTS[req] : undefined;
+    if (point === undefined || typeof req !== "string") return;
     game.engine.setGlobal(TASK_REQUEST_GLOBAL, "");
     busy = true;
-    client
-      .requestTask({ objectiveId: "hist.besaettelsen.h4", purpose: "check", surface: "world", contextKey: CONTEXT_KEY })
+    context = req;
+    // Phase 1: the pupil is introduced before the first task, never tested on what was not introduced.
+    let introduced: Promise<void> = Promise.resolve();
+    if (req === CONTEXT_KEY && game.engine.globals.get("intro_seen") !== true) {
+      root.inert = true;
+      introduced = intro.show().then(() => {
+        game.engine.setGlobal("intro_seen", true);
+      });
+    }
+    introduced
+      .then(() => client.requestTask({ objectiveId: "hist.besaettelsen.h4", purpose: point.purpose, surface: "world", contextKey: req }))
       .then(open)
       .catch((err: unknown) => {
         root.inert = true;
-        view.show({ instanceToken: "none", kind: "choice", stimulus: { prompt: "Arkivaren kunne ikke finde en opgave.", options: null }, mode: "practice", hintsAvailable: 0, contextKey: CONTEXT_KEY });
+        view.show({ instanceToken: "none", kind: "choice", stimulus: { prompt: "Arkivaren kunne ikke finde en opgave.", options: null }, mode: "practice", hintsAvailable: 0, contextKey: context });
         view.error(err instanceof BridgeError ? `Ingen opgave lige nu (${err.code}).` : String(err));
       });
   };

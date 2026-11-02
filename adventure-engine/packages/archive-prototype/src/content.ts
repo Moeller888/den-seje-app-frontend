@@ -19,6 +19,9 @@ export const CONTEXT_KEY = "arkivskab";
 export const TASK_REQUEST_GLOBAL = "task_request";
 /** Event the game loop sends to the cabinet with `$outcome` = the server's verdict. */
 export const RESULT_ACTION = "bridge.result";
+/** D-310 phase 6: the drawer behind the opened cabinet asks for a NEW application task. */
+export const DRAWER_KEY = "skuffe";
+export const DRAWER_RESULT_ACTION = "bridge.result.skuffe";
 
 export const archiveContent: ContentPackage = {
   game: {
@@ -30,7 +33,7 @@ export const archiveContent: ContentPackage = {
     player: { actor: "marker" },
     entry: "game#start",
     // World state only. Nothing here is learning data: mastery, XP and evidence live on the server.
-    globals: { cabinet_open: false, [TASK_REQUEST_GLOBAL]: "" },
+    globals: { cabinet_open: false, transfer_done: false, intro_seen: false, [TASK_REQUEST_GLOBAL]: "" },
     viewport: { width: 1280, height: 720 },
     ui: { inventorySlots: 4, inventoryHeight: 96, reactWhenNothingHappens: false, fadeMs: 300, clickFeedbackMs: 200 },
   },
@@ -89,14 +92,18 @@ export const archiveContent: ContentPackage = {
       id: "cabinet",
       kind: "logic",
       nodes: [
-        { id: "c0", type: "entry", name: "main", next: ["c1", "r1", "r2", "r3"] },
+        { id: "c0", type: "entry", name: "main", next: ["c1", "r1", "r2", "r3", "d1", "d2", "d3"] },
         // Exploring is free and never a task (F0 11 §2.2 rule 6). Only the locked cabinet asks for one.
         { id: "c1", type: "guard", expr: is("$action", "interact"), next: ["c2"] },
-        { id: "c2", type: "walk_to", actor: "marker", spot: "cabinet_spot", next: ["c3", "c5"] },
+        { id: "c2", type: "walk_to", actor: "marker", spot: "cabinet_spot", next: ["c3", "c5", "c6g"] },
         { id: "c3", type: "guard", expr: is("cabinet_open", false), next: ["c4"] },
         { id: "c4", type: "say", speaker: "marker", textKey: "line.cabinet_locked", next: ["c4b"] },
         { id: "c4b", type: "set", var: TASK_REQUEST_GLOBAL, value: CONTEXT_KEY, next: [] },
-        { id: "c5", type: "guard", expr: is("cabinet_open", true), next: ["c6"] },
+        // Phase 6 (D-310): behind the opened cabinet a drawer holds a new problem — the same method, a new claim.
+        { id: "c5", type: "guard", expr: all(is("cabinet_open", true), is("transfer_done", false)), next: ["c5a"] },
+        { id: "c5a", type: "say", speaker: "marker", textKey: "line.drawer", next: ["c5b"] },
+        { id: "c5b", type: "set", var: TASK_REQUEST_GLOBAL, value: DRAWER_KEY, next: [] },
+        { id: "c6g", type: "guard", expr: all(is("cabinet_open", true), is("transfer_done", true)), next: ["c6"] },
         { id: "c6", type: "say", speaker: "marker", textKey: "line.cabinet_is_open", next: [] },
         // The world reacts to the server's verdict; it never computes one.
         { id: "r1", type: "guard", expr: all(is("$action", RESULT_ACTION), is("$outcome", "correct")), next: ["r1a"] },
@@ -107,6 +114,13 @@ export const archiveContent: ContentPackage = {
         { id: "r2a", type: "say", speaker: "marker", textKey: "line.still_locked", next: [] },
         { id: "r3", type: "guard", expr: all(is("$action", RESULT_ACTION), is("$outcome", "aborted")), next: ["r3a"] },
         { id: "r3a", type: "say", speaker: "marker", textKey: "line.connection", next: [] },
+        { id: "d1", type: "guard", expr: all(is("$action", DRAWER_RESULT_ACTION), is("$outcome", "correct")), next: ["d1a", "d1b"] },
+        { id: "d1a", type: "set", var: "transfer_done", value: true, next: [] },
+        { id: "d1b", type: "say", speaker: "marker", textKey: "line.drawer_done", next: [] },
+        { id: "d2", type: "guard", expr: all(is("$action", DRAWER_RESULT_ACTION), is("$outcome", "incorrect")), next: ["d2a"] },
+        { id: "d2a", type: "say", speaker: "marker", textKey: "line.drawer_wrong", next: [] },
+        { id: "d3", type: "guard", expr: all(is("$action", DRAWER_RESULT_ACTION), is("$outcome", "aborted")), next: ["d3a"] },
+        { id: "d3a", type: "say", speaker: "marker", textKey: "line.connection", next: [] },
       ],
     },
   ],
@@ -117,9 +131,12 @@ export const archiveContent: ContentPackage = {
       "s.arkiv": "Arkivet",
       "a.marker": "Dig",
       "o.cabinet": "Arkivskab",
-      "line.intro": "Rigsarkivet, april 1940. Arkivaren har bedt mig finde den rigtige kilde, før skabet kan låses op.",
-      "line.cabinet_locked": "Skabet er låst. På hylden ligger fire kilder. Jeg må vælge den rigtige.",
-      "line.cabinet_is_open": "Skabet står åbent. Kilderne er sat på plads.",
+      "line.intro": "Et arkiv, april 1940. Arkivaren samler kilder om den 9. april. Det låste skab åbner kun for den, der bruger kilderne rigtigt.",
+      "line.cabinet_locked": "Skabet er låst. På hylden ligger fire kilder. Jeg skal finde den, der bedst kan undersøge en påstand.",
+      "line.cabinet_is_open": "Skabet står åbent, og skuffen er tom. Kilderne er sat på plads.",
+      "line.drawer": "I skuffen ligger en ny påstand og fire nye kilder. Samme metode, ny situation.",
+      "line.drawer_done": "Skuffen glider i. Jeg brugte de samme tre spørgsmål på en ny påstand.",
+      "line.drawer_wrong": "Den kilde passer ikke til den nye påstand. Hvem har lavet den, og hvad kunne de vide?",
       "line.unlocked": "Klik! Låsen giver efter, og skabet glider op.",
       "line.still_locked": "Låsen rører sig ikke. Jeg kan prøve igen med en ny opgave.",
       "line.connection": "Forbindelsen svigtede. Mit svar er gemt, så jeg kan sende det igen.",
