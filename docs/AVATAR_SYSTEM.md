@@ -385,6 +385,10 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **SV-1 + v5 candidate package — D-304 (for the owner's visual review; NOT approved; 0 image calls; D-301 stands; v5 not validated).**
+  - **Package.** `sv1-v5-candidates-v1.json` pins the source, processing, master v5, colours, covering, method files and each layer by sha256 for `SV1-V5-CHALK`, `-CHARCOAL`, `-NAVYWHITE` and `-BURGUNDYGUM`.
+  - **Results.** 21/24 technical PASS. Charcoal × three long trousers stays COMBO-2 FAIL [KNOWN_D291], diagnosed as a false alarm: the top lace's own edge under the hem, a weakness visible only magnified. No real image fault was found.
+  - **Recommended for review.** 21 combinations. The private page is under `<Documents>/DenSejeApp-artefacts/d304-sv1-v5-candidates/`. See `docs/decisions/D-304.md`.
 - **SV-1 offline follow-up — D-302 (0 image calls; D-301's REJECTED SOURCE unchanged; master v5 is a development prototype, not validated; no shoe approved).**
   - **Collar.** The alarms are not image faults. Of the 162 ankle px, 133 lie on a legitimate tongue in front of the ankle and 29 on the collar side; the "3 px" is one antialiased pixel. The 6 "inside" px are one column where the opening's V dips lower and C's ankle shows through the opening. The check's reference assumption is too narrow; the locked verdict stands.
   - **Colour line.** The cause is a closed field without a seed (the band between the upper|sole seam and the sole's inner line), split pixel by pixel by the breadth-first labelling. v5 (`northstar-shoe-master-v5.mjs`; v4 untouched) applies one rule: a closed field takes one material as a whole. Fixed on both shoes in all five colours, the chain measures still pass, and sole grain halves. See `docs/decisions/D-302.md`.
