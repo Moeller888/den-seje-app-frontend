@@ -15,6 +15,8 @@
 //      SQLSTATE 55P03 (lock_not_available) within seconds and changes NOTHING (still CASCADE); run again
 //      after the lock is gone, it succeeds.
 //   4. The documented rollback restores CASCADE exactly, no row changed.
+//   5. Concurrency: a delete racing with a new answer waits and then fails with 23001 (history kept);
+//      a late answer to a question deleted first fails with 23503 (no orphan).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -137,6 +139,35 @@ test("real PostgreSQL: H2 RESTRICT, SQLSTATEs, lock_timeout and rollback", { ski
     await blocker.query("ROLLBACK");
     await apply(c, read(FILE));
     assert.deepEqual(await defs(c), [RESTRICT, RESTRICT]);
+  });
+
+  await t.test("5. concurrency: a delete racing with a new answer on the same question never loses history", async () => {
+    // A question with no history yet. Session A serves it (uncommitted instance); session B deletes the
+    // question. B must wait for A's row (the foreign-key check takes a KEY SHARE lock on the question),
+    // then — A committed — fail with 23001 and leave the new history in place.
+    const c = await newDb();
+    await apply(c, read(FILE));
+    const a = await connect();
+    const b = await connect();
+    await a.query("BEGIN");
+    await a.query(`INSERT INTO public.question_instances (question_id) VALUES ('${Q_FREE}')`);
+    const deleting = sqlstate(b.query(`DELETE FROM public.questions WHERE id = '${Q_FREE}'`));
+    for (let i = 0; i < 200; i++) {
+      const w = (await c.query(`SELECT count(*)::int AS n FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock'`)).rows[0].n;
+      if (w >= 1) break;
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    await a.query("COMMIT");
+    assert.equal(await deleting, "23001", "the delete is refused once the answer exists");
+    assert.equal((await c.query(`SELECT count(*)::int AS n FROM public.question_instances WHERE question_id = '${Q_FREE}'`)).rows[0].n, 1);
+    // The other order: the delete of a question WITHOUT history commits first; the late insert then fails
+    // (23503) instead of creating an orphan.
+    await c.query(`INSERT INTO public.questions (id) VALUES ('${uid(50)}')`);
+    await b.query("BEGIN");
+    await b.query(`DELETE FROM public.questions WHERE id = '${uid(50)}'`);
+    const inserting = sqlstate(a.query(`INSERT INTO public.question_instances (question_id) VALUES ('${uid(50)}')`));
+    await b.query("COMMIT");
+    assert.equal(await inserting, "23503");
   });
 
   await t.test("4. the documented rollback restores CASCADE exactly, no row changed", async () => {

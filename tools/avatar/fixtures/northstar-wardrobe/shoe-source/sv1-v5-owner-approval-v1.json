@@ -1,0 +1,171 @@
+{
+  "approval": "sv1-v5-owner-approval-v1",
+  "decision": "D-305",
+  "date": "2026-11-02",
+  "ownerWords": "Registrér ejerens visuelle bedømmelse af D-304: De 21 anbefalede kombinationer er godkendt. Omfang: SV1-V5-CHALK, SV1-V5-NAVYWHITE og SV1-V5-BURGUNDYGUM med alle seks undersøgte underdele. SV1-V5-CHARCOAL med nederdel, shorts og capri. Koks med oliven-, navy- og sandbukser er ikke omfattet.",
+  "scope": "the concrete results shown in D-304 (the locked layers of sv1-v5-candidates-v1, each with the cream tee over the named bottom); not general mass production, not other tops, not other shoes, not a re-render",
+  "limitations": [
+    "D-301: SV-1 is a REJECTED SOURCE by D-299's original rules (unchanged history)",
+    "D-302: master v5 was developed on SV-1 (development history)",
+    "master v5 is NOT independently validated"
+  ],
+  "package": {
+    "file": "tools/avatar/fixtures/northstar-wardrobe/shoe-source/sv1-v5-candidates-v1.json",
+    "sha256": "4e82bd7be794887468350d4d78363572343487c724f2794ac7b85c5764341661"
+  },
+  "combinations": [
+    {
+      "id": "SV1-V5-CHALK--skirt-sand",
+      "candidate": "SV1-V5-CHALK",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-skirt-sand",
+      "layerSha256": "18e982a6c8ab0bdd3a591bd56a10dc8192b51777568ebaf9c65c17fcc8ba86c2"
+    },
+    {
+      "id": "SV1-V5-CHALK--shorts-navy",
+      "candidate": "SV1-V5-CHALK",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-shorts-navy",
+      "layerSha256": "18e982a6c8ab0bdd3a591bd56a10dc8192b51777568ebaf9c65c17fcc8ba86c2"
+    },
+    {
+      "id": "SV1-V5-CHALK--capri-lightblue",
+      "candidate": "SV1-V5-CHALK",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-capri-lightblue",
+      "layerSha256": "18e982a6c8ab0bdd3a591bd56a10dc8192b51777568ebaf9c65c17fcc8ba86c2"
+    },
+    {
+      "id": "SV1-V5-CHALK--trousers-square-olive",
+      "candidate": "SV1-V5-CHALK",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-trousers-square-olive",
+      "layerSha256": "18e982a6c8ab0bdd3a591bd56a10dc8192b51777568ebaf9c65c17fcc8ba86c2"
+    },
+    {
+      "id": "SV1-V5-CHALK--trousers-square-navy",
+      "candidate": "SV1-V5-CHALK",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "layerSha256": "18e982a6c8ab0bdd3a591bd56a10dc8192b51777568ebaf9c65c17fcc8ba86c2"
+    },
+    {
+      "id": "SV1-V5-CHALK--trousers-square-sand",
+      "candidate": "SV1-V5-CHALK",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "layerSha256": "18e982a6c8ab0bdd3a591bd56a10dc8192b51777568ebaf9c65c17fcc8ba86c2"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--skirt-sand",
+      "candidate": "SV1-V5-NAVYWHITE",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-skirt-sand",
+      "layerSha256": "31303fbb664fdec2064fc56f1f251e9e6ccf62dcd10f9a53a8ece021bcc6c8f8"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--shorts-navy",
+      "candidate": "SV1-V5-NAVYWHITE",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-shorts-navy",
+      "layerSha256": "31303fbb664fdec2064fc56f1f251e9e6ccf62dcd10f9a53a8ece021bcc6c8f8"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--capri-lightblue",
+      "candidate": "SV1-V5-NAVYWHITE",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-capri-lightblue",
+      "layerSha256": "31303fbb664fdec2064fc56f1f251e9e6ccf62dcd10f9a53a8ece021bcc6c8f8"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--trousers-square-olive",
+      "candidate": "SV1-V5-NAVYWHITE",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-trousers-square-olive",
+      "layerSha256": "31303fbb664fdec2064fc56f1f251e9e6ccf62dcd10f9a53a8ece021bcc6c8f8"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--trousers-square-navy",
+      "candidate": "SV1-V5-NAVYWHITE",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "layerSha256": "31303fbb664fdec2064fc56f1f251e9e6ccf62dcd10f9a53a8ece021bcc6c8f8"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--trousers-square-sand",
+      "candidate": "SV1-V5-NAVYWHITE",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "layerSha256": "31303fbb664fdec2064fc56f1f251e9e6ccf62dcd10f9a53a8ece021bcc6c8f8"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--skirt-sand",
+      "candidate": "SV1-V5-BURGUNDYGUM",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-skirt-sand",
+      "layerSha256": "7db5bfb8085280f146698aad844db68b5740eefb7264fa9a8f3787be65138d20"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--shorts-navy",
+      "candidate": "SV1-V5-BURGUNDYGUM",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-shorts-navy",
+      "layerSha256": "7db5bfb8085280f146698aad844db68b5740eefb7264fa9a8f3787be65138d20"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--capri-lightblue",
+      "candidate": "SV1-V5-BURGUNDYGUM",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-capri-lightblue",
+      "layerSha256": "7db5bfb8085280f146698aad844db68b5740eefb7264fa9a8f3787be65138d20"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--trousers-square-olive",
+      "candidate": "SV1-V5-BURGUNDYGUM",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-trousers-square-olive",
+      "layerSha256": "7db5bfb8085280f146698aad844db68b5740eefb7264fa9a8f3787be65138d20"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--trousers-square-navy",
+      "candidate": "SV1-V5-BURGUNDYGUM",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "layerSha256": "7db5bfb8085280f146698aad844db68b5740eefb7264fa9a8f3787be65138d20"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--trousers-square-sand",
+      "candidate": "SV1-V5-BURGUNDYGUM",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "layerSha256": "7db5bfb8085280f146698aad844db68b5740eefb7264fa9a8f3787be65138d20"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--skirt-sand",
+      "candidate": "SV1-V5-CHARCOAL",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-skirt-sand",
+      "layerSha256": "42570ca9eaf922b19369885d482abe76654f5f73a599e9766e46819a8944c543"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--shorts-navy",
+      "candidate": "SV1-V5-CHARCOAL",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-shorts-navy",
+      "layerSha256": "42570ca9eaf922b19369885d482abe76654f5f73a599e9766e46819a8944c543"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--capri-lightblue",
+      "candidate": "SV1-V5-CHARCOAL",
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-capri-lightblue",
+      "layerSha256": "42570ca9eaf922b19369885d482abe76654f5f73a599e9766e46819a8944c543"
+    }
+  ],
+  "notApproved": [
+    "SV1-V5-CHARCOAL--trousers-square-olive",
+    "SV1-V5-CHARCOAL--trousers-square-navy",
+    "SV1-V5-CHARCOAL--trousers-square-sand"
+  ],
+  "publication": "NOT GRANTED: no layer is published, integrated, catalogued, activated or flagged by this approval"
+}
