@@ -82,6 +82,14 @@ const defaultTimers: Timers = {
  * and is the only party that talks to the backend. The game gets opaque tokens, whitelisted stimuli and
  * verdicts — never a session token, an instance id, an answer key or a way to grant itself anything.
  */
+/** One host entry, and one pending submission, per server instance AND answer round. */
+function roundKey(task: ServiceTask): string {
+  return `${task.instanceId}#${task.roundNo}`;
+}
+function pendingKey(task: ServiceTask): string {
+  return PENDING_PREFIX + roundKey(task);
+}
+
 export class BridgeHost {
   private readonly o: Required<Omit<BridgeHostOptions, "store" | "onReject" | "onServiceError">> & BridgeHostOptions;
   private readonly timers: Timers;
@@ -90,6 +98,7 @@ export class BridgeHost {
   private kinds: readonly InteractionKind[] = [];
   private requests = new Map<string, RequestState>();
   private readonly tokens = new Map<string, Entry>();
+  /** Key: instance AND round. A repeat reopens the SAME server instance in a new round (D-211/D-266). */
   private readonly byInstance = new Map<string, string>();
 
   constructor(options: BridgeHostOptions) {
@@ -198,7 +207,7 @@ export class BridgeHost {
 
     // The committed answer is final: a stored pending submission (earlier abort or host reload) is resent
     // with its own submission id and payload, so the server sees one submission however often it arrives.
-    const pending = this.readPending(entry.task.instanceId) ?? this.writePending(entry.task.instanceId, {
+    const pending = this.readPending(entry.task) ?? this.writePending(entry.task, {
       submissionId: this.o.randomId(),
       roundNo: entry.task.roundNo,
       action: msg.action,
@@ -220,7 +229,7 @@ export class BridgeHost {
         retryable: false,
       };
       entry.result = body;
-      this.o.store?.removeItem(PENDING_PREFIX + entry.task.instanceId);
+      this.o.store?.removeItem(pendingKey(entry.task));
     } catch (err) {
       this.o.onServiceError?.(err);
       entry.submitting = false;
@@ -257,7 +266,7 @@ export class BridgeHost {
         for (const id of waiting) this.finish(gen, id, { ...aborted, nonce: this.nonce as string, requestId: id });
         return;
       }
-      this.o.store?.removeItem(PENDING_PREFIX + entry.task.instanceId);
+      this.o.store?.removeItem(pendingKey(entry.task));
       for (const id of waiting) this.finishError(gen, id, errorCodeFor(err, "server_error"));
       return;
     }
@@ -295,7 +304,10 @@ export class BridgeHost {
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
   private register(task: ServiceTask): Entry {
-    const existing = this.byInstance.get(task.instanceId);
+    // A closed round must never answer for a NEW round of the same instance: the repeat would get the old
+    // verdict, nothing would be submitted, nothing paid, and the server's round would stay open.
+    const key = roundKey(task);
+    const existing = this.byInstance.get(key);
     if (existing !== undefined) {
       const e = this.tokens.get(existing) as Entry;
       return e;
@@ -303,7 +315,7 @@ export class BridgeHost {
     const token = this.o.randomId();
     const entry: Entry = { token, task, result: null, waiting: [], submitting: false };
     this.tokens.set(token, entry);
-    this.byInstance.set(task.instanceId, token);
+    this.byInstance.set(key, token);
     return entry;
   }
 
@@ -320,21 +332,21 @@ export class BridgeHost {
     };
   }
 
-  private readPending(instanceId: string): Pending | null {
-    const raw = this.o.store?.getItem(PENDING_PREFIX + instanceId) ?? null;
+  private readPending(task: ServiceTask): Pending | null {
+    const raw = this.o.store?.getItem(pendingKey(task)) ?? null;
     if (raw === null) return null;
     try {
       const p = JSON.parse(raw) as Pending;
-      if (typeof p.submissionId === "string" && typeof p.roundNo === "number" && typeof p.action === "object" && p.action !== null) return p;
+      if (typeof p.submissionId === "string" && p.roundNo === task.roundNo && typeof p.action === "object" && p.action !== null) return p;
     } catch {
       /* corrupt entry: dropped below */
     }
-    this.o.store?.removeItem(PENDING_PREFIX + instanceId);
+    this.o.store?.removeItem(pendingKey(task));
     return null;
   }
 
-  private writePending(instanceId: string, p: Pending): Pending {
-    this.o.store?.setItem(PENDING_PREFIX + instanceId, JSON.stringify(p));
+  private writePending(task: ServiceTask, p: Pending): Pending {
+    this.o.store?.setItem(pendingKey(task), JSON.stringify(p));
     return p;
   }
 
