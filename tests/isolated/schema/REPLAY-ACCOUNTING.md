@@ -67,7 +67,17 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
     `question_attempts` eller `_v2`-funktionerne (katalog, 2026-11-01), og begge filer kræver G1 først.
 
   D-284 og D-286 blev ved en fejl ikke skrevet på listen, da de blev merget, og blev derfor afspillet
-  her. Hver fil afspilles først, når den er anvendt og verificeret, og i den rækkefølge filerne selv
+  her.
+
+  **Følgen, set i #534:** D-286 fjerner `authenticated`'s EXECUTE på `set_night_correct`. Fordi filen
+  blev afspillet, havde den isolerede database den kontrakt, som D-286 indfører, og ikke den, der
+  gælder i produktionen. Produktionen giver stadig `authenticated` EXECUTE (læst 2026-11-01).
+  #534's natteflag-test kaldte derfor funktionen som elev og fik `42501 permission denied`. Det var
+  en miljøforskel, ikke en fejl i testen eller i D-278. Med posten her får den isolerede database
+  igen produktionens adgangsmodel.
+
+  Når D-286 er anvendt og fjernet fra listen, skal den nye kontrakt testes særskilt: eleven kan ikke
+  længere kalde `set_night_correct`. Hver fil afspilles først, når den er anvendt og verificeret, og i den rækkefølge filerne selv
   håndhæver: G1, derefter bootstrappen, derefter alignmentet. A, B, kommentarrettelsen og D-280's to
   filer er anvendt og verificeret og står derfor ikke længere her (se "Anvendt i produktionen efter
   planens første version").
