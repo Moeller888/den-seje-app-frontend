@@ -57,6 +57,14 @@
 -- true → false) on an inactive question; H5's round guard that a reopen raises repeat_count by one.
 -- On a reopen both fire (PostgreSQL runs BEFORE triggers in name order: G2's first); on _v2's
 -- UPDATE ... SET answered = true G2's guard returns at once and takes no lock.
+--
+-- D-316 (compatibility, 2026-11-02): release_open_question_outside is one of the seven pinned writers.
+-- 20261102100000 (not applied) gives it a reviewed second body (md5 ecbaa6bcce3940f4a8607526f5fd756a)
+-- that ALSO releases the caller's open round when its question is inactive — by the same two paths as a
+-- subject switch: a round-1 instance (repeat_count 0, never answered, so no attempt) is deleted; a
+-- reopened repeat is closed (answered false → true, repeat_count unchanged), which the round guard
+-- allows. This file accepts either body, so the two can be applied in either order; any third body still
+-- stops it. Proof on PostgreSQL 17: tests/unit/release-open-rounds-inactive-pg.test.mjs.
 -- ATOMIC: the state check, the creation and the final check are ONE statement (one DO block). A
 -- failure anywhere — also in the final check, after every object was created — rolls back the whole
 -- block, whether the runner wraps the file in a transaction or runs each statement on its own
@@ -110,7 +118,11 @@ BEGIN
     IF v_hash IS NULL THEN
       RAISE EXCEPTION 'H5 bootstrap: % findes ikke', r.key;
     END IF;
-    IF v_hash IS DISTINCT FROM r.value THEN
+    -- D-316 (20261102100000): release_open_question_outside may also have that file's reviewed body
+    -- (ecbaa6bc…: it also releases a round whose question is inactive, by the same two paths), so D-316
+    -- and this file can be applied in either order. Any other body still stops the migration.
+    IF v_hash IS DISTINCT FROM r.value
+       AND NOT (r.key = 'public.release_open_question_outside(text[])' AND v_hash = 'ecbaa6bcce3940f4a8607526f5fd756a') THEN
       RAISE EXCEPTION 'H5 bootstrap: % har ikke den gennemgåede krop efter D-280 del 1 og D-290 G1 (md5 %, forventet %) — gennemgå rundevagten og _v2 igen', r.key, v_hash, r.value;
     END IF;
   END LOOP;

@@ -130,6 +130,8 @@ export const REPO_AHEAD_OF_PRODUCTION = Object.freeze({
     "repository ahead of production: the repository's request-password-help calls public.reserve_password_help, which production does not have (catalog, 2026-10-25) — open production task D-243",
   "20261030211428_question_attempts_v2.sql":
     "repository ahead of production: the repository's process-event calls process_question_attempt_v2 / process_text_answer_v2 behind the H5 switch, which production does not have (catalog, 2026-11-01) — open production task D-266/D-273 (H5)",
+  "20261102100000_release_open_rounds_on_inactive_questions.sql":
+    "repository ahead of production: the repository's regression test tests/isolated/open-round-inactive-question.isolated.spec.mjs proves through get-next-question that an open round on a deactivated question no longer blocks the pupil, which needs this body of release_open_question_outside; production still runs the old body (7b7693b3…, catalog 2026-11-02) — open production task D-316",
 });
 
 // Every timestamped migration from ACCOUNTED_FROM on must be accounted for in exactly one place:
