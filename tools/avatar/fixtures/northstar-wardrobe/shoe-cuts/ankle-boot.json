@@ -3,7 +3,7 @@
   "label": "Ankelstøvle",
   "contract": "shoe-cut-v1",
   "referenceItem": "shoes-ankleboots-brown",
-  "note": "the published brown ankle boot (D-239/D-240 run d-240-shoe-cover/run-1) as the reference geometry; its existing source is dark and its covering needed D-240's extraction fix",
+  "note": "the published brown ankle boot (D-239/D-240 run d-240-shoe-cover/run-1) as the reference geometry; its existing source is dark and its covering needed D-240's extraction fix. Version 2 (D-319, before any lock): the shaft's rim band is its own field (the new source must separate it), the opening zone reaches the rim band's top line, and each field has a minimum size per side at 1x",
   "source": {
     "crop": {
       "x0": 320,
@@ -31,7 +31,22 @@
           608,
           1345
         ]
-      ]
+      ],
+      "minPxPerSide": 8000
+    },
+    "rim": {
+      "slot": "tongue",
+      "seeds": [
+        [
+          405,
+          1325
+        ],
+        [
+          620,
+          1325
+        ]
+      ],
+      "minPxPerSide": 120
     },
     "sole": {
       "slot": "sole",
@@ -44,20 +59,21 @@
           623,
           1488
         ]
-      ]
+      ],
+      "minPxPerSide": 1500
     }
   },
   "opening": {
     "type": "shaft",
     "zone": {
-      "y0": 1298,
-      "y1": 1318
+      "y0": 1296,
+      "y1": 1322
     },
     "riseMaxPx": 3,
     "envelopePx": 2,
     "parts": [
-      "the shaft's rim around the leg",
-      "the inside of the shaft (a narrow band of skin and lining)"
+      "the shaft's rim band around the leg (its own field)",
+      "the inside of the shaft above the rim band (skin of the leg may show)"
     ]
   },
   "covering": {
@@ -116,5 +132,6 @@
         1504
       ]
     }
-  }
+  },
+  "contractVersion": 2
 }

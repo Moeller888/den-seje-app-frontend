@@ -20,7 +20,7 @@ test("D-318 the sneaker contract holds the locked modules' numbers unchanged; th
   assert.deepEqual(SN.source.crop, { ...SS.CROP }); assert.equal(SN.source.K, SS.K); assert.equal(SN.source.splitX, SS.SPLIT_X);
   assert.deepEqual(Object.fromEntries(Object.entries(SN.fields).map(([k, v]) => [v.slot, v.seeds])), JSON.parse(JSON.stringify(SM.SPEC.seeds)));
   assert.deepEqual(SN.opening.zone, { ...E2.COLLAR_ZONE }); assert.equal(SN.referenceItem, SM.SPEC.source);
-  assert.deepEqual(Object.keys(AB.fields), ["upper", "sole"]); assert.equal(AB.opening.type, "shaft"); assert.equal(AB.referenceItem, "shoes-ankleboots-brown");
+  assert.deepEqual(Object.keys(AB.fields), ["upper", "rim", "sole"]); assert.equal(AB.contractVersion, 2); assert.equal(AB.opening.type, "shaft"); assert.equal(AB.referenceItem, "shoes-ankleboots-brown");
   assert.throws(() => KIT.checkCut({ ...SN, fields: { a: { slot: "upper", seeds: [] }, b: { slot: "upper", seeds: [] } } }), /own master group slot/);
   assert.throws(() => KIT.checkCut({ ...SN, source: { ...SN.source, splitX: 10 } }), /splitX/);
 });
@@ -40,8 +40,8 @@ test("D-318 the kit's K route renders a synthetic shoe exactly as SS.renderAtK (
   const a = KIT.renderAtK(img, cut, SM.SPEC_V4, SM.buildShoeMaster, { navy: NAVY }).navy;
   const b = SS.renderAtK(img, SM.SPEC_V4, NAVY, { seedsBySide: { left: SS.cropSeedsAtK(SS.SYNTH_SEEDS, "left"), right: SS.cropSeedsAtK(SS.SYNTH_SEEDS, "right") }, templateOf: tpl });
   assert.equal(sha(a), sha(b));
-  assert.deepEqual(KIT.designFor(AB, { upper: [1, 2, 3], sole: [4, 5, 6] }), { upper: [1, 2, 3], sole: [4, 5, 6], toe: [1, 2, 3], laces: [1, 2, 3], tongue: [1, 2, 3] });
-  assert.throws(() => KIT.designFor(AB, { upper: [1, 2, 3] }), /no colour for the field sole/);
+  assert.deepEqual(KIT.designFor(AB, { upper: [1, 2, 3], rim: [7, 8, 9], sole: [4, 5, 6] }), { upper: [1, 2, 3], tongue: [7, 8, 9], sole: [4, 5, 6], toe: [1, 2, 3], laces: [1, 2, 3] });
+  assert.throws(() => KIT.designFor(AB, { upper: [1, 2, 3] }), /no colour for the field rim/);
 });
 
 test("D-318 the opening check: normal overlap, a tongue rising inside the opening and skin in the opening pass; a hole, material on the shin, a notch below the floor and a moved shoe fail", () => {
