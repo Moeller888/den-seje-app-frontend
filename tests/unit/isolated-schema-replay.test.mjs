@@ -76,6 +76,14 @@ test("the replayed schema has production's key objects", async () => {
   // reported after the application.
   const rel = await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.release_open_question_outside(text[])'::regprocedure`);
   assert.equal(rel.m, "b80c1c7857ecc90bdbd7b6175b65c78f");
+  // 20261101210000 (D-298 H2, applied as remote 20261102182750 on 2026-11-02): the answer history cannot
+  // be deleted with its question — both foreign keys to questions are ON DELETE RESTRICT.
+  const h2 = (await db.query(`SELECT conrelid::regclass::text AS t, pg_get_constraintdef(oid) AS d FROM pg_constraint
+    WHERE contype = 'f' AND confrelid = 'public.questions'::regclass ORDER BY 1`)).rows;
+  assert.deepEqual(h2, [
+    { t: "question_instances", d: "FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE RESTRICT" },
+    { t: "student_answers", d: "FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE RESTRICT" },
+  ]);
   assert.notEqual(gar.m, "63b8347dd4d72d40ced43e8728b5ab87", "the replay must not carry the old, double-paying body");
   assert.deepEqual(gar, { m: "fc8d729f8b0166815fe2647805ce2e60", s: true, c: ["search_path=public"],
     a: ["postgres=X/postgres", "authenticated=X/postgres", "service_role=X/postgres"], n: 1, anon: false, auth: true, svc: true });
