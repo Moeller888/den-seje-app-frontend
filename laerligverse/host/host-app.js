@@ -15,6 +15,13 @@ function say(text) {
   $("lv-live").textContent = text;
 }
 
+/** The game has completed the handshake: show it, and announce it once (not on every message). */
+function linked() {
+  if ($("lv-link").textContent === "forbundet") return;
+  $("lv-link").textContent = "forbundet";
+  say("Spillet er klar.");
+}
+
 function fail(text) {
   body.dataset.state = "refused";
   $("lv-mode").hidden = false;
@@ -78,7 +85,7 @@ async function startDidacticDemo(c) {
   });
   window.addEventListener("message", (e) => {
     void host.onMessage({ origin: e.origin, source: e.source, data: e.data }).then(() => {
-      if (host.sessionNonce !== null) $("lv-link").textContent = "forbundet";
+      if (host.sessionNonce !== null) linked();
     });
   });
   $("lv-game-region").hidden = false;
@@ -148,7 +155,7 @@ function start(c) {
   window.addEventListener("message", (e) => {
     if (host === null) return;
     void host.handleMessage(e).then(() => {
-      if (host.sessionNonce !== null) $("lv-link").textContent = "forbundet";
+      if (host.sessionNonce !== null) linked();
     });
   });
 
