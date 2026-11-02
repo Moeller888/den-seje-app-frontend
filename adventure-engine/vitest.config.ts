@@ -24,6 +24,8 @@ export default defineConfig({
         "packages/app/src/adapter.ts",
         "packages/app/src/ui/**",
         "packages/app/src/env.d.ts",
+        // D-307: the Arkivskabet prototype is DOM code, covered by e2e/archive.spec.ts.
+        "packages/archive-prototype/**",
       ],
       reporter: ["text", "json-summary"],
       thresholds: {

@@ -70,6 +70,34 @@ importers:
         specifier: 5.4.11
         version: 5.4.11(@types/node@22.10.1)
 
+  packages/archive-prototype:
+    dependencies:
+      '@adventure-engine/app':
+        specifier: workspace:*
+        version: link:../app
+      '@adventure-engine/content':
+        specifier: workspace:*
+        version: link:../content
+      '@adventure-engine/learning-bridge':
+        specifier: workspace:*
+        version: link:../learning-bridge
+      '@adventure-engine/save':
+        specifier: workspace:*
+        version: link:../save
+      '@fontsource/atkinson-hyperlegible':
+        specifier: 5.1.0
+        version: 5.1.0
+    devDependencies:
+      '@adventure-engine/core':
+        specifier: workspace:*
+        version: link:../core
+      '@adventure-engine/scenario-runner':
+        specifier: workspace:*
+        version: link:../scenario-runner
+      vite:
+        specifier: 5.4.11
+        version: 5.4.11(@types/node@22.10.1)
+
   packages/audio:
     dependencies:
       '@adventure-engine/content':

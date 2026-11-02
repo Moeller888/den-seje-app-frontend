@@ -1,0 +1,16 @@
+:root { color-scheme: light; --ink: #1f2430; --paper: #f6f3ec; --line: #c9c2b2; --warn: #7a3b00; --warn-bg: #fff1d6; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.45 system-ui, sans-serif; }
+.host-head { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.host-head h1 { margin: 0; font-size: 20px; }
+.test-banner { margin: 6px 0 0; padding: 6px 10px; background: var(--warn-bg); color: var(--warn); border-radius: 6px; font-weight: 600; }
+.host-main { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; padding: 16px; }
+#lv-game { width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--line); border-radius: 8px; background: #111; }
+.host-panel { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fff; }
+.host-panel h2 { margin: 0 0 8px; font-size: 16px; }
+.host-panel h3 { margin: 14px 0 6px; font-size: 14px; }
+.host-panel dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0; }
+.host-panel dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
+.host-panel button { display: block; width: 100%; margin: 6px 0; padding: 8px; font: inherit; }
+.rejects { margin: 0; padding-left: 18px; font-size: 13px; }
+@media (max-width: 800px) { .host-main { grid-template-columns: 1fr; } }
