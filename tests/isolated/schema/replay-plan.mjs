@@ -105,6 +105,10 @@ export function extractSchemaPart(file, sql) {
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
 export const NOT_IN_PRODUCTION = Object.freeze({
+  "20261031230000_claim_daily_reward_exactly_once.sql":
+    "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
+  "20261101120000_night_owl_stop_new_awards.sql":
+    "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
   "20261101140000_deactivate_two_misgraded_questions.sql":
     "D-290, not applied in production: it creates the open-round guard (guard_open_round_requires_active_question and its trigger on question_instances), which production does not have, and the two questions are still active",
   "20261101150000_grading_meaningful_characters.sql":
@@ -123,6 +127,37 @@ export const NOT_IN_PRODUCTION = Object.freeze({
 export const REPO_AHEAD_OF_PRODUCTION = Object.freeze({
   "20260808010000_password_help_reserve_rpc.sql":
     "repository ahead of production: the repository's request-password-help calls public.reserve_password_help, which production does not have (catalog, 2026-10-25) — open production task D-243",
+  "20261030211428_question_attempts_v2.sql":
+    "repository ahead of production: the repository's process-event calls process_question_attempt_v2 / process_text_answer_v2 behind the H5 switch, which production does not have (catalog, 2026-11-01) — open production task D-266/D-273 (H5)",
+});
+
+// Every timestamped migration from ACCOUNTED_FROM on must be accounted for in exactly one place:
+// NOT_IN_PRODUCTION (merged, not applied — not replayed, data-only files included), REPO_AHEAD_OF_PRODUCTION
+// (not applied, replayed by owner decision) or APPLIED_IN_PRODUCTION below (applied AND verified, with
+// the version production's ledger gave it). A new migration that is in none
+// of them fails tests/unit/replay-accounting-complete.test.mjs, so a merge can no longer replay an
+// unapplied file by omission. A file moves to APPLIED_IN_PRODUCTION only after its application in
+// production is verified; it then leaves NOT_IN_PRODUCTION in the same change.
+export const ACCOUNTED_FROM = "20261020000000";
+export const APPLIED_IN_PRODUCTION = Object.freeze({
+  "20261020120000_difficulty_scale_a.sql": "20261030045204",
+  "20261022120000_fix_mc_correct_answer_not_in_options.sql": "20261029141201",
+  "20261025120000_student_rpc_caller_scope.sql": "20261025172041",
+  "20261026110000_leaderboard_execute_containment.sql": "20261026113548",
+  "20261026120000_leaderboard_identity_scope.sql": "20261026161704",
+  "20261026170000_recalculate_prestige_execute_containment.sql": "20261026192215",
+  "20261026180000_recalculate_prestige_caller_scope.sql": "20261027052218",
+  "20261027090000_sweep_stale_generation_jobs_hardening.sql": "20261027102310",
+  "20261027110000_avatar_generation_jobs_read_scope.sql": "20261027124113",
+  "20261027120000_repeat_answer_coin_reward.sql": "20261027162102",
+  "20261027130000_recover_stuck_job_atomic_execute_scope.sql": "20261027151432",
+  "20261029120000_difficulty_scale_b.sql": "20261030094958",
+  "20261029150000_teacher_stats_from_answers.sql": "20261030092931",
+  "20261029170000_mc_grading_compensation.sql": "20261031171755",
+  "20261030120000_student_subject_level_comment.sql": "20261030182931",
+  "20261031190000_reward_integrity_server_authority.sql": "20261101101441",
+  "20261031194600_mc_length_cue_answer_paths.sql": "20261101101401",
+  "20261031194700_mc_length_cue_top10.sql": "20261101102339",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),

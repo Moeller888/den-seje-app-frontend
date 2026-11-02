@@ -52,16 +52,32 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:**
-  - `20261101140000_deactivate_two_misgraded_questions.sql` (D-290 G2). Den opretter siden rettelsen
-    2026-11-01 en funktion og en trigger og er derfor ikke længere ren data.
-  - `20261101150000_grading_meaningful_characters` (D-290 G1). Den genskaber
-    `process_question_attempt`, som produktionen stadig kører i D-280 del 1's udgave.
+- **Ikke anvendt i produktionen** (alle merget; produktionen kører stadig det, der var før — læst
+  2026-11-01):
+  - `20261031230000_claim_daily_reward_exactly_once` (D-284): `claim_daily_reward` har md5 `80273d5d…`.
+  - `20261101120000_night_owl_stop_new_awards` (D-286): `evaluate_achievements` har md5 `9bd9a5d5…`, og
+    `authenticated` har stadig EXECUTE på `set_night_correct`.
+  - `20261101140000_deactivate_two_misgraded_questions` (D-290 G2): de to spørgsmål er stadig aktive,
+    og produktionen har ikke værnet `guard_open_round_requires_active_question` med dets trigger på
+    `question_instances`. Filen er derfor ikke længere ren data.
+  - `20261101150000_grading_meaningful_characters` (D-290 G1): `process_question_attempt` er D-280 del
+    1's udgave.
   - `20261101190000_question_attempts_v2_bootstrap` og
     `20261101190100_question_attempts_v2_align_grading` (H5-integrationen). Produktionen har hverken
     `question_attempts` eller `_v2`-funktionerne (katalog, 2026-11-01), og begge filer kræver G1 først.
 
-  Hver fil afspilles først, når den er anvendt og verificeret, og i den rækkefølge filerne selv
+  D-284 og D-286 blev ved en fejl ikke skrevet på listen, da de blev merget, og blev derfor afspillet
+  her.
+
+  **Følgen, set i #534:** D-286 fjerner `authenticated`'s EXECUTE på `set_night_correct`. Fordi filen
+  blev afspillet, havde den isolerede database den kontrakt, som D-286 indfører, og ikke den, der
+  gælder i produktionen. Produktionen giver stadig `authenticated` EXECUTE (læst 2026-11-01).
+  #534's natteflag-test kaldte derfor funktionen som elev og fik `42501 permission denied`. Det var
+  en miljøforskel, ikke en fejl i testen eller i D-278. Med posten her får den isolerede database
+  igen produktionens adgangsmodel.
+
+  Når D-286 er anvendt og fjernet fra listen, skal den nye kontrakt testes særskilt: eleven kan ikke
+  længere kalde `set_night_correct`. Hver fil afspilles først, når den er anvendt og verificeret, og i den rækkefølge filerne selv
   håndhæver: G1, derefter bootstrappen, derefter alignmentet. A, B, kommentarrettelsen og D-280's to
   filer er anvendt og verificeret og står derfor ikke længere her (se "Anvendt i produktionen efter
   planens første version").
@@ -139,3 +155,16 @@ Se hovedet af `ci-function-stubs.sql`. Kort fortalt:
 - **Kolonneværdier ud over tabellens standardværdier** i `ensure_student_progress` modelleres ikke.
 
 Isoleret E2E kan derfor ikke bevise disse effekter. De kan kun verificeres mod den rigtige implementering.
+
+## Fuldstændigt regnskab (fra 2026-11-01)
+Hver migration med version fra `ACCOUNTED_FROM` (`20261020000000`) skal stå i præcis én liste i
+`replay-plan.mjs`: `NOT_IN_PRODUCTION` (merget, ikke anvendt — også rene datafiler),
+`REPO_AHEAD_OF_PRODUCTION` (ikke anvendt, afspilles efter ejerbeslutning B) eller
+`APPLIED_IN_PRODUCTION` (anvendt og verificeret, med produktionens ledger-version).
+`tests/unit/replay-accounting-complete.test.mjs` fejler, hvis en ny migration ikke er registreret, så en
+merge ikke længere kan afspille en uanvendt fil ved en forglemmelse. En fil flyttes først til
+`APPLIED_IN_PRODUCTION`, når anvendelsen er verificeret.
+
+`20261030211428_question_attempts_v2` (H5) er ikke anvendt i produktionen, men repositoryets
+`process-event` kalder v2-funktionerne bag H5-kontakten. Den står derfor i `REPO_AHEAD_OF_PRODUCTION`
+(uændret afspilning) som åben produktionsopgave under D-266/D-273.
