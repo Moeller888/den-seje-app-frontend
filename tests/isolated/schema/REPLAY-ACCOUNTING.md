@@ -61,6 +61,9 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
     `20261101190100_question_attempts_v2_align_grading` (H5-integrationen). Produktionen har hverken
     `question_attempts` eller `_v2`-funktionerne (katalog, 2026-11-02). Begge filer kræver G1 først,
     og G1 er anvendt.
+  - `20261101210000_question_history_restrict` (D-298 H2): begge fremmednøgler til `questions`
+    (`question_instances_question_id_fkey`, `student_answers_question_id_fkey`) er stadig
+    `ON DELETE CASCADE` i produktionen (katalog, 2026-11-02).
 
   D-284 og D-286 blev ved en fejl ikke skrevet på listen, da de blev merget, og blev derfor afspillet
   her.

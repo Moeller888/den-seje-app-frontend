@@ -118,6 +118,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "H5 integration 1/2, not applied in production (no question_attempts there, catalog 2026-11-01); it requires G1 (20261101150000) first, applied in production since 2026-11-02 (20261102064630)",
   "20261101190100_question_attempts_v2_align_grading.sql":
     "H5 integration 2/2, not applied in production (no process_question_attempt_v2 there, catalog 2026-11-01); it requires G1 and 20261101190000 first",
+  "20261101210000_question_history_restrict.sql":
+    "D-298 H2, not applied in production: both foreign keys to questions are still ON DELETE CASCADE there",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
