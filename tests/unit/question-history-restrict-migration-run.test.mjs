@@ -111,10 +111,18 @@ test("the documented rollback restores production's CASCADE exactly, with no row
   assert.deepEqual(await snapshot(db), before);
 });
 
-test("the file is D-110 shaped: header says not applied, lock_timeout set, no data statement", () => {
+test("the file is D-110 shaped: header says not applied, ONE statement with lock_timeout inside, no data statement", () => {
   const sql = read(FILE);
   assert.match(sql, /NOT APPLIED IN PRODUCTION\. Applying it needs a separate owner authorisation/);
-  assert.match(sql, /SET LOCAL lock_timeout = '5s';/);
-  const code = sql.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  const code = sql.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").trim();
+  // One DO block and nothing else: no runner can commit part of it (Supabase does not document
+  // whether apply_migration wraps a file in a transaction).
+  assert.match(code, /^DO \$h2\$[\s\S]*\$h2\$;$/, "the whole file is one DO block");
+  assert.equal(code.match(/\$h2\$/g).length, 2);
+  // lock_timeout is local to this statement's transaction, set first, inside the block.
+  assert.match(code, /^DO \$h2\$\s*DECLARE[\s\S]*?BEGIN\s*PERFORM set_config\('lock_timeout', '5s', true\);/);
+  assert.doesNotMatch(code, /^\s*SET\s+(LOCAL\s+)?lock_timeout/im, "no top-level SET, which is a no-op outside a transaction");
   assert.doesNotMatch(code, /^\s*(INSERT|UPDATE|DELETE|TRUNCATE)\b/im, "no data statement");
+  const rollback = rollbackSql().split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").trim();
+  assert.match(rollback, /^DO \$rollback_h2\$[\s\S]*\$rollback_h2\$;$/, "the rollback is one DO block too");
 });

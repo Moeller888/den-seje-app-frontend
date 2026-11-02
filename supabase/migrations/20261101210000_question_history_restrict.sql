@@ -22,13 +22,20 @@
 -- 2026-11-01) or already this file's RESTRICT definition (re-run: no change). Anything else aborts.
 --
 -- LOCKS: re-creating a foreign key takes a short exclusive lock on question_instances and
--- student_answers and validates their rows (5,912 and 80 rows on 2026-11-01). lock_timeout makes the
+-- student_answers and validates their rows (5,912 and 80 rows on 2026-11-01). lock_timeout (5s) makes the
 -- migration abort instead of queueing behind a long transaction; it can then simply be run again.
+--
+-- ATOMIC, WHATEVER THE RUNNER DOES: Supabase does not document whether apply_migration wraps a file in
+-- one transaction. So the guard, the lock_timeout and BOTH constraint changes are ONE statement (one DO
+-- block): a failure anywhere — the guard, a lock timeout, the validation of either table — rolls back
+-- everything, also the first table's change, whether the runner wraps the file or runs each statement on
+-- its own (autocommit). lock_timeout is set with set_config(..., is_local => true) INSIDE the block, so it
+-- applies to exactly this statement's transaction in both models (a top-level SET LOCAL would be a no-op
+-- outside a transaction). tests/unit/question-history-restrict-pg.test.mjs proves both on PostgreSQL 17:
+-- a forced failure of the second change leaves the first one rolled back.
 --
 -- ROLLBACK: docs/operations/question-history-restrict-rollback.md (separate owner authorisation).
 -- ============================================================================
-
-SET LOCAL lock_timeout = '5s';
 
 DO $h2$
 DECLARE
@@ -37,6 +44,7 @@ DECLARE
   r record;
   v_found integer := 0;
 BEGIN
+  PERFORM set_config('lock_timeout', '5s', true);
   FOR r IN
     SELECT c.conrelid::regclass::text AS tbl, c.conname, pg_get_constraintdef(c.oid) AS def
       FROM pg_constraint c
@@ -55,15 +63,15 @@ BEGIN
   IF v_found <> 2 THEN
     RAISE EXCEPTION 'D-298 H2: expected the 2 reviewed foreign keys to questions, found %; nothing changed', v_found;
   END IF;
-END
-$h2$;
 
-ALTER TABLE public.question_instances
+  EXECUTE $ddl$ALTER TABLE public.question_instances
   DROP CONSTRAINT question_instances_question_id_fkey,
   ADD CONSTRAINT question_instances_question_id_fkey
-    FOREIGN KEY (question_id) REFERENCES public.questions(id) ON DELETE RESTRICT;
+    FOREIGN KEY (question_id) REFERENCES public.questions(id) ON DELETE RESTRICT$ddl$;
 
-ALTER TABLE public.student_answers
+  EXECUTE $ddl$ALTER TABLE public.student_answers
   DROP CONSTRAINT student_answers_question_id_fkey,
   ADD CONSTRAINT student_answers_question_id_fkey
-    FOREIGN KEY (question_id) REFERENCES public.questions(id) ON DELETE RESTRICT;
+    FOREIGN KEY (question_id) REFERENCES public.questions(id) ON DELETE RESTRICT$ddl$;
+END
+$h2$;

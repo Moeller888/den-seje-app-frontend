@@ -20,17 +20,23 @@ WHERE contype = 'f' AND confrelid = 'public.questions'::regclass;
 
 ```sql
 -- ROLLBACK D-298 H2 — restores production's ON DELETE CASCADE on both foreign keys (no row is changed).
-SET LOCAL lock_timeout = '5s';
+-- One statement (one DO block): both changes or neither, whatever the runner does; lock_timeout is set
+-- inside the block so it applies in either transaction model.
+DO $rollback_h2$
+BEGIN
+  PERFORM set_config('lock_timeout', '5s', true);
 
-ALTER TABLE public.question_instances
+  EXECUTE $ddl$ALTER TABLE public.question_instances
   DROP CONSTRAINT question_instances_question_id_fkey,
   ADD CONSTRAINT question_instances_question_id_fkey
-    FOREIGN KEY (question_id) REFERENCES public.questions(id) ON DELETE CASCADE;
+    FOREIGN KEY (question_id) REFERENCES public.questions(id) ON DELETE CASCADE$ddl$;
 
-ALTER TABLE public.student_answers
+  EXECUTE $ddl$ALTER TABLE public.student_answers
   DROP CONSTRAINT student_answers_question_id_fkey,
   ADD CONSTRAINT student_answers_question_id_fkey
-    FOREIGN KEY (question_id) REFERENCES public.questions(id) ON DELETE CASCADE;
+    FOREIGN KEY (question_id) REFERENCES public.questions(id) ON DELETE CASCADE$ddl$;
+END
+$rollback_h2$;
 ```
 
 ## Efterkontrol (read-only)

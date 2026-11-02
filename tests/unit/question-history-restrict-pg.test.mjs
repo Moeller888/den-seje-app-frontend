@@ -21,6 +21,10 @@
 //   4. The documented rollback restores CASCADE exactly, no row changed.
 //   5. Concurrency: a delete racing with a new answer waits and then is refused (history kept);
 //      a late answer to a question deleted first fails with 23503 (no orphan).
+//   6. ATOMIC whatever the runner does: wrapped in one transaction or autocommit, a lock on EITHER table
+//      aborts with 55P03 within seconds and leaves BOTH constraints CASCADE; lock_timeout does not leak.
+//   7. A forced failure of the SECOND change (orphan row in student_answers) rolls the FIRST change
+//      back, in both models.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -182,6 +186,50 @@ test("real PostgreSQL: H2 RESTRICT, SQLSTATEs, lock_timeout and rollback", { ski
     const inserting = sqlstate(a.query(`INSERT INTO public.question_instances (question_id) VALUES ('${uid(50)}')`));
     await b.query("COMMIT");
     assert.equal(await inserting, "23503");
+  });
+
+  // ── Atomic whatever the runner does ────────────────────────────────────────────────────────────
+  // Two transaction models a runner may use: the file wrapped in BEGIN … COMMIT, or every statement on
+  // its own (autocommit — the file is ONE statement, so it runs in its own implicit transaction).
+  const MODELS = {
+    "wrapped in one transaction": (c, sql) => apply(c, sql),
+    "autocommit (no wrapping)": (c, sql) => c.query(sql),
+  };
+
+  await t.test("6. lock_timeout applies in both models, also on the SECOND table; nothing changes; it does not leak", async () => {
+    for (const [model, run] of Object.entries(MODELS)) {
+      for (const table of ["question_instances", "student_answers"]) {
+        const c = await newDb();
+        const blocker = await connect();
+        await blocker.query("BEGIN");
+        await blocker.query(`LOCK TABLE public.${table} IN ACCESS SHARE MODE`);
+        const started = Date.now();
+        assert.equal(await sqlstate(run(c, read(FILE))), "55P03", `${model}, lock on ${table}`);
+        assert.ok(Date.now() - started < 30000, `${model}, ${table}: aborts within seconds`);
+        assert.deepEqual(await defs(c), [CASCADE, CASCADE], `${model}, lock on ${table}: the first table's change is rolled back too`);
+        await blocker.query("ROLLBACK");
+        if (model.startsWith("autocommit")) {
+          assert.equal((await c.query("SHOW lock_timeout")).rows[0].lock_timeout, "0", "set_config(..., true) did not leak into the session");
+        }
+      }
+    }
+  });
+
+  await t.test("7. a forced failure of the SECOND change rolls the FIRST one back, in both models", async () => {
+    for (const [model, run] of Object.entries(MODELS)) {
+      const c = await newDb();
+      // An orphan student_answers row, inserted past the foreign-key triggers: re-validating the second
+      // constraint (student_answers) must fail AFTER the first (question_instances) was already changed.
+      await c.query("SET session_replication_role = replica");
+      await c.query(`INSERT INTO public.student_answers (question_id) VALUES ('${uid(77)}')`);
+      await c.query("SET session_replication_role = DEFAULT");
+      const before = await counts(c);
+      const e = await (async () => { try { await run(c, read(FILE)); return null; } catch (err) { return err; } })();
+      assert.equal(e?.code, "23503", `${model}: the second constraint's validation fails`);
+      assert.match(e.message, /student_answers/, `${model}: it is the second change that fails`);
+      assert.deepEqual(await defs(c), [CASCADE, CASCADE], `${model}: the first change (question_instances) is rolled back`);
+      assert.deepEqual(await counts(c), before, `${model}: no row changed`);
+    }
   });
 
   await t.test("4. the documented rollback restores CASCADE exactly, no row changed", async () => {
