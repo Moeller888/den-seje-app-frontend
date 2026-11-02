@@ -233,7 +233,8 @@ describe("bridge host — retry safety and backend data it cannot carry", () => 
     const t = p.client.requestTask(CHECK);
     await flush();
     const task = await t;
-    p.store.setItem("lvb2:pending:inst-1", "{not json");
+    // Pending entries are keyed per instance AND round (D-321 QA).
+    p.store.setItem("lvb2:pending:inst-1#1", "{not json");
     const r = p.client.act(task.instanceToken, { kind: "choice", payload: { optionId: "opt_a" } });
     await flush();
     expect((await r).outcome).toBe("correct");
