@@ -636,7 +636,7 @@ async function main(argv) {
     // Exactly one image: the RECEIPT check only. The D-319 evaluation (check, chain, outfits, views, verdict) follows.
     const problems = receiptProblems(Buffer.from(payload.data[0].b64_json, "base64"));
     const receipt = { tool: TOOL, callId: call.callId, category: auth.category, cut: auth.cut, image: { file: images[0].file || null, sha256: images[0].sha256 }, verdict: problems.length ? "TECHNICAL_REJECT" : "RECEIVED_FOR_BF_CHECK", problems,
-      next: "node --expose-gc tools/avatar/northstar-shoe-validation-evaluate.mjs --source <this image> --out <a new directory outside both clones> --dwebp <dwebp.exe> --phase check, then chain, outfits, views, browser, verdict",
+      next: "node --expose-gc tools/avatar/northstar-shoe-cut-evaluate.mjs --cut ankle-boot --plan tools/avatar/fixtures/northstar-wardrobe/shoe-source/ab-plan-v1.json --source <this image> --out <a new directory outside both clones> --dwebp <dwebp.exe> --phase check, then chain, outfits, views, verdict (D-319, frozen; hint corrected by D-325, which changes no guard)",
       note: "A TECHNICAL_REJECT here means the image is not a 1536x1024 RGBA PNG; the image is kept unchanged. RECEIVED_FOR_BF_CHECK approves nothing." };
     try { writeAtomic(out.receipt, JSON.stringify(receipt, null, 2) + "\n"); } catch (e) { manifest.receiptFileError = errText(e); }
     manifest.receipt = { file: out.show("receipt.json"), verdict: receipt.verdict, problems };

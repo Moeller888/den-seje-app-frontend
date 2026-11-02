@@ -1,0 +1,177 @@
+{
+  "id": "ankle-boot-v3",
+  "label": "Ankelstøvle",
+  "contract": "shoe-cut-v1",
+  "referenceItem": "shoes-ankleboots-brown",
+  "note": "Version 3 (D-325, developed WITH knowledge of AB-1, not independently validated): each field's seed is found per image inside a fixed search zone by the seed rule (northstar-shoe-cut-seeds.mjs, zone-v1) instead of one exact point — v2's sole seed sat in the old drawing's 2 px welt band and on a line in AB-1. Everything else is version 2's. Version 2 (ankle-boot.json) stays as D-319 locked it. The sole has two zones (its band and the heel block, a closed field of its own in AB-1's drawing); its minimum size per side is 400 px at 1x (v2's 1500 assumed one sole field as the old drawing had it)",
+  "source": {
+    "crop": {
+      "x0": 320,
+      "y0": 1270,
+      "w": 384,
+      "h": 256
+    },
+    "K": 4,
+    "splitX": 512,
+    "layoutReference": {
+      "file": null,
+      "sha256": null,
+      "from": "layoutCanvas(the reference item's published layer) — written only when a source attempt is prepared"
+    }
+  },
+  "fields": {
+    "upper": {
+      "slot": "upper",
+      "seeds": [],
+      "zones": {
+        "left": [
+          392,
+          1340,
+          445,
+          1420
+        ],
+        "right": [
+          579,
+          1340,
+          632,
+          1420
+        ]
+      },
+      "minSafePx": 300,
+      "minPxPerSide": 8000
+    },
+    "rim": {
+      "slot": "tongue",
+      "seeds": [],
+      "zones": {
+        "left": [
+          395,
+          1314,
+          445,
+          1330
+        ],
+        "right": [
+          579,
+          1314,
+          629,
+          1330
+        ]
+      },
+      "minSafePx": 40,
+      "minPxPerSide": 120
+    },
+    "sole": {
+      "slot": "sole",
+      "seeds": [],
+      "zones": {
+        "left": [
+          [
+            360,
+            1487,
+            450,
+            1503
+          ],
+          [
+            452,
+            1428,
+            472,
+            1458
+          ]
+        ],
+        "right": [
+          [
+            574,
+            1487,
+            664,
+            1503
+          ],
+          [
+            552,
+            1428,
+            572,
+            1458
+          ]
+        ]
+      },
+      "minSafePx": 40,
+      "minPxPerSide": 400
+    }
+  },
+  "opening": {
+    "type": "shaft",
+    "zone": {
+      "y0": 1296,
+      "y1": 1322
+    },
+    "riseMaxPx": 3,
+    "envelopePx": 2,
+    "parts": [
+      "the shaft's rim band around the leg (its own field)",
+      "the inside of the shaft above the rim band (skin of the leg may show)"
+    ]
+  },
+  "covering": {
+    "rule": "closed-footwear",
+    "sliverPx": 6
+  },
+  "placement": {
+    "maxShiftPx": 2,
+    "downscale": "premultiplied K x K area average",
+    "translation": "one global integer translation"
+  },
+  "evaluation": {
+    "bottoms": [
+      "bottom-skirt-sand",
+      "bottom-shorts-navy",
+      "bottom-capri-lightblue",
+      "bottom-trousers-square-olive",
+      "bottom-trousers-square-navy",
+      "bottom-trousers-square-sand"
+    ],
+    "reviewRegions": {
+      "shaft top L": [
+        380,
+        1290,
+        480,
+        1330
+      ],
+      "shaft top R": [
+        544,
+        1290,
+        644,
+        1330
+      ],
+      "toe L": [
+        336,
+        1420,
+        440,
+        1504
+      ],
+      "toe R": [
+        584,
+        1420,
+        688,
+        1504
+      ],
+      "heel L": [
+        430,
+        1400,
+        500,
+        1504
+      ],
+      "heel R": [
+        524,
+        1400,
+        594,
+        1504
+      ]
+    }
+  },
+  "contractVersion": 3,
+  "seedRule": {
+    "id": "zone-v1",
+    "safeDistPx": 2,
+    "ambiguityRatio": 0.5,
+    "note": "a seed is the deepest pixel, at least safeDistPx from any line or empty pixel, of the one field that dominates the zone; ambiguous, missing or merged fields are rejected; every choice is logged"
+  }
+}
