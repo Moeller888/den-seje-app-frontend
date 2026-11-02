@@ -7,7 +7,10 @@
 // cream tee (K01–K09); stored the same way (avatar_northstar_tee), ignored for every other outfit.
 // D-283: a third row offers the 2 owner-approved solid trousers (D-281) in place of the outfit's bottom wherever the top and shoes are
 // a pair D-281 checked; stored the same way (avatar_northstar_pants). "Outfittets egen underdel" returns to the outfit's own bottom.
-import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarTeeAllowed, northstarPantsAllowed } from "./avatar-layers.js";
+// D-308: a fourth row offers the 4 owner-approved SV1-V5 shoes (D-305) only where the whole effective outfit is one of the 21 approved
+// combinations; an unavailable shoe is disabled and the reason is written under the row. Stored the same way (avatar_northstar_shoes);
+// "Outfittets egne sko" returns to the outfit's own shoes.
+import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SV1_SHOES, NORTHSTAR_PRINT_TEE_BASE, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarOutfitFor } from "./avatar-layers.js";
 
 function store(key, value) {
   try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch (_e) { return false; }
@@ -17,7 +20,7 @@ export function applyNorthstarUrlOptIn(search) {
   let v = null;
   try { v = new URLSearchParams(search || "").get("northstar"); } catch (_e) { v = null; }
   if (v === "1") store(NORTHSTAR_OPT_IN_KEY, "1");
-  else if (v === "0") { store(NORTHSTAR_OPT_IN_KEY, null); store(NORTHSTAR_OUTFIT_KEY, null); store(NORTHSTAR_TEE_KEY, null); store(NORTHSTAR_PANTS_KEY, null); }
+  else if (v === "0") { store(NORTHSTAR_OPT_IN_KEY, null); store(NORTHSTAR_OUTFIT_KEY, null); store(NORTHSTAR_TEE_KEY, null); store(NORTHSTAR_PANTS_KEY, null); store(NORTHSTAR_SHOES_KEY, null); }
   return v;
 }
 
@@ -25,6 +28,7 @@ export function mountNorthstarPanel(panel, preview) {
   if (!panel || !isNorthstarWardrobeOn()) return false;
   const current = northstarSelectedOutfit(), tee = northstarSelectedTee(), teeOk = northstarTeeAllowed(current), shown = teeOk && tee ? tee : null;
   const pants = northstarSelectedPants(), pantsOk = northstarPantsAllowed(current, shown), shownPants = pantsOk && pants ? pants : null;
+  const shoe = northstarSelectedShoe(), shownShoe = shoe && northstarShoeAllowed(current, shown, shownPants, shoe) ? shoe : null;
   panel.textContent = "";
   const title = document.createElement("div");
   title.className = "panel-title";
@@ -59,7 +63,16 @@ export function mountNorthstarPanel(panel, preview) {
   const pantsList = row("northstar-pants-list");
   for (const [id, p] of Object.entries(NORTHSTAR_SOLID_PANTS)) button(pantsList, p.label, NORTHSTAR_PANTS_KEY, id, id === shownPants, !pantsOk);
   button(pantsList, "Outfittets egen underdel", NORTHSTAR_PANTS_KEY, null, pantsOk && !shownPants, !pantsOk);
-  const what = () => { const parts = [shown ? NORTHSTAR_PRINT_TEES[shown].label : null, shownPants ? NORTHSTAR_SOLID_PANTS[shownPants].label : null].filter(Boolean);
+  const shoesTitle = document.createElement("div");
+  shoesTitle.className = "northstar-subtitle";
+  shoesTitle.textContent = "Sko";
+  const shoesList = row("northstar-shoes-list"), shoeNote = document.createElement("p");
+  shoeNote.className = "northstar-note";
+  const blocked = [];
+  for (const [id, sh] of Object.entries(NORTHSTAR_SV1_SHOES)) { const ok = northstarShoeAllowed(current, shown, shownPants, id); button(shoesList, sh.label, NORTHSTAR_SHOES_KEY, id, id === shownShoe, !ok); if (!ok) blocked.push(sh.label); }
+  button(shoesList, "Outfittets egne sko", NORTHSTAR_SHOES_KEY, null, !!current && !shownShoe, !current);
+  shoeNote.textContent = blocked.length ? blocked.join(", ") + ": ikke mulig her. " + shoeReason(current, shown, shownPants) : "";
+  const what = () => { const parts = [shown ? NORTHSTAR_PRINT_TEES[shown].label : null, shownPants ? NORTHSTAR_SOLID_PANTS[shownPants].label : null, shownShoe ? NORTHSTAR_SV1_SHOES[shownShoe].label : null].filter(Boolean);
     return current ? current + (parts.length ? " med " + parts.join(" og ") : "") : ""; };
   const describe = () => {
     const path = preview && preview.dataset ? preview.dataset.avatarRenderPath : null;
@@ -75,7 +88,20 @@ export function mountNorthstarPanel(panel, preview) {
   panel.appendChild(tees);
   panel.appendChild(pantsTitle);
   panel.appendChild(pantsList);
+  panel.appendChild(shoesTitle);
+  panel.appendChild(shoesList);
+  panel.appendChild(shoeNote);
   panel.appendChild(status);
   panel.hidden = false;
   return true;
+}
+
+// Why an SV1-V5 shoe cannot be chosen for this outfit (the owner approved 21 concrete combinations: the cream tee without a print over
+// the skirt, shorts, capri or long trousers; charcoal not with long trousers).
+function shoeReason(key, tee, pants) {
+  const o = northstarOutfitFor(key, tee, pants);
+  if (!o) return "Vælg først et outfit.";
+  if (o.top !== NORTHSTAR_PRINT_TEE_BASE) return "Skoene er kun godkendt med den cremefarvede T-shirt uden tryk (K01–K09).";
+  if (/trousers/.test(o.bottom)) return "Koks er ikke godkendt med lange bukser.";
+  return "Kombinationen er ikke godkendt.";
 }

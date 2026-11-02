@@ -1,9 +1,9 @@
 // D-305 — the owner's approval of 21 concrete SV1-V5 combinations (sv1-v5-owner-approval-v1.json) and the private runtime preparation:
 // exactly D-304's recommended set, each tied to its locked layer; charcoal with the three long trousers not approved; nothing published
-// or integrated (no file in assets/avatar-northstar/, no item in the runtime table). No private file is read.
+// or integrated by D-305 itself; D-308 then published exactly the staged files under the owner's permission. No private file is read.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,10 +29,13 @@ test("D-305 the history and the limits are kept", () => {
   assert.match(M.status, /NOT APPROVED/, "D-304's package record is history, unchanged");
 });
 
-test("D-305 nothing is published or integrated: no staged file in assets/, no item in the runtime, the flag false", () => {
-  for (const item of Object.values(P.RUNTIME_ITEMS)) { assert.ok(!Object.prototype.hasOwnProperty.call(AL.NORTHSTAR_ITEMS, item), item + " is in the runtime table");
-    for (const f of [item + "-shoes-v1.webp", "hide-" + item + "-v1.webp"]) assert.ok(!existsSync(join(ROOT, "assets", "avatar-northstar", f)), f + " is published"); }
-  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
-  assert.deepEqual(Object.keys(P.RUNTIME_ITEMS), Object.keys(M.candidates));
-  assert.deepEqual({ ...P.RUNTIME_ITEM_SHAPE, layers: [...P.RUNTIME_ITEM_SHAPE.layers], shadows: [...P.RUNTIME_ITEM_SHAPE.shadows] }, { ...AL.NORTHSTAR_ITEMS["shoes-sneakers-beige"], shadowsOf: "shoes-sneakers-beige" });
+test("D-305 published by D-308 exactly as staged: the 8 files with D-305's hashes, the item shape, the 21 combinations; the flag false", () => {
+  const FILES = { "shoes-sneakers-low-sv1-chalk-shoes-v1.webp": ["917921f24e8b8093f24d2266bf3116ed7ce2c992b213acbc63b95c9bd2637cc7", 33100], "shoes-sneakers-low-sv1-charcoal-shoes-v1.webp": ["7f75aa7eb25d4e79b6b045f271f7c3cf3d200f81a081b159ad564d062a2eee33", 23364],
+    "shoes-sneakers-low-sv1-navywhite-shoes-v1.webp": ["15a7e348694be940807b1cca97057ac5d95ec7c24ed81b493ec4b397798ae553", 32542], "shoes-sneakers-low-sv1-burgundygum-shoes-v1.webp": ["1363624ae8cc838e91c004495336726627558be9b7d3aef038739503df295b4f", 33766],
+    ...Object.fromEntries(["chalk", "charcoal", "navywhite", "burgundygum"].map((c) => ["hide-shoes-sneakers-low-sv1-" + c + "-v1.webp", ["89dca922cc815e4e8774b419a451dfb7bd3370daa2351aca07dcdb176474ac64", 634]])) };
+  const doc = readFileSync(join(ROOT, "docs", "decisions", "D-305.md"), "utf8");
+  for (const [f, [h, n]] of Object.entries(FILES)) { const b = readFileSync(join(ROOT, "assets", "avatar-northstar", f)); assert.deepEqual([sha(b), b.length], [h, n], f); assert.ok(doc.includes(h), f + ": the hash D-305 listed"); }
+  for (const [id, item] of Object.entries(P.RUNTIME_ITEMS)) { assert.equal(AL.NORTHSTAR_SV1_SHOES[id].item, item); assert.deepEqual({ ...AL.NORTHSTAR_ITEMS[item], layers: [...AL.NORTHSTAR_ITEMS[item].layers], shadows: [...AL.NORTHSTAR_ITEMS[item].shadows] }, { ...P.RUNTIME_ITEM_SHAPE, layers: [...P.RUNTIME_ITEM_SHAPE.layers], shadows: [...P.RUNTIME_ITEM_SHAPE.shadows] }); }
+  assert.deepEqual([...AL.NORTHSTAR_SV1_SHOE_COMBOS].sort(), A.combinations.map((c) => c.top + "+" + c.bottom + "+" + P.RUNTIME_ITEMS[c.candidate]).sort());
+  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false); assert.deepEqual(Object.keys(P.RUNTIME_ITEMS), Object.keys(M.candidates));
 });

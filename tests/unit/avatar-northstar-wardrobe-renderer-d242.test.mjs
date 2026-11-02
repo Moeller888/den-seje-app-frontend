@@ -91,7 +91,7 @@ function webpInfo(b) {   // RIFF/WEBP with a single lossless VP8L chunk: 14-bit 
   const v = b.readUInt32LE(21); return { chunk, w: (v & 0x3fff) + 1, h: ((v >> 14) & 0x3fff) + 1, alpha: (v >> 28) & 1 };
 }
 
-test("D-242 runtime assets: at most 41 authorised files (plus exactly D-274's 32 published tee layers and D-281's 2 trousers layers), every one in the manifest with purpose, origin and its sha256; lossless WebP 1024×1536", () => {
+test("D-242 runtime assets: at most 41 authorised files (plus exactly D-274's 32 published tee layers, D-281's 2 trousers layers and D-305's 8 shoe files), every one in the manifest with purpose, origin and its sha256; lossless WebP 1024×1536", () => {
   const all = readdirSync(DIR).filter((f) => f !== "manifest.json").sort();
   assert.deepEqual(all, MAN.files.map((f) => f.file).sort(), "the directory holds exactly the manifest's files");
   // D-274's publication permission covers exactly its own 32 tee layers; D-242's exception keeps its own limit
@@ -100,8 +100,11 @@ test("D-242 runtime assets: at most 41 authorised files (plus exactly D-274's 32
   // D-281's publication permission covers exactly its own 2 trousers layers
   const d281 = MAN.files.filter((f) => f.origin && f.origin.decision === "D-281").map((f) => f.file).sort(), ext281 = MAN.extensions.find((e) => e.decision === "D-281");
   assert.deepEqual(d281, [...ext281.files].sort()); assert.deepEqual(d281, ["bottom-trousers-square-navy-pants-v1.webp", "bottom-trousers-square-sand-pants-v1.webp"]);
-  const onDisk = all.filter((f) => !d274.includes(f) && !d281.includes(f));
-  assert.ok(onDisk.length <= 41); assert.equal(MAN.decision, "D-242"); assert.deepEqual([MAN.counts.d242Files, MAN.counts.d274Files, MAN.counts.d281Files], [onDisk.length, 32, 2]);
+  // D-305's publication permission (D-308) covers exactly its own 4 shoe layers and 4 covering masks
+  const d305 = MAN.files.filter((f) => f.origin && f.origin.decision === "D-305").map((f) => f.file).sort(), ext305 = MAN.extensions.find((e) => e.decision === "D-305");
+  assert.deepEqual(d305, [...ext305.files].sort()); assert.equal(d305.length, 8); assert.ok(d305.every((f) => /^(hide-)?shoes-sneakers-low-sv1-(chalk|charcoal|navywhite|burgundygum)(-shoes)?-v1.webp$/.test(f)));
+  const onDisk = all.filter((f) => !d274.includes(f) && !d281.includes(f) && !d305.includes(f));
+  assert.ok(onDisk.length <= 41); assert.equal(MAN.decision, "D-242"); assert.deepEqual([MAN.counts.d242Files, MAN.counts.d274Files, MAN.counts.d281Files, MAN.counts.d305Files], [onDisk.length, 32, 2, 8]);
   const kinds = { figure: onDisk.filter((f) => f.startsWith("figure-")), hide: onDisk.filter((f) => f.startsWith("hide-")), shadow: onDisk.filter((f) => f.includes("-shadow-")) };
   kinds.item = onDisk.filter((f) => !kinds.figure.includes(f) && !kinds.hide.includes(f) && !kinds.shadow.includes(f));
   assert.deepEqual(kinds.figure, ["figure-arms-v1.webp", "figure-body-v1.webp", "figure-head-v1.webp"]); assert.equal(kinds.hide.length, 4);
@@ -112,14 +115,16 @@ test("D-242 runtime assets: at most 41 authorised files (plus exactly D-274's 32
   for (const f of all) assert.ok(!/(^|[^a-z])h1([^a-z]|$)|d202|raw|reference|review|base-figure/i.test(f), "not C, H1, a raw generation, a reference sheet or a review file: " + f);
 });
 
-test("D-242 manifest ↔ module: every plan file exists, every file is used; the 19 outfits match; all 19 (and D-275's 144 print-tee outfits and D-283's 110 trousers outfits) equal the pipeline byte for byte", () => {
+test("D-242 manifest ↔ module: every plan file exists, every file is used; the 19 outfits match; all 19 (and D-275's 144 print-tee outfits and D-283's 110 trousers outfits, D-308's 18 shoe outfits) equal the pipeline byte for byte", () => {
   const used = new Set(), files = new Set(MAN.files.map((f) => f.file));
   const plans = [...Object.keys(L.NORTHSTAR_OUTFITS).map((k) => [k, L.northstarCanvasPlan(k)]),
     ...Object.keys(L.NORTHSTAR_PRINT_TEES).flatMap((t) => Object.keys(L.NORTHSTAR_OUTFITS).filter((k) => L.northstarTeeAllowed(k)).map((k) => [k + "+" + t, L.northstarPlanFor(L.northstarOutfitFor(k, t))])),
-    ...Object.keys(L.NORTHSTAR_SOLID_PANTS).flatMap((p) => Object.keys(L.NORTHSTAR_OUTFITS).map((k) => [k + "+" + p, L.northstarPlanFor(L.northstarOutfitFor(k, null, p))]))];
+    ...Object.keys(L.NORTHSTAR_SOLID_PANTS).flatMap((p) => Object.keys(L.NORTHSTAR_OUTFITS).map((k) => [k + "+" + p, L.northstarPlanFor(L.northstarOutfitFor(k, null, p))])),
+    ...Object.keys(L.NORTHSTAR_SV1_SHOES).flatMap((s) => [null, ...Object.keys(L.NORTHSTAR_SOLID_PANTS)].flatMap((p) => Object.keys(L.NORTHSTAR_OUTFITS).filter((k) => L.northstarShoeAllowed(k, null, p, s)).map((k) => [k + "+" + p + "+" + s, L.northstarPlanFor(L.northstarOutfitFor(k, null, p, s))])))];
   for (const [k, p] of plans) for (const s of p) for (const src of [s.src, s.cut].filter(Boolean)) { const f = src.split("/").pop(); assert.ok(files.has(f), k + ": " + f); used.add(f); }
   assert.deepEqual([...files].filter((f) => !used.has(f)), []);
   const eq = MAN.extensions.find((e) => e.decision === "D-274").equivalence; assert.deepEqual([eq.printOutfits, eq.outfitsDiffering], [144, 0]); assert.ok(eq.publishedFilesIdenticalToPipeline >= 32 + 9);
+  const eq305 = MAN.extensions.find((e) => e.decision === "D-305").equivalence; assert.deepEqual([eq305.reachableOutfits, eq305.outfitsDiffering, eq305.allReachableApproved, eq305.shoeShadowIsBeigeSneakers, eq305.approvedNotReachable.length], [18, 0, true, true, 3]);
   const eq281 = MAN.extensions.find((e) => e.decision === "D-281").equivalence; assert.deepEqual([eq281.reachableOutfits, eq281.outfitsDiffering, eq281.allReachableChecked, eq281.trousersShadowIsOlives], [110, 0, true, true]);
   assert.deepEqual(Object.fromEntries(Object.entries(MAN.outfits).map(([k, o]) => [k, { top: o.top, bottom: o.bottom, shoes: o.shoes }])), JSON.parse(JSON.stringify(L.NORTHSTAR_OUTFITS)));
   assert.deepEqual(MAN.knownFaulty, [...L.NORTHSTAR_KNOWN_FAULTY]);
