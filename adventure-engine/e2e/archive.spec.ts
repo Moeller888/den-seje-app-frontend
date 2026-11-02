@@ -37,10 +37,30 @@ async function useCabinet(page: Page): Promise<void> {
   await page.keyboard.press("Enter");
 }
 
+/** Phase 1 (D-310): two content cards, then the comprehension check, which shows one explanation for any choice. */
+async function passIntro(f: FrameLocator, choice = 0): Promise<void> {
+  await expect(f.locator("#lv-intro")).toBeVisible();
+  await expect(f.locator('#lv-intro [data-card="0"]')).toContainText("9. april 1940");
+  await f.locator("#lv-intro-next").click();
+  await expect(f.locator('#lv-intro [data-card="1"]')).toContainText("Hvem har lavet den?");
+  await f.locator("#lv-intro-next").click();
+  await expect(f.locator("#lv-intro-next")).toBeDisabled();
+  await f.locator(`#lv-intro [data-check="${choice}"]`).click();
+  await expect(f.locator("#lv-intro-explanation")).toContainText("Generalens egen ordre");
+  await f.locator("#lv-intro-next").click();
+  await expect(f.locator("#lv-intro")).toBeHidden();
+}
+
+/** Phase 2: open the descriptions of the first `n` sources. */
+async function investigate(f: FrameLocator, n = 2): Promise<void> {
+  for (let i = 0; i < n; i++) await f.locator(".lv-inspect").nth(i).click();
+}
+
 async function openTask(page: Page): Promise<FrameLocator> {
   const f = await startGame(page);
   await useCabinet(page);
   await confirmLine(page, "line.cabinet_locked");
+  await passIntro(f);
   await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "open");
   return f;
 }
@@ -57,31 +77,40 @@ test.describe("Arkivskabet — a meaningful action in the world, graded through 
   test("committed source choice → host grades → reward once → the cabinet opens", async ({ page }) => {
     const f = await openTask(page);
     await expect(f.locator("#lv-prompt")).toContainText("9. april 1940");
-    await expect(f.locator("#lv-mode")).toHaveText("Selvstændig opgave");
+    await expect(f.locator("#lv-mode")).toHaveText("Øvelse · hints tilladt");
     // Choosing is not answering: the commit button decides (commit point).
     await f.locator('.lv-card[data-option="kilde_b"]').click();
     await f.locator('.lv-card[data-option="kilde_a"]').click();
-    await expect(f.locator('.lv-card[aria-pressed="true"]')).toHaveCount(1);
+    await expect(f.locator('#lv-task .lv-card[aria-pressed="true"]')).toHaveCount(1);
+    // Phase 2: the choice cannot be committed before two sources are investigated.
+    await expect(f.locator("#lv-commit")).toBeDisabled();
+    await investigate(f);
+    await expect(f.locator("#lv-commit")).toBeEnabled();
     expect(await ledger(page)).toEqual({ xp: "0", coins: "0", graded: "0" });
     await f.locator("#lv-commit").click();
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "correct");
     await expect(f.locator("#lv-feedback-text")).toContainText("ro og orden");
-    await expect(f.locator("#lv-evidence")).toHaveAttribute("data-evidence", "evidence");
+    // Guided practice is never evidence (LPD §5.1 stage 2), even when right.
+    await expect(f.locator("#lv-evidence")).toHaveAttribute("data-evidence", "practice");
     await expect.poll(() => ledger(page)).toEqual({ xp: "10", coins: "5", graded: "1" });
     // The world reacts to the verdict.
     await f.locator("#lv-close").click();
     await confirmLine(page, "line.unlocked");
+    // D-310: the opened cabinet now leads on to the drawer's new application (phase 6) — still no new reward.
     await useCabinet(page);
-    await confirmLine(page, "line.cabinet_is_open");
+    await confirmLine(page, "line.drawer");
     expect(await ledger(page)).toEqual({ xp: "10", coins: "5", graded: "1" });
   });
 
   test("a wrong source is graded incorrect, pays nothing, shows the right answer, and the cabinet stays locked", async ({ page }) => {
     const f = await openTask(page);
+    await investigate(f);
     await f.locator('.lv-card[data-option="kilde_d"]').click();
     await f.locator("#lv-commit").click();
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "incorrect");
-    await expect(f.locator("#lv-correct")).toContainText("Proklamationen fra kongen og regeringen");
+    await expect(f.locator("#lv-correct")).toContainText("Proklamation, 9. april 1940");
+    // Phase 5: the explanation refutes THIS choice, not just "wrong".
+    await expect(f.locator("#lv-feedback-text")).toContainText("Det illegale blad er lavet fire år senere");
     await f.locator("#lv-close").click();
     await confirmLine(page, "line.still_locked");
     expect(await ledger(page)).toEqual({ xp: "0", coins: "0", graded: "1" });
@@ -90,7 +119,8 @@ test.describe("Arkivskabet — a meaningful action in the world, graded through 
   test("a hint comes from the host, and the same right answer then counts as practice", async ({ page }) => {
     const f = await openTask(page);
     await f.locator("#lv-hint").click();
-    await expect(f.locator('#lv-hints li[data-level="1"]')).toHaveText("Hvem bestemte, hvad befolkningen skulle gøre?");
+    await expect(f.locator('#lv-hints li[data-level="1"]')).toHaveText("Læs påstanden igen: hvis ønske handler den om?");
+    await investigate(f);
     await f.locator('.lv-card[data-option="kilde_a"]').click();
     await f.locator("#lv-commit").click();
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "correct");
@@ -100,6 +130,7 @@ test.describe("Arkivskabet — a meaningful action in the world, graded through 
   test("network failure: the game shows the abort, and 'send again' delivers the original answer once", async ({ page }) => {
     const f = await openTask(page);
     await page.locator("#inject-network").click();
+    await investigate(f);
     await f.locator('.lv-card[data-option="kilde_a"]').click();
     await f.locator("#lv-commit").click();
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "aborted", { timeout: 20_000 });
@@ -127,10 +158,65 @@ test.describe("Arkivskabet — a meaningful action in the world, graded through 
     await confirmLine(page, "line.intro");
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "open", { timeout: 30_000 });
     await expect(f.locator("#lv-prompt")).toHaveText(prompt ?? "");
+    await investigate(f);
     await f.locator('.lv-card[data-option="kilde_a"]').click();
     await f.locator("#lv-commit").click();
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "correct");
     await expect.poll(() => ledger(page)).toEqual({ xp: "10", coins: "5", graded: "1" });
+  });
+});
+
+test.describe("Arkivskabet — the learning sequence (D-310)", () => {
+  test("the introduction comes once: after a wrong first try the next use goes straight to the shelf", async ({ page }) => {
+    const f = await openTask(page);
+    await investigate(f);
+    await f.locator('.lv-card[data-option="kilde_c"]').click();
+    await f.locator("#lv-commit").click();
+    await expect(f.locator("#lv-feedback-text")).toContainText("Den tyske soldat");
+    await f.locator("#lv-close").click();
+    await confirmLine(page, "line.still_locked");
+    await useCabinet(page);
+    await confirmLine(page, "line.cabinet_locked");
+    await expect(f.locator("#lv-intro")).toBeHidden();
+    await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "open");
+  });
+
+  test("investigation shows who, when and to whom; the own reason comes back next to the explanation", async ({ page }) => {
+    const f = await openTask(page);
+    await expect(f.locator("#lv-material")).toBeVisible();
+    await expect(f.locator("#lv-guide")).toContainText("Undersøg mindst 2 kilder");
+    await f.locator('[data-inspect="kilde_b"]').click();
+    await expect(f.locator("#lv-detail-kilde_b")).toContainText("Hvornår: skrevet i 1985");
+    await expect(f.locator('[data-inspect="kilde_b"]')).toHaveAttribute("aria-expanded", "true");
+    await f.locator('[data-inspect="kilde_a"]').click();
+    await f.locator('.lv-card[data-option="kilde_a"]').click();
+    await f.locator('[data-reason="hvem"]').click();
+    await f.locator("#lv-commit").click();
+    await expect(f.locator("#lv-own-reason")).toContainText("hvem der lavede kilden");
+  });
+
+  test("phase 6: the drawer gives a NEW claim where the proclamation is wrong, without hints", async ({ page }) => {
+    const f = await openTask(page);
+    await investigate(f);
+    await f.locator('.lv-card[data-option="kilde_a"]').click();
+    await f.locator("#lv-commit").click();
+    await f.locator("#lv-close").click();
+    await confirmLine(page, "line.unlocked");
+    await useCabinet(page);
+    await confirmLine(page, "line.drawer");
+    await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "open");
+    await expect(f.locator("#lv-prompt")).toContainText("almindelige danskere");
+    await expect(f.locator("#lv-mode")).toHaveText("Selvstændig opgave · uden hints");
+    await expect(f.locator("#lv-hint")).toBeHidden();
+    await investigate(f);
+    // A pupil who only remembers "the proclamation" is refuted with the reason.
+    await f.locator('.lv-card[data-option="kilde_e"]').click();
+    await f.locator("#lv-commit").click();
+    await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "incorrect");
+    await expect(f.locator("#lv-feedback-text")).toContainText("påstanden er en anden nu");
+    await expect(f.locator("#lv-evidence")).toHaveAttribute("data-evidence", "evidence");
+    await f.locator("#lv-close").click();
+    await confirmLine(page, "line.drawer_wrong");
   });
 });
 

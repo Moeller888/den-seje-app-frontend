@@ -62,6 +62,11 @@ export type Action =
 export interface StimulusOption {
   readonly id: string;
   readonly label: string;
+  /**
+   * Optional description the pupil can inspect (e.g. a source's origin, date and addressee) — part of the
+   * stimulus, never a hint about correctness. D-310. Omitted when the backend has none.
+   */
+  readonly detail?: string;
 }
 
 /** Whitelisted stimulus: prompt and option ids/labels. Never an answer key. */
@@ -274,9 +279,11 @@ function parseStimulus(v: unknown, where: string): Stimulus {
   const prompt = str(s.prompt, `${where}.prompt`, 1000);
   if (s.options === null) return { prompt, options: null };
   if (!Array.isArray(s.options) || s.options.length < 2 || s.options.length > MAX_OPTIONS) fail(`${where}.options: invalid list`);
-  const options = s.options.map((o, i) => {
-    const r = obj(o, `${where}.options[${i}]`, ["id", "label"]);
-    return { id: id(r.id, `${where}.options[${i}].id`), label: str(r.label, `${where}.options[${i}].label`, 300) };
+  const options = s.options.map((o, i): StimulusOption => {
+    const keys = isPlain(o) && Object.prototype.hasOwnProperty.call(o, "detail") ? ["id", "label", "detail"] : ["id", "label"];
+    const r = obj(o, `${where}.options[${i}]`, keys);
+    const base = { id: id(r.id, `${where}.options[${i}].id`), label: str(r.label, `${where}.options[${i}].label`, 300) };
+    return keys.length === 3 ? { ...base, detail: str(r.detail, `${where}.options[${i}].detail`, 400) } : base;
   });
   if (new Set(options.map((o) => o.id)).size !== options.length) fail(`${where}.options: duplicate id`);
   return { prompt, options };

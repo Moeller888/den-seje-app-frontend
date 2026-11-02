@@ -5,7 +5,8 @@ import { loadContent } from "@adventure-engine/content";
 import { Engine } from "@adventure-engine/core";
 import { HeadlessAdapter } from "@adventure-engine/scenario-runner";
 import { describe, expect, it } from "vitest";
-import { CONTEXT_KEY, RESULT_ACTION, TASK_REQUEST_GLOBAL, archiveContent } from "../src/content.ts";
+import { CONTEXT_KEY, DRAWER_KEY, DRAWER_RESULT_ACTION, RESULT_ACTION, TASK_REQUEST_GLOBAL, archiveContent } from "../src/content.ts";
+import { INTRO_CARDS, INTRO_CHECK, wordCount } from "../src/intro-content.ts";
 
 /** Headless run of the Arkivskabet scene (D-307): speech is confirmed, time runs until the world is idle. */
 function world() {
@@ -41,15 +42,39 @@ describe("Arkivskabet scene (D-307) — headless", () => {
     expect(engine.globals.get(TASK_REQUEST_GLOBAL)).toBe(CONTEXT_KEY);
   });
 
-  it("the server's 'correct' opens the cabinet; afterwards using it asks for no task", () => {
+  it("the server's 'correct' opens the cabinet; the drawer then asks for a NEW application task (phase 6)", () => {
     const { engine, settle } = world();
     engine.event("cabinet", RESULT_ACTION, { $outcome: "correct" });
     expect(settle()).toEqual(["line.unlocked"]);
     expect(engine.world.objects.get("cabinet")?.variant).toBe("open");
     expect(engine.globals.get("cabinet_open")).toBe(true);
     engine.event("cabinet", "interact");
+    expect(settle()).toEqual(["line.drawer"]);
+    expect(engine.globals.get(TASK_REQUEST_GLOBAL)).toBe(DRAWER_KEY);
+  });
+
+  it("the drawer's verdict: 'incorrect' keeps it open for another try, 'correct' closes the sequence", () => {
+    const { engine, settle } = world();
+    engine.event("cabinet", RESULT_ACTION, { $outcome: "correct" });
+    settle();
+    engine.event("cabinet", DRAWER_RESULT_ACTION, { $outcome: "incorrect" });
+    expect(settle()).toEqual(["line.drawer_wrong"]);
+    expect(engine.globals.get("transfer_done")).toBe(false);
+    engine.event("cabinet", DRAWER_RESULT_ACTION, { $outcome: "correct" });
+    expect(settle()).toEqual(["line.drawer_done"]);
+    expect(engine.globals.get("transfer_done")).toBe(true);
+    engine.setGlobal(TASK_REQUEST_GLOBAL, "");
+    engine.event("cabinet", "interact");
     expect(settle()).toEqual(["line.cabinet_is_open"]);
     expect(engine.globals.get(TASK_REQUEST_GLOBAL)).toBe("");
+  });
+
+  it("the drawer's verdict does not touch the cabinet, and the cabinet's does not touch the drawer", () => {
+    const { engine, settle } = world();
+    engine.event("cabinet", DRAWER_RESULT_ACTION, { $outcome: "correct" });
+    settle();
+    expect(engine.globals.get("cabinet_open")).toBe(false);
+    expect(engine.world.objects.get("cabinet")?.variant).toBe("default");
   });
 
   it("'incorrect' and 'aborted' leave the cabinet locked, each with its own line", () => {
@@ -64,9 +89,27 @@ describe("Arkivskabet scene (D-307) — headless", () => {
 
   it("the game's world state has no learning field (mastery, XP and evidence live on the server)", () => {
     const keys = Object.keys(archiveContent.game.globals ?? {});
-    expect(keys.sort()).toEqual(["cabinet_open", TASK_REQUEST_GLOBAL].sort());
+    expect(keys.sort()).toEqual(["cabinet_open", "intro_seen", TASK_REQUEST_GLOBAL, "transfer_done"].sort());
     // No answer key (option ids live on the host) and no learning or reward field anywhere in the content.
     expect(JSON.stringify(archiveContent)).not.toMatch(/kilde_|"xp"|"coins"|mastery|evidence|correct_?answer|hints_?used/i);
+  });
+});
+
+describe("Arkivskabet — introduction (D-310, LPD §5.1 stage 1)", () => {
+  it("each content card has at most 80 words, and there are 1–3 of them", () => {
+    expect(INTRO_CARDS.length).toBeGreaterThanOrEqual(1);
+    expect(INTRO_CARDS.length).toBeLessThanOrEqual(3);
+    for (const c of INTRO_CARDS) expect(wordCount(c.text), c.title).toBeLessThanOrEqual(80);
+  });
+
+  it("the comprehension check judges nothing: one explanation for every choice, no right/wrong words", () => {
+    expect(INTRO_CHECK.options).toHaveLength(2);
+    expect(INTRO_CHECK.explanation).not.toMatch(/(rigtigt|forkert|korrekt)/i);
+  });
+
+  it("the introduction teaches the method the tasks use: who, when, to whom", () => {
+    const text = INTRO_CARDS.map((c) => c.text).join(" ");
+    for (const q of ["Hvem har lavet den?", "Hvornår?", "Til hvem?"]) expect(text).toContain(q);
   });
 });
 

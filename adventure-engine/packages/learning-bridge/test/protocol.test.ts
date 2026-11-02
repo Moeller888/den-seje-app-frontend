@@ -63,4 +63,12 @@ describe("bridge/2 protocol — the game validates host messages strictly too", 
     expect(helloProtocols({ type: "task.request" })).toBeNull();
     expect(helloProtocols(null)).toBeNull();
   });
+
+  it("an option may carry a 'detail' description (D-310), but nothing else", () => {
+    const withDetail = { ...present, stimulus: { prompt: "x", options: [{ id: "a", label: "A", detail: "Hvem: kongen. Hvornår: 1940." }, { id: "b", label: "B" }] } };
+    expect(parseHostMessage(withDetail).ok).toBe(true);
+    expect(parseHostMessage({ ...present, stimulus: { prompt: "x", options: [{ id: "a", label: "A", detail: 5 }, { id: "b", label: "B" }] } }).ok).toBe(false);
+    expect(parseHostMessage({ ...present, stimulus: { prompt: "x", options: [{ id: "a", label: "A", detail: "x".repeat(401) }, { id: "b", label: "B" }] } }).ok).toBe(false);
+    expect(parseHostMessage({ ...present, stimulus: { prompt: "x", options: [{ id: "a", label: "A", detail: "d", correct: true }, { id: "b", label: "B" }] } }).ok).toBe(false);
+  });
 });

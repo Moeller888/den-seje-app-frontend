@@ -22,3 +22,18 @@
 .lv-hints { margin: 10px 0 0; padding-left: 20px; }
 .lv-status { min-height: 1.4em; margin: 10px 0 0; font-weight: 600; }
 .lv-feedback p { margin: 6px 0; }
+/* D-310: source investigation, self-explanation and the introduction. */
+.lv-source { display: flex; flex-direction: column; gap: 6px; }
+.lv-source .lv-card { width: 100%; }
+.lv-sheet button.lv-inspect { align-self: flex-start; padding: 4px 10px; font-size: 14px; }
+.lv-detail { margin: 0; padding: 8px 10px; border-left: 4px solid #b9a77c; background: #fbf5e6; font-size: 15px; }
+.lv-detail[hidden] { display: none; }
+.lv-guide { margin: 0 0 10px; font-style: italic; }
+.lv-guide:empty { display: none; }
+.lv-reasons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.lv-reasons[hidden] { display: none; }
+.lv-reasons .lv-card-title { width: 100%; margin: 0; }
+.lv-sheet button.lv-reason[aria-pressed="true"] { border-color: #2f4f7a; outline: 2px solid #2f4f7a; }
+.lv-card-title { margin: 10px 0 4px; font-size: 16px; }
+.lv-note { margin: 12px 0 0; font-size: 13px; color: #5a4f3a; }
+.lv-note[hidden] { display: none; }
