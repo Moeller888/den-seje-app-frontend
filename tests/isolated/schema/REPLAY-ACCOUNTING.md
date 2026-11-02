@@ -134,6 +134,17 @@ Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i p
 Ejerbeslutning 2026-10-28 (mulighed B): den isolerede CI tester repositoryets kode mod det skema,
 koden selv erklærer. Den skal ikke kopiere produktionens historiske afvigelser.
 
+- **`20261102100000_release_open_rounds_on_inactive_questions` (D-316)** anvendes, selv om den ikke er
+  anvendt i produktionen.
+  - Repositoryets regressionstest `tests/isolated/open-round-inactive-question.isolated.spec.mjs`
+    kræver den. Testen viser gennem get-next-question, at en åben runde på et spørgsmål, der er
+    deaktiveret efter udlevering, ikke længere blokerer eleven.
+  - **Afvigelse fra produktionen:** den isolerede database frigiver en åben runde på et inaktivt
+    spørgsmål, som produktionen endnu ikke gør. Produktionen kører stadig den gamle krop, md5
+    `7b7693b3…` (katalog, 2026-11-02).
+  - Afvigelsen forsvinder, når D-316 er anvendt og verificeret. Så flyttes filen til
+    `APPLIED_IN_PRODUCTION`.
+
 - **`20260808010000_password_help_reserve_rpc`** anvendes med den rigtige migrationsfil, ikke en stub.
   - Repositoryets `request-password-help` afhænger af RPC'en `public.reserve_password_help`. Den
     bruges til cooldown, dagligt loft og reservation, før der må sendes mail. Uden RPC'en skrives

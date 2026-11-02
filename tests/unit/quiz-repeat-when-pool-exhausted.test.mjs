@@ -412,12 +412,19 @@ test("the reviewed spelling migration is the only later definition of the repeat
   // answer and the key). Its runtime suite (grading-meaningful-characters-migration-run) proves the
   // body is D-280's byte for byte outside those lines — rewards, repeat award, reopen, lock and CAS
   // included — and that first and repeat answers pay exactly as before.
+  // D-316 redefines release_open_question_outside with ONE added condition in both statements: the
+  // caller's open round is also released when its question is inactive. The two paths stay this
+  // migration's: a round-1 instance is deleted; a reopened repeat is CLOSED with repeat_count kept, so it
+  // can never be served again as a first attempt with the full award. It writes no reward. Its runtime
+  // suites (release-open-rounds-inactive-migration-run, -pg) prove both paths, the untouched rows and the
+  // rollback to this migration's exact body (md5 7b7693b3…).
   assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
     ["20261018143726_fix_danish_question_bank_text.sql",
      "20261027120000_repeat_answer_coin_reward.sql",
      "20261031194600_mc_length_cue_answer_paths.sql",
      "20261031194700_mc_length_cue_top10.sql",
-     "20261101150000_grading_meaningful_characters.sql"]);
+     "20261101150000_grading_meaningful_characters.sql",
+     "20261102100000_release_open_rounds_on_inactive_questions.sql"]);
 });
 
 test("the migration version is not shared with any other migration", () => {
