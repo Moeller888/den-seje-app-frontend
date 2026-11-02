@@ -1,0 +1,1887 @@
+{
+  "approval": "sv1-shoe-tee-owner-approval-v1",
+  "date": "2026-11-02",
+  "ownerWords": "Registrér ejerens godkendelse af alle 305 anbefalede kombinationer fra D-312, og aktivér dem i Northstar-opt-in. Godkendelsen gælder præcis kandidatlisten i sv1-shoe-tee-candidates-v1.json. Sammen med de tidligere 21 giver det 326 godkendte kombinationer. De 37 tilbageholdte kombinationer med koks og lange bukser er ikke omfattet.",
+  "scope": "exactly the 305 recommended IDs of the candidate file (the existing published layers, unchanged); together with sv1-v5-owner-approval-v1.json (21) the 326 combinations the opt-in may show; not shop, catalogue, ordinary pupil activation or a flag",
+  "candidates": {
+    "file": "tools/avatar/fixtures/northstar-wardrobe/shoe-source/sv1-shoe-tee-candidates-v1.json",
+    "sha256": "dbccc63179f07335fc37bc7f807b92420d70e2e76acb388255df29a486b5add1"
+  },
+  "previous": "tools/avatar/fixtures/northstar-wardrobe/shoe-source/sv1-v5-owner-approval-v1.json",
+  "combinations": [
+    {
+      "id": "SV1-V5-BURGUNDYGUM--tee-blue--capri-lightblue",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--tee-blue--capri-lightblue",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--tee-blue--capri-lightblue",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--tee-blue--capri-lightblue",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--tee-blue--shorts-navy",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--tee-blue--shorts-navy",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--tee-blue--shorts-navy",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--tee-blue--shorts-navy",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--tee-blue--trousers-square-navy",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--tee-blue--trousers-square-navy",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--tee-blue--trousers-square-navy",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--tee-blue--trousers-square-olive",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-trousers-square-olive",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--tee-blue--trousers-square-olive",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-trousers-square-olive",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--tee-blue--trousers-square-olive",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-trousers-square-olive",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--tee-blue--trousers-square-sand",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--tee-blue--trousers-square-sand",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--tee-blue--trousers-square-sand",
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-CRM--shorts-navy",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-CRM--shorts-navy",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-CRM--shorts-navy",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-CRM--shorts-navy",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-CRM--skirt-sand",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-CRM--skirt-sand",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-CRM--skirt-sand",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-CRM--skirt-sand",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-CRM--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-CRM--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-CRM--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-CRM--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-CRM--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-CRM--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-FOR--shorts-navy",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-FOR--shorts-navy",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-FOR--shorts-navy",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-FOR--shorts-navy",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-FOR--skirt-sand",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-FOR--skirt-sand",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-FOR--skirt-sand",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-FOR--skirt-sand",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-FOR--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-FOR--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-FOR--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-FOR--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-FOR--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-FOR--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-forest",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-HTH--shorts-navy",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-HTH--shorts-navy",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-HTH--shorts-navy",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-HTH--shorts-navy",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-HTH--skirt-sand",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-HTH--skirt-sand",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-HTH--skirt-sand",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-HTH--skirt-sand",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-HTH--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-HTH--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-HTH--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-HTH--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-HTH--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-HTH--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-NAV--shorts-navy",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-NAV--shorts-navy",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-NAV--shorts-navy",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-NAV--shorts-navy",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-NAV--skirt-sand",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-NAV--skirt-sand",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-FOX-NAV--skirt-sand",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-NAV--skirt-sand",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-NAV--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-NAV--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-NAV--trousers-square-navy",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-FOX-NAV--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-FOX-NAV--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-FOX-NAV--trousers-square-sand",
+      "top": "top-tee-hip-print-fox-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-COR--capri-lightblue",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-COR--capri-lightblue",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-COR--capri-lightblue",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-COR--capri-lightblue",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-COR--shorts-navy",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-COR--shorts-navy",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-COR--shorts-navy",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-COR--shorts-navy",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-COR--skirt-sand",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-COR--skirt-sand",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-COR--skirt-sand",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-COR--skirt-sand",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-COR--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-COR--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-COR--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-COR--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-COR--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-COR--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-coral",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-CRM--shorts-navy",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-CRM--shorts-navy",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-CRM--shorts-navy",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-CRM--shorts-navy",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-CRM--skirt-sand",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-CRM--skirt-sand",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-CRM--skirt-sand",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-CRM--skirt-sand",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-CRM--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-CRM--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-CRM--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-CRM--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-CRM--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-CRM--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-FOR--shorts-navy",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-FOR--shorts-navy",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-FOR--shorts-navy",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-FOR--shorts-navy",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-FOR--skirt-sand",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-FOR--skirt-sand",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-FOR--skirt-sand",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-FOR--skirt-sand",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-FOR--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-FOR--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-FOR--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-FOR--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-FOR--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-FOR--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-forest",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-HTH--shorts-navy",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-HTH--shorts-navy",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-HTH--shorts-navy",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-HTH--shorts-navy",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-HTH--skirt-sand",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-HTH--skirt-sand",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-HTH--skirt-sand",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-HTH--skirt-sand",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-HTH--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-HTH--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-HTH--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-HTH--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-HTH--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-HTH--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-MUS--capri-lightblue",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-MUS--capri-lightblue",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-MUS--capri-lightblue",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-MUS--capri-lightblue",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-MUS--shorts-navy",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-MUS--shorts-navy",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-MUS--shorts-navy",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-MUS--shorts-navy",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-MUS--skirt-sand",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-MUS--skirt-sand",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-MUS--skirt-sand",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-MUS--skirt-sand",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-MUS--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-MUS--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-MUS--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-MUS--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-MUS--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-MUS--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-mustard",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-NAV--shorts-navy",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-NAV--shorts-navy",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-NAV--shorts-navy",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-NAV--shorts-navy",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-NAV--skirt-sand",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-NAV--skirt-sand",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-SHD-NAV--skirt-sand",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-NAV--skirt-sand",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-NAV--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-NAV--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-NAV--trousers-square-navy",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-SHD-NAV--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-SHD-NAV--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-SHD-NAV--trousers-square-sand",
+      "top": "top-tee-hip-print-shield-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-COR--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-COR--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-COR--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-COR--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-COR--shorts-navy",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-COR--shorts-navy",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-COR--shorts-navy",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-COR--shorts-navy",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-COR--skirt-sand",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-COR--skirt-sand",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-COR--skirt-sand",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-COR--skirt-sand",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-COR--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-COR--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-COR--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-COR--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-COR--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-COR--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-coral",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-CRM--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-CRM--shorts-navy",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-CRM--shorts-navy",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-CRM--shorts-navy",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-CRM--shorts-navy",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-CRM--skirt-sand",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-CRM--skirt-sand",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-CRM--skirt-sand",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-CRM--skirt-sand",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-CRM--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-CRM--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-CRM--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-CRM--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-CRM--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-CRM--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-cream",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-FOR--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-FOR--shorts-navy",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-FOR--shorts-navy",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-FOR--shorts-navy",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-FOR--shorts-navy",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-FOR--skirt-sand",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-FOR--skirt-sand",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-FOR--skirt-sand",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-FOR--skirt-sand",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-FOR--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-FOR--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-FOR--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-FOR--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-FOR--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-FOR--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-forest",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-HTH--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-HTH--shorts-navy",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-HTH--shorts-navy",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-HTH--shorts-navy",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-HTH--shorts-navy",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-HTH--skirt-sand",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-HTH--skirt-sand",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-HTH--skirt-sand",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-HTH--skirt-sand",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-HTH--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-HTH--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-HTH--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-HTH--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-HTH--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-HTH--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-MUS--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-MUS--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-MUS--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-MUS--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-MUS--shorts-navy",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-MUS--shorts-navy",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-MUS--shorts-navy",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-MUS--shorts-navy",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-MUS--skirt-sand",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-MUS--skirt-sand",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-MUS--skirt-sand",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-MUS--skirt-sand",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-MUS--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-MUS--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-MUS--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-MUS--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-MUS--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-MUS--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-mustard",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-NAV--capri-lightblue",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-NAV--shorts-navy",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-NAV--shorts-navy",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-NAV--shorts-navy",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-NAV--shorts-navy",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-shorts-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-NAV--skirt-sand",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-NAV--skirt-sand",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-CHARCOAL--TP-TEA-NAV--skirt-sand",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-CHARCOAL"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-NAV--skirt-sand",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-NAV--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-NAV--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-NAV--trousers-square-navy",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoe": "SV1-V5-NAVYWHITE"
+    },
+    {
+      "id": "SV1-V5-BURGUNDYGUM--TP-TEA-NAV--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-BURGUNDYGUM"
+    },
+    {
+      "id": "SV1-V5-CHALK--TP-TEA-NAV--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-CHALK"
+    },
+    {
+      "id": "SV1-V5-NAVYWHITE--TP-TEA-NAV--trousers-square-sand",
+      "top": "top-tee-hip-print-teapot-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoe": "SV1-V5-NAVYWHITE"
+    }
+  ],
+  "notApproved": [
+    "SV1-V5-CHARCOAL--tee-cream--trousers-square-navy",
+    "SV1-V5-CHARCOAL--tee-cream--trousers-square-sand",
+    "SV1-V5-CHARCOAL--tee-blue--trousers-square-navy",
+    "SV1-V5-CHARCOAL--tee-blue--trousers-square-olive",
+    "SV1-V5-CHARCOAL--tee-blue--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-FOX-CRM--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-FOX-CRM--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-FOX-FOR--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-FOX-FOR--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-FOX-HTH--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-FOX-HTH--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-FOX-NAV--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-FOX-NAV--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-SHD-COR--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-SHD-COR--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-SHD-CRM--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-SHD-CRM--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-SHD-FOR--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-SHD-FOR--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-SHD-HTH--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-SHD-HTH--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-SHD-MUS--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-SHD-MUS--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-SHD-NAV--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-SHD-NAV--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-TEA-COR--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-TEA-COR--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-TEA-CRM--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-TEA-CRM--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-TEA-FOR--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-TEA-FOR--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-TEA-HTH--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-TEA-HTH--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-TEA-MUS--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-TEA-MUS--trousers-square-sand",
+    "SV1-V5-CHARCOAL--TP-TEA-NAV--trousers-square-navy",
+    "SV1-V5-CHARCOAL--TP-TEA-NAV--trousers-square-sand"
+  ],
+  "limitations": [
+    "D-301: SV-1 is a REJECTED SOURCE by D-299's original rules (unchanged history)",
+    "master v5 is NOT independently validated",
+    "D-312's measurements and history unchanged"
+  ]
+}

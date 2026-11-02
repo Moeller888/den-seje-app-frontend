@@ -385,6 +385,15 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **326 SV1-V5 shoe combinations in the opt-in — D-314 (the owner approved D-312's 305 candidates; no asset changed; flag false).**
+  - **Runtime.** `NORTHSTAR_SV1_SHOE_COMBOS` = D-305's 21 + D-314's 305 (`sv1-shoe-tee-owner-approval-v1.json`): the cream, blue and 16 print tees. 323 reachable, all byte-identical to the approved renderings. Charcoal with long trousers (37) stays refused on every top, also after a reload or a change.
+  - **Panel.** Only two reasons remain: "Vælg først et outfit." and "Koks er ikke godkendt med lange bukser." See `docs/decisions/D-314.md`.
+- **SV1-V5 shoes × blue and print tees — D-312 (offline check; candidates NOT approved; runtime list unchanged at 21).**
+  - **Checked.** 342 new combinations the opt-in can already compose. 305 technical PASS, all byte-identical in the runtime with no missing assets. 37 FAIL, exactly charcoal × long trousers (COMBO-2, held out).
+  - **Recommendation.** Extend the approval list with the 305 candidates in `sv1-shoe-tee-candidates-v1.json` (blue tee 17, print tees 288). This needs the owner's approval before `NORTHSTAR_SV1_SHOE_COMBOS` changes. See `docs/decisions/D-312.md`.
+- **SV1-V5 shoes in the Northstar opt-in — D-308 (the 8 D-305 files published with exact hashes; a shoe choice is shown only on the 21 approved combinations; flag false).**
+  - **Runtime.** `NORTHSTAR_SV1_SHOES` (4 shoes) and `NORTHSTAR_SV1_SHOE_COMBOS` (the 21 combinations). `northstarShoeAllowed` judges the whole effective outfit after the print-tee and trousers choices. Anything else keeps the outfit's own shoes, and the stored choice stays untouched. 18 combinations are reachable; the 3 olive ones are not, and no outfit was added. The panel has a "Sko" row with a reason for every unavailable choice.
+  - **Verified.** On the published files the result is byte-identical to the 18 approved D-304 renderings. In Chromium, 27 baseline pages are identical to main and choice, reload, return, blocked state and asset fallback all pass. See `docs/decisions/D-308.md`.
 - **SV1-V5 shoes approved — D-305 (owner's visual approval of 21 concrete combinations; layers staged privately, NOT published or integrated; flag false; D-301/D-302 and v5's missing independent validation stand).**
   - **Approval.** `sv1-v5-owner-approval-v1.json` lists the 21 IDs: chalk, navy/white and burgundy/gum × six bottoms, and charcoal × skirt, shorts and capri. Charcoal × three long trousers is not approved.
   - **Staged.** 8 files (4 shoe layers and 4 covering masks; the shadow reuses `shoes-sneakers-beige`) are lossless. The browser's plan and compose are byte-identical to the 21 approved renderings.
