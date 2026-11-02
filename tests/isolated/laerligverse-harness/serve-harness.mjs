@@ -81,14 +81,24 @@ function handler(side) {
   };
 }
 
-export async function startHarness() {
-  const listen = (side, port) =>
+/**
+ * @param {{ host?: "harness" | "f3", mode?: "isolated-test" | "local-preview", supabaseUrl?: string, anonKey?: string }} [opts]
+ *   host "harness" (default): the D-315 test host page. host "f3" (D-321): the REAL Lærligverse host page
+ *   (laerligverse/host/) with its configuration and CSP rendered by tools/laerligverse/host-page.mjs.
+ */
+export async function startHarness(opts = {}) {
+  let hostHandlerFn = handler("host");
+  if (opts.host === "f3") {
+    const { renderHostPage, hostHandler } = await import("../../../tools/laerligverse/host-page.mjs");
+    hostHandlerFn = hostHandler(renderHostPage({ mode: opts.mode ?? "isolated-test", backend: "local-supabase", gameOrigin: GAME_ORIGIN, gameUrl: `${GAME_ORIGIN}/game.html`, supabaseUrl: opts.supabaseUrl, anonKey: opts.anonKey }));
+  }
+  const listen = (fn, port) =>
     new Promise((ok, fail) => {
-      const s = createServer(handler(side));
+      const s = createServer(fn);
       s.once("error", fail);
       s.listen(port, "127.0.0.1", () => ok(s));
     });
-  const host = await listen("host", HOST_PORT);
-  const game = await listen("game", GAME_PORT);
+  const host = await listen(hostHandlerFn, HOST_PORT);
+  const game = await listen(handler("game"), GAME_PORT);
   return { close: () => Promise.all([host, game].map((s) => new Promise((ok) => s.close(() => ok())))) };
 }

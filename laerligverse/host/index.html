@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="__LV_CSP__" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Lærligverse</title>
+    <link rel="stylesheet" href="./host.css" />
+    <!-- Filled in by the server that serves this page (tools/laerligverse/serve-local.mjs or the isolated
+         test harness). Unfilled placeholders make the page refuse to start: fail closed. -->
+    <script type="application/json" id="lv-config">__LV_CONFIG__</script>
+  </head>
+  <body data-state="booting">
+    <a class="skip" href="#lv-game-region">Gå til spillet</a>
+    <header class="lv-head">
+      <h1>Lærligverse</h1>
+      <p id="lv-mode" class="lv-mode-banner" hidden></p>
+    </header>
+    <main class="lv-main">
+      <section id="lv-login" class="lv-card" aria-labelledby="lv-login-title" hidden>
+        <h2 id="lv-login-title">Log ind (lokal testelev)</h2>
+        <p class="lv-note">Kun til lokal udvikling og den isolerede testdatabase. I Lærlig bruges din almindelige Lærlig-session.</p>
+        <form id="lv-login-form">
+          <label for="lv-email">E-mail</label>
+          <input id="lv-email" type="email" autocomplete="username" required />
+          <label for="lv-password">Adgangskode</label>
+          <input id="lv-password" type="password" autocomplete="current-password" required />
+          <button id="lv-login-submit" type="submit">Log ind</button>
+        </form>
+        <p id="lv-login-error" class="lv-error" role="alert" hidden></p>
+      </section>
+      <section id="lv-game-region" class="lv-game-region" aria-label="Lærligverse-spillet" hidden>
+        <iframe id="lv-game" title="Lærligverse: Arkivskabet" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin"></iframe>
+      </section>
+      <aside class="lv-card lv-status" aria-labelledby="lv-status-title">
+        <h2 id="lv-status-title">Status</h2>
+        <dl>
+          <dt>Session</dt><dd id="lv-session">ikke logget ind</dd>
+          <dt>Forbindelse til spillet</dt><dd id="lv-link">venter</dd>
+        </dl>
+        <p id="lv-live" class="lv-live" role="status" aria-live="polite"></p>
+        <button id="lv-logout" type="button" hidden>Log ud</button>
+      </aside>
+    </main>
+    <noscript>Lærligverse kræver JavaScript.</noscript>
+    <script type="module" src="./host-app.js"></script>
+  </body>
+</html>
