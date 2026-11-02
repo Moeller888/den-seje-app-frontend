@@ -385,6 +385,9 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **326 SV1-V5 shoe combinations in the opt-in — D-314 (the owner approved D-312's 305 candidates; no asset changed; flag false).**
+  - **Runtime.** `NORTHSTAR_SV1_SHOE_COMBOS` = D-305's 21 + D-314's 305 (`sv1-shoe-tee-owner-approval-v1.json`): the cream, blue and 16 print tees. 323 reachable, all byte-identical to the approved renderings. Charcoal with long trousers (37) stays refused on every top, also after a reload or a change.
+  - **Panel.** Only two reasons remain: "Vælg først et outfit." and "Koks er ikke godkendt med lange bukser." See `docs/decisions/D-314.md`.
 - **SV1-V5 shoes × blue and print tees — D-312 (offline check; candidates NOT approved; runtime list unchanged at 21).**
   - **Checked.** 342 new combinations the opt-in can already compose. 305 technical PASS, all byte-identical in the runtime with no missing assets. 37 FAIL, exactly charcoal × long trousers (COMBO-2, held out).
   - **Recommendation.** Extend the approval list with the 305 candidates in `sv1-shoe-tee-candidates-v1.json` (blue tee 17, print tees 288). This needs the owner's approval before `NORTHSTAR_SV1_SHOE_COMBOS` changes. See `docs/decisions/D-312.md`.

@@ -868,7 +868,8 @@ export const NORTHSTAR_SOLID_PANTS_CHECKED = Object.freeze({
 // D-305/D-308: the 4 owner-approved SV1-V5 shoes (D-305's approval file). Each is the low sneaker cut through shoe master v5, closed
 // footwear with its own covering mask, and the beige sneakers' own published skin shadow (shadowsOf). The owner approved 21 concrete
 // combinations, not the shoes in general: a shoe is shown ONLY where the whole effective outfit (after the print tee and the trousers)
-// is one of NORTHSTAR_SV1_SHOE_COMBOS; anywhere else the outfit keeps its own shoes.
+// is one of NORTHSTAR_SV1_SHOE_COMBOS; anywhere else the outfit keeps its own shoes. D-314: the owner approved D-312's 305 candidates
+// (sv1-shoe-tee-owner-approval-v1.json) — the blue tee and the 16 print tees — so the list holds 21 + 305 = 326.
 export const NORTHSTAR_SV1_SHOE_BASE = "shoes-sneakers-beige";
 const _SH = (colour, label) => Object.freeze({ item: "shoes-sneakers-low-sv1-" + colour, label });
 export const NORTHSTAR_SV1_SHOES = Object.freeze({
@@ -877,11 +878,22 @@ export const NORTHSTAR_SV1_SHOES = Object.freeze({
   "SV1-V5-NAVYWHITE": _SH("navywhite", "Lave sneakers · navy/hvid"),
   "SV1-V5-BURGUNDYGUM": _SH("burgundygum", "Lave sneakers · bordeaux/gummi"),
 });
-const _SC = (shoe, bottoms) => bottoms.map((b) => "top-tee-hip-cream+bottom-" + b + "+" + NORTHSTAR_SV1_SHOES[shoe].item);
+const _SC = (top, shoe, bottoms) => bottoms.map((b) => top + "+bottom-" + b + "+" + NORTHSTAR_SV1_SHOES[shoe].item);
 const _SIX = ["skirt-sand", "shorts-navy", "capri-lightblue", "trousers-square-olive", "trousers-square-navy", "trousers-square-sand"];
-// The 21 approved combinations (top+bottom+shoes), exactly sv1-v5-owner-approval-v1.json; charcoal with long trousers is not approved.
+const _LONG = ["trousers-square-olive", "trousers-square-navy", "trousers-square-sand"];
+// Per top, the bottoms each shoe is approved with: chalk, navy/white and burgundy/gum with every bottom the top was checked with;
+// charcoal never with long trousers (COMBO-2 at leg/shoe, held out — a separate owner decision).
+const _ST = (top, bottoms) => [
+  ..._SC(top, "SV1-V5-CHALK", bottoms), ..._SC(top, "SV1-V5-NAVYWHITE", bottoms), ..._SC(top, "SV1-V5-BURGUNDYGUM", bottoms),
+  ..._SC(top, "SV1-V5-CHARCOAL", bottoms.filter((b) => _LONG.indexOf(b) === -1)),
+];
+// The 326 approved combinations (top+bottom+shoes): D-305's 21 (cream tee, sv1-v5-owner-approval-v1.json) and D-314's 305 (blue tee
+// over shorts, capri and the three long trousers — the blue tee + skirt is a known fault; each print tee over skirt, shorts, capri and
+// the navy and sand trousers — sv1-shoe-tee-owner-approval-v1.json).
 export const NORTHSTAR_SV1_SHOE_COMBOS = Object.freeze([
-  ..._SC("SV1-V5-CHALK", _SIX), ..._SC("SV1-V5-NAVYWHITE", _SIX), ..._SC("SV1-V5-BURGUNDYGUM", _SIX), ..._SC("SV1-V5-CHARCOAL", _SIX.slice(0, 3)),
+  ..._ST("top-tee-hip-cream", _SIX),
+  ..._ST("top-tee-hip-blue", _SIX.filter((b) => b !== "skirt-sand")),
+  ...Object.values(NORTHSTAR_PRINT_TEES).flatMap((t) => _ST(t.item, ["skirt-sand", "shorts-navy", "capri-lightblue", "trousers-square-navy", "trousers-square-sand"])),
 ]);
 // The ten items: their layers and their skin-shadow parts (multiply; on C's body, on C's arms); then the print tees, the trousers and
 // the SV1-V5 shoes.

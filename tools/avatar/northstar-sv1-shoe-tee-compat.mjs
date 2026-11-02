@@ -31,13 +31,14 @@ const sha = (b) => createHash("sha256").update(b).digest("hex"), gc = () => { if
 export const HELD_OUT_BOTTOMS = Object.freeze(["bottom-trousers-square-olive", "bottom-trousers-square-navy", "bottom-trousers-square-sand"]);
 const topIdOf = (AL, top) => { const p = Object.entries(AL.NORTHSTAR_PRINT_TEES).find(([, t]) => t.item === top); return p ? p[0] : top.replace("top-", "").replace("-hip", ""); };
 
-/** The new composable combinations: [{ id, top, bottom, shoe, item, heldOut }] in a fixed order (top, bottom, shoe). */
-export function newCombinations(AL) {
+/** The new composable combinations: [{ id, top, bottom, shoe, item, heldOut }] in a fixed order (top, bottom, shoe), against an approved
+ *  list (default the runtime's; D-312's map was taken against D-305's 21, before D-314 approved its 305 candidates). */
+export function newCombinations(AL, approved = AL.NORTHSTAR_SV1_SHOE_COMBOS) {
   const seen = new Map();
   for (const k of Object.keys(AL.NORTHSTAR_OUTFITS)) for (const t of [null, ...Object.keys(AL.NORTHSTAR_PRINT_TEES)]) for (const p of [null, ...Object.keys(AL.NORTHSTAR_SOLID_PANTS)]) {
     const o = AL.northstarOutfitFor(k, t, p); if (!o) continue;
     for (const [s, sh] of Object.entries(AL.NORTHSTAR_SV1_SHOES)) { const key = o.top + "+" + o.bottom + "+" + sh.item;
-      if (AL.NORTHSTAR_SV1_SHOE_COMBOS.includes(key) || AL.NORTHSTAR_KNOWN_FAULTY.includes(o.top + "+" + o.bottom + "+" + o.shoes) || seen.has(key)) continue;
+      if (approved.includes(key) || AL.NORTHSTAR_KNOWN_FAULTY.includes(o.top + "+" + o.bottom + "+" + o.shoes) || seen.has(key)) continue;
       seen.set(key, { id: s + "--" + topIdOf(AL, o.top) + "--" + o.bottom.replace("bottom-", ""), top: o.top, bottom: o.bottom, shoe: s, item: sh.item, heldOut: s === "SV1-V5-CHARCOAL" && HELD_OUT_BOTTOMS.includes(o.bottom), reachableAs: [k, t, p].filter(Boolean).join("+") }); } }
   const order = (c) => [c.top.includes("print") ? 2 : c.top.includes("blue") ? 1 : 0, c.top, c.bottom, c.shoe].join("|");
   return [...seen.values()].sort((a, b) => (order(a) < order(b) ? -1 : 1));
