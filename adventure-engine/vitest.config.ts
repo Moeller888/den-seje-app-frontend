@@ -64,6 +64,10 @@ export default defineConfig({
         // Follow-up: the SVG allowlist is security code and fully covered.
         "packages/content-tools/src/svg.ts": FULL,
         "packages/content-tools/src/*.ts": { lines: 97, statements: 97, functions: 100, branches: 90 },
+        // D-306: the learning bridge is security code (sender checks, validation, idempotency).
+        "packages/learning-bridge/src/protocol.ts": { lines: 98, statements: 98, functions: 100, branches: 85 },
+        "packages/learning-bridge/src/host.ts": { lines: 95, statements: 95, functions: 100, branches: 85 },
+        "packages/learning-bridge/src/client.ts": { lines: 100, statements: 100, functions: 100, branches: 90 },
         // One defensive guard is unreachable while the membership invariant holds (docs/decisions/phase-2.md §11).
         "packages/core/src/navigator.ts": { ...FULL, branches: 99 },
       },

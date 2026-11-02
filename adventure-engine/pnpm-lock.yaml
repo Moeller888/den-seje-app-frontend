@@ -140,6 +140,8 @@ importers:
 
   packages/geometry: {}
 
+  packages/learning-bridge: {}
+
   packages/media:
     dependencies:
       '@adventure-engine/content':
