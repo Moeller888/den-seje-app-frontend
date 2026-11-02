@@ -385,6 +385,10 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **SV1-V5 shoes approved — D-305 (owner's visual approval of 21 concrete combinations; layers staged privately, NOT published or integrated; flag false; D-301/D-302 and v5's missing independent validation stand).**
+  - **Approval.** `sv1-v5-owner-approval-v1.json` lists the 21 IDs: chalk, navy/white and burgundy/gum × six bottoms, and charcoal × skirt, shorts and capri. Charcoal × three long trousers is not approved.
+  - **Staged.** 8 files (4 shoe layers and 4 covering masks; the shadow reuses `shoes-sneakers-beige`) are lossless. The browser's plan and compose are byte-identical to the 21 approved renderings.
+  - **Plan.** An explicit combination list in the opt-in, with fallback to the outfit's own shoes; 18 of the 21 are reachable. Publishing and integration need the owner's separate permission, worded in `docs/decisions/D-305.md`.
 - **SV-1 + v5 candidate package — D-304 (for the owner's visual review; NOT approved; 0 image calls; D-301 stands; v5 not validated).**
   - **Package.** `sv1-v5-candidates-v1.json` pins the source, processing, master v5, colours, covering, method files and each layer by sha256 for `SV1-V5-CHALK`, `-CHARCOAL`, `-NAVYWHITE` and `-BURGUNDYGUM`.
   - **Results.** 21/24 technical PASS. Charcoal × three long trousers stays COMBO-2 FAIL [KNOWN_D291], diagnosed as a false alarm: the top lace's own edge under the hem, a weakness visible only magnified. No real image fault was found.
