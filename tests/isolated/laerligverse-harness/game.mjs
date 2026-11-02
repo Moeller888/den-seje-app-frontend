@@ -44,7 +44,13 @@ const client = new BridgeClient({
   onStatus: (s) => (body.dataset.bridge = s),
   onReject: (reason) => (body.dataset.lastReject = reason),
 });
-window.addEventListener("message", (e) => client.onMessage({ origin: e.origin, source: e.source, data: e.data }));
+// Test evidence: everything the game ever receives, as text, so a test can prove no token reaches it.
+const received = [];
+window.__lvReceived = () => received.slice();
+window.addEventListener("message", (e) => {
+  try { received.push(JSON.stringify(e.data)); } catch { received.push("<unserialisable>"); }
+  client.onMessage({ origin: e.origin, source: e.source, data: e.data });
+});
 
 let current = null;
 let context = CONTEXT_KEY;

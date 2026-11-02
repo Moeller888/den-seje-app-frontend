@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BridgeError } from "../src/client.ts";
 import { MAX_MESSAGE_BYTES, PROTOCOL, parseGameMessage, type TaskResultMsg } from "../src/protocol.ts";
+import type { ServiceResult, ServiceTask, Submission, TaskQuery } from "../src/service.ts";
 import { FakeTaskService } from "../src/test-service.ts";
 import { GAME_ORIGIN, ITEMS, MemoryStore, flush, pair } from "./harness.ts";
 
@@ -225,6 +226,66 @@ describe("bridge/2 — sender, origin and payload checks", () => {
     await flush();
     await r;
     expect(JSON.stringify(p.toGame)).not.toContain("inst-");
+  });
+});
+
+describe("bridge/2 — a repeat is a NEW round of the same instance (D-211/D-266)", () => {
+  /** Serves the same server instance again in round 2, as get-next-question does after a repeat reopens it. */
+  class Reopening extends FakeTaskService {
+    readonly submits: Array<{ instanceId: string; roundNo: number; optionId: string }> = [];
+    private first: ServiceTask | null = null;
+    override async fetchTask(q: TaskQuery): Promise<ServiceTask> {
+      if (this.first === null) {
+        this.first = await super.fetchTask(q);
+        return this.first;
+      }
+      return { ...this.first, roundNo: this.first.roundNo + 1 };
+    }
+    override async submit(s: Submission): Promise<ServiceResult> {
+      this.submits.push({ instanceId: s.instanceId, roundNo: s.roundNo, optionId: s.action.kind === "choice" ? s.action.payload.optionId : "" });
+      if (s.roundNo > 1) return { outcome: "correct", feedbackText: "Gentagelse.", correctAnswer: null, evidence: "practice", replay: false };
+      return super.submit(s);
+    }
+  }
+
+  it("round 2 gets its own token and its own submission; round 1's stored verdict never answers for it", async () => {
+    const service = new Reopening(ITEMS);
+    const p = await connected({ service });
+    const first = p.client.requestTask(CHECK);
+    await flush();
+    const t1 = await first;
+    const a1 = p.client.act(t1.instanceToken, { kind: "choice", payload: { optionId: "opt_a" } });
+    await flush();
+    expect((await a1).outcome).toBe("correct");
+    const second = p.client.requestTask(CHECK);
+    await flush();
+    const t2 = await second;
+    expect(t2.instanceToken).not.toBe(t1.instanceToken);
+    const a2 = p.client.act(t2.instanceToken, { kind: "choice", payload: { optionId: "opt_a" } });
+    await flush();
+    expect((await a2).feedback.text).toBe("Gentagelse.");
+    expect(service.submits.map((s) => s.roundNo)).toEqual([1, 2]);
+    expect(new Set(service.submits.map((s) => s.instanceId)).size).toBe(1);
+  });
+
+  it("a pending submission stored for round 1 (or under the old instance-only key) is never resent as round 2's answer", async () => {
+    const store = new MemoryStore();
+    const service = new Reopening(ITEMS);
+    const p = await connected({ service, host: { store } });
+    const first = p.client.requestTask(CHECK);
+    await flush();
+    await first;
+    // Stale entries from round 1: a WRONG answer under the instance-only key and under round 1's key.
+    const stale = JSON.stringify({ submissionId: "old", roundNo: 1, action: { kind: "choice", payload: { optionId: "opt_b" } } });
+    store.map.set("lvb2:pending:inst-1", stale);
+    store.map.set("lvb2:pending:inst-1#1", stale);
+    const second = p.client.requestTask(CHECK);
+    await flush();
+    const t2 = await second;
+    const a2 = p.client.act(t2.instanceToken, { kind: "choice", payload: { optionId: "opt_a" } });
+    await flush();
+    await a2;
+    expect(service.submits).toEqual([{ instanceId: "inst-1", roundNo: 2, optionId: "opt_a" }]);
   });
 });
 

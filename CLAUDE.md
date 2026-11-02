@@ -435,3 +435,26 @@ WORKING TREE INTEGRITY
   kloner.
 - Enhver yderligere mutation kræver særskilt, eksplicit autorisation.
 - Er du i tvivl om, hvorvidt en handling er dækket: STOP og spørg.
+
+========================================
+PRODUCTION ACTIONS (D-313)
+========================================
+
+49. PRODUKTIONSTESTS ER PRODUKTIONSSKRIVNINGER
+
+- Et script eller en test, der logger ind i produktionen og kalder Edge Functions,
+  REST eller RPC'er, er en produktionsskrivning. Det gælder også, når hensigten er
+  "kun læsning", og når scriptet ligger i en fil, som guarden ikke inspicerer.
+- Det kræver ejerens GO til netop den kørsel. GO'et skal nævne projektet,
+  kontoen eller slottet (aldrig e-mail eller adgangskode), det højeste antal kald,
+  der skriver, og de forventede sideeffekter. "Kør smoke" uden disse oplysninger
+  er ikke nok.
+- Læs aldrig produktionens adgangsoplysninger fra et script, du selv har skrevet,
+  uden et sådant GO. Det gælder testlogins i `.env`, service-nøgler og tokens.
+- Før enhver handling i produktionen: læs de seneste filer i
+  `docs/operations/production-actions/` på en frisk `origin/main`. Det gælder
+  migrationer, deployments, flag, secrets og tests med skrivninger.
+- Efter handlingen: registrér den som én ny fil i samme mappe, med kun målte
+  fakta. Skriv aldrig hemmeligheder eller elevers identitet.
+- Blokerer Lærlig-guarden en handling: STOP og rapportér. Flyt aldrig koden
+  til en fil for at komme uden om den.
