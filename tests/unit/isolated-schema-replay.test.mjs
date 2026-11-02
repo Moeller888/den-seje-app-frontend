@@ -71,6 +71,11 @@ test("the replayed schema has production's key objects", async () => {
       has_function_privilege('anon', p.oid, 'EXECUTE') anon, has_function_privilege('authenticated', p.oid, 'EXECUTE') auth,
       has_function_privilege('service_role', p.oid, 'EXECUTE') svc
     FROM pg_proc p WHERE p.oid = 'public.grant_achievement_rewards(text[])'::regprocedure`);
+  // 20261102100000 (D-316, applied as remote 20261102123618 on 2026-11-02): release_open_question_outside
+  // also releases an open round on an inactive question, with the history guard — the body production
+  // reported after the application.
+  const rel = await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.release_open_question_outside(text[])'::regprocedure`);
+  assert.equal(rel.m, "b80c1c7857ecc90bdbd7b6175b65c78f");
   assert.notEqual(gar.m, "63b8347dd4d72d40ced43e8728b5ab87", "the replay must not carry the old, double-paying body");
   assert.deepEqual(gar, { m: "fc8d729f8b0166815fe2647805ce2e60", s: true, c: ["search_path=public"],
     a: ["postgres=X/postgres", "authenticated=X/postgres", "service_role=X/postgres"], n: 1, anon: false, auth: true, svc: true });

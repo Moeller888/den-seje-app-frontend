@@ -93,6 +93,7 @@ Filen selv ændres aldrig.
 | `20261101140000_deactivate_two_misgraded_questions.sql` (D-290 G2) | `20261102071826 deactivate_two_misgraded_questions` | 2026-11-02 via ét `apply_migration`, filen ordret fra `main` `85e3128` (SHA-256 `801d9ba6eafee8ba741334ab8f7a0babac0fcb50ceba7502f3aa4e070ccba891`; den gemte sætning md5-identisk med filen, `0ed24c38…`; ejergodkendt) | Ja, læsende 2026-11-02 lige efter: begge spørgsmål inaktive med uændrede hashes; aktive spørgsmål 2101 → 2099; instanser (5912) og XP/mønter uændrede (kontrolhashes); værnet med md5 `e5627de1…`, `SECURITY DEFINER`, `search_path=""`, ingen EXECUTE for API-roller; triggeren `BEFORE INSERT OR UPDATE OF answered, question_id` (tgtype 23); ingen nye åbne runder på inaktive spørgsmål | **Kun skemadelen anvendes, ordret** (`SCHEMA_PART`): værnets funktion, dens `REVOKE` og triggeren. Datadelen kræver produktionens to spørgsmål med de gennemgåede hashes og springes over; dens vagter og deaktivering er bevist på syntetiske rækker i `deactivate-two-misgraded-questions-*.test.mjs` |
 | `20261101150000_grading_meaningful_characters.sql` (D-290 G1) | `20261102064630 grading_meaningful_characters` | 2026-11-02 af en anden session via `apply_migration` (filens SHA-256 `406933134b95fb2f72591eb5a0f99e4a3a9c57a5decceabdca9edaa507e6299f`; den gemte sætning md5-identisk med filen, `9c6ad814…`) | Ja, læsende 2026-11-02: `process_question_attempt` md5 `2e05e769…` (G1's krop), `SECURITY DEFINER`, EXECUTE kun `postgres` og `service_role`; `normalize_choice_answer` `281addc2…` og `normalize_number_answer` `3dadb6e1…`, begge `IMMUTABLE`, `search_path=""`, kun ejeren har EXECUTE | **Anvendes**, efter D-280 del 1 |
 | `20261101170000_achievement_reward_exactly_once.sql` (D-292) | `20261102073618 achievement_reward_exactly_once` | 2026-11-02 via ét `apply_migration`, filen ordret fra `main` `5e28917` (SHA-256 `a8f582b0f634e92876f9ba45bf04b9e1ba0c342d2eae664d7c49886d3712e70b`; den gemte sætning md5-identisk med filen, `34a8b4df…`; ejergodkendt) | Ja, læsende 2026-11-02 lige efter: `grant_achievement_rewards` md5 `fc8d729f…`, `SECURITY DEFINER`, `search_path=public`, ejer `postgres`, EXECUTE kun `postgres`, `authenticated` og `service_role` (ikke `PUBLIC` eller `anon`); `user_achievements` (146 rækker, 11 uindløste), mønter/XP og genstande uændrede (kontrolhashes) | **Anvendes**. `isolated-schema-replay.test.mjs` kræver den nye krop og rettighederne og afviser den gamle (`63b8347d…`) |
+| `20261102100000_release_open_rounds_on_inactive_questions.sql` (D-316) | `20261102123618 release_open_rounds_on_inactive_questions` | 2026-11-02 via ét `apply_migration`, filen ordret fra `main` `ff49139` (SHA-256 `e935f5f8a71bfb08d2d1c95d2cd2e198e4692a9e9a2e966e700614141d0fe2f8`; den gemte sætning md5-identisk med filen, `842bc73d…`; ejergodkendt) | Ja, læsende 2026-11-02 lige efter: `release_open_question_outside` md5 `b80c1c78…` med historikværnet, `SECURITY DEFINER`, `search_path=public`, ejer `postgres`, EXECUTE uændret (`authenticated`, `service_role`; ikke `anon`); G2-triggeren uændret; instanser, svar, XP/mønter og achievements uændrede (kontrolhashes); de fire gamle åbne runder står uændret og frigives først ved elevens næste anmodning | **Anvendes** (var `REPO_AHEAD_OF_PRODUCTION` fra #556; afvigelsen er væk). `isolated-schema-replay.test.mjs` kræver den nye krop |
 
 Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i produktionen, og senere D-280 del 1 i versionsorden.
 
@@ -133,17 +134,6 @@ Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i p
 ## Repositoryet er foran produktionen (anvendes alligevel)
 Ejerbeslutning 2026-10-28 (mulighed B): den isolerede CI tester repositoryets kode mod det skema,
 koden selv erklærer. Den skal ikke kopiere produktionens historiske afvigelser.
-
-- **`20261102100000_release_open_rounds_on_inactive_questions` (D-316)** anvendes, selv om den ikke er
-  anvendt i produktionen.
-  - Repositoryets regressionstest `tests/isolated/open-round-inactive-question.isolated.spec.mjs`
-    kræver den. Testen viser gennem get-next-question, at en åben runde på et spørgsmål, der er
-    deaktiveret efter udlevering, ikke længere blokerer eleven.
-  - **Afvigelse fra produktionen:** den isolerede database frigiver en åben runde på et inaktivt
-    spørgsmål, som produktionen endnu ikke gør. Produktionen kører stadig den gamle krop, md5
-    `7b7693b3…` (katalog, 2026-11-02).
-  - Afvigelsen forsvinder, når D-316 er anvendt og verificeret. Så flyttes filen til
-    `APPLIED_IN_PRODUCTION`.
 
 - **`20260808010000_password_help_reserve_rpc`** anvendes med den rigtige migrationsfil, ikke en stub.
   - Repositoryets `request-password-help` afhænger af RPC'en `public.reserve_password_help`. Den
