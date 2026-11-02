@@ -17,6 +17,8 @@ function say(text) {
 
 /** The game has completed the handshake: show it, and announce it once (not on every message). */
 function linked() {
+  // Signed out: the game frame may still be talking, but the link to Lærlig is not active.
+  if (body.dataset.session === "signed-out") return;
   if ($("lv-link").textContent === "forbundet") return;
   $("lv-link").textContent = "forbundet";
   say("Spillet er klar.");
@@ -100,6 +102,7 @@ function start(c) {
   const session = passwordSessionProvider({ supabaseUrl: c.supabaseUrl, anonKey: c.anonKey });
   const frame = /** @type {HTMLIFrameElement} */ ($("lv-game"));
   let host = null;
+  let signIns = 0;
   const reportedFlag = { laerligverseBackend: true }; // explicit, in this non-production page only
 
   session.onChange((s) => {
@@ -107,6 +110,10 @@ function start(c) {
       $("lv-session").textContent = "logget ud";
       body.dataset.session = "signed-out";
       $("lv-logout").hidden = true;
+      $("lv-link").textContent = "afbrudt (logget ud)";
+      // No dead end: the pupil can sign in again on the same page (an expired session lands here too).
+      $("lv-login").hidden = false;
+      body.dataset.state = "login";
       say("Du er logget ud. Nye afleveringer bliver ikke sendt, før du logger ind igen.");
     }
   });
@@ -146,7 +153,11 @@ function start(c) {
         if (e.type === "service-error") body.dataset.lastServiceError = e.code ?? "";
       },
     });
-    frame.src = c.gameUrl;
+    // A new sign-in always loads a FRESH game document (a new bridge session). Re-assigning the same src is not
+    // a reliable reload in every browser, so each sign-in gets its own URL.
+    const url = new URL(c.gameUrl);
+    url.searchParams.set("signin", String(++signIns));
+    frame.src = url.toString();
     body.dataset.state = "running";
     $("lv-link").textContent = "forbinder";
     say("Spillet indlæses.");
