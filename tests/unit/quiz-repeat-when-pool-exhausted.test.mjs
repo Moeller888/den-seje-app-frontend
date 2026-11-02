@@ -338,16 +338,26 @@ const REVIEWED_LATER_REPEAT_USERS = {
     "called by nothing until a separately approved activation. It redefines none of this migration's functions " +
     "(its precondition only checks their md5). Its question_instances changes are pinned below: " +
     "UNIQUE (id, student_id), and the round guard trigger, which only enforces what every request_repeat_* " +
-    "already does (reopen = answered true -> false with repeat_count + 1)."
+    "already does (reopen = answered true -> false with repeat_count + 1).",
+  "20261101190000_question_attempts_v2_bootstrap.sql":
+    "H5 integration: on a database without H5 it EXECUTEs 20261030211428's sections 1–6 byte for byte " +
+    "(proven in question-attempts-v2-bootstrap.test.mjs); on one with H5 it only verifies them. It " +
+    "redefines none of this migration's functions (its state check only reads their md5) and carries " +
+    "exactly the same two question_instances statements as 20261030211428, pinned below.",
+  "20261101190100_question_attempts_v2_align_grading.sql":
+    "H5 integration: re-creates only process_question_attempt_v2 (D-280's alias rule); it redefines none " +
+    "of this migration's functions and does not touch question_instances.",
 };
 
 // The only question_instances statements a reviewed later user may contain, each exactly once.
+const H5_QUESTION_INSTANCES_STATEMENTS = [
+  "ALTER TABLE public.question_instances\n  ADD CONSTRAINT question_instances_id_student_id_key UNIQUE (id, student_id);",
+  "CREATE TRIGGER question_instances_round_guard\n  BEFORE UPDATE OF answered, repeat_count ON public.question_instances\n" +
+    "  FOR EACH ROW EXECUTE FUNCTION public.question_instances_round_guard();",
+];
 const REVIEWED_QUESTION_INSTANCES_CHANGES = {
-  "20261030211428_question_attempts_v2.sql": [
-    "ALTER TABLE public.question_instances\n  ADD CONSTRAINT question_instances_id_student_id_key UNIQUE (id, student_id);",
-    "CREATE TRIGGER question_instances_round_guard\n  BEFORE UPDATE OF answered, repeat_count ON public.question_instances\n" +
-      "  FOR EACH ROW EXECUTE FUNCTION public.question_instances_round_guard();",
-  ],
+  "20261030211428_question_attempts_v2.sql": H5_QUESTION_INSTANCES_STATEMENTS,
+  "20261101190000_question_attempts_v2_bootstrap.sql": H5_QUESTION_INSTANCES_STATEMENTS,
 };
 
 test("reviewed later repeat users redefine none of this migration's functions", () => {
@@ -355,7 +365,8 @@ test("reviewed later repeat users redefine none of this migration's functions", 
   assert.deepEqual(Object.keys(REVIEWED_LATER_REPEAT_USERS),
     ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql",
       "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql",
-      "20261030211428_question_attempts_v2.sql"],
+      "20261030211428_question_attempts_v2.sql", "20261101190000_question_attempts_v2_bootstrap.sql",
+      "20261101190100_question_attempts_v2_align_grading.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
@@ -397,11 +408,16 @@ test("the reviewed spelling migration is the only later definition of the repeat
   // sets an MC key to content.correct; part 2 only names these functions in its guard. The runtime
   // suite (mc-length-cue-top10-migration-run) proves the rewards, the repeat amount and the reopen
   // order unchanged.
+  // D-290 G1 changes ONLY the three grading lines of process_question_attempt (normalisation of the
+  // answer and the key). Its runtime suite (grading-meaningful-characters-migration-run) proves the
+  // body is D-280's byte for byte outside those lines — rewards, repeat award, reopen, lock and CAS
+  // included — and that first and repeat answers pay exactly as before.
   assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
     ["20261018143726_fix_danish_question_bank_text.sql",
      "20261027120000_repeat_answer_coin_reward.sql",
      "20261031194600_mc_length_cue_answer_paths.sql",
-     "20261031194700_mc_length_cue_top10.sql"]);
+     "20261031194700_mc_length_cue_top10.sql",
+     "20261101150000_grading_meaningful_characters.sql"]);
 });
 
 test("the migration version is not shared with any other migration", () => {

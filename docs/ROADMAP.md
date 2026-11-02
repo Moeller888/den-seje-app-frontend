@@ -906,6 +906,14 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 
 ### Opgaveformer — Question Interaction track
 
+> **Læringsprogression (2026-10-31, udkast, ikke godkendt — [D-277](decisions/D-277.md)):**
+> - Ejeren har gjort læringsprogressionen til en hovedprioritet: introduktion → arbejde med viden
+>   → feedback → test.
+> - Nye opgaveformer skal understøtte progressionen og ikke blot udvide spørgsmålsbanken.
+> - Audit, læringsmodel, analyse af de 16 former og den foreslåede rækkefølge står i
+>   [learning-progression-design.md](learning-progression-design.md) §6 og §10.
+> - Tabellen nedenfor er uændret, indtil ejeren har godkendt modellen.
+
 _Ejerbeslutning 2026-10-02:_ quizzen skal have mange forskellige opgaveformer, ikke kun multiple
 choice. I dag er alle 2099 aktive spørgsmål multiple choice. Den bindende arkitekturmodel —
 **stimulus adskilt fra svarform, frontend-renderer valgt efter interaktionstype, server-evaluator

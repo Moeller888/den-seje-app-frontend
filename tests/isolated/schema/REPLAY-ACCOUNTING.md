@@ -52,15 +52,38 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** `20261031194600_mc_length_cue_answer_paths` og
-  `20261031194700_mc_length_cue_top10` (D-280). Den første ændrer `process_question_attempt` og de tre
-  gentagelsesfunktioner, som produktionen kører; den anden retter ti produktionsspørgsmål. CI spejler
-  produktionen, så ingen af dem afspilles, før de er anvendt og verificeret; da afspilles den første,
-  og den anden behandles som data efter planens regler. A, B og kommentarrettelsen er anvendt og
-  verificeret og anvendes derfor også her (se "Anvendt i produktionen efter planens første version").
-- **Ikke anvendt i produktionen (D-292):** `20261101170000_achievement_reward_exactly_once` ændrer
-  `grant_achievement_rewards` (belønningen indløses atomisk, præcis én gang) og fjerner EXECUTE for
-  `PUBLIC` og `anon`. Den afspilles ikke, før den er anvendt og verificeret i produktionen.
+- **Ikke anvendt i produktionen** (alle merget; produktionen kører stadig det, der var før — læst
+  2026-11-01):
+  - `20261031230000_claim_daily_reward_exactly_once` (D-284): `claim_daily_reward` har md5 `80273d5d…`.
+  - `20261101120000_night_owl_stop_new_awards` (D-286): `evaluate_achievements` har md5 `9bd9a5d5…`, og
+    `authenticated` har stadig EXECUTE på `set_night_correct`.
+  - `20261101140000_deactivate_two_misgraded_questions` (D-290 G2): de to spørgsmål er stadig aktive,
+    og produktionen har ikke værnet `guard_open_round_requires_active_question` med dets trigger på
+    `question_instances`. Filen er derfor ikke længere ren data.
+  - `20261101150000_grading_meaningful_characters` (D-290 G1): `process_question_attempt` er D-280 del
+    1's udgave.
+  - `20261101170000_achievement_reward_exactly_once` (D-292): ændrer `grant_achievement_rewards`, så
+    belønningen indløses atomisk og præcis én gang, og fjerner EXECUTE for `PUBLIC` og `anon`.
+    Produktionen kører stadig den tidligere udgave.
+  - `20261101190000_question_attempts_v2_bootstrap` og
+    `20261101190100_question_attempts_v2_align_grading` (H5-integrationen). Produktionen har hverken
+    `question_attempts` eller `_v2`-funktionerne (katalog, 2026-11-01), og begge filer kræver G1 først.
+
+  D-284 og D-286 blev ved en fejl ikke skrevet på listen, da de blev merget, og blev derfor afspillet
+  her.
+
+  **Følgen, set i #534:** D-286 fjerner `authenticated`'s EXECUTE på `set_night_correct`. Fordi filen
+  blev afspillet, havde den isolerede database den kontrakt, som D-286 indfører, og ikke den, der
+  gælder i produktionen. Produktionen giver stadig `authenticated` EXECUTE (læst 2026-11-01).
+  #534's natteflag-test kaldte derfor funktionen som elev og fik `42501 permission denied`. Det var
+  en miljøforskel, ikke en fejl i testen eller i D-278. Med posten her får den isolerede database
+  igen produktionens adgangsmodel.
+
+  Når D-286 er anvendt og fjernet fra listen, skal den nye kontrakt testes særskilt: eleven kan ikke
+  længere kalde `set_night_correct`. Hver fil afspilles først, når den er anvendt og verificeret, og i den rækkefølge filerne selv
+  håndhæver: G1, derefter bootstrappen, derefter alignmentet. A, B, kommentarrettelsen og D-280's to
+  filer er anvendt og verificeret og står derfor ikke længere her (se "Anvendt i produktionen efter
+  planens første version").
 
 ## Anvendt i produktionen efter planens første version
 En fil fjernes fra `NOT_IN_PRODUCTION`, først når den er anvendt **og** verificeret i produktionen.
@@ -72,7 +95,44 @@ Filen selv ændres aldrig.
 | `20261029120000_difficulty_scale_b.sql` | `20261030094958 difficulty_scale_b` | 2026-10-30 via `apply_migration`, filen ordret fra `main` (SHA-256 `9fb5ffd33df32f8342cda143cc28c32b25478ec0332b2261925cf8ca21a96a1c`, lig SHA-256 af den sætning, migrationsloggen gemte; ejergodkendt) | Ja, læsende 2026-10-30: `student_level_fold_log` med RLS og 0 policies, kun `postgres` og `service_role` i ACL; begge indeks som i filen; de tre funktioner `SECURITY INVOKER` med låst `search_path`, EXECUTE kun for `service_role`, md5 som i filen; 0 rækker i `student_subject_level` og `student_level_fold_log`; A og #351 uændrede | **Anvendes**, efter A |
 | `20261030120000_student_subject_level_comment.sql` | `20261030182931 student_subject_level_comment` | 2026-10-30 via `apply_migration`, filen ordret fra `main` (SHA-256 `beda3783777d4f961e67358ed543cf7e849e91187408b3a9d81d4361ae1286f0`, lig SHA-256 af den sætning, migrationsloggen gemte; ejergodkendt). Filens header siger stadig "NOT APPLIED IN PRODUCTION"; den er historisk og ændres ikke | Ja, læsende 2026-10-30: tabelkommentaren ordret som godkendt; B's tre funktioner med uændret md5, `SECURITY INVOKER` og EXECUTE kun for `service_role`; ACL, grants, RLS, policies, kolonner, indeks og constraints identiske med øjebliksbilledet før; 0 rækker i begge niveautabeller | **Anvendes**, efter B |
 
-Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i produktionen.
+| `20261031194600_mc_length_cue_answer_paths.sql` | `20261101101401 mc_length_cue_answer_paths` | 2026-11-01 via `apply_migration`, filen ordret fra `main` `7523ec2` (SHA-256 `f334ae136d9603661b8af6028dbbc43dd715a67ecf54b2a092f74c88551a9a05`; den gemte sætning md5-identisk med filen; ejergodkendt). Filens header siger stadig "IKKE anvendt"; den er historisk og ændres ikke | Ja, læsende 2026-11-01: de fire funktioner med filens md5; signatur, ejer, returtype, SECURITY, `search_path` og EXECUTE (kun `postgres` og `service_role`) uændrede | **Anvendes**, D-280 del 1 |
+| `20261031194700_mc_length_cue_top10.sql` | `20261101102339 mc_length_cue_top10` | 2026-11-01 via `apply_migration`, filen ordret fra `main` `7523ec2` (SHA-256 `fc94f7c0e5fff7c85147e4220813c92ef268b5ccc3dae8c5cc884e14088501a9`; den gemte sætning md5-identisk med filen; ejergodkendt). Header historisk, ændres ikke | Ja, læsende 2026-11-01: de ti spørgsmål med de godkendte efter-hashes; 5 åbne besvarelser med nyt facit, ellers byte-identiske; 197 afsluttede besvarelser byte-identiske | **Springes over** som ren data (ingen skema-token); de ti produktionsspørgsmål findes ikke i den isolerede database |
+
+Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i produktionen, og senere D-280 del 1 i versionsorden.
+
+**H5 og G1: forskellen mellem repository og produktion.**
+
+| | Repository (filnavnsorden) | Produktion | Isoleret afspilning i dag |
+|---|---|---|---|
+| `20261030211428` (H5 PR 1) | anvendt | ikke anvendt; filen afviser sig selv efter D-280 del 1 | **anvendes** (som før #522) |
+| D-278, D-280 del 1 | anvendt | anvendt 2026-11-01 | anvendes |
+| D-280 del 2 | anvendt | anvendt 2026-11-01 | springes over (ren data) |
+| `20261101150000` (G1) | anvendt | **ikke anvendt** | springes over (`NOT_IN_PRODUCTION`) |
+| `20261101190000` (bootstrap) | verificerer H5, fratager `service_role` EXECUTE på `process_question_attempt_v2` | **ikke anvendt**; skal opbygge H5 efter G1 | springes over (`NOT_IN_PRODUCTION`) |
+| `20261101190100` (alignment) | giver `_v2` bedømmelsen fra D-280 og G1 og giver `service_role` EXECUTE tilbage | **ikke anvendt** | springes over (`NOT_IN_PRODUCTION`) |
+
+- **Den isolerede database har i dag H5-skemaet fra `20261030211428`.** Dens
+  `process_question_attempt_v2` er den oprindelige: aliaser kun ved præcis to poster, kun `[a-z0-9]`
+  sammenlignes, og `service_role` har EXECUTE. Det er en kendt afvigelse fra produktionen, som slet
+  ikke har H5. Den er uændret fra før #522.
+  - Intet i den isolerede E2E kalder `_v2`: `tests/h5-submission.spec.ts` opsnapper `process-event`.
+  - Afvigelsen forsvinder, når G1 og de to H5-filer er anvendt i produktionen og fjernet fra
+    `NOT_IN_PRODUCTION`.
+- **Produktionens eneste vej til H5** er: G1 → `20261101190000` → `20261101190100`. Uden G1 afviser
+  både bootstrappen og alignmentet sig selv, og intet ændres.
+  - Mellem de to H5-filer kan ingen API-rolle kalde den gamle `_v2`.
+  - Alignmentet kontrollerer G1's to hjælpefunktioner: krop, `IMMUTABLE`, `search_path`, ejer og at
+    ingen API-rolle har EXECUTE.
+- **G2 (`20261101140000`) er uafhængig af H5-rækkefølgen.** Bootstrappen accepterer G2's værn
+  `open_round_requires_active_question`, men kun præcis som gennemgået: funktionens md5, triggerens
+  form og kolonner, `SECURITY DEFINER`, `search_path`, ejer og ingen EXECUTE for API-roller. Alle
+  andre ekstra triggere afvises stadig. G2 kan derfor anvendes før G1, mellem G1 og bootstrappen,
+  mellem de to H5-filer eller efter dem. Alle rækkefølger ender i samme skema
+  (`question-attempts-v2-g2-compat.test.mjs`, og på PostgreSQL 17
+  `question-attempts-v2-g2-compat-pg.test.mjs`).
+- **Bevis.** `tests/unit/question-attempts-v2-bootstrap.test.mjs` (PGlite) viser, at
+  repositoryets rækkefølge og produktionens rækkefølge ender i identisk skema og bedømmer ens med G1.
+  `question-attempts-v2-bootstrap-concurrency.test.mjs` viser det samme på PostgreSQL 17.
 
 ## Repositoryet er foran produktionen (anvendes alligevel)
 Ejerbeslutning 2026-10-28 (mulighed B): den isolerede CI tester repositoryets kode mod det skema,
@@ -98,3 +158,16 @@ Se hovedet af `ci-function-stubs.sql`. Kort fortalt:
 - **Kolonneværdier ud over tabellens standardværdier** i `ensure_student_progress` modelleres ikke.
 
 Isoleret E2E kan derfor ikke bevise disse effekter. De kan kun verificeres mod den rigtige implementering.
+
+## Fuldstændigt regnskab (fra 2026-11-01)
+Hver migration med version fra `ACCOUNTED_FROM` (`20261020000000`) skal stå i præcis én liste i
+`replay-plan.mjs`: `NOT_IN_PRODUCTION` (merget, ikke anvendt — også rene datafiler),
+`REPO_AHEAD_OF_PRODUCTION` (ikke anvendt, afspilles efter ejerbeslutning B) eller
+`APPLIED_IN_PRODUCTION` (anvendt og verificeret, med produktionens ledger-version).
+`tests/unit/replay-accounting-complete.test.mjs` fejler, hvis en ny migration ikke er registreret, så en
+merge ikke længere kan afspille en uanvendt fil ved en forglemmelse. En fil flyttes først til
+`APPLIED_IN_PRODUCTION`, når anvendelsen er verificeret.
+
+`20261030211428_question_attempts_v2` (H5) er ikke anvendt i produktionen, men repositoryets
+`process-event` kalder v2-funktionerne bag H5-kontakten. Den står derfor i `REPO_AHEAD_OF_PRODUCTION`
+(uændret afspilning) som åben produktionsopgave under D-266/D-273.

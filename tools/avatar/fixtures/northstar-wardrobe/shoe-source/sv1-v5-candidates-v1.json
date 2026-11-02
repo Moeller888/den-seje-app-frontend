@@ -1,0 +1,149 @@
+{
+  "package": "sv1-v5-candidates-v1",
+  "status": "CANDIDATES FOR THE OWNER'S VISUAL REVIEW — NOT APPROVED; D-301 REJECTED SOURCE STANDS; MASTER v5 DEVELOPED ON SV-1, NOT INDEPENDENTLY VALIDATED; PRIVATE (NO PUBLIC ASSET, RUNTIME, CATALOGUE, ACTIVATION OR FLAG CHANGE)",
+  "source": {
+    "callId": "SV-1-shoes-sneakers-low-tight-k4",
+    "sha256": "30e15fdacb167416afbb126301711b63acc46342423add21c2e1c15155dba71a",
+    "location": "<Documents>/DenSejeApp-artefacts/sv-calls/SV-1-shoes-sneakers-low-tight-k4/sv.image-1.png"
+  },
+  "processing": {
+    "haloRule": {
+      "kind": "distance",
+      "keepPx": 3
+    },
+    "k": 4,
+    "crop": {
+      "x0": 320,
+      "y0": 1270,
+      "w": 384,
+      "h": 256
+    },
+    "registration": {
+      "dx": 0,
+      "dy": 0
+    }
+  },
+  "master": {
+    "revision": "shoe-master-v5-field",
+    "unseededField": "whole-majority",
+    "base": "shoe-master-v4-line"
+  },
+  "covering": "closed-footwear (BC.closedFootwearHidden, SLIVER_PX 6)",
+  "outfitCheck": "R1.checkOutfit (outfit revision d239)",
+  "methodFiles": {
+    "tools/avatar/northstar-shoe-source.mjs": "0e0bbb4a0e2f0db88a6825aa1221b58abcc4fca9311a85133c2f64f618520e40",
+    "tools/avatar/northstar-shoe-eval-v2.mjs": "93a6872d858706322f17f17c99c7476f79fe7a08a4419fc9332e8cab87044ab0",
+    "tools/avatar/northstar-shoe-master.mjs": "fb8f284c6bfc65e222da2f7fbbe090c881018e6bdd0e5bb3b78319e8a5183d0e",
+    "tools/avatar/northstar-shoe-master-v5.mjs": "11b69f60a968872114c773f9ec7fdce8632375b96eec291d8eaa05b88922f001",
+    "tools/avatar/northstar-shoe-v5-study.mjs": "9213153b18d7ea0f0a94d651284de6f76afc8f8db3277a006fa1489fb7b4b2fa",
+    "tools/avatar/northstar-base-figure-c.mjs": "a43bf3c1e8d42c88ff01e9966059233f5605d05a87ebda09180530d13c6b57e0",
+    "tools/avatar/northstar-base-figure.mjs": "a99235c19e7d69c9b4d3f37856be3bad41028860b340031df60596cb2b418b47",
+    "tools/avatar/northstar-r1-garment.mjs": "d6702ffb808c06f199e2437c76fab54dfea8c68b7a1e0d6842b10eb019e41906"
+  },
+  "candidates": {
+    "SV1-V5-CHALK": {
+      "design": "light chalk (SYNTHETIC)",
+      "colours": {
+        "upper": [
+          238,
+          234,
+          224
+        ],
+        "toe": [
+          238,
+          234,
+          224
+        ],
+        "sole": [
+          246,
+          244,
+          238
+        ],
+        "laces": [
+          250,
+          248,
+          242
+        ]
+      },
+      "layerSha256": "18e982a6c8ab0bdd3a591bd56a10dc8192b51777568ebaf9c65c17fcc8ba86c2"
+    },
+    "SV1-V5-CHARCOAL": {
+      "design": "dark charcoal (SYNTHETIC)",
+      "colours": {
+        "upper": [
+          54,
+          56,
+          62
+        ],
+        "toe": [
+          54,
+          56,
+          62
+        ],
+        "sole": [
+          44,
+          44,
+          48
+        ],
+        "laces": [
+          72,
+          74,
+          82
+        ]
+      },
+      "layerSha256": "42570ca9eaf922b19369885d482abe76654f5f73a599e9766e46819a8944c543"
+    },
+    "SV1-V5-NAVYWHITE": {
+      "design": "contrast navy + white (SYNTHETIC)",
+      "colours": {
+        "upper": [
+          40,
+          54,
+          96
+        ],
+        "toe": [
+          236,
+          234,
+          228
+        ],
+        "sole": [
+          240,
+          238,
+          232
+        ],
+        "laces": [
+          242,
+          240,
+          234
+        ]
+      },
+      "layerSha256": "31303fbb664fdec2064fc56f1f251e9e6ccf62dcd10f9a53a8ece021bcc6c8f8"
+    },
+    "SV1-V5-BURGUNDYGUM": {
+      "design": "contrast burgundy + gum (SYNTHETIC)",
+      "colours": {
+        "upper": [
+          112,
+          34,
+          44
+        ],
+        "toe": [
+          228,
+          214,
+          188
+        ],
+        "sole": [
+          176,
+          124,
+          72
+        ],
+        "laces": [
+          228,
+          214,
+          188
+        ]
+      },
+      "layerSha256": "7db5bfb8085280f146698aad844db68b5740eefb7264fa9a8f3787be65138d20"
+    }
+  }
+}

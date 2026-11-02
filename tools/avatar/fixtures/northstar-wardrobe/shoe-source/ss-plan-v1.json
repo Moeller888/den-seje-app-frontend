@@ -1,0 +1,117 @@
+{
+  "decision": "D-294",
+  "kind": "the plan of ONE tight shoe-source call (SS-1); it never authorises by itself (D-295 is the authorisation)",
+  "authorisesImageRequest": false,
+  "call": {
+    "callId": "SS-1-shoes-sneakers-low-tight-k4",
+    "category": "shoes",
+    "cut": "sneaker-low-k4",
+    "prompt": {
+      "text": "Image 1 is a LAYOUT reference: a pair of low-top lace-up sneakers in a front three-quarter view, exactly as a cartoon avatar wears them, enlarged from a small picture, so it is blurry.\nRedraw this same pair of sneakers as a crisp, clean, high-detail 2D cartoon illustration that uses the full resolution of the canvas, keeping EXACTLY what Image 1 fixes:\n- the same two shoes in the same places, at the same size and angle, with the same outer outlines: the left shoe on the left, the right shoe on the right; do not move, rotate, enlarge, shrink, re-pose or re-proportion them;\n- the same construction: a low collar with the tongue showing, four horizontal laces on each shoe, a rounded toe cap separated from the upper by a seam line, a thick sole with a bevelled top edge;\n- the same colours: warm beige upper and toe cap, light beige sole and laces, a dark brown outline.\nStyle: the same cartoon style as Image 1, with smooth dark brown outlines of even weight and clean anti-aliased edges, thin brown seam lines, and soft painted shading and highlights. No texture noise, no photographic detail, no logos, no text, and no stripes or decorations that Image 1 does not have.\nThe shoes are worn: each ankle goes into its shoe, so the opening at the top of each shoe is EMPTY and fully transparent, with no inner lining, no sock, no foot, no skin and no leg.\nNo ground, no cast shadow and no background: everything outside the two shoes is fully transparent.",
+      "sha256": "3dca35b1709893a6dc1583b675a14d24e2d23252613cf7a8b2f94097efc7260e"
+    }
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1536x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "images": [
+      {
+        "role": "Image 1",
+        "what": "the layout reference: the published low sneaker layer's CROP enlarged x4 (bilinear, premultiplied), transparent outside the shoes; built by northstar-shoe-source.mjs layoutCanvas from assets/avatar-northstar/shoes-sneakers-beige-shoes-v1.webp; derived from a published asset, never C",
+        "name": "ss-1-layout-image-1.png",
+        "bytes": 802060,
+        "sha256": "145a8633653fea9fe368e7a2f5611848a928c8568ad47913e3f547526c8680d3",
+        "location": "<Documents>/DenSejeApp-artefacts/ss-calls/references/sneaker-low-k4/"
+      }
+    ],
+    "notSent": [
+      "C (the base figure)",
+      "any other reference",
+      "a mask",
+      "input_fidelity"
+    ]
+  },
+  "geometry": {
+    "crop": {
+      "x0": 320,
+      "y0": 1270,
+      "w": 384,
+      "h": 256
+    },
+    "k": 4,
+    "sourceSize": {
+      "w": 1536,
+      "h": 1024
+    },
+    "mapping": "avatar (x, y) <- source (K (x − crop.x0) + i, K (y − crop.y0) + j), i, j in 0..K−1",
+    "downscale": "premultiplied K x K area average (colour weighted by alpha)",
+    "placement": "at CROP; one global integer translation from the registration (|dx|, |dy| <= 2); never a scale, rotation, warp or per-shoe move",
+    "shoes": "both shoes as in the published layer: left in x < 512, right in x >= 512 (avatar px); the same size, angle and place relative to each other",
+    "fill": "the shoes span about 92 % of the source's width and 84 % of its height (352 x 214 of 384 x 256 avatar px)"
+  },
+  "acceptance": {
+    "detail": {
+      "maxAlphaTransitionPx": 2,
+      "maxLineTransitionPx": 2
+    },
+    "geometry": {
+      "maxShiftPx": 2,
+      "minShoeIoU": 0.95,
+      "sizeRatio": [
+        0.96,
+        1.04
+      ],
+      "maxCentroidOffsetPx": 2,
+      "maxPaintOverAnklePx": 40,
+      "maxSkinPx": 3,
+      "shoeComponents": 2,
+      "maxCoveringChange": 0.01,
+      "maxNewlyExposedFootPx": 20
+    },
+    "skin": "C's median skin at the ankle, OKLab distance < 0.04",
+    "seeds": "the cut's 22 seeds mapped to K must each land in a field of the new drawing; otherwise its fields need entering once (reported, not guessed)",
+    "rejectedWhen": "any rule fails; a source that would need a free deformation, a per-shoe move or a retouch is reported as such and goes no further",
+    "smoothingGuard": "per design and field, the line contrast of the new source (v2 at K) >= 0.9 x the published source's (v2 at 1x)",
+    "visualIsNeverAutomatic": true
+  },
+  "evaluation": {
+    "tool": "tools/avatar/northstar-shoe-source-evaluate.mjs",
+    "phases": [
+      "check",
+      "chain",
+      "outfits",
+      "views",
+      "browser"
+    ],
+    "designs": [
+      "original colour",
+      "light chalk (SYNTHETIC)",
+      "dark charcoal (SYNTHETIC)",
+      "contrast navy + white (SYNTHETIC)",
+      "contrast burgundy + gum (SYNTHETIC)"
+    ],
+    "routes": {
+      "published v2 at 1x": "the published source through master v2 at avatar resolution (D-291)",
+      "new source v2 at K": "the new source through master v2 at K, downscaled (SOURCE EFFECT against the first)",
+      "new source v3 at K": "the new source through the v3 edge rules at K, downscaled (MASTER EFFECT against the second)"
+    },
+    "outfits": "the cream tee over the six bottoms (skirt-sand, shorts-navy, capri-lightblue, trousers-square-olive, -navy, -sand); COMBO-2 results kept as they are",
+    "views": "D-293's regions of both shoes at 1:1, 4x nearest and 4x interpolated (labelled), light and dark; Chromium at 110x165 and 300x450, DPR 1, 2, 3"
+  },
+  "frozen": {
+    "method": {
+      "revision": "shoe-master-v2",
+      "atK": "radii x K (northstar-shoe-source.mjs specAtK)"
+    },
+    "productionBaseline": {
+      "method": "d240"
+    }
+  }
+}
