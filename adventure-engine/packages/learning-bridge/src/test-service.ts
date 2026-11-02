@@ -52,6 +52,8 @@ export function normaliseText(s: string): string {
 }
 
 export class FakeTaskService implements TaskService {
+  /** Default: imitates a backend with idempotent submission (H5). Tests can switch it off. */
+  submitRetry: "server-idempotent" | "none" = "server-idempotent";
   readonly items: readonly FakeItem[];
   /** Every effect the "server" granted: the test oracle for "no extra rewards". */
   readonly ledger: LedgerEntry[] = [];

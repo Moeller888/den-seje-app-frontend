@@ -49,6 +49,7 @@ export const ERROR_CODES = Object.freeze([
   "kind_not_supported",
   "task_unavailable",
   "hint_unavailable",
+  "session_expired",
   "server_error",
 ] as const);
 export type ErrorCode = (typeof ERROR_CODES)[number];

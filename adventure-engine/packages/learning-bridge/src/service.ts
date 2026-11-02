@@ -60,7 +60,7 @@ export interface ServiceHint {
  * submission id; permanent ones are reported to the game at once.
  */
 export class ServiceError extends Error {
-  readonly code: "network" | "timeout" | "forbidden" | "not_found" | "invalid" | "unavailable" | "server";
+  readonly code: "network" | "timeout" | "forbidden" | "not_found" | "invalid" | "unavailable" | "server" | "unauthorized" | "outdated";
   readonly transient: boolean;
   constructor(code: ServiceError["code"], transient: boolean, message?: string) {
     super(message ?? code);
@@ -70,7 +70,15 @@ export class ServiceError extends Error {
   }
 }
 
+/**
+ * Whether resending a submission after an ambiguous failure (no response, timeout, 5xx) is safe.
+ * "server-idempotent": the backend itself guarantees that a resend can neither record nor pay twice and
+ * returns the original verdict. "none": no such guarantee — the host must not resend automatically.
+ */
+export type SubmitRetry = "server-idempotent" | "none";
+
 export interface TaskService {
+  readonly submitRetry: SubmitRetry;
   /** The pupil's open instance, if any (resumption: one open instance per pupil on the server). */
   openTask(): Promise<ServiceTask | null>;
   fetchTask(query: TaskQuery): Promise<ServiceTask>;

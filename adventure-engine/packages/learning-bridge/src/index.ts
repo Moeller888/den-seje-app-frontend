@@ -6,3 +6,13 @@ export * from "./protocol.ts";
 export * from "./service.ts";
 export { BridgeHost, type BridgeHostOptions, type KeyValueStore, type Timers } from "./host.ts";
 export { BridgeClient, BridgeError, type BridgeClientOptions, type ClientStatus } from "./client.ts";
+export {
+  LaerligTaskService,
+  createLaerligTaskService,
+  DEFAULT_FLAGS,
+  type EdgeCaller,
+  type EdgeFunction,
+  type LaerligServiceOptions,
+  type LaerligverseFlags,
+  type Subject,
+} from "./laerlig-service.ts";

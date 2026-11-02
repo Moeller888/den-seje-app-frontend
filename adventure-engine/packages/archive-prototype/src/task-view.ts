@@ -156,6 +156,14 @@ export class TaskView {
     this.outcome = r.outcome;
     this.root.dataset["state"] = r.outcome;
     this.feedback.replaceChildren();
+    if (r.outcome === "aborted" && !r.retryable) {
+      // Unresolved: the backend cannot tell whether the answer was recorded, so nothing is resent.
+      this.root.dataset["state"] = "unresolved";
+      this.status.textContent = "Vi ved ikke, om dit svar nåede frem. Det bliver ikke sendt igen automatisk. Din lærer kan se, hvad der blev registreret.";
+      this.closeBtn.hidden = false;
+      this.refresh();
+      return;
+    }
     if (r.outcome === "aborted") {
       this.status.textContent = "Forbindelsen svigtede. Dit svar er gemt og bliver sendt igen, præcis som du afgav det.";
       this.retryBtn.hidden = false;

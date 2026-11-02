@@ -90,7 +90,8 @@ async function boot(): Promise<void> {
     try {
       view.result(await client.act(current.instanceToken, action));
     } catch (err) {
-      view.error(err instanceof BridgeError ? `Svaret kunne ikke afleveres (${err.code}). Prøv igen om lidt.` : String(err));
+      if (err instanceof BridgeError && err.code === "session_expired") view.error("Du er blevet logget ud af Lærlig. Log ind igen, og åbn arkivet på ny.");
+      else view.error(err instanceof BridgeError ? `Svaret kunne ikke afleveres (${err.code}). Prøv igen om lidt.` : String(err));
     }
   };
 

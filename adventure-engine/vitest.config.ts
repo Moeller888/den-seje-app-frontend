@@ -70,6 +70,8 @@ export default defineConfig({
         "packages/learning-bridge/src/protocol.ts": { lines: 98, statements: 98, functions: 100, branches: 85 },
         "packages/learning-bridge/src/host.ts": { lines: 95, statements: 95, functions: 100, branches: 85 },
         "packages/learning-bridge/src/client.ts": { lines: 100, statements: 100, functions: 100, branches: 90 },
+        // D-309: the real-backend adapter maps every status of the existing contracts.
+        "packages/learning-bridge/src/laerlig-service.ts": { lines: 98, statements: 98, functions: 100, branches: 90 },
         // One defensive guard is unreachable while the membership invariant holds (docs/decisions/phase-2.md §11).
         "packages/core/src/navigator.ts": { ...FULL, branches: 99 },
       },

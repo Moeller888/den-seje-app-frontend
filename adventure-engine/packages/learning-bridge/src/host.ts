@@ -206,9 +206,10 @@ export class BridgeHost {
 
     let body: Omit<TaskResultMsg, "requestId" | "nonce">;
     try {
-      const r = await this.withRetry(gen, msg.requestId, () =>
-        this.o.service.submit({ instanceId: entry.task.instanceId, roundNo: pending.roundNo, submissionId: pending.submissionId, action: pending.action }),
-      );
+      const submitOnce = () =>
+        this.o.service.submit({ instanceId: entry.task.instanceId, roundNo: pending.roundNo, submissionId: pending.submissionId, action: pending.action });
+      // Automatic resubmission only where the backend itself guarantees it cannot record or pay twice.
+      const r = await (this.o.service.submitRetry === "server-idempotent" ? this.withRetry(gen, msg.requestId, submitOnce) : this.call(submitOnce));
       body = {
         protocol: PROTOCOL,
         type: "task.result",
@@ -224,7 +225,25 @@ export class BridgeHost {
       this.o.onServiceError?.(err);
       entry.submitting = false;
       const waiting = entry.waiting.splice(0);
-      if ((err instanceof ServiceError && err.transient) || err instanceof CallTimeout) {
+      const ambiguous = (err instanceof ServiceError && err.transient) || err instanceof CallTimeout;
+      if (ambiguous && this.o.service.submitRetry !== "server-idempotent") {
+        // The request may or may not have been recorded, and this backend cannot tell us safely:
+        // stop in an explicit unresolved state. No automatic resend, and the pending entry is kept so
+        // nothing new can be committed for this instance from this host.
+        const unresolved: Omit<TaskResultMsg, "requestId" | "nonce"> = {
+          protocol: PROTOCOL,
+          type: "task.result",
+          instanceToken: entry.token,
+          outcome: "aborted",
+          feedback: { text: null, correctAnswer: null },
+          evidence: "none",
+          retryable: false,
+        };
+        entry.result = unresolved;
+        for (const id of waiting) this.finish(gen, id, { ...unresolved, nonce: this.nonce as string, requestId: id });
+        return;
+      }
+      if (ambiguous) {
         // Nothing is lost: the pending submission stays stored and is resent on the next commit.
         const aborted: Omit<TaskResultMsg, "requestId" | "nonce"> = {
           protocol: PROTOCOL,
@@ -385,9 +404,16 @@ export class BridgeHost {
   private finish(gen: number, requestId: string, message: HostMessage): void {
     // A reply for a session the game has since replaced is dropped; the game resumes through init.openTask.
     if (gen !== this.gen) return;
+    let out: HostMessage = message;
+    if (!parseHostMessage(out).ok) {
+      // Backend data the protocol cannot carry (e.g. a prompt over the size limit): the game gets an
+      // explicit error instead of a request that never ends. Reported, never silent.
+      this.o.onServiceError?.(new Error(`bridge host: backend data does not fit the protocol (${message.type})`));
+      out = { protocol: PROTOCOL, type: "error", nonce: this.nonce, requestId, code: "server_error" };
+    }
     const state = this.requests.get(requestId);
-    if (state !== undefined) state.done = message;
-    this.send(message);
+    if (state !== undefined) state.done = out;
+    this.send(out);
   }
 
   private finishError(gen: number, requestId: string, code: ErrorCode): void {
@@ -407,6 +433,11 @@ export class BridgeHost {
 }
 
 function errorCodeFor(err: unknown, fallback: ErrorCode): ErrorCode {
-  if (err instanceof ServiceError && (err.code === "forbidden" || err.code === "not_found")) return "unknown_task";
+  if (!(err instanceof ServiceError)) return fallback;
+  if (err.code === "forbidden" || err.code === "not_found") return "unknown_task";
+  // The pupil must sign in again in Lærlig; the game never sees or renews a session itself.
+  if (err.code === "unauthorized") return "session_expired";
+  // A manipulated action the backend adapter refused before any server call.
+  if (err.code === "invalid") return "invalid_message";
   return fallback;
 }
