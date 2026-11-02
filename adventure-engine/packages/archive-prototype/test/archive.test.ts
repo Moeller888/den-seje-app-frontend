@@ -6,7 +6,9 @@ import { Engine } from "@adventure-engine/core";
 import { HeadlessAdapter } from "@adventure-engine/scenario-runner";
 import { describe, expect, it } from "vitest";
 import { CONTEXT_KEY, DRAWER_KEY, DRAWER_RESULT_ACTION, RESULT_ACTION, TASK_REQUEST_GLOBAL, archiveContent } from "../src/content.ts";
+import { ARCHIVE_ITEMS } from "../src/host-items.ts";
 import { INTRO_CARDS, INTRO_CHECK, wordCount } from "../src/intro-content.ts";
+import { ACTIVITIES, ARCHIVE_CARD_EXERCISE, DECISION_POINTS, REFLECTION, REVISION_KEY, REVISIT_KEY, REVISIT_RESULT_ACTION, SOURCE_FIELDS, checkArchiveCard, parseSourceBack } from "../src/sequence.ts";
 
 /** Headless run of the Arkivskabet scene (D-307): speech is confirmed, time runs until the world is idle. */
 function world() {
@@ -109,7 +111,96 @@ describe("Arkivskabet — introduction (D-310, LPD §5.1 stage 1)", () => {
 
   it("the introduction teaches the method the tasks use: who, when, to whom", () => {
     const text = INTRO_CARDS.map((c) => c.text).join(" ");
-    for (const q of ["Hvem har lavet den?", "Hvornår?", "Til hvem?"]) expect(text).toContain(q);
+    for (const q of ["Hvem har lavet den?", "Hvornår?", "Til hvem?", "Og hvorfor?"]) expect(text).toContain(q);
+  });
+});
+
+describe("Arkivskabet v2 — the learning sequence as data (D-322)", () => {
+  it("every activity says what it is and what it may count for; only server-judged, unassisted steps may ever become evidence", () => {
+    for (const a of Object.values(ACTIVITIES)) {
+      expect(a.label.length, a.id).toBeGreaterThan(0);
+      if (a.mayBecomeEvidence) expect(a.judgedBy, a.id).toBe("server");
+    }
+    expect(Object.values(ACTIVITIES).filter((a) => a.mayBecomeEvidence).map((a) => a.id).sort()).toEqual(["revisit", "transfer"]);
+    for (const id of ["intro", "introCheck", "archiveCard", "flip", "hypothesis", "revision", "reflection", "worldReaction"]) expect(ACTIVITIES[id]?.mayBecomeEvidence, id).toBe(false);
+  });
+
+  it("decision points: revision asks for the SAME objective as the hypothesis; transfer and revisit ask for their own", () => {
+    expect(DECISION_POINTS[REVISION_KEY]?.objectiveId).toBe(DECISION_POINTS[CONTEXT_KEY]?.objectiveId);
+    expect(DECISION_POINTS[DRAWER_KEY]?.purpose).toBe("check");
+    expect(DECISION_POINTS[REVISIT_KEY]?.purpose).toBe("review");
+    expect(DECISION_POINTS[REVISIT_KEY]?.resultAction).toBe(REVISIT_RESULT_ACTION);
+    const ids = new Set(Object.values(DECISION_POINTS).map((p) => p.objectiveId));
+    expect(ids.size).toBe(3);
+  });
+
+  it("the test adapter has a task for every decision point, and the revision is a NEW instance (other option ids)", () => {
+    for (const p of Object.values(DECISION_POINTS)) expect(ARCHIVE_ITEMS.some((i) => i.objectiveId === p.objectiveId), p.objectiveId).toBe(true);
+    const kilde = ARCHIVE_ITEMS.filter((i) => i.objectiveId === DECISION_POINTS[CONTEXT_KEY]?.objectiveId);
+    expect(kilde).toHaveLength(2);
+    const [first, revision] = kilde.map((i) => new Set((i.options ?? []).map((o) => o.id)));
+    expect([...(revision ?? [])].some((id) => first?.has(id))).toBe(false);
+  });
+
+  it("every source description has the five archive fields, and they parse as a document back", () => {
+    for (const item of ARCHIVE_ITEMS) {
+      for (const o of item.options ?? []) {
+        const back = parseSourceBack(o.detail ?? "");
+        expect(back?.map((f) => f.field), `${item.id}/${o.id}`).toEqual(["Afsender", "Tid", "Modtager", "Formål", "Kontekst"]);
+      }
+    }
+    expect(parseSourceBack("bare en almindelig sætning")).toBeNull();
+  });
+
+  it("no surface cues: labels name only the KIND of source (no year, no date), the right one is never uniquely the longest, and it moves", () => {
+    const positions = new Set<number>();
+    for (const item of ARCHIVE_ITEMS) {
+      const options = item.options ?? [];
+      // The date and the sender belong on the back; a label that repeats the claim's year is a match, not sourcing.
+      for (const o of options) expect(o.label, `${item.id}/${o.id}`).not.toMatch(/\d{4}|april|maj|kongen|regeringen/i);
+      const right = options.find((o) => o.id === item.answer);
+      expect(right, item.id).toBeDefined();
+      const longer = options.filter((o) => o.id !== item.answer && o.label.length >= (right?.label.length ?? 0));
+      expect(longer.length, `${item.id}: the right label must not be the uniquely longest (length cue, cf. D-280)`).toBeGreaterThan(0);
+      positions.add(options.findIndex((o) => o.id === item.answer));
+    }
+    expect(positions.size, "the right answer must not always sit in the same place").toBeGreaterThan(2);
+  });
+
+  it("every wrong option has its own refutation that names a field to look at", () => {
+    for (const item of ARCHIVE_ITEMS) {
+      for (const o of item.options ?? []) {
+        if (o.id === item.answer) continue;
+        expect(item.optionFeedback?.[o.id], `${item.id}/${o.id}`).toMatch(/afsender|tid|formål|modtager/i);
+      }
+    }
+  });
+
+  it("the archive card: all four questions used once; a wrong placement gets its own explanation", () => {
+    expect(new Set(ARCHIVE_CARD_EXERCISE.facts.map((f) => f.field))).toEqual(new Set(SOURCE_FIELDS.map((f) => f.key)));
+    const right = Object.fromEntries(ARCHIVE_CARD_EXERCISE.facts.map((f) => [f.id, f.field]));
+    expect(checkArchiveCard(right)).toEqual({ allRight: true, wrong: [] });
+    const swapped = { ...right, f1: "tid" as const, f2: "afsender" as const };
+    const r = checkArchiveCard(swapped);
+    expect(r.allRight).toBe(false);
+    expect(r.wrong.map((w) => w.id)).toEqual(["f1", "f2"]);
+    expect(checkArchiveCard({}).wrong).toHaveLength(4);
+  });
+
+  it("reflection and revisit are local: a minimum length, a model answer, and an explicit 'no mastery' label", () => {
+    expect(REFLECTION.minChars).toBeGreaterThan(0);
+    expect(REFLECTION.model.length).toBeGreaterThan(REFLECTION.minChars);
+    expect(REFLECTION.selfCheck.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("the world comments on the revisit verdict and changes nothing else", () => {
+    for (const [outcome, line] of [["correct", "line.revisit_done"], ["incorrect", "line.revisit_wrong"]] as const) {
+      const { engine, settle } = world();
+      const before = JSON.stringify([...engine.globals.entries()]);
+      engine.event("cabinet", REVISIT_RESULT_ACTION, { $outcome: outcome });
+      expect(settle()).toEqual([line]);
+      expect(JSON.stringify([...engine.globals.entries()])).toBe(before);
+    }
   });
 });
 

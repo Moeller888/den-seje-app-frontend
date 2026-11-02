@@ -7,27 +7,24 @@ import { gameReady } from "@adventure-engine/app/ready";
 import { BridgeClient, BridgeError, type Action, type ClientStatus, type PresentBody } from "@adventure-engine/learning-bridge";
 import { MemoryStorage } from "@adventure-engine/save";
 import { HOST_ORIGIN, randomId } from "./config.ts";
-import { CONTEXT_KEY, DRAWER_KEY, DRAWER_RESULT_ACTION, RESULT_ACTION, TASK_REQUEST_GLOBAL, archiveContent, archiveManifest } from "./content.ts";
+import { CONTEXT_KEY, DRAWER_KEY, TASK_REQUEST_GLOBAL, archiveContent, archiveManifest } from "./content.ts";
 import { IntroView } from "./intro-view.ts";
+import { DECISION_POINTS, REVISION_KEY, REVISIT_KEY, type DecisionPoint } from "./sequence.ts";
+import { ArchiveCardView, ReflectionView, RevisitView } from "./sequence-views.ts";
 import { TaskView } from "./task-view.ts";
 
 /**
- * D-310: the world's two decision points and what they ask the host for. The cabinet is guided practice
- * (hints allowed, never evidence); the drawer is a new application without hints. The server — here the
- * test adapter — decides what an answer counts as; the game only says which kind of situation it is.
- */
-const DECISION_POINTS: Readonly<Record<string, { purpose: "practice" | "check"; resultAction: string }>> = {
-  [CONTEXT_KEY]: { purpose: "practice", resultAction: RESULT_ACTION },
-  [DRAWER_KEY]: { purpose: "check", resultAction: DRAWER_RESULT_ACTION },
-};
-
-/**
- * Game page of the Arkivskabet prototype (D-307), loaded in an iframe on its own origin.
+ * Game page of the Arkivskabet prototype (D-307, v2 = D-322), loaded in an iframe on its own origin.
  *
  * It has no Supabase client, no session and no answer key. It reaches the learning system only through
  * the bridge (D-306): it asks for a task at the world's decision point, draws it as archive objects,
  * sends the pupil's committed action and lets the world react to the verdict. The engine's core is used
  * unchanged: the scene asks for a task by setting a global, and the verdict comes back as an event.
+ *
+ * D-322 learning sequence: 1 intro → (archive card, local practice) → 2 explore (turn the documents) →
+ * 3 hypothesis with a reason → 4 feedback pointing at the relevant information → 5 revision on a NEW task →
+ * 6 new application (drawer) → 7 reflection (local) → 8 revisit (LOCAL PROTOTYPE, no mastery).
+ * Which situation it is lives in sequence.ts; what an answer COUNTS as is decided only by the server side.
  */
 
 const KINDS = ["choice", "short_text"] as const;
@@ -84,6 +81,40 @@ async function boot(): Promise<void> {
   let context: string = CONTEXT_KEY;
   let lastAction: Action | null = null;
   let busy = false;
+  // Steps 7–8 start only once the world has said its line about the transfer verdict (idle world).
+  let afterTransferPending = false;
+
+  const intro = new IntroView(document.body);
+  const archiveCard = new ArchiveCardView(document.body);
+  const reflection = new ReflectionView(document.body);
+  const revisit = new RevisitView(document.body);
+
+  const pointFor = (key: string): DecisionPoint => DECISION_POINTS[key] ?? (DECISION_POINTS[CONTEXT_KEY] as DecisionPoint);
+
+  /** Asks the host for a task at a decision point and shows it; a failure is shown, never swallowed. */
+  const request = (key: string): Promise<void> => {
+    const point = pointFor(key);
+    busy = true;
+    context = key;
+    root.inert = true;
+    return client
+      .requestTask({ objectiveId: point.objectiveId, purpose: point.purpose, surface: "world", contextKey: key })
+      .then(open)
+      .catch((err: unknown) => {
+        root.inert = true;
+        view.show({ instanceToken: "none", kind: "choice", stimulus: { prompt: "Arkivaren kunne ikke finde en opgave.", options: null }, mode: "practice", hintsAvailable: 0, contextKey: key });
+        view.error(err instanceof BridgeError ? `Ingen opgave lige nu (${err.code}).` : String(err));
+      });
+  };
+
+  /** Steps 7 and 8 after the new application: reflection, then the (prototype) revisit task. */
+  const afterTransfer = async (): Promise<void> => {
+    busy = true;
+    root.inert = true;
+    await reflection.show();
+    await revisit.show();
+    await request(REVISIT_KEY);
+  };
 
   const finish = (outcome: string): void => {
     view.hide();
@@ -92,8 +123,9 @@ async function boot(): Promise<void> {
     lastAction = null;
     busy = false;
     // The world reacts to the verdict; it never computes one.
-    const point = DECISION_POINTS[context] ?? DECISION_POINTS[CONTEXT_KEY];
-    if ((outcome === "correct" || outcome === "incorrect" || outcome === "aborted") && point !== undefined) game.engine.event("cabinet", point.resultAction, { $outcome: outcome });
+    const point = pointFor(context);
+    if (outcome === "correct" || outcome === "incorrect" || outcome === "aborted") game.engine.event("cabinet", point.resultAction, { $outcome: outcome });
+    if (context === DRAWER_KEY && (outcome === "correct" || outcome === "incorrect")) afterTransferPending = true;
   };
 
   const send = async (action: Action): Promise<void> => {
@@ -124,14 +156,23 @@ async function boot(): Promise<void> {
       if (lastAction !== null) void send(lastAction);
     },
     close: (outcome) => finish(outcome),
+    // Step 5: after an incorrect assessment, a NEW instance of the same objective — never the same task again.
+    revise: () => {
+      view.hide();
+      current = null;
+      lastAction = null;
+      void request(REVISION_KEY);
+    },
   });
 
-  const intro = new IntroView(document.body);
   const open = (task: PresentBody): void => {
     current = task;
     context = task.contextKey;
     root.inert = true;
-    view.show(task);
+    const point = pointFor(task.contextKey);
+    // Revision is offered only on the source assessment (practice), never on the transfer or the revisit.
+    const allowRevision = task.contextKey === CONTEXT_KEY || task.contextKey === REVISION_KEY;
+    view.show(task, { activity: { cls: point.activity.cls, label: point.activity.label }, allowRevision });
   };
 
   game.setLanguage("da", false);
@@ -150,6 +191,11 @@ async function boot(): Promise<void> {
   const tick = (): void => {
     requestAnimationFrame(tick);
     if (busy || !titleScreen.hidden || !game.engine.idleReport().idle) return;
+    if (afterTransferPending) {
+      afterTransferPending = false;
+      afterTransfer().catch((err: unknown) => console.error("[sequence] after transfer", err));
+      return;
+    }
     if (resume !== null) {
       const task = resume;
       resume = null;
@@ -158,27 +204,23 @@ async function boot(): Promise<void> {
       return;
     }
     const req = game.engine.globals.get(TASK_REQUEST_GLOBAL);
-    const point = typeof req === "string" ? DECISION_POINTS[req] : undefined;
-    if (point === undefined || typeof req !== "string") return;
+    if (typeof req !== "string" || DECISION_POINTS[req] === undefined) return;
     game.engine.setGlobal(TASK_REQUEST_GLOBAL, "");
     busy = true;
     context = req;
-    // Phase 1: the pupil is introduced before the first task, never tested on what was not introduced.
+    // Step 1: the pupil is introduced before the first task, never tested on what was not introduced;
+    // the archive card then practises the four questions locally (never evidence).
     let introduced: Promise<void> = Promise.resolve();
     if (req === CONTEXT_KEY && game.engine.globals.get("intro_seen") !== true) {
       root.inert = true;
-      introduced = intro.show().then(() => {
-        game.engine.setGlobal("intro_seen", true);
-      });
+      introduced = intro
+        .show()
+        .then(() => archiveCard.show())
+        .then(() => {
+          game.engine.setGlobal("intro_seen", true);
+        });
     }
-    introduced
-      .then(() => client.requestTask({ objectiveId: "hist.besaettelsen.h4", purpose: point.purpose, surface: "world", contextKey: req }))
-      .then(open)
-      .catch((err: unknown) => {
-        root.inert = true;
-        view.show({ instanceToken: "none", kind: "choice", stimulus: { prompt: "Arkivaren kunne ikke finde en opgave.", options: null }, mode: "practice", hintsAvailable: 0, contextKey: context });
-        view.error(err instanceof BridgeError ? `Ingen opgave lige nu (${err.code}).` : String(err));
-      });
+    void introduced.then(() => request(req));
   };
   requestAnimationFrame(tick);
 }
