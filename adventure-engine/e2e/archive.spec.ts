@@ -378,6 +378,9 @@ test.describe("Arkivskabet — the evidence view (D-330): a correct answer is no
     // Transfer without help, in a situation never practised: independent AND applied.
     await useCabinet(page);
     await confirmLine(page, "line.drawer");
+    // Wait for the NEW task before turning documents (the previous sheet's buttons are still in the DOM).
+    await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "open");
+    await expect(f.locator("#lv-prompt")).toContainText("almindelig dansker i København");
     await investigate(f);
     await choose(f, "kilde_f", "til");
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "correct");
@@ -393,6 +396,7 @@ test.describe("Arkivskabet — the evidence view (D-330): a correct answer is no
     await page.locator("#advance-clock").click();
     await f.locator("#lv-revisit-start").click();
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "open");
+    await expect(f.locator("#lv-prompt")).toContainText("kæmpet");
     await investigate(f);
     await choose(f, "gb_rapport");
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "correct");
