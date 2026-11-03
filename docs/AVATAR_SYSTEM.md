@@ -400,6 +400,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Sweater combinations approved — D-336 (owner visual approval of 30; files staged privately; NOT published or integrated; flag false).**
+  - **Approved.** Heather and navy, each plain or with the teapot or fox print, with skirt, capri and olive, navy and sand trousers and beige sneakers: 30 combos in `ls2-owner-approval-v1.json`. Navy shorts are outside the approval.
+  - **Staged.** 15 runtime files reproduce all 30 approved renderings byte for byte when the hip seam is drawn behind the bottom (`planWithHipSeam`).
+  - **Reachable.** 24 of the 30 can be reached in today's opt-in; the olive ones cannot.
+  - **Next.** Publishing and integration need the owner's permission; the wording is in `docs/decisions/D-336.md`.
 - **Sweater master v2 — D-335 (offline; 30 candidates for the owner's visual review, not approved; nothing published or integrated; no runtime change).**
   - **Sleeve line fixed.** The cut's own layer split sends every fabric pixel over C's arm, its soft edge included, to the sleeve layer. Warm pixels on heather fell from 117 to 6. D-333's alpha cause was wrong.
   - **Hip seam.** The 52 hip pixels are their own layer, drawn behind the bottom (order body · shoes · hip seam · bottom · top body · arms · sleeves · head). The light notch with long trousers is gone, and skirt and capri stay clean. Outfits pass 42/42 with 0 enclosed holes and no double contour; the bottoms' soft edge differs by at most 9 levels.
