@@ -1,7 +1,7 @@
 {
   "decision": "D-300",
   "experiment": "SV (D-299): one independent validation of D-297's locked method on one new tight shoe source for the low sneaker, drawn at K = 4 and judged by the locked validation evaluator",
-  "status": "AUTHORISATION PREPARED by D-300; NOT EXECUTED: the send needs the exact token in D-300's status (merged) AND a separate owner execution instruction; no earlier permission is reused",
+  "status": "AUTHORISED by D-300 (D-300 SV: 1 CALL AUTHORISED): ONE single-use call; EXECUTED on the owner's instruction; no earlier permission is reused; CLOSED by D-301: 1 spent and received (SV-1, REJECTED SOURCE by the locked D-299 evaluation)",
   "meta": {
     "authorisesImageRequest": false,
     "why": "authorisation is the exact token in D-300's decision status plus this file's unspent entry, never a general boolean",
@@ -25,7 +25,17 @@
       "basis": "SS-1's measured usage for the same request shape (1,536 image-input, 350 text-input, 1,372 image-output tokens = $0.0552) with the prompt 206 bytes longer (about 70 more text tokens): expected about $0.056; at most about $0.07 with 600 text tokens and the largest measured image output (1,756 tokens, TPV-1)",
       "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
     },
-    "actuallySent": 0
+    "actuallySent": 1,
+    "closed": {
+      "by": "D-301",
+      "reason": "the one authorised call was sent once and received",
+      "spent": 1,
+      "received": 1,
+      "uncertain": 0,
+      "refusedBeforeSend": 0,
+      "closedUnused": 0,
+      "reopen": "never automatically; only a new owner decision"
+    }
   },
   "privacy": {
     "cSentToApi": "never: C is not part of this call",
@@ -122,8 +132,23 @@
         "filename": "SV-1-shoes-sneakers-low-tight-k4.claim.json",
         "eventsFilename": "SV-1-shoes-sneakers-low-tight-k4.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "recordedBy": "D-301",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_6d2405dd9a684812bda99e5e62bd41a8",
+        "imageSha256": "30e15fdacb167416afbb126301711b63acc46342423add21c2e1c15155dba71a",
+        "sentAt": "2026-11-01",
+        "fetches": 1,
+        "usage": {
+          "imageInputTokens": 1536,
+          "textInputTokens": 397,
+          "imageOutputTokens": 1372
+        },
+        "listPriceUsd": 0.0554,
+        "evaluation": "REJECTED SOURCE by the locked D-299 evaluation (collar check v2 only: a band 3 px thick painted over C's ankle > 2; 6 px of C's foot exposed inside the shoe > 0); detail, shape, skin, antialiasing, halo, seeds, lines and volume passed; all five variants NOT USABLE (the source); outfits 27 technical PASS, 3 FAIL (COMBO-2, KNOWN_D291)"
+      }
     }
   ],
   "adapterImplementations": {

@@ -1,6 +1,6 @@
 # L1 K1 — tilbagerulning af svarlogens nye felter
 
-Migration: `supabase/migrations/20261101220000_l1_k1_attempt_context.sql`.
+Migration: `supabase/migrations/20261103110000_l1_k1_attempt_context.sql`.
 
 Tilbagerulningen kræver ejerens **særskilte godkendelse** og køres som ét `apply_migration`-kald
 (D-110). Den er kun mulig, **før det første forsøg er skrevet**: den fjerner de seks kolonner, og

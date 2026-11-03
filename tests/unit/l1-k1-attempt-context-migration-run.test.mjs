@@ -1,4 +1,4 @@
-// RUNTIME proof for migration 20261101220000_l1_k1_attempt_context (L1 K1), PGlite.
+// RUNTIME proof for migration 20261103110000_l1_k1_attempt_context (L1 K1), PGlite.
 //
 // Built on the MERGED H5 chain (helpers/h5-integration-chain.mjs): production's order G1 → H5 bootstrap
 // → H5 alignment, and the repository's order, each followed by K1. The migration file and the
@@ -27,7 +27,7 @@ import {
 import { NOT_IN_PRODUCTION, planReplay } from "../isolated/schema/replay-plan.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const K1 = "20261101220000_l1_k1_attempt_context.sql";
+const K1 = "20261103110000_l1_k1_attempt_context.sql";
 const K1_SQL = () => migrationSql(K1);
 const MC_K1 = "public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text,text,integer)";
 const TEXT_K1 = "public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)";

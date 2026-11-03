@@ -1,0 +1,149 @@
+{
+  "decision": "D-320",
+  "meta": {
+    "authorisesImageRequest": false,
+    "note": "the authorisation is the token in D-320's status on origin/main together with the owner's separate execution instruction; this file is the budget and the entry"
+  },
+  "budget": {
+    "authorised": 1,
+    "reserve": 0,
+    "retries": 0,
+    "fallback": false,
+    "reusesEarlierPermissions": false,
+    "automaticExtension": false,
+    "separateFrom": "every earlier budget (D-295's SS-1 and D-300's SV-1 included: both spent and closed)",
+    "enforcedLimit": "the call count (one one-shot claim); the price is an estimate",
+    "price": {
+      "verifiedAt": "2026-11-02",
+      "source": "https://developers.openai.com/api/docs/pricing (Standard, gpt-image-2.5-sunburst: text input $5.00, image input $8.00, image output $30.00 per 1M tokens; cached input applies only to the Responses API; no per-image table and no separate snapshot price on the page)",
+      "perCallEstimate": 0.06,
+      "perCallUpperEstimate": 0.07,
+      "totalEstimate": 0.06,
+      "basis": "SV-1's measured usage for the same request shape (1,536 image-input, 397 text-input, 1,372 image-output tokens = $0.0554); this prompt is about 40 % longer (about 560 text tokens): expected about $0.056; at most about $0.07 with 800 text tokens and the largest measured image output (1,756 tokens, TPV-1)",
+      "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
+    },
+    "actuallySent": 1,
+    "closed": {
+      "by": "D-324",
+      "reason": "the one authorised call was sent once and received",
+      "spent": 1,
+      "received": 1,
+      "uncertain": 0,
+      "refusedBeforeSend": 0,
+      "closedUnused": 0,
+      "reopen": "never automatically; only a new owner decision"
+    }
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1536x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "what": "the layout reference (request.canvases)"
+      }
+    ],
+    "canvases": {
+      "ankle-boot-k4": {
+        "name": "ankle-boot-layout-image-1.png",
+        "bytes": 543709,
+        "sha256": "ff023bf235a48ee89ae21fb8a3835a34815d3cb45a7314dcefa0f2425b3fabbf",
+        "tracked": false
+      }
+    }
+  },
+  "frozen": {
+    "plan": {
+      "file": "tools/avatar/fixtures/northstar-wardrobe/shoe-source/ab-plan-v1.json",
+      "sha256": "691218ebe3a076dee54e6e3da3e5480bc641e3297f073660c433907ead0815a4"
+    },
+    "prompt": {
+      "sha256": "8e0f21250ed041a7956de984535f9949114e35ee658ff1de6d7c7cdd7de0f7e1"
+    },
+    "method": "shoe-master-v5-field + shoe-cut-kit (D-318) + cut evaluation (D-319)",
+    "methodFiles": {
+      "tools/avatar/northstar-shoe-cut-kit.mjs": "78deae0ae29671ba88ca152fa38905716da1a593893fd0aff708800044e56236",
+      "tools/avatar/northstar-shoe-cut-evaluate.mjs": "a404ea2126204f6e47351bbd59463e3cc545e03759e11ca3f392b82fc138471d",
+      "tools/avatar/northstar-shoe-cut-reference.mjs": "45ab1af57e6483bb4423d9594aa47121d5844e7f964405202a8182e99cc90416",
+      "tools/avatar/fixtures/northstar-wardrobe/shoe-cuts/ankle-boot.json": "ce3c7ec20d1decb1ac9006318ba1946329b1900da7d2cfab8f57945babde0a13",
+      "tools/avatar/northstar-shoe-master.mjs": "fb8f284c6bfc65e222da2f7fbbe090c881018e6bdd0e5bb3b78319e8a5183d0e",
+      "tools/avatar/northstar-shoe-master-v5.mjs": "11b69f60a968872114c773f9ec7fdce8632375b96eec291d8eaa05b88922f001",
+      "tools/avatar/northstar-shoe-eval-v2.mjs": "93a6872d858706322f17f17c99c7476f79fe7a08a4419fc9332e8cab87044ab0",
+      "tools/avatar/northstar-shoe-source.mjs": "0e0bbb4a0e2f0db88a6825aa1221b58abcc4fca9311a85133c2f64f618520e40",
+      "tools/avatar/northstar-shoe-master-study.mjs": "9a9ba9bf859f9d22f0c37cb3e14b833cb010ada37c9fa5c7f4472af5f02c431f",
+      "tools/avatar/northstar-r1-garment.mjs": "d6702ffb808c06f199e2437c76fab54dfea8c68b7a1e0d6842b10eb019e41906"
+    }
+  },
+  "stopRules": [
+    "a single call: no retry, no reserve, no fallback, no other model",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome — never resent",
+    "any HTTP error, moderation block or format error ends the experiment with that outcome",
+    "the executor's stop file AB-STOP.json"
+  ],
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-ankleboot-source-d320.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-320",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  },
+  "calls": [
+    {
+      "callId": "AB-1-shoes-ankleboot-tight-k4",
+      "category": "shoes",
+      "cut": "ankle-boot-k4",
+      "order": 1,
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "claim": {
+        "identity": "AB-1-shoes-ankleboot-tight-k4-claim",
+        "filename": "AB-1-shoes-ankleboot-tight-k4.claim.json",
+        "eventsFilename": "AB-1-shoes-ankleboot-tight-k4.events.jsonl"
+      },
+      "prompt": {
+        "sha256": "8e0f21250ed041a7956de984535f9949114e35ee658ff1de6d7c7cdd7de0f7e1"
+      },
+      "canvas": "ff023bf235a48ee89ae21fb8a3835a34815d3cb45a7314dcefa0f2425b3fabbf",
+      "recordedBy": "D-324",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_634eff68b30d420bbe1b49366aebb82e",
+        "fetches": 1,
+        "imageSha256": "9edfa6c2a6050aad8671eb684e16360cdcb566669b8e65bf9d4e887792526126",
+        "usage": {
+          "imageInputTokens": 1536,
+          "textInputTokens": 586,
+          "imageOutputTokens": 1372
+        },
+        "listPriceUsd": 0.0564,
+        "evaluation": "REJECTED SOURCE by the locked D-319 evaluation: fields — the sole seeds (400,1488 and 623,1488) lie on a drawn line, not in a field; every other check rule passed; chain not measurable, so no design or outfit result"
+      }
+    }
+  ],
+  "status": "AUTHORISED by D-320 (D-320 AB: 1 CALL AUTHORISED): ONE single-use call; EXECUTED on the owner's instruction; no earlier permission is reused; CLOSED by D-324: 1 spent and received (AB-1, REJECTED SOURCE by the locked D-319 evaluation: the contract's sole seeds do not lie in a field)"
+}

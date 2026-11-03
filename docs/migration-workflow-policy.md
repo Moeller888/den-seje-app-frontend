@@ -123,3 +123,32 @@ absence of database-deploying commands from `package.json` scripts and GitHub wo
 It is **documentation protection**. It cannot stop a person from typing `supabase db push` in a
 terminal, and it does not claim to. What it catches is this policy being quietly weakened, or a
 forbidden command being wired into automation where nobody would notice it.
+
+---
+
+## 6. Production tests and every other production action (D-313)
+
+**A script or test that signs in to production and calls its Edge Functions, REST or RPCs is a
+production write.** This holds even when it is meant to be read-only, and even when it lives in a
+file the guard does not inspect. On 2026-11-02 such a script wrote 14 answers, with quest and
+streak side effects, and caused one HTTP 500 (see the log below).
+
+It needs the owner's GO for that run. The GO names:
+- the project;
+- the account or E2E slot (never an e-mail address or a password);
+- the maximum number of writing calls;
+- the expected side effects (answers, XP, coins, quests, streak, profile).
+
+"Run the smoke" without them is not enough. There is no standing permission.
+
+**Every production action is recorded** as one file in
+[`docs/operations/production-actions/`](./operations/production-actions/README.md). That covers
+migrations, deployments, flags, secrets, and tests that write. Before any production action, read
+the recent files on a fresh `origin/main`. Each action gets its own file, so parallel sessions
+never edit the same line. Record only what was measured: unknown before-values stay unknown, and
+no secret or pupil identity is ever written down.
+
+Production credentials (test-account logins, service keys, tokens) are not read by a script a
+session wrote without the owner's GO. The automated guard is a text filter, not the boundary.
+
+This section is pinned by `tests/unit/production-testing-policy.test.mjs`.

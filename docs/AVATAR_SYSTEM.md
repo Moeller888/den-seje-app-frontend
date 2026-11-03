@@ -27,6 +27,21 @@ art layer behind them can be upgraded without a rewrite.
 
 ## 2. Current state (the honest picture)
 
+- **Northstar test wardrobe (browser opt-in only) — status after D-314, owner-tested and approved in the app (2026-11-02).**
+  - **What works in the opt-in** (`avatar.html?northstar=1`, `localStorage` only; `AVATAR_NORTHSTAR_WARDROBE = false`; no shop, catalogue, ordinary pupil activation or flag change):
+    - **Tops:** the cream and blue tees, and 16 print tees (teapot and shield in six colours, fox in four; D-274/D-275).
+    - **Bottoms:** sand skirt, navy shorts, light-blue capri, olive trousers, and the solid navy and sand trousers (D-281/D-283).
+    - **Shoes:** the four original items (beige and white sneakers, black lace-up boots, brown ankle boots) and the four SV1-V5 low sneakers (chalk, charcoal, navy/white, burgundy/gum; D-305/D-308).
+    - **Base:** the 19 ready K outfits.
+  - **SV1-V5 shoe combinations:** 326 approved (D-305's 21 + D-314's 305; `NORTHSTAR_SV1_SHOE_COMBOS`), 323 reachable in the current panel. The 3 cream tee + olive trousers combinations are approved but unreachable: no K outfit pairs them, and none was added for it.
+  - **Remaining limits:**
+    - Every choice is gated by explicit lists over the whole effective outfit: print tees only on the cream-tee outfits K01–K09; trousers only on D-281's checked top/shoe pairs; SV1 shoes only on the 326.
+    - Charcoal with long trousers (37) is excluded (COMBO-2 at leg/shoe; a separate decision), and the blue tee + skirt is a known fault.
+    - The figure has a neutral expression and does not blink; equipped cosmetics other than aura/back fall back to today's avatar.
+    - SV-1 is a rejected source by D-299's original rules, and master v5 is not independently validated (the approval covers the concrete items shown).
+    - The old reference sneaker's stroke tip is unfixed.
+  - **Not documented:** mass production across new cuts. Every working item family so far is one cut with colour or print variants. A new cut (another top, bottom or shoe shape) needs its own source, master and checks before variants can follow.
+  - See `docs/decisions/D-314.md` and the D-242 … D-314 entries below.
 - **`AVATAR_V2 = true` is LIVE in production** (`js/avatar-layers.js:230`, commit `52f8365`,
   2026-06-25). The C2 render path is the default for users.
 - **But the art is a placeholder.** The live render loads **flat hand-authored SVGs**
@@ -385,6 +400,64 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **AB-1 ankle boots in the Northstar opt-in — D-331 (LIVE in the opt-in; flag still false; no catalogue, shop or ordinary pupil view change).**
+  - **Published.** The 4 D-326 files are published byte for byte; their hashes were checked before publication.
+  - **Offered.** `AB1-BOOT-ORIGINAL` and `AB1-BOOT-LIGHTSAND` are offered in the "Sko" row for exactly the 180 combinations in `NORTHSTAR_AB1_BOOT_COMBOS`. 10 were shown to the owner and 170 checked technically.
+  - **Rule.** The whole effective outfit decides. Outside the list, the outfit's own shoes are shown, also after a reload.
+  - **Verified.** The runtime is byte-identical in 180/180 cases. The Chromium baseline, figure, choice, blocked and failure checks pass. See `docs/decisions/D-331.md`.
+- **Two AB-1 ankle boots approved by the owner — D-326 (registration + private preparation; NOT published, NOT integrated; flag false; 0 image calls).**
+  - **Approved.** `AB1-BOOT-ORIGINAL` (original colour) and `AB1-BOOT-LIGHTSAND` (light sand, approved as shown — not documented suede). Black + gum is not covered. See `ab1-boot-owner-approval-v1.json`.
+  - **History kept.** D-324's rejection, D-325's technical FAILs (ΔE p95 0.0568, line contrast below 0.2) and its development caveat stay as history.
+  - **Staged privately.** The 4 runtime files are 2 layers and 2 covering masks; the shadow is the published ankle boot's, via `shadowsOf`. They are byte-identical to the 12 shown renderings in the browser's own compose.
+  - **Combinations.** The opt-in could reach 180 combinations (90 outfits × 2). The 170 not shown in D-325 were checked: 170/170 PASS and byte-identical at runtime.
+  - **Next.** Publishing and integration need the owner's separate permission (wording in `docs/decisions/D-326.md`).
+- **Robust field labelling — D-325 (offline development study on AB-1; 0 image calls; contract v3 developed WITH knowledge of AB-1, so NOT independently validated; D-324's verdict and D-320's closure unchanged; no item approved).**
+  - **Cause.** v2's fixed sole seed (y 1488) sat in the old drawing's 2 px welt band; AB-1 draws the sole 2 px higher, so that row is a line.
+  - **Rule `zone-v1`.** `northstar-shoe-cut-seeds.mjs` and `ankle-boot-v3.json` find each field in a fixed zone by its safe pixels (at least 2 px from any line). Missing, ambiguous and merged fields are refused, and every choice is logged. At K, the fields decided at 1x are followed (`zone-v1-k-follows-1x`).
+  - **Locked files unchanged.** The D-318/D-319 files, contract v2 and the sneaker stay as they were.
+  - **Chain on AB-1.**
+    - All fields resolve, and the outfits pass 18/18.
+    - Technically, the original colour's ΔE p95 is 0.057 (limit 0.045), and line contrast is below 0.2 (the dark sole; the ink rule counts painted shading as line).
+    - Visually, the original colour and light sand look finished at app size and may go to owner review with the caveat visible. Black + gum is not finished (stepped heel edge, dark welt fragments).
+  - **Adapter.** The adapter's "next" hint now names the D-319 evaluator; no guard changed.
+  - See `docs/decisions/D-325.md`.
+- **AB-1 result — D-324 (one call sent and received, about $0.0564; REJECTED SOURCE by the locked D-319 evaluation; D-320 closed; no item approved).**
+  - **Rejected on one rule.** The source passed every quality and fit rule: detail at K, no stroke tips, no skin remnants, no glow, a closed separate rim band, shape, covering and opening. The contract's sole seeds (y 1488) lie on a drawn line between a welt band and the sole, so the fields could not be built. The chain, the designs and the outfits were therefore not measurable.
+  - **Possible false alarm.** The seed placement is recorded separately as a possible false alarm. The verdict stands. See `docs/decisions/D-324.md`.
+- **Ankle-boot source attempt prepared — D-319 (locked plan) and D-320 (authorisation of one call AB-1; prepared, NOT executed; 0 image calls; no item approved).**
+  - **Lock.** `ab-plan-v1.json` pins contract v2 (upper, rim and sole fields), the cut kit, the cut evaluator and the reference builder, master v5, the prompt, the model and parameters, three designs, the evaluation and `ACCEPT`.
+  - **Image 1.** A guide layer (stroke tips and skin specks dropped in the opening band). It is guidance, not image quality.
+  - **Clarified before the lock.** The original colour's ΔE p95 is master-bound (sneaker 0.032, boot 0.038), not a source fault. The boot's line contrast is only 0.047, so line and volume floors are absolute. Skin remnants are measured on the source at K.
+  - **Rehearsal.** The whole chain was rehearsed on the old source, which is rejected as expected. Estimate about $0.06, at most about $0.07. See `docs/decisions/D-319.md` and `D-320.md`.
+- **Shoe cut kit — D-318 (offline; 0 image calls; no asset, runtime or flag change).**
+  - **Contracts and method.** One contract per shoe cut (`fixtures/northstar-wardrobe/shoe-cuts/sneaker-low.json`, `ankle-boot.json`) holds crop, K, seeds and fields, the opening, covering, placement, bottoms and review regions. The shared method is `northstar-shoe-cut-kit.mjs`; the locked files are unchanged.
+  - **Results.** The kit reproduces the four approved SV1-V5 layers and their covering masks byte for byte. The new opening check (collar or shaft) classifies overlap and skin in the opening versus material on the shin, foot through the shoe and holes; it gets 15/15 real and negative cases right. Its tolerances are not yet independently validated.
+  - **Ankle boot.** The rehearsal on the existing dark source is technically clean (18/18 outfits) but visually limited by the source: stroke tips and a ragged shaft top. See `docs/decisions/D-318.md`.
+- **326 SV1-V5 shoe combinations in the opt-in — D-314 (the owner approved D-312's 305 candidates; no asset changed; flag false).**
+  - **Runtime.** `NORTHSTAR_SV1_SHOE_COMBOS` = D-305's 21 + D-314's 305 (`sv1-shoe-tee-owner-approval-v1.json`): the cream, blue and 16 print tees. 323 reachable, all byte-identical to the approved renderings. Charcoal with long trousers (37) stays refused on every top, also after a reload or a change.
+  - **Panel.** Only two reasons remain: "Vælg først et outfit." and "Koks er ikke godkendt med lange bukser." See `docs/decisions/D-314.md`.
+- **SV1-V5 shoes × blue and print tees — D-312 (offline check; candidates NOT approved; runtime list unchanged at 21).**
+  - **Checked.** 342 new combinations the opt-in can already compose. 305 technical PASS, all byte-identical in the runtime with no missing assets. 37 FAIL, exactly charcoal × long trousers (COMBO-2, held out).
+  - **Recommendation.** Extend the approval list with the 305 candidates in `sv1-shoe-tee-candidates-v1.json` (blue tee 17, print tees 288). This needs the owner's approval before `NORTHSTAR_SV1_SHOE_COMBOS` changes. See `docs/decisions/D-312.md`.
+- **SV1-V5 shoes in the Northstar opt-in — D-308 (the 8 D-305 files published with exact hashes; a shoe choice is shown only on the 21 approved combinations; flag false).**
+  - **Runtime.** `NORTHSTAR_SV1_SHOES` (4 shoes) and `NORTHSTAR_SV1_SHOE_COMBOS` (the 21 combinations). `northstarShoeAllowed` judges the whole effective outfit after the print-tee and trousers choices. Anything else keeps the outfit's own shoes, and the stored choice stays untouched. 18 combinations are reachable; the 3 olive ones are not, and no outfit was added. The panel has a "Sko" row with a reason for every unavailable choice.
+  - **Verified.** On the published files the result is byte-identical to the 18 approved D-304 renderings. In Chromium, 27 baseline pages are identical to main and choice, reload, return, blocked state and asset fallback all pass. See `docs/decisions/D-308.md`.
+- **SV1-V5 shoes approved — D-305 (owner's visual approval of 21 concrete combinations; layers staged privately, NOT published or integrated; flag false; D-301/D-302 and v5's missing independent validation stand).**
+  - **Approval.** `sv1-v5-owner-approval-v1.json` lists the 21 IDs: chalk, navy/white and burgundy/gum × six bottoms, and charcoal × skirt, shorts and capri. Charcoal × three long trousers is not approved.
+  - **Staged.** 8 files (4 shoe layers and 4 covering masks; the shadow reuses `shoes-sneakers-beige`) are lossless. The browser's plan and compose are byte-identical to the 21 approved renderings.
+  - **Plan.** An explicit combination list in the opt-in, with fallback to the outfit's own shoes; 18 of the 21 are reachable. Publishing and integration need the owner's separate permission, worded in `docs/decisions/D-305.md`.
+- **SV-1 + v5 candidate package — D-304 (for the owner's visual review; NOT approved; 0 image calls; D-301 stands; v5 not validated).**
+  - **Package.** `sv1-v5-candidates-v1.json` pins the source, processing, master v5, colours, covering, method files and each layer by sha256 for `SV1-V5-CHALK`, `-CHARCOAL`, `-NAVYWHITE` and `-BURGUNDYGUM`.
+  - **Results.** 21/24 technical PASS. Charcoal × three long trousers stays COMBO-2 FAIL [KNOWN_D291], diagnosed as a false alarm: the top lace's own edge under the hem, a weakness visible only magnified. No real image fault was found.
+  - **Recommended for review.** 21 combinations. The private page is under `<Documents>/DenSejeApp-artefacts/d304-sv1-v5-candidates/`. See `docs/decisions/D-304.md`.
+- **SV-1 offline follow-up — D-302 (0 image calls; D-301's REJECTED SOURCE unchanged; master v5 is a development prototype, not validated; no shoe approved).**
+  - **Collar.** The alarms are not image faults. Of the 162 ankle px, 133 lie on a legitimate tongue in front of the ankle and 29 on the collar side; the "3 px" is one antialiased pixel. The 6 "inside" px are one column where the opening's V dips lower and C's ankle shows through the opening. The check's reference assumption is too narrow; the locked verdict stands.
+  - **Colour line.** The cause is a closed field without a seed (the band between the upper|sole seam and the sole's inner line), split pixel by pixel by the breadth-first labelling. v5 (`northstar-shoe-master-v5.mjs`; v4 untouched) applies one rule: a closed field takes one material as a whole. Fixed on both shoes in all five colours, the chain measures still pass, and sole grain halves. See `docs/decisions/D-302.md`.
+- **SV-1 result — D-301 (one call sent and received; REJECTED SOURCE by the locked evaluation; D-300 closed; method INCOMPLETE pending the owner's visual review; no shoe approved).**
+  - **Passed.** The independent source passed every quality and processing rule: detail 1 px, line inventory 0.89–1.04×, volume ≥ 0.75×, antialiasing 99 %, no halo left. The chain kept the lines in all five colours.
+  - **Rejected.** The collar check v2 rejected it: a band 3 px over the ankle (limit 2) and 6 px of foot exposed inside the shoe. Every variant is therefore NOT USABLE. Outfits: 27 technical PASS, 3 COMBO-2 (KNOWN_D291, charcoal × trousers).
+  - **Separate findings.** A possible false alarm: the collar reads naturally at 1:1. A possible missed alarm: a colour line at the three-field toe corner in the contrast designs (v2 and v4).
+  - See `docs/decisions/D-301.md`.
 - **Shoe validation prepared — D-299 (method lock and plan) and D-300 (authorisation of one call SV-1; prepared, NOT executed; 0 image calls; no shoe approved).**
   - **Lock.** D-297's method is pinned by sha256 in `sv-plan-v1.json`: master v4, evaluation v2, the K-source geometry, the new evaluator `northstar-shoe-validation-evaluate.mjs`, the measures and the unchanged outfit check. Its parameters are tested against the code, and the adapter refuses a send if any file differs on origin/main.
   - **New rules.** Painted volume: upper, toe cap and sole must keep ≥ 0.7× the published drawing's. Antialiasing is measured on the source, ≥ 50 % of the silhouette edge, because the 4× downscale alone makes partial alpha.

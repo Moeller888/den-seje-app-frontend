@@ -347,7 +347,7 @@ const REVIEWED_LATER_REPEAT_USERS = {
   "20261101190100_question_attempts_v2_align_grading.sql":
     "H5 integration: re-creates only process_question_attempt_v2 (D-280's alias rule); it redefines none " +
     "of this migration's functions and does not touch question_instances.",
-  "20261101220000_l1_k1_attempt_context.sql":
+  "20261103110000_l1_k1_attempt_context.sql":
     "L1 K1: adds six columns to question_attempts and re-creates only process_question_attempt_v2 and " +
     "process_text_answer_v2 with two more parameters (mode, hints) whose bodies are the previous ones plus " +
     "K1's lines (proven in l1-k1-attempt-context-migration-run.test.mjs: same outcomes, amounts, streak and " +
@@ -371,7 +371,7 @@ test("reviewed later repeat users redefine none of this migration's functions", 
     ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql",
       "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql",
       "20261030211428_question_attempts_v2.sql", "20261101190000_question_attempts_v2_bootstrap.sql",
-      "20261101190100_question_attempts_v2_align_grading.sql", "20261101220000_l1_k1_attempt_context.sql"],
+      "20261101190100_question_attempts_v2_align_grading.sql", "20261103110000_l1_k1_attempt_context.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
@@ -417,12 +417,19 @@ test("the reviewed spelling migration is the only later definition of the repeat
   // answer and the key). Its runtime suite (grading-meaningful-characters-migration-run) proves the
   // body is D-280's byte for byte outside those lines — rewards, repeat award, reopen, lock and CAS
   // included — and that first and repeat answers pay exactly as before.
+  // D-316 redefines release_open_question_outside with ONE added condition in both statements: the
+  // caller's open round is also released when its question is inactive. The two paths stay this
+  // migration's: a round-1 instance is deleted; a reopened repeat is CLOSED with repeat_count kept, so it
+  // can never be served again as a first attempt with the full award. It writes no reward. Its runtime
+  // suites (release-open-rounds-inactive-migration-run, -pg) prove both paths, the untouched rows and the
+  // rollback to this migration's exact body (md5 7b7693b3…).
   assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
     ["20261018143726_fix_danish_question_bank_text.sql",
      "20261027120000_repeat_answer_coin_reward.sql",
      "20261031194600_mc_length_cue_answer_paths.sql",
      "20261031194700_mc_length_cue_top10.sql",
-     "20261101150000_grading_meaningful_characters.sql"]);
+     "20261101150000_grading_meaningful_characters.sql",
+     "20261102100000_release_open_rounds_on_inactive_questions.sql"]);
 });
 
 test("the migration version is not shared with any other migration", () => {

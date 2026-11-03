@@ -107,7 +107,7 @@ export const LEGACY_ANSWER_RPCS = Object.freeze({ mc: "process_question_attempt"
 
 export type V2Submission ={ roundNo: number; submissionId: string; reviewText: string | null; misconceptionType: string | null };
 
-// L1 K1 (migration 20261101220000, docs/learning-progression-l1-contracts.md §K1): the activity mode
+// L1 K1 (migration 20261103110000, docs/learning-progression-l1-contracts.md §K1): the activity mode
 // and the hints used are decided by the SERVER and are constants here until L3 (hints) and L5 (modes
 // recorded on the instance). They are never read from the request body: a client that sends fields
 // with these names is ignored, because nothing in this module takes them as arguments.

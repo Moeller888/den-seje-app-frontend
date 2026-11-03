@@ -323,11 +323,13 @@ const REVIEWED_LATER_READERS = {
     "NOTICE. No policy, RLS or table privilege on question_instances is touched (proven in " +
     "mc-length-cue-top10-migration-run.test.mjs).",
   "20261101140000_deactivate_two_misgraded_questions.sql":
-    "D-290 G2: an owner-run DO block — no function, nothing a client can call. It reads " +
-    "question_instances only as count(*) of the open instances of two named questions (a guard that " +
-    "must find 0), returns nothing to anyone and writes only questions.is_active. No policy, RLS, " +
-    "table privilege or row of question_instances is touched (proven in " +
-    "deactivate-two-misgraded-questions-migration-run.test.mjs).",
+    "D-290 G2: an owner-run DO block reads question_instances only as count(*) of the open instances " +
+    "of two named questions (a guard that must find 0), returns nothing to anyone and writes only " +
+    "questions.is_active. The open-round guard is a BEFORE INSERT/UPDATE trigger on question_instances " +
+    "whose SECURITY DEFINER function (EXECUTE revoked from every role, so nothing a client can call) " +
+    "reads one questions row's is_active FOR SHARE and returns the row being written or refuses it; it " +
+    "reads no instance and returns no data. No policy, RLS, table privilege or existing row of " +
+    "question_instances is touched (proven in deactivate-two-misgraded-questions-migration-run.test.mjs).",
   "20261101150000_grading_meaningful_characters.sql":
     "D-290 G1: re-creates process_question_attempt from D-280's body with only its three grading lines " +
     "changed; the single read of question_instances (one instance by id AND student_id) is unchanged and " +
@@ -346,7 +348,7 @@ const REVIEWED_LATER_READERS = {
     "G1's comparison (normalize_choice_answer / normalize_number_answer) only; its read is unchanged (one " +
     "instance by id and student_id), EXECUTE is service_role only. No policy, RLS or table privilege on " +
     "question_instances is touched (proven in question-attempts-v2-bootstrap.test.mjs).",
-  "20261101220000_l1_k1_attempt_context.sql":
+  "20261103110000_l1_k1_attempt_context.sql":
     "L1 K1: re-creates the two _v2 functions with mode and hints; their read of question_instances is " +
     "unchanged (one instance by id AND student_id, FOR UPDATE) — the only new use is that row's created_at " +
     "for the technical interval, stored in the pupil's own attempt. EXECUTE is service_role only. No " +
@@ -491,7 +493,7 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261101150000_grading_meaningful_characters.sql",
      "20261101190000_question_attempts_v2_bootstrap.sql",
      "20261101190100_question_attempts_v2_align_grading.sql",
-     "20261101220000_l1_k1_attempt_context.sql"],
+     "20261103110000_l1_k1_attempt_context.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

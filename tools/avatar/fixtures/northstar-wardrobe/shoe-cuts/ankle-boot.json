@@ -1,0 +1,137 @@
+{
+  "id": "ankle-boot",
+  "label": "Ankelstøvle",
+  "contract": "shoe-cut-v1",
+  "referenceItem": "shoes-ankleboots-brown",
+  "note": "the published brown ankle boot (D-239/D-240 run d-240-shoe-cover/run-1) as the reference geometry; its existing source is dark and its covering needed D-240's extraction fix. Version 2 (D-319, before any lock): the shaft's rim band is its own field (the new source must separate it), the opening zone reaches the rim band's top line, and each field has a minimum size per side at 1x",
+  "source": {
+    "crop": {
+      "x0": 320,
+      "y0": 1270,
+      "w": 384,
+      "h": 256
+    },
+    "K": 4,
+    "splitX": 512,
+    "layoutReference": {
+      "file": null,
+      "sha256": null,
+      "from": "layoutCanvas(the reference item's published layer) — written only when a source attempt is prepared"
+    }
+  },
+  "fields": {
+    "upper": {
+      "slot": "upper",
+      "seeds": [
+        [
+          415,
+          1345
+        ],
+        [
+          608,
+          1345
+        ]
+      ],
+      "minPxPerSide": 8000
+    },
+    "rim": {
+      "slot": "tongue",
+      "seeds": [
+        [
+          405,
+          1325
+        ],
+        [
+          620,
+          1325
+        ]
+      ],
+      "minPxPerSide": 120
+    },
+    "sole": {
+      "slot": "sole",
+      "seeds": [
+        [
+          400,
+          1488
+        ],
+        [
+          623,
+          1488
+        ]
+      ],
+      "minPxPerSide": 1500
+    }
+  },
+  "opening": {
+    "type": "shaft",
+    "zone": {
+      "y0": 1296,
+      "y1": 1322
+    },
+    "riseMaxPx": 3,
+    "envelopePx": 2,
+    "parts": [
+      "the shaft's rim band around the leg (its own field)",
+      "the inside of the shaft above the rim band (skin of the leg may show)"
+    ]
+  },
+  "covering": {
+    "rule": "closed-footwear",
+    "sliverPx": 6
+  },
+  "placement": {
+    "maxShiftPx": 2,
+    "downscale": "premultiplied K x K area average",
+    "translation": "one global integer translation"
+  },
+  "evaluation": {
+    "bottoms": [
+      "bottom-skirt-sand",
+      "bottom-shorts-navy",
+      "bottom-capri-lightblue",
+      "bottom-trousers-square-olive",
+      "bottom-trousers-square-navy",
+      "bottom-trousers-square-sand"
+    ],
+    "reviewRegions": {
+      "shaft top L": [
+        380,
+        1290,
+        480,
+        1330
+      ],
+      "shaft top R": [
+        544,
+        1290,
+        644,
+        1330
+      ],
+      "toe L": [
+        336,
+        1420,
+        440,
+        1504
+      ],
+      "toe R": [
+        584,
+        1420,
+        688,
+        1504
+      ],
+      "heel L": [
+        430,
+        1400,
+        500,
+        1504
+      ],
+      "heel R": [
+        524,
+        1400,
+        594,
+        1504
+      ]
+    }
+  },
+  "contractVersion": 2
+}

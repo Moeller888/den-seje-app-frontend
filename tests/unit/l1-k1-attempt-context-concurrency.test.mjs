@@ -1,4 +1,4 @@
-// REAL PostgreSQL 17 proof for migration 20261101220000_l1_k1_attempt_context (L1 K1) — what PGlite (one
+// REAL PostgreSQL 17 proof for migration 20261103110000_l1_k1_attempt_context (L1 K1) — what PGlite (one
 // connection) cannot show: K1 keeps H5's exactly-once guarantees under contention.
 //
 //   0. On PostgreSQL 17, K1 applies on production's H5 order and the documented rollback restores the
@@ -38,7 +38,7 @@ test("a real PostgreSQL server is present where it is required (CI)", { skip: !R
   assert.equal(SKIP, false, `LEVEL_ENGINE_PG_REQUIRED=1, but: ${SKIP}`);
 });
 
-const K1 = "20261101220000_l1_k1_attempt_context.sql";
+const K1 = "20261103110000_l1_k1_attempt_context.sql";
 function rollbackSql() {
   const m = /```sql\n([\s\S]*?)```/.exec(readFileSync(join(ROOT, "docs/operations/l1-k1-attempt-context-rollback.md"), "utf8").split("\r\n").join("\n"));
   assert.ok(m && /ROLLBACK L1 K1/.test(m[1]));
