@@ -46,7 +46,8 @@ const gnq = (request, pupil, body) =>
 const answer = (request, pupil, instanceId, text) =>
   request.post(`${SUPA}/functions/v1/process-event`, {
     headers: { apikey: ANON, authorization: `Bearer ${pupil.token}`, ...json },
-    data: { question_instance_id: instanceId, answer: text, question_shown_at: new Date().toISOString() },
+    // process-event takes question_shown_at as epoch milliseconds (the adapter sends Date.now()).
+    data: { question_instance_id: instanceId, answer: text, question_shown_at: Date.now() },
   });
 const instances = async (request, pupil) =>
   await (await request.get(`${SUPA}/rest/v1/question_instances?select=id,answered,was_correct,correct_answer,repeat_count,questions(learning_objective)&student_id=eq.${pupil.id}&order=created_at`, { headers: svc })).json();
@@ -140,11 +141,16 @@ test("an open question in ANOTHER objective is a 409: not served as this objecti
 test("concurrent targeted requests: ONE open instance, the same one for every request", async ({ request }) => {
   const p = await makePupil(request, "concurrent");
   const rs = await Promise.all([0, 1, 2].map(() => gnq(request, p, { subject: "historie", learning_objective: "world_war_2" })));
-  const ok = rs.filter((r) => r.status() === 200);
-  expect(ok.length, "at least one request is served").toBeGreaterThan(0);
-  const ids = new Set(await Promise.all(ok.map(async (r) => (await r.json()).question_instance_id)));
-  expect(ids.size, "never two different instances").toBe(1);
+  const bodies = await Promise.all(rs.map(async (r) => ({ status: r.status(), body: await r.json() })));
+  const served = bodies.filter((b) => b.status === 200 && typeof b.body.question_instance_id === "string");
+  expect(served.length, "at least one request is served").toBeGreaterThan(0);
+  expect(new Set(served.map((b) => b.body.question_instance_id)).size, "never two different instances").toBe(1);
+  // A request that lost the race is told so explicitly — never "the objective is exhausted".
+  for (const b of bodies.filter((x) => !served.includes(x))) expect(b).toEqual({ status: 409, body: { error: "open_question_exists" } });
   expect(await instances(request, p)).toHaveLength(1);
+  // A retry gets the same instance.
+  const again = await (await gnq(request, p, { subject: "historie", learning_objective: "world_war_2" })).json();
+  expect(again.question_instance_id).toBe(served[0].body.question_instance_id);
 });
 
 test("an exhausted objective is an explicit objective_exhausted and NEVER a repeat (E2); untargeted, the same pupil may get one", async ({ request }) => {
