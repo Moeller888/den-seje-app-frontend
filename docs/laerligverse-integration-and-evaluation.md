@@ -1,5 +1,7 @@
 # Lærligverse: integrationskontrakt mod H4/H5, didaktisk evalueringsmodel og demoguide (D-323)
 
+> **Terminologi, rettet 2026-11-03 (D-329).** I projektets kanoniske dokumenter er **H4** D-266's »nye indsendelser af lange svar før bedømmelse«, og **H5** er svarloggen `question_attempts` (D-273). Dette dokument brugte »H4« løst om *målretning af læringsmål*. Den funktion hedder nu **målretning (D-329)** og er bygget slukket som standard. Hvor der nedenfor står »H4« om lærerbedømt fritekst, er det D-266's H4. Hvor der står »H4« om mål, læs »målretning (D-329)«.
+
 Status: **udkast til ejerbeslutning**. Dokumentet ændrer ingen kode, ingen database og ingen deploy.
 Det beskriver, hvad Lærligverse forventer af læringsmotoren (H4/H5), når den findes. Det træffer **ingen**
 LP-2- eller LP-13-beslutning og forudsætter ikke, at H5 er anvendt i produktionen.
@@ -88,7 +90,7 @@ adapter (`LaerligTaskService`): den skal kalde v2-endpoints og mappe de nye udfa
 | 3 Forståelse | Rigtigt svar **og** en begrundelse, der passer | Begrundelsen vælges, men sendes og bedømmes ikke | — (kun lærerens observation) |
 | 4 Selvstændig anvendelse | Rigtigt i en ny situation uden hjælp | Kun i testadapteren; legacy kender ikke hints eller mode | — |
 | 5 Fastholdelse | Rigtigt efter en forsinkelse | Genbesøget er lokalt og forsinkelsen springes over | — |
-| 6 Dokumenteret progression | Gentagne selvstændige, forsinkede rigtige svar på samme mål | Kræver H4 (mål), H5 (mode/hints/forsøg) og K4/K7 | — |
+| 6 Dokumenteret progression | Gentagne selvstændige, forsinkede rigtige svar på samme mål | Kræver målretning (D-329), H5 + L1 K1 (mode/hints/forsøg) og K4/K7 | — |
 
 **Konklusion:** I dag kan F3 dokumentere niveau 2 mod den rigtige backend. Niveau 3–6 er designet og vist i
 testadapteren, men **ikke dokumenteret**.
@@ -188,7 +190,7 @@ browserfanen.**
 
 ## 6. Pilotplan (forslag)
 
-1. **Forudsætning**: backend kan målrette et objective (H4) og registrere `mode` og `hints_used` (H5). Indtil da kan piloten kun køre på testadapteren og **uden** registrering, dvs. kun med papirbaseret præ/post.
+1. **Forudsætning**: backend kan målrette et objective (D-329, bygget, slukket) og registrere `mode` og `hints_used` (H5 + L1 K1). Indtil da kan piloten kun køre på testadapteren og **uden** registrering, dvs. kun med papirbaseret præ/post.
 2. Én lektion (45 min): prætest 10 min → forløb 20 min → posttest og overførsel 10 min → lærerens opsamling 5 min (Hanghøj: lærerens rolle).
 3. Forsinket test efter 7 dage, 10 min.
 4. Lærerinterview (15 min) og 3–4 elevinterviews.
