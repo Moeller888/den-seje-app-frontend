@@ -12,6 +12,8 @@
 //      targeting can only NARROW what the pupil may already be served, never widen it  → 403 otherwise.
 //   3. An open instance from ANOTHER objective is never served as this objective's question, and it is
 //      not released or changed either (no side effect on the ordinary quiz)             → 409.
+//   3b. A request that lost the race for the one open instance (idx_one_open_question) to a concurrent
+//      request is told so explicitly (409 open_question_exists), never "exhausted"; a retry gets it.
 //   4. Targeting never reaches the REPEAT step. Narrowing the scope to one objective would otherwise
 //      re-create the "mini-scope" that audit finding E2 closed (an exhausted mini-pool hands out repeats
 //      while unanswered questions remain elsewhere). An exhausted objective is an explicit

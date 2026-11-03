@@ -80,7 +80,11 @@ test("index.ts: a targeted request returns objective_exhausted BEFORE the repeat
   const exhausted = INDEX_CODE.indexOf('if (!inserted && targeting.mode === "on") {');
   const repeat = INDEX_CODE.search(/if \(!inserted\) \{[\s\S]{0,600}request_repeat_question/);
   assert.ok(exhausted > 0 && repeat > exhausted, "the targeted early return comes first");
-  assert.match(INDEX_CODE.slice(exhausted, repeat), /step: "no_questions", reason: "objective_exhausted"/);
+  const block = INDEX_CODE.slice(exhausted, repeat);
+  assert.match(block, /step: "no_questions", reason: "objective_exhausted"/);
+  // A lost race for the one open instance is a 409, checked BEFORE "exhausted" is claimed.
+  assert.ok(block.indexOf('error: "open_question_exists"') > 0 && block.indexOf('error: "open_question_exists"') < block.indexOf("objective_exhausted"));
+  assert.match(block, /\.from\("question_instances"\)\s*\.select\("id"\)\s*\.eq\("student_id", student_id\)\s*\.eq\("answered", false\)/);
 });
 
 test("index.ts: an open instance of another objective is a 409 with no release and no other side effect", () => {

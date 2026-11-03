@@ -161,7 +161,7 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat | dette repository | 15 | `f42296bbe15a3e912cb4d756f2360ee0546cef4ce0edb9f2e750005c8d3bcd3f` |
+| Kandidat | dette repository | 15 | `129c3199a7786210008a711f4b9fea5ac63e4579e96fdc0c03f9c6675ec67626` |
 | Forrige kandidat (før D-329, målretning af læringsmål) | main før D-329 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
 | Forrige kandidat (Match par #377, før log-pseudonym #379) | main før #379 | 13 | `2ce45c7eaa113a9bda93d342e77e51e53efbe3b53ea64aeabaec0bb9dda3560e` |
 | Forrige kandidat (H5 PR 2, før Match par #377) | main før #377 | 12 | `a52e2da432f61fb7cdcf38827529526a33e9b0d6ad123cc0a91095cb4d30ebc3` |
@@ -187,7 +187,7 @@ D-329 (Lærligverse F4-B) tilføjer `objective-target.ts` og målretning af ét 
 præcis `on` **og** anmodningen indeholder `learning_objective`. Slukket laver funktionen præcis de samme
 kald som før. `learning_objective` læses kun i den åbne instans' select, når målretningen er tændt, så
 slukket-pariteten er uændret. Tændt kan den kun indsnævre det server-afledte scope. Den springer
-gentagelsestrinnet over (E2) og svarer 409 på en åben instans fra et andet mål. Secret'en sættes ikke i
+gentagelsestrinnet over (E2) og svarer 409 på en åben instans fra et andet mål, og 409 `open_question_exists`, hvis en samtidig anmodning vandt den ene åbne instans. Secret'en sættes ikke i
 produktionen uden ejerens særskilte GO.
 Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
 kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i

@@ -429,6 +429,21 @@ serve(async (req) => {
     // English repeat, and "the pool is empty" must mean empty for the chosen subject.
     // D-329 rule 4: a targeted request never reaches the repeat step (E2 mini-scope).
     if (!inserted && targeting.mode === "on") {
+      // A concurrent request may have won idx_one_open_question (one open instance per pupil): then the
+      // objective is NOT exhausted. Say so explicitly; the caller's retry gets that instance as due.
+      const { data: openRows, error: openError } = await admin()
+        .from("question_instances")
+        .select("id")
+        .eq("student_id", student_id)
+        .eq("answered", false)
+        .limit(1);
+      if (openError) throw openError;
+      if (Array.isArray(openRows) && openRows.length > 0) {
+        return new Response(JSON.stringify({ error: "open_question_exists" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        });
+      }
       return new Response(JSON.stringify({ step: "no_questions", reason: "objective_exhausted" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
