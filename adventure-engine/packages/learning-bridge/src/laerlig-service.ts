@@ -101,6 +101,8 @@ function failure(status: number, body: unknown): ServiceError {
   if (status === 403) return new ServiceError("forbidden", false);
   if (status === 404) return new ServiceError("not_found", false);
   if (status === 426) return new ServiceError("outdated", false, "the backend closed this answer path");
+  // D-329: a concurrent request won the pupil's one open instance. Transient: a retry gets that instance.
+  if (status === 409 && isObj(body) && body.error === "open_question_exists") return new ServiceError("unavailable", true, "open_question_exists");
   // D-329 open_question_other_objective; H5 round_closed / stale_round / submission_conflict. Never retried:
   // the server refused on purpose and wrote nothing.
   if (status === 409) return new ServiceError("unavailable", false, isObj(body) ? String(body.error ?? body.outcome ?? "conflict") : "conflict");

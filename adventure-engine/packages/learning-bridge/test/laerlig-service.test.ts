@@ -299,6 +299,8 @@ describe("LaerligTaskService — objective targeting, D-329/D-330 (mock HTTP; th
       [{ status: 400, body: { error: "invalid_learning_objective" } }, "invalid", false],
       [{ status: 403, body: { error: "learning_objective_not_allowed" } }, "forbidden", false],
       [{ status: 409, body: { error: "open_question_other_objective" } }, "unavailable", false],
+      // A lost race for the one open instance: transient, the host's retry is served that instance.
+      [{ status: 409, body: { error: "open_question_exists" } }, "unavailable", true],
       [{ status: 200, body: { step: "no_questions", reason: "objective_exhausted" } }, "unavailable", false],
       [{ status: 504, body: null }, "server", true],
       [new Error("timeout"), "network", true],
