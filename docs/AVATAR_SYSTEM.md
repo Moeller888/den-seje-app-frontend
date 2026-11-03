@@ -400,6 +400,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **AB-1 ankle boots in the Northstar opt-in — D-331 (LIVE in the opt-in; flag still false; no catalogue, shop or ordinary pupil view change).**
+  - **Published.** The 4 D-326 files are published byte for byte; their hashes were checked before publication.
+  - **Offered.** `AB1-BOOT-ORIGINAL` and `AB1-BOOT-LIGHTSAND` are offered in the "Sko" row for exactly the 180 combinations in `NORTHSTAR_AB1_BOOT_COMBOS`. 10 were shown to the owner and 170 checked technically.
+  - **Rule.** The whole effective outfit decides. Outside the list, the outfit's own shoes are shown, also after a reload.
+  - **Verified.** The runtime is byte-identical in 180/180 cases. The Chromium baseline, figure, choice, blocked and failure checks pass. See `docs/decisions/D-331.md`.
 - **Two AB-1 ankle boots approved by the owner — D-326 (registration + private preparation; NOT published, NOT integrated; flag false; 0 image calls).**
   - **Approved.** `AB1-BOOT-ORIGINAL` (original colour) and `AB1-BOOT-LIGHTSAND` (light sand, approved as shown — not documented suede). Black + gum is not covered. See `ab1-boot-owner-approval-v1.json`.
   - **History kept.** D-324's rejection, D-325's technical FAILs (ΔE p95 0.0568, line contrast below 0.2) and its development caveat stay as history.

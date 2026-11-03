@@ -10,8 +10,9 @@
 // D-308: a fourth row offers the 4 owner-approved SV1-V5 shoes (D-305) only where the whole effective outfit is one of the 21 approved
 // combinations; an unavailable shoe is disabled and the reason is written under the row. Stored the same way (avatar_northstar_shoes);
 // "Outfittets egne sko" returns to the outfit's own shoes. D-314: the list now holds 326 combinations (also the blue tee and the 16 print
-// tees); the reasons name what is still not approved.
-import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SV1_SHOES, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarOutfitFor } from "./avatar-layers.js";
+// tees); the reasons name what is still not approved. D-331: the row also offers the 2 owner-approved AB-1 ankle boots (D-326), each
+// against its own list of 180 combinations; the same rule, store and fallback.
+import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarOutfitFor } from "./avatar-layers.js";
 
 function store(key, value) {
   try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch (_e) { return false; }
@@ -70,10 +71,10 @@ export function mountNorthstarPanel(panel, preview) {
   const shoesList = row("northstar-shoes-list"), shoeNote = document.createElement("p");
   shoeNote.className = "northstar-note";
   const blocked = [];
-  for (const [id, sh] of Object.entries(NORTHSTAR_SV1_SHOES)) { const ok = northstarShoeAllowed(current, shown, shownPants, id); button(shoesList, sh.label, NORTHSTAR_SHOES_KEY, id, id === shownShoe, !ok); if (!ok) blocked.push(sh.label); }
+  for (const [id, sh] of Object.entries(NORTHSTAR_SHOE_CHOICES)) { const ok = northstarShoeAllowed(current, shown, shownPants, id); button(shoesList, sh.label, NORTHSTAR_SHOES_KEY, id, id === shownShoe, !ok); if (!ok) blocked.push(sh.label); }
   button(shoesList, "Outfittets egne sko", NORTHSTAR_SHOES_KEY, null, !!current && !shownShoe, !current);
   shoeNote.textContent = blocked.length ? blocked.join(", ") + ": ikke mulig her. " + shoeReason(current, shown, shownPants) : "";
-  const what = () => { const parts = [shown ? NORTHSTAR_PRINT_TEES[shown].label : null, shownPants ? NORTHSTAR_SOLID_PANTS[shownPants].label : null, shownShoe ? NORTHSTAR_SV1_SHOES[shownShoe].label : null].filter(Boolean);
+  const what = () => { const parts = [shown ? NORTHSTAR_PRINT_TEES[shown].label : null, shownPants ? NORTHSTAR_SOLID_PANTS[shownPants].label : null, shownShoe ? NORTHSTAR_SHOE_CHOICES[shownShoe].label : null].filter(Boolean);
     return current ? current + (parts.length ? " med " + parts.join(" og ") : "") : ""; };
   const describe = () => {
     const path = preview && preview.dataset ? preview.dataset.avatarRenderPath : null;
