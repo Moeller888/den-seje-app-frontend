@@ -32,6 +32,8 @@ test("D-314 the runtime list is 21 + 305 = 326; 323 reachable, all approved; the
     const o = L.northstarOutfitFor(k, t, p); if (!o) continue;
     if (/trousers/.test(o.bottom)) assert.ok(!L.northstarShoeAllowed(k, t, p, "SV1-V5-CHARCOAL"), [k, t, p].join("+") + ": charcoal with long trousers");
     assert.ok(!L.northstarShoeAllowed(k, t, p, "SV1-V5-ORANGE") && !L.northstarShoeAllowed(k, t, p, null)); }
-  const man = JSON.parse(read("assets/avatar-northstar/manifest.json")); assert.equal(readdirSync(join(REPO, "assets", "avatar-northstar")).filter((f) => f !== "manifest.json").length, 73); assert.equal(man.files.length, 73);
+  // D-314 added no file: 73 before it; D-331 later published D-326's 4 boot files under their own permission
+  const man = JSON.parse(read("assets/avatar-northstar/manifest.json")), notD326 = (f) => !/^(hide-)?shoes-ankleboots-ab1-/.test(f);
+  assert.equal(readdirSync(join(REPO, "assets", "avatar-northstar")).filter((f) => f !== "manifest.json" && notD326(f)).length, 73); assert.equal(man.files.filter((f) => notD326(f.file)).length, 73);
   assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
 });
