@@ -161,7 +161,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat | dette repository | 15 | `129c3199a7786210008a711f4b9fea5ac63e4579e96fdc0c03f9c6675ec67626` |
+| Kandidat | dette repository | 15 | `d4532fdbf1f3eb80a4307a26836958c1e2d628155344773ca22ec61f035e096f` |
+| Forrige kandidat (D-329, før D-332's `option_details`) | `feat/laerligverse-f4-objective` | 15 | `129c3199a7786210008a711f4b9fea5ac63e4579e96fdc0c03f9c6675ec67626` |
 | Forrige kandidat (før D-329, målretning af læringsmål) | main før D-329 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
 | Forrige kandidat (Match par #377, før log-pseudonym #379) | main før #379 | 13 | `2ce45c7eaa113a9bda93d342e77e51e53efbe3b53ea64aeabaec0bb9dda3560e` |
 | Forrige kandidat (H5 PR 2, før Match par #377) | main før #377 | 12 | `a52e2da432f61fb7cdcf38827529526a33e9b0d6ad123cc0a91095cb4d30ebc3` |
@@ -189,6 +190,10 @@ kald som før. `learning_objective` læses kun i den åbne instans' select, når
 slukket-pariteten er uændret. Tændt kan den kun indsnævre det server-afledte scope. Den springer
 gentagelsestrinnet over (E2) og svarer 409 på en åben instans fra et andet mål, og 409 `open_question_exists`, hvis en samtidig anmodning vandt den ene åbne instans. Secret'en sættes ikke i
 produktionen uden ejerens særskilte GO.
+D-332 udvider den offentlige spørgsmåls-DTO (`_shared/question-dto.ts`) med det valgfrie felt
+`content.option_details`: én beskrivelse pr. svarmulighed (»bagsiden« af en kilde), kun for MC, højst 400
+tegn. Intet eksisterende spørgsmål har feltet, så svarene og slukket-pariteten er uændrede. Et misdannet felt
+afviser spørgsmålet som dårligt indhold.
 Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
 kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten

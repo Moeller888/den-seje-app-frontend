@@ -37,8 +37,8 @@ import { matchLayout, type MatchLayout } from "./match-pairs.ts";
 
 export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "option_details", "type", "force_text", "match"] as const);
 
-/** D-332: upper bound per option description (display text, not a document store). */
-export const MAX_OPTION_DETAIL_CHARS = 600;
+/** D-332: upper bound per option description — the same bound the Lærligverse bridge protocol enforces. */
+export const MAX_OPTION_DETAIL_CHARS = 400;
 
 export const PUBLIC_METADATA_KEYS = Object.freeze([
   "difficulty_type",

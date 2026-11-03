@@ -1,0 +1,55 @@
+{
+  "_om": "Lærerens afgørelser (D-332). Tilladte status: ikke_gennemgaaet, godkendt, godkendt_med_aendringer, afvist, kraever_undersoegelse. Værktøjet overskriver aldrig en afgørelse.",
+  "laerer": "",
+  "dato": "",
+  "elementer": {
+    "maal": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    },
+    "intro-1": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    },
+    "intro-2": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    },
+    "intro-3": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    },
+    "intro-tjek": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    },
+    "arkivkort": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    },
+    "h4-kilde": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    },
+    "h4-kilde-revision": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    },
+    "h4-overfoersel": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    },
+    "refleksion": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    },
+    "t1864": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    },
+    "h4-genbesoeg": {
+      "status": "ikke_gennemgaaet",
+      "kommentar": ""
+    }
+  }
+}

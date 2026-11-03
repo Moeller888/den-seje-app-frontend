@@ -230,10 +230,16 @@ export class LaerligTaskService implements TaskService {
     if (format === "mc" && c.force_text !== true && answerType === "short") {
       const opts = c.options;
       if (!Array.isArray(opts) || opts.length < 2 || opts.length > 12 || !opts.every((o) => typeof o === "string" && o.length > 0)) return bad("invalid options");
+      // D-332: optional per-option descriptions (the back of each source), one per option, same order.
+      const details = c.option_details;
+      if (details !== undefined && (!Array.isArray(details) || details.length !== opts.length || !details.every((t) => typeof t === "string" && t.length > 0 && t.length <= 400))) {
+        return bad("invalid option_details");
+      }
       stimulusOptions = (opts as string[]).map((text, i) => {
         const oid = `o${i + 1}`;
         options.set(oid, text);
-        return { id: oid, label: text };
+        const detail = Array.isArray(details) ? (details[i] as string) : undefined;
+        return detail === undefined ? { id: oid, label: text } : { id: oid, label: text, detail };
       });
       kind = "choice";
     } else if ((format === "text" && answerType === "short") || (format === "mc" && c.force_text === true && answerType === "short")) {

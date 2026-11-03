@@ -354,3 +354,20 @@ describe("LaerligTaskService — H5 submissions, D-273/D-330 (mock HTTP)", () =>
     await expect(svc.submit({ ...a, roundNo: 2 })).rejects.toMatchObject({ code: "invalid" });
   });
 });
+
+describe("LaerligTaskService — option_details, D-332 (mock HTTP)", () => {
+  it("passes the server's per-option descriptions through as the documents' backs; absent stays absent", async () => {
+    const withDetails = { ...MC, content: { ...MC.content, option_details: ["Afsender: a|Tid: b", "Afsender: c|Tid: d", "Afsender: e|Tid: f"] } };
+    const t = await new LaerligTaskService({ call: scripted({ status: 200, body: withDetails }).call, subject: "historie" }).fetchTask(Q);
+    expect(t.options?.map((o) => o.detail)).toEqual(["Afsender: a|Tid: b", "Afsender: c|Tid: d", "Afsender: e|Tid: f"]);
+    const plain = await new LaerligTaskService({ call: scripted({ status: 200, body: MC }).call, subject: "historie" }).fetchTask(Q);
+    expect(plain.options?.every((o) => !("detail" in o))).toBe(true);
+  });
+
+  it("malformed descriptions (wrong count, non-text, too long) refuse the task instead of misaligning backs and options", async () => {
+    for (const bad of [["one"], [1, 2, 3], ["a", "b", "c".repeat(401)], "x"]) {
+      const body = { ...MC, content: { ...MC.content, option_details: bad } };
+      await expect(new LaerligTaskService({ call: scripted({ status: 200, body }).call, subject: "historie" }).fetchTask(Q), JSON.stringify(bad)).rejects.toMatchObject({ code: "server" });
+    }
+  });
+});

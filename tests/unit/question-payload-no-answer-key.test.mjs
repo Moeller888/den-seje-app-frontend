@@ -171,7 +171,7 @@ test("D-332: option_details (the back of each source) pass only for MC, one per 
   // Absent: the payload is exactly what it was before D-332.
   assert.deepEqual(toPublicQuestion({ question: "Q?", options: ["a", "b"], correct: "a" }, "mc", null).content, { question: "Q?", options: ["a", "b"] });
   // Malformed: refused as bad content (the caller skips the question), never passed through.
-  for (const bad of [["only one"], "not an array", [1, 2], ["", "x"], ["x", "y".repeat(601)]]) {
+  for (const bad of [["only one"], "not an array", [1, 2], ["", "x"], ["x", "y".repeat(401)]]) {
     assert.throws(() => toPublicQuestion({ ...raw, option_details: bad }, "mc", null), /invalid option_details/, JSON.stringify(bad));
   }
   // Not for other formats.
