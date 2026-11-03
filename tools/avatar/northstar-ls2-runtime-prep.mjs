@@ -35,10 +35,11 @@ export const itemShape = (shadows) => Object.freeze({ category: "top", layers: O
 
 export function approval() { return JSON.parse(readFileSync(join(ROOT, APPROVAL_REL), "utf8")); }
 /** The plan of an outfit with the hip seam: northstarPlanFor's plan, plus one draw of the top's hipSeam file before the bottom's first
- *  draw. Returns null where northstarPlanFor does; a top without hipSeam gets the plan unchanged. */
+ *  draw. Returns null where northstarPlanFor does; a top without hipSeam gets the plan unchanged, and so does a plan that already draws
+ *  the seam (D-337 put the step into northstarPlanFor itself). */
 export function planWithHipSeam(AL, o, table, basePath) {
   const plan = AL.northstarPlanFor(o, table, basePath); if (!plan) return null; const top = table[o.top];
-  if (!top || !top.hipSeam) return plan;
+  if (!top || !top.hipSeam || plan.some((s) => s.src === basePath + "/" + top.hipSeam)) return plan;   // D-337: the runtime's plan draws it already
   const k = plan.findIndex((s) => s.op === "draw" && s.src === basePath + "/" + o.bottom + "-pants-v1.webp"); if (k < 0) throw new Error("no bottom draw in the plan");
   return [...plan.slice(0, k), { op: "draw", src: basePath + "/" + top.hipSeam }, ...plan.slice(k)];
 }

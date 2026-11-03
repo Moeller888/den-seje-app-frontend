@@ -400,6 +400,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Sweaters in the Northstar opt-in — D-337 (published and integrated behind the opt-in; flag still false; no catalogue, shop or ordinary pupil view change).**
+  - **Published.** The 15 D-336 files are published byte for byte; their hashes were checked before publication.
+  - **Order.** `northstarPlanFor` draws the hip seam after the shoes and before the bottom; the sweater's body and rib are drawn in front.
+  - **Choice.** The "Trøje" row offers 6 sweaters for exactly the 30 approved combinations (24 reachable). Outside the list the outfit's own top is shown and the stored choice is kept, also after a reload.
+  - **Verified.** The runtime is byte-identical to the 30 approved renderings. The Chromium baseline, figure (right hip ≤ 2 levels), choice, blocked and failure checks pass. See `docs/decisions/D-337.md`.
 - **Sweater combinations approved — D-336 (owner visual approval of 30; files staged privately; NOT published or integrated; flag false).**
   - **Approved.** Heather and navy, each plain or with the teapot or fox print, with skirt, capri and olive, navy and sand trousers and beige sneakers: 30 combos in `ls2-owner-approval-v1.json`. Navy shorts are outside the approval.
   - **Staged.** 15 runtime files reproduce all 30 approved renderings byte for byte when the hip seam is drawn behind the bottom (`planWithHipSeam`).

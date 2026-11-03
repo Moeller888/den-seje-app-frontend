@@ -7,7 +7,7 @@
   },
   "flag": "AVATAR_NORTHSTAR_WARDROBE (js/avatar-layers.js), false",
   "counts": {
-    "files": 77,
+    "files": 92,
     "shadows": 12,
     "maxFiles": 41,
     "maxShadows": 20,
@@ -15,7 +15,8 @@
     "d274Files": 32,
     "d281Files": 2,
     "d305Files": 8,
-    "d326Files": 4
+    "d326Files": 4,
+    "d336Files": 15
   },
   "outfits": {
     "K01": {
@@ -915,6 +916,248 @@
       },
       "sha256": "2d533c2537798dad46fbfbbe45d650c3d3c3a2af78274ae503fd11da9b06e322",
       "bytes": 39008,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-heather-fox-sleeves-v1.webp",
+      "purpose": "the sleeve layer of the owner-approved sweater LS2-HEATHER-FOX (D-336), drawn over C's arms",
+      "origin": {
+        "approved": "LS2-HEATHER-FOX",
+        "layerPixelSha256": "a1cb694c5176774c37e5e7cb1a954c64cb392d4c166d36463a57f098bdeae236",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "dcaed7063a0ae149d62b73be8c9232510f7ac118d9ec63e88ec96c0417915a2e",
+      "bytes": 23668,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-heather-fox-top-body-v1.webp",
+      "purpose": "the body layer of the owner-approved sweater LS2-HEATHER-FOX (D-336), split from the approved D-335 v3 layer by the cut's rule (LS2.splitLayers)",
+      "origin": {
+        "approved": "LS2-HEATHER-FOX",
+        "layerPixelSha256": "a1cb694c5176774c37e5e7cb1a954c64cb392d4c166d36463a57f098bdeae236",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "955e95df798a8210a0b34af2a5b46de46f9a4dafe3b52718f2b96c8d99173eb0",
+      "bytes": 72416,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-heather-sleeves-v1.webp",
+      "purpose": "the sleeve layer of the owner-approved sweater LS2-HEATHER (D-336), drawn over C's arms",
+      "origin": {
+        "approved": "LS2-HEATHER",
+        "layerPixelSha256": "0e7cc0701a90a2e8e03b3fc34e87ff4daccfb68f94a31d783dd03007bb3d5eaa",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "dcaed7063a0ae149d62b73be8c9232510f7ac118d9ec63e88ec96c0417915a2e",
+      "bytes": 23668,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-heather-teapot-sleeves-v1.webp",
+      "purpose": "the sleeve layer of the owner-approved sweater LS2-HEATHER-TEAPOT (D-336), drawn over C's arms",
+      "origin": {
+        "approved": "LS2-HEATHER-TEAPOT",
+        "layerPixelSha256": "085f70d111abae29c57c45784d9fd37e09df3579f72da3b1c0386d08df4c0a5d",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "dcaed7063a0ae149d62b73be8c9232510f7ac118d9ec63e88ec96c0417915a2e",
+      "bytes": 23668,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-heather-teapot-top-body-v1.webp",
+      "purpose": "the body layer of the owner-approved sweater LS2-HEATHER-TEAPOT (D-336), split from the approved D-335 v3 layer by the cut's rule (LS2.splitLayers)",
+      "origin": {
+        "approved": "LS2-HEATHER-TEAPOT",
+        "layerPixelSha256": "085f70d111abae29c57c45784d9fd37e09df3579f72da3b1c0386d08df4c0a5d",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "f8bfa47a3d6595eaaa5a42b978c49fce226cf38ac06f6ff5d8aba9b88c0b3629",
+      "bytes": 74342,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-heather-top-body-v1.webp",
+      "purpose": "the body layer of the owner-approved sweater LS2-HEATHER (D-336), split from the approved D-335 v3 layer by the cut's rule (LS2.splitLayers)",
+      "origin": {
+        "approved": "LS2-HEATHER",
+        "layerPixelSha256": "0e7cc0701a90a2e8e03b3fc34e87ff4daccfb68f94a31d783dd03007bb3d5eaa",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "0ad6d6adbc0399d2f961676c9d14fd17a739b2fcb9a510861d0d512f9a8d5939",
+      "bytes": 62196,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-hip-seam-v1.webp",
+      "purpose": "the sweater cut's hip seam (D-335 hipSeamLayer), drawn after the shoes and BEFORE the bottom",
+      "origin": {
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "pixelSha256": "217da648ba6c156100f08fb902df3b9a4aa0813383665fad66318f292fac74b4",
+        "decision": "D-336"
+      },
+      "sha256": "953ed60f4f9298352eaf040bc61020f04b4fb2deb5d0d8e575945c97cd5358ac",
+      "bytes": 446,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-navy-fox-sleeves-v1.webp",
+      "purpose": "the sleeve layer of the owner-approved sweater LS2-NAVY-FOX (D-336), drawn over C's arms",
+      "origin": {
+        "approved": "LS2-NAVY-FOX",
+        "layerPixelSha256": "232fe6f46a8c130e756840a41a3244a96e7cabeab49e998e19bd80052d3a0a4b",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "b28f4ea7ab9cc520c0dc334cd78fcf29b49534fb63db31a2b24801f1eab978be",
+      "bytes": 22602,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-navy-fox-top-body-v1.webp",
+      "purpose": "the body layer of the owner-approved sweater LS2-NAVY-FOX (D-336), split from the approved D-335 v3 layer by the cut's rule (LS2.splitLayers)",
+      "origin": {
+        "approved": "LS2-NAVY-FOX",
+        "layerPixelSha256": "232fe6f46a8c130e756840a41a3244a96e7cabeab49e998e19bd80052d3a0a4b",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "9822f123ba3b4188531e87b29cf6e979b7e991b3f7d014aefe72ea34fde7a5ff",
+      "bytes": 69094,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-navy-sleeves-v1.webp",
+      "purpose": "the sleeve layer of the owner-approved sweater LS2-NAVY (D-336), drawn over C's arms",
+      "origin": {
+        "approved": "LS2-NAVY",
+        "layerPixelSha256": "d5fc142dcd85aa9e6d3d0f9411eeaa508b215a4ab4a7c6de3ff530b311f8d616",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "b28f4ea7ab9cc520c0dc334cd78fcf29b49534fb63db31a2b24801f1eab978be",
+      "bytes": 22602,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-navy-teapot-sleeves-v1.webp",
+      "purpose": "the sleeve layer of the owner-approved sweater LS2-NAVY-TEAPOT (D-336), drawn over C's arms",
+      "origin": {
+        "approved": "LS2-NAVY-TEAPOT",
+        "layerPixelSha256": "49a1d8cc7f36aad4fd8003a250d0372abc01653f3e49cc31daceceab880153fc",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "b28f4ea7ab9cc520c0dc334cd78fcf29b49534fb63db31a2b24801f1eab978be",
+      "bytes": 22602,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-navy-teapot-top-body-v1.webp",
+      "purpose": "the body layer of the owner-approved sweater LS2-NAVY-TEAPOT (D-336), split from the approved D-335 v3 layer by the cut's rule (LS2.splitLayers)",
+      "origin": {
+        "approved": "LS2-NAVY-TEAPOT",
+        "layerPixelSha256": "49a1d8cc7f36aad4fd8003a250d0372abc01653f3e49cc31daceceab880153fc",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "5982ecf04755696180e10e4e052e372d4db0ccb3822d0e80210bdefa806b34a6",
+      "bytes": 70658,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-navy-top-body-v1.webp",
+      "purpose": "the body layer of the owner-approved sweater LS2-NAVY (D-336), split from the approved D-335 v3 layer by the cut's rule (LS2.splitLayers)",
+      "origin": {
+        "approved": "LS2-NAVY",
+        "layerPixelSha256": "d5fc142dcd85aa9e6d3d0f9411eeaa508b215a4ab4a7c6de3ff530b311f8d616",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+        "decision": "D-336"
+      },
+      "sha256": "afa517e9d08a2d6b374a52162246bf4dbb99ae7fa5de15fe5fe7404b90f7336a",
+      "bytes": 59356,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-shadow-arms-v1.webp",
+      "purpose": "the sweater cut's skin shadow on C's arms (multiply, D-214; shared by all six designs)",
+      "origin": {
+        "source": "the cut item's skin shadow",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-pilot",
+          "method": "d239",
+          "rawSha256": "de8d5d14559bf217a8fee5c0e403922942e241a51eec6819983e1f53fedf3c0b",
+          "files": {
+            "layer-topBody.png": "b848a9b1936b6c8708c79ecb461337626205ab68f12eb2e719485605fb0b56b8",
+            "layer-sleeves.png": "42ad22791e5de0eeb16b989aa68b23e653ee43bd7bccd8b4682e54c7ea7bf8da",
+            "shadow-multiply.png": "1c96d61915f1cc7ebdebfe0ac201ec306435095981d9964cbadabcb6ec2b596d"
+          }
+        },
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "decision": "D-336"
+      },
+      "sha256": "fe9c36b61f72d96d58a1c272613a3575cb9b8301a577fb6ed71f616fda421bf4",
+      "bytes": 1048,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-sweater-ls2-shadow-body-v1.webp",
+      "purpose": "the sweater cut's skin shadow on C's body (multiply, D-214; shared by all six designs)",
+      "origin": {
+        "source": "the cut item's skin shadow",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-pilot",
+          "method": "d239",
+          "rawSha256": "de8d5d14559bf217a8fee5c0e403922942e241a51eec6819983e1f53fedf3c0b",
+          "files": {
+            "layer-topBody.png": "b848a9b1936b6c8708c79ecb461337626205ab68f12eb2e719485605fb0b56b8",
+            "layer-sleeves.png": "42ad22791e5de0eeb16b989aa68b23e653ee43bd7bccd8b4682e54c7ea7bf8da",
+            "shadow-multiply.png": "1c96d61915f1cc7ebdebfe0ac201ec306435095981d9964cbadabcb6ec2b596d"
+          }
+        },
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "decision": "D-336"
+      },
+      "sha256": "68a1f71d0574ad2fddd0184280a652663335db851a3e3751bf0274231da5b6c2",
+      "bytes": 410,
       "width": 1024,
       "height": 1536,
       "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
@@ -2443,6 +2686,160 @@
         "everyListedReachable": true,
         "shoeShadowIsAnkleBoots": true,
         "publishedFilesEqualStaged": 4
+      }
+    },
+    {
+      "decision": "D-336",
+      "publishedBy": "D-337",
+      "authorisation": "owner 2026-11-03: Jeg godkender også offentliggørelse af præcis de 15 filer i D-336's filliste med de registrerede SHA-256-hashes under assets/avatar-northstar/ som udvidelse af D-242's undtagelse fra D-127 §2. Færdiggør derefter integrationen af de seks sweatere i Northstar-opt-in. Tegn det fælles hoftelag bag underdelen og sweaterens krop og ribkant foran. Begræns sweatervalget til de 30 godkendte kombinationer med beige sneakers. Brug de eksisterende outfits, så de 24 kombinationer, der kan nås i panelet i dag, bliver tilgængelige. Hold integrationen bag den eksisterende opt-in med AVATAR_NORTHSTAR_WARDROBE=false.",
+      "files": [
+        "top-sweater-ls2-heather-fox-sleeves-v1.webp",
+        "top-sweater-ls2-heather-fox-top-body-v1.webp",
+        "top-sweater-ls2-heather-sleeves-v1.webp",
+        "top-sweater-ls2-heather-teapot-sleeves-v1.webp",
+        "top-sweater-ls2-heather-teapot-top-body-v1.webp",
+        "top-sweater-ls2-heather-top-body-v1.webp",
+        "top-sweater-ls2-hip-seam-v1.webp",
+        "top-sweater-ls2-navy-fox-sleeves-v1.webp",
+        "top-sweater-ls2-navy-fox-top-body-v1.webp",
+        "top-sweater-ls2-navy-sleeves-v1.webp",
+        "top-sweater-ls2-navy-teapot-sleeves-v1.webp",
+        "top-sweater-ls2-navy-teapot-top-body-v1.webp",
+        "top-sweater-ls2-navy-top-body-v1.webp",
+        "top-sweater-ls2-shadow-arms-v1.webp",
+        "top-sweater-ls2-shadow-body-v1.webp"
+      ],
+      "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json",
+      "itemTable": {
+        "top-sweater-ls2-heather": {
+          "category": "top",
+          "layers": [
+            "top-body",
+            "sleeves"
+          ],
+          "shadows": [
+            "body",
+            "arms"
+          ],
+          "shadowsOf": "top-sweater-ls2",
+          "hipSeam": "top-sweater-ls2-hip-seam-v1.webp"
+        },
+        "top-sweater-ls2-heather-teapot": {
+          "category": "top",
+          "layers": [
+            "top-body",
+            "sleeves"
+          ],
+          "shadows": [
+            "body",
+            "arms"
+          ],
+          "shadowsOf": "top-sweater-ls2",
+          "hipSeam": "top-sweater-ls2-hip-seam-v1.webp"
+        },
+        "top-sweater-ls2-heather-fox": {
+          "category": "top",
+          "layers": [
+            "top-body",
+            "sleeves"
+          ],
+          "shadows": [
+            "body",
+            "arms"
+          ],
+          "shadowsOf": "top-sweater-ls2",
+          "hipSeam": "top-sweater-ls2-hip-seam-v1.webp"
+        },
+        "top-sweater-ls2-navy": {
+          "category": "top",
+          "layers": [
+            "top-body",
+            "sleeves"
+          ],
+          "shadows": [
+            "body",
+            "arms"
+          ],
+          "shadowsOf": "top-sweater-ls2",
+          "hipSeam": "top-sweater-ls2-hip-seam-v1.webp"
+        },
+        "top-sweater-ls2-navy-teapot": {
+          "category": "top",
+          "layers": [
+            "top-body",
+            "sleeves"
+          ],
+          "shadows": [
+            "body",
+            "arms"
+          ],
+          "shadowsOf": "top-sweater-ls2",
+          "hipSeam": "top-sweater-ls2-hip-seam-v1.webp"
+        },
+        "top-sweater-ls2-navy-fox": {
+          "category": "top",
+          "layers": [
+            "top-body",
+            "sleeves"
+          ],
+          "shadows": [
+            "body",
+            "arms"
+          ],
+          "shadowsOf": "top-sweater-ls2",
+          "hipSeam": "top-sweater-ls2-hip-seam-v1.webp"
+        }
+      },
+      "combinations": [
+        "top-sweater-ls2-heather+bottom-skirt-sand+shoes-sneakers-beige",
+        "top-sweater-ls2-heather+bottom-capri-lightblue+shoes-sneakers-beige",
+        "top-sweater-ls2-heather+bottom-trousers-square-olive+shoes-sneakers-beige",
+        "top-sweater-ls2-heather+bottom-trousers-square-navy+shoes-sneakers-beige",
+        "top-sweater-ls2-heather+bottom-trousers-square-sand+shoes-sneakers-beige",
+        "top-sweater-ls2-heather-teapot+bottom-skirt-sand+shoes-sneakers-beige",
+        "top-sweater-ls2-heather-teapot+bottom-capri-lightblue+shoes-sneakers-beige",
+        "top-sweater-ls2-heather-teapot+bottom-trousers-square-olive+shoes-sneakers-beige",
+        "top-sweater-ls2-heather-teapot+bottom-trousers-square-navy+shoes-sneakers-beige",
+        "top-sweater-ls2-heather-teapot+bottom-trousers-square-sand+shoes-sneakers-beige",
+        "top-sweater-ls2-heather-fox+bottom-skirt-sand+shoes-sneakers-beige",
+        "top-sweater-ls2-heather-fox+bottom-capri-lightblue+shoes-sneakers-beige",
+        "top-sweater-ls2-heather-fox+bottom-trousers-square-olive+shoes-sneakers-beige",
+        "top-sweater-ls2-heather-fox+bottom-trousers-square-navy+shoes-sneakers-beige",
+        "top-sweater-ls2-heather-fox+bottom-trousers-square-sand+shoes-sneakers-beige",
+        "top-sweater-ls2-navy+bottom-skirt-sand+shoes-sneakers-beige",
+        "top-sweater-ls2-navy+bottom-capri-lightblue+shoes-sneakers-beige",
+        "top-sweater-ls2-navy+bottom-trousers-square-olive+shoes-sneakers-beige",
+        "top-sweater-ls2-navy+bottom-trousers-square-navy+shoes-sneakers-beige",
+        "top-sweater-ls2-navy+bottom-trousers-square-sand+shoes-sneakers-beige",
+        "top-sweater-ls2-navy-teapot+bottom-skirt-sand+shoes-sneakers-beige",
+        "top-sweater-ls2-navy-teapot+bottom-capri-lightblue+shoes-sneakers-beige",
+        "top-sweater-ls2-navy-teapot+bottom-trousers-square-olive+shoes-sneakers-beige",
+        "top-sweater-ls2-navy-teapot+bottom-trousers-square-navy+shoes-sneakers-beige",
+        "top-sweater-ls2-navy-teapot+bottom-trousers-square-sand+shoes-sneakers-beige",
+        "top-sweater-ls2-navy-fox+bottom-skirt-sand+shoes-sneakers-beige",
+        "top-sweater-ls2-navy-fox+bottom-capri-lightblue+shoes-sneakers-beige",
+        "top-sweater-ls2-navy-fox+bottom-trousers-square-olive+shoes-sneakers-beige",
+        "top-sweater-ls2-navy-fox+bottom-trousers-square-navy+shoes-sneakers-beige",
+        "top-sweater-ls2-navy-fox+bottom-trousers-square-sand+shoes-sneakers-beige"
+      ],
+      "drawOrder": "body · shoes · hip seam · bottom · top body · arms · sleeves · head · shadows",
+      "stagedManifestSha256": "a52ed39eb3f203c71266d238b14ccc2e7b2de2b5133ed69992933ad93786e895",
+      "equivalence": {
+        "what": "northstarCompose(northstarPlanFor(outfit)) on the published files against the owner-approved D-335 v3 rendering, RGBA bytes that differ; all 30 approved combinations",
+        "approvedCombinations": 30,
+        "outfitsDiffering": 0,
+        "reachableOutfits": 24,
+        "approvedNotReachable": [
+          "top-sweater-ls2-heather+bottom-trousers-square-olive+shoes-sneakers-beige",
+          "top-sweater-ls2-heather-fox+bottom-trousers-square-olive+shoes-sneakers-beige",
+          "top-sweater-ls2-heather-teapot+bottom-trousers-square-olive+shoes-sneakers-beige",
+          "top-sweater-ls2-navy+bottom-trousers-square-olive+shoes-sneakers-beige",
+          "top-sweater-ls2-navy-fox+bottom-trousers-square-olive+shoes-sneakers-beige",
+          "top-sweater-ls2-navy-teapot+bottom-trousers-square-olive+shoes-sneakers-beige"
+        ],
+        "allReachableApproved": true,
+        "hipSeamBetweenShoesAndBottom": true,
+        "publishedFilesEqualStaged": 15
       }
     }
   ]
