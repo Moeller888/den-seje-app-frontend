@@ -400,6 +400,12 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Two AB-1 ankle boots approved by the owner — D-326 (registration + private preparation; NOT published, NOT integrated; flag false; 0 image calls).**
+  - **Approved.** `AB1-BOOT-ORIGINAL` (original colour) and `AB1-BOOT-LIGHTSAND` (light sand, approved as shown — not documented suede). Black + gum is not covered. See `ab1-boot-owner-approval-v1.json`.
+  - **History kept.** D-324's rejection, D-325's technical FAILs (ΔE p95 0.0568, line contrast below 0.2) and its development caveat stay as history.
+  - **Staged privately.** The 4 runtime files are 2 layers and 2 covering masks; the shadow is the published ankle boot's, via `shadowsOf`. They are byte-identical to the 12 shown renderings in the browser's own compose.
+  - **Combinations.** The opt-in could reach 180 combinations (90 outfits × 2). The 170 not shown in D-325 were checked: 170/170 PASS and byte-identical at runtime.
+  - **Next.** Publishing and integration need the owner's separate permission (wording in `docs/decisions/D-326.md`).
 - **Robust field labelling — D-325 (offline development study on AB-1; 0 image calls; contract v3 developed WITH knowledge of AB-1, so NOT independently validated; D-324's verdict and D-320's closure unchanged; no item approved).**
   - **Cause.** v2's fixed sole seed (y 1488) sat in the old drawing's 2 px welt band; AB-1 draws the sole 2 px higher, so that row is a line.
   - **Rule `zone-v1`.** `northstar-shoe-cut-seeds.mjs` and `ankle-boot-v3.json` find each field in a fixed zone by its safe pixels (at least 2 px from any line). Missing, ambiguous and merged fields are refused, and every choice is logged. At K, the fields decided at 1x are followed (`zone-v1-k-follows-1x`).
