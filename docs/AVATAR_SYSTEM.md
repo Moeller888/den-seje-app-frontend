@@ -400,11 +400,16 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Sweater master v2 — D-335 (offline; 30 candidates for the owner's visual review, not approved; nothing published or integrated).**
+  - **Warm sleeve line fixed.** The cause was the layer split: fabric over C's arm's soft edge (arm alpha 85–115) went to the body layer under the arm. The cut's own split now sends every fabric pixel over C's arm to the sleeve layer (`ls-master-v2`, 1,069 px). Warm pixels on heather fell from 117 to 6; colours, alpha, edges, cuffs and hands are unchanged.
+  - **Navy shorts held out.** A small hem-corner repair left a 1–7 px enclosed hole and failed FIT-4 on every design.
+  - **Long trousers caveat.** They show a small hip tick at ×3; it is sub-pixel at app size.
+  - See `docs/decisions/D-335.md`.
 - **Long-sleeve master prototype — D-333 (offline; 0 image calls; nothing published or integrated; no design approved).**
   - **Source.** One master (`ls-master-v1`) on the existing green sweater (d239), with D-264's method unchanged; only the per-cut data differ.
   - **Designs.** Heather and navy, plain and with the approved teapot and fox prints. The prints use one placement: D-269's chest-center box on C. The fraction rule is undefined on a long sleeve.
   - **Fit.** Fit, cuffs, wrists and armhole gap are clean. Outfits pass 35/42; shorts fail COMBO-6, like the source sweater itself.
-  - **Open, one-time per cut.** The source's alpha 251–254 along C's arm shows as a warm dotted line on light colours, and the hip corner fails against shorts. See `docs/decisions/D-333.md`.
+  - **Open, one-time per cut.** A warm dotted line along C's arm on light colours, and the hip corner fails against shorts. See `docs/decisions/D-333.md`. D-333's cause for the line (the source's alpha) was wrong; D-335 corrected it.
 - **Owner feedback on D-331 (2026-11-03):** the boots look fine in the opt-in, a visual confirmation of the test integration (registered by D-333).
 - **AB-1 ankle boots in the Northstar opt-in — D-331 (LIVE in the opt-in; flag still false; no catalogue, shop or ordinary pupil view change).**
   - **Published.** The 4 D-326 files are published byte for byte; their hashes were checked before publication.
