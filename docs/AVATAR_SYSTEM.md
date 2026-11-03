@@ -400,11 +400,17 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Sweater master v2 — D-335 (offline; 30 candidates for the owner's visual review, not approved; nothing published or integrated; no runtime change).**
+  - **Sleeve line fixed.** The cut's own layer split sends every fabric pixel over C's arm, its soft edge included, to the sleeve layer. Warm pixels on heather fell from 117 to 6. D-333's alpha cause was wrong.
+  - **Hip seam.** The 52 hip pixels are their own layer, drawn behind the bottom (order body · shoes · hip seam · bottom · top body · arms · sleeves · head). The light notch with long trousers is gone, and skirt and capri stay clean. Outfits pass 42/42 with 0 enclosed holes and no double contour; the bottoms' soft edge differs by at most 9 levels.
+  - **Local renderer.** northstarCompose with the one extra draw step equals the checked picture byte for byte.
+  - **To integrate.** This needs that draw step in `northstarPlanFor` and a published seam file. Both need owner permission. Navy shorts are held out by the owner.
+  - See `docs/decisions/D-335.md`.
 - **Long-sleeve master prototype — D-333 (offline; 0 image calls; nothing published or integrated; no design approved).**
   - **Source.** One master (`ls-master-v1`) on the existing green sweater (d239), with D-264's method unchanged; only the per-cut data differ.
   - **Designs.** Heather and navy, plain and with the approved teapot and fox prints. The prints use one placement: D-269's chest-center box on C. The fraction rule is undefined on a long sleeve.
   - **Fit.** Fit, cuffs, wrists and armhole gap are clean. Outfits pass 35/42; shorts fail COMBO-6, like the source sweater itself.
-  - **Open, one-time per cut.** The source's alpha 251–254 along C's arm shows as a warm dotted line on light colours, and the hip corner fails against shorts. See `docs/decisions/D-333.md`.
+  - **Open, one-time per cut.** A warm dotted line along C's arm on light colours, and the hip corner fails against shorts. See `docs/decisions/D-333.md`. D-333's cause for the line (the source's alpha) was wrong; D-335 corrected it.
 - **Owner feedback on D-331 (2026-11-03):** the boots look fine in the opt-in, a visual confirmation of the test integration (registered by D-333).
 - **AB-1 ankle boots in the Northstar opt-in — D-331 (LIVE in the opt-in; flag still false; no catalogue, shop or ordinary pupil view change).**
   - **Published.** The 4 D-326 files are published byte for byte; their hashes were checked before publication.
