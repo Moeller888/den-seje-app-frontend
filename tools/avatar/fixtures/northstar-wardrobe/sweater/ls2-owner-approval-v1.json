@@ -1,0 +1,699 @@
+{
+  "decision": "D-336",
+  "kind": "owner visual approval of concrete combinations",
+  "recordedBy": "D-336",
+  "date": "2026-11-03",
+  "ownerWords": "Registrér min visuelle godkendelse af de 30 sweaterkombinationer i D-335 v3 fra PR #576, merget som 5340c26. Godkendelsen omfatter lyng og navy, hver uden tryk eller med tekande eller ræv, sammen med de fem viste underdele og beige sneakers. Navy shorts ligger uden for godkendelsen.",
+  "scope": "the 30 concrete combinations exactly as D-335 v3 rendered and showed them (the hip-seam layer drawn behind the bottom, the sweater's body and rib in front); NOT other bottoms, shoes, colours, prints or renderings, NOT the method in general, NOT automatic mass production",
+  "version": {
+    "master": "ls-master-v2 (layer split) + the hip-seam layer behind the bottom (hipSeamLayer, HIP_SEAM_ORDER)",
+    "mergedIn": "5340c262bb3452271ab29385b72e6dfe52b96d0d (PR #576, head bbc7b3d)",
+    "source": {
+      "item": "top-sweater-green",
+      "run": "d-239-targeted-correction/final1-pilot",
+      "method": "d239",
+      "cut": "sweater-long",
+      "origin": {
+        "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-pilot",
+        "method": "d239",
+        "rawSha256": "de8d5d14559bf217a8fee5c0e403922942e241a51eec6819983e1f53fedf3c0b",
+        "files": {
+          "layer-topBody.png": "b848a9b1936b6c8708c79ecb461337626205ab68f12eb2e719485605fb0b56b8",
+          "layer-sleeves.png": "42ad22791e5de0eeb16b989aa68b23e653ee43bd7bccd8b4682e54c7ea7bf8da",
+          "shadow-multiply.png": "1c96d61915f1cc7ebdebfe0ac201ec306435095981d9964cbadabcb6ec2b596d"
+        }
+      }
+    },
+    "splitRule": "LS2.splitLayers: sleeve layer where C's arm alpha >= 1",
+    "hipSeamLayer": {
+      "addedPx": 52,
+      "box": [
+        398,
+        801,
+        626,
+        817
+      ],
+      "ink": [
+        2,
+        6,
+        1
+      ],
+      "order": [
+        "body",
+        "shoes",
+        "hipSeam",
+        "pants",
+        "topBody",
+        "arms",
+        "sleeves",
+        "head"
+      ]
+    },
+    "files": {
+      "tools/avatar/northstar-longsleeve-master.mjs": "dbb1037cc45861f879137d877c697ad931867174dbb4e3273fcd7a8eaadaddad",
+      "tools/avatar/northstar-longsleeve-master-v2.mjs": "e9e3022eebcbeeb2c26627efbe9c94e1d4821397905e1ee4ddc7bb8b960c6305",
+      "tools/avatar/northstar-longsleeve-master-study.mjs": "a938bb825f3872cf29a07f93ac3be1561b44b750506ec87f4279b942c431010d"
+    }
+  },
+  "designs": {
+    "heather": {
+      "id": "LS2-HEATHER",
+      "proposedRuntimeItem": "top-sweater-ls2-heather",
+      "colour": {
+        "name": "heather",
+        "rgb": [
+          158,
+          160,
+          164
+        ]
+      },
+      "print": null,
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/layers/heather.png",
+        "fileSha256": "fcff39b558c91840b990cfd581cb9c4408ae5c9c315ffe4c6b26be4cbfc4c702",
+        "bytes": 152843,
+        "pixelSha256": "0e7cc0701a90a2e8e03b3fc34e87ff4daccfb68f94a31d783dd03007bb3d5eaa"
+      }
+    },
+    "heather + teapot": {
+      "id": "LS2-HEATHER-TEAPOT",
+      "proposedRuntimeItem": "top-sweater-ls2-heather-teapot",
+      "colour": {
+        "name": "heather",
+        "rgb": [
+          158,
+          160,
+          164
+        ]
+      },
+      "print": {
+        "motif": "teapot",
+        "callId": "TPV-2-tee-print-object-teapot",
+        "sha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+        "decision": "D-271/D-274",
+        "placement": {
+          "rule": "D-269 chest-center as its box on C (tp-approval-candidates-v1.json boxOnC); the fraction rule's body width is undefined on a long sleeve",
+          "spec": {
+            "x": 0,
+            "y": 0.39,
+            "width": 0.58,
+            "height": 0.52
+          },
+          "box": [
+            437,
+            537,
+            150,
+            135
+          ],
+          "armpitRow": 650
+        }
+      },
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/layers/heather-teapot.png",
+        "fileSha256": "540c6fdabdb4db992f69992e69db899bfbfbb3f65e25e7bf87e3baff5f8594fa",
+        "bytes": 169685,
+        "pixelSha256": "085f70d111abae29c57c45784d9fd37e09df3579f72da3b1c0386d08df4c0a5d"
+      }
+    },
+    "heather + fox": {
+      "id": "LS2-HEATHER-FOX",
+      "proposedRuntimeItem": "top-sweater-ls2-heather-fox",
+      "colour": {
+        "name": "heather",
+        "rgb": [
+          158,
+          160,
+          164
+        ]
+      },
+      "print": {
+        "motif": "fox",
+        "callId": "TPV-1-tee-print-animal-fox",
+        "sha256": "a7b321204599be347a790224974836adf88090d4d6cf847e062577da2003c219",
+        "decision": "D-271/D-274",
+        "placement": {
+          "rule": "D-269 chest-center as its box on C (tp-approval-candidates-v1.json boxOnC); the fraction rule's body width is undefined on a long sleeve",
+          "spec": {
+            "x": 0,
+            "y": 0.39,
+            "width": 0.58,
+            "height": 0.52
+          },
+          "box": [
+            437,
+            537,
+            150,
+            135
+          ],
+          "armpitRow": 650
+        }
+      },
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/layers/heather-fox.png",
+        "fileSha256": "2610e4cda98b0f3d16efa5cbf0baf7ce89a30eb4c74bb990708f8067d3d742f9",
+        "bytes": 166664,
+        "pixelSha256": "a1cb694c5176774c37e5e7cb1a954c64cb392d4c166d36463a57f098bdeae236"
+      }
+    },
+    "navy": {
+      "id": "LS2-NAVY",
+      "proposedRuntimeItem": "top-sweater-ls2-navy",
+      "colour": {
+        "name": "navy",
+        "rgb": [
+          38,
+          50,
+          92
+        ]
+      },
+      "print": null,
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/layers/navy.png",
+        "fileSha256": "bd4867afd763ed649c66f986fbeeacf3faa79b437297c6468b0de24428c4e18d",
+        "bytes": 126611,
+        "pixelSha256": "d5fc142dcd85aa9e6d3d0f9411eeaa508b215a4ab4a7c6de3ff530b311f8d616"
+      }
+    },
+    "navy + teapot": {
+      "id": "LS2-NAVY-TEAPOT",
+      "proposedRuntimeItem": "top-sweater-ls2-navy-teapot",
+      "colour": {
+        "name": "navy",
+        "rgb": [
+          38,
+          50,
+          92
+        ]
+      },
+      "print": {
+        "motif": "teapot",
+        "callId": "TPV-2-tee-print-object-teapot",
+        "sha256": "8df1696338145d5b553b8dec40f1134b4aef08affbe855e91019804fd3d529d1",
+        "decision": "D-271/D-274",
+        "placement": {
+          "rule": "D-269 chest-center as its box on C (tp-approval-candidates-v1.json boxOnC); the fraction rule's body width is undefined on a long sleeve",
+          "spec": {
+            "x": 0,
+            "y": 0.39,
+            "width": 0.58,
+            "height": 0.52
+          },
+          "box": [
+            437,
+            537,
+            150,
+            135
+          ],
+          "armpitRow": 650
+        }
+      },
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/layers/navy-teapot.png",
+        "fileSha256": "0c90d3b34fb69c953481fb33efbb1c4545e955e1cc4dba86da59110db2dc4b2e",
+        "bytes": 145562,
+        "pixelSha256": "49a1d8cc7f36aad4fd8003a250d0372abc01653f3e49cc31daceceab880153fc"
+      }
+    },
+    "navy + fox": {
+      "id": "LS2-NAVY-FOX",
+      "proposedRuntimeItem": "top-sweater-ls2-navy-fox",
+      "colour": {
+        "name": "navy",
+        "rgb": [
+          38,
+          50,
+          92
+        ]
+      },
+      "print": {
+        "motif": "fox",
+        "callId": "TPV-1-tee-print-animal-fox",
+        "sha256": "a7b321204599be347a790224974836adf88090d4d6cf847e062577da2003c219",
+        "decision": "D-271/D-274",
+        "placement": {
+          "rule": "D-269 chest-center as its box on C (tp-approval-candidates-v1.json boxOnC); the fraction rule's body width is undefined on a long sleeve",
+          "spec": {
+            "x": 0,
+            "y": 0.39,
+            "width": 0.58,
+            "height": 0.52
+          },
+          "box": [
+            437,
+            537,
+            150,
+            135
+          ],
+          "armpitRow": 650
+        }
+      },
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/layers/navy-fox.png",
+        "fileSha256": "d37692697baa4740f1875cd22b6f98586c5ed238514e586a1feb945f948e8871",
+        "bytes": 142081,
+        "pixelSha256": "232fe6f46a8c130e756840a41a3244a96e7cabeab49e998e19bd80052d3a0a4b"
+      }
+    }
+  },
+  "hipSeam": {
+    "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/layers/hip-seam.png",
+    "fileSha256": "34619c4503a3b86c7e8fbe12dac4ebb29fca84561361a0423565d4d2582c5a2f",
+    "bytes": 6367,
+    "pixelSha256": "217da648ba6c156100f08fb902df3b9a4aa0813383665fad66318f292fac74b4",
+    "drawn": "after the shoes, before the bottom"
+  },
+  "combinations": [
+    {
+      "id": "LS2-HEATHER--skirt-sand",
+      "design": "heather",
+      "designId": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather--skirt-sand.png",
+        "fileSha256": "390c3d0e9eb732716f7fe75049469d34a9023b1f185c5775f28b90178b410c97",
+        "bytes": 734438,
+        "pixelSha256": "ce2cb6f1cb290beff3cd164ac5d56c8afb24004f77b429affad5a242d8687a26"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue",
+      "design": "heather",
+      "designId": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather--capri-lightblue.png",
+        "fileSha256": "5c0a9cf93899d184e926e8ec59291fd7cdcd5ef16e86457955abdbefc36f336d",
+        "bytes": 746476,
+        "pixelSha256": "3df58376d9995d12930c22047b81a6a726933a9f307dcb81b4b14622d3ee580a"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive",
+      "design": "heather",
+      "designId": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather--trousers-square-olive.png",
+        "fileSha256": "e03438b8702583b7961124d7bf5d531d206a4064b9e636dca398ac67e396e4c1",
+        "bytes": 728207,
+        "pixelSha256": "04401870e9537b10f7b3b2cfaf7677956445b01c6817a2b9292c9c920fa92494"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy",
+      "design": "heather",
+      "designId": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather--trousers-square-navy.png",
+        "fileSha256": "292d557b507010356d8fe5af5036b688551c35b19b3e1a712a972f8a0d9f8045",
+        "bytes": 684185,
+        "pixelSha256": "6bc1c8f3c7cf69c74d423ee5554011e574216e2ca6586be5659b63b9f0615d64"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand",
+      "design": "heather",
+      "designId": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather--trousers-square-sand.png",
+        "fileSha256": "92637ac7855904d1614e7a35e9b522d9a26ba46bd3ba7e94c39597570443dbe3",
+        "bytes": 703048,
+        "pixelSha256": "6c96164ac93604fd7ede0a6e8ee6993070d1dcc90827f7d1cfaa18114e465483"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand",
+      "design": "heather + teapot",
+      "designId": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather-teapot--skirt-sand.png",
+        "fileSha256": "514c9e3d77e229377f81d5fabea6b0d0e3d0d17f27bd6f7e73f88c69a623cb88",
+        "bytes": 750909,
+        "pixelSha256": "8f2e221a7502c61dd5ab81af8cc891a322909b0a77be092d7150ecd1e5b4bb8f"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue",
+      "design": "heather + teapot",
+      "designId": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather-teapot--capri-lightblue.png",
+        "fileSha256": "743579c9ad88361b8df11d637c2c43afc6d1f7e51bc9a8d79062b1a92abe8086",
+        "bytes": 762832,
+        "pixelSha256": "5126a6681c54659715780ca237159baf7c8ec0c32c28994655518cf1a92f1440"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive",
+      "design": "heather + teapot",
+      "designId": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather-teapot--trousers-square-olive.png",
+        "fileSha256": "a4ce90523851d6a1509d31fd9da4cb20f07f659069fd34592bb03095297bbe28",
+        "bytes": 744533,
+        "pixelSha256": "305dac5af0780ca427d2d6bccf2c0c1b28ea1269173af742885b371baefcc7e7"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy",
+      "design": "heather + teapot",
+      "designId": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather-teapot--trousers-square-navy.png",
+        "fileSha256": "dbffa6021dcf3d12f2f9c0b99925de57f171b2ac7f6ff73a9aa72b4df36ed5d0",
+        "bytes": 700763,
+        "pixelSha256": "170e219e48e1b4ad244111f089bb9c6c55850d67494bf243d4190ecc1622dd56"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand",
+      "design": "heather + teapot",
+      "designId": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather-teapot--trousers-square-sand.png",
+        "fileSha256": "2c4cce713e8985c9b5b5109d9ea993cc23da396c78030127e880e1af75dfa7ab",
+        "bytes": 719441,
+        "pixelSha256": "a969447da00af69879af571837102ae421f34ff7ad08de33604b75fd6e9410bf"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand",
+      "design": "heather + fox",
+      "designId": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather-fox--skirt-sand.png",
+        "fileSha256": "a3a7f2e7f71195ec968b4984f77c73f1989b3636997b3e9b4417e5b220481aa8",
+        "bytes": 748093,
+        "pixelSha256": "0ded87663cba4922beb9cdeaac2dbe29fcf691b6568c513466ac50a26372d068"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue",
+      "design": "heather + fox",
+      "designId": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather-fox--capri-lightblue.png",
+        "fileSha256": "ae1f8984ea78b8c10abea2e1a81a96c938df2bc8490da60067e90054b494c49f",
+        "bytes": 760358,
+        "pixelSha256": "d8031f6914aaac09d41c27397d6a848a18be8e55d219f4d97c7409434a77ca46"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive",
+      "design": "heather + fox",
+      "designId": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather-fox--trousers-square-olive.png",
+        "fileSha256": "c914c9be130cef0e1f5d141f6cbd911a7624cc43d885976749602d698d522e8f",
+        "bytes": 741552,
+        "pixelSha256": "027b46ed04b5565453054f22803a8e5ead73e61d13eb3f73d7a4e4063bd14be7"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy",
+      "design": "heather + fox",
+      "designId": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather-fox--trousers-square-navy.png",
+        "fileSha256": "caca06cb07fa31cf93504d28183ef2ee68a35128607ae119b3a18a95cf9d7144",
+        "bytes": 697850,
+        "pixelSha256": "bf39de238e35288d644ea3f6d272cffa0a90242e09acf1af6598a8dcbf25e4c5"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand",
+      "design": "heather + fox",
+      "designId": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/heather-fox--trousers-square-sand.png",
+        "fileSha256": "31a9cbf6b0fc050e823c0c1a4308aab5e5aa36d6d2d78321eced87ea8d1194a9",
+        "bytes": 716679,
+        "pixelSha256": "3fdb0628f0f519e03aa0e9243d3101a42d740aa3233778bcfd8c5bbf1b025d8c"
+      }
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand",
+      "design": "navy",
+      "designId": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy--skirt-sand.png",
+        "fileSha256": "db5adc064ef01fbfeb44b98c741a8e94d3edab46ae95cf1e4b1b197a298d28bd",
+        "bytes": 708306,
+        "pixelSha256": "34be37f7be1209cee98e410f172ea862e0146fd9a37125d4d8f0ffece94a3246"
+      }
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue",
+      "design": "navy",
+      "designId": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy--capri-lightblue.png",
+        "fileSha256": "7ab46c70ac55151555fd3be1e2a22e6af67c1ebd696a75a5fd5469b1e484254b",
+        "bytes": 719867,
+        "pixelSha256": "b7292502f52101e9087e1c3f87b0b27aa437ad7bf901542343898a4364a7da70"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive",
+      "design": "navy",
+      "designId": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy--trousers-square-olive.png",
+        "fileSha256": "e8bdd1202486a7a1d53d5e21452edb933771d2be4c0c4b713bf0ff8b7d1d5202",
+        "bytes": 701879,
+        "pixelSha256": "c53ae1c9fc091865a9029881a590b7b232760531a471caa7704500bf539c72ef"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy",
+      "design": "navy",
+      "designId": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy--trousers-square-navy.png",
+        "fileSha256": "aa3caae6083d1661165f8180c32d6f053f0e2c686cb29e9c6be7b157fabe3b3a",
+        "bytes": 657177,
+        "pixelSha256": "ffd7c893a78feb582f5490ac045f22d4f93f1a4b133628ff90c95d21214b906e"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand",
+      "design": "navy",
+      "designId": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy--trousers-square-sand.png",
+        "fileSha256": "0315775a3326f7c0bd627d1d59f035bcc61c810a2f9d998b33521b0a6c8dce36",
+        "bytes": 676626,
+        "pixelSha256": "7a9d1a6f16c0d777759abed58eb12fcc8c78a8f47837804e638956e3dd7a97bd"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand",
+      "design": "navy + teapot",
+      "designId": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy-teapot--skirt-sand.png",
+        "fileSha256": "1bb0d138e922d75da878b8adc0806acea700b54399ae64fe76ffa2cc1bc04296",
+        "bytes": 725958,
+        "pixelSha256": "09e543565014b56bc794734a3acac56c00cbe30e6effab863b18ad98b15d0795"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue",
+      "design": "navy + teapot",
+      "designId": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy-teapot--capri-lightblue.png",
+        "fileSha256": "2afbbd9d19db10c076f036d85143055c11ace0a571088b383cac293016935bb2",
+        "bytes": 737575,
+        "pixelSha256": "7b16fd084ad02d17f5050559de46a8dd57a4b259593795cb0e171a7334019985"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive",
+      "design": "navy + teapot",
+      "designId": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy-teapot--trousers-square-olive.png",
+        "fileSha256": "f734123e46ea5653b848097816c44e6b53eba8d9d2b392b3e9e28c89eb33f0c9",
+        "bytes": 719423,
+        "pixelSha256": "df05efe93a23793cd4e10aebf8bb1160992a9aa4f763d31792413100d36b3709"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy",
+      "design": "navy + teapot",
+      "designId": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy-teapot--trousers-square-navy.png",
+        "fileSha256": "ad02a1032360a68dd01d049f4a80b9b9c7a703b7492e0a20c4c24a2342078232",
+        "bytes": 675188,
+        "pixelSha256": "7d165263f16affd4cb4f5900fadcd6596de80b93f5b92cf0414cb3bd0374a8a1"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand",
+      "design": "navy + teapot",
+      "designId": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy-teapot--trousers-square-sand.png",
+        "fileSha256": "5262f311e10130c7a34d93265d962332537035dd9a3675342cecfa629c69452e",
+        "bytes": 694333,
+        "pixelSha256": "1b9b6117377266a943cadc27898991264eb4d450ff38123c1ed893fd3931a2c2"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand",
+      "design": "navy + fox",
+      "designId": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy-fox--skirt-sand.png",
+        "fileSha256": "4fb64c5a3e30613fabb0370e696c5454d14de0cb5c14b761f0e9c41fd91b275d",
+        "bytes": 722432,
+        "pixelSha256": "914ae09a2946bda1de4b199c1f06a20f04001beb79e78a41a56079d484d9294c"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue",
+      "design": "navy + fox",
+      "designId": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy-fox--capri-lightblue.png",
+        "fileSha256": "03ac6099c082a52c97847b00ae3858e4aad2cba71910206192bd85359179cb17",
+        "bytes": 734374,
+        "pixelSha256": "7730508a1ef6a70b927bf420331c829b75c10a75b2a0ee5b4c637995c96bda66"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive",
+      "design": "navy + fox",
+      "designId": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy-fox--trousers-square-olive.png",
+        "fileSha256": "58b55a0952496a58c9f5c24f165b8185ef7cadedaa40f5cd757fe5809e825ff9",
+        "bytes": 715932,
+        "pixelSha256": "cefb77803f81a78bedebac54660e014c4ca4295f635dda9cc15c1e5b39089614"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy",
+      "design": "navy + fox",
+      "designId": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy-fox--trousers-square-navy.png",
+        "fileSha256": "374effa91a178a0893ebe7dda5724fce3e13c3c2cac216a644e700f5e2a4fde2",
+        "bytes": 671631,
+        "pixelSha256": "d12761c7a95ba48530de8d2ae4de19a98fb408ac8d7fdb917cc6b4323a6810e7"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand",
+      "design": "navy + fox",
+      "designId": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d335-sweater-master-v3/full/navy-fox--trousers-square-sand.png",
+        "fileSha256": "761bbb284c9c0190bc7320d5b5ceec96df643365137b470892d18f64834cdf83",
+        "bytes": 690962,
+        "pixelSha256": "c13f8a166735c9db29ec7290ac9f267697777003629a52b0cd1e895fb94ee841"
+      }
+    }
+  ],
+  "notApproved": [
+    {
+      "bottom": "bottom-shorts-navy",
+      "reason": "outside the owner's approval (held out until checked separately); technical PASS in v3"
+    }
+  ],
+  "historyKept": [
+    "D-333: ls-master-v1 and its results unchanged",
+    "D-335: the alpha cause was tested and wrong; the in-top hip seam (v2b) left a stroke on skirt and capri and is not what is approved",
+    "the approval is a decision about these concrete combinations; it does not change any automatic class"
+  ],
+  "notIncluded": "no publication, runtime integration, catalogue, shop, pupil or flag change (a separate owner decision)"
+}
