@@ -8,19 +8,28 @@ historik må aldrig gå tabt. Er `question_attempts` ikke tom, afbryder den uden
 
 Den genskaber `process_question_attempt_v2` og `process_text_answer_v2` med deres kroppe fra
 `20261101190100` og `20261030211428` (md5 `8a769614…` og `f8809846…`) og deres rettigheder.
+Den fjerner også udleveringssnapshottet: triggeren `question_instances_served_snapshot`, dens
+funktion og de tre kolonner på `question_instances`. Åbne runders snapshot går dermed tabt. Det er
+acceptabelt, fordi intet forsøg findes endnu. En senere genanvendelse af K1 giver kun nye runder et
+snapshot; de øvrige forbliver ukendte.
 
 ```sql
--- ROLLBACK L1 K1 — restores H5's attempt table and _v2 functions; only while no attempt exists.
-SET LOCAL lock_timeout = '5s';
-
+-- ROLLBACK L1 K1 — restores H5's attempt table and _v2 functions and removes the delivery snapshot;
+-- only while no attempt exists. One statement (one DO block); lock_timeout inside it.
 DO $k1_rb$
 DECLARE
   v_rows bigint;
 BEGIN
+  PERFORM set_config('lock_timeout', '5s', true);
   SELECT count(*) INTO v_rows FROM public.question_attempts;
   IF v_rows <> 0 THEN
     RAISE EXCEPTION 'K1 rollback: question_attempts har % række(r); historik slettes ikke; intet ændret', v_rows;
   END IF;
+  EXECUTE $k1_ddl$DROP TRIGGER question_instances_served_snapshot ON public.question_instances$k1_ddl$;
+  EXECUTE $k1_ddl$DROP FUNCTION public.question_instances_served_snapshot()$k1_ddl$;
+  EXECUTE $k1_ddl$ALTER TABLE public.question_instances
+    DROP CONSTRAINT question_instances_served_all_or_none_check,
+    DROP COLUMN served_snapshot, DROP COLUMN served_content_sha256, DROP COLUMN served_at$k1_ddl$;
   EXECUTE $k1_ddl$DROP FUNCTION public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text,text,integer)$k1_ddl$;
   EXECUTE $k1_ddl$DROP FUNCTION public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)$k1_ddl$;
   EXECUTE $k1_ddl$ALTER TABLE public.question_attempts

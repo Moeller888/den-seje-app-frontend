@@ -8,6 +8,10 @@
 //   2. Eight simultaneous calls with DIFFERENT submissions for one round: one attempt, one payout, seven
 //      round_closed — whatever mode the calls carry, only the recorded one is stored.
 //   3. A stale round-1 answer racing with a reopen: never registered.
+//   4. DELIVERED VERSION under a concurrent edit (owner decision 2): an edit that commits first makes a
+//      delivery built from the old row fail (40001) and writes nothing; a delivery that commits first holds
+//      the question row, the edit waits, and the round keeps — and is graded against — the delivered
+//      version, whose fingerprint its attempt carries.
 //
 // Runs only when LEVEL_ENGINE_PG_URL points at a disposable PostgreSQL server; otherwise SKIPPED with
 // the reason — unless LEVEL_ENGINE_PG_REQUIRED=1 (CI's PostgreSQL 17.6 service), where it FAILS. Same
@@ -39,6 +43,7 @@ test("a real PostgreSQL server is present where it is required (CI)", { skip: !R
 });
 
 const K1 = "20261103110000_l1_k1_attempt_context.sql";
+const D327 = "20261103100000_question_attempts_history_no_action.sql";
 function rollbackSql() {
   const m = /```sql\n([\s\S]*?)```/.exec(readFileSync(join(ROOT, "docs/operations/l1-k1-attempt-context-rollback.md"), "utf8").split("\r\n").join("\n"));
   assert.ok(m && /ROLLBACK L1 K1/.test(m[1]));
@@ -58,7 +63,7 @@ async function createDb({ k1 = true } = {}) {
   const url = u.toString();
   const c = await connect(url, false);
   for (const sql of baseSql({ realServer: true })) await c.query(sql);
-  for (const f of PROD_ORDER) await c.query(migrationSql(f));
+  for (const f of [...PROD_ORDER, D327]) await c.query(migrationSql(f));
   if (k1) await c.query(`BEGIN;\n${migrationSql(K1)}\nCOMMIT;`);
   return { url, su: c };
 }
@@ -91,7 +96,7 @@ const RIGHT = TOP10_BEFORE[Q].content.correct;
 test("real PostgreSQL 17: K1 keeps H5's exactly-once guarantees; rollback restores H5", { skip: SKIP, timeout: 300000 }, async (t) => {
   t.after(teardown);
 
-  await t.test("0. K1 applies on production's H5 order; the rollback restores the exact H5 schema", async () => {
+  await t.test("0. K1 applies on production's H5 + D-327 order; the rollback restores that exact schema", async () => {
     const h5 = await createDb({ k1: false });
     const k1 = await createDb();
     await k1.su.query(`BEGIN;\n${rollbackSql()}\nCOMMIT;`);
@@ -109,8 +114,14 @@ test("real PostgreSQL 17: K1 keeps H5's exactly-once guarantees; rollback restor
       current_streak, longest_streak, last_activity_date) VALUES ($1, 100, 50, 7, 7, 1, 1, current_date - 1)`, [id]);
     return id;
   };
-  const serve = async (p) => (await su.query(`INSERT INTO public.question_instances (student_id, question_id, correct_answer,
-    next_review_at) VALUES ($1, $2, $3, now()) RETURNING id`, [p, TOP10_ID[Q], RIGHT])).rows[0].id;
+  // A delivery as get-next-question makes it with K1_SERVED_SNAPSHOT=on: the proposal is the row it read.
+  const proposalOf = async (c, q = TOP10_ID[Q]) => {
+    const r = (await c.query("SELECT content, metadata, answer_format, answer_type FROM public.questions WHERE id = $1", [q])).rows[0];
+    return JSON.stringify({ content: r.content, metadata: r.metadata, answer_format: r.answer_format, answer_type: r.answer_type });
+  };
+  const deliver = (c, p, proposal, q = TOP10_ID[Q], key = RIGHT) => c.query(`INSERT INTO public.question_instances (student_id, question_id,
+    correct_answer, next_review_at, served_snapshot) VALUES ($1, $2, $3, now(), $4::jsonb) RETURNING id`, [p, q, key, proposal]);
+  const serve = async (p) => (await deliver(su, p, await proposalOf(su))).rows[0].id;
   const state = async (p) => ({
     progress: (await su.query(`SELECT xp, coins, correct_answers AS c, total_correct_answers AS t FROM public.student_progress
       WHERE student_id = $1`, [p])).rows[0],
@@ -172,5 +183,42 @@ test("real PostgreSQL 17: K1 keeps H5's exactly-once guarantees; rollback restor
     ]);
     assert.ok(["round_closed", "stale_round"].includes(results[1].outcome), results[1].outcome);
     assert.equal((await state(p)).attempts.length, 1);
+  });
+
+  await t.test("4. a concurrent edit never splits delivery, fingerprint and grading", async () => {
+    const q = TOP10_ID[1];
+    const A = (await su.query("SELECT content FROM public.questions WHERE id = $1", [q])).rows[0].content;
+    const B = { ...A, correct: `${A.correct} (B)`, options: A.options.map((o) => (o === A.correct ? `${A.correct} (B)` : o)) };
+    const editor = await connect(url, false);
+    const server = await connect(url, false);
+
+    // (a) The edit commits first: a delivery built from A (read before the edit) is refused, nothing written.
+    const p1 = await pupil();
+    const proposalA = await proposalOf(su, q);
+    await editor.query("BEGIN");
+    await editor.query("UPDATE public.questions SET content = $2::jsonb WHERE id = $1", [q, JSON.stringify(B)]);
+    const late = deliver(server, p1, proposalA, q, A.correct).then(() => null, (e) => e.code);
+    await waitForLockWaiters(1);
+    await editor.query("COMMIT");
+    assert.equal(await late, "40001", "the delivery from the old row is refused");
+    assert.equal((await su.query("SELECT count(*)::int AS n FROM public.question_instances WHERE student_id = $1", [p1])).rows[0].n, 0);
+
+    // (b) The delivery commits first (from B, current now): the next edit (back to A) waits for it, and the
+    // round keeps B, is graded against B and its attempt carries B's fingerprint.
+    const p2 = await pupil();
+    await server.query("BEGIN");
+    const qi = (await deliver(server, p2, await proposalOf(su, q), q, B.correct)).rows[0].id;
+    const editing = editor.query("UPDATE public.questions SET content = $2::jsonb WHERE id = $1", [q, JSON.stringify(A)]);
+    await waitForLockWaiters(1);
+    await server.query("COMMIT");
+    await editing;
+    const snap = (await su.query("SELECT served_snapshot -> 'content' ->> 'correct' AS c, served_content_sha256 AS h FROM public.question_instances WHERE id = $1", [qi])).rows[0];
+    assert.equal(snap.c, B.correct, "the delivered version is B, not the later A");
+    const svc = await connect(url);
+    const r = (await svc.query(MC, [p2, qi, B.correct, 1, randomUUID(), "quiz_v1", 0])).rows[0].r;
+    assert.deepEqual([r.outcome, r.status], ["recorded", "correct"], "graded against the delivered B");
+    const att = (await su.query("SELECT question_content_sha256 AS h FROM public.question_attempts WHERE question_instance_id = $1", [qi])).rows[0];
+    assert.equal(att.h, snap.h);
+    await done(editor, server, svc);
   });
 });

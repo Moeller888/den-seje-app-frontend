@@ -7,54 +7,87 @@
 -- docs/migration-workflow-policy.md): apply_migration only, never `supabase db push`. No activation:
 -- H5 stays OFF; nothing here switches it on.
 --
--- ORDER IN PRODUCTION: G1 (20261101150000) → H5 bootstrap (20261101190000) → H5 alignment
--- (20261101190100) → H2 (D-298, ON DELETE RESTRICT, must be applied before the history is written) →
--- THIS FILE, before the first attempt is written (the guard requires an empty question_attempts).
+-- ORDER IN PRODUCTION (binding): G1 (20261101150000, applied) → H5 bootstrap (20261101190000) → H5
+-- alignment (20261101190100) → D-327 (20261103100000, attempts survive instance deletion) → THIS FILE,
+-- before the first attempt is written (the guard requires an empty question_attempts and D-327's key).
+-- H2 (D-298) is applied (2026-11-02). Then get-next-question's K1_SERVED_SNAPSHOT=on and the matching
+-- process-event — each a separate owner authorisation; H5 stays OFF throughout.
 --
 -- WHAT CHANGES (and nothing else)
 --   1. question_attempts gets six columns: mode (NOT NULL, one of quiz_v1 / diagnostic / practice /
---      check / review / application, no default), hints_used (NOT NULL, 0–3), server_interval_ms
---      (NULL or ≥ 0, only on the first round), objective_ids and objective_mapping_version (NULL; both
---      or neither — L2 fills them, never retroactively), question_content_sha256 (NOT NULL, 64 hex).
---   2. process_question_attempt_v2 and process_text_answer_v2 are re-created with two more parameters,
---      p_mode and p_hints_used, which they validate (an unknown value is refused, never defaulted) and
---      store; they compute server_interval_ms and question_content_sha256 from the server's own rows.
---      Everything else in both bodies — round check, submission idempotency, frozen result, grading,
---      amounts, streak, quests, SECURITY DEFINER, search_path, EXECUTE (service_role only) — is
---      byte-identical to the bodies they replace (20261101190100 / 20261030211428; the test proves it).
---      The old signatures are dropped: a different argument list is a new function in PostgreSQL, and
---      keeping the old one would leave a writer that cannot fill the new NOT NULL columns.
---   No row is written. No backfill: K2 — answers without these fields are unknown, never mastery.
+--      check / review / application, no default), hints_used (NOT NULL, 0–3), server_interval_ms (NULL,
+--      or 0 … 3 600 000 ms and only on the first round), objective_ids and objective_mapping_version
+--      (both NULL, or a non-empty array without NULL elements with a version ≥ 1 — L2 fills them, never
+--      retroactively) and question_content_sha256 (NULL = UNKNOWN version, or 64 hex).
+--   2. question_instances gets the SERVER-DELIVERED version of each round: served_snapshot (content,
+--      metadata, answer_format, answer_type and this instance's key), served_content_sha256 and
+--      served_at — all three NULL (unknown) or all three set. A trigger
+--      (question_instances_served_snapshot) owns them:
+--        * INSERT of an open round WITH a proposed snapshot (get-next-question, K1_SERVED_SNAPSHOT=on):
+--          the question row is locked FOR SHARE and the proposal must equal it exactly (content,
+--          metadata, format, type) — otherwise the insert fails with 40001 and get-next-question tries
+--          its next candidate. So the version recorded is the version the response was built from, and
+--          a concurrent edit is ordered strictly before or after it (never between).
+--        * INSERT without a proposal (an older get-next-question, fixtures): NULL — unknown, not guessed.
+--        * a reopen (answered true → false; the locked repeat functions): a fresh snapshot of the
+--          locked question row in the same statement; get-next-question serves the repeat FROM it.
+--        * any other UPDATE: the round's snapshot is kept byte for byte (a reload, a later content
+--          edit or D-280's re-keying never re-versions a round), except a key re-written in the SAME
+--          transaction that opened the round (D-280's repeat functions re-key right after reopening).
+--      Earlier rounds' fingerprints live in their attempt rows, which are append-only.
+--      "Served" is what the server delivered; "shown to the pupil" needs the client's confirmation and is
+--      deliberately NOT claimed here (K9).
+--   3. process_question_attempt_v2 and process_text_answer_v2 are re-created with p_mode and
+--      p_hints_used (server constants in process-event; an unknown value is refused, never defaulted).
+--      When the round has a snapshot they GRADE AND ROUTE FROM IT (format, type, content, metadata,
+--      key) and store its fingerprint; without one (rounds opened before this file or without a
+--      proposal) they grade as before from the current question and store question_content_sha256 =
+--      NULL: an unknown version is never evidence for mastery.
+--      server_interval_ms: from served_at (or created_at for an unknown-version round) to the answer,
+--      first round only; negative or above 3 600 000 ms (1 hour) is NULL — never clipped. It is a
+--      technical SERVER interval, not the pupil's active working time, and is never used for mastery,
+--      level or reward.
+--      Everything else in both bodies — round check, submission idempotency, frozen result, grading
+--      rules, amounts, streak, quests, SECURITY DEFINER, search_path, EXECUTE (service_role only) — is
+--      unchanged from 20261101190100 / 20261030211428 (the test proves it line by line).
+--      The old signatures are dropped (a different argument list is a new function in PostgreSQL).
+--   No row is written. No backfill: rounds and attempts without these fields stay unknown (K2).
 --
--- GUARD (one DO block: guard, change and final check commit together or not at all):
---   * H5's schema exists; question_attempts is EMPTY (K1 is applied before the first attempt);
---   * process_question_attempt_v2 has the aligned body (md5 8a769614…) and process_text_answer_v2 its
---     H5 body (f8809846…); anything else stops the migration;
---   * a second run on a database that already has K1 (both new bodies, md5 c4fde09c… /
---     6877fdfa…) changes nothing.
+-- GUARD AND ATOMICITY: one DO block (all or nothing, whatever the runner does; lock_timeout is set
+-- inside it): H5's schema exists; D-327 is applied (question_attempts_instance_fkey is NO ACTION);
+-- question_attempts is EMPTY; process_question_attempt_v2 has the aligned body (md5 8a769614…) and
+-- process_text_answer_v2 its H5 body (f8809846…); a second run on a database that already has K1
+-- (both new bodies and the trigger function, md5 below) changes nothing; anything else stops it.
 --
 -- ROLLBACK (before the first attempt only): docs/operations/l1-k1-attempt-context-rollback.md.
 -- ============================================================================
-
-SET LOCAL lock_timeout = '5s';
 
 DO $k1$
 DECLARE
   v_hash text;
   v_rows bigint;
 BEGIN
+  PERFORM set_config('lock_timeout', '5s', true);
+
   IF to_regclass('public.question_attempts') IS NULL THEN
     RAISE EXCEPTION 'K1: question_attempts findes ikke — anvend H5 (20261101190000, 20261101190100) først; intet ændret';
   END IF;
 
   IF EXISTS (SELECT 1 FROM pg_catalog.pg_attribute WHERE attrelid = 'public.question_attempts'::regclass
              AND attname = 'mode' AND NOT attisdropped) THEN
-    IF (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text,text,integer)')) IS DISTINCT FROM 'c4fde09c4c7f13c8a9905e9f8b763296'
-       OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)')) IS DISTINCT FROM '6877fdfa91ec30bd06e099f21ac840ad' THEN
+    IF (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text,text,integer)')) IS DISTINCT FROM '439186fa94119fec02b8f282eb75dbbd'
+       OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)')) IS DISTINCT FROM '809675f9071eb2a62d1c9a9b2628bc84'
+       OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.question_instances_served_snapshot()')) IS DISTINCT FROM 'babbb196f07c4fb60e42ff9e917bf180' THEN
       RAISE EXCEPTION 'K1: kolonnen mode findes, men _v2-funktionerne har ukendte kroppe; intet ændret';
     END IF;
     RAISE NOTICE 'K1: allerede anvendt; intet ændret';
     RETURN;
+  END IF;
+
+  IF (SELECT pg_get_constraintdef(c.oid) FROM pg_catalog.pg_constraint c
+      WHERE c.conname = 'question_attempts_instance_fkey' AND c.conrelid = 'public.question_attempts'::regclass)
+     IS DISTINCT FROM 'FOREIGN KEY (question_instance_id, student_id) REFERENCES question_instances(id, student_id)' THEN
+    RAISE EXCEPTION 'K1: D-327 (20261103100000) er ikke anvendt — question_attempts_instance_fkey skal være ON DELETE NO ACTION; intet ændret';
   END IF;
 
   SELECT count(*) INTO v_rows FROM public.question_attempts;
@@ -77,15 +110,103 @@ BEGIN
     ADD COLUMN hints_used smallint NOT NULL
       CONSTRAINT question_attempts_hints_used_check CHECK (hints_used BETWEEN 0 AND 3),
     ADD COLUMN server_interval_ms integer
-      CONSTRAINT question_attempts_server_interval_ms_check CHECK (server_interval_ms >= 0),
+      CONSTRAINT question_attempts_server_interval_ms_check CHECK (server_interval_ms BETWEEN 0 AND 3600000),
     ADD COLUMN objective_ids uuid[],
     ADD COLUMN objective_mapping_version integer,
-    ADD COLUMN question_content_sha256 text NOT NULL
+    ADD COLUMN question_content_sha256 text
       CONSTRAINT question_attempts_content_sha256_check CHECK (question_content_sha256 ~ '^[0-9a-f]{64}$'),
     ADD CONSTRAINT question_attempts_interval_first_round_check
       CHECK (server_interval_ms IS NULL OR attempt_no = 1),
     ADD CONSTRAINT question_attempts_objectives_versioned_check
-      CHECK ((objective_ids IS NULL) = (objective_mapping_version IS NULL))$k1_ddl$;
+      CHECK ((objective_ids IS NULL AND objective_mapping_version IS NULL)
+          OR (objective_ids IS NOT NULL AND cardinality(objective_ids) >= 1
+              AND array_position(objective_ids, NULL) IS NULL
+              AND objective_mapping_version IS NOT NULL AND objective_mapping_version >= 1))$k1_ddl$;
+
+  EXECUTE $k1_ddl$COMMENT ON COLUMN public.question_attempts.question_content_sha256 IS
+  'K1: fingerprint of the SERVER-DELIVERED version of the round (question_instances.served_content_sha256). NULL = unknown version (a round opened before K1 or without a verified snapshot): never evidence for mastery. "Shown to the pupil" is not claimed (K9).'$k1_ddl$;
+
+  EXECUTE $k1_ddl$COMMENT ON COLUMN public.question_attempts.server_interval_ms IS
+  'K1: technical server interval from delivery of the first round to the answer, 0..3600000 ms; NULL when unknown, negative or above one hour (never clipped). Not active working time; never used for mastery, level or reward.'$k1_ddl$;
+
+  EXECUTE $k1_ddl$ALTER TABLE public.question_instances
+    ADD COLUMN served_snapshot jsonb,
+    ADD COLUMN served_content_sha256 text
+      CONSTRAINT question_instances_served_sha256_check CHECK (served_content_sha256 ~ '^[0-9a-f]{64}$'),
+    ADD COLUMN served_at timestamptz,
+    ADD CONSTRAINT question_instances_served_all_or_none_check
+      CHECK ((served_snapshot IS NULL) = (served_content_sha256 IS NULL)
+         AND (served_snapshot IS NULL) = (served_at IS NULL))$k1_ddl$;
+
+  EXECUTE $k1_ddl$CREATE FUNCTION public.question_instances_served_snapshot()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_q       record;
+  v_opening boolean;
+BEGIN
+  v_opening := (TG_OP = 'INSERT' AND NEW.answered IS NOT TRUE)
+            OR (TG_OP = 'UPDATE' AND OLD.answered IS TRUE AND NEW.answered IS NOT TRUE);
+
+  IF TG_OP = 'UPDATE' AND NOT v_opening THEN
+    -- Within a round the delivered version never changes. Only a key re-written in the SAME
+    -- transaction that opened the round (D-280's repeat functions re-key right after reopening) is
+    -- folded into that round's snapshot.
+    IF OLD.served_snapshot IS NOT NULL AND NEW.answered IS NOT TRUE AND OLD.served_at = now()
+       AND NEW.correct_answer IS DISTINCT FROM OLD.correct_answer THEN
+      NEW.served_snapshot := jsonb_set(OLD.served_snapshot, '{correct_answer}', to_jsonb(NEW.correct_answer));
+      NEW.served_content_sha256 := encode(sha256(convert_to(NEW.served_snapshot::text, 'UTF8')), 'hex');
+      NEW.served_at := OLD.served_at;
+    ELSE
+      NEW.served_snapshot := OLD.served_snapshot;
+      NEW.served_content_sha256 := OLD.served_content_sha256;
+      NEW.served_at := OLD.served_at;
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  IF NOT v_opening OR (TG_OP = 'INSERT' AND NEW.served_snapshot IS NULL) THEN
+    -- An answered row inserted as such, or an insert without a proposal: no delivered version known.
+    NEW.served_snapshot := NULL;
+    NEW.served_content_sha256 := NULL;
+    NEW.served_at := NULL;
+    RETURN NEW;
+  END IF;
+
+  SELECT q.content, q.metadata, q.answer_format, q.answer_type INTO v_q
+  FROM public.questions q WHERE q.id = NEW.question_id
+  FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'served snapshot: question % does not exist', NEW.question_id USING ERRCODE = 'foreign_key_violation';
+  END IF;
+
+  IF TG_OP = 'INSERT' AND (
+       NEW.served_snapshot -> 'content' IS DISTINCT FROM v_q.content
+    OR coalesce(NEW.served_snapshot -> 'metadata', 'null'::jsonb) IS DISTINCT FROM coalesce(v_q.metadata, 'null'::jsonb)
+    OR NEW.served_snapshot ->> 'answer_format' IS DISTINCT FROM v_q.answer_format
+    OR NEW.served_snapshot ->> 'answer_type' IS DISTINCT FROM v_q.answer_type) THEN
+    RAISE EXCEPTION 'served snapshot: question % changed between selection and delivery', NEW.question_id
+      USING ERRCODE = 'serialization_failure';
+  END IF;
+
+  NEW.served_snapshot := jsonb_build_object(
+    'content', v_q.content, 'metadata', v_q.metadata, 'answer_format', v_q.answer_format,
+    'answer_type', v_q.answer_type, 'correct_answer', NEW.correct_answer);
+  NEW.served_content_sha256 := encode(sha256(convert_to(NEW.served_snapshot::text, 'UTF8')), 'hex');
+  NEW.served_at := now();
+  RETURN NEW;
+END;
+$function$$k1_ddl$;
+
+  EXECUTE $k1_ddl$REVOKE ALL ON FUNCTION public.question_instances_served_snapshot() FROM PUBLIC, anon, authenticated, service_role$k1_ddl$;
+
+  EXECUTE $k1_ddl$CREATE TRIGGER question_instances_served_snapshot
+  BEFORE INSERT OR UPDATE ON public.question_instances
+  FOR EACH ROW EXECUTE FUNCTION public.question_instances_served_snapshot()$k1_ddl$;
+
 
   EXECUTE $k1_ddl$DROP FUNCTION public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)$k1_ddl$;
 
@@ -128,6 +249,7 @@ DECLARE
   v_constraint text;
   v_content_sha text;
   v_interval   integer;
+  v_interval_ms numeric;
   v_norm_answer text;
   v_norm_key   text;
 BEGIN
@@ -188,6 +310,15 @@ BEGIN
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'process_question_attempt_v2: spørgsmålet til instans % findes ikke', v_instance.id;
+  END IF;
+
+  -- K1: a round with a delivered version is graded and routed from exactly that version.
+  IF v_instance.served_snapshot IS NOT NULL THEN
+    v_format   := v_instance.served_snapshot ->> 'answer_format';
+    v_type     := v_instance.served_snapshot ->> 'answer_type';
+    v_content  := v_instance.served_snapshot -> 'content';
+    v_metadata := v_instance.served_snapshot -> 'metadata';
+    v_instance.correct_answer := v_instance.served_snapshot ->> 'correct_answer';
   END IF;
 
   -- process-event's routing: answer_type 'long' → long path; a format containing 'text' → short text.
@@ -284,14 +415,13 @@ BEGIN
         p_student_id, v_correct, CASE WHEN v_correct THEN 10 ELSE 0 END);
     END IF;
 
-    -- K1: the fingerprint of the content and key the server graded against, and the technical
-    -- interval from the instance's creation to this answer (first round only; logged, it has no effect
-    -- on mastery, level or reward). Capped at the integer range: an instance may be weeks old.
-    v_content_sha := encode(sha256(convert_to(
-      jsonb_build_object('content', v_content, 'correct_answer', v_instance.correct_answer)::text, 'UTF8')), 'hex');
-    v_interval := CASE WHEN v_instance.repeat_count = 0 AND v_instance.created_at IS NOT NULL
-      THEN least(greatest(floor(extract(epoch FROM (v_now - v_instance.created_at)) * 1000), 0), 2147483647)::integer
-    END;
+    -- K1: the fingerprint of the delivered version (NULL = unknown), and the technical server interval
+    -- of the first round (delivery → answer); negative or above one hour is NULL, never clipped. It has
+    -- no effect on mastery, level or reward.
+    v_content_sha := v_instance.served_content_sha256;
+    v_interval_ms := CASE WHEN v_instance.repeat_count = 0
+      THEN floor(extract(epoch FROM (v_now - coalesce(v_instance.served_at, v_instance.created_at))) * 1000) END;
+    v_interval := CASE WHEN v_interval_ms BETWEEN 0 AND 3600000 THEN v_interval_ms::integer END;
 
     INSERT INTO public.question_attempts (
       question_instance_id, student_id, attempt_no, submission_id, grading, status, was_correct,
@@ -359,6 +489,7 @@ DECLARE
   v_constraint text;
   v_content_sha text;
   v_interval   integer;
+  v_interval_ms numeric;
 BEGIN
   IF p_user_id IS NULL OR p_instance_id IS NULL OR p_submission_id IS NULL THEN
     RETURN jsonb_build_object('outcome', 'invalid_request', 'reason', 'missing_identity');
@@ -422,6 +553,14 @@ BEGIN
     RAISE EXCEPTION 'process_text_answer_v2: spørgsmålet til instans % findes ikke', v_instance.id;
   END IF;
 
+  -- K1: a round with a delivered version is routed from exactly that version (the key shown, too).
+  IF v_instance.served_snapshot IS NOT NULL THEN
+    v_format  := v_instance.served_snapshot ->> 'answer_format';
+    v_type    := v_instance.served_snapshot ->> 'answer_type';
+    v_content := v_instance.served_snapshot -> 'content';
+    v_instance.correct_answer := v_instance.served_snapshot ->> 'correct_answer';
+  END IF;
+
   IF coalesce(v_type, '') = 'long' OR strpos(lower(coalesce(v_format, '')), 'text') = 0 THEN
     RETURN jsonb_build_object('outcome', 'invalid_request', 'reason', 'answer_path');
   END IF;
@@ -472,14 +611,13 @@ BEGIN
     PERFORM public.update_weekly_quest_progress_for_answer(
       p_user_id, p_is_correct, CASE WHEN p_is_correct THEN 10 ELSE 0 END);
 
-    -- K1: the fingerprint of the content and key the server graded against, and the technical
-    -- interval from the instance's creation to this answer (first round only; logged, it has no effect
-    -- on mastery, level or reward). Capped at the integer range: an instance may be weeks old.
-    v_content_sha := encode(sha256(convert_to(
-      jsonb_build_object('content', v_content, 'correct_answer', v_instance.correct_answer)::text, 'UTF8')), 'hex');
-    v_interval := CASE WHEN v_instance.repeat_count = 0 AND v_instance.created_at IS NOT NULL
-      THEN least(greatest(floor(extract(epoch FROM (v_now - v_instance.created_at)) * 1000), 0), 2147483647)::integer
-    END;
+    -- K1: the fingerprint of the delivered version (NULL = unknown), and the technical server interval
+    -- of the first round (delivery → answer); negative or above one hour is NULL, never clipped. It has
+    -- no effect on mastery, level or reward.
+    v_content_sha := v_instance.served_content_sha256;
+    v_interval_ms := CASE WHEN v_instance.repeat_count = 0
+      THEN floor(extract(epoch FROM (v_now - coalesce(v_instance.served_at, v_instance.created_at))) * 1000) END;
+    v_interval := CASE WHEN v_interval_ms BETWEEN 0 AND 3600000 THEN v_interval_ms::integer END;
 
     INSERT INTO public.question_attempts (
       question_instance_id, student_id, attempt_no, submission_id, grading, status, was_correct,
@@ -523,8 +661,14 @@ $function$$k1_ddl$;
 
   EXECUTE $k1_ddl$GRANT EXECUTE ON FUNCTION public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer) TO service_role$k1_ddl$;
 
-  IF (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text,text,integer)')) IS DISTINCT FROM 'c4fde09c4c7f13c8a9905e9f8b763296'
-     OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)')) IS DISTINCT FROM '6877fdfa91ec30bd06e099f21ac840ad'
+  IF (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text,text,integer)')) IS DISTINCT FROM '439186fa94119fec02b8f282eb75dbbd'
+     OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)')) IS DISTINCT FROM '809675f9071eb2a62d1c9a9b2628bc84'
+     OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.question_instances_served_snapshot()')) IS DISTINCT FROM 'babbb196f07c4fb60e42ff9e917bf180'
+     OR NOT EXISTS (SELECT 1 FROM pg_catalog.pg_trigger WHERE tgname = 'question_instances_served_snapshot' AND tgrelid = 'public.question_instances'::regclass AND tgenabled = 'O')
+     OR has_function_privilege('service_role', 'public.question_instances_served_snapshot()', 'EXECUTE')
+     OR has_column_privilege('anon', 'public.question_instances', 'served_snapshot', 'SELECT')
+     OR has_column_privilege('authenticated', 'public.question_instances', 'served_snapshot', 'SELECT')
+     OR has_column_privilege('authenticated', 'public.question_instances', 'served_content_sha256', 'SELECT')
      OR to_regprocedure('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)') IS NOT NULL OR to_regprocedure('public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)') IS NOT NULL
      OR has_function_privilege('anon', 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text,text,integer)', 'EXECUTE') OR has_function_privilege('authenticated', 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text,text,integer)', 'EXECUTE')
      OR has_function_privilege('anon', 'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)', 'EXECUTE') OR has_function_privilege('authenticated', 'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)', 'EXECUTE')
