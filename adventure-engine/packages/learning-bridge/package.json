@@ -1,0 +1,10 @@
+{
+  "name": "@adventure-engine/learning-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./test-service": "./src/test-service.ts"
+  }
+}
