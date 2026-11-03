@@ -13,6 +13,10 @@
 //   content.question    string, required, non-empty
 //   content.options     MC only: the visible choices, strings only, at least two — never a marker of
 //                       which one is right
+//   content.option_details  MC only, when present (D-332): one description per option, same order —
+//                       the "back of the document" a source-criticism task shows (sender, time, recipient,
+//                       purpose, context). Display text, like the options themselves; never a marker of
+//                       which option is right. Malformed → the question is refused as bad content.
 //   content.type        string display hint, when present
 //   content.force_text  true, when present (renderer flag)
 //   content.match       Match par only: { left, right } — two lists of item texts, the right list in
@@ -31,7 +35,10 @@
 
 import { matchLayout, type MatchLayout } from "./match-pairs.ts";
 
-export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "type", "force_text", "match"] as const);
+export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "option_details", "type", "force_text", "match"] as const);
+
+/** D-332: upper bound per option description (display text, not a document store). */
+export const MAX_OPTION_DETAIL_CHARS = 600;
 
 export const PUBLIC_METADATA_KEYS = Object.freeze([
   "difficulty_type",
@@ -45,6 +52,7 @@ export const PUBLIC_METADATA_KEYS = Object.freeze([
 export type PublicContent = {
   question: string;
   options?: string[];
+  option_details?: string[];
   type?: string;
   force_text?: true;
   match?: MatchLayout;
@@ -97,6 +105,17 @@ export function toPublicQuestion(rawContent: unknown, format: string, rawMetadat
       throw new Error("MC question has a non-text option");
     }
     content.options = [...options];
+    // D-332: optional per-option descriptions. Absent on every existing question → payload unchanged.
+    const details = rawContent.option_details;
+    if (details !== undefined) {
+      if (
+        !Array.isArray(details) || details.length !== options.length ||
+        !details.every((t) => typeof t === "string" && t.trim().length > 0 && t.length <= MAX_OPTION_DETAIL_CHARS)
+      ) {
+        throw new Error("MC question has invalid option_details");
+      }
+      content.option_details = [...details];
+    }
   }
 
   if (format === "match") {

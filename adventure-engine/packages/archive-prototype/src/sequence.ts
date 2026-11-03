@@ -6,7 +6,7 @@
  * those live only on the host (host-items.ts). The archive-card exercise below is local PRACTICE with
  * explanations; it never counts as evidence and never reaches the server.
  */
-import { CONTEXT_KEY, DRAWER_KEY, DRAWER_RESULT_ACTION, RESULT_ACTION, REVISIT_RESULT_ACTION } from "./content.ts";
+import { CONTEXT_KEY, DRAWER_KEY, DRAWER_RESULT_ACTION, RESULT_ACTION, REVISIT_RESULT_ACTION, TRANSFER_RESULT_ACTION } from "./content.ts";
 
 /** What an activity is, and what it may ever count for. Shown to the pupil as a badge. */
 export type ActivityClass = "introduktion" | "udforskning" | "oevelse" | "vurdering" | "refleksion" | "genbesoeg" | "spilverden";
@@ -29,7 +29,8 @@ export const ACTIVITIES: Readonly<Record<string, Activity>> = Object.freeze({
   flip: { id: "flip", cls: "udforskning", label: "Udforskning", judgedBy: "ingen", mayBecomeEvidence: false },
   hypothesis: { id: "hypothesis", cls: "oevelse", label: "Din vurdering · øvelse med hjælp", judgedBy: "server", mayBecomeEvidence: false },
   revision: { id: "revision", cls: "oevelse", label: "Revision · ny opgave, samme mål", judgedBy: "server", mayBecomeEvidence: false },
-  transfer: { id: "transfer", cls: "vurdering", label: "Ny anvendelse · uden hjælp", judgedBy: "server", mayBecomeEvidence: true },
+  transfer: { id: "transfer", cls: "vurdering", label: "Selvstændig anvendelse · uden hjælp", judgedBy: "server", mayBecomeEvidence: true },
+  transferPeriod: { id: "transferPeriod", cls: "vurdering", label: "Overførsel · ny periode, uden hjælp", judgedBy: "server", mayBecomeEvidence: true },
   reflection: { id: "reflection", cls: "refleksion", label: "Refleksion · sendes ikke", judgedBy: "ingen", mayBecomeEvidence: false },
   revisit: { id: "revisit", cls: "genbesoeg", label: "Genbesøg · lokal prototype", judgedBy: "server", mayBecomeEvidence: true },
   worldReaction: { id: "worldReaction", cls: "spilverden", label: "Spilverden", judgedBy: "ingen", mayBecomeEvidence: false },
@@ -37,17 +38,19 @@ export const ACTIVITIES: Readonly<Record<string, Activity>> = Object.freeze({
 
 export const REVISION_KEY = "arkivskab-revision";
 export const REVISIT_KEY = "genbesoeg";
-export { REVISIT_RESULT_ACTION };
+/** D-332 step 7: transfer to another period (1864). */
+export const TRANSFER_KEY = "overfoersel";
+export { REVISIT_RESULT_ACTION, TRANSFER_RESULT_ACTION };
 
 /**
  * The world's decision points: what the game asks the host for. ONE objective for the whole sequence
  * (D-330): a revisit or a transfer can only be evidence about the objective it revisits. The id is the
  * PROTOTYPE's; the real ones follow LP-2/LP-13. The host maps it to an existing server objective (D-329).
  */
-export const OBJECTIVE_ID = "hist.besaettelsen.h4";
+export const OBJECTIVE_ID = "kildekritik.ophav";
 export interface DecisionPoint {
   readonly objectiveId: string;
-  readonly purpose: "practice" | "check" | "review";
+  readonly purpose: "practice" | "check" | "review" | "application";
   readonly resultAction: string;
   readonly activity: Activity;
 }
@@ -55,6 +58,7 @@ export const DECISION_POINTS: Readonly<Record<string, DecisionPoint>> = Object.f
   [CONTEXT_KEY]: { objectiveId: OBJECTIVE_ID, purpose: "practice", resultAction: RESULT_ACTION, activity: ACTIVITIES.hypothesis as Activity },
   [REVISION_KEY]: { objectiveId: OBJECTIVE_ID, purpose: "practice", resultAction: RESULT_ACTION, activity: ACTIVITIES.revision as Activity },
   [DRAWER_KEY]: { objectiveId: OBJECTIVE_ID, purpose: "check", resultAction: DRAWER_RESULT_ACTION, activity: ACTIVITIES.transfer as Activity },
+  [TRANSFER_KEY]: { objectiveId: OBJECTIVE_ID, purpose: "application", resultAction: TRANSFER_RESULT_ACTION, activity: ACTIVITIES.transferPeriod as Activity },
   [REVISIT_KEY]: { objectiveId: OBJECTIVE_ID, purpose: "review", resultAction: REVISIT_RESULT_ACTION, activity: ACTIVITIES.revisit as Activity },
 });
 
