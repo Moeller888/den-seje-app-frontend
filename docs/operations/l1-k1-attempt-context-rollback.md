@@ -13,6 +13,33 @@ funktion og de tre kolonner på `question_instances`. Åbne runders snapshot gå
 acceptabelt, fordi intet forsøg findes endnu. En senere genanvendelse af K1 giver kun nye runder et
 snapshot; de øvrige forbliver ukendte.
 
+### Forudsætning: flaget skal være slået fra i den aktive Edge-udrulning
+
+Tilbagerulningen fjerner kolonner, som get-next-question bruger, når `K1_SERVED_SNAPSHOT` er `on`.
+Indsættelsen sender `served_snapshot`, og due- og repeat-vejen læser den. Med flaget slået til vil
+hver ny indsættelse fejle, og hver snapshot-læsning give 500, så snart kolonnerne er væk. Derfor gælder
+følgende rækkefølge, og hvert trin skal være gennemført, før `apply_migration` kaldes:
+
+1. **Slå flaget fra:** fjern Edge-secret'en `K1_SERVED_SNAPSHOT` eller sæt den til en anden værdi end
+   `on`. Notér klokkeslættet (T0). Den aktive version af get-next-question skal være en, der kun læser
+   og skriver `served_*`, når flaget er præcis `on`. Det gælder for versionen fra PR #536 og senere.
+2. **Verificér, at flaget er slået fra i den aktive udrulning:** secret-listen viser ikke værdien `on`,
+   og databasen viser, at ingen ny runde har fået et snapshot fra et forslag efter T0:
+   `SELECT count(*) FROM public.question_instances WHERE repeat_count = 0 AND created_at > T0 AND served_snapshot IS NOT NULL`
+   skal give 0. En genåbning tager stadig et snapshot i triggeren uanset flaget, så kun nye runder
+   (`repeat_count = 0`) beviser, hvad gnq sender. Er tallet ikke 0, kører en isolate stadig med
+   flaget slået til. Vent, og gentag kontrollen.
+3. **Lad igangværende requests løbe ud:** vent mindst 10 minutter efter T0. Det er længere end en
+   Edge-funktions maksimale køretid, så intet kald, der begyndte med flaget slået til, kan sende en
+   sætning med `served_*` efter tilbagerulningen. Gentag kontrollen i trin 2 lige før `apply_migration`.
+4. **Kør tilbagerulningen.** Den tager en eksklusiv lås på `question_instances` og venter højst 5
+   sekunder (`lock_timeout`) på igangværende transaktioner. Kan den ikke få låsen, afbryder den uden
+   ændringer og kan køres igen senere med en ny godkendelse.
+5. **Bagefter:** `K1_SERVED_SNAPSHOT` må ikke slås til igen, før K1 er genanvendt med en særskilt
+   godkendelse. Process-event skal rulles tilbage til versionen uden `p_mode`/`p_hints_used`, før H5
+   aktiveres. H5-aktivering kræver i forvejen K1, så H5 må ikke være aktiveret, mens K1 er rullet
+   tilbage.
+
 ```sql
 -- ROLLBACK L1 K1 — restores H5's attempt table and _v2 functions and removes the delivery snapshot;
 -- only while no attempt exists. One statement (one DO block); lock_timeout inside it.
