@@ -1,5 +1,6 @@
 // D-335 — VERSION 2 OF THE LONG-SLEEVE (SWEATER) MASTER: D-333's ls-master-v1 unchanged (its file and results stay as recorded), plus
-// TWO per-cut repairs — the layer split (splitLayers) and the hip seam (coverBaseTopStrip) — offline; no image call; nothing published.
+// TWO per-cut repairs — the layer split (splitLayers) and the hip seam (coverBaseTopStrip; as a prototype, hipSeamLayer drawn behind the
+// bottom) — offline; no image call; nothing published; no runtime file changed.
 //   the fault (D-333; its cause corrected here) — a warm dotted line inside the sleeves along C's arm outline, faint on the source's green,
 //                       plain on heather. Traced pixel by pixel: those fabric pixels lie on C's arm's soft (antialiased) edge, where the
 //                       arm's alpha is 85–115. The production split puts a top's pixel in the sleeve layer (drawn OVER C's arms) only
@@ -53,4 +54,15 @@ export function coverBaseTopStrip(t, master, base) {
   for (let i = 0; i < N; i++) { if (!add[i]) continue; n++; const x = i % W, y = (i / W) | 0; bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x); by0 = Math.min(by0, y); by1 = Math.max(by1, y);
     core[i] = 1; alpha[i] = base.R[i * 4 + 3]; contour.set([...ink, base.R[i * 4 + 3]], i * 4); panel[i] = 0; ratio[i] = 1; disp[i * 2] = 0; disp[i * 2 + 1] = 0; }
   return { t: { ...t, core, alpha, contour }, master: { ...master, panel, ratio, disp }, addedPx: n, box: n ? [bx0, by0, bx1, by1] : null, ink };
+}
+
+/** D-335 PROTOTYPE (offline) — the hip seam as ITS OWN LAYER, drawn BEHIND the bottom: the same 52 pixels as coverBaseTopStrip (the cut's
+ *  ink, C's alpha), not part of the top's layers. In the order body · shoes · hipSeam · bottom · topBody · arms · sleeves · head a bottom
+ *  narrower than C at the hip (the trousers) leaves the strip visible and the hole closed; a wider one (skirt, capri) covers it. One
+ *  layer for the cut — the same for every colour, print and outfit (the ink is the cut's contour, not the design's). */
+export const HIP_SEAM_ORDER = Object.freeze(["body", "shoes", "hipSeam", "pants", "topBody", "arms", "sleeves", "head"]);
+export function hipSeamLayer(t, master, base) {
+  const r = coverBaseTopStrip(t, master, base), L = new Uint8ClampedArray(N * 4);
+  for (let i = 0; i < N; i++) if (r.t.core[i] && !t.core[i]) L.set(r.t.contour.subarray(i * 4, i * 4 + 4), i * 4);
+  return { layer: L, addedPx: r.addedPx, box: r.box, ink: r.ink };
 }

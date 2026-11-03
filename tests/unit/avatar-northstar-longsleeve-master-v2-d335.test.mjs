@@ -27,7 +27,7 @@ test("D-335 splitLayers: fabric over any part of C's arm (its soft edge included
 test("D-335 v2 is v1's master with only the split and the hip seam added; the revision and the per-cut data are v1's", () => {
   assert.equal(LS2.REVISION, "ls-master-v2"); assert.equal(LS.REVISION, "ls-master-v1"); assert.equal(LS2.SLEEVE_FROM_ARM_ALPHA, 1);
   assert.equal(LS2.SPEC, LS.SPEC); assert.equal(LS2.SOURCE, LS.SOURCE); assert.equal(LS2.buildMasterFor, LS.buildMasterFor);
-  assert.deepEqual(Object.keys(LS2).sort(), ["HIP_ROWS", "REVISION", "SLEEVE_FROM_ARM_ALPHA", "SOURCE", "SPEC", "buildMasterFor", "coverBaseTopStrip", "splitLayers"]);
+  assert.deepEqual(Object.keys(LS2).sort(), ["HIP_ROWS", "HIP_SEAM_ORDER", "REVISION", "SLEEVE_FROM_ARM_ALPHA", "SOURCE", "SPEC", "buildMasterFor", "coverBaseTopStrip", "hipSeamLayer", "splitLayers"]);
 });
 
 test("D-335 coverBaseTopStrip: C's base-top strip connected below the cut becomes the cut's contour (its ink, C's alpha); nothing else changes", () => {
@@ -42,4 +42,16 @@ test("D-335 coverBaseTopStrip: C's base-top strip connected below the cut become
   for (let y = 690; y <= 720; y++) assert.equal(r.t.core[y * W + 300], 0);
   let changed = 0; for (let i = 0; i < N; i++) if (r.t.core[i] !== core[i] || r.t.alpha[i] !== alpha[i]) changed++; assert.equal(changed, 40);
   assert.equal(t.core[710 * W + 100], 0, "the input cut is not mutated");
+});
+
+test("D-335 prototype: hipSeamLayer is exactly coverBaseTopStrip's added pixels as their own layer; the order draws it after the shoes and before the bottom", () => {
+  const lab = new Uint8Array(N), R = new Uint8ClampedArray(N * 4), core = new Uint8Array(N), alpha = new Uint8Array(N), contour = new Uint8ClampedArray(N * 4);
+  for (let y = 700; y < 760; y++) for (let x = 60; x < 140; x++) lab[y * W + x] = 2;
+  for (let y = 690; y <= 720; y++) for (const x of [100, 101]) { lab[y * W + x] = 1; R[(y * W + x) * 4 + 3] = 230; }
+  for (let y = 650; y <= 700; y++) for (let x = 90; x <= 101; x++) { const i = y * W + x; core[i] = 1; alpha[i] = 254; if (x >= 100) contour.set([10, 12, 8, 240], i * 4); }
+  const t = { core, alpha, contour }, master = { panel: new Int8Array(N).fill(-1), ratio: new Float32Array(N), disp: new Float32Array(N * 2) }, base = { sep: { lab }, R };
+  const s = LS2.hipSeamLayer(t, master, base), c = LS2.coverBaseTopStrip(t, master, base); let n = 0;
+  for (let i = 0; i < N; i++) { const a = s.layer[i * 4 + 3]; if (a) { n++; assert.equal(core[i], 0, "never over the cut"); assert.deepEqual([...s.layer.subarray(i * 4, i * 4 + 4)], [...c.t.contour.subarray(i * 4, i * 4 + 4)]); } }
+  assert.equal(n, c.addedPx); assert.equal(s.addedPx, 40);
+  const o = LS2.HIP_SEAM_ORDER; assert.deepEqual([...o], ["body", "shoes", "hipSeam", "pants", "topBody", "arms", "sleeves", "head"]); assert.ok(o.indexOf("hipSeam") < o.indexOf("pants") && o.indexOf("pants") < o.indexOf("topBody"));
 });
