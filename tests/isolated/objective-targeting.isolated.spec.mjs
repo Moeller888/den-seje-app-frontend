@@ -46,7 +46,8 @@ const gnq = (request, pupil, body) =>
 const answer = (request, pupil, instanceId, text) =>
   request.post(`${SUPA}/functions/v1/process-event`, {
     headers: { apikey: ANON, authorization: `Bearer ${pupil.token}`, ...json },
-    data: { question_instance_id: instanceId, answer: text, question_shown_at: new Date().toISOString() },
+    // process-event takes question_shown_at as epoch milliseconds (the adapter sends Date.now()).
+    data: { question_instance_id: instanceId, answer: text, question_shown_at: Date.now() },
   });
 const instances = async (request, pupil) =>
   await (await request.get(`${SUPA}/rest/v1/question_instances?select=id,answered,was_correct,correct_answer,repeat_count,questions(learning_objective)&student_id=eq.${pupil.id}&order=created_at`, { headers: svc })).json();
