@@ -24,8 +24,22 @@ test("D-335 splitLayers: fabric over any part of C's arm (its soft edge included
   assert.equal(LS2.splitLayers(layer, base, 128).moved, 0); assert.equal(LS2.splitLayers(layer, base, 128).layers.topBody[(600 * W + 112) * 4 + 3] > 0, true);
 });
 
-test("D-335 v2 is v1's master with only the split added; the revision and the per-cut data are v1's", () => {
+test("D-335 v2 is v1's master with only the split and the hip seam added; the revision and the per-cut data are v1's", () => {
   assert.equal(LS2.REVISION, "ls-master-v2"); assert.equal(LS.REVISION, "ls-master-v1"); assert.equal(LS2.SLEEVE_FROM_ARM_ALPHA, 1);
   assert.equal(LS2.SPEC, LS.SPEC); assert.equal(LS2.SOURCE, LS.SOURCE); assert.equal(LS2.buildMasterFor, LS.buildMasterFor);
-  assert.deepEqual(Object.keys(LS2).sort(), ["REVISION", "SLEEVE_FROM_ARM_ALPHA", "SOURCE", "SPEC", "buildMasterFor", "splitLayers"]);
+  assert.deepEqual(Object.keys(LS2).sort(), ["HIP_ROWS", "REVISION", "SLEEVE_FROM_ARM_ALPHA", "SOURCE", "SPEC", "buildMasterFor", "coverBaseTopStrip", "splitLayers"]);
+});
+
+test("D-335 coverBaseTopStrip: C's base-top strip connected below the cut becomes the cut's contour (its ink, C's alpha); nothing else changes", () => {
+  const lab = new Uint8Array(N), R = new Uint8ClampedArray(N * 4), core = new Uint8Array(N), alpha = new Uint8Array(N), contour = new Uint8ClampedArray(N * 4);
+  for (let y = 700; y < 760; y++) for (let x = 60; x < 140; x++) lab[y * W + x] = 2;                                   // C's base shorts from row 700
+  for (const sx of [100, 300]) for (let y = 690; y <= 720; y++) for (const x of [sx, sx + 1]) { lab[y * W + x] = 1; R[(y * W + x) * 4 + 3] = x === sx ? 250 : 140; }   // two base-top strips
+  for (let y = 650; y <= 700; y++) for (let x = 90; x <= 101; x++) { const i = y * W + x; core[i] = 1; alpha[i] = 254; if (x >= 100) contour.set([10, 12, 8, 240], i * 4); }   // the cut, its side ink
+  const t = { core, alpha, contour }, master = { panel: new Int8Array(N).fill(-1), ratio: new Float32Array(N), disp: new Float32Array(N * 2) }, base = { sep: { lab }, R };
+  const r = LS2.coverBaseTopStrip(t, master, base);
+  assert.equal(r.addedPx, 40, "rows 701-720 x 100-101 (the strip at x 300 is not connected to the cut)"); assert.deepEqual(r.box, [100, 701, 101, 720]); assert.deepEqual(r.ink, [10, 12, 8]);
+  for (let y = 701; y <= 720; y++) for (const x of [100, 101]) { const i = y * W + x; assert.equal(r.t.core[i], 1); assert.equal(r.t.alpha[i], R[i * 4 + 3]); assert.deepEqual([...r.t.contour.subarray(i * 4, i * 4 + 4)], [10, 12, 8, R[i * 4 + 3]]); assert.equal(r.master.panel[i], 0); }
+  for (let y = 690; y <= 720; y++) assert.equal(r.t.core[y * W + 300], 0);
+  let changed = 0; for (let i = 0; i < N; i++) if (r.t.core[i] !== core[i] || r.t.alpha[i] !== alpha[i]) changed++; assert.equal(changed, 40);
+  assert.equal(t.core[710 * W + 100], 0, "the input cut is not mutated");
 });

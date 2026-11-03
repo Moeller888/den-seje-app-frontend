@@ -400,10 +400,10 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Sweater master v2 — D-335 (offline; 30 candidates for the owner's visual review, not approved; nothing published or integrated).**
+- **Sweater master v2 — D-335 (offline; 18 candidates for the owner's visual review, not approved; nothing published or integrated).**
+  - **Hip seam.** The sweater's side contour now continues over C's base-top strip at the hip (`coverBaseTopStrip`, 52 px; 0 enclosed holes). The light notch with trousers is gone and navy shorts now pass. Skirt and capri, which are wider than C at the hip, show the continued contour as a stroke on their fabric: skirt fails COMBO-2, and capri is held out on a visual finding. A clean seam for both kinds of bottom needs a top layer drawn under the bottom, which is a runtime change.
   - **Warm sleeve line fixed.** The cause was the layer split: fabric over C's arm's soft edge (arm alpha 85–115) went to the body layer under the arm. The cut's own split now sends every fabric pixel over C's arm to the sleeve layer (`ls-master-v2`, 1,069 px). Warm pixels on heather fell from 117 to 6; colours, alpha, edges, cuffs and hands are unchanged.
-  - **Navy shorts held out.** A small hem-corner repair left a 1–7 px enclosed hole and failed FIT-4 on every design.
-  - **Long trousers caveat.** They show a small hip tick at ×3; it is sub-pixel at app size.
+  - **Navy shorts held out by the owner.** The first hem-lengthening attempt left a 1–7 px enclosed hole and failed FIT-4, so it is not used.
   - See `docs/decisions/D-335.md`.
 - **Long-sleeve master prototype — D-333 (offline; 0 image calls; nothing published or integrated; no design approved).**
   - **Source.** One master (`ls-master-v1`) on the existing green sweater (d239), with D-264's method unchanged; only the per-cut data differ.

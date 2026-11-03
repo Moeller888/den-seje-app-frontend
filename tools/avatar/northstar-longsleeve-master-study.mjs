@@ -13,6 +13,8 @@
 //   package — (D-335) the candidates for the owner's visual review: every design except the source-colour control x every bottom whose
 //             outfit check passes for ALL designs (outfits.json); app-size sheets (110x165, 300x450; light and dark) per design over
 //             those bottoms; candidates.json lists them with the bottoms held out and why.
+//   hip     — (D-335) the right hip before (--before, the previous build) and after, heather and navy over each bottom: 1:1, x6 and the
+//             whole figure at 300x450 and 110x165 (light); hip.json with the outfit verdicts before and after.
 //   compare — (D-335) before/after of the cut repair on heather: v1's and v2's sleeve, armhole and cuff close-ups side by side, and the
 //             warm pixels the composite shows over the sleeves (C's arm contour through not fully opaque fabric). --before <v1 out dir>.
 // --master v1 (default; D-333's ls-master-v1, unchanged) or v2 (D-335's ls-master-v2: the same master and layer, split into body and
@@ -50,6 +52,11 @@ export const MOTIFS = Object.freeze({
 });
 export const BOTTOMS = Object.freeze(["bottom-skirt-sand", "bottom-shorts-navy", "bottom-capri-lightblue", "bottom-trousers-square-olive", "bottom-trousers-square-navy", "bottom-trousers-square-sand"]);
 export const SHOE = "shoes-sneakers-beige";
+/** Bottoms the owner holds out of the candidate package whatever the checks say (owner 2026-11-03: navy shorts until checked separately). */
+export const OWNER_HELD = Object.freeze({ "bottom-shorts-navy": "held out by the owner until that combination is checked separately (D-335)" });
+/** Bottoms held out on a VISUAL finding of the v2 hip seam although the outfit check passes (D-335; a wider bottom than C at the right
+ *  hip: the sweater's continued side contour lies on the bottom's fabric inside its own outline). Applies to --master v2 only. */
+export const VISUAL_HELD_V2 = Object.freeze({ "bottom-capri-lightblue": "a short dark stroke of the hip seam on the capri fabric just inside its outline, seen at x6 (technical PASS) (D-335)" });
 /** The designs: one master, two colours, plain and with each print at the one chest-center rule; plus the source's own colour. */
 export const DESIGNS = Object.freeze({
   "green (source colour)": { colour: "source" },
@@ -90,13 +97,15 @@ async function main() {
   if (phase === "build") return phaseBuild(OUT);
   if (phase === "compare") return phaseCompare(OUT, at("--before"));
   if (phase === "package") return phasePackage(OUT);
+  if (phase === "hip") return phaseHip(OUT, at("--before"));
   if (phase === "outfits") { if (!DW) throw new Error("--dwebp"); return phaseOutfits(OUT, DW); }
   if (phase === "views") return phaseViews(OUT);
-  throw new Error("--phase build|outfits|views|compare|package");
+  throw new Error("--phase build|outfits|views|compare|package|hip");
 }
 
 function phaseBuild(OUT) {
-  const t0 = Date.now(), E = env(), { base, w, T, src, t } = E, master = LS.buildMasterFor(LS.SPEC, t, src), item = union(src.layers), g = S1.geometry(t.core);
+  const t0 = Date.now(), E = env(), { base, w, T, src } = E, m0 = LS.buildMasterFor(LS.SPEC, E.t, src), hip = VERSION === "v2" ? LS2.coverBaseTopStrip(E.t, m0, base) : null;
+  const t = hip ? hip.t : E.t, master = hip ? hip.master : m0, item = union(src.layers), g = S1.geometry(t.core);
   // the ONE placement: D-269's chest-center box as it lies on C for the approved print tees (tp-approval-candidates-v1.json boxOnC). D-269
   // defines it as fractions of the cut's geometry, whose body width is measured below the sleeves' end; a long sleeve reaches the hip, so
   // that measure is undefined here (40 px) — every top sits on the same figure C, so the box on C is the rule's cut-independent form
@@ -123,7 +132,7 @@ function phaseBuild(OUT) {
   const srcWG = wristAndGap(src.layers, base, master, armpitRow); for (let i = 0; i < N; i++) if (srcWG.shown[i]) pm.set([255, 0, 255, 255], i * 4);
   for (let y = box[1]; y < box[1] + box[3]; y++) for (const x of [box[0], box[0] + box[2] - 1]) pm.set([0, 0, 0, 255], (y * W + x) * 4); for (let x = box[0]; x < box[0] + box[2]; x++) for (const y of [box[1], box[1] + box[3] - 1]) pm.set([0, 0, 0, 255], (y * W + x) * 4);
   writeFileSync(join(OUT, "layer-map.png"), encodePng(W, H, pm));
-  const rec = { decision: VERSION === "v2" ? "D-335" : "D-333", splitRule: VERSION === "v2" ? "LS2.splitLayers: sleeve layer where C's arm alpha >= " + LS2.SLEEVE_FROM_ARM_ALPHA : "production: sleeve layer where C's arm alpha >= 128", master: { revision: VERSION === "v2" ? LS2.REVISION : LS.REVISION, spec: LS.SPEC, source: { ...LS.SOURCE, origin: E.origin }, sizes: master.sizes, seamPx: { left: master.seams.left.length, right: master.seams.right.length }, base: master.base, sourceColour: green },
+  const rec = { decision: VERSION === "v2" ? "D-335" : "D-333", hipSeam: hip ? { addedPx: hip.addedPx, box: hip.box, ink: hip.ink } : null, splitRule: VERSION === "v2" ? "LS2.splitLayers: sleeve layer where C's arm alpha >= " + LS2.SLEEVE_FROM_ARM_ALPHA : "production: sleeve layer where C's arm alpha >= 128", master: { revision: VERSION === "v2" ? LS2.REVISION : LS.REVISION, spec: LS.SPEC, source: { ...LS.SOURCE, origin: E.origin }, sizes: master.sizes, seamPx: { left: master.seams.left.length, right: master.seams.right.length }, base: master.base, sourceColour: green },
     geometry: { bbox: g.bbox, height: g.height, bodyWidthBelowSleeves: g.bodyWidthBelowSleeves, sleeveEndRow: g.sleeveEndRow, fractionRuleBoxWouldBe: PF.placementBox(g, "chest-center") },
     placement: { rule: "D-269 chest-center as its box on C (tp-approval-candidates-v1.json boxOnC); the fraction rule's body width is undefined on a long sleeve", spec: PF.PLACEMENTS["chest-center"], box, armpitRow },
     source: { fit: { ok: srcFit.ok, failed: srcFit.failed }, cuffsAndHands: srcWG.sides }, designs, seconds: Math.round((Date.now() - t0) / 1000) };
@@ -173,10 +182,21 @@ function phaseCompare(OUT, BEFORE) {
 }
 function phasePackage(OUT) {
   const O = JSON.parse(readFileSync(join(OUT, "outfits.json"), "utf8")), names = Object.keys(DESIGNS).filter((n) => DESIGNS[n].colour !== "source"), V = join(OUT, "views"); mkdirSync(V, { recursive: true });
-  const ok = BOTTOMS.filter((bt) => names.every((n) => O.units[n + " | " + bt].ok)), out = BOTTOMS.filter((bt) => !ok.includes(bt));
+  const vis = VERSION === "v2" ? VISUAL_HELD_V2 : {}, ok = BOTTOMS.filter((bt) => !OWNER_HELD[bt] && !vis[bt] && names.every((n) => O.units[n + " | " + bt].ok)), out = BOTTOMS.filter((bt) => !ok.includes(bt));
   const candidates = names.flatMap((n) => ok.map((bt) => ({ id: "LS2-" + slug(n).toUpperCase() + "--" + bt.replace("bottom-", ""), design: n, top: DESIGNS[n], bottom: bt, shoes: SHOE, technical: "PASS" })));
   for (const [bn, bg] of [["light", LIGHT], ["dark", DARK]]) for (const [w2, h2] of [[110, 165], [300, 450]]) { const tiles = []; for (const n of names) for (const bt of ok) tiles.push(down(flat(loadPx(join(OUT, "full", slug(n) + "--" + bt.replace("bottom-", "") + ".png")), bg), w2, h2)); writeFileSync(join(V, "package--" + w2 + "x" + h2 + "--" + bn + ".png"), (() => { const g = grid(tiles, ok.length, 6); return encodePng(g.w, g.h, g.px); })()); gc(); }
-  const rec = { decision: "D-335", master: "ls-master-v2", rows: names, columns: ok, candidates, heldOut: out.map((bt) => ({ bottom: bt, failed: [...new Set(names.flatMap((n) => O.units[n + " | " + bt].failed))], sourceItemAlso: O.sourceItem[bt] })) };
+  const rec = { decision: "D-335", master: "ls-master-v2", rows: names, columns: ok, candidates, heldOut: out.map((bt) => ({ bottom: bt, ownerHeld: OWNER_HELD[bt] || null, visualHeld: vis[bt] || null, failed: [...new Set(names.flatMap((n) => O.units[n + " | " + bt].failed))], sourceItemAlso: O.sourceItem[bt] })) };
   writeFileSync(join(OUT, "candidates.json"), JSON.stringify(rec, null, 2) + "\n"); console.log(JSON.stringify({ candidates: candidates.length, columns: ok, heldOut: rec.heldOut }));
+}
+function phaseHip(OUT, BEFORE) {
+  if (!BEFORE) throw new Error("--before <the previous out dir>"); const V = join(OUT, "views"), HB = [590, 770, 670, 840]; mkdirSync(V, { recursive: true });
+  const bots = ["skirt-sand", "capri-lightblue", "trousers-square-olive", "trousers-square-navy", "trousers-square-sand", "shorts-navy"], sets = { x1: [], x6: [], app300: [], app110: [] };
+  for (const n of ["heather", "navy"]) for (const bt of bots) for (const dir of [BEFORE, OUT]) { const C = flat(loadPx(join(dir, "full", slug(n) + "--" + bt + ".png")), LIGHT);
+    sets.x1.push(crop(C, HB, 1)); sets.x6.push(crop(C, HB, 6)); sets.app300.push(down(C, 300, 450)); sets.app110.push(down(C, 110, 165)); }
+  for (const [k, t] of Object.entries(sets)) { const g = grid(t, 4, k === "x1" ? 4 : 8); writeFileSync(join(V, "hip-before-after--" + k + ".png"), encodePng(g.w, g.h, g.px)); gc(); }
+  const ob = JSON.parse(readFileSync(join(BEFORE, "outfits.json"), "utf8")).units, oa = JSON.parse(readFileSync(join(OUT, "outfits.json"), "utf8")).units, verdicts = {};
+  for (const k of Object.keys(oa)) verdicts[k] = { before: ob[k] ? (ob[k].ok ? "PASS" : ob[k].failed.join("|")) : null, after: oa[k].ok ? "PASS" : oa[k].failed.join("|") };
+  writeFileSync(join(OUT, "hip.json"), JSON.stringify({ decision: "D-335", layout: "rows: heather (6 bottoms), then navy; per bottom two columns: before | after; bottoms: " + bots.join(", "), verdicts }, null, 2) + "\n");
+  console.log(JSON.stringify(Object.fromEntries(Object.entries(verdicts).filter(([, v]) => v.before !== v.after))));
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((e) => { console.error("REFUSED: " + e.message); process.exit(1); });
