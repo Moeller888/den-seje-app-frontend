@@ -400,6 +400,12 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Long-sleeve master prototype — D-333 (offline; 0 image calls; nothing published or integrated; no design approved).**
+  - **Source.** One master (`ls-master-v1`) on the existing green sweater (d239), with D-264's method unchanged; only the per-cut data differ.
+  - **Designs.** Heather and navy, plain and with the approved teapot and fox prints. The prints use one placement: D-269's chest-center box on C. The fraction rule is undefined on a long sleeve.
+  - **Fit.** Fit, cuffs, wrists and armhole gap are clean. Outfits pass 35/42; shorts fail COMBO-6, like the source sweater itself.
+  - **Open, one-time per cut.** The source's alpha 251–254 along C's arm shows as a warm dotted line on light colours, and the hip corner fails against shorts. See `docs/decisions/D-333.md`.
+- **Owner feedback on D-331 (2026-11-03):** the boots look fine in the opt-in, a visual confirmation of the test integration (registered by D-333).
 - **AB-1 ankle boots in the Northstar opt-in — D-331 (LIVE in the opt-in; flag still false; no catalogue, shop or ordinary pupil view change).**
   - **Published.** The 4 D-326 files are published byte for byte; their hashes were checked before publication.
   - **Offered.** `AB1-BOOT-ORIGINAL` and `AB1-BOOT-LIGHTSAND` are offered in the "Sko" row for exactly the 180 combinations in `NORTHSTAR_AB1_BOOT_COMBOS`. 10 were shown to the owner and 170 checked technically.
