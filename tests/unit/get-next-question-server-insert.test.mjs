@@ -162,6 +162,9 @@ test("the admin client is used only for the instance insert and the server-only 
     "from:question_instances",
     "from:question_instances",
     "rpc:get_unserved_questions_for_student",
+    // D-329, targeted requests only: the lost-race check reads ONLY the id of the verified pupil's open
+    // instance (no key), before "objective_exhausted" may be claimed; it never reaches the repeat RPCs below.
+    "from:question_instances",
     // QUESTION_MIX_ENGINE "v2" only: the same repeat with exhaustion judged on servable formats
     // (migration 20261019150000; service_role only, same student-scoped guards).
     "rpc:request_repeat_question_servable_for_student",
@@ -181,7 +184,7 @@ test("the admin client is used only for the instance insert and the server-only 
   // pinned in level-flow.test.mjs.
   assert.equal((INDEX_CODE.match(/await loadLevelPlan\(admin\(\) as unknown as LevelReadClient, \{\s*studentId: student_id,/g) ?? []).length, 1,
     "the level engine call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 10, "no other admin() use (the 10th is Match par's key read)");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 11, "no other admin() use (the 10th is Match par's key read, the 11th D-329's id-only lost-race check)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {
