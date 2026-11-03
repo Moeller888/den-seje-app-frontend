@@ -161,7 +161,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat | dette repository | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
+| Kandidat | dette repository | 15 | `f42296bbe15a3e912cb4d756f2360ee0546cef4ce0edb9f2e750005c8d3bcd3f` |
+| Forrige kandidat (før D-329, målretning af læringsmål) | main før D-329 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
 | Forrige kandidat (Match par #377, før log-pseudonym #379) | main før #379 | 13 | `2ce45c7eaa113a9bda93d342e77e51e53efbe3b53ea64aeabaec0bb9dda3560e` |
 | Forrige kandidat (H5 PR 2, før Match par #377) | main før #377 | 12 | `a52e2da432f61fb7cdcf38827529526a33e9b0d6ad123cc0a91095cb4d30ebc3` |
 | Version 180, som deployet 2026-10-31 — **rollback-mål før H5-aktivering** | `1aee47a` (main, merge af #487), uændret | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
@@ -181,6 +182,13 @@ PR #379 tilføjer feltet `pupil` (et envejs-pseudonym af eleven, `log-pseudonym.
 `FORMAT_MIX:`-loglinjer (shadow og v2). Slukket-pariteten kontrollerer, at hver `FORMAT_MIX:`-linje
 har præcis det forventede pseudonym, og at ingen anden linje har det. Først derefter fjernes feltet,
 og resten skal stadig være identisk med version 179.
+D-329 (Lærligverse F4-B) tilføjer `objective-target.ts` og målretning af ét eksisterende
+`learning_objective`. Den er **slukket**, medmindre Edge-secret'en `LAERLIGVERSE_OBJECTIVE_TARGETING` er
+præcis `on` **og** anmodningen indeholder `learning_objective`. Slukket laver funktionen præcis de samme
+kald som før. `learning_objective` læses kun i den åbne instans' select, når målretningen er tændt, så
+slukket-pariteten er uændret. Tændt kan den kun indsnævre det server-afledte scope. Den springer
+gentagelsestrinnet over (E2) og svarer 409 på en åben instans fra et andet mål. Secret'en sættes ikke i
+produktionen uden ejerens særskilte GO.
 Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
 kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten
@@ -271,7 +279,7 @@ reference.
 - `entrypoint_path` `functions/get-next-question/index.ts`;
 - `import_map_path` `functions/get-next-question/deno.json`;
 - `verify_jwt` `false`, ellers fejler browserens OPTIONS-preflight;
-- præcis de 14 filer i kandidatmanifestet, med stierne som i manifestet.
+- præcis de 15 filer i kandidatmanifestet, med stierne som i manifestet.
 
 Ingen secret ændres.
 
