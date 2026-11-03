@@ -202,3 +202,17 @@ test("the host app reads no secret from the URL and stores no token in web stora
   assert.ok(!/location\.(search|hash)|URLSearchParams/.test(app), "configuration must not come from the URL");
   assert.ok(!/(localStorage|sessionStorage)\.setItem/.test(app), "the host app must not write tokens to storage");
 });
+
+test("D-330: the evidence classifier is served to the host (never the test adapter), and the page configuration carries the objective map and the H5 switch escaped", () => {
+  assert.ok(HOST_FILES.includes("bridge/evidence.js"));
+  const ev = readFileSync(new URL("../../laerligverse/host/bridge/evidence.js", import.meta.url), "utf8");
+  assert.equal(/test-service|FakeTaskService|supabase/i.test(ev.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "")), false);
+  const html = renderHostPage({ mode: "isolated-test", gameOrigin: "http://127.0.0.1:4331", gameUrl: "http://127.0.0.1:4331/game.html", supabaseUrl: "http://127.0.0.1:54321", anonKey: "k", objectiveMap: { "hist.x": "</script>" }, h5: true });
+  assert.equal(html.includes("</script><"), false, "no script break-out through the objective map");
+  const cfg = JSON.parse(html.match(/<script type="application\/json" id="lv-config">([\s\S]*?)<\/script>/)[1]);
+  assert.deepEqual(cfg.objectiveMap, { "hist.x": "</script>" });
+  assert.equal(cfg.h5, true);
+  const plain = JSON.parse(renderHostPage({ mode: "isolated-test", gameOrigin: "http://127.0.0.1:4331", gameUrl: "http://127.0.0.1:4331/game.html", supabaseUrl: "http://127.0.0.1:54321", anonKey: "k" }).match(/<script type="application\/json" id="lv-config">([\s\S]*?)<\/script>/)[1]);
+  assert.equal(plain.objectiveMap, null, "off by default");
+  assert.equal(plain.h5, false, "off by default");
+});

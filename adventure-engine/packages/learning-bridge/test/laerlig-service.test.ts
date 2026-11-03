@@ -263,3 +263,92 @@ describe("bridge host — retry safety and backend data it cannot carry", () => 
   });
 });
 
+
+describe("LaerligTaskService — objective targeting, D-329/D-330 (mock HTTP; the real server is in objective-targeting + laerligverse-evidence isolated specs)", () => {
+  const MAP = { "hist.besaettelsen.h4": "world_war_2" } as const;
+  const TARGETED = { ...MC, learning_objective: "world_war_2" };
+
+  it("sends the HOST-mapped existing objective and accepts only a reply that echoes it", async () => {
+    const s = scripted({ status: 200, body: TARGETED });
+    const svc = new LaerligTaskService({ call: s.call, subject: "historie", objectiveMap: MAP });
+    const t = await svc.fetchTask(Q);
+    expect(s.calls).toEqual([{ fn: "get-next-question", body: { subject: "historie", learning_objective: "world_war_2" } }]);
+    expect(t.objective).toBe("world_war_2");
+    expect(svc.targeting).toBe("objective");
+  });
+
+  it("a server that ignores the objective (no echo, or another one) is refused — no random question as the objective's task (C3)", async () => {
+    for (const body of [MC, { ...MC, learning_objective: "cold_war" }]) {
+      const svc = new LaerligTaskService({ call: scripted({ status: 200, body }).call, subject: "historie", objectiveMap: MAP });
+      await expect(svc.fetchTask(Q)).rejects.toMatchObject({ code: "unavailable", transient: false });
+      expect(await svc.openTask()).toBeNull();
+    }
+  });
+
+  it("an objective the host does not map is never sent untargeted (no request at all)", async () => {
+    const s = scripted();
+    const svc = new LaerligTaskService({ call: s.call, subject: "historie", objectiveMap: MAP });
+    for (const objectiveId of ["hist.unknown", "__proto__", "constructor"]) {
+      await expect(svc.fetchTask({ ...Q, objectiveId })).rejects.toMatchObject({ code: "unavailable" });
+    }
+    expect(s.calls).toEqual([]);
+  });
+
+  it("maps 400 / 403 / 409 / objective_exhausted / timeout and malformed replies without retrying refusals", async () => {
+    const cases: Array<[{ status: number; body: unknown } | Error, string, boolean]> = [
+      [{ status: 400, body: { error: "invalid_learning_objective" } }, "invalid", false],
+      [{ status: 403, body: { error: "learning_objective_not_allowed" } }, "forbidden", false],
+      [{ status: 409, body: { error: "open_question_other_objective" } }, "unavailable", false],
+      [{ status: 200, body: { step: "no_questions", reason: "objective_exhausted" } }, "unavailable", false],
+      [{ status: 504, body: null }, "server", true],
+      [new Error("timeout"), "network", true],
+      [{ status: 200, body: { ...TARGETED, question_instance_id: "not-a-uuid" } }, "server", false],
+      [{ status: 200, body: { learning_objective: "world_war_2" } }, "server", false],
+    ];
+    for (const [reply, code, transient] of cases) {
+      const svc = new LaerligTaskService({ call: scripted(reply).call, subject: "historie", objectiveMap: MAP });
+      await expect(svc.fetchTask(Q), JSON.stringify(reply instanceof Error ? reply.message : reply)).rejects.toMatchObject({ code, transient });
+    }
+  });
+});
+
+describe("LaerligTaskService — H5 submissions, D-273/D-330 (mock HTTP)", () => {
+  const SUB = "0b8f7c6d-5e4f-4a3b-9c2d-1e0f9a8b7c6d";
+  const recorded = { outcome: "recorded", status: "correct", correct_answer: "9. april 1940", review_text: null, misconception_type: null, round_no: 1, xp_awarded: 10, coins_awarded: 5 };
+
+  async function served(svcReplies: Array<{ status: number; body: unknown }>, h5 = true) {
+    const s = scripted({ status: 200, body: MC }, ...svcReplies);
+    const svc = new LaerligTaskService({ call: s.call, subject: "historie", h5Submissions: h5 });
+    await svc.fetchTask(Q);
+    return { s, svc };
+  }
+
+  it("off by default: the legacy body, no round_no, no submission_id", async () => {
+    const { s, svc } = await served([{ status: 200, body: { status: "correct", correct_answer: "9. april 1940" } }], false);
+    await svc.submit({ instanceId: ID, roundNo: 1, submissionId: SUB, action: { kind: "choice", payload: { optionId: "o1" } } });
+    expect(Object.keys(s.calls[1]?.body ?? {}).sort()).toEqual(["answer", "question_instance_id", "question_shown_at"]);
+  });
+
+  it("on: the host's round and submission id go to the _v2 path; recorded and replay are the only successes", async () => {
+    const { s, svc } = await served([{ status: 200, body: recorded }, { status: 200, body: { ...recorded, outcome: "replay" } }]);
+    const a = { instanceId: ID, roundNo: 1, submissionId: SUB, action: { kind: "choice", payload: { optionId: "o1" } } } as const;
+    expect(await svc.submit(a)).toMatchObject({ outcome: "correct", replay: false, evidence: "none" });
+    expect(s.calls[1]?.body).toMatchObject({ round_no: 1, submission_id: SUB, answer: "9. april 1940" });
+    expect(await svc.submit(a)).toMatchObject({ outcome: "correct", replay: true });
+  });
+
+  it("on: refused rounds (409), a reply for another round, or an unknown outcome are never successes", async () => {
+    const a = { instanceId: ID, roundNo: 1, submissionId: SUB, action: { kind: "choice", payload: { optionId: "o1" } } } as const;
+    for (const [reply, code] of [
+      [{ status: 409, body: { outcome: "round_closed", error: "Round already closed" } }, "unavailable"],
+      [{ status: 409, body: { outcome: "submission_conflict", error: "Submission id already used" } }, "unavailable"],
+      [{ status: 200, body: { ...recorded, round_no: 2 } }, "server"],
+      [{ status: 200, body: { ...recorded, outcome: "something" } }, "server"],
+    ] as const) {
+      const { svc } = await served([reply]);
+      await expect(svc.submit(a)).rejects.toMatchObject({ code });
+    }
+    const { svc } = await served([]);
+    await expect(svc.submit({ ...a, roundNo: 2 })).rejects.toMatchObject({ code: "invalid" });
+  });
+});

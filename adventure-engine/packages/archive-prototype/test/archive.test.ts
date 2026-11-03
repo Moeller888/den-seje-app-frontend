@@ -125,18 +125,20 @@ describe("Arkivskabet v2 — the learning sequence as data (D-322)", () => {
     for (const id of ["intro", "introCheck", "archiveCard", "flip", "hypothesis", "revision", "reflection", "worldReaction"]) expect(ACTIVITIES[id]?.mayBecomeEvidence, id).toBe(false);
   });
 
-  it("decision points: revision asks for the SAME objective as the hypothesis; transfer and revisit ask for their own", () => {
+  it("decision points: ONE objective for every step (D-330); the steps differ by purpose and context", () => {
     expect(DECISION_POINTS[REVISION_KEY]?.objectiveId).toBe(DECISION_POINTS[CONTEXT_KEY]?.objectiveId);
     expect(DECISION_POINTS[DRAWER_KEY]?.purpose).toBe("check");
     expect(DECISION_POINTS[REVISIT_KEY]?.purpose).toBe("review");
     expect(DECISION_POINTS[REVISIT_KEY]?.resultAction).toBe(REVISIT_RESULT_ACTION);
     const ids = new Set(Object.values(DECISION_POINTS).map((p) => p.objectiveId));
-    expect(ids.size).toBe(3);
+    expect([...ids]).toEqual(["hist.besaettelsen.h4"]);
   });
 
   it("the test adapter has a task for every decision point, and the revision is a NEW instance (other option ids)", () => {
-    for (const p of Object.values(DECISION_POINTS)) expect(ARCHIVE_ITEMS.some((i) => i.objectiveId === p.objectiveId), p.objectiveId).toBe(true);
-    const kilde = ARCHIVE_ITEMS.filter((i) => i.objectiveId === DECISION_POINTS[CONTEXT_KEY]?.objectiveId);
+    for (const [key, p] of Object.entries(DECISION_POINTS)) {
+      expect(ARCHIVE_ITEMS.filter((i) => i.objectiveId === p.objectiveId && i.contextKey === key), key).toHaveLength(1);
+    }
+    const kilde = [CONTEXT_KEY, REVISION_KEY].map((k) => ARCHIVE_ITEMS.find((i) => i.contextKey === k) as (typeof ARCHIVE_ITEMS)[number]);
     expect(kilde).toHaveLength(2);
     const [first, revision] = kilde.map((i) => new Set((i.options ?? []).map((o) => o.id)));
     expect([...(revision ?? [])].some((id) => first?.has(id))).toBe(false);

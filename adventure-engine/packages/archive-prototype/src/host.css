@@ -13,4 +13,12 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.45 s
 .host-panel dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
 .host-panel button { display: block; width: 100%; margin: 6px 0; padding: 8px; font: inherit; }
 .rejects { margin: 0; padding-left: 18px; font-size: 13px; }
+.host-evidence { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fff; }
+.host-evidence h2 { margin: 0 0 6px; font-size: 16px; }
+.evidence-note { margin: 0 0 8px; font-size: 14px; color: var(--warn); }
+.host-evidence table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 10px; }
+.host-evidence caption { text-align: left; font-weight: 600; padding: 4px 0; }
+.host-evidence th, .host-evidence td { text-align: left; vertical-align: top; padding: 5px 8px; border-top: 1px solid var(--line); }
+.host-evidence td[data-status="observed"] { font-weight: 600; }
+.host-evidence td[data-status="unknown"] { font-style: italic; }
 @media (max-width: 800px) { .host-main { grid-template-columns: 1fr; } }

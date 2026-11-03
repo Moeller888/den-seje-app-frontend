@@ -40,9 +40,11 @@ export const REVISIT_KEY = "genbesoeg";
 export { REVISIT_RESULT_ACTION };
 
 /**
- * The world's decision points: what the game asks the host for. The objective ids are the PROTOTYPE's
- * (D-322); the real ones follow LP-2/LP-13 (owner decision) and the backend's objective targeting (H4).
+ * The world's decision points: what the game asks the host for. ONE objective for the whole sequence
+ * (D-330): a revisit or a transfer can only be evidence about the objective it revisits. The id is the
+ * PROTOTYPE's; the real ones follow LP-2/LP-13. The host maps it to an existing server objective (D-329).
  */
+export const OBJECTIVE_ID = "hist.besaettelsen.h4";
 export interface DecisionPoint {
   readonly objectiveId: string;
   readonly purpose: "practice" | "check" | "review";
@@ -50,10 +52,10 @@ export interface DecisionPoint {
   readonly activity: Activity;
 }
 export const DECISION_POINTS: Readonly<Record<string, DecisionPoint>> = Object.freeze({
-  [CONTEXT_KEY]: { objectiveId: "hist.besaettelsen.h4.kilde", purpose: "practice", resultAction: RESULT_ACTION, activity: ACTIVITIES.hypothesis as Activity },
-  [REVISION_KEY]: { objectiveId: "hist.besaettelsen.h4.kilde", purpose: "practice", resultAction: RESULT_ACTION, activity: ACTIVITIES.revision as Activity },
-  [DRAWER_KEY]: { objectiveId: "hist.besaettelsen.h4.overfoersel", purpose: "check", resultAction: DRAWER_RESULT_ACTION, activity: ACTIVITIES.transfer as Activity },
-  [REVISIT_KEY]: { objectiveId: "hist.besaettelsen.h4.genbesoeg", purpose: "review", resultAction: REVISIT_RESULT_ACTION, activity: ACTIVITIES.revisit as Activity },
+  [CONTEXT_KEY]: { objectiveId: OBJECTIVE_ID, purpose: "practice", resultAction: RESULT_ACTION, activity: ACTIVITIES.hypothesis as Activity },
+  [REVISION_KEY]: { objectiveId: OBJECTIVE_ID, purpose: "practice", resultAction: RESULT_ACTION, activity: ACTIVITIES.revision as Activity },
+  [DRAWER_KEY]: { objectiveId: OBJECTIVE_ID, purpose: "check", resultAction: DRAWER_RESULT_ACTION, activity: ACTIVITIES.transfer as Activity },
+  [REVISIT_KEY]: { objectiveId: OBJECTIVE_ID, purpose: "review", resultAction: REVISIT_RESULT_ACTION, activity: ACTIVITIES.revisit as Activity },
 });
 
 /** The four questions a source is asked, and the fifth thing a historian looks at. */

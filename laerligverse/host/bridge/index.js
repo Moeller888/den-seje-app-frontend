@@ -4,3 +4,4 @@ export * from "./protocol.js";
 export * from "./service.js";
 export { BridgeHost } from "./host.js";
 export { LaerligTaskService, createLaerligTaskService, DEFAULT_FLAGS } from "./laerlig-service.js";
+export { assessObjectives, evidenceEligibility, observationFromAttemptRow, REVISIT_MIN_HOURS } from "./evidence.js";

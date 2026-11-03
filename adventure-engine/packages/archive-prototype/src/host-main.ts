@@ -1,5 +1,5 @@
 import "./host.css";
-import { BridgeHost, type RejectReason } from "@adventure-engine/learning-bridge";
+import { BridgeHost, assessObjectives, type ObjectiveAssessment, type RejectReason } from "@adventure-engine/learning-bridge";
 import { FakeTaskService } from "@adventure-engine/learning-bridge/test-service";
 import { GAME_ORIGIN, randomId } from "./config.ts";
 import { ARCHIVE_ITEMS } from "./host-items.ts";
@@ -59,6 +59,13 @@ byId("inject-network").addEventListener("click", () => {
   service.injectFailures("network", "network", "network", "network");
   render();
 });
+// D-330: the revisit rule (FORSLAG ≥ 20 h) needs time to pass. Only the TEST ADAPTER's clock moves; nothing real.
+let clockOffset = 0;
+service.clock = () => Date.now() + clockOffset;
+byId("advance-clock").addEventListener("click", () => {
+  clockOffset += 20 * 3_600_000;
+  render();
+});
 let reloads = 0;
 byId("reload-game").addEventListener("click", () => {
   // A new URL always navigates (re-assigning the same src is not reliably a reload in every browser).
@@ -75,6 +82,55 @@ function render(): void {
   const log = byId("ledger-rejects");
   log.replaceChildren(...rejects.slice(-8).map((r) => Object.assign(document.createElement("li"), { textContent: r })));
   byId("host-session").textContent = host.sessionNonce === null ? "ingen" : "aktiv";
+  renderEvidence(assessObjectives(service.observations()));
+}
+
+// D-330: the evidence chain's classification of what the test adapter observed. A view, never a record.
+const STATE_LABEL: ReadonlyArray<[keyof ObjectiveAssessment["states"], string]> = [
+  ["introduced", "Introduceret"],
+  ["practised", "Øvet"],
+  ["supported", "Støttet præstation"],
+  ["independent", "Selvstændig præstation"],
+  ["applied", "Anvendelse i ny situation"],
+  ["revisited", "Genbesøg"],
+  ["documentedProgression", "Dokumenteret progression"],
+];
+const STATUS_LABEL = { observed: "observeret", not_observed: "ikke observeret", unknown: "ukendt" } as const;
+let lastEvidence = "";
+function renderEvidence(assessments: ObjectiveAssessment[]): void {
+  const key = JSON.stringify(assessments);
+  if (key === lastEvidence) return;
+  lastEvidence = key;
+  const box = byId("evidence-body");
+  box.replaceChildren();
+  if (assessments.length === 0) {
+    box.append(Object.assign(document.createElement("p"), { textContent: "Endnu ingen besvarede opgaver." }));
+    return;
+  }
+  for (const a of assessments) {
+    const table = document.createElement("table");
+    table.dataset["objective"] = a.objective;
+    table.append(Object.assign(document.createElement("caption"), { textContent: `Mål (prototype-id): ${a.objective}` }));
+    const tbody = document.createElement("tbody");
+    for (const [state, label] of STATE_LABEL) {
+      const v = a.states[state];
+      const tr = document.createElement("tr");
+      tr.dataset["state"] = state;
+      const td = Object.assign(document.createElement("td"), { textContent: `${STATUS_LABEL[v.status]}: ${v.why.join(" ")}` });
+      td.dataset["status"] = v.status;
+      tr.append(Object.assign(document.createElement("th"), { scope: "row", textContent: label }), td);
+      tbody.append(tr);
+    }
+    const eligible = a.evidence.filter((e) => e.eligible).length;
+    const tr = document.createElement("tr");
+    tr.dataset["state"] = "evidence";
+    const td = Object.assign(document.createElement("td"), { textContent: `${eligible} af ${a.evidence.length} svar` });
+    td.dataset["eligible"] = String(eligible);
+    tr.append(Object.assign(document.createElement("th"), { scope: "row", textContent: "Kan bruges som evidens (K4)" }), td);
+    tbody.append(tr);
+    table.append(tbody);
+    box.append(table);
+  }
 }
 render();
 setInterval(render, 250);

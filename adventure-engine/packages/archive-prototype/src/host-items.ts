@@ -4,8 +4,9 @@ import type { FakeItem } from "@adventure-engine/learning-bridge/test-service";
  * HOST SIDE ONLY — the test adapter's items, with their answer keys (D-307, D-310, D-322).
  * The game bundle must never import this file; e2e/archive.spec.ts scans the built game bundle for it.
  *
- * Objective H4 of the occupation pilot (F0 12: "kan bruge en kilde til at begrunde en påstand"). The
- * objective ids are the prototype's (D-322 sequence.ts); the real ones await LP-2/LP-13 and H4.
+ * ONE learning objective for the whole sequence (D-330): "kan bruge en kilde til at begrunde en påstand".
+ * The id is the prototype's; the real ones await LP-2/LP-13. The steps differ by decision point (contextKey),
+ * so practice, revision, transfer and revisit are evidence about the SAME objective.
  *
  * KONSTRUERET UNDERVISNINGSMATERIALE. The source descriptions (`detail`, format "Felt: værdi|…") DESCRIBE
  * kinds of sources and are not quotations. Only the proclamation of 9 April 1940 is a real document; it is
@@ -32,7 +33,8 @@ export const ARCHIVE_ITEMS: readonly FakeItem[] = [
   {
     // Step 3 (hypothesis): guided practice, hints allowed, never evidence.
     id: "h4-kilde",
-    objectiveId: "hist.besaettelsen.h4.kilde",
+    objectiveId: "hist.besaettelsen.h4",
+    contextKey: "arkivskab",
     kind: "choice",
     prompt: "Påstand: »Regeringen ønskede, at befolkningen skulle holde sig i ro den 9. april 1940.« Hvilken kilde er bedst til at undersøge påstanden?",
     options: [
@@ -56,7 +58,8 @@ export const ARCHIVE_ITEMS: readonly FakeItem[] = [
     // Step 5 (revision): a NEW instance of the same objective after feedback — same claim, the sources in a
     // different order and under new ids, so the pupil re-reads rather than re-clicks a position.
     id: "h4-kilde-revision",
-    objectiveId: "hist.besaettelsen.h4.kilde",
+    objectiveId: "hist.besaettelsen.h4",
+    contextKey: "arkivskab-revision",
     kind: "choice",
     prompt: "Revidér din vurdering. Påstand: »Regeringen ønskede, at befolkningen skulle holde sig i ro den 9. april 1940.« Hvilken kilde er bedst til at undersøge påstanden?",
     options: [
@@ -75,7 +78,8 @@ export const ARCHIVE_ITEMS: readonly FakeItem[] = [
   {
     // Step 6 (new application): the SAME proclamation is now the wrong answer, because the claim is different.
     id: "h4-overfoersel",
-    objectiveId: "hist.besaettelsen.h4.overfoersel",
+    objectiveId: "hist.besaettelsen.h4",
+    contextKey: "skuffe",
     kind: "choice",
     prompt: "Påstand: »En almindelig dansker i København blev overrasket og bange om morgenen den 9. april 1940.« Hvilken kilde er bedst til at undersøge påstanden?",
     options: [
@@ -98,7 +102,8 @@ export const ARCHIVE_ITEMS: readonly FakeItem[] = [
   {
     // Step 8 (revisit, LOCAL PROTOTYPE): the method in yet another situation, without help.
     id: "h4-genbesoeg",
-    objectiveId: "hist.besaettelsen.h4.genbesoeg",
+    objectiveId: "hist.besaettelsen.h4",
+    contextKey: "genbesoeg",
     kind: "choice",
     prompt: "Påstand: »Der blev kæmpet nogle steder i Danmark om morgenen den 9. april 1940.« Hvilken kilde er bedst til at undersøge påstanden?",
     options: [
