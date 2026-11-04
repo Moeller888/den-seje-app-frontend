@@ -18,7 +18,7 @@
 // a real historical frame that the teacher must check (`frameToCheck`). None of them is a historical original,
 // an abridgement or a paraphrase of one.
 
-export const VERSION = "kildekritik-maaling-v1";
+export const VERSION = "kildekritik-maaling-v1.1";
 export const APPROVAL = Object.freeze({
   status: "afventer_laerergodkendelse",
   text: "Forslag. Ikke godkendt af en lærer. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.",
@@ -46,7 +46,7 @@ export const TRANSFER_CRITERIA = Object.freeze({
 export const PART2_INSTRUCTION = "Kan kilden bruges som belæg for påstanden? Sæt kryds ved ja eller nej.";
 export const PART2_REASON = "Vælg én af påstandene ovenfor. Forklar dit svar ud fra, hvem der har lavet kilden, til hvem og hvorfor (1–3 sætninger).";
 export const PART3_INSTRUCTION = "Her er fire kilder. Vælg den kilde, der er bedst til at undersøge hver påstand.";
-export const PART3_REASON = "Forklar dit valg ved påstand a med en oplysning om kilden (1–2 sætninger).";
+export const PART3_REASON = "Forklar dit valg ved påstand {id} med en oplysning om kilden (1–2 sætninger).";
 
 const form = (f) => Object.freeze(f);
 
@@ -59,7 +59,7 @@ export const FORMS = Object.freeze({
       kind: "Brev", status: "didaktisk konstrueret",
       header: "Brev skrevet i København, juli 1853. Underskrevet: J. Holm, læge.",
       text: "Til Magistraten. I de sidste tre uger har jeg besøgt over hundrede syge i gaderne ved havnen. De fleste bor i trange, fugtige kældre med åbne rendestene. Jeg beder derfor Magistraten om penge til at rydde gårdene og til et lazaret, hvor de syge kan ligge. Sker der intet, frygter jeg, at sygdommen spreder sig til hele byen.",
-      glossary: { Magistraten: "byens styre", lazaret: "et midlertidigt sygehus" },
+      glossary: { Magistraten: "byens styre", lazaret: "et midlertidigt sygehus", rendestene: "åbne render til spildevand" },
     },
     part1: {
       questions: ["Hvem har lavet kilden?", "Hvornår er kilden lavet?", "Hvem er kilden skrevet til?", "Hvorfor tror du, kilden er skrevet? Skriv, hvad afsenderen ville opnå."],
@@ -73,6 +73,7 @@ export const FORMS = Object.freeze({
       ],
     },
     part3: {
+      reasonFor: "a",
       sources: [
         { label: "Dagbog", meta: "en elev · 1955 · hende selv · at skrive sine oplevelser ned" },
         { label: "Skolereglement", meta: "skolekommissionen · 1955 · lærere og forældre · at fastsætte skolens regler" },
@@ -80,8 +81,8 @@ export const FORMS = Object.freeze({
         { label: "Erindringsbog", meta: "en tidligere elev · 2005 · bogens læsere · at fortælle om sin barndom" },
       ],
       claims: [
-        { id: "a", text: "Eleverne på en landsbyskole syntes i 1955, at skolen var streng.", answer: "Dagbog", why: "Skrevet af en elev samme år, til hende selv: tæt på oplevelsen." },
-        { id: "b", text: "Skolen havde i 1955 en regel om, at eleverne skulle rejse sig, når læreren kom ind.", answer: "Skolereglement", why: "Skrevet af dem, der fastsatte reglerne, samme år, for at fastsætte dem." },
+        { sourceKind: "personlig", id: "a", text: "Eleverne på en landsbyskole syntes i 1955, at skolen var streng.", answer: "Dagbog", why: "Skrevet af en elev samme år, til hende selv: tæt på oplevelsen." },
+        { sourceKind: "officiel", id: "b", text: "Skolen havde i 1955 en regel om, at eleverne skulle rejse sig, når læreren kom ind.", answer: "Skolereglement", why: "Skrevet af dem, der fastsatte reglerne, samme år, for at fastsætte dem." },
       ],
     },
   }),
@@ -93,7 +94,7 @@ export const FORMS = Object.freeze({
       kind: "Opslag", status: "didaktisk konstrueret",
       header: "Opslag hængt op i Aarhus, oktober 1918. Underskrevet: Sundhedskommissionen.",
       text: "Influenzaen breder sig hurtigt i byen. Undgå forsamlinger, besøg ikke syge, og hold børn hjemme, hvis de har feber. Byens skoler holdes lukket i otte dage. Følg disse råd for jeres egen og naboernes skyld.",
-      glossary: { Sundhedskommissionen: "byens udvalg for sundhed" },
+      glossary: { Sundhedskommissionen: "byens udvalg for sundhed", forsamlinger: "når mange mennesker samles" },
     },
     part1: {
       questions: ["Hvem har lavet kilden?", "Hvornår er kilden lavet?", "Hvem er kilden skrevet til?", "Hvorfor tror du, kilden er skrevet? Skriv, hvad afsenderen ville opnå."],
@@ -101,12 +102,13 @@ export const FORMS = Object.freeze({
     },
     part2: {
       claims: [
-        { text: "Sundhedskommissionen ønskede, at folk holdt sig fra forsamlinger.", answer: "ja", why: "Afsenderens egen hensigt: kommissionen skriver det selv." },
         { text: "Tusindvis af danskere døde af den spanske syge.", answer: "nej", why: "Påstanden er sand, men opslaget kan ikke belægge den: det nævner ingen syge eller døde." },
+        { text: "Sundhedskommissionen ønskede, at folk holdt sig fra forsamlinger.", answer: "ja", why: "Afsenderens egen hensigt: kommissionen skriver det selv." },
         { text: "Borgerne i Aarhus fulgte rådene.", answer: "nej", why: "Opslaget er en opfordring. Det viser ikke, hvad folk gjorde." },
       ],
     },
     part3: {
+      reasonFor: "b",
       sources: [
         { label: "Brev", meta: "en arbejder · 1910 · hans bror · at fortælle om sit liv" },
         { label: "Arbejdsreglement", meta: "fabriksejeren · 1910 · arbejderne · at fastsætte arbejdstiden" },
@@ -114,8 +116,8 @@ export const FORMS = Object.freeze({
         { label: "Avisannonce", meta: "fabrikken · 1910 · avislæsere · at skaffe flere arbejdere" },
       ],
       claims: [
-        { id: "a", text: "Arbejderne på en fabrik syntes i 1910, at arbejdsdagen var for lang.", answer: "Brev", why: "Skrevet af en arbejder samme år, til hans bror: tæt på oplevelsen." },
-        { id: "b", text: "Fabrikken havde i 1910 en regel om, hvornår arbejdsdagen begyndte.", answer: "Arbejdsreglement", why: "Skrevet af fabriksejeren samme år for at fastsætte arbejdstiden." },
+        { sourceKind: "officiel", id: "a", text: "Fabrikken havde i 1910 en regel om, hvornår arbejdsdagen begyndte.", answer: "Arbejdsreglement", why: "Skrevet af fabriksejeren samme år for at fastsætte arbejdstiden." },
+        { sourceKind: "personlig", id: "b", text: "Arbejderne på en fabrik syntes i 1910, at arbejdsdagen var for lang.", answer: "Brev", why: "Skrevet af en arbejder samme år, til hans bror: tæt på oplevelsen." },
       ],
     },
   }),
@@ -135,12 +137,13 @@ export const FORMS = Object.freeze({
     },
     part2: {
       claims: [
-        { text: "Amtmanden mente, at de ramte familier havde brug for hjælp fra staten.", answer: "ja", why: "Afsenderens egen opfattelse: amtmanden skriver det selv." },
         { text: "Stormfloden kostede mennesker livet.", answer: "nej", why: "Påstanden er sand, men indberetningen kan ikke belægge den: den nævner huse og dyr, ikke døde." },
         { text: "Staten sendte hjælp til de ramte.", answer: "nej", why: "Indberetningen er en anmodning. Den viser ikke, hvad staten gjorde." },
+        { text: "Amtmanden mente, at de ramte familier havde brug for hjælp fra staten.", answer: "ja", why: "Afsenderens egen opfattelse: amtmanden skriver det selv." },
       ],
     },
     part3: {
+      reasonFor: "a",
       sources: [
         { label: "Brev", meta: "en passager · 1847 · en ven · at fortælle om sin første togtur" },
         { label: "Annonce", meta: "jernbaneselskabet · 1847 · avislæsere · at sælge billetter" },
@@ -148,8 +151,8 @@ export const FORMS = Object.freeze({
         { label: "Maleri", meta: "en kunstner · 1900 · udstillingens publikum · at vise et tog i fart" },
       ],
       claims: [
-        { id: "a", text: "Passagerer på den første jernbane mellem København og Roskilde syntes i 1847, at turen gik hurtigt.", answer: "Brev", why: "Skrevet af en passager samme år: tæt på oplevelsen." },
-        { id: "b", text: "Jernbaneselskabet ville i 1847 have flere til at købe billetter.", answer: "Annonce", why: "Lavet af selskabet selv samme år for at sælge billetter." },
+        { sourceKind: "personlig", id: "a", text: "Passagerer på den første jernbane mellem København og Roskilde syntes i 1847, at turen gik hurtigt.", answer: "Brev", why: "Skrevet af en passager samme år: tæt på oplevelsen." },
+        { sourceKind: "officiel", id: "b", text: "Jernbaneselskabet ville i 1847 have flere til at købe billetter.", answer: "Annonce", why: "Lavet af selskabet selv samme år for at sælge billetter." },
       ],
     },
   }),

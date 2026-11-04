@@ -70,6 +70,11 @@ facit) og i `laererpakke/laerervejledning.md` (med facit).
 - **Del 3:** to påstande om de samme fire kilder. Den ene besvares af den personlige kilde og den anden af den officielle.
 - **Begrundelseskrav og tidsforbrug:** de samme.
 
+> **F9 (D-346), v1.1:** del 2's og del 3's svarrækkefølge skifter nu mellem A, B og C (før: altid ja–nej–nej og den
+> personlige kilde som påstand a). B2 spørger altid om den personlige påstand. Afsender-heuristikken i del 2 er
+> fundet, men ikke rettet: det er lærerens valg (`docs/decisions/D-346.md` §4). Godkendelsessiden:
+> `proeve-godkendelse-vejledning.md`.
+
 **Hvad er rettet i forhold til F5's udkast:**
 
 - **Det personlige svar var altid rigtigt.** I prætest, posttest og genbesøg i `kildekritik-pilot.md` §1–5 (D-332) var det rigtige svar hver gang den personlige kilde (dagbog/brev). Reglen »vælg altid den personlige kilde« ville give fuldt hus. I v1 giver den kun halvdelen af del 3.
@@ -170,6 +175,9 @@ er sat ved at anvende rubrikkens beskrivelser. Testen kontrollerer resultatet.
 | 5. Kan eleverne udtrykke forståelse på flere måder? | På papir ja, fordi korte og mundtlige svar accepteres. I spillet kun ved klik, og refleksionen sendes ikke | Verificeret i kode / forslag |
 | 6. Påvirker hjælpemidler fortolkningen? | Ja, hvis de bruges forskelligt før og efter. Kræv samme støtte ved alle målinger | Forslag |
 | 7. Hvordan dokumenteres støtten? | Kolonnerne `pre_stoette`, `post_stoette`, `T_stoette` og `C_stoette` i registreringsskemaet | Implementeret (skema) |
+
+> **F9 (D-346):** afsnittet herunder er rettet og uddybet i `oplaesning-og-fair-maaling.md`. Lærlig har en
+> oplæsning, og ikke al oplæsning sender tekst ud. Den ens støtteprocedure står i §7.1 der.
 
 **Ingen kodeændring i F8.** Oplæsning i spillet ville være et nyt system, og en løsning som Azure sender tekst til
 en ekstern tjeneste. Det kræver en særskilt beslutning. I piloten læser læreren eller en makker op.

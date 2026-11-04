@@ -9,7 +9,7 @@
 | Del | Status |
 |---|---|
 | Arkivskabets 12 læringselementer | **Godkendt** af Christopher Møller 04-11-2026 (`docs/laerligverse/kildekritik-godkendelse-register.json`, SHA-256 `8cd7d969…`) |
-| Prøverne i denne pakke (kildekritik-maaling-v1) | **Afventer særskilt faglig godkendelse** |
+| Prøverne i denne pakke (kildekritik-maaling-v1.1) | **Afventer særskilt faglig godkendelse** |
 | LP-13-regler (sekvenspolitikken) | **Afventer beslutning** (`docs/laerligverse/lp13-beslutningskatalog.md`) |
 | Elevpilot | **Ikke autoriseret** |
 | Produktionsintegration | **Ikke autoriseret** |
@@ -42,7 +42,7 @@ Kan dag 1 ikke rumme en dobbeltlektion, så tag prætesten i en tidligere lektio
 
 1. **Før:** Giv hver elev en kode (fx A07). Skriv koblingen kode → elev på et ark, der bliver hos dig. Lærlig får aldrig navne.
 2. **Prætest:** Del opgave A ud. Sig: »Det er ikke en prøve med karakter. Vi vil se, hvad I kan nu.« Undervis ikke før eller under prætesten.
-3. **Oplæsning:** Alle elever må få kilden og spørgsmålene læst op (af dig, en makker eller en oplæsningsfunktion). Notér, hvem der fik det, i `stoette_*`. Oplæsning er en del af prøven, ikke snyd.
+3. **Støtte (samme ved A, B, T og C for den samme elev):** Alle elever må få kilden og spørgsmålene læst op (af dig, en makker eller en lydfil), svare mundtligt (du skriver ordret ned), få ekstra tid og større skrift. Hjælp til kildekritik (»hvem er afsenderen?«) er ikke tilladt. Notér støtten i `*_stoette` (fx `oplaesning_laerer`, `mundtlig`, `ekstra_tid`). Ændres støtten mellem A og B, indgår eleven ikke i B − A. Se `docs/laerligverse/oplaesning-og-fair-maaling.md` §7.1.
 4. **Arkivskabet:** Lad eleverne spille. Hjælp med teknik, men forklar ikke kildekritik ud over spillet. Brug observationsskemaet (§7).
 5. **Posttest og transfertest:** Straks efter. Samme vilkår som prætesten.
 6. **Forsinket test:** Efter reel tid. Fortæl ikke eleverne på forhånd, hvad der kommer. Brug aldrig spillets »+20 timer«-knap som erstatning.
@@ -78,7 +78,7 @@ Begrundelsen bedømmes med B1.
 | a. Eleverne på en landsbyskole syntes i 1955, at skolen var streng. | **Dagbog** | Skrevet af en elev samme år, til hende selv: tæt på oplevelsen. |
 | b. Skolen havde i 1955 en regel om, at eleverne skulle rejse sig, når læreren kom ind. | **Skolereglement** | Skrevet af dem, der fastsatte reglerne, samme år, for at fastsætte dem. |
 
-Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personlige kilde og påstand b af den officielle, så en elev, der altid vælger den personlige kilde, får kun det ene rigtigt.
+Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personlige kilde og påstand b af den officielle, så en elev, der altid vælger den personlige kilde, får kun det ene rigtigt. Rækkefølgen skifter mellem formerne.
 
 ### B · posttest · Den spanske syge 1918 (12 min)
 
@@ -95,18 +95,18 @@ Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personl
 
 | Del 2 | Facit | Hvorfor |
 |---|---|---|
-| 1. Sundhedskommissionen ønskede, at folk holdt sig fra forsamlinger. | **ja** | Afsenderens egen hensigt: kommissionen skriver det selv. |
-| 2. Tusindvis af danskere døde af den spanske syge. | **nej** | Påstanden er sand, men opslaget kan ikke belægge den: det nævner ingen syge eller døde. |
+| 1. Tusindvis af danskere døde af den spanske syge. | **nej** | Påstanden er sand, men opslaget kan ikke belægge den: det nævner ingen syge eller døde. |
+| 2. Sundhedskommissionen ønskede, at folk holdt sig fra forsamlinger. | **ja** | Afsenderens egen hensigt: kommissionen skriver det selv. |
 | 3. Borgerne i Aarhus fulgte rådene. | **nej** | Opslaget er en opfordring. Det viser ikke, hvad folk gjorde. |
 
 Begrundelsen bedømmes med B1.
 
 | Del 3 | Facit | Hvorfor |
 |---|---|---|
-| a. Arbejderne på en fabrik syntes i 1910, at arbejdsdagen var for lang. | **Brev** | Skrevet af en arbejder samme år, til hans bror: tæt på oplevelsen. |
-| b. Fabrikken havde i 1910 en regel om, hvornår arbejdsdagen begyndte. | **Arbejdsreglement** | Skrevet af fabriksejeren samme år for at fastsætte arbejdstiden. |
+| a. Fabrikken havde i 1910 en regel om, hvornår arbejdsdagen begyndte. | **Arbejdsreglement** | Skrevet af fabriksejeren samme år for at fastsætte arbejdstiden. |
+| b. Arbejderne på en fabrik syntes i 1910, at arbejdsdagen var for lang. | **Brev** | Skrevet af en arbejder samme år, til hans bror: tæt på oplevelsen. |
 
-Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personlige kilde og påstand b af den officielle, så en elev, der altid vælger den personlige kilde, får kun det ene rigtigt.
+Begrundelsen ved påstand b bedømmes med B2. Påstand b besvares af den personlige kilde og påstand a af den officielle, så en elev, der altid vælger den personlige kilde, får kun det ene rigtigt. Rækkefølgen skifter mellem formerne.
 
 ### C · forsinket test · Stormfloden 1872 (12 min)
 
@@ -123,9 +123,9 @@ Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personl
 
 | Del 2 | Facit | Hvorfor |
 |---|---|---|
-| 1. Amtmanden mente, at de ramte familier havde brug for hjælp fra staten. | **ja** | Afsenderens egen opfattelse: amtmanden skriver det selv. |
-| 2. Stormfloden kostede mennesker livet. | **nej** | Påstanden er sand, men indberetningen kan ikke belægge den: den nævner huse og dyr, ikke døde. |
-| 3. Staten sendte hjælp til de ramte. | **nej** | Indberetningen er en anmodning. Den viser ikke, hvad staten gjorde. |
+| 1. Stormfloden kostede mennesker livet. | **nej** | Påstanden er sand, men indberetningen kan ikke belægge den: den nævner huse og dyr, ikke døde. |
+| 2. Staten sendte hjælp til de ramte. | **nej** | Indberetningen er en anmodning. Den viser ikke, hvad staten gjorde. |
+| 3. Amtmanden mente, at de ramte familier havde brug for hjælp fra staten. | **ja** | Afsenderens egen opfattelse: amtmanden skriver det selv. |
 
 Begrundelsen bedømmes med B1.
 
@@ -134,7 +134,7 @@ Begrundelsen bedømmes med B1.
 | a. Passagerer på den første jernbane mellem København og Roskilde syntes i 1847, at turen gik hurtigt. | **Brev** | Skrevet af en passager samme år: tæt på oplevelsen. |
 | b. Jernbaneselskabet ville i 1847 have flere til at købe billetter. | **Annonce** | Lavet af selskabet selv samme år for at sælge billetter. |
 
-Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personlige kilde og påstand b af den officielle, så en elev, der altid vælger den personlige kilde, får kun det ene rigtigt.
+Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personlige kilde og påstand b af den officielle, så en elev, der altid vælger den personlige kilde, får kun det ene rigtigt. Rækkefølgen skifter mellem formerne.
 
 ### T · transfertest · Vaskemaskinen 1962 (10 min)
 

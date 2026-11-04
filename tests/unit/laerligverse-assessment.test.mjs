@@ -22,15 +22,25 @@ test("forms A, B and C are parallel: same parts, same claim pattern, comparable 
   const lens = [];
   for (const f of Object.values(FORMS)) {
     assert.equal(f.part1.questions.length, 4, f.id);
-    assert.deepEqual(f.part2.claims.map((c) => c.answer), ["ja", "nej", "nej"], f.id);
+    // Same claim pattern (one "ja", two "nej")…
+    assert.deepEqual(f.part2.claims.map((c) => c.answer).sort(), ["ja", "nej", "nej"], f.id);
     assert.equal(f.part3.sources.length, 4, f.id);
     assert.equal(f.part3.claims.length, 2, f.id);
-    // a = the personal source, b = the official one: "always the diary" gets only one right.
+    // One personal and one official answer: "always the diary" gets only one right.
+    assert.deepEqual(f.part3.claims.map((c) => c.sourceKind).sort(), ["officiel", "personlig"], f.id);
     assert.notEqual(f.part3.claims[0].answer, f.part3.claims[1].answer, f.id);
+    // B2 always asks for the justification of the PERSONAL claim, so the reasoning task is the same kind.
+    assert.equal(f.part3.claims.find((c) => c.id === f.part3.reasonFor)?.sourceKind, "personlig", f.id);
     for (const c of f.part3.claims) assert.ok(f.part3.sources.some((s) => s.label === c.answer), `${f.id}${c.id}`);
     lens.push(words(f.source.text));
     assert.ok(f.frameToCheck.length > 40, f.id);
   }
+  // F9: …but NOT in the same positions. A pupil who memorises the pretest's answer order ("ja, nej, nej"; "a is the
+  // diary") must gain nothing on the posttest or the delayed test.
+  const p2 = Object.values(FORMS).map((f) => f.part2.claims.map((c) => c.answer).join(","));
+  assert.equal(new Set(p2).size, p2.length, `part 2 answer orders repeat: ${p2}`);
+  const p3 = Object.values(FORMS).map((f) => f.part3.claims.map((c) => c.sourceKind).join(","));
+  assert.ok(new Set(p3).size > 1, `part 3 always has the personal source in the same position: ${p3}`);
   assert.ok(Math.max(...lens) - Math.min(...lens) <= 25, `source lengths ${lens}`);
   assert.ok(Math.max(...lens) <= 70, "keep the reading load low");
 });

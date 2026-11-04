@@ -16,7 +16,7 @@ Læs kilden. Du må gerne få den læst op. Du må svare med få ord.
 
 > Til Magistraten. I de sidste tre uger har jeg besøgt over hundrede syge i gaderne ved havnen. De fleste bor i trange, fugtige kældre med åbne rendestene. Jeg beder derfor Magistraten om penge til at rydde gårdene og til et lazaret, hvor de syge kan ligge. Sker der intet, frygter jeg, at sygdommen spreder sig til hele byen.
 
-*Ord:* Magistraten = byens styre · lazaret = et midlertidigt sygehus
+*Ord:* Magistraten = byens styre · lazaret = et midlertidigt sygehus · rendestene = åbne render til spildevand
 
 ### Del 1
 
@@ -87,7 +87,7 @@ Læs kilden. Du må gerne få den læst op. Du må svare med få ord.
 
 > Influenzaen breder sig hurtigt i byen. Undgå forsamlinger, besøg ikke syge, og hold børn hjemme, hvis de har feber. Byens skoler holdes lukket i otte dage. Følg disse råd for jeres egen og naboernes skyld.
 
-*Ord:* Sundhedskommissionen = byens udvalg for sundhed
+*Ord:* Sundhedskommissionen = byens udvalg for sundhed · forsamlinger = når mange mennesker samles
 
 ### Del 1
 
@@ -113,8 +113,8 @@ Kan kilden bruges som belæg for påstanden? Sæt kryds ved ja eller nej.
 
 | Påstand | Ja | Nej |
 |---|---|---|
-| 1. Sundhedskommissionen ønskede, at folk holdt sig fra forsamlinger. | ☐ | ☐ |
-| 2. Tusindvis af danskere døde af den spanske syge. | ☐ | ☐ |
+| 1. Tusindvis af danskere døde af den spanske syge. | ☐ | ☐ |
+| 2. Sundhedskommissionen ønskede, at folk holdt sig fra forsamlinger. | ☐ | ☐ |
 | 3. Borgerne i Aarhus fulgte rådene. | ☐ | ☐ |
 
 Vælg én af påstandene ovenfor. Forklar dit svar ud fra, hvem der har lavet kilden, til hvem og hvorfor (1–3 sætninger).
@@ -134,15 +134,15 @@ Her er fire kilder. Vælg den kilde, der er bedst til at undersøge hver påstan
 | Jubilæumstale | fabriksejeren · 1935 · gæster ved fabrikkens jubilæum · at fejre fabrikken |
 | Avisannonce | fabrikken · 1910 · avislæsere · at skaffe flere arbejdere |
 
-**Påstand a:** Arbejderne på en fabrik syntes i 1910, at arbejdsdagen var for lang.
+**Påstand a:** Fabrikken havde i 1910 en regel om, hvornår arbejdsdagen begyndte.
 
 Bedste kilde: ______________________
 
-**Påstand b:** Fabrikken havde i 1910 en regel om, hvornår arbejdsdagen begyndte.
+**Påstand b:** Arbejderne på en fabrik syntes i 1910, at arbejdsdagen var for lang.
 
 Bedste kilde: ______________________
 
-Forklar dit valg ved påstand a med en oplysning om kilden (1–2 sætninger).
+Forklar dit valg ved påstand b med en oplysning om kilden (1–2 sætninger).
 
 ____________________________________________
 
@@ -226,9 +226,9 @@ Kan kilden bruges som belæg for påstanden? Sæt kryds ved ja eller nej.
 
 | Påstand | Ja | Nej |
 |---|---|---|
-| 1. Amtmanden mente, at de ramte familier havde brug for hjælp fra staten. | ☐ | ☐ |
-| 2. Stormfloden kostede mennesker livet. | ☐ | ☐ |
-| 3. Staten sendte hjælp til de ramte. | ☐ | ☐ |
+| 1. Stormfloden kostede mennesker livet. | ☐ | ☐ |
+| 2. Staten sendte hjælp til de ramte. | ☐ | ☐ |
+| 3. Amtmanden mente, at de ramte familier havde brug for hjælp fra staten. | ☐ | ☐ |
 
 Vælg én af påstandene ovenfor. Forklar dit svar ud fra, hvem der har lavet kilden, til hvem og hvorfor (1–3 sætninger).
 
