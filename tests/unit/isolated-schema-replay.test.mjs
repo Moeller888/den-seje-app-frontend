@@ -104,6 +104,15 @@ test("the replayed schema has production's key objects", async () => {
       AND has_table_privilege(r.role, c.oid, p.priv) ORDER BY 1, 2, 3`);
   assert.deepEqual(d237.rows, [], "no API role holds TRUNCATE or MAINTAIN in public");
   assert.equal((await one(db, `SELECT has_table_privilege('service_role', 'public.profiles', 'TRUNCATE') t`)).t, true);
+  // 20261103100000 (D-327, applied as remote 20261104163310 on 2026-11-04): an H5 attempt cannot vanish
+  // with its instance — question_attempts_instance_fkey is ON DELETE NO ACTION, not deferrable; the
+  // account key stays ON DELETE CASCADE.
+  const d327 = await db.query(`SELECT conname, pg_get_constraintdef(oid) d, condeferrable def FROM pg_constraint
+    WHERE conrelid = 'public.question_attempts'::regclass AND contype = 'f' ORDER BY conname`);
+  assert.deepEqual(d327.rows, [
+    { conname: "question_attempts_instance_fkey", d: "FOREIGN KEY (question_instance_id, student_id) REFERENCES question_instances(id, student_id)", def: false },
+    { conname: "question_attempts_student_id_fkey", d: "FOREIGN KEY (student_id) REFERENCES auth.users(id) ON DELETE CASCADE", def: false },
+  ]);
   assert.notEqual(gar.m, "63b8347dd4d72d40ced43e8728b5ab87", "the replay must not carry the old, double-paying body");
   assert.deepEqual(gar, { m: "fc8d729f8b0166815fe2647805ce2e60", s: true, c: ["search_path=public"],
     a: ["postgres=X/postgres", "authenticated=X/postgres", "service_role=X/postgres"], n: 1, anon: false, auth: true, svc: true });

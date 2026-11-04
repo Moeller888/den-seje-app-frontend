@@ -3,7 +3,12 @@
 Migration: `supabase/migrations/20261103100000_question_attempts_history_no_action.sql`
 ([D-327](../decisions/D-327.md)).
 
-**Status:** IKKE ANVENDT I PRODUKTIONEN. Både anvendelse og tilbagerulning kræver ejerens særskilte
+**Status (opdateret 2026-11-04):** ANVENDT I PRODUKTIONEN 2026-11-04 som
+`20261104163310 question_attempts_history_no_action`
+([produktionslog](production-actions/2026-11-04T1633Z-d327-applied.md)). Tilbagerulningen er IKKE udført
+og kræver ejerens særskilte godkendelse (D-110). Teksten nedenfor er bevaret uændret.
+
+Oprindelig status: IKKE ANVENDT I PRODUKTIONEN. Både anvendelse og tilbagerulning kræver ejerens særskilte
 godkendelse (D-110). Kør tilbagerulningen som ét `apply_migration`-kald, aldrig med `supabase db push`.
 
 Tilbagerulningen genskaber H5's oprindelige `ON DELETE CASCADE` på `question_attempts_instance_fkey`,
