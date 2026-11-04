@@ -116,8 +116,6 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
   "20261101120000_night_owl_stop_new_awards.sql":
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
-  "20261103100000_question_attempts_history_no_action.sql":
-    "D-327 (H5 track), not applied in production: question_attempts_instance_fkey there is still the bootstrap's ON DELETE CASCADE (bootstrap applied 2026-11-04 as 20261104095423, alignment as 20261104140659); it requires 20261101190000 and 20261101190100 first, both applied in production",
   "20261103110000_l1_k1_attempt_context.sql":
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
 });
@@ -168,6 +166,7 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261101190100_question_attempts_v2_align_grading.sql": "20261104140659",
   "20261101210000_question_history_restrict.sql": "20261102182750",
   "20261102100000_release_open_rounds_on_inactive_questions.sql": "20261102123618",
+  "20261103100000_question_attempts_history_no_action.sql": "20261104163310",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),
