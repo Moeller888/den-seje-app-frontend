@@ -7,6 +7,7 @@
 //
 // The decision file (docs/laerligverse/kildekritik-godkendelse.json) belongs to the TEACHER: this tool creates
 // it with every element "ikke_gennemgaaet" and NEVER overwrites a decision. Nothing here approves anything.
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -69,6 +70,33 @@ export async function elements() {
     if (key === "skuffe") out.push({ id: "refleksion", title: "7a · Refleksion (lokal, sendes ikke)", kind: "refleksion", reflection: seq.REFLECTION });
   }
   return { list: out, objective: items.OBJECTIVE };
+}
+
+/** D-344: JSON with sorted keys, so a fingerprint depends on content only, never on key order. */
+export function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${stableJson(value[k])}`).join(",")}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
+
+/** D-344: what the review page shows for one element — its own data plus the shared texts printed next to it. */
+export function shownContent(element, objective) {
+  const shown = { element };
+  if (element.kind === "maal") shown.objective = objective;
+  if (element.kind === "opgave") {
+    shown.objective = objective;
+    shown.nextStep = NEXT_STEP[element.serverStep] ?? null;
+    shown.uncertainty = UNCERTAINTY[element.id] ?? null;
+    shown.observed = OBSERVED;
+  }
+  return shown;
+}
+
+/** D-344: id → SHA-256 of the content the teacher sees, for the given elements. */
+export function fingerprintsOf({ list, objective }) {
+  return Object.fromEntries(list.map((e) => [e.id, createHash("sha256").update(stableJson(shownContent(e, objective))).digest("hex")]));
 }
 
 function md({ list, objective }) {
@@ -241,8 +269,9 @@ fieldset{border:1px dashed #9a8f73;border-radius:6px;margin-top:10px}fieldset la
 ${list.map(block).join("\n")}
 <script>
 const IDS = ${JSON.stringify(list.map((e) => e.id))};
+const FP = ${JSON.stringify(fingerprintsOf({ list, objective }))};
 const STATUSES = ${JSON.stringify(STATUSES)};
-function collect(){const el={};for(const id of IDS){const s=document.querySelector('input[name="st-'+id+'"]:checked');el[id]={status:s?s.value:"ikke_gennemgaaet",kommentar:document.querySelector('textarea[name="km-'+id+'"]').value,aendringer:document.querySelector('textarea[name="ae-'+id+'"]').value}}return{_om:"Lærerens afgørelser (D-332/D-341). Tilladte status: "+STATUSES.join(", ")+". Værktøjet overskriver aldrig en afgørelse.",laerer:document.getElementById("laerer").value,dato:document.getElementById("dato").value,elementer:el}}
+function collect(){const el={};for(const id of IDS){const s=document.querySelector('input[name="st-'+id+'"]:checked');el[id]={status:s?s.value:"ikke_gennemgaaet",kommentar:document.querySelector('textarea[name="km-'+id+'"]').value,aendringer:document.querySelector('textarea[name="ae-'+id+'"]').value}}return{_om:"Lærerens afgørelser (D-332/D-341). Tilladte status: "+STATUSES.join(", ")+". Værktøjet overskriver aldrig en afgørelse.",laerer:document.getElementById("laerer").value,dato:document.getElementById("dato").value,elementer:el,indhold:FP}}
 function count(){const d=collect().elementer;const done=Object.values(d).filter(v=>v.status!=="ikke_gennemgaaet").length;document.getElementById("count").textContent=done+" af "+IDS.length+" gennemgået";for(const id of IDS)document.getElementById(id).dataset.status=d[id].status}
 document.addEventListener("change",count);count();
 document.getElementById("save").addEventListener("click",()=>{const d=collect();const decided=Object.values(d.elementer).some(v=>v.status!=="ikke_gennemgaaet");if(decided&&(!d.laerer||!d.dato)){document.getElementById("msg").textContent="Skriv dit navn og datoen, før du gemmer afgørelser.";return}const missing=IDS.filter(id=>d.elementer[id].status==="skal_rettes"&&!d.elementer[id].aendringer.trim());if(missing.length){document.getElementById("msg").textContent="Skriv, hvad der skal rettes, for: "+missing.join(", ");return}const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)+"\\n"],{type:"application/json"}));a.download="kildekritik-godkendelse.json";a.click();document.getElementById("msg").textContent="Gemt som fil."});
