@@ -99,32 +99,38 @@ function partners(DW) { const spec = json("tools/avatar/fixtures/northstar-wardr
 function composite(w, base, items, seam) { const x = seam ? checkOutfitSeam(w, base, items, seam) : (() => { const r = R1.checkOutfit(w, base, items); return { ...r, enclosedPx: null, hipOpen: null }; })();
   let c = x.proof.dressedRuntime; for (const it of items) if (it.shadow) c = IP.applyShadow(c, x.proof.stack, it.shadow); const out = { ok: x.ok, failed: x.failed, enclosedPx: x.enclosedPx, hipOpen: x.hipOpen, picture: c }; x.proof = null; return out; }
 
-function phaseTank(OUT, DW) {
-  const t0 = Date.now(), E = K.envC(), { w, base, T } = E, c = K.loadCut("tank"), ctx = K.prepare(c, E), { t, src, master } = ctx, union = new Uint8ClampedArray(N * 4);
+function phaseTank(OUT, DW, CUT = "tank", PREV = null) {
+  const t0 = Date.now(), E = K.envC(), { w, base, T } = E, c = K.loadCut(CUT), ctx = K.prepare(c, E), { t, src, master } = ctx, union = new Uint8ClampedArray(N * 4);
   for (const L of Object.values(src.layers)) for (let i = 0; i < N; i++) if (L[i * 4 + 3]) union.set(L.subarray(i * 4, i * 4 + 4), i * 4);
-  const clear = K.printClearance(ctx), box = c.print.boxOnC, seam = K.hipSeam(ctx), sh = K.shadowParts(ctx), g = S1.geometry(t.core);
+  const clear = K.printClearance(ctx), box = c.print.boxOnC, seam = K.behindBottom(ctx), seamKey = c.hipSeam ? "hipSeam" : "hemJunction", seamFile = c.hipSeam ? "hip-seam.png" : "hem-junction.png", sh = K.shadowParts(ctx), g = S1.geometry(t.core);
   let boxClear = 99; for (let y = box[1]; y < box[1] + box[3]; y++) for (let x = box[0]; x < box[0] + box[2]; x++) boxClear = Math.min(boxClear, clear[y * W + x]);
   const src0 = (() => { const v = [[], [], []]; for (let i = 0; i < N; i++) if (master.panel[i] === 0 && !t.contour[i * 4 + 3] && union[i * 4 + 3] >= 250 && Math.abs(master.ratio[i] - 1) < 0.03) for (let k = 0; k < 3; k++) v[k].push(union[i * 4 + k]); return v.map((a) => { a.sort((x, y) => x - y); return a[a.length >> 1]; }); })();
   const motifs = Object.fromEntries(Object.entries(MOTIFS).map(([k, m]) => [k, motif(m, box)])), colours = { heather: PF.COLOURS.heather, navy: PF.COLOURS.navy, source: src0 };
-  mkdirSync(join(OUT, "layers"), { recursive: true }); mkdirSync(join(OUT, "full"), { recursive: true }); writeFileSync(join(OUT, "layers", "hip-seam.png"), encodePng(W, H, seam.layer));
+  mkdirSync(join(OUT, "layers"), { recursive: true }); mkdirSync(join(OUT, "full"), { recursive: true }); writeFileSync(join(OUT, "layers", seamFile), encodePng(W, H, seam.layer));
   const designs = {}, P = partners(DW), srcItem = { ...src, category: "top", covering: "none" }, ref = {};
   for (const bt of BOTTOMS) { const x = composite(w, base, [srcItem, P[bt], P[SHOE]], null); ref[bt] = { ok: x.ok, failed: x.failed }; writeFileSync(join(OUT, "full", "source--" + bt.replace("bottom-", "") + ".png"), encodePng(W, H, x.picture)); gc(); }
   for (const [name, d] of Object.entries(TANK_DESIGNS)) {
     const r = K.renderDesign(ctx, { rgb: colours[d.colour], print: d.print ? motifs[d.print].img : null }), fit = R1.checkItem(w, base, T, t, r.layers);
     let minClear = null; if (r.print) { minClear = 99; for (const i of r.print.footprint) minClear = Math.min(minClear, clear[i]); }
     let fid = null; if (d.colour === "source") { const dd = []; for (let i = 0; i < N; i++) if (union[i * 4 + 3] >= 250) dd.push(Math.max(...[0, 1, 2].map((k) => Math.abs(r.layer[i * 4 + k] - union[i * 4 + k])))); dd.sort((a, b) => a - b); fid = { p50: dd[dd.length >> 1], p95: dd[Math.floor(dd.length * 0.95)], p99: dd[Math.floor(dd.length * 0.99)], max: dd[dd.length - 1] }; }
+    // D-343: with --prev, the design layer must be the previous run's pixel for pixel (only the layer behind the bottom changes)
+    const sameAsPrev = PREV ? diffPx(r.layer, loadPx(join(PREV, "layers", slug(name) + ".png"))) === 0 : null; if (PREV && !sameAsPrev) throw new Error(name + ": the design layer differs from " + PREV);
     let alphaDiff = 0; for (let i = 0; i < N; i++) if (r.layer[i * 4 + 3] !== union[i * 4 + 3]) alphaDiff++; let slPx = 0; for (let i = 0; i < N; i++) if (r.layers.sleeves[i * 4 + 3]) slPx++;
     writeFileSync(join(OUT, "layers", slug(name) + ".png"), encodePng(W, H, r.layer));
     const item = { item: "tank", layers: r.layers, shadow: t.shadow, category: "top", covering: "none" }, outfits = {};
     for (const bt of BOTTOMS) { const x = composite(w, base, [item, P[bt], P[SHOE]], seam.layer); writeFileSync(join(OUT, "full", slug(name) + "--" + bt.replace("bottom-", "") + ".png"), encodePng(W, H, x.picture));
       outfits[bt] = { ok: x.ok, failed: x.failed, enclosedPx: x.enclosedPx, hipOpen: x.hipOpen, sourceItem: ref[bt] }; x.picture = null; gc(); }
-    designs[name] = { rgb: colours[d.colour], fit: { ok: fit.ok, failed: fit.failed }, alphaPxDifferingFromSource: alphaDiff, sleeveLayerPx: slPx, print: r.print ? { at: r.print.at, footprintPx: r.print.footprintPx, onContour: r.print.onContour, minClearancePx: minClear, safe: minClear >= PF.MARGIN && r.print.onContour === 0 } : null, fidelityToSourceMaxChannelDiff: fid, outfits };
+    designs[name] = { rgb: colours[d.colour], layerSameAsPrev: sameAsPrev, fit: { ok: fit.ok, failed: fit.failed }, alphaPxDifferingFromSource: alphaDiff, sleeveLayerPx: slPx, print: r.print ? { at: r.print.at, footprintPx: r.print.footprintPx, onContour: r.print.onContour, minClearancePx: minClear, safe: minClear >= PF.MARGIN && r.print.onContour === 0 } : null, fidelityToSourceMaxChannelDiff: fid, outfits };
     console.log(name, JSON.stringify({ fit: fit.ok, print: designs[name].print && designs[name].print.safe, outfits: Object.values(outfits).filter((o) => o.ok).length + "/" + BOTTOMS.length })); gc(); }
   const all = Object.values(designs).flatMap((d) => Object.values(d.outfits));
   const rec = { decision: "D-342", cut: c.id, source: { item: c.source.item, origin: ctx.origin, sourceColour: src0 }, master: { sizes: master.sizes, base: master.base }, geometry: { bbox: g.bbox, height: g.height },
-    printBox: { box, minClearanceInBoxPx: boxClear, margin: PF.MARGIN }, hipSeam: { addedPx: seam.addedPx, box: seam.box, ink: seam.ink }, shadowParts: Object.keys(sh), sourceOutfits: ref, designs,
+    printBox: { box, minClearanceInBoxPx: boxClear, margin: PF.MARGIN }, [seamKey]: { addedPx: seam.addedPx, box: seam.box, ink: seam.ink, ...(seam.hem ? { hem: seam.hem, shortsTop: seam.shortsTop } : {}) }, shadowParts: Object.keys(sh), sourceOutfits: ref, designs,
     summary: { outfits: all.length, pass: all.filter((o) => o.ok).length, enclosedPxMax: Math.max(...all.map((o) => o.enclosedPx)), hipOpenMax: { right: Math.max(...all.map((o) => o.hipOpen.right)), left: Math.max(...all.map((o) => o.hipOpen.left)) } }, seconds: Math.round((Date.now() - t0) / 1000) };
-  writeFileSync(join(OUT, "tank.json"), JSON.stringify(rec, null, 2) + "\n"); console.log(JSON.stringify({ master: rec.master, printBox: rec.printBox, hipSeam: rec.hipSeam, summary: rec.summary, sourceOutfits: ref, failing: Object.entries(designs).flatMap(([n, d]) => Object.entries(d.outfits).filter(([, o]) => !o.ok).map(([b, o]) => n + " | " + b + ": " + o.failed.join("|"))), seconds: rec.seconds }));
+  // the candidates for a visual review: every design but the source colour x every bottom whose outfit passes; the navy shorts are a
+  // technical control only (owner: never an approved combination)
+  rec.candidates = Object.entries(designs).filter(([n]) => TANK_DESIGNS[n].colour !== "source").flatMap(([n, d]) => BOTTOMS.filter((bt) => bt !== "bottom-shorts-navy" && d.outfits[bt].ok).map((bt) => ({ design: n, bottom: bt, shoes: SHOE })));
+  rec.shortsTechnicalOnly = Object.fromEntries(Object.entries(designs).map(([n, d]) => [n, d.outfits["bottom-shorts-navy"].ok ? "PASS" : d.outfits["bottom-shorts-navy"].failed.join("|")]));
+  writeFileSync(join(OUT, CUT + ".json"), JSON.stringify(rec, null, 2) + "\n"); console.log(JSON.stringify({ master: rec.master, printBox: rec.printBox, [seamKey]: rec[seamKey], candidates: rec.candidates.length, summary: rec.summary, sourceOutfits: ref, failing: Object.entries(designs).flatMap(([n, d]) => Object.entries(d.outfits).filter(([, o]) => !o.ok).map(([b, o]) => n + " | " + b + ": " + o.failed.join("|"))), seconds: rec.seconds }));
 }
 
 /** The comparison designs: on the tee the approved print tees (D-274), on the sweater the approved layers (D-336), on the tank the kit's. */
@@ -132,12 +138,12 @@ export const COMPARE = Object.freeze([{ name: "heather + teapot", tee: "top-tee-
 const VIEW_BOTTOM = "bottom-trousers-square-navy", FIG = [250, 0, 774, 1536];
 export const CLOSE = Object.freeze({ "armhole left": [330, 540, 450, 700], "hem and right hip": [560, 720, 680, 860], "print": [420, 520, 604, 690], "cuff or hand left": [280, 760, 420, 880] });
 
-function phaseViews(OUT, DW) {
+function phaseViews(OUT, DW, CUT = "tank") {
   const t0 = Date.now(), E = K.envC(), { w, base } = E, P = partners(DW), D = decoder(DW), VD = join(OUT, "views"), pics = {}; mkdirSync(VD, { recursive: true });
   const save = (n, g) => writeFileSync(join(VD, n), encodePng(g.w, g.h, g.px));
   try {
     const teeShadow = K.cutOf(K.loadCut("tee-hip"), E).t.shadow, sw = K.loadCut("sweater-long"), swShadow = K.cutOf(sw, E).t.shadow, swSeam = D.dec(sw.runtime.hipSeam);
-    const tc = K.loadCut("tank"), tankCut = K.cutOf(tc, E), tankSeam = loadPx(join(OUT, "layers", "hip-seam.png")); gc();
+    const tc = K.loadCut(CUT), tankCut = K.cutOf(tc, E), tankSeam = loadPx(join(OUT, "layers", tc.hipSeam ? "hip-seam.png" : "hem-junction.png")); gc();
     for (const d of COMPARE) {
       const items = { tee: [{ category: "top", layers: { topBody: D.dec(d.tee + "-top-body-v1.webp"), sleeves: D.dec(d.tee + "-sleeves-v1.webp") }, shadow: teeShadow }, null],
         sweater: [{ category: "top", layers: { topBody: D.dec(d.sweater + "-top-body-v1.webp"), sleeves: D.dec(d.sweater + "-sleeves-v1.webp") }, shadow: swShadow }, swSeam],
@@ -157,13 +163,32 @@ function phaseViews(OUT, DW) {
   console.log(JSON.stringify({ order, verdicts: order.map((k) => pics[k].ok) }));
 }
 
+/** D-343 — the review sheets of a tank run (its full/ composites) against a previous run (--prev): every candidate on light and dark,
+ *  before/after at both hips, close-ups x3 of armholes, neck, print and hips for every design, app sizes. Reads only written composites. */
+export const REVIEW_BOX = Object.freeze({ "armhole left": [330, 540, 450, 700], "armhole right": [574, 540, 694, 700], neck: [440, 440, 584, 540], print: [420, 520, 604, 690], "hip left": [366, 730, 446, 860], "hip right": [578, 730, 658, 860] });
+function phaseReview(OUT, PREV, CUT) {
+  if (!PREV) throw new Error("--prev <the previous run's out dir>"); const rec = JSON.parse(readFileSync(join(OUT, CUT + ".json"), "utf8")), VD = join(OUT, "review"); mkdirSync(VD, { recursive: true });
+  const save = (n, g) => writeFileSync(join(VD, n), encodePng(g.w, g.h, g.px)), pic = (dir, d, bt) => loadPx(join(dir, "full", slug(d) + "--" + bt.replace("bottom-", "") + ".png"));
+  const designs = Object.keys(TANK_DESIGNS), cand = designs.filter((n) => TANK_DESIGNS[n].colour !== "source"), bots = BOTTOMS.filter((b) => b !== "bottom-shorts-navy");
+  for (const [bn, bg] of [["light", LIGHT], ["dark", DARK]]) { save("candidates--figure--" + bn + ".png", grid(cand.flatMap((n) => bots.map((bt) => down(flat(pic(OUT, n, bt), bg), 262, 768, FIG))), bots.length, 8)); gc();
+    for (const [w2, h2] of [[110, 165], [300, 450]]) { save("candidates--app-" + w2 + "x" + h2 + "--" + bn + ".png", grid(cand.flatMap((n) => bots.map((bt) => down(flat(pic(OUT, n, bt), bg), w2, h2))), bots.length, 6)); gc(); } }
+  save("shorts-technical--figure--light.png", grid(designs.map((n) => down(flat(pic(OUT, n, "bottom-shorts-navy"), LIGHT), 262, 768, FIG)), designs.length, 8));
+  for (const d of ["heather + teapot", "navy + fox"]) for (const side of ["left", "right"]) { const b = REVIEW_BOX["hip " + side], t = [];
+    for (const bt of BOTTOMS) for (const dir of [PREV, OUT]) t.push(crop(flat(pic(dir, d, bt), LIGHT), b, 4)); save("before-after--hip-" + side + "--" + slug(d) + "--x4.png", grid(t, 4, 8)); gc(); }
+  for (const [k, b] of Object.entries(REVIEW_BOX)) for (const [bn, bg] of [["light", LIGHT], ["dark", DARK]]) { const t = []; for (const n of designs) for (const bt of k.startsWith("hip") ? BOTTOMS : ["bottom-trousers-square-navy"]) t.push(crop(flat(pic(OUT, n, bt), bg), b, 3));
+    save("close--" + slug(k) + "--" + bn + "--x3.png", grid(t, k.startsWith("hip") ? BOTTOMS.length : designs.length, 6)); gc(); }
+  writeFileSync(join(OUT, "review.json"), JSON.stringify({ decision: "D-343", cut: CUT, previous: PREV, rows: { candidates: cand, columns: bots }, hipSheets: "per design and side: per bottom (" + BOTTOMS.join(", ") + ") the previous run then this run", closeUps: REVIEW_BOX, summary: rec.summary, candidates: rec.candidates.length }, null, 2) + "\n");
+  console.log(JSON.stringify({ sheets: "written", candidates: rec.candidates.length }));
+}
+
 async function main() {
   const args = process.argv.slice(2), at = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null), phase = at("--phase"), OUT = at("--out"), DW = at("--dwebp"), r = relative(ROOT, resolve(OUT || "."));
   if (!OUT || !(r.startsWith("..") || isAbsolute(r))) throw new Error("--out must be outside the repository (the views show C)"); mkdirSync(OUT, { recursive: true });
   if (!DW || !existsSync(DW)) throw new Error("--dwebp <the vendored dwebp>");
   if (phase === "control") return phaseControl(OUT, DW);
-  if (phase === "tank") return phaseTank(OUT, DW);
-  if (phase === "views") return phaseViews(OUT, DW);
+  if (phase === "tank") return phaseTank(OUT, DW, at("--cut") || "tank", at("--prev"));
+  if (phase === "views") return phaseViews(OUT, DW, at("--cut") || "tank");
+  if (phase === "review") return phaseReview(OUT, at("--prev"), at("--cut") || "tank-v2");
   throw new Error("--phase control|tank|views");
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((e) => { console.error("REFUSED: " + e.message); process.exit(1); });
