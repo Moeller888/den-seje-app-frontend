@@ -825,10 +825,21 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
     bedømmelseshændelser for lærere. Ingen genskabelse og ingen backfill. H5 er afgjort 2026-10-30
     ([D-273](decisions/D-273.md)): variant C (serverstyret `round_no` + `submission_id` +
     databasevagt) og M2 (aktivering ved håndhævelse i databasen uden for undervisningstiden), ikke
-    aktiveret. PR #488 (migration `20261030211428`) er merget og ikke anvendt; PR #494 (`round_no` i
-    `get-next-question`) er draft og ikke deployet; `process-event` (PR 3), `app.js` (PR 4) og
-    aktiveringen (PR 5) er ikke startet, og en mulig oprydning (PR 6) er ikke defineret. Hver
-    produktionsændring kræver ejerens særskilte GO. H1–H4 er ikke godkendt. Design og trinplan:
+    aktiveret. **Status 2026-11-04:**
+    - PR 1–4 er merget: #488, #494, #498 og #504.
+    - H5-skemaet kom i produktionen gennem bootstrappen (`20261104095423`), fordi PR 1's fil afviser sig
+      selv efter D-280.
+    - Alignmentet (`20261104140659`) og D-327 (`20261104163310`, forsøg overlever sletning af en
+      instans) er anvendt.
+    - `get-next-question` v181 udleverer `round_no` (PR 2).
+    - `process-event` er stadig v34 og kalder kun de gamle RPC'er. PR 3 er ikke deployet.
+    - Klienten (PR 4) er live med `ENABLE_H5_SUBMISSIONS = false`.
+    - `question_attempts` er tom.
+    - Næste trin er K1 (`20261103110000`, merget i #536, ikke anvendt), derefter deploy af
+      `process-event` og aktiveringen (PR 5). En mulig oprydning (PR 6) er ikke defineret.
+    - Produktionslogs: `docs/operations/production-actions/2026-11-04T*`.
+
+    Hver produktionsændring kræver ejerens særskilte GO. H1–H4 er ikke godkendt. Design og trinplan:
     [`question-attempts-design.md`](question-attempts-design.md). Loggen er ikke komplet, før lange svar
     og lærerbedømmelser også er dækket.
   - **Mulig dobbelt XP ved lærerbedømmelse (fundet i koden, ikke afprøvet, ikke startet):** RPC'en

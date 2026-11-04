@@ -1,6 +1,16 @@
 # Besvarelseshistorik: `question_attempts` — design
 
-**Status:** ARKITEKTURRETNING GODKENDT, IKKE BYGGET. Ejeren har 2026-10-30 godkendt retningen og
+**Status (2026-11-04):** TRIN 1 OG 1B BYGGET, SKEMAET ANVENDT I PRODUKTIONEN, IKKE AKTIVERET.
+- H5-bootstrap (`20261104095423`), alignment (`20261104140659`) og D-327 (`20261104163310`) er
+  anvendt.
+- `question_attempts` er tom. `process-event` v34 kalder kun de gamle RPC'er, og
+  `ENABLE_H5_SUBMISSIONS = false`.
+- K1, deploy af `process-event` og aktiveringen kræver hver ejerens særskilte godkendelse.
+- Se tabellen i §8.
+
+Teksten nedenfor er bevaret.
+
+Oprindelig status: ARKITEKTURRETNING GODKENDT, IKKE BYGGET. Ejeren har 2026-10-30 godkendt retningen og
 principperne i §9.1. H5 er afgjort 2026-10-30 ([D-273](decisions/D-273.md), §9.3): variant C og M2
 som teknisk retning, ikke aktiveret. H1–H4 i §9.2 er **ikke** godkendt. Intet er anvendt i
 produktion. Hvert implementeringstrin i §8 kræver sin egen godkendelse.
@@ -325,10 +335,10 @@ ikke en ejerbeslutning:
 
 | PR | Indhold | Status |
 |---|---|---|
-| PR 1 | Migration `20261030211428` (forsøgslog, rundevagt, `_v2`) | PR #488 merget, ikke anvendt i produktion |
-| PR 2 | `get-next-question` udleverer `round_no` | PR #494, draft, ikke deployet |
-| PR 3 | `process-event` sender `round_no` og `submission_id` til `_v2` | ikke startet |
-| PR 4 | `app.js`: `submission_id`, låst genforsøg, sessionStorage pr. elev | ikke startet |
+| PR 1 | Migration `20261030211428` (forsøgslog, rundevagt, `_v2`) | PR #488 merget 2026-10-31. Filen selv er ikke anvendt (den afviser sig selv efter D-280). Skemaet kom i produktionen 2026-11-04 gennem bootstrappen `20261101190000` (`20261104095423`) og alignmentet `20261101190100` (`20261104140659`) |
+| PR 2 | `get-next-question` udleverer `round_no` | PR #494 merget 2026-10-31. Deployet som v181 2026-11-04 |
+| PR 3 | `process-event` sender `round_no` og `submission_id` til `_v2` | PR #498 merget 2026-10-31 (siden udvidet med K1's `p_mode`/`p_hints_used`, #536). Ikke deployet; produktionen kører v34 |
+| PR 4 | `app.js`: `submission_id`, låst genforsøg, sessionStorage pr. elev | PR #504 merget 2026-10-31. Live med `ENABLE_H5_SUBMISSIONS = false` |
 | PR 5 | Aktivering (M2) | ikke startet; særskilt ejer-GO |
 | PR 6 | Mulig oprydning af den gamle gren i `process-event` | ikke defineret, ikke godkendt |
 
