@@ -120,6 +120,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "H5 integration 2/2, not applied in production (no process_question_attempt_v2 there, catalog 2026-11-01); it requires G1 and 20261101190000 first",
   "20261103100000_question_attempts_history_no_action.sql":
     "D-327 (H5 track), not applied in production: it changes question_attempts_instance_fkey, and production has no question_attempts (H5 not applied); it requires 20261101190000 and 20261101190100 first",
+  "20261103110000_l1_k1_attempt_context.sql":
+    "L1 K1, not applied in production: it extends H5's question_attempts (not there either) with mode, hints and content fingerprint",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision

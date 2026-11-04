@@ -143,9 +143,18 @@ test("the key-bearing reads run on the backend client, scoped to the verified st
   // The due and repeat reads embed questions(content) — the key — so they must not depend on the
   // pupil being able to read it, and must be scoped to student_id. The third is Match par's instance
   // key (correct_answer of a "match" row, PR #377), under the same rule.
+  // L1 K1 adds a fourth: the round's delivered version (served_snapshot, which carries the key) — only with
+  // K1_SERVED_SNAPSHOT=on, and scoped to the instance AND the verified student.
   const reads = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.from\("question_instances"\)[\s\S]*?;/g)].map((m) => m[0]);
-  assert.equal(reads.length, 3);
+  const selected = reads.map((r) => /\.select\((["`])([\s\S]*?)\1\)/.exec(r)?.[2].replace(/\s+/g, " ").trim());
+  assert.deepEqual(selected, [
+    "correct_answer",                                                          // Match par's key (match only)
+    "served_snapshot",                                                         // L1 K1's delivered version
+    "id, repeat_count, next_review_at, questions ( content, answer_format, answer_type, metadata, is_active )", // due
+    "id, repeat_count, questions ( content, answer_format, answer_type, metadata, is_active )",                 // repeat
+  ]);
   for (const r of reads) assert.match(r, /\.eq\("student_id", student_id\)/);
+  assert.match(reads[1], /\.eq\("id", instanceId\)\s*\.eq\("student_id", student_id\)/);
   assert.equal(/supabase\s*\.from\("question_instances"\)/.test(INDEX_CODE), false,
     "no question_instances read on the user client");
   assert.equal(/supabase\.rpc\(\s*"(get_unserved_questions|request_repeat_question)/.test(INDEX_CODE), false,
