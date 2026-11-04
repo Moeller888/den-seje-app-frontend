@@ -166,3 +166,24 @@ test("the key-bearing reads run on the backend client, scoped to the verified st
   assert.equal(/supabase\.rpc\(\s*"(get_unserved_questions|request_repeat_question)/.test(INDEX_CODE), false,
     "the key-bearing RPCs are never called on the user client");
 });
+
+test("D-332: option_details (the back of each source) pass only for MC, one per option, as text — and nothing else rides along", () => {
+  const raw = {
+    question: "Hvilken kilde er bedst?",
+    options: ["Brev", "Mindetale"],
+    option_details: ["Afsender: en soldat|Tid: april 1864", "Afsender: en politiker|Tid: 1914"],
+    correct: "Brev",
+    accepted_answers: ["Brev"],
+  };
+  const pub = toPublicQuestion(raw, "mc", null);
+  assert.deepEqual(pub.content, { question: raw.question, options: raw.options, option_details: raw.option_details });
+  assert.equal(JSON.stringify(pub).includes("correct"), false, "no key, no accepted answers");
+  // Absent: the payload is exactly what it was before D-332.
+  assert.deepEqual(toPublicQuestion({ question: "Q?", options: ["a", "b"], correct: "a" }, "mc", null).content, { question: "Q?", options: ["a", "b"] });
+  // Malformed: refused as bad content (the caller skips the question), never passed through.
+  for (const bad of [["only one"], "not an array", [1, 2], ["", "x"], ["x", "y".repeat(401)]]) {
+    assert.throws(() => toPublicQuestion({ ...raw, option_details: bad }, "mc", null), /invalid option_details/, JSON.stringify(bad));
+  }
+  // Not for other formats.
+  assert.equal("option_details" in toPublicQuestion({ question: "Stav", option_details: ["x"], correct: "y" }, "text", null).content, false);
+});

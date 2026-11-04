@@ -9,7 +9,7 @@ import { MemoryStorage } from "@adventure-engine/save";
 import { HOST_ORIGIN, randomId } from "./config.ts";
 import { CONTEXT_KEY, DRAWER_KEY, TASK_REQUEST_GLOBAL, archiveContent, archiveManifest } from "./content.ts";
 import { IntroView } from "./intro-view.ts";
-import { DECISION_POINTS, REVISION_KEY, REVISIT_KEY, type DecisionPoint } from "./sequence.ts";
+import { DECISION_POINTS, REVISION_KEY, REVISIT_KEY, TRANSFER_KEY, type DecisionPoint } from "./sequence.ts";
 import { ArchiveCardView, ReflectionView, RevisitView } from "./sequence-views.ts";
 import { TaskView } from "./task-view.ts";
 
@@ -82,7 +82,9 @@ async function boot(): Promise<void> {
   let lastAction: Action | null = null;
   let busy = false;
   // Steps 7–8 start only once the world has said its line about the transfer verdict (idle world).
-  let afterTransferPending = false;
+  // Steps 7–8 start only once the world has said its line about the previous verdict (idle world):
+  // after the drawer (6) → reflection, then the transfer task (7); after the transfer → revisit (8).
+  let pendingStep: "afterDrawer" | "afterTransfer" | null = null;
 
   const intro = new IntroView(document.body);
   const archiveCard = new ArchiveCardView(document.body);
@@ -108,10 +110,15 @@ async function boot(): Promise<void> {
   };
 
   /** Steps 7 and 8 after the new application: reflection, then the (prototype) revisit task. */
-  const afterTransfer = async (): Promise<void> => {
+  const afterDrawer = async (): Promise<void> => {
     busy = true;
     root.inert = true;
     await reflection.show();
+    await request(TRANSFER_KEY);
+  };
+  const afterTransfer = async (): Promise<void> => {
+    busy = true;
+    root.inert = true;
     await revisit.show();
     await request(REVISIT_KEY);
   };
@@ -125,7 +132,8 @@ async function boot(): Promise<void> {
     // The world reacts to the verdict; it never computes one.
     const point = pointFor(context);
     if (outcome === "correct" || outcome === "incorrect" || outcome === "aborted") game.engine.event("cabinet", point.resultAction, { $outcome: outcome });
-    if (context === DRAWER_KEY && (outcome === "correct" || outcome === "incorrect")) afterTransferPending = true;
+    if (context === DRAWER_KEY && (outcome === "correct" || outcome === "incorrect")) pendingStep = "afterDrawer";
+    if (context === TRANSFER_KEY && (outcome === "correct" || outcome === "incorrect")) pendingStep = "afterTransfer";
   };
 
   const send = async (action: Action): Promise<void> => {
@@ -191,9 +199,10 @@ async function boot(): Promise<void> {
   const tick = (): void => {
     requestAnimationFrame(tick);
     if (busy || !titleScreen.hidden || !game.engine.idleReport().idle) return;
-    if (afterTransferPending) {
-      afterTransferPending = false;
-      afterTransfer().catch((err: unknown) => console.error("[sequence] after transfer", err));
+    if (pendingStep !== null) {
+      const step = pendingStep;
+      pendingStep = null;
+      (step === "afterDrawer" ? afterDrawer() : afterTransfer()).catch((err: unknown) => console.error(`[sequence] ${step}`, err));
       return;
     }
     if (resume !== null) {

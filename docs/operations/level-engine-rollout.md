@@ -161,7 +161,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat | dette repository | 16 | `f53e2c064ae50f1afe70415c4a0ae169fe4d5ef3e3ea3bd7d385b394b5d21182` |
+| Kandidat | dette repository | 16 | `d5d8fad4f86a5299b8c1d3be71f5ec0d5ee08a07e9483b8813731a413e900edb` |
+| Forrige kandidat (D-329 efter L1 K1, før D-332's `option_details`) | `feat/laerligverse-f4-objective` | 16 | `f53e2c064ae50f1afe70415c4a0ae169fe4d5ef3e3ea3bd7d385b394b5d21182` |
 | Forrige kandidat (L1 K1 `served-snapshot.ts`, før D-329 `objective-target.ts`) | main efter #536 | 15 | `4a89e9e6e33b363c9e8360bb81b19077dcb26c4791c3a086a66c73386b718f8d` |
 | Forrige kandidat (før L1 K1 og D-329) | main før K1 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
 | Forrige kandidat (Match par #377, før log-pseudonym #379) | main før #379 | 13 | `2ce45c7eaa113a9bda93d342e77e51e53efbe3b53ea64aeabaec0bb9dda3560e` |
@@ -190,6 +191,10 @@ kald som før. `learning_objective` læses kun i den åbne instans' select, når
 slukket-pariteten er uændret. Tændt kan den kun indsnævre det server-afledte scope. Den springer
 gentagelsestrinnet over (E2) og svarer 409 på en åben instans fra et andet mål, og 409 `open_question_exists`, hvis en samtidig anmodning vandt den ene åbne instans. Secret'en sættes ikke i
 produktionen uden ejerens særskilte GO.
+D-332 udvider den offentlige spørgsmåls-DTO (`_shared/question-dto.ts`) med det valgfrie felt
+`content.option_details`: én beskrivelse pr. svarmulighed (»bagsiden« af en kilde), kun for MC, højst 400
+tegn. Intet eksisterende spørgsmål har feltet, så svarene og slukket-pariteten er uændrede. Et misdannet felt
+afviser spørgsmålet som dårligt indhold.
 Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
 kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten
