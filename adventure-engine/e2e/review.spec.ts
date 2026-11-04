@@ -51,7 +51,7 @@ test("lærergennemgang: intet er forhåndsgodkendt; afgørelser gemmes og indlæ
   expect(data.dato).toBe("2026-11-04");
   expect(data.elementer["h4-kilde"]).toEqual({ status: "godkendt", kommentar: "Fin kilde. Æøå bevares.", aendringer: "" });
   expect(data.elementer.t1864).toEqual({ status: "skal_rettes", kommentar: "", aendringer: "Tilføj, at Dybbøl blev stormet den 18. april." });
-  expect(data.elementer["h4-genbesoeg"].status).toBe("afvist");
+  expect(data.elementer["h4-genbesoeg"]?.status).toBe("afvist");
   expect(Object.values(data.elementer).filter((v) => v.status === "ikke_gennemgaaet").length).toBe(ids.length - 3);
 
   // A fresh page (nothing remembered) loads the file back: every value restored.
