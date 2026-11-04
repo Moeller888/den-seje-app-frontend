@@ -1,0 +1,75 @@
+{
+  "id": "tank-v3",
+  "label": "Tanktop (v3, udtonet overgang)",
+  "contract": "top-cut-v1",
+  "family": "tank",
+  "note": "D-345: tank-v2 (D-343) with the opaque section of the hem junction faded into C's own alpha over 10 rows instead of ending at once (D-343's 1 px step at the end of the opaque section, seen from x2 on the long trousers). Everything else is tank-v2's. Nothing approved, published or integrated",
+  "source": {
+    "item": "top-tank-teal",
+    "run": "d-239-targeted-correction/final1-pilot",
+    "method": "d239",
+    "template": "item-layers",
+    "from": "R1.templateFromLayers of the processed item's layers and skin shadow"
+  },
+  "panels": {
+    "seams": null,
+    "seamSearchPx": 8,
+    "extendPx": 14,
+    "armpitOut": null
+  },
+  "warp": {
+    "cylinder": 0.1,
+    "foldMaxPx": 3,
+    "foldBlur": 14
+  },
+  "sleeves": {
+    "kind": "none",
+    "layerSplitFromArmAlpha": 128
+  },
+  "cuffs": null,
+  "trim": {
+    "bands": "none"
+  },
+  "print": {
+    "rule": "D-269 chest-center",
+    "boxOnC": [
+      437,
+      537,
+      150,
+      135
+    ],
+    "boxFrom": "the box on C, unchanged (its safe-area clearance on this cut is measured)"
+  },
+  "shadow": {
+    "from": "the cut item's skin shadow",
+    "split": "arms where C's arm alpha >= 128, body elsewhere on C's body (D-242)",
+    "publishedAs": null
+  },
+  "hipSeam": null,
+  "hemJunction": {
+    "rule": "K.hemJunctionLayer",
+    "outlinePx": 3,
+    "rowsBelowShortsTop": 80,
+    "opaqueRowsBelowHem": 24,
+    "opaqueTaperRows": 10,
+    "drawn": "after the shoes, before the bottom (the hip seam's place)",
+    "publishedAs": null
+  },
+  "runtime": {
+    "layers": [
+      "top-body"
+    ],
+    "shadows": [
+      "body",
+      "arms"
+    ]
+  },
+  "control": null,
+  "oneTimeWork": [
+    "the contract itself: source item, no seams (sleeveless), the warp and print box copied from the tee",
+    "D-343: tracing which of C's base pixels the outfit check finds open beside the tank (a 1-2 px outline sliver along the side, invisible on the background, and a notch at each hem corner where the bottom's side starts) and four variants on four bottoms (sweater hip seam, none, inked side strip, shifted side) before the hem junction",
+    "the hem junction's two numbers: the outline band (3 px; 2 px leaves the right side unjoined) and the rows below C's shorts top (80, the hip seam's); C's base top below the hem joins it (else 1-4 px enclosed holes between the junction and the bottom)",
+    "the junction's alpha: opaque in the first 24 rows below each hem corner (the long trousers leave their fill transparent inside their contour at the left hip, rows 784-806, so C's soft alpha showed a 1 px light seam), C's own soft alpha below (all-opaque drew a hard stepped edge outside the trousers at the right hip, rows 800-836)",
+    "D-345: the fade (10 rows), tried on four outfits at 1:1, x2 and app size before the family check"
+  ]
+}
