@@ -236,22 +236,20 @@ test("the alignment changes process_question_attempt_v2 in exactly the alias rul
 // production: the isolated database mirrors that and skips them until each is applied and verified
 // there (tests/isolated/schema/REPLAY-ACCOUNTING.md). Their
 // repository order is proven by the PGlite histories below, not by the replay.
-test("replay plan: H5, D-278, D-280 part 1, G1 and the bootstrap are replayed in file order; the alignment and D-280 part 2 are not", () => {
+test("replay plan: H5, D-278, D-280 part 1, G1, the bootstrap and the alignment are replayed in file order; D-280 part 2 is not", () => {
   const files = readdirSync(join(ROOT, "supabase", "migrations")).filter((f) => f.endsWith(".sql"));
   const plan = planReplay(files, (f) => SQL(f)).plan;
   const entry = (f) => plan.find((p) => p.file === f);
-  for (const f of [D280_PATHS, D280_TOP10, G1, BOOTSTRAP]) assert.equal(NOT_IN_PRODUCTION[f], undefined, `${f}: applied in production`);
-  // The bootstrap was applied in production on 2026-11-04 (remote 20261104095423, owner-approved).
+  for (const f of [D280_PATHS, D280_TOP10, G1, BOOTSTRAP, ALIGN]) assert.equal(NOT_IN_PRODUCTION[f], undefined, `${f}: applied in production`);
+  // The bootstrap and the alignment were applied in production on 2026-11-04 (remote 20261104095423 and
+  // 20261104140659, each owner-approved).
   assert.equal(APPLIED_IN_PRODUCTION[BOOTSTRAP], "20261104095423");
-  for (const f of [H5, D278, D280_PATHS, G1, BOOTSTRAP]) assert.equal(entry(f).action, "apply", f);
+  assert.equal(APPLIED_IN_PRODUCTION[ALIGN], "20261104140659");
+  for (const f of [H5, D278, D280_PATHS, G1, BOOTSTRAP, ALIGN]) assert.equal(entry(f).action, "apply", f);
   assert.equal(entry(D280_TOP10).action, "skip");
-  assert.equal(entry(ALIGN).action, "skip");
-  assert.match(NOT_IN_PRODUCTION[ALIGN], /not applied in production/);
-  assert.equal(entry(ALIGN).reason, NOT_IN_PRODUCTION[ALIGN]);
-  assert.match(NOT_IN_PRODUCTION[ALIGN], /requires G1 and 20261101190000 first/);
   const applied = plan.filter((p) => p.action === "apply").map((p) => p.file).filter((f) => REPO_ORDER.includes(f));
-  assert.deepEqual(applied, [H5, D278, D280_PATHS, G1, BOOTSTRAP], "the replay applies what production has, in file order");
-  // Each skip is lifted only once its file is applied in production, in REPO_ORDER: the bootstrap,
+  assert.deepEqual(applied, [H5, D278, D280_PATHS, G1, BOOTSTRAP, ALIGN], "the replay applies what production has, in file order");
+  // Each skip was lifted only once its file was applied in production, in REPO_ORDER: the bootstrap,
   // then the alignment — the order the files themselves enforce (the guards below).
   assert.deepEqual([G1, BOOTSTRAP, ALIGN], REPO_ORDER.slice(3));
 });

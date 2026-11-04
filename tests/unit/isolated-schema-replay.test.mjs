@@ -85,15 +85,17 @@ test("the replayed schema has production's key objects", async () => {
     { t: "student_answers", d: "FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE RESTRICT" },
   ]);
   // 20261101190000 (H5 bootstrap, applied as remote 20261104095423 on 2026-11-04): the H5 schema exists,
-  // process_question_attempt_v2 keeps the original grading and NO API role may call it until the
-  // alignment; process_text_answer_v2 is for service_role only; the round guard is on question_instances.
+  // process_text_answer_v2 is for service_role only and the round guard is on question_instances.
+  // 20261101190100 (H5 alignment, applied as remote 20261104140659 on 2026-11-04):
+  // process_question_attempt_v2 has the aligned grading (D-280 and G1), and service_role alone may call it.
   const h5 = await one(db, `SELECT to_regclass('public.question_attempts') IS NOT NULL t,
       (SELECT md5(prosrc) FROM pg_proc WHERE oid = to_regprocedure('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)')) mc,
       has_function_privilege('service_role', 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)', 'EXECUTE') mc_svc,
+      has_function_privilege('authenticated', 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)', 'EXECUTE') mc_auth,
       has_function_privilege('service_role', 'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)', 'EXECUTE') text_svc,
       has_function_privilege('authenticated', 'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)', 'EXECUTE') text_auth,
       EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'question_instances_round_guard' AND tgrelid = 'public.question_instances'::regclass) guard`);
-  assert.deepEqual(h5, { t: true, mc: "943d03820fe4756f5a72c6f0a5d77d7d", mc_svc: false, text_svc: true, text_auth: false, guard: true });
+  assert.deepEqual(h5, { t: true, mc: "8a7696147df978e250918b2c93e20577", mc_svc: true, mc_auth: false, text_svc: true, text_auth: false, guard: true });
   assert.notEqual(gar.m, "63b8347dd4d72d40ced43e8728b5ab87", "the replay must not carry the old, double-paying body");
   assert.deepEqual(gar, { m: "fc8d729f8b0166815fe2647805ce2e60", s: true, c: ["search_path=public"],
     a: ["postgres=X/postgres", "authenticated=X/postgres", "service_role=X/postgres"], n: 1, anon: false, auth: true, svc: true });
@@ -373,20 +375,24 @@ test("reserve_password_help: reservation, cooldown, daily cap — each audited �
   assert.equal((await rows()).length, 4, "a refused call writes nothing");
 });
 
-// The replayed state — H5 PR 1 (20261030211428, replayed by owner decision), D-280 part 1, G1 and G2's
-// guard, as production now has G1 and G2 — still satisfies the two H5 integration files' guards. They
-// stay NOT_IN_PRODUCTION; this only proves their prerequisites accept it. Run inside a transaction that
-// is rolled back, so no other test sees the change.
-test("H5's bootstrap and alignment accept the replayed G1 + G2 state (rolled back)", async () => {
-  const before = await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)'::regprocedure`);
+// The replayed state — H5 PR 1 (20261030211428, replayed by owner decision), D-280 part 1, G1, G2's guard,
+// the H5 bootstrap and the H5 alignment, as production has them since 2026-11-04 — ends with the aligned
+// _v2. A second run of the alignment changes nothing (rolled back, so no other test sees it), and a second
+// run of the bootstrap is refused (it only accepts the pre-alignment _v2) and changes nothing.
+test("the replay ends with H5 aligned: a second alignment run changes nothing, a second bootstrap run is refused", async () => {
+  const V2 = "public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)";
+  const state = () => one(db, `SELECT md5(prosrc) m, proacl::text acl FROM pg_proc WHERE oid = '${V2}'::regprocedure`);
+  const before = await state();
+  assert.deepEqual(before, { m: "8a7696147df978e250918b2c93e20577", acl: "{postgres=X/postgres,service_role=X/postgres}" },
+    "the replay applied the alignment: G1's grading, EXECUTE for service_role only");
   await db.exec("BEGIN");
   try {
-    await db.exec(readMigration("20261101190000_question_attempts_v2_bootstrap.sql"));
     await db.exec(readMigration("20261101190100_question_attempts_v2_align_grading.sql"));
-    const aligned = await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)'::regprocedure`);
-    assert.equal(aligned.m, "8a7696147df978e250918b2c93e20577", "the aligned _v2 (G1's grading)");
+    assert.deepEqual(await state(), before, "a second alignment run changes nothing");
   } finally {
     await db.exec("ROLLBACK");
   }
-  assert.deepEqual(await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)'::regprocedure`), before);
+  await assert.rejects(db.exec(readMigration("20261101190000_question_attempts_v2_bootstrap.sql")),
+    /H5 bootstrap: public\.process_question_attempt_v2\(uuid,uuid,text,integer,uuid,text,text\) har ikke den forventede krop/);
+  assert.deepEqual(await state(), before, "the refused bootstrap changed nothing");
 });
