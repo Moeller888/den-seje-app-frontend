@@ -400,6 +400,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Tank top's own side — D-343 (offline; 30 candidates for the owner's visual review, NOT approved; nothing published or integrated; flag false).**
+  - **Rule.** `K.hemJunctionLayer` replaces the sweater's hip seam for the tank (contract `top-cuts/tank-v2.json`; D-342's `tank.json` kept as the historical trial). It continues the tank's contour only from each hem corner down along C's outline, behind the bottom; the side above the hem is left alone. It is opaque in the first 24 rows below the corner, then C's own soft edge. The cut is not widened: the 7 design layers are pixel-identical to D-342's.
+  - **Checked.** 42 of 42 outfits pass (7 designs × 6 bottoms × beige sneakers; D-342: 35 of 42), with 0 enclosed holes. No ragged extra contour and no light notch, reviewed on light and dark, at hips, armholes, neck and print, and at app size. Navy shorts are a technical control only. The tee and sweater still reproduce byte for byte.
+  - **Open item (separate).** The approved print tees show a faint warm dotted line along C's arm edge on the sleeve. A split from arm alpha 1 removes it, but the tee layers are not changed without an owner decision.
+  - See `docs/decisions/D-343.md`.
 - **Top cut kit — D-342 (offline; one shared path for tops with per-cut contracts; the tee and sweater reproduce their approved layers byte for byte; a tank top tried; nothing approved, published or integrated).**
   - **Kit.** `tools/avatar/northstar-top-cut-kit.mjs` only calls the locked method files (tee master, long-sleeve master v1/v2, print family), with every cut-specific number in a contract under `tools/avatar/fixtures/northstar-wardrobe/top-cuts/` (`tee-hip`, `sweater-long`, `tank`).
   - **Control.** With the tee and sweater contracts the kit rebuilds the 16 approved print tees, the 6 approved sweaters, the sweater's hip seam and both cuts' skin shadows: 0 bytes differ from the published files; the tee master keeps D-267's locked fingerprint.
