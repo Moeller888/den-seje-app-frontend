@@ -2,7 +2,7 @@
 
 **Status:** H5 og K1 er merget på `main` (K1 som PR #536, `41aebf4b`), men **intet er anvendt eller aktiveret i produktionen**. Denne runbook er en procedure, **ikke en godkendelse**. Hvert trin kræver ejerens særskilte GO (CLAUDE.md regel 48; `docs/migration-workflow-policy.md`, D-110). `supabase db push` er forbudt.
 
-**Formål:** Gøre den append-only svarlog (`public.question_attempts`, D-266/D-273) med forsøgskontekst (K1, D-334) til den eneste vej for automatisk rettede svar. Fra cutover (M2) kan første forsøg, gentagelser og indholdsversion dokumenteres pålideligt. Kilden er P0-auditten af læringsfundamentet (2026-11-04), afsnittet om H5/K1-integritet §6. Den er udarbejdet i ejerens arbejdskopi under `docs/research/p0-learning-foundation/` og er **ikke committet** på tidspunktet for denne runbook.
+**Formål:** Gøre den append-only svarlog (`public.question_attempts`, D-266/D-273) med forsøgskontekst (K1, D-334) til den eneste vej for automatisk rettede svar. Fra cutover (M2) kan første forsøg, gentagelser og indholdsversion dokumenteres pålideligt. Alt, hvad der skal bruges for at udføre aktiveringen, står i denne runbook. Den bygger på en audit af læringsfundamentet (2026-11-04), som ikke er en del af repositoryet. Beslutningerne fra auditten er gengivet i §1.1.
 
 **Værktøjer i denne runbook:**
 - `docs/operations/h5-k1-readiness-checks.sql`: read-only, én SELECT, kører gennem Supabase-MCP `execute_sql` og godkendes af Lærlig-guarden.
@@ -14,7 +14,7 @@
 
 | # | Forudsætning | Hvordan kontrolleres | Status 2026-11-04 |
 |---|---|---|---|
-| F1 | Arbejdet sker fra en kendt `main`-commit, og migrationsfilerne er uændrede siden gennemgangen | `git rev-parse origin/main`; `git log -1 -- supabase/migrations/2026110119000*.sql supabase/migrations/20261103*.sql` | `41aebf4b` |
+| F1 | Arbejdet sker fra en kendt `main`-commit, og de fire migrationsfiler er uændrede siden gennemgangen | `git rev-parse origin/main`; `git log --oneline -- supabase/migrations/2026110119*.sql supabase/migrations/20261103*.sql` (globbene rammer præcis `20261101190000_…bootstrap`, `20261101190100_…align_grading`, `20261103100000_…history_no_action` og `20261103110000_…attempt_context`) | `41aebf4b` |
 | F2 | G1 (D-290) er anvendt | Readiness `PRE-01` = true | Opfyldt (se §11) |
 | F3 | De syv fastlåste svar-/genåbningsfunktioner har de gennemgåede kroppe; G2 er fraværende eller præcis gennemgået | `PRE-02`…`PRE-05` = true | Opfyldt (se §11) |
 | F4 | `question_attempts` findes ikke | `PRE-06` = true og `BOOT-01` = false | Opfyldt |
@@ -23,7 +23,18 @@
 | F7 | Frontend i drift har `ENABLE_H5_SUBMISSIONS = false` | `curl -s https://xn--lrlig-sra.dk/js/answer-submission.js \| grep ENABLE_H5_SUBMISSIONS` | `false` (verificeret 2026-11-04) |
 | F8 | Fuld unit-suite og Playwright er grønne på den `main`-commit, der deployes | CI på `main` + `npm run test:unit` lokalt | Kontrolleres ved hvert trin |
 | F9 | Et aftalt tidsvindue uden for undervisningstid (designdokumentet: M2 "uden for undervisningstiden") | Ejeren | — |
-| F10 | Ejerens beslutninger fra P0-auditten (beslutningsregistret, ikke committet): P0-D01 (H5-kæden må anvendes), P0-D02 (deploy af gnq/PE), P0-D03 (M2 efter observation) og P0-D14 (forklaring af den lave elevtrafik). Hver skal registreres som et D-nummer, før trinnet udføres | Ejeren | Åbne |
+| F10 | Ejerens beslutninger B1–B4 i §1.1 er truffet og registreret som D-numre i `docs/decisions/` | Ejeren | **Åbne — kun forslag** |
+
+### 1.1 Beslutninger, der kræves (status: FORSLAG — ingen er godkendt)
+
+Beslutningerne blev formuleret i en audit af læringsfundamentet den 2026-11-04 (arbejdsnavne P0-D01, P0-D02, P0-D03 og P0-D14). De gengives her, så runbooken kan bruges uden adgang til auditten. Ingen af dem er truffet. Hver skal registreres som et D-nummer (med reservations-tag), før det trin, den gælder, udføres.
+
+| # | Arbejdsnavn | Spørgsmål | Foreslået svar | Gælder |
+|---|---|---|---|---|
+| B1 | P0-D01 | Må H5-kæden anvendes i produktionen (bootstrap → alignment → D-327 → K1), med én GO pr. migration? | Ja, når readiness-gaten for trinnet er GO | A1–A4 |
+| B2 | P0-D02 | Hvordan deployes `get-next-question` og `process-event`? | Trinvis: `get-next-question` (A5) og `process-event` (A6) efter A4, hver efter en forklaret diff mod den deployede kode | A5, A6 |
+| B3 | P0-D03 | Hvornår udføres M2? | Først efter ≥ 48 timers observation med reel elevtrafik og en M2-PR, der registrerer cutover-tidspunktet T (§9) | A10 |
+| B4 | P0-D14 | Er den lave elevtrafik siden 2026-11-02 forventet (fx ferie eller testpause)? | Ejeren bekræfter. Indtil da er en observationsperiode uden elevsvar ikke bevis for noget (§8) | A9 |
 
 ## 2. Kontrol af repository, deployede funktioner og schema
 
@@ -58,7 +69,11 @@
 
 ## 4. Forventet tilstand før og efter hvert trin (readiness-kontroller)
 
+Readiness-filen returnerer **33 rækker**: 27 kontroller, `CUT-02` og 5 gate-rækker. Testen kontrollerer dette antal mod netop denne sætning.
+
 `T` = alle kontroller i fasen er `true`, `F` = alle er `false`. "Partiel" (nogle true, nogle false i samme fase) er altid **NO-GO**.
+
+**`ok = NULL` er aldrig bestået.** NULL betyder "ikke evaluerbar" eller "kun information". Ingen GO-beslutning må hvile på en NULL-række. Gate-rækkerne regner NULL som false.
 
 | Fase | Før A1 (i dag) | Efter A1 | Efter A2 | Efter A3 | Efter A4 | Efter A10 |
 |---|---|---|---|---|---|---|
@@ -69,19 +84,27 @@
 | `D327-01` | F | F | F | T | T | T |
 | `K1-*` | F | F | F | F | T | T |
 | `CUT-01` | F | F | F | F | F | T |
-| `LED-01` | T (ingen) | T | T | T | T | T |
+| `CUT-02` | NULL (ikke relevant) | NULL | NULL | NULL | NULL | T (registreringen findes) |
+| `LED-01` (ledger = skemaets fase) | T (fase 0) | T (fase 1) | T (fase 2) | T (fase 3) | T (fase 4) | T |
 | `LED-02` | T | T | T | T | T | T |
 | `INT-01` (estimat) | "findes ikke" | 0 | 0 | 0 | 0 | ≥ 0 |
+| `GATE-A1` | **T** | F | F | F | F | F |
+| `GATE-A2` | F | **T** | F | F | F | F |
+| `GATE-A3` | F | F | **T** | F | F | F |
+| `GATE-A4` | F | F | F | **T** | F | F |
+| `GATE-M2` | F | F | F | F | **T** | F |
 | `SEC-*` | F (separat spor, blokerer ikke) | — | — | — | — | — |
 
-Bevis på PGlite: `tests/unit/h5-k1-readiness-checks.test.mjs` test 2 (før), 3 (fuld kæde), 4a (D-327/K1 mangler), 4b (kun bootstrap).
+`LED-01` er false, hvis ledgeren er tom eller ufuldstændig, mens skemaet er længere fremme. Det samme gælder, hvis et trin er anvendt under et andet navn end det foreskrevne i §3, eller hvis versionerne står i forkert rækkefølge. `GATE-*` dækker kun schemadelen; deploys, flag og observation har manuelle kriterier (§5, §9).
+
+Bevis på PGlite: `tests/unit/h5-k1-readiness-checks.test.mjs`. Test 2 dækker før A1, test 3 den fulde kæde, test 4a manglende D-327/K1, test 4b kun bootstrap, og test 8 ledger og gates.
 
 ## 5. GO/NO-GO
 
 **GO for trin N kræver alle punkter:**
 1. Ejerens skriftlige GO for netop trin N (ikke for andre trin).
-2. Readiness-resultatet umiddelbart før matcher kolonnen "før trin N" i §4. Ingen partiel fase.
-3. `PRE-*` og `LED-02` er true.
+2. Readiness-resultatet umiddelbart før matcher kolonnen "før trin N" i §4, og den tilhørende `GATE-*` er `true` (for A1–A4 og M2). Ingen partiel fase. En række med `ok = NULL` tæller aldrig som opfyldt.
+3. `PRE-*` (undtagen `PRE-06` efter A4), `LED-01` og `LED-02` er true.
 4. For A5–A8: diff mod den deployede kode er forklaret (§2.4), og CI er grøn på den commit, der deployes.
 5. For A8: A5–A7 er gennemført og verificeret (§7). For A10: §9 er opfyldt.
 6. Ingen åben driftshændelse. Ingen igangværende anden migration eller deploy på samme tid (versionskollisioner, D-110).
@@ -107,7 +130,7 @@ Bevis på PGlite: `tests/unit/h5-k1-readiness-checks.test.mjs` test 2 (før), 3 
 |---|---|---|
 | Svaranmodning, H5-vej | `question_instance_id`, `answer`, `round_no` (heltal ≥ 1), `submission_id` (UUID, ét pr. bevidst svar, genbruges ved retry) | `js/answer-submission.js:4-20, 67-87`; `process-event/answer-v2.ts:38-66` |
 | Kun ét af `round_no`/`submission_id`, eller ugyldig værdi | 400 `invalid_request`, aldrig nedgradering til legacy | `process-event/index.ts:97-104` |
-| Svar fra `_v2` | `outcome` ∈ {`recorded`, `replay`, `round_closed`, `stale_round`, `submission_conflict`, `not_found`, `invalid_request`} + `round_no` | `20261103110000_l1_k1_attempt_context.sql` l. 650-657; `answer-v2.ts:91` |
+| Svar fra `_v2` | `outcome` ∈ {`recorded`, `replay`, `round_closed`, `stale_round`, `submission_conflict`, `not_found`, `invalid_request`} + `round_no` | Kontraktens udfald: headeren i `supabase/migrations/20261030211428_question_attempts_v2.sql` l. 56-70; svarets felter: `20261103110000_l1_k1_attempt_context.sql` l. 648-652; Edge-oversættelse: `answer-v2.ts:91` |
 | `get-next-question` | Sender `round_no` (= `repeat_count + 1`) | `get-next-question/index.ts:39, 265, 508, 549` |
 | `K1_SERVED_SNAPSHOT` | Ikke sat = intet snapshot sendes (adfærd som før). `on` = forslag til snapshot ved indsættelse; due-/repeat-vejen læser `served_snapshot` | `get-next-question/index.ts:164-202`; `instance-insert.ts:21-84` |
 | `ENABLE_H5_SUBMISSIONS` | Konstant `false`; ingen URL- eller localStorage-omgåelse | `js/answer-submission.js:10, 31` |
@@ -115,12 +138,21 @@ Bevis på PGlite: `tests/unit/h5-k1-readiness-checks.test.mjs` test 2 (før), 3 
 | Synlighed | `js/flags.js` rapporterer `h5_submissions` | `js/flags.js:19, 39` |
 
 **Kontrol efter A5–A8:**
-- `get_edge_function` viser `round_no` i den deployede `get-next-question`.
-- En syntetisk testelev (ikke en rigtig elev) besvarer ét spørgsmål efter A8 → `INT-01` stiger, og §8-blokken er ren.
+- `get_edge_function` viser `round_no` i den deployede `get-next-question`. Dette er read-only.
+- **Produktionstest med en testbesvarelse — IRREVERSIBEL, kræver særskilt GO, udføres ikke som del af denne runbook uden det GO:**
+  - En syntetisk testelev (aldrig en rigtig elev) kan besvare ét spørgsmål efter A8, så `INT-01` stiger, og §8 blok 1 kan kontrolleres.
+  - **Det første forsøg i `question_attempts` er produktionshistorik.** Fra da af kan A4-, A3- og A1/A2-rollbacks (§10) ikke længere genskabe den tidligere databasetilstand uden at slette ny historik. K1-rollbacken afbryder selv, og ingen rollback må slette forsøg.
+  - GO'et skal derfor nævne projektet, testkontoen, at handlingen afskærer schema-rollback, og de forventede skrivninger: én række i `question_instances`, én i `question_attempts`, samt XP, mønter, streak og quests for testkontoen (produktionsloggens regel, `docs/operations/production-actions/README.md`).
+  - Uden et sådant GO er A8 først verificeret, når rigtige elevsvar viser sig i §8.
 
 ## 8. Overvågning i 48–72 timer (A9)
 
-Kør dagligt og efter hver skoledag. **Præcise integritetskontroller** (kræver, at `question_attempts` findes, dvs. efter A1). Kør dem read-only med `execute_sql`. Resultatet er kun antal:
+Kør dagligt og efter hver skoledag. Der er to blokke med **præcise integritetskontroller**. De køres read-only med `execute_sql`, og resultatet er kun antal.
+
+- **Blok 1** kræver, at `question_attempts` findes, dvs. efter A1.
+- **Blok 2** kræver cutover-registreringen fra M2 (§9). Den må først køres efter M2.
+
+**Blok 1 — efter A1:**
 
 ```sql
 -- H5-K1 INTEGRITY CHECKS (read-only; requires public.question_attempts)
@@ -128,36 +160,70 @@ SELECT check_id, actual, ok FROM (
   SELECT 'INT-A' AS check_id, count(*)::text AS actual, NULL::boolean AS ok, 1 AS ord
     FROM public.question_attempts
   UNION ALL
-  SELECT 'INT-B', count(*)::text, count(*) = 0, 2
+  -- INFORMATION, not a criterion: legacy answers since the first attempt (expected while old clients
+  -- remain, i.e. between A8 and M2). It can never become a GO criterion: it counts from the first
+  -- attempt, not from the cutover T.
+  SELECT 'INT-B0', count(*)::text, NULL::boolean, 2
     FROM public.question_instances qi
    WHERE qi.answered
      AND qi.answered_at >= (SELECT min(a.created_at) FROM public.question_attempts a)
      AND NOT EXISTS (SELECT 1 FROM public.question_attempts a
                       WHERE a.question_instance_id = qi.id AND a.attempt_no = qi.repeat_count + 1)
   UNION ALL
-  SELECT 'INT-C', count(*)::text, count(*) = 0, 3
+  -- Legacy answers AFTER the cutover T: not evaluable here, because T is only registered by M2
+  -- (runbook §9). The criterion is block 2.
+  SELECT 'INT-B', 'IKKE EVALUERBAR: cutover-tidspunktet T er ikke registreret (M2 findes ikke) — se blok 2', NULL::boolean, 3
+  UNION ALL
+  SELECT 'INT-C', count(*)::text, count(*) = 0, 4
     FROM public.question_attempts a
     JOIN public.question_instances qi ON qi.id = a.question_instance_id
    WHERE a.question_content_sha256 IS NULL AND qi.served_snapshot IS NOT NULL
      AND a.attempt_no = qi.repeat_count + 1
   UNION ALL
-  SELECT 'INT-D', count(*)::text, count(*) = 0, 4
+  SELECT 'INT-D', count(*)::text, count(*) = 0, 5
     FROM public.question_attempts a
    WHERE a.mode <> 'quiz_v1' OR a.hints_used <> 0
   UNION ALL
-  SELECT 'INT-E', count(*)::text, count(*) = 0, 5
+  SELECT 'INT-E', count(*)::text, count(*) = 0, 6
     FROM (SELECT a.question_instance_id, a.attempt_no FROM public.question_attempts a
            GROUP BY 1, 2 HAVING count(*) > 1) d
+) x ORDER BY ord;
+```
+
+**Blok 2 — efter M2.** Kræver `public.answer_path_cutovers` fra M2-PR'en (§9). Tabellen findes ikke i dag; kør ikke blokken før M2.
+
+```sql
+-- H5-K1 INTEGRITY AFTER M2 (read-only; requires public.question_attempts and public.answer_path_cutovers)
+SELECT check_id, actual, ok FROM (
+  SELECT 'CUT-T' AS check_id,
+         coalesce((SELECT c.effective_at::text FROM public.answer_path_cutovers c WHERE c.cutover = 'h5_m2'),
+                  'mangler') AS actual,
+         EXISTS (SELECT 1 FROM public.answer_path_cutovers c WHERE c.cutover = 'h5_m2') AS ok, 1 AS ord
+  UNION ALL
+  -- Answers after T without their attempt: the cutover criterion. NULL (not evaluable) without T.
+  SELECT 'INT-B', count(*)::text,
+         CASE WHEN EXISTS (SELECT 1 FROM public.answer_path_cutovers c WHERE c.cutover = 'h5_m2')
+              THEN count(*) = 0 END, 2
+    FROM public.question_instances qi
+   WHERE qi.answered
+     AND qi.answered_at > (SELECT c.effective_at FROM public.answer_path_cutovers c WHERE c.cutover = 'h5_m2')
+     AND NOT EXISTS (SELECT 1 FROM public.question_attempts a
+                      WHERE a.question_instance_id = qi.id AND a.attempt_no = qi.repeat_count + 1)
 ) x ORDER BY ord;
 ```
 
 | Kontrol | Betydning | Grænse |
 |---|---|---|
 | INT-A | Antal forsøg (information) | — |
-| INT-B | Besvarede instanser siden første forsøg uden matchende forsøg | **Før A10:** > 0 er forventeligt, når ældre klienter bruger legacy-vejen; tallet skal falde mod 0, efterhånden som klienterne opdateres. **Efter A10:** skal være 0 |
+| INT-B0 | Legacy-svar siden første forsøg (information) | `ok = NULL` altid. **Aldrig et GO-kriterium.** Mellem A8 og M2 er > 0 forventeligt (klienter, der ikke er genindlæst). Tallet kan ikke falde til 0 igen, fordi det tæller fra første forsøg |
+| INT-B (blok 1) | Legacy-svar efter cutover | `ok = NULL`: **ikke evaluerbar** før M2 har registreret T. Må aldrig læses som bestået |
+| CUT-T (blok 2) | T er registreret for `h5_m2` | `true` efter M2 |
+| INT-B (blok 2) | Besvarede instanser efter T uden matchende forsøg | 0. `NULL`, hvis T mangler, er NO-GO |
 | INT-C | Forsøg uden indholdshash på runder med snapshot | 0 (efter A7) |
 | INT-D | Afvigende `mode`/`hints_used` i L1 | 0 |
 | INT-E | Dubletter pr. runde (umulig via constraint; kontrollen bekræfter det) | 0 |
+
+**Begrænsning ved INT-B (blok 2):** T registreres inde i M2's transaktion, før den committes. Et legacy-kald, der starter mellem T og M2's commit, kan stadig lykkes med de gamle rettigheder og få `answered_at > T`. Vinduet er sekundbrøker, og sådan en række skal forklares, før M2 erklæres verificeret.
 
 **Edge-logs** (read-only `query_logs`, 24 t-vinduer): antal `POST` og statuskoder for `process-event` og `get-next-question`. Kriterier:
 - 0 svar med status 5xx;
@@ -171,12 +237,33 @@ SELECT check_id, actual, ok FROM (
 Alle punkter skal være opfyldt:
 1. A1–A8 er gennemført, og readiness-kolonnen "efter A4" holder.
 2. A9 har varet ≥ 48 timer og har omfattet mindst én skoledag med elevsvar. INT-C, INT-D og INT-E = 0. Ingen uforklarede 4xx/5xx.
-3. INT-B viser, at stort set alle nye svar går via `_v2`, og de resterende legacy-svar kan forklares med klienter, der ikke er genindlæst.
-4. M2-migrationen findes som merget PR med rollback (GRANT tilbage) og tests, inkl. `process-event`'s 426-vej.
+3. INT-B0 (kun information) viser, at stort set alle nye svar går via `_v2`, og de resterende legacy-svar kan forklares med klienter, der ikke er genindlæst.
+4. M2-migrationen findes som merget PR med rollback (GRANT tilbage) og tests, inkl. `process-event`'s 426-vej **og registreringen af T (nedenfor)**.
 5. Tidsvindue uden for undervisningstid (F9).
-6. Ejerens GO.
+6. Readiness `GATE-M2` = true.
+7. Ejerens GO.
 
-Efter M2 er **cutover-tidspunktet T** = tidspunktet for M2. Fra T kræves `CUT-01` = true og INT-B = 0.
+### 9.1 Bindende forudsætning: registrering af cutover-tidspunktet T
+
+**Status 2026-11-04:** Der findes ingen troværdig, vedvarende registrering af et aktiveringstidspunkt. Kun `auth.audit_log_entries` matcher søgningen, og den indeholder login-hændelser. Følgende kan **ikke** bruges som T:
+- **Ledgerens `version`:** den er migrationens identifikator. Ved `apply_migration` stemples den af API'et, men tidszonen er ikke dokumenteret, og ved andre anvendelsesveje er den filnavnets tidsstempel.
+- **Tidspunktet i en fil under `docs/operations/production-actions/`:** det er skrevet manuelt og kan ikke aflæses read-only med SQL.
+- **Tidspunktet for commit eller merge af M2-PR'en.**
+
+**Kontrakt, som M2-PR'en skal opfylde (forslag; kræver ejerens godkendelse sammen med M2):**
+1. Ny tabel `public.answer_path_cutovers`:
+   - `cutover text PRIMARY KEY CHECK (cutover IN ('h5_m2'))`, `effective_at timestamptz NOT NULL`, `migration text NOT NULL`;
+   - RLS slået til uden policies, ingen rettigheder for anon/authenticated, `service_role` kun SELECT;
+   - en append-only-trigger mod UPDATE/DELETE.
+2. M2-migrationen udfører `REVOKE EXECUTE` på `process_question_attempt(uuid,uuid,text,bigint)` og `process_text_answer(uuid,uuid,text,boolean)` fra `service_role`. **I samme DO-blok og transaktion** indsætter den `('h5_m2', clock_timestamp(), '<filnavn>')`. Én transaktion betyder, at registreringen og overgangen enten begge findes eller ingen af dem.
+3. `effective_at` er `timestamptz`, så tidszonen er entydig: det er et absolut tidspunkt, der vises i sessionens tidszone, og produktionsloggen bruger UTC.
+4. M2-PR'ens tests viser:
+   - at registreringen ikke kan ændres;
+   - at blok 2 giver INT-B = 0 uden legacy-svar efter T og false med ét;
+   - at readiness `CUT-02` = true efter M2.
+5. Readiness `CUT-02` er false, hvis M2 er udført uden registreringen. Det er NO-GO, og M2 må i så fald ikke erklæres gennemført.
+
+Efter M2 er **cutover-tidspunktet T** = `answer_path_cutovers.effective_at` for `h5_m2`. Fra T kræves `CUT-01` = true, `CUT-02` = true, `CUT-T` = true og INT-B (blok 2) = 0.
 
 ## 10. Tilbagerulning pr. fase
 
@@ -192,7 +279,7 @@ Efter M2 er **cutover-tidspunktet T** = tidspunktet for M2. Fra T kræves `CUT-0
 | A6 process-event | Redeploy arkiveret v34-kilde | Ikke relevant | Nej | Arkivér kilden før A6. Før A8 er H5-vejen ubrugt, så v34 kan genindsættes uden datatab |
 | A7 flag | Fjern secret eller sæt ≠ `on` | Ikke relevant. Allerede oprettede snapshots bliver stående (det er ønsket) | — | — |
 | A8 frontend | `ENABLE_H5_SUBMISSIONS = false` + deploy | **Ingen.** Forsøg, der er skrevet, bevares bevidst (append-only historik). Legacy-vejen virker igen | — | Efter første forsøg er A1–A4 **ikke længere genskabelige**. Kun fremadrettet rettelse (D-273) |
-| A10 M2 | — | `GRANT EXECUTE … TO service_role` (skal ligge i M2-PR'en) | Nej (PR findes ikke) | Afprøves i M2-PR'en |
+| A10 M2 | — | `GRANT EXECUTE … TO service_role` (skal ligge i M2-PR'en) | Nej (PR findes ikke) | Afprøves i M2-PR'en. Registreringen af T (§9.1) er append-only og bliver stående: den dokumenterer, at cutover fandt sted. En senere ny cutover kræver en ny, gennemgået kontrakt |
 
 **Efter første skrevne forsøg** er historikken produktionsdata. Ingen rollback må slette den. Fejl rettes fremad med en ny, gennemgået migration.
 
@@ -208,7 +295,12 @@ Efter M2 er **cutover-tidspunktet T** = tidspunktet for M2. Fra T kræves `CUT-0
 | `LED-01` / `LED-02` | true ("ingen" af kæden i ledgeren; den oprindelige H5-fil er ikke anvendt) | Ja |
 | `SEC-01` / `SEC-02` | false (policyen "Students can insert own events"; TRUNCATE for anon og authenticated på alle tre tabeller) | Separat spor |
 
-**Konklusion:** De databasemæssige forudsætninger for A1 er opfyldt. Blokeringerne ligger i A5–A10 og i beslutningerne (se A0-rapporten).
+**Konklusion:** De databasemæssige forudsætninger for A1 er opfyldt. Følgende blokerer en samlet aktivering:
+1. Beslutningerne B1–B4 (§1.1) er ikke truffet.
+2. Den deployede `get-next-question` v180 sender ikke `round_no` (§3). A8 kræver A5 først.
+3. Kilden for `process-event` v34 og `get-next-question` v180 er ikke arkiveret til rollback (§2.3, §10).
+4. M2 findes ikke som PR, og registreringen af T (§9.1) findes ikke.
+5. Der har næsten ikke været elevtrafik, så observationen i A9 kan endnu ikke give evidens.
 
 **Elevtrafik:**
 - **Edge-logs, 2026-11-02 08:00–2026-11-03 08:00:**

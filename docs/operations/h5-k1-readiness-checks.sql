@@ -17,10 +17,12 @@
 --   tests/unit/h5-k1-readiness-checks.test.mjs beviser, at databasens fingeraftryk og alle rækketal er
 --   uændrede efter kørsel, og afviser enhver skrivende sætning i filen.
 --
--- Kontrakt pr. række: check_id, phase, expected, actual, ok
+-- Kontrakt pr. række: check_id, phase, expected, actual, ok — i alt 33 rækker (27 kontroller, CUT-02 og
+-- 5 gate-rækker; testen kontrollerer antallet mod runbookens §4)
 --   ok = true   betingelsen er opfyldt
---   ok = false  betingelsen er ikke opfyldt (blokerer, hvis runbookens gate kræver den)
---   ok = NULL   kun information (fx estimeret antal forsøg); afgøres i runbookens manuelle kontroller.
+--   ok = false  betingelsen er ikke opfyldt
+--   ok = NULL   IKKE EVALUERBAR eller kun information (fx estimeret antal forsøg, CUT-02 før M2). NULL er
+--               aldrig bestået: gate-rækkerne regner NULL som false, og runbooken kræver ok = true.
 --
 -- Faser (rækkefølgen i produktionen er bindende, D-327 / PR #536):
 --   pre       forudsætninger før H5-bootstrap (G1, de syv fastlåste funktionskroppe, G2-værnet)
@@ -29,10 +31,11 @@
 --   d327      20261103100000_question_attempts_history_no_action.sql er anvendt
 --   k1        20261103110000_l1_k1_attempt_context.sql er anvendt
 --   cutover   M2: service_role har mistet EXECUTE på de to legacy-svarfunktioner (IKKE implementeret
---             endnu — design §PR 5, D-273)
+--             endnu — design §PR 5, D-273); CUT-02: cutover-tidspunktet T er registreret (kontrakt, §9)
 --   integrity estimeret antal forsøg (præcise integritetskontroller: runbook §8)
---   ledger    supabase_migrations.schema_migrations
---   security  separat sikkerhedsspor (R6/R7 i P0-auditten) — blokerer ikke aktiveringen
+--   ledger    supabase_migrations.schema_migrations; LED-01 sammenholder ledgeren med skemaets fase
+--   security  separat sikkerhedsspor (R6/R7) — blokerer ikke aktiveringen
+--   gate      GATE-A1…A4 og GATE-M2: må næste SQL-trin tages (kun schemadelen; NULL tæller som false)
 -- En kontrol for et tidligere trin forbliver ok = true, når et senere trin har erstattet objektet
 -- med den gennemgåede efterfølger (fx align-kroppen erstattet af K1-kroppen).
 --
@@ -100,10 +103,25 @@ s AS (
     (SELECT count(*) FROM pg_catalog.pg_attribute a WHERE a.attrelid = t.qi AND a.attnum > 0 AND NOT a.attisdropped
        AND a.attname IN ('served_snapshot','served_content_sha256','served_at')) AS served_cols,
     -- estimated live rows from the statistics (NULL while the table does not exist)
-    CASE WHEN t.qa IS NULL THEN NULL ELSE pg_stat_get_live_tuples(t.qa) END AS qa_rows
+    CASE WHEN t.qa IS NULL THEN NULL ELSE pg_stat_get_live_tuples(t.qa) END AS qa_rows,
+    -- the H5/K1 chain as the ledger records it (names given to apply_migration, in version order)
+    (SELECT coalesce(string_agg(m.name, ',' ORDER BY m.version), '') FROM supabase_migrations.schema_migrations m
+      WHERE m.name IN ('question_attempts_v2_bootstrap', 'question_attempts_v2_align_grading',
+                       'question_attempts_history_no_action', 'l1_k1_attempt_context')) AS ledger_chain
   FROM f, t
-)
-SELECT check_id, phase, expected, actual, ok FROM (
+),
+st AS (
+  -- the stage the SCHEMA has reached (0 = nothing, 1 = bootstrap, 2 = alignment, 3 = D-327, 4 = K1)
+  SELECT s.*,
+    CASE WHEN s.k1_bodies AND s.k1_cols = 6 AND s.served_cols = 3 THEN 4
+         WHEN s.fk_del = 'a' THEN 3
+         WHEN s.mc7 = '8a7696147df978e250918b2c93e20577' THEN 2
+         WHEN s.qa IS NOT NULL THEN 1
+         ELSE 0 END AS schema_stage
+  FROM s
+),
+checks AS (
+SELECT check_id, phase, expected, actual, ok, ord FROM (
 
 -- ── pre: forudsætninger for H5-bootstrap ──────────────────────────────────────────────────────────
 SELECT 'PRE-01' AS check_id, 'pre' AS phase,
@@ -329,6 +347,18 @@ SELECT 'CUT-01', 'cutover', 'M2 udført: service_role har ikke EXECUTE på proce
        || ' pta=' || coalesce(has_function_privilege('service_role', s.pta_oid, 'EXECUTE')::text, 'mangler'),
        coalesce(NOT has_function_privilege('service_role', s.pqa_oid, 'EXECUTE')
          AND NOT has_function_privilege('service_role', s.pta_oid, 'EXECUTE'), false), 50 FROM s
+UNION ALL
+SELECT 'CUT-02', 'cutover', 'efter M2: det faktiske cutover-tidspunkt T er registreret vedvarende i public.answer_path_cutovers (kontrakt, runbook §9); før M2 ikke relevant',
+       CASE WHEN NOT coalesce(NOT has_function_privilege('service_role', s.pqa_oid, 'EXECUTE')
+                              AND NOT has_function_privilege('service_role', s.pta_oid, 'EXECUTE'), false)
+              THEN 'M2 ikke udført — ikke relevant'
+            WHEN to_regclass('public.answer_path_cutovers') IS NULL
+              THEN 'M2 udført, men registreringen af T findes ikke'
+            ELSE 'registreringstabellen findes (rækken for h5_m2 kontrolleres i runbook §8 blok 2)' END,
+       CASE WHEN NOT coalesce(NOT has_function_privilege('service_role', s.pqa_oid, 'EXECUTE')
+                              AND NOT has_function_privilege('service_role', s.pta_oid, 'EXECUTE'), false)
+              THEN NULL
+            ELSE to_regclass('public.answer_path_cutovers') IS NOT NULL END, 51 FROM s
 
 -- ── integrity: estimat (præcise kontroller efter aktivering: runbook §8) ───────────────────────────
 UNION ALL
@@ -338,20 +368,19 @@ SELECT 'INT-01', 'integrity', 'estimeret antal forsøg i question_attempts (info
 
 -- ── ledger: migrationsloggen (findes i alle Supabase-databaser) ─────────────────────────────────────
 UNION ALL
-SELECT 'LED-01', 'ledger', 'ledgeren har ingen, eller et præfiks af, bootstrap → alignment → D-327 → K1 i stigende versionsorden',
-       coalesce((SELECT string_agg(m.name || '@' || m.version, ' → ' ORDER BY m.version)
+SELECT 'LED-01', 'ledger', 'ledgeren svarer præcist til skemaets fase: præcis de anvendte trin, under de navne runbooken foreskriver, i stigende versionsorden (et tomt eller ufuldstændigt ledger ved et avanceret skema er false)',
+       'ledger=' || coalesce((SELECT string_agg(m.name || '@' || m.version, ' → ' ORDER BY m.version)
                    FROM supabase_migrations.schema_migrations m
                   WHERE m.name IN ('question_attempts_v2_bootstrap', 'question_attempts_v2_align_grading',
-                                   'question_attempts_history_no_action', 'l1_k1_attempt_context')), 'ingen'),
-       coalesce((SELECT string_agg(m.name, ',' ORDER BY m.version)
-                   FROM supabase_migrations.schema_migrations m
-                  WHERE m.name IN ('question_attempts_v2_bootstrap', 'question_attempts_v2_align_grading',
-                                   'question_attempts_history_no_action', 'l1_k1_attempt_context')), '')
-         IN ('', 'question_attempts_v2_bootstrap',
-             'question_attempts_v2_bootstrap,question_attempts_v2_align_grading',
-             'question_attempts_v2_bootstrap,question_attempts_v2_align_grading,question_attempts_history_no_action',
-             'question_attempts_v2_bootstrap,question_attempts_v2_align_grading,question_attempts_history_no_action,l1_k1_attempt_context'),
-       70
+                                   'question_attempts_history_no_action', 'l1_k1_attempt_context')), 'ingen')
+         || '; skema-fase=' || st.schema_stage::text,
+       st.ledger_chain = CASE st.schema_stage
+         WHEN 0 THEN ''
+         WHEN 1 THEN 'question_attempts_v2_bootstrap'
+         WHEN 2 THEN 'question_attempts_v2_bootstrap,question_attempts_v2_align_grading'
+         WHEN 3 THEN 'question_attempts_v2_bootstrap,question_attempts_v2_align_grading,question_attempts_history_no_action'
+         ELSE 'question_attempts_v2_bootstrap,question_attempts_v2_align_grading,question_attempts_history_no_action,l1_k1_attempt_context' END,
+       70 FROM st
 UNION ALL
 SELECT 'LED-02', 'ledger', 'den oprindelige H5-fil 20261030211428 (navn question_attempts_v2) er IKKE i ledgeren — produktionens vej er bootstrap',
        (SELECT count(*) FROM supabase_migrations.schema_migrations m WHERE m.name = 'question_attempts_v2')::text,
@@ -376,5 +405,41 @@ SELECT 'SEC-02', 'security', 'anon/authenticated har ikke TRUNCATE på question_
           (VALUES ('question_instances'), ('student_progress'), ('student_events')) AS tt(tb)
          WHERE to_regclass('public.' || tb) IS NOT NULL
            AND has_table_privilege(r, to_regclass('public.' || tb), 'TRUNCATE')), 81
-) AS checks
+) AS u
+)
+-- ── gate: må det næste SQL-trin tages? Kun ok = true tæller; NULL eller false er NO-GO ─────────────
+-- (A5–A8 og A9 er deploys/drift og har manuelle kriterier i runbook §5/§9; gate-rækkerne dækker kun schemadelen.)
+SELECT check_id, phase, expected, actual, ok FROM (
+SELECT check_id, phase, expected, actual, ok, ord FROM checks
+UNION ALL
+SELECT 'GATE-A1', 'gate', 'schemadelen tillader A1 (bootstrap): alle PRE og LED true; ingen BOOT/ALIGN/D327/K1 true; CUT-01 false',
+       CASE WHEN g.ok THEN 'GO for schemadelen' ELSE 'NO-GO' END, g.ok, 90
+  FROM (SELECT bool_and(coalesce(ok, false)) FILTER (WHERE phase IN ('pre', 'ledger'))
+               AND NOT bool_or(coalesce(ok, false)) FILTER (WHERE phase IN ('boot', 'align', 'd327', 'k1'))
+               AND NOT bool_or(coalesce(ok, false)) FILTER (WHERE check_id = 'CUT-01') AS ok FROM checks) g
+UNION ALL
+SELECT 'GATE-A2', 'gate', 'schemadelen tillader A2 (alignment): PRE, LED og BOOT true; ALIGN-01, D327 og K1 false; CUT-01 false',
+       CASE WHEN g.ok THEN 'GO for schemadelen' ELSE 'NO-GO' END, g.ok, 91
+  FROM (SELECT bool_and(coalesce(ok, false)) FILTER (WHERE phase IN ('pre', 'ledger', 'boot'))
+               AND NOT bool_or(coalesce(ok, false)) FILTER (WHERE check_id = 'ALIGN-01' OR phase IN ('d327', 'k1'))
+               AND NOT bool_or(coalesce(ok, false)) FILTER (WHERE check_id = 'CUT-01') AS ok FROM checks) g
+UNION ALL
+SELECT 'GATE-A3', 'gate', 'schemadelen tillader A3 (D-327): PRE, LED, BOOT og ALIGN true; D327 og K1 false; CUT-01 false',
+       CASE WHEN g.ok THEN 'GO for schemadelen' ELSE 'NO-GO' END, g.ok, 92
+  FROM (SELECT bool_and(coalesce(ok, false)) FILTER (WHERE phase IN ('pre', 'ledger', 'boot', 'align'))
+               AND NOT bool_or(coalesce(ok, false)) FILTER (WHERE phase IN ('d327', 'k1'))
+               AND NOT bool_or(coalesce(ok, false)) FILTER (WHERE check_id = 'CUT-01') AS ok FROM checks) g
+UNION ALL
+SELECT 'GATE-A4', 'gate', 'schemadelen tillader A4 (K1): PRE (inkl. tom tabel), LED, BOOT, ALIGN og D327 true; K1 false; CUT-01 false',
+       CASE WHEN g.ok THEN 'GO for schemadelen' ELSE 'NO-GO' END, g.ok, 93
+  FROM (SELECT bool_and(coalesce(ok, false)) FILTER (WHERE phase IN ('pre', 'ledger', 'boot', 'align', 'd327'))
+               AND NOT bool_or(coalesce(ok, false)) FILTER (WHERE phase = 'k1')
+               AND NOT bool_or(coalesce(ok, false)) FILTER (WHERE check_id = 'CUT-01') AS ok FROM checks) g
+UNION ALL
+SELECT 'GATE-M2', 'gate', 'schemadelen tillader M2: PRE, LED, BOOT, ALIGN, D327 og K1 true; CUT-01 false (øvrige M2-kriterier: runbook §9, herunder registreringen af T)',
+       CASE WHEN g.ok THEN 'GO for schemadelen' ELSE 'NO-GO' END, g.ok, 94
+  FROM (SELECT bool_and(coalesce(ok, false)) FILTER (WHERE phase IN ('pre', 'ledger', 'boot', 'align', 'd327', 'k1')
+                                                     AND check_id <> 'PRE-06')   -- after A8 the table is no longer empty
+               AND NOT bool_or(coalesce(ok, false)) FILTER (WHERE check_id = 'CUT-01') AS ok FROM checks) g
+) AS r
 ORDER BY ord;
