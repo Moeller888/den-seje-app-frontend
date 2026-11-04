@@ -403,6 +403,8 @@ art layer behind them can be upgraded without a rewrite.
 - **Sweater list extended — D-340 (owner approved D-339's 240; NORTHSTAR_LS2_COMBOS = 30 + 240 = 270, 264 reachable; no new file; flag false).**
   - **Rule unchanged.** The whole effective outfit decides; shorts are never on the list, and charcoal SV1 only with skirt and capri.
   - **Verified.** The runtime is byte-identical for all 270. The Chromium baseline, figure with the new shoes, choice with shoe change, shorts fallback with reload and return, blocked and failure checks pass. See `docs/decisions/D-340.md`.
+  - **Live.** PR #584 merged as `6582df4` (2026-11-04) and live in the opt-in. Production serves main's bytes, and the D-340 verifiers pass after the merge.
+  - **D-337's verifiers** check the historical list of 30 only and fail on the current list by design. Use the D-340 verifiers.
 - **Sweaters with the other shoes — D-339 (offline; 240 candidates for the owner's visual review, not approved; runtime list unchanged at 30).**
   - **Candidates.** 6 sweaters × 40 reachable bottom × shoe pairs. All pass, with 0 enclosed holes and runtime byte-identical.
   - **Reused reviews.** Above row 1280 each candidate is pixel-identical to the approved D-336 sweater; below it, to an approved tee outfit. Only the 54 sweater × shoe colour pairs are new to judge.
@@ -413,6 +415,7 @@ art layer behind them can be upgraded without a rewrite.
   - **Order.** `northstarPlanFor` draws the hip seam after the shoes and before the bottom; the sweater's body and rib are drawn in front.
   - **Choice.** The "Trøje" row offers 6 sweaters for exactly the 30 approved combinations (24 reachable). Outside the list the outfit's own top is shown and the stored choice is kept, also after a reload.
   - **Verified.** The runtime is byte-identical to the 30 approved renderings. The Chromium baseline, figure (right hip ≤ 2 levels), choice, blocked and failure checks pass. See `docs/decisions/D-337.md`.
+  - **Historical list.** These checks and their two verifiers apply to the historical list of 30. The current list (270) is D-340's.
 - **Sweater combinations approved — D-336 (owner visual approval of 30; files staged privately; NOT published or integrated; flag false).**
   - **Approved.** Heather and navy, each plain or with the teapot or fox print, with skirt, capri and olive, navy and sand trousers and beige sneakers: 30 combos in `ls2-owner-approval-v1.json`. Navy shorts are outside the approval.
   - **Staged.** 15 runtime files reproduce all 30 approved renderings byte for byte when the hip seam is drawn behind the bottom (`planWithHipSeam`).
