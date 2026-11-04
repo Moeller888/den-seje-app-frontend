@@ -161,7 +161,7 @@ export function createClient() {
     },
     from: (table) => builder(table),
     rpc: async (fn, args) => {
-      if (!String(fn).startsWith("minigame_break_")) return { data: null, error: null };
+      // Every RPC reaches SERVER, so a spec can prove which ones a page made (e.g. no reward call).
       const r = await srv(fn, args);
       return r.error ? { data: null, error: r.error } : { data: r.data, error: null };
     },
@@ -213,6 +213,10 @@ const blocked = (offHost: string[]) => offHost.filter((u) => !/fonts\.(googleapi
 // ── Forløb 1: eleven afslår ─────────────────────────────────────────────────────────────────────────
 
 test("forløb 1: no offer before 20 minutes; at 20 the next answer offers one game; 'Nej, ellers tak' continues the quiz", async ({ page }) => {
+  // A whole journey: several real quiz rounds with the app’s own feedback delays (0.6–2 s each) plus, as the
+  // first test of a browser project, the cold start. Measured 2026-11-04: 19 s warm, > 30 s cold in Firefox
+  // and WebKit. Not a wait for the app: every step still has its own assertion and timeout.
+  test.setTimeout(60_000);
   const srv = new Server();
   const { offHost, errors } = await setup(page, srv);
   await page.goto(baseUrl + "/index.html");
@@ -265,6 +269,10 @@ test("forløb 1: no offer before 20 minutes; at 20 the next answer offers one ga
 // ── Forløb 2: eleven accepterer ─────────────────────────────────────────────────────────────────────
 
 test("forløb 2: 'Ja tak' opens the offered game for exactly one round, then back to the quiz", async ({ page }) => {
+  // A whole journey: several real quiz rounds with the app’s own feedback delays (0.6–2 s each) plus, as the
+  // first test of a browser project, the cold start. Measured 2026-11-04: 19 s warm, > 30 s cold in Firefox
+  // and WebKit. Not a wait for the app: every step still has its own assertion and timeout.
+  test.setTimeout(60_000);
   const srv = new Server();
   srv.pool = ["kloeft"];
   srv.seconds = 800;
@@ -300,6 +308,41 @@ test("forløb 2: 'Ja tak' opens the offered game for exactly one round, then bac
   await answer(page, srv);
   await expect(dialog(page)).toHaveCount(0);
 
+  expect(blocked(offHost)).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test("a Stabel break plays one full round and pays nothing: no reward RPC, no coin text (D-347)", async ({ page }) => {
+  const srv = new Server();
+  srv.pool = ["stabel"];
+  srv.seconds = 800;
+  const { offHost, errors } = await setup(page, srv);
+  await page.goto(baseUrl + "/index.html");
+  await answer(page, srv);
+  await expect(dialog(page).getByRole("heading")).toHaveText("Har du lyst til et spil Stabel?");
+  await page.getByRole("button", { name: "Ja tak" }).click();
+  await page.waitForURL(/\/stabel\.html$/);
+  await expect(page.locator("#stabel-start")).toBeEnabled();
+  const onStabel = srv.calls.length;                         // every call from here on is the game page's
+  await expect(page.locator("#stabel-lead")).toContainText("Stabel giver ingen mønter.");
+  await page.locator("#stabel-start").click();
+  // Drop plates as fast as the game allows until one misses and the round ends by its own rules.
+  const over = page.locator("#stabel-over");
+  for (let i = 0; i < 200 && !(await over.isVisible()); i++) {
+    await page.locator("#stabel-drop").click({ force: true }).catch(() => {});
+    await page.waitForTimeout(90);
+  }
+  await expect(over).toBeVisible({ timeout: 20000 });
+  await expect(page.locator("#stabel-coins")).toHaveCount(0);
+  await expect(over).not.toContainText(/mønt/i);
+  await expect(page.locator("#stabel-again")).toBeHidden();
+  await page.waitForTimeout(500);                           // a late reward call would land here
+  expect(srv.calls.slice(onStabel).map((c) => c.fn)).toEqual([]);   // the round itself calls nothing at all
+  await page.locator("#minigame-pass-return").click();
+  await page.waitForURL(/\/index\.html$/);
+  expect(srv.calls[onStabel]?.fn).toBe("minigame_break_finish");    // leaving reports the break, nothing else
+  expect(srv.calls.some((c) => c.fn === "claim_stabel_reward")).toBe(false);
+  expect(srv.offers[0]).toMatchObject({ status: "finished", outcome: "completed" });
   expect(blocked(offHost)).toEqual([]);
   expect(errors).toEqual([]);
 });

@@ -229,11 +229,11 @@ test("every game redeems a pass before anything is playable, plays one round, an
   }
 });
 
-test("the games' economy is unchanged: only Stabel calls an RPC (its existing capped coins), the pass module pays nothing", () => {
+test("no minigame pays anything (D-347): no game calls an RPC — Stabel included — and the pass module pays nothing", () => {
   for (const g of GAMES) {
-    const js = read(`js/${g}.js`);
-    const rpcs = js.match(/\.rpc\(/g) || [];
-    assert.equal(rpcs.length, g === "stabel" ? 1 : 0, g);
+    const code = read(`js/${g}.js`).replace(/\/\/.*$/gm, "");
+    assert.equal(/\.rpc\(|functions\.invoke\(|\.from\(/.test(code), false, g + " talks to the backend directly");
+    assert.equal(code.includes("claim_stabel_reward"), false, g);
   }
   const pass = read("js/minigame-pass.js");
   assert.deepEqual([...pass.matchAll(/rpc\("([a-z_]+)"/g)].map((m) => m[1]), ["minigame_break_start", "minigame_break_finish"]);

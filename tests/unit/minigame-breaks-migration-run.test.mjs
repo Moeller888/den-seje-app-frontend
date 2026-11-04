@@ -46,9 +46,10 @@ const FIXTURE = `
     answered_at timestamptz,
     user_answer text);
   ALTER TABLE public.question_instances ENABLE ROW LEVEL SECURITY;
-  -- Supabase's default privileges hand new objects to the API roles; the migration must revoke them.
-  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated;
-  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated;
+  -- Production's default privileges (pg_default_acl, read 2026-11-04): new tables and functions go to all
+  -- three API roles. The migration must revoke them explicitly.
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated, service_role;
 `;
 
 async function migrated() {
@@ -444,7 +445,8 @@ test("E3: every function is SECURITY DEFINER with search_path pinned, and EXECUT
   const db = await migrated();
   const rows = (await db.query(`SELECT p.proname, p.prosecdef, p.proconfig,
       has_function_privilege('anon', p.oid, 'EXECUTE') AS anon_x,
-      has_function_privilege('authenticated', p.oid, 'EXECUTE') AS auth_x
+      has_function_privilege('authenticated', p.oid, 'EXECUTE') AS auth_x,
+      has_function_privilege('service_role', p.oid, 'EXECUTE') AS svc_x
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
     WHERE n.nspname = 'public' AND p.proname LIKE '%minigame_break%' ORDER BY 1`)).rows;
   assert.deepEqual(rows.map((r) => r.proname), [
@@ -456,6 +458,7 @@ test("E3: every function is SECURITY DEFINER with search_path pinned, and EXECUT
     assert.deepEqual(r.proconfig, ["search_path=public"], r.proname);
     assert.equal(r.anon_x, false, r.proname);
     assert.equal(r.auth_x, !r.proname.startsWith("_"), r.proname);
+    assert.equal(r.svc_x, !r.proname.startsWith("_"), r.proname + ": internal helpers are closed to service_role too");
   }
   const tables = (await db.query(`SELECT c.relname, c.relrowsecurity,
       (SELECT count(*) FROM pg_policy WHERE polrelid = c.oid)::int AS policies,
@@ -510,4 +513,91 @@ test("F2: disabled games are never drawn; a one-game pool always gives that game
   assert.deepEqual(Object.keys(counts).sort(), ["husk", "slope"]);
   await db.query("UPDATE public.minigame_break_games SET enabled = (game_key = 'naal')");
   assert.deepEqual(await drawMany(db, 5), { naal: 5 });
+});
+
+// ── Gruppe G: ingen belønning fra minispil — Stabels mønt-RPC lukket ─────────────────────────────────
+
+const STABEL = "supabase/migrations/20260928000000_stabel_reward.sql";
+
+// The fixture plus student_progress and the REAL Stabel migration of 2026-09-28, as production has it.
+async function withStabel() {
+  const db = new PGlite();
+  await db.exec(FIXTURE);
+  await db.exec(`CREATE TABLE public.student_progress (student_id uuid PRIMARY KEY, xp int NOT NULL DEFAULT 0,
+    coins int NOT NULL DEFAULT 0, mastery int NOT NULL DEFAULT 0);
+    ALTER TABLE public.student_progress ENABLE ROW LEVEL SECURITY;
+    INSERT INTO public.student_progress VALUES ('${P1}', 120, 40, 7), ('${P2}', 0, 0, 0);`);
+  await db.exec(read(STABEL));
+  return db;
+}
+const claim = (db, role, sub, plates = 30) =>
+  as(db, role, sub, `SELECT public.claim_stabel_reward(${plates}) AS r`);
+const progress = async (db, id) =>
+  (await db.query(`SELECT xp, coins, mastery FROM public.student_progress WHERE student_id = '${id}'`)).rows[0];
+
+test("G1: positive control — before D-347 a pupil can call claim_stabel_reward directly and is paid", async () => {
+  const db = await withStabel();
+  const r = await claim(db, "authenticated", P1);
+  assert.equal(r.ok, true, r.message);
+  assert.equal(r.rows[0].r.coins, 30);
+  assert.deepEqual(await progress(db, P1), { xp: 120, coins: 70, mastery: 7 });
+});
+
+test("G2: after D-347 no API role can call claim_stabel_reward — anon, a pupil, service_role", async () => {
+  const db = await withStabel();
+  await claim(db, "authenticated", P1);                     // history: 30 coins paid before the change
+  await db.exec(read(FILE));
+  for (const [role, sub] of [["authenticated", P1], ["authenticated", P2], ["anon", null], ["service_role", null]]) {
+    const r = await claim(db, role, sub);
+    assert.equal(r.ok, false, role);
+    assert.match(r.message, /permission denied for function claim_stabel_reward/, role);
+  }
+  const acl = (await db.query(`SELECT proacl::text AS a FROM pg_proc WHERE oid = 'public.claim_stabel_reward(integer)'::regprocedure`)).rows[0].a;
+  assert.equal(acl, "{postgres=X/postgres}", "only the owner keeps EXECUTE");
+});
+
+test("G3: closing it pays nothing and takes nothing: coins, XP, mastery and the ledger history are untouched", async () => {
+  const db = await withStabel();
+  await claim(db, "authenticated", P1);
+  const before = await progress(db, P1);
+  const ledger = async () => (await db.query("SELECT student_id, reward_date, coins_today FROM public.stabel_daily_rewards ORDER BY 1")).rows;
+  const ledgerBefore = await ledger();
+  await db.exec(read(FILE));
+  for (let i = 0; i < 3; i++) await claim(db, "authenticated", P1, 50);
+  assert.deepEqual(await progress(db, P1), before);
+  assert.deepEqual(await progress(db, P2), { xp: 0, coins: 0, mastery: 0 });
+  assert.deepEqual(await ledger(), ledgerBefore, "every historical row is kept");
+  assert.ok(ledgerBefore.length === 1 && ledgerBefore[0].coins_today === 30);
+  // The function itself still exists (for the record and a possible owner-approved rollback).
+  assert.equal((await db.query("SELECT to_regprocedure('public.claim_stabel_reward(integer)') IS NOT NULL AS x")).rows[0].x, true);
+});
+
+test("G4: a whole break — offer, 'Ja tak', Stabel started and finished — moves no XP, coins or mastery", async () => {
+  const db = await withStabel();
+  await db.exec(read(FILE));
+  await db.query("UPDATE public.minigame_break_games SET enabled = (game_key = 'stabel')");
+  await setProgress(db, P1, 1199, 600);
+  const before = await progress(db, P1);
+  const r = await afterAnswer(db, P1, await answered(db, P1, 100, 0));
+  assert.deepEqual(r.offer.game, "stabel", "Stabel can still be drawn");
+  await respond(db, P1, r.offer.id, true);
+  assert.equal((await start(db, P1, r.offer.id, "stabel")).status, "ok");
+  assert.equal((await claim(db, "authenticated", P1, 50)).ok, false, "a forged end-of-round claim is refused");
+  await finish(db, P1, r.offer.id, "completed");
+  assert.deepEqual(await progress(db, P1), before);
+});
+
+test("G5: the migration runs on a database without Stabel's function (guarded), and re-runs cleanly", async () => {
+  const db = await migrated();                               // FIXTURE has no claim_stabel_reward
+  await db.exec(read(FILE));
+  const withIt = await withStabel();
+  await withIt.exec(read(FILE));
+  await withIt.exec(read(FILE));
+  assert.equal((await claim(withIt, "authenticated", P1)).ok, false);
+});
+
+test("G6: no minigame function writes XP, coins or mastery — the migration never names student_progress", () => {
+  const code = read(FILE).replace(/--.*$/gm, "");
+  assert.equal(/student_progress/.test(code), false);
+  assert.equal(/\b(xp|coins|mastery)\b/i.test(code), false);
 });

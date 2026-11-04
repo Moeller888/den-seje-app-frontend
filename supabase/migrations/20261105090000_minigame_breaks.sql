@@ -5,8 +5,8 @@
 -- registered answer creates one offer for one game, drawn uniformly at random from the enabled games.
 -- The pupil answers "Ja tak" (accept) or "Nej, ellers tak" (decline). Either way a new period of
 -- 1,200 seconds starts. An accepted offer is a single-use pass for exactly one round of that game.
--- The games themselves pay nothing new: no XP, no coins, no mastery. (Stabel's existing, capped
--- claim_stabel_reward is not touched by this migration.)
+-- No minigame pays anything: no XP, no coins, no mastery — Stabel included (owner decision 2026-11-04,
+-- D-347). See STABEL'S COIN RPC CLOSED at the end of this file.
 --
 -- ACTIVE QUIZ TIME — MEASURED ON THE SERVER, NOT BY A BROWSER TIMER
 -- Every answer path already stamps the pupil's question_instances row on the server:
@@ -45,8 +45,11 @@
 -- an offer id or a question instance of another pupil behaves exactly like one that does not exist.
 -- The three tables have RLS enabled with NO policies and every privilege revoked from anon and
 -- authenticated; only these functions reach them. search_path is pinned to public and every name is
--- schema-qualified. EXECUTE is revoked from PUBLIC and anon and granted to authenticated only; the
--- internal expiry helper is executable by no API role.
+-- schema-qualified. EXECUTE on the four RPCs is revoked from PUBLIC and anon and granted to authenticated
+-- (service_role keeps the project default grant: it is the backend and bypasses RLS anyway). The two
+-- internal helpers are executable by no API role, service_role included. Production default privileges
+-- (pg_default_acl, read 2026-11-04) grant new tables and functions to anon, authenticated and service_role;
+-- every grant below is therefore explicit.
 --
 -- PRIVACY
 -- Stored per pupil: earned seconds (0..1200), the time of the last credited answer, and one row per
@@ -122,7 +125,7 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public._minigame_break_expire(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._minigame_break_expire(uuid) FROM PUBLIC, anon, authenticated, service_role;
 
 -- Internal: the calling pupil, with their progress row created and locked. Raises for anyone else.
 CREATE OR REPLACE FUNCTION public._minigame_break_lock_pupil()
@@ -155,7 +158,7 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public._minigame_break_lock_pupil() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._minigame_break_lock_pupil() FROM PUBLIC, anon, authenticated, service_role;
 
 -- Called by the quiz right after an answer has been registered. Credits the answer's active time and,
 -- once 1,200 seconds are earned, creates the one offer. Never changes anything about the answer itself.
@@ -438,3 +441,21 @@ GRANT EXECUTE ON FUNCTION public.minigame_break_after_answer(uuid, integer) TO a
 GRANT EXECUTE ON FUNCTION public.minigame_break_respond(uuid, boolean)       TO authenticated;
 GRANT EXECUTE ON FUNCTION public.minigame_break_start(uuid, text)            TO authenticated;
 GRANT EXECUTE ON FUNCTION public.minigame_break_finish(uuid, text)           TO authenticated;
+
+-- STABEL'S COIN RPC CLOSED (owner decision 2026-11-04, D-347)
+-- Stabel stays in the pool but pays nothing. Removing the page's call is not enough: claim_stabel_reward
+-- (20260928000000, SECURITY DEFINER) was executable by `authenticated`, so any pupil could call
+-- POST /rest/v1/rpc/claim_stabel_reward directly and be paid up to 50 coins a day without playing.
+-- Its only caller was js/stabel.js (no function, trigger or Edge Function calls it — catalog and
+-- repository checked 2026-11-04). EXECUTE is therefore revoked from every API role, service_role
+-- included. Nothing is dropped: the function stays for the record and public.stabel_daily_rewards keeps
+-- every historical row; coins already paid stay in student_progress. Reopening it would be a new owner
+-- decision (rollback: docs/operations/minigame-breaks-rollback.md). Guarded, so the file also runs on a
+-- database that never had the function.
+DO $stabel$
+BEGIN
+  IF to_regprocedure('public.claim_stabel_reward(integer)') IS NOT NULL THEN
+    REVOKE ALL ON FUNCTION public.claim_stabel_reward(integer) FROM PUBLIC, anon, authenticated, service_role;
+  END IF;
+END
+$stabel$;

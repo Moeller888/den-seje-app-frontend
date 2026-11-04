@@ -13,8 +13,8 @@
 //
 // WHAT THIS DOES NOT DO. The game files are public static assets (Cloudflare serves every page to anyone);
 // their JavaScript can be downloaded and run by hand. What is closed is every way to play through the
-// product: no menu entry, no link, and no page that starts a round without a redeemed pass. The games pay
-// nothing (Stabel's existing, capped coins excepted), so a hand-run copy gains nothing.
+// product: no menu entry, no link, and no page that starts a round without a redeemed pass. No game pays
+// anything — no XP, no coins, no mastery, Stabel included (D-347) — so a hand-run copy gains nothing.
 //
 // ONE ROUND. beginRound() returns true once; the "Igen" button is hidden. When the round is over, the
 // only way on is "Tilbage til quizzen". Leaving early (the top link) is reported as 'exited'. Both report

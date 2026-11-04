@@ -2,7 +2,9 @@
 
 Gælder migration `supabase/migrations/20261105090000_minigame_breaks.sql` og frontenden i samme PR.
 Ingen af trinnene nedenfor rører elevbesvarelser, XP, mønter, mastery eller spørgsmål: funktionen **læser**
-kun `question_instances` og `profiles` og **skriver** kun i sine egne tre tabeller.
+kun `question_instances` og `profiles` og **skriver** kun i sine egne tre tabeller. Migrationen fjerner
+desuden EXECUTE på `claim_stabel_reward(integer)` fra alle API-roller (Stabel giver ingen mønter, D-347);
+den ændrer ingen data.
 
 Hvert trin, der ændrer produktionen, kræver ejerens separate godkendelse
 ([`../migration-workflow-policy.md`](../migration-workflow-policy.md)).
@@ -48,6 +50,20 @@ DROP TABLE IF EXISTS public.minigame_break_games;
 COMMIT;
 ```
 
+## Stabels mønter — kun ved en ny ejerbeslutning
+
+At lukke `claim_stabel_reward` er en del af D-347 og **ikke** noget, en tilbagerulning af spillepauserne
+genåbner (niveau 2 og 3 lader den være lukket). Skulle ejeren beslutte, at Stabel igen skal give mønter,
+genskaber dette præcis de rettigheder, produktionen havde før (læst 2026-11-04:
+`{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}`):
+
+```sql
+GRANT EXECUTE ON FUNCTION public.claim_stabel_reward(integer) TO authenticated, service_role;
+```
+
+Kræver desuden, at `js/stabel.js` igen kalder funktionen (revert af den del af PR #597). Funktionens krop og
+`stabel_daily_rewards` er urørte, så loftet på 50 pr. dag gælder fortsat.
+
 ## Kontrol efter anvendelse (read-only)
 
 ```sql
@@ -68,4 +84,14 @@ WHERE  n.nspname = 'public' AND c.relname LIKE 'minigame_break_%' AND c.relkind 
 
 SELECT game_key, enabled FROM public.minigame_break_games ORDER BY 1;
 -- forventet: brud, hop, husk, kloeft, naal, slope, stabel — alle enabled.
+
+SELECT proacl::text,
+       has_function_privilege('authenticated', oid, 'EXECUTE') AS auth_x,
+       has_function_privilege('anon', oid, 'EXECUTE')          AS anon_x,
+       has_function_privilege('service_role', oid, 'EXECUTE')  AS svc_x
+FROM   pg_proc WHERE oid = 'public.claim_stabel_reward(integer)'::regprocedure;
+-- forventet: {postgres=X/postgres}, og alle tre false.
+
+SELECT count(*), sum(coins_today) FROM public.stabel_daily_rewards;
+-- forventet: samme tal som i preflight (historikken er urørt).
 ```
