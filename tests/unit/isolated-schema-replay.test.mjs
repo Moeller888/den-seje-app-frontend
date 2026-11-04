@@ -84,6 +84,16 @@ test("the replayed schema has production's key objects", async () => {
     { t: "question_instances", d: "FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE RESTRICT" },
     { t: "student_answers", d: "FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE RESTRICT" },
   ]);
+  // 20261101190000 (H5 bootstrap, applied as remote 20261104095423 on 2026-11-04): the H5 schema exists,
+  // process_question_attempt_v2 keeps the original grading and NO API role may call it until the
+  // alignment; process_text_answer_v2 is for service_role only; the round guard is on question_instances.
+  const h5 = await one(db, `SELECT to_regclass('public.question_attempts') IS NOT NULL t,
+      (SELECT md5(prosrc) FROM pg_proc WHERE oid = to_regprocedure('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)')) mc,
+      has_function_privilege('service_role', 'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)', 'EXECUTE') mc_svc,
+      has_function_privilege('service_role', 'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)', 'EXECUTE') text_svc,
+      has_function_privilege('authenticated', 'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)', 'EXECUTE') text_auth,
+      EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'question_instances_round_guard' AND tgrelid = 'public.question_instances'::regclass) guard`);
+  assert.deepEqual(h5, { t: true, mc: "943d03820fe4756f5a72c6f0a5d77d7d", mc_svc: false, text_svc: true, text_auth: false, guard: true });
   assert.notEqual(gar.m, "63b8347dd4d72d40ced43e8728b5ab87", "the replay must not carry the old, double-paying body");
   assert.deepEqual(gar, { m: "fc8d729f8b0166815fe2647805ce2e60", s: true, c: ["search_path=public"],
     a: ["postgres=X/postgres", "authenticated=X/postgres", "service_role=X/postgres"], n: 1, anon: false, auth: true, svc: true });

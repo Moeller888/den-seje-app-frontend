@@ -57,13 +57,13 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   - `20261031230000_claim_daily_reward_exactly_once` (D-284): `claim_daily_reward` har md5 `80273d5d…`.
   - `20261101120000_night_owl_stop_new_awards` (D-286): `evaluate_achievements` har md5 `9bd9a5d5…`, og
     `authenticated` har stadig EXECUTE på `set_night_correct`.
-  - `20261101190000_question_attempts_v2_bootstrap` og
-    `20261101190100_question_attempts_v2_align_grading` (H5-integrationen). Produktionen har hverken
-    `question_attempts` eller `_v2`-funktionerne (katalog, 2026-11-02). Begge filer kræver G1 først,
-    og G1 er anvendt.
+  - `20261101190100_question_attempts_v2_align_grading` (H5-integrationen 2/2). Produktionen har
+    H5-skemaet fra bootstrappen siden 2026-11-04, men `process_question_attempt_v2` har stadig den
+    oprindelige bedømmelse (md5 `943d0382…`), og ingen API-rolle har EXECUTE på den. Filen kræver G1 og
+    bootstrappen først. Begge er anvendt.
   - `20261103100000_question_attempts_history_no_action` (D-327, H5-sporet): ændrer
-    `question_attempts_instance_fkey` til `ON DELETE NO ACTION`. Produktionen har ikke
-    `question_attempts`, fordi H5 ikke er anvendt. Filen kræver H5-bootstrappen og alignmentet først og
+    `question_attempts_instance_fkey` til `ON DELETE NO ACTION`. I produktionen er den stadig
+    bootstrappens `ON DELETE CASCADE` (siden 2026-11-04). Filen kræver H5-bootstrappen og alignmentet først og
     skal anvendes før H5-aktivering.
 
   D-284 og D-286 blev ved en fejl ikke skrevet på listen, da de blev merget, og blev derfor afspillet
@@ -99,6 +99,7 @@ Filen selv ændres aldrig.
 | `20261101170000_achievement_reward_exactly_once.sql` (D-292) | `20261102073618 achievement_reward_exactly_once` | 2026-11-02 via ét `apply_migration`, filen ordret fra `main` `5e28917` (SHA-256 `a8f582b0f634e92876f9ba45bf04b9e1ba0c342d2eae664d7c49886d3712e70b`; den gemte sætning md5-identisk med filen, `34a8b4df…`; ejergodkendt) | Ja, læsende 2026-11-02 lige efter: `grant_achievement_rewards` md5 `fc8d729f…`, `SECURITY DEFINER`, `search_path=public`, ejer `postgres`, EXECUTE kun `postgres`, `authenticated` og `service_role` (ikke `PUBLIC` eller `anon`); `user_achievements` (146 rækker, 11 uindløste), mønter/XP og genstande uændrede (kontrolhashes) | **Anvendes**. `isolated-schema-replay.test.mjs` kræver den nye krop og rettighederne og afviser den gamle (`63b8347d…`) |
 | `20261102100000_release_open_rounds_on_inactive_questions.sql` (D-316) | `20261102123618 release_open_rounds_on_inactive_questions` | 2026-11-02 via ét `apply_migration`, filen ordret fra `main` `ff49139` (SHA-256 `e935f5f8a71bfb08d2d1c95d2cd2e198e4692a9e9a2e966e700614141d0fe2f8`; den gemte sætning md5-identisk med filen, `842bc73d…`; ejergodkendt) | Ja, læsende 2026-11-02 lige efter: `release_open_question_outside` md5 `b80c1c78…` med historikværnet, `SECURITY DEFINER`, `search_path=public`, ejer `postgres`, EXECUTE uændret (`authenticated`, `service_role`; ikke `anon`); G2-triggeren uændret; instanser, svar, XP/mønter og achievements uændrede (kontrolhashes); de fire gamle åbne runder står uændret og frigives først ved elevens næste anmodning | **Anvendes** (var `REPO_AHEAD_OF_PRODUCTION` fra #556; afvigelsen er væk). `isolated-schema-replay.test.mjs` kræver den nye krop |
 | `20261101210000_question_history_restrict.sql` (D-298 H2) | `20261102182750 question_history_restrict` | 2026-11-02 via ét `apply_migration`, filen ordret fra `main` `243477a` (SHA-256 `4b283716dd6e867011c15c6e215efee229d9e377ec48ce5854b0d58928b67cb5`; den gemte sætning md5-identisk med filen, `11fd239e…`; ejergodkendt) | Ja, læsende 2026-11-02 lige efter: `question_instances_question_id_fkey` og `student_answers_question_id_fkey` er `ON DELETE RESTRICT`, validerede, ikke deferrable; 2143 spørgsmål, 5985 instanser og 80 svar, og kontrolhashes over instanser og svar uændrede | **Anvendes**. `isolated-schema-replay.test.mjs` kræver begge RESTRICT |
+| `20261101190000_question_attempts_v2_bootstrap.sql` (H5 integration 1/2) | `20261104095423 question_attempts_v2_bootstrap` | 2026-11-04 via ét `apply_migration`, filen ordret fra `main` `6738369` (SHA-256 `55061cc48f1991cfea38efa9a9564c2f245f95381a5c097219aae710b093b010`; den gemte sætning md5-identisk med filen, `13d6d365…`; ejergodkendt) | Ja, læsende 2026-11-04 lige efter: alle 9 H5-objekter findes; `process_question_attempt_v2` md5 `943d0382…`, ingen EXECUTE for `service_role`, `authenticated` eller `anon`; `process_text_answer_v2` md5 `f8809846…`, EXECUTE kun `service_role`; `question_attempts` tom, RLS uden policies, `service_role` kun SELECT; fremmednøglen `ON DELETE CASCADE`; G2-værnet (`e5627de1…`) og de syv skrivere uændrede; 5985 instanser, 80 svar og 43 åbne runder uændrede | **Anvendes**. I afspilningen findes H5 i forvejen (`20261030211428`), så bootstrappen kun verificerer og fratager `service_role` EXECUTE på `process_question_attempt_v2`, som i produktionen. `isolated-schema-replay.test.mjs` kræver H5-skemaet og rettighederne |
 
 Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i produktionen, og senere D-280 del 1 i versionsorden.
 
@@ -110,16 +111,15 @@ Rækkefølgen i afspilningen er #351 → A → B → kommentarrettelsen, som i p
 | D-278, D-280 del 1 | anvendt | anvendt 2026-11-01 | anvendes |
 | D-280 del 2 | anvendt | anvendt 2026-11-01 | springes over (ren data) |
 | `20261101150000` (G1) | anvendt | anvendt 2026-11-02 (`20261102064630`) | **anvendes** |
-| `20261101190000` (bootstrap) | verificerer H5, fratager `service_role` EXECUTE på `process_question_attempt_v2` | **ikke anvendt**; skal opbygge H5 (G1 er på plads) | springes over (`NOT_IN_PRODUCTION`) |
+| `20261101190000` (bootstrap) | verificerer H5, fratager `service_role` EXECUTE på `process_question_attempt_v2` | anvendt 2026-11-04 (`20261104095423`); opbyggede H5 | **anvendes** (verificerer og fratager EXECUTE, som i produktionen) |
 | `20261101190100` (alignment) | giver `_v2` bedømmelsen fra D-280 og G1 og giver `service_role` EXECUTE tilbage | **ikke anvendt** | springes over (`NOT_IN_PRODUCTION`) |
 
-- **Den isolerede database har i dag H5-skemaet fra `20261030211428`.** Dens
+- **Den isolerede database har H5-skemaet fra `20261030211428`, verificeret af bootstrappen.** Dens
   `process_question_attempt_v2` er den oprindelige: aliaser kun ved præcis to poster, kun `[a-z0-9]`
-  sammenlignes, og `service_role` har EXECUTE. Det er en kendt afvigelse fra produktionen, som slet
-  ikke har H5. Den er uændret fra før #522.
+  sammenlignes. Siden bootstrappen også afspilles (2026-11-04), har `service_role` ikke længere EXECUTE
+  på den, præcis som i produktionen.
   - Intet i den isolerede E2E kalder `_v2`: `tests/h5-submission.spec.ts` opsnapper `process-event`.
-  - Afvigelsen forsvinder, når de to H5-filer er anvendt i produktionen og fjernet fra
-    `NOT_IN_PRODUCTION`.
+  - Alignmentet afspilles først, når det er anvendt i produktionen og fjernet fra `NOT_IN_PRODUCTION`.
 - **Produktionens eneste vej til H5** er: G1 → `20261101190000` → `20261101190100`. Uden G1 afviser
   både bootstrappen og alignmentet sig selv, og intet ændres.
   - Mellem de to H5-filer kan ingen API-rolle kalde den gamle `_v2`.
