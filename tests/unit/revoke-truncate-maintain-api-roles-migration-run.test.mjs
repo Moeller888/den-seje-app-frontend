@@ -87,8 +87,70 @@ const SNAPSHOT_2026_11_04 = Object.fromEntries(Object.entries({
   ...SNAPSHOT_2026_10_27, ...CHANGED_SINCE_2026_10_27, ...ADDED_SINCE_2026_10_27,
 }).sort(([a], [b]) => a.localeCompare(b)));
 
-// The fixture's input: the most recent verified snapshot.
+// The fixture's input: the most recent verified snapshot BEFORE D-237. It stays the input after D-237 was
+// applied: the tests below prove what the file does to that state, so it must not be replaced by the
+// state after the migration.
 const PROD_ACL = SNAPSHOT_2026_11_04;
+
+// D-237 was applied in production on 2026-11-04 at 15:50:40 UTC (remote 20261104155040, owner-approved;
+// docs/operations/production-actions/2026-11-04T1550Z-d237-applied.md). Two more dated, read-only records:
+//   * PREFLIGHT_2026_11_04T1514Z — the catalog right before the application (preflight 15:14 UTC, re-read
+//     15:49 UTC with the same fingerprint). It is SNAPSHOT_2026_11_04 plus question_attempts, which the
+//     H5 bootstrap created at 09:54 UTC that day (no API role holds anything on it).
+//   * AFTER_D237_2026_11_04T1551Z — the catalog after the application (postflight 15:51 UTC; production
+//     still had exactly this ACL at 16:10 UTC). 45 relations.
+// Neither is a live read: no test here reads production.
+const PREFLIGHT_2026_11_04T1514Z = Object.fromEntries(Object.entries({
+  ...SNAPSHOT_2026_11_04,
+  question_attempts: ["r", "postgres=arwdDxtm/postgres,service_role=r/postgres"],
+}).sort(([a], [b]) => a.localeCompare(b)));
+const AFTER_D237_2026_11_04T1551Z = {
+  achievements: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  analytics_question_attempts: ["v", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres"],
+  analytics_student_summary: ["v", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres"],
+  attempt_stats: ["v", "postgres=arwdDxtm/postgres,authenticated=r/postgres,service_role=arwdDxtm/postgres"],
+  avatar_asset_review_queue: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  avatar_asset_validation_runs: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  avatar_assets: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  avatar_generation_events: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  avatar_generation_jobs: ["r", "postgres=arwdDxtm/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  avatar_ingestion_artifacts: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  avatar_ingestion_events: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  avatar_ingestion_jobs: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  daily_login_rewards: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  daily_quests: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  password_help_requests: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  placement_sessions: ["r", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres"],
+  profiles: ["r", "postgres=arwdDxtm/postgres,anon=ardxt/postgres,authenticated=ardxt/postgres,service_role=arwdDxtm/postgres"],
+  progress_corrections: ["r", "postgres=arwdDxtm/postgres"],
+  question_attempt_audit: ["r", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres"],
+  question_attempts: ["r", "postgres=arwdDxtm/postgres,service_role=r/postgres"],
+  question_diagnostics: ["v", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres"],
+  question_instances: ["r", "postgres=arwdDxtm/postgres,anon=wdxt/postgres,authenticated=wdxt/postgres,service_role=arwdDxtm/postgres"],
+  question_performance: ["v", "postgres=arwdDxtm/postgres,authenticated=r/postgres,service_role=arwdDxtm/postgres"],
+  questions: ["r", "postgres=arwdDxtm/postgres,anon=awdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  shop_items: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  stabel_daily_rewards: ["r", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres"],
+  streak_milestones: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  student_answers: ["r", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres"],
+  student_band_state: ["r", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres"],
+  student_events: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  student_level_fold_log: ["r", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres"],
+  student_progress: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  student_quest_progress: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  student_subject_level: ["r", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres"],
+  student_weekly_quest_progress: ["r", "postgres=arwdDxtm/postgres,anon=rxt/postgres,authenticated=rxt/postgres,service_role=arwdDxtm/postgres"],
+  teacher_password_resets: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  teacher_spotlights: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  themes: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  titles: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  user_achievements: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  user_items: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  user_themes: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  user_titles: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  weekly_quests: ["r", "postgres=arwdDxtm/postgres,anon=arwdxt/postgres,authenticated=arwdxt/postgres,service_role=arwdDxtm/postgres"],
+  ww2_taxonomy_audit: ["v", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres"],
+};
 
 const LETTER = { a: "INSERT", r: "SELECT", w: "UPDATE", d: "DELETE", D: "TRUNCATE", x: "REFERENCES", t: "TRIGGER", m: "MAINTAIN" };
 const API = ["anon", "authenticated"];
@@ -102,7 +164,7 @@ function expected(acl) {
   return fmt(e);
 }
 
-async function freshDb() {
+async function freshDb(snapshot = PROD_ACL) {
   const db = new PGlite();
   await db.exec(`
     CREATE ROLE dbowner LOGIN NOSUPERUSER BYPASSRLS;
@@ -115,7 +177,7 @@ async function freshDb() {
     GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
     SET ROLE dbowner;
     CREATE TABLE public._base (id int);`);
-  for (const [name, [kind, acl]] of Object.entries(PROD_ACL)) {
+  for (const [name, [kind, acl]] of Object.entries(snapshot)) {
     await db.exec(kind === "r"
       ? `CREATE TABLE public.${name} (id int); ALTER TABLE public.${name} ENABLE ROW LEVEL SECURITY;`
       : `CREATE VIEW public.${name} AS SELECT id FROM public._base;`);
@@ -315,4 +377,28 @@ test("rollback: the statements generated before the migration restore every ACL 
   for (const g of generated) await db.exec(g);
   await db.exec("RESET ROLE;");
   assert.deepEqual(await acls(db), before, "rollback restores the snapshot's ACL on every relation");
+});
+
+test("production after D-237 (2026-11-04 15:51Z): the file applied to the 15:14Z preflight state gives exactly the verified after-state", async () => {
+  // The two dated records cover the same 45 relations with the same kinds.
+  assert.deepEqual(Object.keys(AFTER_D237_2026_11_04T1551Z).sort(), Object.keys(PREFLIGHT_2026_11_04T1514Z));
+  for (const [name, [kind]] of Object.entries(PREFLIGHT_2026_11_04T1514Z)) assert.equal(AFTER_D237_2026_11_04T1551Z[name][0], kind, name);
+  // The after-state is the preflight state minus TRUNCATE (D) and MAINTAIN (m) for anon and authenticated —
+  // 120 single privileges in 61 role/relation entries — and nothing else.
+  let removed = 0, entries = 0;
+  for (const [name, [, acl]] of Object.entries(PREFLIGHT_2026_11_04T1514Z)) {
+    assert.equal(AFTER_D237_2026_11_04T1551Z[name][1], expected(acl), name);
+    for (const r of API) {
+      const n = ((parse(acl)[r] ?? "").match(/[Dm]/g) ?? []).length;
+      removed += n; if (n > 0) entries += 1;
+    }
+  }
+  assert.equal(removed, 120, "single privileges removed");
+  assert.equal(entries, 61, "role/relation entries changed");
+  // And the unmodified file, run on that state, produces it.
+  const db = await freshDb(PREFLIGHT_2026_11_04T1514Z);
+  await migrate(db);
+  const got = await acls(db);
+  assert.deepEqual(Object.keys(got), Object.keys(AFTER_D237_2026_11_04T1551Z).sort());
+  for (const [name, [, acl]] of Object.entries(AFTER_D237_2026_11_04T1551Z)) assert.equal(got[name], acl, name);
 });

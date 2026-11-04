@@ -110,8 +110,6 @@ export function extractSchemaPart(file, sql) {
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
 export const NOT_IN_PRODUCTION = Object.freeze({
-  "20261027160000_revoke_truncate_maintain_api_roles.sql":
-    "D-237, not applied in production (no ledger entry, and anon/authenticated still hold TRUNCATE and MAINTAIN on the 30 tables and MAINTAIN on the 2 views, catalog 2026-11-04); applying it needs its own owner GO",
   "20261031230000_claim_daily_reward_exactly_once.sql":
     "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
   "20261101120000_night_owl_stop_new_awards.sql":
@@ -154,6 +152,7 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261027110000_avatar_generation_jobs_read_scope.sql": "20261027124113",
   "20261027120000_repeat_answer_coin_reward.sql": "20261027162102",
   "20261027130000_recover_stuck_job_atomic_execute_scope.sql": "20261027151432",
+  "20261027160000_revoke_truncate_maintain_api_roles.sql": "20261104155040",
   "20261029120000_difficulty_scale_b.sql": "20261030094958",
   "20261029150000_teacher_stats_from_answers.sql": "20261030092931",
   "20261029170000_mc_grading_compensation.sql": "20261031171755",
