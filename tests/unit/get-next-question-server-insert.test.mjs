@@ -163,6 +163,9 @@ test("the admin client is used only for the instance insert and the server-only 
     // Match par only (PR #377): the instance key of a "match" row, read on its own so every other
     // format makes the release-gated reads unchanged (pinned in match-pairs.test.mjs).
     "from:question_instances",
+    // L1 K1 (K1_SERVED_SNAPSHOT=on only): the instance's delivered version (served_snapshot), read on its
+    // own and scoped to the verified student, so with the switch off every read is unchanged.
+    "from:question_instances",
     "from:question_instances",
     "rpc:get_unserved_questions_for_student",
     // D-329, targeted requests only: the lost-race check reads ONLY the id of the verified pupil's open
@@ -187,7 +190,8 @@ test("the admin client is used only for the instance insert and the server-only 
   // pinned in level-flow.test.mjs.
   assert.equal((INDEX_CODE.match(/await loadLevelPlan\(admin\(\) as unknown as LevelReadClient, \{\s*studentId: student_id,/g) ?? []).length, 1,
     "the level engine call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 12, "no other admin() use (the 10th is Match par's key read, the 11th D-329's id-only lost-race check, the 12th D-338's step-history read)");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 13,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {
