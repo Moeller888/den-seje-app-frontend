@@ -161,7 +161,7 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat | dette repository | 16 | `59f2f1e6b1e758a614e9ddb08dacd437524d937b19873fe9ba03030ea02e0526` |
+| Kandidat | dette repository | 16 | `1855bd54bd97fba6bf4be02bbb6233883e6c21b6a3f61adf22fe03e76faa77ac` |
 | Forrige kandidat (D-332, før D-338's sekvens) | `feat/laerligverse-f5-kildekritik` | 15 | `d4532fdbf1f3eb80a4307a26836958c1e2d628155344773ca22ec61f035e096f` |
 | Forrige kandidat (D-329, før D-332's `option_details`) | `feat/laerligverse-f4-objective` | 15 | `129c3199a7786210008a711f4b9fea5ac63e4579e96fdc0c03f9c6675ec67626` |
 | Forrige kandidat (før D-329, målretning af læringsmål) | main før D-329 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |

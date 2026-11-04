@@ -147,6 +147,10 @@ serve(async (req) => {
     }
     if (targeting.mode === "on") {
       scope.subjectDomains = [targeting.objective];
+      // The subject-switch release below must never release an open round of the TARGETED objective: the
+      // objective is already validated as part of this pupil's own scope (D-338, found by the isolated
+      // resume test — an objective outside HISTORY_DOMAINS was released and re-served on every request).
+      if (!scope.releaseDomains.includes(targeting.objective)) scope.releaseDomains = [...scope.releaseDomains, targeting.objective];
       console.log("OBJECTIVE_TARGETING:", { objective: targeting.objective });
     }
 
