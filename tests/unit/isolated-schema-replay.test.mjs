@@ -96,6 +96,14 @@ test("the replayed schema has production's key objects", async () => {
       has_function_privilege('authenticated', 'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)', 'EXECUTE') text_auth,
       EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'question_instances_round_guard' AND tgrelid = 'public.question_instances'::regclass) guard`);
   assert.deepEqual(h5, { t: true, mc: "8a7696147df978e250918b2c93e20577", mc_svc: true, mc_auth: false, text_svc: true, text_auth: false, guard: true });
+  // 20261027160000 (D-237, applied as remote 20261104155040 on 2026-11-04): no relation in public grants
+  // TRUNCATE or MAINTAIN to anon or authenticated, as in production; service_role keeps them.
+  const d237 = await db.query(`SELECT c.relname, r.role, p.priv FROM pg_class c
+      CROSS JOIN (VALUES ('anon'), ('authenticated')) r(role) CROSS JOIN (VALUES ('TRUNCATE'), ('MAINTAIN')) p(priv)
+    WHERE c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r', 'v', 'm', 'p')
+      AND has_table_privilege(r.role, c.oid, p.priv) ORDER BY 1, 2, 3`);
+  assert.deepEqual(d237.rows, [], "no API role holds TRUNCATE or MAINTAIN in public");
+  assert.equal((await one(db, `SELECT has_table_privilege('service_role', 'public.profiles', 'TRUNCATE') t`)).t, true);
   // 20261103100000 (D-327, applied as remote 20261104163310 on 2026-11-04): an H5 attempt cannot vanish
   // with its instance — question_attempts_instance_fkey is ON DELETE NO ACTION, not deferrable; the
   // account key stays ON DELETE CASCADE.

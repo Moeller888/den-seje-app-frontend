@@ -3,7 +3,14 @@
 Gælder migrationen `supabase/migrations/20261027160000_revoke_truncate_maintain_api_roles.sql`
 ([D-237](../decisions/D-237.md)).
 
-**Status:** IKKE ANVENDT I PRODUKTIONEN. Både anvendelse og tilbagerulning kræver ejerens særskilte
+**Status (opdateret 2026-11-04):** ANVENDT I PRODUKTIONEN 2026-11-04 15:50:40 UTC som
+`20261104155040 revoke_truncate_maintain_api_roles`
+([produktionslog](production-actions/2026-11-04T1550Z-d237-applied.md)). Tilbagerulningen er IKKE
+udført og kræver ejerens særskilte godkendelse (D-110, [migration-workflow-policy.md](../migration-workflow-policy.md)).
+Teksten nedenfor beskriver forløbet før anvendelsen og er bevaret uændret. Check 1 i preflighten
+("D-237 er ikke anvendt") giver nu én række, som forventet efter anvendelsen.
+
+Oprindelig status: IKKE ANVENDT I PRODUKTIONEN. Både anvendelse og tilbagerulning kræver ejerens særskilte
 godkendelse (D-110, [migration-workflow-policy.md](../migration-workflow-policy.md)).
 `supabase db push` er forbudt.
 
