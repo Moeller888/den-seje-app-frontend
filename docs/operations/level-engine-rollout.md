@@ -161,8 +161,9 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat | dette repository | 15 | `129c3199a7786210008a711f4b9fea5ac63e4579e96fdc0c03f9c6675ec67626` |
-| Forrige kandidat (før D-329, målretning af læringsmål) | main før D-329 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
+| Kandidat | dette repository | 16 | `f53e2c064ae50f1afe70415c4a0ae169fe4d5ef3e3ea3bd7d385b394b5d21182` |
+| Forrige kandidat (L1 K1 `served-snapshot.ts`, før D-329 `objective-target.ts`) | main efter #536 | 15 | `4a89e9e6e33b363c9e8360bb81b19077dcb26c4791c3a086a66c73386b718f8d` |
+| Forrige kandidat (før L1 K1 og D-329) | main før K1 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
 | Forrige kandidat (Match par #377, før log-pseudonym #379) | main før #379 | 13 | `2ce45c7eaa113a9bda93d342e77e51e53efbe3b53ea64aeabaec0bb9dda3560e` |
 | Forrige kandidat (H5 PR 2, før Match par #377) | main før #377 | 12 | `a52e2da432f61fb7cdcf38827529526a33e9b0d6ad123cc0a91095cb4d30ebc3` |
 | Version 180, som deployet 2026-10-31 — **rollback-mål før H5-aktivering** | `1aee47a` (main, merge af #487), uændret | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
@@ -172,7 +173,7 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 Kandidaten adskiller sig fra version 179 i `index.ts` (niveaugrenen, låsningen, H5's `round_no` og
 Match par's nøglelæsning), `instance-insert.ts` (læser `repeat_count` tilbage, H5),
 `_shared/interaction-kinds.ts` og `_shared/question-dto.ts` (Match par) og i de nye `level-flow.ts` og
-`_shared/match-pairs.ts` og `log-pseudonym.ts` (PR #379). De øvrige 7 filer er byte-identiske. Fra version 180 adskiller den sig ved
+`_shared/match-pairs.ts` og `log-pseudonym.ts` (PR #379) samt L1 K1's `served-snapshot.ts`. De øvrige 7 filer er byte-identiske. L1 K1 er slået fra, medmindre Edge-secret'en `K1_SERVED_SNAPSHOT` er præcis `on`; slået fra laver den præcis de samme kald som før (slukket-pariteten). Slået til læser den instansens udleverede version i en særskilt backend-læsning og sender et udleveringsforslag med indsættelsen. Den må først slås til, når migration `20261103110000` er anvendt. Fra version 180 adskiller den sig ved
 H5's `round_no` (D-266, H5 PR 2): et nyt svarfelt og `repeat_count` i de tre læsninger, der udleverer
 en instans. Slukket-pariteten fjerner præcis den forskel efter at have kontrolleret den, og resten skal
 stadig være identisk med version 179. Match par (PR #377) læser instansens nøgle i en særskilt
@@ -279,7 +280,7 @@ reference.
 - `entrypoint_path` `functions/get-next-question/index.ts`;
 - `import_map_path` `functions/get-next-question/deno.json`;
 - `verify_jwt` `false`, ellers fejler browserens OPTIONS-preflight;
-- præcis de 15 filer i kandidatmanifestet, med stierne som i manifestet.
+- præcis de 16 filer i kandidatmanifestet, med stierne som i manifestet.
 
 Ingen secret ændres.
 

@@ -210,9 +210,24 @@ test("grading by process_question_attempt's comparison is exact for every possib
 test("get-next-question: the key is drawn at instance creation and every path lays out from the instance key", () => {
   const index = read("supabase/functions/get-next-question/index.ts");
   assert.match(index, /if \(answer_format === "match"\) \{[\s\S]*?return \{ question, correct: createMatchKey\(parseMatchPairs\(raw\)\.length\) \};/);
-  assert.match(index, /const instanceKey = await matchInstanceKey\(format, instance\.id\);\s*const pub = toPublicQuestion\(q\.content, format, q\.metadata, instanceKey\)/);
+  // Due and repeat lay out from the instance key on BOTH approved paths:
+  //   * K1_SERVED_SNAPSHOT off (delivered = null): the key read below, exactly as before;
+  //   * on (L1 K1): the key stored in the round's delivered snapshot — the key of THIS round, the same
+  //     one _v2 grades against and the attempt records.
+  // The rows built from are the delivered version when there is one, else the question row (unchanged).
+  assert.match(index, /const delivered = servedSnapshot \? await deliveredFor\(instance\.id\) : null;\s*const q = delivered \?\? instance\.questions;/);
+  assert.match(index, /const instanceKey = delivered\s*\? \(format === "match" \? delivered\.key : undefined\)\s*: await matchInstanceKey\(format, instance\.id\);\s*const pub = toPublicQuestion\(q\.content, format, q\.metadata, instanceKey\)/);
   assert.match(index, /toPublicQuestion\(q\.content, format, q\.metadata, normalized\.correct\)/);
-  assert.match(index, /const instanceKey = await matchInstanceKey\(format, repeatRow\.id\);\s*const pub = toPublicQuestion\(rq\.content, format, rq\.metadata, instanceKey\)/);
+  assert.match(index, /const delivered = servedSnapshot \? await deliveredFor\(repeatRow\.id\) : null;\s*const src = delivered \?\? rq;/);
+  assert.match(index, /const instanceKey = delivered\s*\? \(format === "match" \? delivered\.key : undefined\)\s*: await matchInstanceKey\(format, repeatRow\.id\);\s*const pub = toPublicQuestion\(src\.content, format, src\.metadata, instanceKey\)/);
+  // The snapshot's key is only ever used for a "match" layout; every other format passes no key (as before).
+  assert.equal((index.match(/delivered\.key/g) ?? []).length, 2);
+  // The delivered version is read on the backend client, scoped to the verified student and the instance,
+  // and a failed read is a visible 500 (the same error class), never a fallback to the question row.
+  const snapRead = index.slice(index.indexOf("const deliveredFor"), index.indexOf("// 🔥 1. DUE QUESTIONS"));
+  assert.match(snapRead, /await admin\(\)\s*\.from\("question_instances"\)\s*\.select\("served_snapshot"\)\s*\.eq\("id", instanceId\)\s*\.eq\("student_id", student_id\)\s*\.limit\(1\);/);
+  assert.match(snapRead, /if \(error\) throw new InstanceKeyReadError/);
+  assert.equal((index.match(/^\s*served_snapshot,$/gm) ?? []).length, 0, "the shared due/repeat selects stay unchanged");
   // The key is read only for a "match" row, on the backend client, scoped to the verified student — the
   // shared due/repeat selects stay as in the release-gated version (no correct_answer in them).
   const keyRead = index.slice(index.indexOf("const matchInstanceKey"), index.indexOf("// 🔥 1. DUE QUESTIONS"));

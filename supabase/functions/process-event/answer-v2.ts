@@ -121,6 +121,12 @@ export function replyForV2(data: unknown, roundNo: number): HttpReply {
     return { status, body: { outcome, error }, problem: null };
   }
 
+  // L1 K1: mode and hints_used are server constants (./text-answer-rpc.ts L1_ATTEMPT_CONTEXT), so the
+  // database refusing them is a server contract break, never the client's fault: a 500, not a 400.
+  if (outcome === "invalid_request" && (r.reason === "invalid_mode" || r.reason === "invalid_hints")) {
+    return unexpected(`invalid_request: ${r.reason} (server-decided field)`);
+  }
+
   if (outcome === "invalid_request") {
     const body: Record<string, unknown> = { outcome, error: "Invalid request" };
     if (typeof r.reason === "string" && DB_INVALID_REASONS.has(r.reason)) body.reason = r.reason;
