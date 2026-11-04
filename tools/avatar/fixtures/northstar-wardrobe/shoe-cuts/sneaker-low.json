@@ -1,0 +1,220 @@
+{
+  "id": "sneaker-low",
+  "label": "Lav sneaker",
+  "contract": "shoe-cut-v1",
+  "referenceItem": "shoes-sneakers-beige",
+  "note": "the D-289…D-314 sneaker: the numbers that were spread over northstar-shoe-source.mjs (CROP, K, SPLIT_X), northstar-shoe-master.mjs (SPEC.seeds) and northstar-shoe-eval-v2.mjs (COLLAR_ZONE), unchanged",
+  "source": {
+    "crop": {
+      "x0": 320,
+      "y0": 1270,
+      "w": 384,
+      "h": 256
+    },
+    "K": 4,
+    "splitX": 512,
+    "layoutReference": {
+      "file": "<Documents>/DenSejeApp-artefacts/sv-calls/references/sneaker-low-k4/sv-1-layout-image-1.png",
+      "sha256": "145a8633653fea9fe368e7a2f5611848a928c8568ad47913e3f547526c8680d3",
+      "from": "layoutCanvas(the reference item's published layer)"
+    }
+  },
+  "fields": {
+    "sole": {
+      "slot": "sole",
+      "seeds": [
+        [
+          404,
+          1465
+        ],
+        [
+          618,
+          1465
+        ]
+      ]
+    },
+    "toe": {
+      "slot": "toe",
+      "seeds": [
+        [
+          387,
+          1445
+        ],
+        [
+          634,
+          1445
+        ]
+      ]
+    },
+    "upper": {
+      "slot": "upper",
+      "seeds": [
+        [
+          439,
+          1410
+        ],
+        [
+          377,
+          1404
+        ],
+        [
+          583,
+          1410
+        ],
+        [
+          645,
+          1405
+        ]
+      ]
+    },
+    "tongue": {
+      "slot": "tongue",
+      "seeds": [
+        [
+          416,
+          1365
+        ],
+        [
+          605,
+          1365
+        ],
+        [
+          408,
+          1384
+        ],
+        [
+          402,
+          1400
+        ],
+        [
+          613,
+          1384
+        ],
+        [
+          620,
+          1401
+        ]
+      ]
+    },
+    "laces": {
+      "slot": "laces",
+      "seeds": [
+        [
+          413,
+          1377
+        ],
+        [
+          407,
+          1392
+        ],
+        [
+          400,
+          1410
+        ],
+        [
+          396,
+          1421
+        ],
+        [
+          609,
+          1377
+        ],
+        [
+          614,
+          1393
+        ],
+        [
+          621,
+          1410
+        ],
+        [
+          626,
+          1421
+        ]
+      ]
+    }
+  },
+  "opening": {
+    "type": "collar",
+    "zone": {
+      "y0": 1340,
+      "y1": 1400
+    },
+    "riseMaxPx": 3,
+    "envelopePx": 2,
+    "parts": [
+      "tongue in front of the ankle",
+      "heel counter behind it",
+      "the collar opening (a V on the outer side)"
+    ]
+  },
+  "covering": {
+    "rule": "closed-footwear",
+    "sliverPx": 6
+  },
+  "placement": {
+    "maxShiftPx": 2,
+    "downscale": "premultiplied K x K area average",
+    "translation": "one global integer translation"
+  },
+  "evaluation": {
+    "bottoms": [
+      "bottom-skirt-sand",
+      "bottom-shorts-navy",
+      "bottom-capri-lightblue",
+      "bottom-trousers-square-olive",
+      "bottom-trousers-square-navy",
+      "bottom-trousers-square-sand"
+    ],
+    "reviewRegions": {
+      "laces and eyelets L": [
+        388,
+        1360,
+        440,
+        1425
+      ],
+      "laces and eyelets R": [
+        584,
+        1360,
+        636,
+        1425
+      ],
+      "upper | toe L": [
+        350,
+        1415,
+        470,
+        1460
+      ],
+      "upper | toe R": [
+        552,
+        1415,
+        672,
+        1460
+      ],
+      "collar L": [
+        380,
+        1352,
+        470,
+        1380
+      ],
+      "collar R": [
+        556,
+        1352,
+        646,
+        1380
+      ],
+      "sole curve L": [
+        336,
+        1440,
+        480,
+        1500
+      ],
+      "sole curve R": [
+        544,
+        1440,
+        688,
+        1500
+      ]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "container": {
+      "id": "cellar",
+      "kind": "scene"
+    },
+    "entry": "lamp#main",
+    "icon": "lamp",
+    "id": "lamp",
+    "nameKey": "o.lamp",
+    "spot": "lamp",
+    "variants": {
+      "default": {
+        "sprite": "lamp"
+      },
+      "lit": {
+        "sprite": "lamp.lit"
+      }
+    }
+  },
+  {
+    "container": {
+      "id": "mira",
+      "kind": "actor"
+    },
+    "entry": "wick#main",
+    "icon": "icon.wick",
+    "id": "wick",
+    "nameKey": "o.wick",
+    "variants": {
+      "default": {}
+    }
+  }
+]

@@ -163,12 +163,59 @@ Cloudflare læser `_redirects` som konfiguration og serverer den aldrig som fil.
 CLOUDFLARE DASHBOARD — PRÆCISE VÆRDIER
 ----------------------------------------
 
+Værdierne, som de står i dashboardet i dag:
+
 ```
 Production branch:   main
 Build command:       node tools/cloudflare-build-static.mjs
-Deploy command:      npx --yes wrangler@4.118.0 deploy
+Deploy command:      node tools/cloudflare-deploy.mjs
+Non-production branch deploy command:      node tools/cloudflare-deploy.mjs
 Build variable:      SKIP_DEPENDENCY_INSTALL=1
 ```
+
+**Status (2026-10-31): aktiv og verificeret.** PR #378 blev merget 2026-10-30 (`2d6dbaf`), og
+ejeren satte begge deploy-kommandoer til `node tools/cloudflare-deploy.mjs` 2026-10-31. Før det stod
+der `npx --yes wrangler@4.118.0 deploy` for main og Cloudflares standard `npx wrangler versions
+upload` for alle andre branches. Verificeret samme dag:
+
+- **main:** ejeren har læst loggen for den seneste main-build; den viser
+  `all 3 required secrets present` både før og efter udrulningen.
+- **andre branches:** ingen branch-upload siden ændringen. Alle versioner fra 16:23 til 22:29 UTC er
+  udrullede main-versioner uden branch-alias, selvom flere PR-branches blev pushet i det tidsrum.
+- **produktion:** den udrullede version har alle tre secret-navne (kun navne er læst).
+
+Rækkefølgen betød noget: kommandoerne måtte først ændres **efter** merge, ellers var main-buildet
+fejlet, fordi scriptet ikke fandtes på main.
+
+Workeren bruger Cloudflares **ældre preview-model** for andre branches end main: hver branch-build
+bliver en version af produktions-Workeren med produktionens indstillinger. Den nyere model (Worker
+Previews, `npx wrangler preview`, egne preview-indstillinger) er ikke slået til, og skiftet dertil
+kan ikke fortrydes. I dashboardet kan feltet derfor hedde enten "Non-production branch deploy
+command" eller "Preview command".
+
+De gamle kommandoer fjernede oplæsningens secrets to gange (19/10 og igen senest 21/10):
+
+1. Hver ny version — både `wrangler deploy` og `wrangler versions upload` — kopierer secrets fra
+   den **nyeste** version, ikke fra den deployede.
+2. Workers Builds bygger og uploader også alle andre branches. En branch fra før 157P har ingen
+   `worker/`, så dens upload er en ren asset-version **uden secrets** — og den bliver den nyeste
+   version.
+3. Næste merge til main arver det tomme sæt, og `/api/tts` svarer 503 `azure_not_configured`. En
+   branch-upload som nyeste version får desuden `wrangler secret put` til at nægte at køre.
+
+Scriptet læser `WORKERS_CI_BRANCH`:
+
+- **main:** stopper, før der deployes, hvis den nyeste version mangler `AZURE_SPEECH_KEY`,
+  `AZURE_SPEECH_REGION` eller `TTS_ADMIN_TOKEN`; kører `wrangler deploy`; og fejler buildet højlydt,
+  hvis den version, der nu serveres, mangler en af dem. Kun **navne** læses — aldrig værdier.
+- **alle andre branches:** kun `wrangler deploy --dry-run` (bundlen valideres, intet uploades).
+  Preview-URL'er findes alligevel ikke for en Worker med en Durable Object-klasse.
+- En branch, der er ældre end scriptet, har ingen `tools/cloudflare-deploy.mjs`, så dens build
+  fejler, før den kan uploade noget. Det er meningen: lukket ved fejl.
+
+**Hvis buildet fejler med `missing secret(s)`:** sæt de navngivne secrets igen med
+`npx wrangler secret put <NAVN> --name den-seje-app-frontend` (kræver ejer-OK), og kør
+deployet igen. Tjek bagefter kun navnene med `npx wrangler secret list --name den-seje-app-frontend`.
 
 **Wrangler er pinnet til præcis 4.118.0 og er ikke en projektafhængighed.** Fordi Cloudflare kører
 med `SKIP_DEPENDENCY_INSTALL=1`, kan man ikke regne med en lokalt installeret Wrangler; `npx --yes`

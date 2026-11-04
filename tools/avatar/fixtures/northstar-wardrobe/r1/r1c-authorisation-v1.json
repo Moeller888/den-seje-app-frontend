@@ -1,0 +1,226 @@
+{
+  "decision": "D-258",
+  "experiment": "R1C (D-257): the cut owns geometry and construction, the model owns the design",
+  "status": "AUTHORISED by D-258 (D-258 R1C: 1 CALL AUTHORISED): ONE single-use call; no earlier permission is reused; the plan r1c-plan-v1.json stays the unauthorised plan it was; CLOSED by D-259: 1 spent and received (R1C-1, technically rejected)",
+  "meta": {
+    "authorisesImageRequest": false,
+    "why": "authorisation is the exact token in D-258's decision status plus this file's unspent entry, never a general boolean",
+    "kind": "a bounded method experiment: no catalogue, no runtime, no activation, no item approval"
+  },
+  "budget": {
+    "authorised": 1,
+    "reserve": 0,
+    "retries": 0,
+    "fallback": false,
+    "reusesEarlierPermissions": false,
+    "automaticExtension": false,
+    "separateFrom": "every earlier budget, D-255 included (closed by D-257)",
+    "enforcedLimit": "the call count (one one-shot claim); the price is an estimate",
+    "price": {
+      "verifiedAt": "2026-10-30",
+      "source": "https://developers.openai.com/api/docs/pricing (Standard, gpt-image-2.5-sunburst: text input $5.00, image input $8.00, image output $30.00 per 1M tokens)",
+      "perCallEstimate": 0.0687,
+      "totalEstimate": 0.0687,
+      "basis": "3,072 image tokens + at most 600 text tokens in (the prompt is 1,396 bytes, about 350 tokens), 1,372 image tokens out, as measured on D-255's R1-1 (3,072 + 250 in, 1,372 out)",
+      "note": "an estimate, not a guaranteed maximum; the canvas is mostly transparent and may count differently; the billed amount is read on the OpenAI usage page"
+    },
+    "actuallySent": 1,
+    "closed": {
+      "by": "D-259",
+      "reason": "the one authorised call was sent once and received",
+      "spent": 1,
+      "received": 1,
+      "uncertain": 0,
+      "refusedBeforeSend": 0,
+      "closedUnused": 0,
+      "reopen": "never automatically; only a new owner decision"
+    }
+  },
+  "privacy": {
+    "cSentToApi": "allowed for this one call only (owner, 2026-10-30)",
+    "canvasSentToApi": "allowed for this one call only (the private bleed canvas v2, derived from a generated item on C)",
+    "publishOrTrack": "never: C, the canvas, the raw result and every review sheet stay outside both clones (D-127 §2)",
+    "h1": "never used"
+  },
+  "frozen": {
+    "plan": {
+      "file": "tools/avatar/fixtures/northstar-wardrobe/r1/r1c-plan-v1.json",
+      "sha256": "45b4763e1ed55aa780efa27c6e53051bcfbe0f36a74bdd8cf429ef2da4a710c4"
+    },
+    "prompt": {
+      "sha256": "ec172f9642865b2bc7a929e1afbb0ca288413d08b03970aac50b44895be7f1fe"
+    },
+    "method": "r1-c1",
+    "production": "d240",
+    "outfitRevision": "d239",
+    "evaluation": "tools/avatar/northstar-r1c-evaluate.mjs (placement, every automatic check, the review sheets and the record)",
+    "noChangeDuringTheExperiment": "the canvas, prompt, placement, construction layer, post-processing, checks and their thresholds are not changed after receipt; any later correction is a new method version"
+  },
+  "deviationsFromPlanV1": [
+    {
+      "what": "Image 1 is the bleed canvas v2, not the plan's v1 (6f7af80c...)",
+      "why": "v1 carried the template item's own drawn lines in its fold shade (neck rib line, sleeve seams, hem stitch) and a darker ring in the bleed: both invite the model to draw lines the cut draws itself; v2 closes the shade (3 px), softens it (9x9 mean), takes the edge zone and the bleed from the interior, and runs the trim tone into the bleed only beyond the neck and cuff edges"
+    },
+    {
+      "what": "the placement's reference shape is the cut's core grown by the ESTIMATED bleed b (0 to 30 px), not a fixed 16 px",
+      "why": "D-258's study: a fixed reference turned a 24 px or 10 px bleed into a wrong scale and a false trim fault; with b estimated the scale is right for 0 to 24 px and an output without bleed fails the coverage check"
+    },
+    {
+      "what": "the second-outline and clipped-detail checks find lines by contrast and valley, not by an ink colour class",
+      "why": "D-258's study: the ink class saw only near-black lines and missed a brown pocket across the edge"
+    },
+    {
+      "what": "a tone-leak check (the canvas's grey kept in the material) and an explicit list of visual criteria",
+      "why": "the owner's instruction: the reference's bands and tones must not end as visible colours; visual criteria never count as automatic passes"
+    }
+  ],
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1536",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "what": "the bleed canvas v2 (request.canvases)"
+      },
+      {
+        "role": "Image 2",
+        "what": "C",
+        "name": "d202-base-figure-v2.image-1.png",
+        "bytes": 1300423,
+        "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tracked": false
+      }
+    ],
+    "canvases": {
+      "tee-hip-bleed-v2": {
+        "name": "image-1.tee-hip-bleed-v2.png",
+        "bytes": 25098,
+        "sha256": "1a7fe120eafece870808848ea9d5e2aa9b5cb2e689835b4cf33966c2dddb2a67",
+        "tracked": false
+      }
+    },
+    "canvasLocation": "<Documents>/DenSejeApp-artefacts/r1c-calls/references/tee-hip-bleed-v2/image-1.tee-hip-bleed-v2.png",
+    "canvasGenerator": "northstar-r1c-evaluate.mjs canvasV2 (via cutOf; deterministic; the evaluation refuses a rebuilt canvas that differs)"
+  },
+  "placement": {
+    "rule": "one uniform scale and one translation (s1) maximising the IoU of the output's opaque mask with the cut's core grown by b, b estimated in 0 to 30 px (coarse every 4, then +-2)",
+    "accept": "IoU >= 0.95",
+    "noDeformation": "the output is never warped, retouched or masked; b only names the reference shape"
+  },
+  "postProcessing": {
+    "allowed": "s1 as above, then composeC1: the cut's alpha, the output's own pixels, the cut's construction lines (contour, band edges, hem stitch), the production sleeve split, the cut's shadow and covering",
+    "forbidden": "retouch, deformation, a per-design mask or parameter, filling a hole by any means",
+    "holes": "counted on the output BEFORE the construction lines are drawn, including those a line would later cover"
+  },
+  "acceptance": {
+    "automatic": {
+      "placement": "IoU >= 0.95 with the bleed-grown core",
+      "coverage": "the core grown by 4 px covered >= 99.9 % before any crop",
+      "holesBeforeLines": "0 core pixels without the output's own paint",
+      "trim": "trim edge P90 <= 2 px from the cut's band edge at the neck and at the cuffs (a plain trim passes and is reported)",
+      "secondOutline": "the output's own lines (contrast >= 30 below the 7x7 mean and a 15-level valley) 2 to 10 px inside the cut's edge or along the band edges <= 0.5 % of the band area",
+      "clippedDetails": "0 line components reaching 6 px into the core and outside the cut",
+      "toneLeak": "<= 1 % of the core neutral grey within 12 levels of the canvas tone (for a grey design: visual, never automatic)",
+      "fit": "fitCheck (d232 fit revision) passed with the cut's shadow and covering",
+      "outfits": "with the K partners: the cut's template item's result in every outfit; a difference is reviewed"
+    },
+    "visual": [
+      "neck: the rib follows the opening; one line at its inner edge; no second line; no white sliver",
+      "armpits: fabric to the cut's contour; no notch; no background",
+      "cuffs: the trim ends at the sleeve opening; one line at its edge; not clipped",
+      "hem and side seams: one stitch line, not two; the hem not cut",
+      "pocket: whole, inside the body, naturally placed",
+      "folds: shading once, not doubled; the folds belong to the fabric",
+      "material: new fabric, folds, pocket and details from the output (not a recolour of the canvas)",
+      "trim colour: the bands read as trim of the design, not as the canvas's grey",
+      "Northstar quality at full size and at 110x165 and 52x78",
+      "no skin, hands or background inside the material"
+    ],
+    "visualIsNeverAutomatic": true,
+    "classes": {
+      "automaticallyUsable": "every automatic check passed AND the visual review finds none of the visual faults",
+      "technicallyRejected": "placement, coverage, holes or fit failed",
+      "requiresManualDecision": "anything else; it does not count as passed"
+    },
+    "combo2": "the known COMBO-2 pattern sensitivity (D-253) is reported apart; the check is not changed",
+    "scope": "one result can support or weaken the r1-c1 hypothesis; it cannot prove automation at scale nor reject every R1 variant"
+  },
+  "stopRules": [
+    "a single call: no retry, no reserve, no fallback, no other model",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome — never resent",
+    "any HTTP error, moderation block or format error ends the experiment with that outcome",
+    "the executor's stop file R1C-STOP.json"
+  ],
+  "calls": [
+    {
+      "callId": "R1C-1-top-tee-hip-apricot-bleed",
+      "order": 1,
+      "category": "top",
+      "cut": "tee-hip-bleed-v2",
+      "canvas": "1a7fe120eafece870808848ea9d5e2aa9b5cb2e689835b4cf33966c2dddb2a67",
+      "prompt": {
+        "sha256": "ec172f9642865b2bc7a929e1afbb0ca288413d08b03970aac50b44895be7f1fe"
+      },
+      "claim": {
+        "identity": "R1C-1-top-tee-hip-apricot-bleed-claim",
+        "filename": "R1C-1-top-tee-hip-apricot-bleed.claim.json",
+        "eventsFilename": "R1C-1-top-tee-hip-apricot-bleed.events.jsonl"
+      },
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_59720a2704684db0b9a19cea43302a70",
+        "imageSha256": "74adb3d36f73cdfc83b33c6e959983f23d892a384f06a171f043b6ba6137808a",
+        "usage": {
+          "input_tokens": 3413,
+          "input_tokens_details": {
+            "image_tokens": 3072,
+            "text_tokens": 341
+          },
+          "output_tokens": 1372,
+          "output_tokens_details": {
+            "image_tokens": 1372,
+            "text_tokens": 0
+          },
+          "total_tokens": 4785
+        },
+        "evaluation": "technically rejected under the frozen D-258 rules: placement IoU 0.9543 (estimated bleed 2 px), coverage 0.95583, 435 holes before the lines, trim P90 neck 8.5 px / cuff 4.5 px, fitCheck failed FIT-4-COVERAGE+FIT-6v2-SILHOUETTE; no own outline, no clipped detail, no tone leak"
+      },
+      "recordedBy": "D-259"
+    }
+  ],
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-r1c-d258.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-258",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}

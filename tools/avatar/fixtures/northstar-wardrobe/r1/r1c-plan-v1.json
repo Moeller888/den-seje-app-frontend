@@ -1,0 +1,155 @@
+{
+  "decision": "D-257",
+  "plan": "r1c-v1",
+  "status": "PLAN ONLY — NOT AUTHORISED. No call may be sent on this file; an authorisation is a separate owner decision with its own authorisation file, adapter and budget.",
+  "authorisesImageRequest": false,
+  "activePermissions": 0,
+  "hypothesis": "Given a canvas whose grey shape is the cut grown by a 16 px bleed, with the trim bands marked in a darker grey and no outline anywhere, the model paints fabric over the whole shape (coverage of the core grown by 4 px ≥ 99.9 %) and puts its trim where the bands are (trim edge within 2 px of the cut's band edge in 90 % of the sectors), without an outline or seams of its own; one uniform scale and one shift (s1) then place it, and the cut's construction layer supplies every edge, so no hole, double contour or clipped detail remains at the neck, armpits, cuffs and hem.",
+  "notReused": "no D-255 permission, call id, claim or budget is reused; D-255 is closed by D-257",
+  "frozen": {
+    "method": {
+      "revision": "r1-c1",
+      "module": "tools/avatar/northstar-r1-construction.mjs",
+      "similarity": "s1-hypothesis (tools/avatar/northstar-r1-similarity.mjs)",
+      "composition": "composeC1: the output's own pixels inside the cut's alpha, construction lines over them, every unpainted core pixel a hole"
+    },
+    "productionBaseline": {
+      "method": "d240",
+      "outfitRevision": "d239"
+    },
+    "cut": {
+      "name": "tee-hip",
+      "from": "top-tee-hip-cream",
+      "rawSha256": "9c7e2215905099f33914c2addce072c06c62669e93090341a56695e41041f770",
+      "spec": {
+        "neckBand": 11,
+        "cuffBand": 9,
+        "hemStitch": 7,
+        "bleed": 16
+      }
+    },
+    "canvas": {
+      "name": "image-1.tee-hip-bleed.png",
+      "bytes": 61299,
+      "sha256": "6f7af80cbe16b9bc48cbe6669f6dc636cb3bba2e7836e26f25586c7f9f086452",
+      "generator": "node tools/avatar/northstar-r1-construction-demo.mjs --out <dir outside the repo> (deterministic)",
+      "location": "<Documents>/DenSejeApp-artefacts/r1c-calls/references/tee-hip-bleed/",
+      "tracked": false
+    }
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1536",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "what": "the bleed canvas (frozen.canvas)"
+      },
+      {
+        "role": "Image 2",
+        "what": "C",
+        "name": "d202-base-figure-v2.image-1.png",
+        "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818"
+      }
+    ]
+  },
+  "promptFrame": "Image 1 is a garment template on a transparent background: {noun}, painted flat grey with its fold shading, at its exact position and size on a 1024x1536 canvas. The light grey area is the main fabric; the dark grey bands at the neck and at the sleeve ends are the ribbed trim. The grey shape is deliberately a little larger than the finished garment: paint every grey pixel right up to the edge of the grey shape, and nothing outside it. Image 2 shows the cartoon character the garment is made for; use Image 2 only for the drawing style (soft cel shading, light from the upper left). Do not draw the character or any part of a body: no skin, head, neck, arms, hands, legs or feet. Repaint the light grey area as the main fabric and the dark grey bands as the trim of the garment described below, keeping the fold shading. Do not draw any outline: no line around the garment, around or along the trim bands, or along the hem, and no seams or stitching at the edges; these are added afterwards. Free details such as pockets or prints go only on the light grey area, well inside it. The background stays fully transparent. Garment: {design}",
+  "call": {
+    "callId": "R1C-1-top-tee-hip-apricot-bleed",
+    "category": "top",
+    "cut": "tee-hip",
+    "noun": "one short-sleeved T-shirt",
+    "design": "a short-sleeved, hip-length T-shirt in soft apricot-peach cotton jersey (a colour close to light skin), with slightly darker peach ribbed trim on the dark grey bands, and a small patch pocket on the wearer's left chest with visible top-stitching.",
+    "prompt": {
+      "bytes": 1396,
+      "sha256": "ec172f9642865b2bc7a929e1afbb0ca288413d08b03970aac50b44895be7f1fe"
+    },
+    "why": "the same family and the same design as R1-1, so the only change is the separation: a bleed, marked trim bands, no outline"
+  },
+  "transformation": "s1: one uniform scale and one translation maximising the IoU of the output's opaque mask with the canvas's bleed shape (s from the area ratio ±15 %; coarse then fine); no rotation, shear, warp, per-design coordinate or repair",
+  "postProcessing": {
+    "allowed": "s1, then composeC1 (the cut's alpha; the output's own pixels; the cut's construction lines: contour, band edges, hem stitch), the production sleeve split, the cut's shadow and covering",
+    "forbidden": "retouch, deformation, a per-design mask or parameter, filling a hole by any means"
+  },
+  "acceptance": {
+    "automatic": {
+      "placement": "s1 IoU with the bleed shape ≥ 0.95, not at the search edge",
+      "coverage": "the core grown by 4 px covered ≥ 99.9 % before any crop; realised margin P5 ≥ 4 px at neck, cuffs, hem and outer edge",
+      "holes": "0 core pixels without the output's own paint (also under the construction lines)",
+      "trim": "trim edge offset P90 ≤ 2 px at the neck and at the cuffs (a plain trim with no colour step passes and is reported)",
+      "secondOutline": "the output's own ink along the edges and band lines ≤ 0.5 % of the band area",
+      "clippedDetails": "0 free details crossing the crop",
+      "fit": "fitCheck (d232 fit revision) passed with the cut's shadow and covering",
+      "outfits": "with the K partners (bottoms capri-lightblue, shorts-navy, skirt-sand, trousers-square-olive × shoes sneakers-white, boots-laceup-black): the cut's template item's result in every outfit; a difference is reviewed"
+    },
+    "visual": [
+      "neck: the rib follows the opening; one line at its inner edge (the cut's), no second line, no white sliver",
+      "armpits: fabric to the cut's contour, no notch, no background",
+      "cuffs: the trim band ends at the sleeve opening; one line at its edge; not clipped",
+      "hem and side seams: one stitch line (the cut's), not two; the hem not cut",
+      "pocket: whole, inside the body, naturally placed, not clipped",
+      "shading: the folds once, not doubled by the construction layer (it draws lines only)",
+      "Northstar quality: line weight and colour of the construction lines against the design's own inner lines; acceptable at full size and at the app sizes 110×165 and 52×78",
+      "no skin, hands or background inside the material"
+    ],
+    "classes": {
+      "automaticallyUsable": "every automatic measure passed and the visual review finds none of the faults",
+      "technicallyRejected": "placement, coverage, holes or fit failed",
+      "requiresManualDecision": "anything else; it does not count as passed"
+    },
+    "combo2": "the known COMBO-2 pattern sensitivity (D-253) is reported apart; the check is not changed"
+  },
+  "stopRules": [
+    "it is a single call: no retry, no reserve, no fallback, no other model",
+    "an uncertain dispatch is never resent",
+    "any HTTP error, moderation block or format error ends the experiment with that outcome"
+  ],
+  "manualEffort": {
+    "definition": "any human action after the result that changes its pixels, masks, transform, parameters or selection — not allowed; needing it is a limitation",
+    "review": "the assistant's visual review is review, not manual effort",
+    "perCut": "the construction spec (band widths, hem stitch, bleed) is set once per cut, never per design"
+  },
+  "cost": {
+    "currency": "USD",
+    "documented": {
+      "price": {
+        "model": "gpt-image-2.5-sunburst",
+        "source": "https://developers.openai.com/api/docs/pricing (Standard), re-read 2026-10-30: text $5.00, image input $8.00, image output $30.00 per 1M tokens",
+        "imageInputPerM": 8,
+        "textInputPerM": 5,
+        "imageOutputPerM": 30
+      },
+      "usage": {
+        "imageInputTokens": 3072,
+        "imageOutputTokens": 1372,
+        "textInputTokensMax": 600,
+        "source": "D-255's R1-1 (3,072 image + 250 text tokens in, 1,372 out) and the 12 earlier calls of the same size and two-image shape"
+      }
+    },
+    "perCallMax": 0.0687,
+    "calls": 1,
+    "totalMax": 0.0687,
+    "enforceable": "the call count (1), not a sum",
+    "uncertainty": "an estimate, not a guaranteed maximum"
+  },
+  "privacy": {
+    "cSentToApi": "only if a later authorisation allows it for this call",
+    "canvas": "private, outside both clones",
+    "h1": "never used",
+    "publicLayers": "none"
+  }
+}

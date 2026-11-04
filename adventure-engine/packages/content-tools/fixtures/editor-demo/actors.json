@@ -1,0 +1,30 @@
+[
+  {
+    "entry": null,
+    "id": "mira",
+    "nameKey": "a.mira",
+    "scene": "cellar",
+    "sounds": {
+      "drip": "s.drip"
+    },
+    "spot": "start",
+    "variants": {
+      "default": {}
+    }
+  },
+  {
+    "dialog": "bo_talk#hello",
+    "entry": null,
+    "id": "bo",
+    "nameKey": "a.bo",
+    "scene": "attic",
+    "spot": "bo",
+    "variants": {
+      "default": {
+        "animations": {
+          "wave": "anim.bo.wave"
+        }
+      }
+    }
+  }
+]

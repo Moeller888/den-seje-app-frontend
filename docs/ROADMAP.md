@@ -15,6 +15,20 @@ _Last reviewed: 2026-07-01._
 
 ---
 
+## Elevens startside er Hub'en (ejerbeslutning 2026-10-22)
+
+- **Ejerbeslutning 2026-10-22:** en elev lander **altid** på `hub.html` efter login — også ved det
+  allerførste login. Før gik `js/login.js` direkte til quizzen (`index.html`), så identitetsprompt,
+  klassetrinsvalg og placeringstesten var det første, en ny elev mødte. De kører stadig, men først
+  når eleven går fra Hub'en til quizzen ("Spil").
+- Uændret: lærer → `teacher.html`, super_admin → `admin.html`, `must_reset_password` →
+  `reset-password.html?forced=1` (som efter skiftet sender tilbage til login og dermed til Hub'en).
+- Næste skridt (ikke bygget): måle-spørgsmål i **alle** fag. I dag måler placeringstesten kun
+  historie og gemmer ét fælles `profiles.placement_band`. Et designforslag kommer før kode og skal
+  passe med sværhedsskalaen 1–10.000 (niveau pr. fag, B1; udfasning af placeringstesten udskudt, B9).
+
+---
+
 ## Public website / landing track — Model A implemented, NOT deployed (2026-08-08)
 
 - **Owner decision: Model A.** A new public front page `landing.html` was added and `/` now
@@ -552,6 +566,39 @@ _Last reviewed: 2026-07-01._
   which evaluates the workflow's own `if:` conditions per scenario. `update-avatar-goldens.yml` (manual, Chromium only) still installs under
   its lock — a separate change.
 
+  **Isoleret E2E — D-110 løst i CI (2026-10-28, D-241).** `.github/workflows/isolated-e2e.yml` kører hele den
+  eksisterende Playwright-suite (de samme 1291 tests og de samme 289 browserbetingede spring) mod en lokal Supabase
+  pr. job. Hvert job har sin egen database, sine egne syntetiske konti og commit'ets egne Edge Functions.
+  Pipelinen er fail-closed over for produktionen i fem lag, og negative kontroller i hvert job beviser, at lagene
+  ikke er tomme. Den bruger ingen fælles lås og ingen produktionskonto.
+
+  Målt:
+  - 3 og 6 samtidige jobs, hver med 1002 bestået og 0 fejl.
+  - 9 jobs i ét workflow: 7 × 1002/0/0 og 2 × 1001/0/1. De to flaky er WebKit-navigationskapløb i specsene.
+  - **9 uafhængige workflows** (`d110/par-1`…`par-9`, ét job hver, som ni terminalers PR'er): 9 × 1002/0/0. Alle ni
+    suiter kørte samtidig i 20,6 min, uden kø, med 28,3 min gennemløb og 233,5 runner-minutter.
+  - Overalt: separate PostgreSQL-clustere og elevkonti, tripwire 0.
+  - Edge Runtime kom op i første forsøg i alle 18 jobs i de to afsluttende 9-målinger. Startforsøg registreres først
+    fra `3602dd7`. Et tidligere 9-forsøg havde 2 SIGBUS-nedbrud ved opstart; det står i D-241.
+
+  **Status (2026-10-28): bevist i CI, ikke taget i brug.** Overgangsplanen stod i D-241. password-help-driften mellem
+  repository og produktion er en separat opgave: D-243.
+
+  **D-110 AFSLUTTET (2026-10-30, D-265).** Overgangen er gennemført i faserne A–C, D1, D2 og D3 og verificeret på
+  faktiske main-kørsler:
+  - **Pull requests:** den påkrævede `isolated-e2e (run 1)` kører mod en lokal Supabase-stack.
+  - **Ruleset 26126869:** kræver `unit` og `isolated-e2e (run 1)` og har ingen bypass (D-249).
+  - **Push til `main`:** den samme isolerede suite (D1) og den skrivebeskyttede **Production Smoke** (D2).
+  - **Den produktionsrettede suite** (`playwright.yml`, job `test`) kører ikke længere automatisk (D3, D-261, PR #476,
+    merget som `81350e6`). Den kan kun startes manuelt med `confirm_production` = `production-e2e` og kun med ejerens
+    GO.
+
+  Ingen automatisk kørsel bruger længere låsen `e2e-shared-supabase`. Den bruges stadig af to manuelle kørsler: en
+  manuelt dispatchet produktionsrettet Playwright E2E på slot 0 og det manuelle `update-avatar-goldens.yml`. Slot 1–3
+  har hver sin lås (`e2e-shared-supabase-slot-<n>`). Uden automatisk dækning er live Edge Functions, produktionens DB/RLS, Auth, udbydere, Worker-runtime og
+  indhold. Hvornår en manuel produktions-E2E bør køres, står i D-261. Den næste anledning er `get-next-question`-deployet
+  og `LEVEL_ENGINE=v1`. Beviser og resterende risici står i D-265.
+
 ## Completed sections
 
 **Avatar / art track** (condensed — full register in `docs/project-state.md`):
@@ -762,6 +809,39 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
     `mastery_score`, `mastery_balance` eller `total_attempts`, og `update_mastery()` kaldes ikke —
     hverken for MC eller tekst. Lærerens `correct_ratio` (`get_student_overview`) bygger på
     `total_attempts`. Kræver en produkt-/arkitekturbeslutning om, hvad mastery skal betyde.
+  - **Lærerstatistik (rettet; anvendt i produktion 2026-10-30, [D-263](decisions/D-263.md)):** klasseoversigten
+    (`get_teacher_visibility`) læste den forladte kolonne `is_correct` (sidst skrevet 2026-03-17) og
+    den aldrig opdaterede `total_attempts`. 41 af 46 elever med svar blev vist med 0 % korrekt, "Spm."
+    og "Forsøg i alt" var 0, og trenden altid "stabil". Migration
+    `20261029150000_teacher_stats_from_answers.sql` beregner tallene fra `was_correct` (første forsøg,
+    gentagelser udeladt) med uændret adgangskontrol og svarform. Anvendt som produktionspost
+    `20261030092931 teacher_stats_from_answers`; bagefter vises 6 af 46 elever med 0 % korrekt, og ejeren
+    har godkendt læreroversigten visuelt. Rollback: `docs/operations/teacher-stats-rollback.md`. Åbne
+    særskilte punkter: manglende historik for tidlige konti, gentagelser der overskriver første svar, og
+    lærerbedømte tekstsvar, der ikke indgår (D-263 §8).
+  - **Besvarelseshistorik (retning godkendt 2026-10-30, [D-266](decisions/D-266.md), ikke bygget):** en gentagelse genåbner elevens
+    række i `question_instances` og sletter det første svar (36 tabte svar hos 1 elev 2026-10-30).
+    Ejeren har valgt en separat `question_attempts`-tabel, der kun tilføjes til, og egne
+    bedømmelseshændelser for lærere. Ingen genskabelse og ingen backfill. H5 er afgjort 2026-10-30
+    ([D-273](decisions/D-273.md)): variant C (serverstyret `round_no` + `submission_id` +
+    databasevagt) og M2 (aktivering ved håndhævelse i databasen uden for undervisningstiden), ikke
+    aktiveret. PR #488 (migration `20261030211428`) er merget og ikke anvendt; PR #494 (`round_no` i
+    `get-next-question`) er draft og ikke deployet; `process-event` (PR 3), `app.js` (PR 4) og
+    aktiveringen (PR 5) er ikke startet, og en mulig oprydning (PR 6) er ikke defineret. Hver
+    produktionsændring kræver ejerens særskilte GO. H1–H4 er ikke godkendt. Design og trinplan:
+    [`question-attempts-design.md`](question-attempts-design.md). Loggen er ikke komplet, før lange svar
+    og lærerbedømmelser også er dækket.
+  - **Mulig dobbelt XP ved lærerbedømmelse (fundet i koden, ikke afprøvet, ikke startet):** RPC'en
+    `review_answer` (4 argumenter) lægger XP til efter karakteren, og Edge-funktionen `review-answer`
+    lægger samme beløb til igen. Udgaven med 4 argumenter har ingen sikring mod en ny bedømmelse, som
+    derfor udbetaler igen. Ingen bedømmelser i produktion siden 2026-04-22. Særskilt opgave; skal være
+    afklaret, før bedømmelser flyttes til hændelseshistorikken.
+  - **Backup og gendannelse (driftsspørgsmål, ikke startet):** projektet er på Supabase' Free-plan, og
+    på den plan har vi ingen almindelig adgang til backups (hverken visning, download eller
+    gendannelse). Ifølge Supabase' Knowledge Base kan Free-projekter i øjeblikket have op til syv daglige
+    backups, der først bliver tilgængelige efter en opgradering; det er ikke efterprøvet for dette
+    projekt, og PITR kræver en betalt plan. Backupmulighederne kræver en særskilt ejerbeslutning.
+    Gendannelse af historiske elevsvar er ikke ønsket nu.
 - **2-0B — RPC EXECUTE-hygiejne (ikke startet):** `get_my_students`, `set_spotlight`,
   `remove_spotlight`, `set_student_domains`, `get_classroom_leaderboard` og `get_weekly_activity`
   har stadig EXECUTE for `anon`. De afviser kald uden `auth.uid()`, så det er P3 — men `anon` bør
@@ -826,6 +906,14 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 
 ### Opgaveformer — Question Interaction track
 
+> **Læringsprogression (2026-10-31, udkast, ikke godkendt — [D-277](decisions/D-277.md)):**
+> - Ejeren har gjort læringsprogressionen til en hovedprioritet: introduktion → arbejde med viden
+>   → feedback → test.
+> - Nye opgaveformer skal understøtte progressionen og ikke blot udvide spørgsmålsbanken.
+> - Audit, læringsmodel, analyse af de 16 former og den foreslåede rækkefølge står i
+>   [learning-progression-design.md](learning-progression-design.md) §6 og §10.
+> - Tabellen nedenfor er uændret, indtil ejeren har godkendt modellen.
+
 _Ejerbeslutning 2026-10-02:_ quizzen skal have mange forskellige opgaveformer, ikke kun multiple
 choice. I dag er alle 2099 aktive spørgsmål multiple choice. Den bindende arkitekturmodel —
 **stimulus adskilt fra svarform, frontend-renderer valgt efter interaktionstype, server-evaluator
@@ -871,7 +959,7 @@ fjernes (kræver Edge-deploy). Ingen aktive spørgsmål rammer den i dag (alle a
 | 10 | **Find fejlen** | sætning/tekst | `find_error` — vælg det forkerte ord | eksakt position | `process_text_answer` | 3 | M |
 | 11 | **Byg sætning** | ordbrikker | `build_sentence` — træk/tryk i rækkefølge | sekvens-lighed mod tilladte rækkefølger | `process_text_answer` | 3 | M |
 | 12 | **Rækkefølge/tidslinje** | begivenheder | `order` — træk og slip (touch + tastatur) | sekvens-lighed | `process_text_answer` | 3 | M–L |
-| 13 | **Match par** | to kolonner | `match` — træk og slip | par-mængde-lighed | `process_text_answer` | 3 | M–L |
+| 13 | **Match par** | to kolonner | `match` — tryk på et element og derefter dets makker (mus, touch og tastatur) | par-mængde-lighed (positioner mod instansens nøgle) | `process_question_attempt` (se note) | 3 — **bygget, ikke servable** (2026-10-22) | M–L |
 | 14 | **Kategorisering** | elementer + kategorier | `categorize` — træk i kurve | afbildnings-lighed | `process_text_answer` | 3 | M–L |
 | 15 | **Hotspot/kort** | billede/kort med navngivne områder | `hotspot` — klik på stedet | punkt inden for navngivet område | `process_text_answer` | 4 | L |
 | 16 | **Langt lærersvar** | tekst/kilde | `answer_type = "long"` (findes) | lærervurdering (`review-answer`) | lærerkø → `TEXT_APPROVED` | findes (ingen aktive spørgsmål) | — |
@@ -882,6 +970,20 @@ særskilt migration (D-110). Binær scoring — ingen delpoint — så XP, mønt
 uændrede. "Belønningsvej `process_text_answer`" for ikke-tekst-former betyder: serveren evaluerer
 det strukturerede svar og kalder den eksisterende CAS-sikrede RPC med `p_is_correct` — der laves
 ingen ny belønnings-RPC pr. form.
+
+**Ejerbeslutning 2026-10-22 — Match par afviger bevidst fra planen ovenfor (accepteret af ejeren):**
+(1) interaktionen er "tryk og forbind" i stedet for træk og slip, og (2) belønningsvejen er
+`process_question_attempt`, ikke `process_text_answer`. Grunden er gentagelser:
+`request_repeat_question_for_student` genåbner alle besvarede auto-bedømte instanser undtagen
+`answer_format = 'text'`, så en `match`-instans kan gentages, og `process_text_answer` betaler fuld XP
+og fulde mønter hver gang (den kender ikke `repeat_count`). `process_question_attempt` giver 2 XP
+og ingen mønter for en gentagelse. Det kræver, at svaret kan sammenlignes som tekst: serveren
+gemmer instansens blanding af højre kolonne som nøgle (`0:2,1:0,2:1`), og `process-event` skriver
+elevens forbindelser i samme form, før RPC'en sammenligner. Ingen ny RPC og ingen migration.
+"Tryk og forbind" virker ens med mus, touch og tastatur; træk kan lægges oven på senere uden at
+ændre kontrakten. **Samme gentagelsesproblem
+gælder de andre former i tabellen, der står med `process_text_answer` (4, 9–12, 14–15)**, hvis deres
+`answer_format` ikke er `text` — det skal afgøres pr. form, før de bygges.
 
 ### Avatar / art track (from 167A)
 

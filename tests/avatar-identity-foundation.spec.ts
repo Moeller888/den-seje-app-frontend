@@ -22,7 +22,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { PROD, PUBLIC_API_KEY } from "./helpers.js";
+import { PROD, serveCheckoutLogin, PUBLIC_API_KEY } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -98,11 +98,14 @@ test.afterAll(async () => {
 });
 
 async function loginAsStudent(page: any) {
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  // A pupil always lands on the Hub; the quiz is one step further (Spil -> index.html).
+  await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
 }
 
 test.beforeEach(async ({ page }) => {
@@ -282,7 +285,7 @@ test("8. Quiz page renders the female body when identity is female", async ({
   await studentClient.rpc("set_avatar_identity", { p_body_type: "female" });
 
   await loginAsStudent(page);
-  // Login lands on index.html. The quiz page renders in two phases by design:
+  // loginAsStudent ends on index.html. The quiz page renders in two phases by design:
   // instant neutral base, then identity resolution after the profile fetch —
   // so the assertion must retry (toBeAttached) rather than count() instantly.
   await page.waitForSelector("#avatar-display img", { timeout: 15000 });

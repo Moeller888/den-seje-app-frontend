@@ -9,7 +9,7 @@
 // this module inlines the SVG and sets those two CSS variables from the identity's
 // resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
 
-import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, R2_COSMETIC_Z, r2HeadwearTransformFor, r2EyesTransformFor, r2FaceTransformFor, r2FaceZFor, r2RequiresC2Fallback, r2CosmeticRenderable, r2ItemAssetSrcFor } from "./avatar-layers.js";
+import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, R2_COSMETIC_Z, r2HeadwearTransformFor, r2EyesTransformFor, r2FaceTransformFor, r2FaceZFor, r2RequiresC2Fallback, r2CosmeticRenderable, r2ItemAssetSrcFor, northstarRenderFor, northstarCompose, NORTHSTAR_CANVAS } from "./avatar-layers.js";
 import { cdnUrl } from "./cloudinary.js";
 import { emitR2RenderObservability } from "./avatar-r2-observability.js";
 
@@ -46,6 +46,59 @@ function preloadDecode(url) {
       img.onload = done;
     }
   });
+}
+
+// ── D-242: the Northstar wardrobe figure (flag/opt-in only) ─────────────────────────────────────────
+// Every layer of the plan is loaded and decoded first (atomic: one failure → the caller shows today's
+// avatar), then the figure is composed ONCE at the master size 1024×1536 with northstarCompose — the
+// item pipeline's own arithmetic — and only the finished picture is scaled for display: layers scaled
+// one by one leave light seams at the neck and between sleeve and body (D-242). The layers load from
+// the origin, never through cdnUrl: a Cloudinary fetch is cross-origin (an unreadable canvas) and may
+// re-encode the lossless layers. One composed picture per outfit and page session.
+const _northstarFigures = new Map();
+function _loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onerror = () => reject(new Error("load error: " + url));
+    img.onload = () => resolve(img);
+    img.src = url;
+  }).then((img) => (typeof img.decode === "function" ? img.decode().then(() => img) : img));
+}
+async function _composeNorthstarFigure(plan) {
+  const { width: w, height: h } = NORTHSTAR_CANVAS;
+  const srcs = [...new Set(plan.flatMap((s) => (s.cut ? [s.src, s.cut] : [s.src])))];
+  const imgs = new Map();
+  await Promise.all(srcs.map(async (src) => {
+    const img = await _loadImage(src);
+    if (img.naturalWidth !== w || img.naturalHeight !== h) throw new Error("not " + w + "×" + h + ": " + src);
+    imgs.set(src, img);
+  }));
+  const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  if (!ctx) throw new Error("no 2d canvas");
+  const keep = new Map(), masks = new Set(plan.map((s) => s.cut).filter(Boolean));
+  const pixelsOf = (src) => {
+    if (keep.has(src)) return keep.get(src);
+    ctx.clearRect(0, 0, w, h); ctx.drawImage(imgs.get(src), 0, 0);
+    const d = ctx.getImageData(0, 0, w, h).data;
+    if (masks.has(src)) keep.set(src, d);
+    return d;
+  };
+  const out = northstarCompose(plan, pixelsOf, w * h);
+  ctx.clearRect(0, 0, w, h); ctx.putImageData(new ImageData(out, w, h), 0, 0);
+  const blob = await new Promise((resolve) => cv.toBlob(resolve, "image/png"));
+  if (!blob) throw new Error("the composed figure could not be encoded");
+  const url = URL.createObjectURL(blob);
+  await preloadDecode(url);
+  return url;
+}
+function northstarFigureUrl(key, plan) {
+  if (!_northstarFigures.has(key)) {
+    const p = _composeNorthstarFigure(plan);
+    _northstarFigures.set(key, p);
+    p.catch(() => _northstarFigures.delete(key));   // a failure is retried on the next mount, never cached
+  }
+  return _northstarFigures.get(key);
 }
 
 async function fetchSvgText(src) {
@@ -206,7 +259,7 @@ function _isMandatoryR2(layer) {
   return !!layer && (layer.isBase === true || _R2_MANDATORY_MARKERS.has(layer.marker));
 }
 
-// Returns the render path actually mounted: "r2" | "c2" (also stamped on
+// Returns the render path actually mounted: "northstar" (D-242, opt-in) | "r2" | "c2" (also stamped on
 // rootEl.dataset.avatarRenderPath), or "aborted" when a newer mount superseded this
 // one (DOM left untouched). Callers key the blink profile off the returned path so
 // an asset-load fallback never leaves R2 lids on a C2 base.
@@ -231,12 +284,32 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
   // the COMPLETE stack resolves for this identity (U2: neutral × medium only); any
   // missing piece → composeR2Layers returns null → the existing C2/SVG path
   // (byte-for-byte). Default off → C2. forceC2 → always the C2 path.
-  let r2Layers = (!forceC2 && isAvatarR2()) ? composeR2Layers(identity, cosmetics) : null;
+  // D-242: the Northstar wardrobe figure — only with AVATAR_NORTHSTAR_WARDROBE or this browser's opt-in, a
+  // stored K outfit, a quiz/hub/avatar surface and no equipped item outside aura/back. Atomic: the figure and
+  // every supported cosmetic must load, or the WHOLE avatar takes today's path below (no item lost silently).
+  // The student's stored identity and equipment are only read, never changed.
+  let nsLayers = null;
+  const ns = forceC2 ? null : northstarRenderFor(surface, cosmetics);
+  if (ns) {
+    try {
+      const url = await northstarFigureUrl(ns.key, ns.plan);
+      if (!isCurrent()) return "aborted";
+      await Promise.all(ns.cosmetics.map((c) => preloadDecode(cdnUrl(c.src))));
+      if (!isCurrent()) return "aborted";
+      nsLayers = [{ src: url, z: 0, isBase: true, inline: false, origin: true }, ...ns.cosmetics];
+    } catch (_e) {
+      if (!isCurrent()) return "aborted";
+      try { console.warn("avatar-northstar: a layer failed to load → today's avatar"); } catch (_ee) {}
+      nsLayers = null;
+    }
+  }
+
+  let r2Layers = (!nsLayers && !forceC2 && isAvatarR2()) ? composeR2Layers(identity, cosmetics) : null;
 
   // D-082 option B: distinguish the "equipped item the R2 stack cannot render" fallback from the
   // identity-ineligible one, so the pilot can tell the two apart. Advisory only — the render
   // decision was already made inside composeR2Layers; this just labels it.
-  if (!forceC2 && isAvatarR2() && !r2Layers && r2RequiresC2Fallback(cosmetics)) {
+  if (!nsLayers && !forceC2 && isAvatarR2() && !r2Layers && r2RequiresC2Fallback(cosmetics)) {
     fellBackReason = "unsupported_cosmetic_equipped";
   }
 
@@ -269,8 +342,8 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
     }
   }
 
-  const layers = r2Layers || composeC2Layers(identity, cosmetics);
-  const path = r2Layers ? "r2" : "c2";
+  const layers = nsLayers || r2Layers || composeC2Layers(identity, cosmetics);
+  const path = nsLayers ? "northstar" : r2Layers ? "r2" : "c2";
   const tokens = hairColorTokensFor(identity);
   const cls = (kind) => layerClass + (animate ? " layer-fade-in" : "");
 
@@ -282,6 +355,12 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
   rootEl.querySelectorAll("[data-c2-layer]").forEach((n) => n.remove());
   rootEl.removeAttribute("data-avatar-rendered");
   if (rootEl.dataset) rootEl.dataset.avatarRenderPath = path; // real DOM always has dataset; guard for mocks
+  // D-242: the figure has its own painted face — a C2 expression overlay left by an earlier render is
+  // hidden on the Northstar path and shown again when a later render leaves it.
+  rootEl.querySelectorAll(".avatar-expr-overlay").forEach((n) => {
+    if (path === "northstar") { n.style.display = "none"; n.setAttribute("data-northstar-hidden", "1"); }
+    else if (n.getAttribute("data-northstar-hidden")) { n.style.display = ""; n.removeAttribute("data-northstar-hidden"); }
+  });
 
   // R2 only: scope the stack's mix-blend layers (blush/tints) to the avatar composite
   // so they can never blend with the page behind it. Visually inert on its own, and
@@ -343,7 +422,7 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
       // 157G: optional Cloudinary delivery for RASTER layers. Default-off + raster-only
       // → returns layer.src unchanged today. Fail-soft. A tint layer without tint
       // support lands here too → renders the untinted map (plan §6 fallback).
-      img.src = cdnUrl(layer.src);
+      img.src = layer.origin ? layer.src : cdnUrl(layer.src);   // D-242: the composed figure is a local blob
       img.alt = "";
       img.style.zIndex = String(layer.z);
       if (layer.blend) img.style.mixBlendMode = layer.blend;   // blush: multiply
@@ -359,7 +438,8 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
   // D-076: single central emission, only when the result is final and this mount is current.
   // Never on "aborted"/missing root; the helper is silent for a missing/invalid surface and
   // for a non-opted-in browser. Fail-soft wrapper so it can never affect the returned render.
-  if (isCurrent()) {
+  // D-242: the opt-in Northstar path reports nothing (it is neither an R2 render nor a C2 fallback).
+  if (isCurrent() && path !== "northstar") {
     const result = path === "r2" ? "r2" : "c2_fallback";
     const reason = path === "r2"
       ? "unknown"

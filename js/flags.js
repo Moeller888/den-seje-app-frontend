@@ -16,6 +16,7 @@ import { isCloudinaryEnabled } from "./cloudinary.js";
 import { isAnalyticsConfigured, isAnalyticsActive } from "./analytics.js";
 import { isReadAloudEnabled } from "./read-aloud/index.js";
 import { getAllConsent } from "./consent.js";
+import { isH5SubmissionsEnabled, ENABLE_H5_SUBMISSIONS } from "./answer-submission.js";
 
 function safe(fn, fallback) {
   try { const v = fn(); return v === undefined ? fallback : v; } catch (_e) { return fallback; }
@@ -34,6 +35,8 @@ export function flagSnapshot() {
     cloudinary:{ active: safe(isCloudinaryEnabled, false) },
     analytics: { configured: safe(isAnalyticsConfigured, false), active: safe(isAnalyticsActive, false) },
     read_aloud:{ active: safe(isReadAloudEnabled, false) },
+    // H5 answer submissions (D-273): default OFF, no browser override; only a reviewed commit turns it on.
+    h5_submissions: { default_on: ENABLE_H5_SUBMISSIONS === true, active: safe(isH5SubmissionsEnabled, false) },
     consent:   safe(getAllConsent, {}),
     // Edge flags are env-side (not visible to the browser): ENABLE_SENTRY_EDGE, ENABLE_AI_GRADING.
   };

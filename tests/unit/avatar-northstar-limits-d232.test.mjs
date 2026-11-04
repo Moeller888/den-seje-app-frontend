@@ -31,8 +31,9 @@ const cuff = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) { const x
 const rowOnSkin = (dy0, dy1, f) => { const o = new Uint8ClampedArray(N * 4), px = []; for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0, w0 = wristOf(x);
   if (base.arms[i * 4 + 3] >= 250 && BF.classify(base.R, i) === "skin" && y >= w0 + dy0 && y < w0 + dy1) { o.set(f(i), i * 4); px.push(i); } } return { o, px }; };
 
-test("D-232 method: d232 is the default; d221 … d225 stay recorded as they ran", () => {
-  assert.equal(IP.METHOD, "d232"); const m = IP.METHODS.d232;
+test("D-232 method: d232 as D-232 defined it; d221 … d225 stay recorded as they ran", () => {
+  // d232 was the default when D-232 recorded it; a later method (D-239's test pins the default) leaves its definition unchanged
+  const m = IP.METHODS.d232; assert.ok(!m.limbExitDetached && !m.unmixPictureSkin);
   assert.deepEqual([m.fitRevision, m.shadowHue, m.remnantChroma, m.limbExit, m.outfitRevision, m.contract], ["d232", "c-own", true, true, "d225", "seam-contract-v2"]);
   for (const k of ["d221", "d222", "d223", "d225"]) assert.ok(!IP.METHODS[k].shadowHue && !IP.METHODS[k].remnantChroma && !IP.METHODS[k].limbExit, k + " unchanged");
 });

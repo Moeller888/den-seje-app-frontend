@@ -1,0 +1,81 @@
+{
+  "scenario": "dialog-choice-and-stack",
+  "description": "Valgmenu med vagtfiltrering, sidegrene, valgt mulighed vises ikke igen, end_dialog sætter næste samtalestart, push/pop, tom menu.",
+  "covers": ["TS-B21", "TS-B22", "TS-B23", "TS-B24", "TS-B25", "TS-B26", "TS-B27", "TS-B28", "TS-D11"],
+  "harness": "world-headless",
+  "content": {
+    "game": { "id": "test", "version": "0.0.1", "formatVersion": 1, "languages": ["da"], "defaultLanguage": "da",
+              "player": { "actor": "keeper" }, "entry": null, "globals": {} },
+    "scenes": [ { "id": "quay", "nameKey": "s.quay", "size": { "width": 1280, "height": 720 }, "entry": null, "variants": ["default"],
+                  "spots": { "a": { "x": 200, "y": 650 }, "b": { "x": 600, "y": 650 } }, "defaultSpot": "a",
+                  "walkable": [ [[0,600],[1280,600],[1280,720],[0,720]] ],
+                  "actorZones": [ { "actor": "gull", "polygon": [[560,500],[660,500],[660,620],[560,620]] } ],
+                  "speechRegions": { "gull": { "x": 500, "y": 300, "width": 400, "height": 120 } } } ],
+    "actors": [
+      { "id": "keeper", "nameKey": "a.keeper", "scene": "quay", "spot": "a", "entry": null, "variants": { "default": {} } },
+      { "id": "gull", "nameKey": "a.gull", "scene": "quay", "spot": "b", "entry": null, "dialog": "gull_talk#first", "variants": { "default": {} } }
+    ],
+    "graphs": [
+      { "id": "gull_talk", "kind": "dialog", "actors": ["keeper", "gull"], "nodes": [
+        { "id": "f0", "type": "entry", "name": "first", "modal": true, "next": ["f1"] },
+        { "id": "f1", "type": "say", "speaker": "gull", "textKey": "d.hello", "next": ["menu"] },
+        { "id": "menu", "type": "choice", "next": ["opt_fish", "gate_secret", "opt_bye", "side_sound"] },
+        { "id": "opt_fish", "type": "say", "speaker": "keeper", "textKey": "d.ask_fish", "next": ["f_ans"] },
+        { "id": "f_ans", "type": "say", "speaker": "gull", "textKey": "d.fish_answer", "next": ["set_asked"] },
+        { "id": "set_asked", "type": "set", "var": "asked_fish", "value": true, "next": ["menu"] },
+        { "id": "gate_secret", "type": "guard", "expr": { "eq": [ { "var": "asked_fish" }, { "const": true } ] }, "next": ["opt_secret"] },
+        { "id": "opt_secret", "type": "say", "speaker": "keeper", "textKey": "d.ask_secret", "next": ["dpush"] },
+        { "id": "dpush", "type": "dialog_push", "actor": "gull", "entryName": "secret_known", "next": ["end1"] },
+        { "id": "opt_bye", "type": "say", "speaker": "keeper", "textKey": "d.bye", "next": ["end1"] },
+        { "id": "side_sound", "type": "set", "var": "menu_side_ran", "value": true, "next": [] },
+        { "id": "end1", "type": "end_dialog", "next": ["again"] },
+        { "id": "again", "type": "entry", "name": "again", "modal": true, "next": ["g1"] },
+        { "id": "g1", "type": "say", "speaker": "gull", "textKey": "d.again", "next": ["end2"] },
+        { "id": "end2", "type": "end_dialog", "next": [] },
+        { "id": "secret_known", "type": "entry", "name": "secret_known", "modal": true, "next": ["sk1"] },
+        { "id": "sk1", "type": "say", "speaker": "gull", "textKey": "d.secret_reply", "next": ["pop", "empty_menu"] },
+        { "id": "pop", "type": "dialog_pop", "actor": "gull", "next": [] },
+        { "id": "empty_menu", "type": "choice", "next": ["gate_never"] },
+        { "id": "gate_never", "type": "guard", "expr": { "eq": [ { "var": "never_set" }, { "const": true } ] }, "next": ["opt_never"] },
+        { "id": "opt_never", "type": "say", "speaker": "keeper", "textKey": "d.never", "next": [] }
+      ] }
+    ],
+    "i18n": { "da": {
+      "s.quay": "Kaj", "a.keeper": "Fyrmester", "a.gull": "Måge",
+      "d.hello": "Skrig!", "d.ask_fish": "Har du set fisk?", "d.fish_answer": "Mange.", "d.ask_secret": "Hvad skjuler du?",
+      "d.bye": "Farvel.", "d.again": "Dig igen.", "d.secret_reply": "Det ved du jo.", "d.never": "(skjult)"
+    } }
+  },
+  "steps": [
+    { "do": "newGame" },
+    { "do": "click", "target": { "actorZone": "gull" } },
+    { "expect": "modal", "value": true },
+    { "expect": "lastCommand", "type": "Say", "nodeId": "f1" },
+    { "do": "confirmSay" },
+    { "expect": "lastCommand", "type": "Choose", "optionIds": ["opt_fish", "opt_bye"] },
+    { "expect": "globals", "lacks": ["menu_side_ran"], "note": "sidegrene startes først ved valg" },
+    { "do": "choose", "option": "opt_fish" },
+    { "expect": "noCommand", "type": "Say", "nodeId": "opt_fish", "note": "valgt mulighed vises ikke igen" },
+    { "expect": "globals", "equals": { "menu_side_ran": true } },
+    { "expect": "lastCommand", "type": "Say", "nodeId": "f_ans" },
+    { "do": "confirmSay" },
+    { "expect": "lastCommand", "type": "Choose", "optionIds": ["opt_fish", "opt_secret", "opt_bye"] },
+    { "do": "choose", "option": "opt_bye" },
+    { "expect": "commands", "contains": [ { "type": "DialogEnd" } ] },
+    { "expect": "modal", "value": false },
+    { "expect": "dialogStack", "actor": "gull", "equals": ["gull_talk#again"] },
+
+    { "do": "click", "target": { "actorZone": "gull" } },
+    { "expect": "lastCommand", "type": "Say", "nodeId": "g1" },
+    { "do": "confirmSay" },
+    { "expect": "dialogStack", "actor": "gull", "equals": ["gull_talk#again"], "note": "end_dialog uden indgange ændrer ikke stakken" },
+
+    { "do": "pushDialog", "actor": "gull", "entry": "gull_talk#secret_known" },
+    { "do": "click", "target": { "actorZone": "gull" } },
+    { "do": "confirmSay" },
+    { "expect": "noCommand", "type": "Choose", "nodeId": "empty_menu" },
+    { "expect": "warning", "code": "W-CHOICE-EMPTY-RUNTIME" },
+    { "expect": "dialogStack", "actor": "gull", "equals": ["gull_talk#again"] },
+    { "expect": "modal", "value": false }
+  ]
+}

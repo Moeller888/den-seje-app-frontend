@@ -1,0 +1,30 @@
+{
+  "name": "@adventure-engine/app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./game": "./src/game.ts",
+    "./style.css": "./src/style.css",
+    "./ready": "./src/ready.ts"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@adventure-engine/audio": "workspace:*",
+    "@adventure-engine/content": "workspace:*",
+    "@adventure-engine/core": "workspace:*",
+    "@adventure-engine/geometry": "workspace:*",
+    "@adventure-engine/media": "workspace:*",
+    "@adventure-engine/render-pixi": "workspace:*",
+    "@adventure-engine/save": "workspace:*",
+    "@fontsource/atkinson-hyperlegible": "5.1.0",
+    "pixi.js": "8.5.2"
+  },
+  "devDependencies": {
+    "vite": "5.4.11"
+  }
+}

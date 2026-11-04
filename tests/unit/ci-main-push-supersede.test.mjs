@@ -146,3 +146,14 @@ test("the main logic only runs for push events in the CLI", () => {
   const cli = src.slice(src.indexOf("const invoked"));
   assert.match(cli, /if \(env\.EVENT_NAME === "push"\) \{[\s\S]*decideMainSuperseded/);
 });
+
+test("D-261: the main-push path is dormant — the test job no longer runs on push — but kept intact for a revert", () => {
+  const y = read(".github/workflows/playwright.yml").split("\r\n").join("\n");
+  const job = y.slice(y.indexOf("\n  test:\n"));
+  assert.ok(job.startsWith("\n  test:\n    needs: classify\n    if: always() && github.event_name == 'workflow_dispatch'\n"),
+    "no push run reaches the stale check any more");
+  // The wiring a revert would need is still there (asserted in full by the test above).
+  assert.match(job, /- name: Stale run check \(superseded or cancelled\)/);
+  // A manual dispatch is never a main-push run: decideMainSuperseded keeps answering "run" for it.
+  assert.equal(decideMainSuperseded({ ...base, eventName: "workflow_dispatch" }).superseded, false);
+});

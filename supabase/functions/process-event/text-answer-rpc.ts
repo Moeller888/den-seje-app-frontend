@@ -93,3 +93,59 @@ export async function callProcessQuestionAttempt(
     p_question_shown_at: attempt.questionShownAt,
   });
 }
+
+// ── H5: the _v2 functions (migration 20261030211428, D-273) ──────────────────────────────────────
+// Same model again: both trust p_student_id / p_user_id (and p_is_correct), so they are called only
+// through the admin client, with the verified user.id, after the ownership check. round_no and
+// submission_id come from the validated request (./answer-v2.ts); review_text and misconception_type
+// are what process-event shows for a wrong answer, so the database can freeze them in the attempt and
+// write the misconception signal in the same transaction. The parameter names are the migration's.
+
+// The names of the two legacy functions, for recognising their revoked EXECUTE after M2
+// (./answer-v2.ts, isRevokedLegacyRpc). Kept here so this module stays the only one that names them.
+export const LEGACY_ANSWER_RPCS = Object.freeze({ mc: "process_question_attempt", text: "process_text_answer" });
+
+export type V2Submission ={ roundNo: number; submissionId: string; reviewText: string | null; misconceptionType: string | null };
+
+// L1 K1 (migration 20261103110000, docs/learning-progression-l1-contracts.md §K1): the activity mode
+// and the hints used are decided by the SERVER and are constants here until L3 (hints) and L5 (modes
+// recorded on the instance). They are never read from the request body: a client that sends fields
+// with these names is ignored, because nothing in this module takes them as arguments.
+export const L1_ATTEMPT_CONTEXT = Object.freeze({ mode: "quiz_v1", hintsUsed: 0 });
+
+export async function callProcessQuestionAttemptV2(
+  makeAdminClient: () => RpcClient,
+  attempt: Omit<QuestionAttempt, "questionShownAt"> & V2Submission,
+): Promise<RpcResult> {
+  const admin = makeAdminClient();
+  return await admin.rpc("process_question_attempt_v2", {
+    p_student_id: attempt.studentId,
+    p_question_instance_id: attempt.instanceId,
+    p_answer: attempt.answer,
+    p_round_no: attempt.roundNo,
+    p_submission_id: attempt.submissionId,
+    p_review_text: attempt.reviewText,
+    p_misconception_type: attempt.misconceptionType,
+    p_mode: L1_ATTEMPT_CONTEXT.mode,
+    p_hints_used: L1_ATTEMPT_CONTEXT.hintsUsed,
+  });
+}
+
+export async function callProcessTextAnswerV2(
+  makeAdminClient: () => RpcClient,
+  award: TextAnswerAward & V2Submission,
+): Promise<RpcResult> {
+  const admin = makeAdminClient();
+  return await admin.rpc("process_text_answer_v2", {
+    p_instance_id: award.instanceId,
+    p_user_id: award.userId,
+    p_user_answer: award.answer,
+    p_is_correct: award.isCorrect === true,
+    p_round_no: award.roundNo,
+    p_submission_id: award.submissionId,
+    p_review_text: award.reviewText,
+    p_misconception_type: award.misconceptionType,
+    p_mode: L1_ATTEMPT_CONTEXT.mode,
+    p_hints_used: L1_ATTEMPT_CONTEXT.hintsUsed,
+  });
+}

@@ -17,8 +17,9 @@
 // SAFETY RULES ENFORCED HERE
 //   * student_id is the caller's verified user.id and correct_answer is the server-normalised key of
 //     the chosen question; nothing comes from the request body.
-//   * The written columns are exactly the ones get-next-question has always written; every other
-//     column keeps its database default (answered = false, no verdict, no teacher fields).
+//   * The written columns are exactly the ones get-next-question has always written — plus, with
+//     K1_SERVED_SNAPSHOT=on, the delivery proposal served_snapshot, which the database verifies and
+//     owns; every other column keeps its database default (answered = false, no verdict, no teacher fields).
 //   * The admin client never receives the pupil's Authorization header and keeps no session.
 //   * If the admin client cannot be built (missing or broken key configuration), the error
 //     propagates. There is deliberately no fallback to the user client.
@@ -48,6 +49,9 @@ export type QuestionAssignment = {
   questionId: string;
   correctAnswer: unknown;
   nowIso: string;
+  // L1 K1 (./served-snapshot.ts): the delivery proposal — exactly the row the response is built from.
+  // Sent only when K1_SERVED_SNAPSHOT=on; the database verifies it against the locked question row.
+  servedSnapshot?: Record<string, unknown>;
 };
 
 // Creates one question instance for the signed-in pupil through a freshly built admin client.
@@ -68,7 +72,14 @@ export async function insertQuestionInstance(
       difficulty_at_time: 1,
       mastery_snapshot: 1,
       next_review_at: assignment.nowIso,
+      ...servedSnapshotColumn(assignment),
     })
-    .select("id")
+    // repeat_count is read back, not assumed: get-next-question derives round_no from it (D-266, H5).
+    .select("id, repeat_count")
     .limit(1);
+}
+
+// L1 K1: the one optional column — served_snapshot, only when get-next-question sends a proposal.
+export function servedSnapshotColumn(assignment: QuestionAssignment): { served_snapshot?: Record<string, unknown> } {
+  return assignment.servedSnapshot !== undefined ? { served_snapshot: assignment.servedSnapshot } : {};
 }

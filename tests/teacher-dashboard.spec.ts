@@ -388,7 +388,11 @@ test("16. Class overview shows Band 1 and negative delta when student has no que
 
 test("17. Class overview shows '+2' growth when student has answered Band 4 questions", async ({ page }) => {
   // get_teacher_visibility computes current_band from question history, not profiles.current_band.
-  // Insert Band 4 answered instances to drive the average to 4.
+  // Insert Band 4 answered instances to drive the average to 4. They carry the result the way the
+  // answer flow writes it — was_correct; the legacy is_correct column is no longer written — so they
+  // count as scored answers (20261029150000_teacher_stats_from_answers). The band averages answered
+  // rows before that migration and scored rows after it; is_correct plays no part in either, so the
+  // rows need no is_correct value.
   const { data: b4qs } = await adminSupabase
     .from("questions")
     .select("id")
@@ -409,7 +413,7 @@ test("17. Class overview shows '+2' growth when student has answered Band 4 ques
       mastery_snapshot:  1,
       next_review_at:    new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       answered_at:       new Date(now.getTime() - i * 1000).toISOString(),
-      is_correct:        true,
+      was_correct:       true,
     }))
   );
 

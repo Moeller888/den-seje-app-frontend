@@ -22,9 +22,12 @@
 //                acts. Long answers are served when the pool holds nothing else, never to fill a share.
 //   number       answer_format "…number…"                auto-graded   renderer "number"
 //   force_text   content.force_text === true (non-long)   auto-graded   renderer "force_text"
-//   match_pairs  answer_format "match" (ROADMAP #13)      PLANNED — no renderer, no grading path yet
+//   match_pairs  answer_format "match" (ROADMAP #13)      auto-graded   renderer "match_pairs" — BUILT, NOT
+//                servable: contract, key and answer shape in _shared/match-pairs.ts; graded by
+//                process_question_attempt like MC (process-event canonicalises the connections first)
 //
-// ADDING A KIND (e.g. Match par) — the order matters, each step is its own reviewed change:
+// ADDING A KIND (Match par has done steps 1 and 2) — the order matters, each step is its own reviewed
+// change:
 //   1. add the entry below with servable: false (content may then be authored, inactive or not,
 //      and is never served);
 //   2. ship the renderer (js/answer-input.js) and the grading path (process-event /
@@ -35,6 +38,9 @@
 // step 3: it decides what the candidate window and the repeat exhaustion check count as servable, and
 // tests/unit/question-format-mix-migration-run.test.mjs fails while the two disagree. The candidate
 // window itself needs no change: it stratifies by the stored fields, not by kind names.
+// Match par, step 3 also: get-next-question's v1 mapAnswerFormat still maps "match" to "mc" (the row is
+// then skipped, because it has no options), so Match par reaches pupils only under QUESTION_MIX_ENGINE=v2
+// until v1 is retired or taught "match" in the same reviewed change.
 //
 // Pure TypeScript with no Deno or network imports, so the Node unit suite tests exactly what the
 // Edge Functions run.
@@ -69,7 +75,7 @@ export const INTERACTION_KINDS: Readonly<Record<InteractionKind, Readonly<Intera
   long_text:   Object.freeze({ wireFormat: "text",        renderer: "long_text",  servable: true,  base: false, maxShare: 0,    teacherGraded: true  }),
   number:      Object.freeze({ wireFormat: "number",      renderer: "number",     servable: true,  base: false, maxShare: 0.15, teacherGraded: false }),
   force_text:  Object.freeze({ wireFormat: "mc",          renderer: "force_text", servable: true,  base: false, maxShare: 0.15, teacherGraded: false }),
-  match_pairs: Object.freeze({ wireFormat: "match",       renderer: null,         servable: false, base: false, maxShare: 0.15, teacherGraded: false }),
+  match_pairs: Object.freeze({ wireFormat: "match",       renderer: "match_pairs", servable: false, base: false, maxShare: 0.15, teacherGraded: false }),
 });
 
 // Registry order is the deterministic tie-break wherever two kinds score the same.

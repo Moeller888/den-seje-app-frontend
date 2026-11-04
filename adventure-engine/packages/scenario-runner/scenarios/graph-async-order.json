@@ -1,0 +1,384 @@
+{
+  "scenario": "graph-async-order",
+  "description": "Kooperativ scheduler: dybde-først til første ventepunkt, delay block/background, detach, join og seedet random.",
+  "covers": [
+    "TS-B04",
+    "TS-B05",
+    "TS-B13",
+    "TS-B14",
+    "TS-B15",
+    "TS-B16",
+    "TS-B20"
+  ],
+  "harness": "graph",
+  "seed": "test-seed-1",
+  "content": {
+    "game": {
+      "id": "test",
+      "version": "0.0.1",
+      "formatVersion": 1,
+      "languages": [
+        "da"
+      ],
+      "defaultLanguage": "da",
+      "globals": {}
+    },
+    "actors": [
+      {
+        "id": "narrator",
+        "nameKey": "a.n",
+        "scene": null,
+        "entry": null,
+        "variants": {
+          "default": {}
+        }
+      }
+    ],
+    "graphs": [
+      {
+        "id": "seq",
+        "kind": "logic",
+        "nodes": [
+          {
+            "id": "seq_e",
+            "type": "entry",
+            "name": "main",
+            "modal": false,
+            "next": [
+              "b",
+              "a"
+            ]
+          },
+          {
+            "id": "a",
+            "type": "set",
+            "var": "a_first",
+            "value": true,
+            "next": [
+              "a_say"
+            ]
+          },
+          {
+            "id": "a_say",
+            "type": "say",
+            "speaker": "narrator",
+            "textKey": "t.a",
+            "next": [
+              "a2"
+            ]
+          },
+          {
+            "id": "a2",
+            "type": "set",
+            "var": "after_a",
+            "value": true,
+            "next": []
+          },
+          {
+            "id": "b",
+            "type": "guard",
+            "expr": {
+              "const": true
+            },
+            "next": [
+              "b_set"
+            ]
+          },
+          {
+            "id": "b_set",
+            "type": "set",
+            "var": "b_ran",
+            "value": true,
+            "next": []
+          }
+        ]
+      },
+      {
+        "id": "timing",
+        "kind": "logic",
+        "nodes": [
+          {
+            "id": "timing_e",
+            "type": "entry",
+            "name": "main",
+            "modal": false,
+            "next": [
+              "dblock"
+            ]
+          },
+          {
+            "id": "dblock",
+            "type": "delay",
+            "minMs": 1000,
+            "maxMs": 1000,
+            "mode": "block",
+            "next": [
+              "s1"
+            ]
+          },
+          {
+            "id": "s1",
+            "type": "set",
+            "var": "t1",
+            "value": true,
+            "next": [
+              "dbg"
+            ]
+          },
+          {
+            "id": "dbg",
+            "type": "delay",
+            "minMs": 2000,
+            "maxMs": 2000,
+            "mode": "background",
+            "next": [
+              "s2"
+            ]
+          },
+          {
+            "id": "s2",
+            "type": "set",
+            "var": "t2",
+            "value": true,
+            "next": []
+          }
+        ]
+      },
+      {
+        "id": "joiner",
+        "kind": "logic",
+        "nodes": [
+          {
+            "id": "joiner_e",
+            "type": "entry",
+            "name": "main",
+            "modal": false,
+            "next": [
+              "d1",
+              "d2"
+            ]
+          },
+          {
+            "id": "d1",
+            "type": "delay",
+            "minMs": 100,
+            "maxMs": 100,
+            "mode": "block",
+            "next": [
+              "j"
+            ]
+          },
+          {
+            "id": "d2",
+            "type": "delay",
+            "minMs": 300,
+            "maxMs": 300,
+            "mode": "block",
+            "next": [
+              "j"
+            ]
+          },
+          {
+            "id": "j",
+            "type": "join",
+            "next": [
+              "inc"
+            ]
+          },
+          {
+            "id": "inc",
+            "type": "set",
+            "var": "joined",
+            "value": true,
+            "next": []
+          }
+        ]
+      },
+      {
+        "id": "dice",
+        "kind": "logic",
+        "nodes": [
+          {
+            "id": "dice_e",
+            "type": "entry",
+            "name": "main",
+            "modal": false,
+            "next": [
+              "r"
+            ]
+          },
+          {
+            "id": "r",
+            "type": "random",
+            "next": [
+              "o1",
+              "o2",
+              "o3"
+            ]
+          },
+          {
+            "id": "o1",
+            "type": "set",
+            "var": "roll",
+            "value": 1,
+            "next": []
+          },
+          {
+            "id": "o2",
+            "type": "set",
+            "var": "roll",
+            "value": 2,
+            "next": []
+          },
+          {
+            "id": "o3",
+            "type": "set",
+            "var": "roll",
+            "value": 3,
+            "next": []
+          }
+        ]
+      }
+    ],
+    "i18n": {
+      "da": {
+        "a.n": "Fortæller",
+        "t.a": "Først."
+      }
+    }
+  },
+  "steps": [
+    {
+      "do": "run",
+      "entry": "seq#main"
+    },
+    {
+      "expect": "globalWriteOrder",
+      "equals": [
+        "a_first",
+        "b_ran"
+      ],
+      "note": "a (set, prioritet 1) startes før b, selv om b står først i next; a kører dybde-først til ventepunktet a_say, derefter startes b"
+    },
+    {
+      "expect": "globals",
+      "equals": {
+        "a_first": true,
+        "b_ran": true
+      },
+      "lacks": [
+        "after_a"
+      ]
+    },
+    {
+      "do": "done",
+      "nodeId": "a_say"
+    },
+    {
+      "expect": "globals",
+      "equals": {
+        "after_a": true
+      }
+    },
+    {
+      "expect": "runResult",
+      "value": true
+    },
+    {
+      "do": "run",
+      "entry": "timing#main"
+    },
+    {
+      "do": "advance",
+      "ms": 999
+    },
+    {
+      "expect": "globals",
+      "lacks": [
+        "t1"
+      ]
+    },
+    {
+      "do": "advance",
+      "ms": 1
+    },
+    {
+      "expect": "globals",
+      "equals": {
+        "t1": true
+      },
+      "lacks": [
+        "t2"
+      ]
+    },
+    {
+      "expect": "runResult",
+      "value": true,
+      "note": "background-delay fuldfører straks over for forælderen"
+    },
+    {
+      "do": "advance",
+      "ms": 2000
+    },
+    {
+      "expect": "globals",
+      "equals": {
+        "t2": true
+      }
+    },
+    {
+      "do": "run",
+      "entry": "joiner#main"
+    },
+    {
+      "do": "advance",
+      "ms": 100
+    },
+    {
+      "expect": "globals",
+      "lacks": [
+        "joined"
+      ]
+    },
+    {
+      "do": "advance",
+      "ms": 200
+    },
+    {
+      "expect": "globals",
+      "equals": {
+        "joined": true
+      }
+    },
+    {
+      "expect": "nodeExecutions",
+      "nodeId": "inc",
+      "count": 1
+    },
+    {
+      "do": "run",
+      "entry": "dice#main"
+    },
+    {
+      "expect": "globalsDeterministic",
+      "name": "roll",
+      "note": "Samme seed → samme værdi i hver kørsel af testen; værdien låses i golden trace"
+    },
+    {
+      "do": "statistic",
+      "entry": "dice#main",
+      "runs": 30000,
+      "freshSeedEach": true,
+      "expect": {
+        "var": "roll",
+        "values": [
+          1,
+          2,
+          3
+        ],
+        "chiSquaredMinP": 0.01
+      }
+    }
+  ],
+  "notes": "Implementeringskopi: entry-node-id'et 'e' er omdøbt til '<graf>_e' i hver graf, fordi node-id'er skal være unikke i hele pakken (spec 02 B2.1, TS-B32)."
+}

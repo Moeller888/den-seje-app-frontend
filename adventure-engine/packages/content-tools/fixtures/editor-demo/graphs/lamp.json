@@ -1,0 +1,97 @@
+{
+  "id": "lamp",
+  "kind": "logic",
+  "nodes": [
+    {
+      "id": "la0",
+      "name": "main",
+      "next": [
+        "la1",
+        "lamp_mirror_wick"
+      ],
+      "type": "entry"
+    },
+    {
+      "expr": {
+        "eq": [
+          {
+            "var": "$action"
+          },
+          {
+            "const": "interact"
+          }
+        ]
+      },
+      "id": "la1",
+      "next": [
+        "la2"
+      ],
+      "type": "guard"
+    },
+    {
+      "actor": "mira",
+      "id": "la2",
+      "next": [
+        "la3"
+      ],
+      "spot": "shelf",
+      "type": "walk_to"
+    },
+    {
+      "id": "la3",
+      "next": [
+        "la4"
+      ],
+      "object": "lamp",
+      "to": {
+        "id": "mira",
+        "kind": "actor"
+      },
+      "type": "move_object"
+    },
+    {
+      "id": "la4",
+      "speaker": "mira",
+      "textKey": "line.lamp_taken",
+      "type": "say"
+    },
+    {
+      "expr": {
+        "and": [
+          {
+            "eq": [
+              {
+                "var": "$action"
+              },
+              {
+                "const": "use.inventory"
+              }
+            ]
+          },
+          {
+            "eq": [
+              {
+                "var": "$target"
+              },
+              {
+                "const": "wick"
+              }
+            ]
+          }
+        ]
+      },
+      "id": "lamp_mirror_wick",
+      "next": [
+        "lamp_mirror_wick_use"
+      ],
+      "type": "guard"
+    },
+    {
+      "id": "lamp_mirror_wick_use",
+      "item": "wick",
+      "kind": "inventory",
+      "target": "lamp",
+      "type": "use_item"
+    }
+  ]
+}

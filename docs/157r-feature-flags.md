@@ -29,6 +29,7 @@ Registry: `js/flags.js` (read-only diagnostics). Rules: [CLAUDE_WORKFLOW.md](./C
 | `ENABLE_CLOUDINARY` | `js/cloudinary.js` (+ cloud name) | `false` | — | `isCloudinaryEnabled()` | returns origin URL |
 | `ENABLE_ANALYTICS` | `js/analytics.js` (+ key, + `analytics` consent) | `false` | — | `isAnalyticsConfigured()` / `isAnalyticsActive()` | no SDK/events |
 | `ENABLE_READ_ALOUD` | `js/read-aloud/index.js` | **`true`** (live, `52e7a04`) | — | `isReadAloudEnabled()` | no control; no audio |
+| `ENABLE_H5_SUBMISSIONS` | `js/answer-submission.js` | `false` | **ingen** — hverken localStorage, URL eller brugerindstilling kan slå den til | `isH5SubmissionsEnabled()` | slået fra sender `app.js` præcis den hidtidige request til `process-event`. Den slås kun til i en gennemgået commit med ejerens særskilte GO, efter at migration `20261030211428` er anvendt, og `process-event` (H5 PR 3) og `get-next-question` med `round_no` (H5 PR 2) er deployet (D-266, D-273) |
 
 Consent categories (`js/consent.js`, 157Q): `analytics`, `error_monitoring`, `ai_features` — default
 `unknown` → flow off until opt-in.

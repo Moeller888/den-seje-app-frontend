@@ -1,0 +1,53 @@
+{
+  "scenario": "graph-veto-and-return",
+  "description": "Return som veto, guard=false giver ikke veto, interaktion uden logik er tilladt, veto fuldfører altid og frigiver modal.",
+  "covers": ["TS-B06", "TS-B07", "TS-B08", "TS-B09", "TS-D01", "TS-D05", "TS-A09"],
+  "harness": "world-headless",
+  "content": {
+    "game": { "id": "test", "version": "0.0.1", "formatVersion": 1, "languages": ["da"], "defaultLanguage": "da",
+              "player": { "actor": "keeper" }, "entry": null, "globals": {} },
+    "scenes": [
+      { "id": "shed", "nameKey": "s.shed", "size": { "width": 1280, "height": 720 }, "entry": null, "variants": ["default"],
+        "spots": { "start": { "x": 200, "y": 650, "facing": "right" } }, "defaultSpot": "start",
+        "walkable": [ [[0,600],[1280,600],[1280,720],[0,720]] ],
+        "objectZones": [
+          { "entity": "crate", "polygon": [[400,500],[500,500],[500,600],[400,600]] },
+          { "entity": "pebble", "polygon": [[700,620],[720,620],[720,640],[700,640]] }
+        ] }
+    ],
+    "actors": [ { "id": "keeper", "nameKey": "a.keeper", "scene": "shed", "spot": "start", "entry": null,
+                  "variants": { "default": { "animations": { "cannot": "anim.cannot" } } } } ],
+    "objects": [
+      { "id": "crate", "nameKey": "o.crate", "container": { "kind": "scene", "id": "shed" }, "entry": "crate_logic#main", "variants": { "default": {} } },
+      { "id": "pebble", "nameKey": "o.pebble", "container": { "kind": "scene", "id": "shed" }, "entry": null, "variants": { "default": {} } }
+    ],
+    "graphs": [
+      { "id": "crate_logic", "kind": "logic", "nodes": [
+        { "id": "c0", "type": "entry", "name": "main", "modal": false, "next": ["c1", "c2"] },
+        { "id": "c1", "type": "guard", "expr": { "eq": [ { "var": "crate_open" }, { "const": false } ] }, "next": ["c3"] },
+        { "id": "c3", "type": "return", "value": false },
+        { "id": "c2", "type": "guard", "expr": { "eq": [ { "var": "crate_open" }, { "const": true } ] }, "next": ["c4"] },
+        { "id": "c4", "type": "set", "var": "crate_looted", "value": true, "next": [] }
+      ] }
+    ],
+    "i18n": { "da": { "s.shed": "Skur", "a.keeper": "Fyrmester", "o.crate": "Kasse", "o.pebble": "Sten" } }
+  },
+  "steps": [
+    { "do": "newGame" },
+    { "do": "click", "target": { "objectZone": "crate" } },
+    { "expect": "runResult", "entity": "crate", "value": false },
+    { "expect": "commands", "contains": [ { "type": "React", "actor": "keeper", "kind": "cannot" } ] },
+    { "expect": "modal", "value": false },
+    { "expect": "globals", "lacks": ["crate_looted"] },
+
+    { "do": "setGlobal", "name": "crate_open", "value": true },
+    { "do": "click", "target": { "objectZone": "crate" } },
+    { "expect": "runResult", "entity": "crate", "value": true },
+    { "expect": "globals", "equals": { "crate_looted": true } },
+    { "expect": "commandsSinceLastClick", "lacks": [ { "type": "React" } ] },
+
+    { "do": "click", "target": { "objectZone": "pebble" } },
+    { "expect": "runResult", "entity": "pebble", "value": true },
+    { "expect": "commandsSinceLastClick", "lacks": [ { "type": "React" } ] }
+  ]
+}

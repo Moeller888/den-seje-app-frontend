@@ -1,0 +1,22 @@
+{
+  "format": "engine.save",
+  "formatVersion": 0,
+  "game": "test",
+  "gameVersion": "0.0.1",
+  "language": "da",
+  "player": "keeper",
+  "rngState": "1c3f5a7b9d2e4f60718293a4b5c6d7e8",
+  "actors": {
+    "keeper": { "scene": "workshop", "x": 600, "y": 640, "facing": "left", "variant": "default", "dialog": [], "items": ["hook"] },
+    "cat": { "scene": "workshop", "x": 900, "y": 650, "facing": "down", "variant": "default", "dialog": [], "items": [] }
+  },
+  "objects": {
+    "rope": { "where": "scene:workshop", "variant": "default", "name": "o.rope" },
+    "hook": { "where": "actor:keeper", "variant": "default", "name": "o.hook" },
+    "grapple": { "where": "none", "variant": "default", "name": "o.grapple" },
+    "valve": { "where": "scene:workshop", "variant": "default", "name": "o.valve" }
+  },
+  "scenes": { "workshop": "default" },
+  "portals": {},
+  "vars": { "counter": 3 }
+}

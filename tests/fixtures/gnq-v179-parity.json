@@ -1,0 +1,4738 @@
+{
+ "source": "21ec9ff (byte-identical to the deployed get-next-question version 179)",
+ "source_manifest": "c4414671f3a5aff1e8d5bc3cb57ec4e92bb0d70ef8008a7ade39a75730c81985",
+ "warmup": {
+  "status": 200,
+  "body": "{\"question_instance_id\":\"due-1\",\"content\":{\"question\":\"Q dq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+  "calls": [
+   {
+    "createClient": "user",
+    "auth": "pupil-jwt"
+   },
+   {
+    "client": "user",
+    "kind": "auth.getUser"
+   },
+   {
+    "client": "user",
+    "kind": "from",
+    "name": "profiles",
+    "ops": [
+     [
+      "select",
+      "active_domains, selected_grade"
+     ],
+     [
+      "eq",
+      "id",
+      "stu-1"
+     ],
+     [
+      "maybeSingle"
+     ]
+    ]
+   },
+   {
+    "client": "user",
+    "kind": "rpc",
+    "name": "release_open_question_outside",
+    "ops": [
+     [
+      "args",
+      {
+       "p_domains": [
+        "prehistoric_denmark",
+        "vikings",
+        "middle_ages",
+        "reformation_monarchy",
+        "enlightenment",
+        "revolutions_democracy",
+        "industrialisation",
+        "world_war_1",
+        "world_war_2",
+        "cold_war",
+        "democracy_power"
+       ]
+      }
+     ]
+    ]
+   },
+   {
+    "createClient": "admin",
+    "auth": "none"
+   },
+   {
+    "client": "admin",
+    "kind": "from",
+    "name": "question_instances",
+    "ops": [
+     [
+      "select",
+      "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+     ],
+     [
+      "eq",
+      "student_id",
+      "stu-1"
+     ],
+     [
+      "eq",
+      "answered",
+      false
+     ],
+     [
+      "lte",
+      "next_review_at",
+      "<ts>"
+     ],
+     [
+      "order",
+      "next_review_at",
+      {
+       "ascending": true
+      }
+     ],
+     [
+      "limit",
+      10
+     ]
+    ]
+   }
+  ],
+  "logs": [
+   "LOG [supabase-keys] source=legacy-anon",
+   "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+   "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+   "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}",
+   "LOG [supabase-keys] source=legacy-service-role"
+  ]
+ },
+ "cases": {
+  "mix=<unset>|historie|due": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"due-1\",\"content\":{\"question\":\"Q dq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}"
+   ]
+  },
+  "mix=<unset>|historie|new": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"new-inst\",\"content\":{\"question\":\"Q q1\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "insert",
+       {
+        "student_id": "stu-1",
+        "question_id": "q1",
+        "answered": false,
+        "correct_answer": "a",
+        "difficulty_at_time": 1,
+        "mastery_snapshot": 1,
+        "next_review_at": "<ts>"
+       }
+      ],
+      [
+       "select",
+       "id"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}"
+   ]
+  },
+  "mix=<unset>|historie|repeat": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"rep-1\",\"content\":{\"question\":\"Q rq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\",\"is_repeat\":true}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n            id,\n            questions (\n              content,\n              answer_format,\n              answer_type,\n              metadata,\n              is_active\n            )\n          "
+      ],
+      [
+       "eq",
+       "id",
+       "rep-1"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}"
+   ]
+  },
+  "mix=<unset>|historie|none": {
+   "status": 200,
+   "body": "{\"step\":\"no_questions\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}"
+   ]
+  },
+  "mix=<unset>|historie|error": {
+   "status": 500,
+   "body": "{\"error\":\"boom\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}",
+    "ERR EDGE FUNCTION ERROR: {\"message\":\"boom\"}"
+   ]
+  },
+  "mix=<unset>|engelsk|due": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"due-1\",\"content\":{\"question\":\"Q dq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}"
+   ]
+  },
+  "mix=<unset>|engelsk|new": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"new-inst\",\"content\":{\"question\":\"Q q1\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "insert",
+       {
+        "student_id": "stu-1",
+        "question_id": "q1",
+        "answered": false,
+        "correct_answer": "a",
+        "difficulty_at_time": 1,
+        "mastery_snapshot": 1,
+        "next_review_at": "<ts>"
+       }
+      ],
+      [
+       "select",
+       "id"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}"
+   ]
+  },
+  "mix=<unset>|engelsk|repeat": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"rep-1\",\"content\":{\"question\":\"Q rq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\",\"is_repeat\":true}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n            id,\n            questions (\n              content,\n              answer_format,\n              answer_type,\n              metadata,\n              is_active\n            )\n          "
+      ],
+      [
+       "eq",
+       "id",
+       "rep-1"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}"
+   ]
+  },
+  "mix=<unset>|engelsk|none": {
+   "status": 200,
+   "body": "{\"step\":\"no_questions\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}"
+   ]
+  },
+  "mix=<unset>|engelsk|error": {
+   "status": 500,
+   "body": "{\"error\":\"boom\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}",
+    "ERR EDGE FUNCTION ERROR: {\"message\":\"boom\"}"
+   ]
+  },
+  "mix=shadow|historie|due": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"due-1\",\"content\":{\"question\":\"Q dq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}"
+   ]
+  },
+  "mix=shadow|historie|new": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"new-inst\",\"content\":{\"question\":\"Q q1\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "insert",
+       {
+        "student_id": "stu-1",
+        "question_id": "q1",
+        "answered": false,
+        "correct_answer": "a",
+        "difficulty_at_time": 1,
+        "mastery_snapshot": 1,
+        "next_review_at": "<ts>"
+       }
+      ],
+      [
+       "select",
+       "id"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"shadow\",\"kind\":\"choice\",\"reason\":\"base\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null,\"would_try_first\":\"m1\",\"v1_first\":\"q1\"}"
+   ]
+  },
+  "mix=shadow|historie|repeat": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"rep-1\",\"content\":{\"question\":\"Q rq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\",\"is_repeat\":true}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n            id,\n            questions (\n              content,\n              answer_format,\n              answer_type,\n              metadata,\n              is_active\n            )\n          "
+      ],
+      [
+       "eq",
+       "id",
+       "rep-1"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"shadow\",\"kind\":null,\"reason\":\"empty\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null,\"would_try_first\":null,\"v1_first\":null}"
+   ]
+  },
+  "mix=shadow|historie|none": {
+   "status": 200,
+   "body": "{\"step\":\"no_questions\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"shadow\",\"kind\":null,\"reason\":\"empty\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null,\"would_try_first\":null,\"v1_first\":null}"
+   ]
+  },
+  "mix=shadow|historie|error": {
+   "status": 500,
+   "body": "{\"error\":\"boom\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}",
+    "ERR EDGE FUNCTION ERROR: {\"message\":\"boom\"}"
+   ]
+  },
+  "mix=shadow|engelsk|due": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"due-1\",\"content\":{\"question\":\"Q dq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}"
+   ]
+  },
+  "mix=shadow|engelsk|new": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"new-inst\",\"content\":{\"question\":\"Q q1\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "insert",
+       {
+        "student_id": "stu-1",
+        "question_id": "q1",
+        "answered": false,
+        "correct_answer": "a",
+        "difficulty_at_time": 1,
+        "mastery_snapshot": 1,
+        "next_review_at": "<ts>"
+       }
+      ],
+      [
+       "select",
+       "id"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"shadow\",\"kind\":\"choice\",\"reason\":\"base\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null,\"would_try_first\":\"m1\",\"v1_first\":\"q1\"}"
+   ]
+  },
+  "mix=shadow|engelsk|repeat": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"rep-1\",\"content\":{\"question\":\"Q rq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\",\"is_repeat\":true}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n            id,\n            questions (\n              content,\n              answer_format,\n              answer_type,\n              metadata,\n              is_active\n            )\n          "
+      ],
+      [
+       "eq",
+       "id",
+       "rep-1"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"shadow\",\"kind\":null,\"reason\":\"empty\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null,\"would_try_first\":null,\"v1_first\":null}"
+   ]
+  },
+  "mix=shadow|engelsk|none": {
+   "status": 200,
+   "body": "{\"step\":\"no_questions\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"shadow\",\"kind\":null,\"reason\":\"empty\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null,\"would_try_first\":null,\"v1_first\":null}"
+   ]
+  },
+  "mix=shadow|engelsk|error": {
+   "status": 500,
+   "body": "{\"error\":\"boom\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_unserved_questions_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}",
+    "ERR EDGE FUNCTION ERROR: {\"message\":\"boom\"}"
+   ]
+  },
+  "mix=v2|historie|due": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"due-1\",\"content\":{\"question\":\"Q dq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}"
+   ]
+  },
+  "mix=v2|historie|new": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"new-inst\",\"content\":{\"question\":\"Q m1\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "insert",
+       {
+        "student_id": "stu-1",
+        "question_id": "m1",
+        "answered": false,
+        "correct_answer": "a",
+        "difficulty_at_time": 1,
+        "mastery_snapshot": 1,
+        "next_review_at": "<ts>"
+       }
+      ],
+      [
+       "select",
+       "id"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"v2\",\"kind\":\"choice\",\"reason\":\"base\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null}"
+   ]
+  },
+  "mix=v2|historie|repeat": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"rep-1\",\"content\":{\"question\":\"Q rq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\",\"is_repeat\":true}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_servable_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n            id,\n            questions (\n              content,\n              answer_format,\n              answer_type,\n              metadata,\n              is_active\n            )\n          "
+      ],
+      [
+       "eq",
+       "id",
+       "rep-1"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"v2\",\"kind\":null,\"reason\":\"empty\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null}"
+   ]
+  },
+  "mix=v2|historie|none": {
+   "status": 200,
+   "body": "{\"step\":\"no_questions\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_servable_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"v2\",\"kind\":null,\"reason\":\"empty\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null}"
+   ]
+  },
+  "mix=v2|historie|error": {
+   "status": 500,
+   "body": "{\"error\":\"boom\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "prehistoric_denmark",
+         "vikings",
+         "middle_ages",
+         "reformation_monarchy",
+         "enlightenment",
+         "revolutions_democracy",
+         "industrialisation",
+         "world_war_1",
+         "world_war_2",
+         "cold_war",
+         "democracy_power"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "vikings"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"historie\",\"subjectDomains\":[\"vikings\"]}",
+    "ERR EDGE FUNCTION ERROR: {\"message\":\"boom\"}"
+   ]
+  },
+  "mix=v2|engelsk|due": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"due-1\",\"content\":{\"question\":\"Q dq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}"
+   ]
+  },
+  "mix=v2|engelsk|new": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"new-inst\",\"content\":{\"question\":\"Q m1\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "insert",
+       {
+        "student_id": "stu-1",
+        "question_id": "m1",
+        "answered": false,
+        "correct_answer": "a",
+        "difficulty_at_time": 1,
+        "mastery_snapshot": 1,
+        "next_review_at": "<ts>"
+       }
+      ],
+      [
+       "select",
+       "id"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"v2\",\"kind\":\"choice\",\"reason\":\"base\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null}"
+   ]
+  },
+  "mix=v2|engelsk|repeat": {
+   "status": 200,
+   "body": "{\"question_instance_id\":\"rep-1\",\"content\":{\"question\":\"Q rq\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\",\"is_repeat\":true}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_servable_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n            id,\n            questions (\n              content,\n              answer_format,\n              answer_type,\n              metadata,\n              is_active\n            )\n          "
+      ],
+      [
+       "eq",
+       "id",
+       "rep-1"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "limit",
+       1
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"v2\",\"kind\":null,\"reason\":\"empty\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null}"
+   ]
+  },
+  "mix=v2|engelsk|none": {
+   "status": 200,
+   "body": "{\"step\":\"no_questions\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "request_repeat_question_servable_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}",
+    "LOG FORMAT_MIX: {\"engine\":\"v2\",\"kind\":null,\"reason\":\"empty\",\"targetBand\":3,\"window\":0,\"gapSinceNonBase\":null,\"served\":{},\"qualified\":[],\"dropped\":0,\"band\":{\"band\":3,\"seed\":3,\"seedSource\":\"grade\",\"folded\":4,\"newlyFolded\":1},\"client_band\":null}"
+   ]
+  },
+  "mix=v2|engelsk|error": {
+   "status": 500,
+   "body": "{\"error\":\"boom\"}",
+   "calls": [
+    {
+     "createClient": "user",
+     "auth": "pupil-jwt"
+    },
+    {
+     "client": "user",
+     "kind": "auth.getUser"
+    },
+    {
+     "client": "user",
+     "kind": "from",
+     "name": "profiles",
+     "ops": [
+      [
+       "select",
+       "active_domains, selected_grade"
+      ],
+      [
+       "eq",
+       "id",
+       "stu-1"
+      ],
+      [
+       "maybeSingle"
+      ]
+     ]
+    },
+    {
+     "client": "user",
+     "kind": "rpc",
+     "name": "release_open_question_outside",
+     "ops": [
+      [
+       "args",
+       {
+        "p_domains": [
+         "english"
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "createClient": "admin",
+     "auth": "none"
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "\n        id,\n        next_review_at,\n        questions (\n          content,\n          answer_format,\n          answer_type,\n          metadata,\n          is_active\n        )\n      "
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "eq",
+       "answered",
+       false
+      ],
+      [
+       "lte",
+       "next_review_at",
+       "<ts>"
+      ],
+      [
+       "order",
+       "next_review_at",
+       {
+        "ascending": true
+       }
+      ],
+      [
+       "limit",
+       10
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "get_question_candidates_for_student",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7,
+        "p_domains": [
+         "english"
+        ],
+        "p_per_group": 20
+       }
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "from",
+     "name": "question_instances",
+     "ops": [
+      [
+       "select",
+       "created_at, questions ( answer_format, answer_type, difficulty_band, learning_objective, force_text:content->force_text )"
+      ],
+      [
+       "eq",
+       "student_id",
+       "stu-1"
+      ],
+      [
+       "order",
+       "created_at",
+       {
+        "ascending": false
+       }
+      ],
+      [
+       "limit",
+       20
+      ]
+     ]
+    },
+    {
+     "client": "admin",
+     "kind": "rpc",
+     "name": "advance_student_band",
+     "ops": [
+      [
+       "args",
+       {
+        "p_student_id": "stu-1",
+        "p_grade": 7
+       }
+      ]
+     ]
+    }
+   ],
+   "logs": [
+    "LOG WAVE: {\"wavePhase\":\"challenge\",\"lastMisconceptionType\":null}",
+    "LOG GRADE: {\"selectedGrade\":7,\"currentDifficultyBand\":null}",
+    "LOG DOMAINS: {\"activeDomains\":[\"vikings\"],\"subject\":\"engelsk\",\"subjectDomains\":[\"english\"]}",
+    "ERR EDGE FUNCTION ERROR: {\"message\":\"boom\"}"
+   ]
+  }
+ }
+}

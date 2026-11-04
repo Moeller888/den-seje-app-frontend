@@ -1,0 +1,142 @@
+{
+  "blockers": [
+    [
+      [
+        560,
+        560
+      ],
+      [
+        680,
+        560
+      ],
+      [
+        680,
+        600
+      ],
+      [
+        560,
+        600
+      ]
+    ]
+  ],
+  "defaultSpot": "start",
+  "entry": "cellar#enter",
+  "id": "cellar",
+  "layers": [
+    {
+      "assets": {
+        "default": "bg.cellar"
+      },
+      "depth": 0,
+      "id": "back"
+    }
+  ],
+  "nameKey": "s.cellar",
+  "objectZones": [
+    {
+      "entity": "lamp",
+      "polygon": [
+        [
+          870,
+          420
+        ],
+        [
+          930,
+          420
+        ],
+        [
+          930,
+          490
+        ],
+        [
+          870,
+          490
+        ]
+      ]
+    }
+  ],
+  "size": {
+    "height": 720,
+    "width": 1280
+  },
+  "sounds": {
+    "drip": "s.drip"
+  },
+  "speechRegions": {
+    "mira": {
+      "height": 120,
+      "width": 400,
+      "x": 160,
+      "y": 300
+    }
+  },
+  "spots": {
+    "arrive": {
+      "facing": "left",
+      "x": 1080,
+      "y": 650
+    },
+    "lamp": {
+      "x": 900,
+      "y": 470
+    },
+    "shelf": {
+      "facing": "up",
+      "x": 900,
+      "y": 630
+    },
+    "stairs": {
+      "facing": "right",
+      "x": 1180,
+      "y": 640
+    },
+    "start": {
+      "x": 300,
+      "y": 640
+    }
+  },
+  "triggerZones": [
+    {
+      "entry": "cellar#draft",
+      "id": "draft",
+      "polygon": [
+        [
+          1000,
+          560
+        ],
+        [
+          1120,
+          560
+        ],
+        [
+          1120,
+          720
+        ],
+        [
+          1000,
+          720
+        ]
+      ]
+    }
+  ],
+  "walkable": [
+    [
+      [
+        0,
+        560
+      ],
+      [
+        1280,
+        560
+      ],
+      [
+        1280,
+        720
+      ],
+      [
+        0,
+        720
+      ]
+    ]
+  ]
+}

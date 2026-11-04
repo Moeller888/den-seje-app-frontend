@@ -1,0 +1,73 @@
+{
+  "id": "attic",
+  "kind": "logic",
+  "nodes": [
+    {
+      "id": "at0",
+      "name": "enter",
+      "next": [
+        "at1"
+      ],
+      "type": "entry"
+    },
+    {
+      "expr": {
+        "eq": [
+          {
+            "var": "$action"
+          },
+          {
+            "const": "scene.enter"
+          }
+        ]
+      },
+      "id": "at1",
+      "next": [
+        "at2",
+        {
+          "order": 1,
+          "to": "at3"
+        }
+      ],
+      "type": "guard"
+    },
+    {
+      "animation": "wave",
+      "entity": "bo",
+      "id": "at2",
+      "type": "play_animation"
+    },
+    {
+      "expr": {
+        "eq": [
+          {
+            "var": "seen_dawn"
+          },
+          {
+            "const": false
+          }
+        ]
+      },
+      "id": "at3",
+      "next": [
+        "at4",
+        {
+          "order": 1,
+          "to": "at5"
+        }
+      ],
+      "type": "guard"
+    },
+    {
+      "id": "at4",
+      "type": "set",
+      "value": true,
+      "var": "seen_dawn"
+    },
+    {
+      "id": "at5",
+      "name": "dawn",
+      "type": "cutscene"
+    }
+  ]
+}

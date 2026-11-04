@@ -1,0 +1,51 @@
+{
+  "scenario": "save-roundtrip-and-corrupt",
+  "description": "Gem i hviletilstand, save → load → save giver identisk kanonisk JSON (bortset fra tidsfelter), game.save/game.load-hændelser, afvisning af ødelagte/forkerte saves, migration og .bak-fallback.",
+  "covers": ["TS-E01", "TS-E02", "TS-E03", "TS-E04", "TS-E05", "TS-E06", "TS-E07", "TS-E08", "TS-E09", "TS-E10"],
+  "harness": "world-headless",
+  "contentRef": "interaction-inventory-combine.json",
+  "contentPatch": {
+    "game.entry": "game_logic#main",
+    "graphs+": [
+      { "id": "game_logic", "kind": "logic", "nodes": [
+        { "id": "g0", "type": "entry", "name": "main", "modal": false, "next": ["g1", "g2"] },
+        { "id": "g1", "type": "guard", "expr": { "eq": [ { "var": "$action" }, { "const": "game.save" } ] }, "next": ["g3"] },
+        { "id": "g3", "type": "set", "var": "saves_made", "value": "yes", "next": [] },
+        { "id": "g2", "type": "guard", "expr": { "eq": [ { "var": "$action" }, { "const": "game.load" } ] }, "next": ["g4"] },
+        { "id": "g4", "type": "set", "var": "loaded_once", "value": true, "next": [] }
+      ] }
+    ]
+  },
+  "steps": [
+    { "do": "newGame" },
+    { "do": "click", "target": { "objectZone": "rope" } },
+    { "do": "setGlobal", "name": "counter", "value": 7 },
+    { "do": "save", "slot": "slot1" },
+    { "expect": "saveContains", "slot": "slot1", "path": "globals.saves_made", "equals": "yes", "note": "game.save kører før snapshot" },
+    { "expect": "saveContains", "slot": "slot1", "path": "globals.counter", "equals": 7 },
+    { "expect": "saveLacks", "slot": "slot1", "path": "globals.$action" },
+    { "expect": "saveValidates", "slot": "slot1", "schema": "engine.save/1" },
+
+    { "do": "acquireModalForTest", "reason": "simuleret samtale" },
+    { "do": "save", "slot": "slot2" },
+    { "expect": "saveRejected", "reason": "not-idle" },
+    { "do": "releaseModalForTest" },
+
+    { "do": "load", "slot": "slot1" },
+    { "expect": "globals", "equals": { "loaded_once": true, "counter": 7 } },
+    { "expect": "inventory", "actor": "keeper", "equals": ["hook", "rope"] },
+    { "do": "save", "slot": "slot3" },
+    { "expect": "savesCanonicallyEqual", "a": "slot1", "b": "slot3", "ignore": ["savedAt", "playTimeMs", "checksum", "globals.loaded_once"] },
+
+    { "do": "loadRaw", "raw": "{ \"format\": \"engine.save\", \"formatVersion\": 1, ", "expectError": "parse" },
+    { "do": "loadRawFromSlotWithMutation", "slot": "slot1", "mutate": { "set": { "globals.counter": 8 } }, "expectError": "checksum" },
+    { "do": "loadRawFromSlotWithMutation", "slot": "slot1", "mutate": { "set": { "content.id": "other-game" } }, "expectError": "wrong-content" },
+    { "do": "loadRawFromSlotWithMutation", "slot": "slot1", "mutate": { "set": { "formatVersion": 99 } }, "expectError": "newer-format" },
+    { "do": "loadRawFromSlotWithMutation", "slot": "slot1", "mutate": { "set": { "objects[id=hook].variant": "nonexistent" } }, "recomputeChecksum": true,
+      "expectWarning": "unknown-variant-fallback", "expectAfterLoad": { "variantOf": "hook", "equals": "default" } },
+
+    { "do": "loadFixture", "fixture": "save-v0-legacy-example", "note": "fixture for en tidligere formatversion skrives sammen med første migration (TS-E07)" },
+    { "do": "corruptSlot", "slot": "slot1" },
+    { "expect": "slotOffersBackup", "slot": "slot1" }
+  ]
+}

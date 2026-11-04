@@ -1,0 +1,38 @@
+{
+  "id": "game",
+  "kind": "logic",
+  "nodes": [
+    {
+      "id": "gs0",
+      "modal": true,
+      "name": "start",
+      "next": [
+        "gs1"
+      ],
+      "type": "entry"
+    },
+    {
+      "expr": {
+        "eq": [
+          {
+            "var": "$action"
+          },
+          {
+            "const": "game.start"
+          }
+        ]
+      },
+      "id": "gs1",
+      "next": [
+        "gs2"
+      ],
+      "type": "guard"
+    },
+    {
+      "id": "gs2",
+      "speaker": "mira",
+      "textKey": "line.intro",
+      "type": "say"
+    }
+  ]
+}

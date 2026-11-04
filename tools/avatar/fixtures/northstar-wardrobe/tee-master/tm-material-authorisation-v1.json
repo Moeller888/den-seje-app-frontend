@@ -1,0 +1,172 @@
+{
+  "decision": "D-267",
+  "experiment": "generated material on the locked D-264 tee master (two separate deliveries)",
+  "status": "AUTHORISED by D-267 (D-267 TM-MATERIAL: 2 CALLS AUTHORISED): TWO single-use calls; no earlier permission is reused; CLOSED by D-268: 2 spent and received (TMG-1 and TMG-2, both requiring visual review; visual verdict in D-268)",
+  "meta": {
+    "authorisesImageRequest": false,
+    "why": "authorisation is the exact token in D-267's decision status plus this file's unspent entries, never a general boolean",
+    "kind": "a bounded method experiment: no catalogue, no runtime, no activation, no item approval"
+  },
+  "budget": {
+    "authorised": 2,
+    "reserve": 0,
+    "retries": 0,
+    "fallback": false,
+    "reusesEarlierPermissions": false,
+    "automaticExtension": false,
+    "separateFrom": "every earlier budget (D-255, D-258 and the rest)",
+    "enforcedLimit": "the call count (one one-shot claim per call); the price is an estimate",
+    "price": {
+      "verifiedAt": "2026-10-30",
+      "source": "https://developers.openai.com/api/docs/pricing (Standard, gpt-image-2.5-sunburst: text input $5.00, image input $8.00, image output $30.00 per 1M tokens)",
+      "perCallEstimate": 0.0435,
+      "totalEstimate": 0.087,
+      "basis": "no image input; about 300 text tokens in per prompt ($0.0015); image output for 1024x1024 high taken as at most the 1,372 tokens measured for 1024x1536 high on R1-1 and R1C-1 ($0.0412); the page gives no per-size token count",
+      "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
+    },
+    "actuallySent": 2,
+    "closed": {
+      "by": "D-268",
+      "reason": "both authorised calls were sent once each and received",
+      "spent": 2,
+      "received": 2,
+      "uncertain": 0,
+      "refusedBeforeSend": 0,
+      "closedUnused": 0,
+      "billedEstimate": "about $0.107 from the reported usage (TMG-1 248 text in, TMG-2 180 text in, 1,756 image tokens out each), above the $0.087 estimate because the output was 1,756 and not 1,372 tokens; the billed amount is read on the OpenAI usage page",
+      "reopen": "never automatically; only a new owner decision"
+    }
+  },
+  "privacy": {
+    "cSentToApi": "never: no image and no reference is sent",
+    "publishOrTrack": "never: the raw results and every review sheet stay outside both clones (D-127 §2)",
+    "h1": "never used"
+  },
+  "frozen": {
+    "plan": {
+      "file": "tools/avatar/fixtures/northstar-wardrobe/tee-master/tm-material-plan-v1.json",
+      "sha256": "f24e186156650870de83046ed6a52b28ade3e71a10591babfc79ef8a4be1214b"
+    },
+    "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026",
+    "production": "d240 (unchanged; this is not the production method)"
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/generations",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png"
+    },
+    "fieldOrder": [
+      "model",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "image",
+      "image[]",
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation",
+      "user"
+    ],
+    "images": []
+  },
+  "stopRules": [
+    "two single calls: no retry, no reserve, no fallback, no other model",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome — never resent, and the later call is not sent",
+    "an HTTP error (credit, access, moderation or request shape) on the first call stops the second",
+    "a format reject at receipt (TECHNICAL_REJECT) of the first call does not stop the second; the deliveries are independent",
+    "the executor's stop file TMM-STOP.json"
+  ],
+  "calls": [
+    {
+      "callId": "TMG-1-tee-hip-swatch-gingham",
+      "order": 1,
+      "delivery": "swatch",
+      "background": "opaque",
+      "prompt": {
+        "sha256": "3c3d275370f66fa3223617355f5f267c3dc2d4c17cd3c96b0aa7c744a453e0e5"
+      },
+      "claim": {
+        "identity": "TMG-1-tee-hip-swatch-gingham-claim",
+        "filename": "TMG-1-tee-hip-swatch-gingham.claim.json",
+        "eventsFilename": "TMG-1-tee-hip-swatch-gingham.events.jsonl"
+      },
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_f018254f42f24f4ca750693bfd34bfd6",
+        "imageSha256": "703c6b73d3cf361e499267e71ee4e233e98e543f07021346ee9b108d5918ce6f",
+        "usage": {
+          "input_tokens": 248,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 248
+          },
+          "output_tokens": 1756,
+          "output_tokens_details": {
+            "image_tokens": 1756,
+            "text_tokens": 0
+          },
+          "total_tokens": 2004
+        },
+        "evaluation": "requires visual review: every material check passed (opaque, wrap seam 5.23/13.77 and 5.01/12.29, 0 details, period ratio 0.128, block spread 1.41); 0 holes, fit OK, outfits 8/8; visual verdict in D-268"
+      },
+      "recordedBy": "D-268"
+    },
+    {
+      "callId": "TMG-2-tee-hip-chest-print-planet",
+      "order": 2,
+      "delivery": "print",
+      "background": "transparent",
+      "prompt": {
+        "sha256": "142a3631e76fed8674355f20531a34f94931de9cce860e6c1dac1f6d6a51fc3a"
+      },
+      "claim": {
+        "identity": "TMG-2-tee-hip-chest-print-planet-claim",
+        "filename": "TMG-2-tee-hip-chest-print-planet.claim.json",
+        "eventsFilename": "TMG-2-tee-hip-chest-print-planet.events.jsonl"
+      },
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_d904973644f2429f962f0e730331a044",
+        "imageSha256": "608b45398c959708caaa09991f1544032b5dd4b12273c04f29a222e4e9ffe458",
+        "usage": {
+          "input_tokens": 180,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 180
+          },
+          "output_tokens": 1756,
+          "output_tokens_details": {
+            "image_tokens": 1756,
+            "text_tokens": 0
+          },
+          "total_tokens": 1936
+        },
+        "evaluation": "requires visual review: every print check passed (transparent share 0.627, extent 0.926, semi 0.0153, fringe lum 10.5, halo 0, specks 0, palette cover 0.921); placed at chest-left [532,541,62,62]; visual verdict in D-268"
+      },
+      "recordedBy": "D-268"
+    }
+  ],
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-tee-material-d267.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-267",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}

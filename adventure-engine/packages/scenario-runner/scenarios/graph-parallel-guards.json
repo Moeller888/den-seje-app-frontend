@@ -1,0 +1,34 @@
+{
+  "scenario": "graph-parallel-guards",
+  "description": "Parallel fan-out, set-prioritet før søskende, komplementære vagter (if/else) og AND-aggregering.",
+  "covers": ["TS-B01", "TS-B02", "TS-B03", "TS-B10", "TS-B11"],
+  "harness": "graph",
+  "content": {
+    "game": { "id": "test", "version": "0.0.1", "formatVersion": 1, "languages": ["da"], "defaultLanguage": "da", "globals": {} },
+    "graphs": [
+      {
+        "id": "g",
+        "kind": "logic",
+        "nodes": [
+          { "id": "n0", "type": "entry", "name": "main", "modal": false, "next": ["g_yes", "g_no", "s1"] },
+          { "id": "s1", "type": "set", "var": "lamp_lit", "value": true, "next": [] },
+          { "id": "g_yes", "type": "guard", "expr": { "eq": [ { "var": "lamp_lit" }, { "const": true } ] }, "next": ["say_yes"] },
+          { "id": "g_no", "type": "guard", "expr": { "eq": [ { "var": "lamp_lit" }, { "const": "false" } ] }, "next": ["say_no"] },
+          { "id": "say_yes", "type": "say", "speaker": "narrator", "textKey": "t.lit", "next": [] },
+          { "id": "say_no", "type": "say", "speaker": "narrator", "textKey": "t.dark", "next": [] }
+        ]
+      }
+    ],
+    "actors": [ { "id": "narrator", "nameKey": "a.narrator", "scene": null, "entry": null, "variants": { "default": {} } } ],
+    "i18n": { "da": { "a.narrator": "Fortæller", "t.lit": "Lampen lyser.", "t.dark": "Det er mørkt." } }
+  },
+  "steps": [
+    { "do": "run", "entry": "g#main", "ctx": { "$action": "test" } },
+    { "expect": "commands", "sequence": [ { "type": "Say", "nodeId": "say_yes" } ], "exhaustive": true },
+    { "do": "done", "nodeId": "say_yes" },
+    { "expect": "runResult", "value": true },
+    { "expect": "globals", "equals": { "lamp_lit": true } },
+    { "expect": "noCommand", "nodeId": "say_no" }
+  ],
+  "notes": "Set kører først pga. typeprioritet (02 B3.2), så g_yes ser den nye værdi. Kanonisk strengsammenligning: true == \"true\"."
+}

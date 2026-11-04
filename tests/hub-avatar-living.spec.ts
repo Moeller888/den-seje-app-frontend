@@ -13,7 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail, PROD } from "./helpers.js";
+import { findAuthUserByEmail, PROD, serveCheckoutLogin } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -176,15 +176,19 @@ async function makeWeeklyQuestClaimable() {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function loginAsStudent(page: any) {
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
 }
 
+// The pupil login lands on hub.html (#446), so the hub is already open: wait for that load
+// instead of navigating again. A second load would find the daily reward and the achievement
+// already consumed by the first one, so the modal and the reaction would never show.
 async function openHubPage(page: any) {
-  await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
+  await expect(page).toHaveURL(`${PROD}/hub.html`);
   // At least one avatar layer — signals renderProfileAvatar() (and engine init) ran.
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
 }

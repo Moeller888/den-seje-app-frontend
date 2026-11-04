@@ -12,7 +12,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail, PROD } from "./helpers.js";
+import { findAuthUserByEmail, PROD, serveCheckoutLogin } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -41,14 +41,17 @@ test.afterAll(async () => {
     .eq("id", studentId);
 });
 
-// Helper: log in as student and wait for index.html to load.
+// Helper: log in as student (lands on the Hub), then open the quiz (index.html).
 async function loginAndWaitForApp(page: any): Promise<void> {
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  // Wait for index.html — URL change confirms redirect
-  await page.waitForURL(/index\.html/, { timeout: 20000 });
+  // Wait for hub.html — URL change confirms redirect
+  await page.waitForURL(/hub\.html/, { timeout: 20000 });
+  // A pupil always lands on the Hub; the quiz is one step further (Spil -> index.html).
+  await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

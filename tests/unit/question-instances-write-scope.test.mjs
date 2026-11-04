@@ -268,4 +268,9 @@ test("the only admin-client writes are the scoped v32 update helper and the serv
     "next_review_at", "question_id", "student_id"]);
   assert.match(values[1], /student_id: assignment\.studentId,/);
   assert.match(values[1], /answered: false,/);
+  // L1 K1 (reviewed): the only other column is the delivery proposal, served_snapshot, and only when
+  // get-next-question sends one (K1_SERVED_SNAPSHOT=on); the database verifies and owns it.
+  assert.equal((values[1].match(/\.\.\./g) ?? []).length, 1, "exactly one spread");
+  assert.match(values[1], /^\s*\.\.\.servedSnapshotColumn\(assignment\),$/m);
+  assert.match(ins, /export function servedSnapshotColumn\(assignment: QuestionAssignment\): \{ served_snapshot\?: Record<string, unknown> \} \{\s*return assignment\.servedSnapshot !== undefined \? \{ served_snapshot: assignment\.servedSnapshot \} : \{\};\s*\}/);
 });

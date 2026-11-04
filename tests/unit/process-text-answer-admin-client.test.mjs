@@ -159,12 +159,14 @@ test("the admin client is built in one place, from serviceKey(), with no headers
 });
 
 test("the admin client is used only by the grading read, the two privileged answer RPCs and the server-owned instance writes", () => {
-  // makeAdminClient is defined once and handed to exactly six call sites — the grading read
-  // (./instance-read.ts), the short-text award, the MC/number attempt, the long-answer save and the
-  // two misconception-signal writes (./instance-writes.ts). It is never invoked directly, so nothing
-  // else can run on it.
+  // makeAdminClient is defined once and handed to exactly eight call sites — the grading read
+  // (./instance-read.ts), the short-text award, the MC/number attempt, the long-answer save, the
+  // two misconception-signal writes (./instance-writes.ts) and the two H5 _v2 calls (D-273,
+  // ./text-answer-rpc.ts). It is never invoked directly, so nothing else can run on it.
   const uses = INDEX_CODE.match(/makeAdminClient/g) ?? [];
-  assert.equal(uses.length, 7, "one definition + six call sites");
+  assert.equal(uses.length, 9, "one definition + eight call sites");
+  assert.match(PATH_TEXT, /await callProcessTextAnswerV2\(\s*makeAdminClient,/);
+  assert.match(PATH_MC, /await callProcessQuestionAttemptV2\(\s*makeAdminClient,/);
   assert.match(INDEX_CODE, /await readInstanceForGrading\(\s*makeAdminClient,/);
   assert.match(PATH_TEXT, /await callProcessTextAnswer\(\s*makeAdminClient,/);
   assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,/);
@@ -205,10 +207,15 @@ test("the deploy diagnostic logs only serviceKeySource(), never a key", () => {
 });
 
 test("MC / number call process_question_attempt via the admin client with server-side values", () => {
-  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,\s*\{\s*studentId:\s+user\.id,\s*instanceId:\s+question_instance_id,\s*answer,\s*questionShownAt:\s+question_shown_at \?\? Date\.now\(\),\s*\}\s*\)/);
+  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,\s*\{\s*studentId:\s+user\.id,\s*instanceId:\s+question_instance_id,\s*answer:\s+gradedAnswer,\s*questionShownAt:\s+question_shown_at \?\? Date\.now\(\),\s*\}\s*\)/);
   assert.equal(/supabase\s*\.rpc\(\s*["']process_question_attempt["']/.test(INDEX_CODE), false,
     "process_question_attempt is never called on the user client");
   assert.equal(/callProcessTextAnswer/.test(PATH_MC), false);
+  // gradedAnswer is the pupil's answer, except for Match par, where it is only the shape-checked
+  // canonical form of the same connections (_shared/match-pairs.ts) — never a server-chosen value.
+  assert.match(INDEX_CODE, /let gradedAnswer = answer\r?\n/);
+  assert.equal((INDEX_CODE.match(/gradedAnswer = /g) ?? []).length, 2, "declared once, reassigned once");
+  assert.match(INDEX_CODE, /if \(format === "match"\) \{\s*const canonical = canonicalMatchAnswer\(answer, correct_answer\)\s*if \(canonical === null\) \{[\s\S]*?status: 400[\s\S]*?\}\s*gradedAnswer = canonical\s*\}/);
 });
 
 test("a key failure on the MC / number path is a visible 500 — no user-client fallback", () => {

@@ -1,0 +1,82 @@
+{
+  "id": "wick",
+  "kind": "logic",
+  "nodes": [
+    {
+      "id": "wi0",
+      "name": "main",
+      "next": [
+        "wi1"
+      ],
+      "type": "entry"
+    },
+    {
+      "expr": {
+        "and": [
+          {
+            "eq": [
+              {
+                "var": "$action"
+              },
+              {
+                "const": "use.inventory"
+              }
+            ]
+          },
+          {
+            "eq": [
+              {
+                "var": "$target"
+              },
+              {
+                "const": "lamp"
+              }
+            ]
+          }
+        ]
+      },
+      "id": "wi1",
+      "next": [
+        "wi2",
+        {
+          "order": 1,
+          "to": "wi3"
+        },
+        {
+          "order": 2,
+          "to": "wi4"
+        }
+      ],
+      "type": "guard"
+    },
+    {
+      "entity": "lamp",
+      "id": "wi2",
+      "type": "set_variant",
+      "variant": "lit"
+    },
+    {
+      "id": "wi3",
+      "object": "wick",
+      "to": {
+        "kind": "none"
+      },
+      "type": "move_object"
+    },
+    {
+      "id": "wi4",
+      "next": [
+        "wi5"
+      ],
+      "type": "set",
+      "value": true,
+      "var": "lamp_lit"
+    },
+    {
+      "id": "wi5",
+      "speaker": "mira",
+      "textKey": "line.lamp_lit",
+      "type": "say"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "animations": [
+    {
+      "atlas": "atlas.bo",
+      "id": "anim.bo.wave",
+      "instructions": [
+        {
+          "n": 4,
+          "op": "fps"
+        },
+        {
+          "from": 0,
+          "op": "play",
+          "to": 1
+        },
+        {
+          "n": 0,
+          "op": "frame"
+        }
+      ]
+    }
+  ],
+  "sounds": [
+    {
+      "asset": "snd.drip",
+      "channel": "ambient",
+      "durationMs": 200,
+      "id": "s.drip",
+      "volume": 0.5
+    }
+  ]
+}

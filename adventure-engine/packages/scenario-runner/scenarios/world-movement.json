@@ -1,0 +1,58 @@
+{
+  "scenario": "world-movement",
+  "description": "Fase 2 (syntetisk): sti om en blocker, frakoblet ø, projektion af mål uden for walk-området, fri klik-gang, tynd trigger-zone krydset på én tick, scroll, placering på en zonekant.",
+  "covers": ["TS-C05", "TS-C06", "TS-C08", "TS-C09", "TS-C10", "TS-D02"],
+  "harness": "world-headless",
+  "content": {
+    "game": { "id": "test", "version": "0.0.1", "formatVersion": 1, "languages": ["da"], "defaultLanguage": "da",
+              "player": { "actor": "rower" }, "entry": null, "globals": {} },
+    "scenes": [
+      { "id": "pier", "nameKey": "s.pier", "size": { "width": 2000, "height": 720 }, "entry": null, "walkSpeed": 300,
+        "spots": { "start": { "x": 500, "y": 600, "facing": "right" } },
+        "defaultSpot": "start",
+        "walkable": [ [[0,500],[2000,500],[2000,720],[0,720]], [[0,100],[200,100],[200,200],[0,200]] ],
+        "blockers": [ [[800,550],[900,550],[900,720],[800,720]] ],
+        "triggerZones": [ { "id": "plank", "entry": "plank_logic#main", "polygon": [[1100,500],[1102,500],[1102,720],[1100,720]] } ] }
+    ],
+    "actors": [ { "id": "rower", "nameKey": "a.rower", "scene": "pier", "spot": "start", "entry": null, "variants": { "default": {} } } ],
+    "graphs": [
+      { "id": "plank_logic", "kind": "logic", "nodes": [
+        { "id": "pl0", "type": "entry", "name": "main", "next": ["pl_in", "pl_out"] },
+        { "id": "pl_in", "type": "guard", "expr": { "eq": [ { "var": "$action" }, { "const": "zone.enter" } ] }, "next": ["pe_set"] },
+        { "id": "pe_set", "type": "set", "var": "plank_entered", "value": true },
+        { "id": "pl_out", "type": "guard", "expr": { "eq": [ { "var": "$action" }, { "const": "zone.exit" } ] }, "next": ["px_set"] },
+        { "id": "px_set", "type": "set", "var": "plank_left", "value": true }
+      ] }
+    ],
+    "i18n": { "da": { "s.pier": "Mole", "a.rower": "Roer" } }
+  },
+  "steps": [
+    { "do": "newGame" },
+    { "expect": "activeZones", "actor": "rower", "equals": [] },
+    { "expect": "scroll", "x": 0 },
+    { "expect": "path", "scene": "pier", "from": [500, 600], "to": [1200, 600], "equals": [[500, 600], [800, 550], [900, 550], [1200, 600]] },
+    { "expect": "path", "scene": "pier", "from": [500, 600], "to": [100, 150], "none": true, "note": "øen er frakoblet (TS-C10)" },
+    { "expect": "path", "scene": "pier", "from": [500, 600], "to": [1500, 400], "equals": [[500, 600], [800, 550], [1500, 500]], "note": "mål over walk-området projiceres til nærmeste kant (TS-C09)" },
+    { "do": "hoverPoint", "x": 1200, "y": 600 },
+    { "expect": "cursor", "mode": "walk" },
+    { "do": "hoverPoint", "x": 850, "y": 650 },
+    { "expect": "cursor", "mode": "idle", "note": "inde i blockeren" },
+    { "do": "clickPoint", "x": 1200, "y": 600 },
+    { "do": "runUntilIdle" },
+    { "expect": "actorPosition", "actor": "rower", "x": 1200, "y": 600 },
+    { "expect": "facing", "actor": "rower", "equals": "right" },
+    { "expect": "globals", "equals": { "plank_entered": true, "plank_left": true }, "note": "zonen er 2 px bred, ganghastigheden 5 px pr. tick" },
+    { "expect": "eventOrder", "equals": ["zone.enter:plank", "zone.exit:plank"] },
+    { "expect": "activeZones", "actor": "rower", "equals": [] },
+    { "expect": "scroll", "x": 560 },
+    { "do": "setActorPosition", "actor": "rower", "x": 1101, "y": 600 },
+    { "expect": "activeZones", "actor": "rower", "equals": ["plank"] },
+    { "do": "setActorPosition", "actor": "rower", "x": 1101, "y": 600 },
+    { "do": "setActorPosition", "actor": "rower", "x": 1100, "y": 650, "note": "præcis på zonekanten tæller som inde" },
+    { "expect": "activeZones", "actor": "rower", "equals": ["plank"] },
+    { "expect": "nodeExecutions", "nodeId": "pe_set", "count": 2 },
+    { "expect": "nodeExecutions", "nodeId": "px_set", "count": 1 },
+    { "do": "advanceTicks", "n": 3 },
+    { "expect": "idle" }
+  ]
+}

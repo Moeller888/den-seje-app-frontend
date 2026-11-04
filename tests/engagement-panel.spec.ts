@@ -22,6 +22,10 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const SUPABASE_URL              = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+// The panel names a pupil by the local part of their e-mail (get_teacher_visibility.display_name:
+// split_part(email, '@', 1)), so the row is found by student2's own address, whatever it is.
+const STUDENT2_DISPLAY_NAME = STUDENT2_EMAIL.split("@")[0];
+
 let adminClient: ReturnType<typeof createClient>;
 let student2Id: string;
 // Three question slots for tests that insert multiple instances
@@ -116,7 +120,7 @@ test("2. Today count matches DB count for active student", async ({
 
   const row = page
     .locator("#engagement-table tbody tr")
-    .filter({ hasText: "student-teacher-test" });
+    .filter({ hasText: STUDENT2_DISPLAY_NAME });
   await expect(row).toBeVisible({ timeout: 5000 });
 
   // Column 2 (index 2) = "I dag" count
@@ -145,7 +149,7 @@ test("3. Student with no activity shows zero counts and 'Aldrig'", async ({
 
   const row = page
     .locator("#engagement-table tbody tr")
-    .filter({ hasText: "student-teacher-test" });
+    .filter({ hasText: STUDENT2_DISPLAY_NAME });
   await expect(row).toBeVisible({ timeout: 5000 });
 
   const todayText  = await row.locator("td").nth(2).textContent();
@@ -180,7 +184,7 @@ test("4. Last-active shows recent time for just-active student", async ({
 
   const row = page
     .locator("#engagement-table tbody tr")
-    .filter({ hasText: "student-teacher-test" });
+    .filter({ hasText: STUDENT2_DISPLAY_NAME });
   const lastActiveText = await row.locator("td").nth(4).textContent();
 
   // Must show something meaning "very recently" — not "Aldrig" or a date in the past

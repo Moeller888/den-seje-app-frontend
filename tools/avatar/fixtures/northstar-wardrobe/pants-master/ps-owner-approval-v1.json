@@ -1,0 +1,20 @@
+{
+  "decision": "D-281",
+  "kind": "the owner's item approval and publication permission for the D-281 solid trousers; the only list the runtime may offer",
+  "owner": {
+    "message": "D-281 GODKENDT: TS-NAV og TS-SND fra pants-master-v2 er godkendt som items, inklusive de fem beskrevne farvepar med lav kontrast.",
+    "publication": "De to bukselag i D-281's filliste, med præcis de registrerede sha256-hashes, må committes og offentliggøres under assets/avatar-northstar/ som udvidelse af D-242's undtagelse fra D-127 §2. Tilladelsen omfatter kun disse to lag.",
+    "date": "2026-10-31"
+  },
+  "approved": ["TS-NAV", "TS-SND"],
+  "lowContrastPairsIncluded": ["TP-TEA-NAV+TS-NAV", "TP-SHD-NAV+TS-NAV", "TP-FOX-NAV+TS-NAV", "TP-TEA-MUS+TS-SND", "TP-SHD-MUS+TS-SND"],
+  "files": {
+    "bottom-trousers-square-navy-pants-v1.webp": { "sha256": "1fdf0d8c70d073db17d1f83aeacb8b195955fdcf01a92ed690fec279a24f146a", "bytes": 69254 },
+    "bottom-trousers-square-sand-pants-v1.webp": { "sha256": "aed3c6c907ab2136cf28d4a8252b0fbd933a11cb993f1adc8a3ff4efb837f33d", "bytes": 78918 }
+  },
+  "basis": {
+    "candidates": { "file": "tools/avatar/fixtures/northstar-wardrobe/pants-master/ps-candidates-v1.json", "sha256": "ac20b2e39acff3ed06cca66f95aa70f5af02812926d1b8231efccd4de60b3c9b" },
+    "stagingManifestSha256": "4831fbe230f9eb81fe3a2299d9bf49e9dd78318bfcbf931e873992f8d0d45380"
+  },
+  "notCovered": "patterned trousers, other items, catalogue or shop entries, pupil activation and flag changes"
+}

@@ -15,6 +15,9 @@
 //                       which one is right
 //   content.type        string display hint, when present
 //   content.force_text  true, when present (renderer flag)
+//   content.match       Match par only: { left, right } — two lists of item texts, the right list in
+//                       the instance's shuffled order (_shared/match-pairs.ts). Never content.pairs,
+//                       which names the right partner of every item.
 //   metadata            only the pedagogical tags listed in PUBLIC_METADATA_KEYS
 // Grading data stays server-side: process-event grades against question_instances.correct_answer
 // and questions.content read through the backend client, and only reveals the correct answer and
@@ -26,7 +29,9 @@
 // Pure TypeScript with no Deno or network imports, so the Node unit suite tests exactly what the
 // Edge Functions run.
 
-export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "type", "force_text"] as const);
+import { matchLayout, type MatchLayout } from "./match-pairs.ts";
+
+export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "type", "force_text", "match"] as const);
 
 export const PUBLIC_METADATA_KEYS = Object.freeze([
   "difficulty_type",
@@ -42,6 +47,7 @@ export type PublicContent = {
   options?: string[];
   type?: string;
   force_text?: true;
+  match?: MatchLayout;
 };
 
 export type PublicQuestion = {
@@ -65,9 +71,11 @@ function publicMetadata(raw: unknown): Record<string, unknown> | null {
 }
 
 // Builds the public payload for one question. `format` is the mapped answer format ("mc", "number",
-// "text"). Throws on content the client could not render, exactly like the server-side
-// normalisation it sits next to, so a bad row is skipped rather than served half-built.
-export function toPublicQuestion(rawContent: unknown, format: string, rawMetadata: unknown): PublicQuestion {
+// "text", "match"). `instanceKey` is the instance's question_instances.correct_answer; only "match"
+// reads it, to lay out the shuffled right column — it is never copied into the payload. Throws on
+// content the client could not render, exactly like the server-side normalisation it sits next to, so a
+// bad row is skipped rather than served half-built.
+export function toPublicQuestion(rawContent: unknown, format: string, rawMetadata: unknown, instanceKey?: unknown): PublicQuestion {
   if (!isPlainObject(rawContent)) {
     throw new Error("Invalid content");
   }
@@ -89,6 +97,10 @@ export function toPublicQuestion(rawContent: unknown, format: string, rawMetadat
       throw new Error("MC question has a non-text option");
     }
     content.options = [...options];
+  }
+
+  if (format === "match") {
+    content.match = matchLayout(rawContent, instanceKey);
   }
 
   if (typeof rawContent.type === "string") content.type = rawContent.type;

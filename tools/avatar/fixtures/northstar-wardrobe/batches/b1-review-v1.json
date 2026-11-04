@@ -1,0 +1,17 @@
+{
+  "batch": "b1",
+  "decision": "D-248",
+  "what": "The assistant's first review of b1's five received pictures (D-248). Recommendations only: the assistant never approves; an owner approval is an entry by \"owner\" with the item's layer hashes, and there is none here. The method and its thresholds were not changed for this review.",
+  "entries": [
+    { "kind": "item", "id": "bottom-pleated-skirt-tartan", "verdict": "recommend-approve", "by": "assistant", "date": "2026-10-28",
+      "reason": "technically OK; pattern, pleats and hem clean at full and app size; with the blue tee all four existing shoes pass; with the cream tee the skirt's waistband contour shows just under the tee's hem as a second line (COMBO-2), so the cream combinations stay rejected" },
+    { "kind": "item", "id": "top-breton-longsleeve", "verdict": "uncertain", "by": "assistant", "date": "2026-10-28",
+      "reason": "G-2's 712 px are the antialiased edges between the navy and white stripes, whose mid-grey falls within the tolerance of C's grey base top — a measurement confusion by the pattern, not base fabric left; the layer covers completely. Technically rejected by the frozen rule; visually clean" },
+    { "kind": "item", "id": "shoes-hightop-canvas-red", "verdict": "uncertain", "by": "assistant", "date": "2026-10-28",
+      "reason": "FIT-4's one pixel is a real hole: the picture paints an opaque dark red pixel (105, 38, 31) between the laces at (624, 1392) and the layer is empty there — an extraction fault of one pixel, invisible at app size" },
+    { "kind": "item", "id": "top-waist-boxy-peach", "verdict": "recommend-reject", "by": "assistant", "date": "2026-10-28",
+      "reason": "the picture paints complete, outlined sleeves; the extraction loses most of the sleeve surface over C's shoulders and arms (20,595 px of lost paint, mean distance 37 to C, 85 % within the new-paint tolerance 40): a skin-near colour explained as C's skin" },
+    { "kind": "item", "id": "shoes-desert-boots-tan", "verdict": "recommend-reject", "by": "assistant", "date": "2026-10-28",
+      "reason": "the picture paints complete tan suede boots; the layer keeps the outline, laces and sole edge only — 8,946 px of holes over C's foot: the suede explained as C's skin, and the covering (derived from the extracted shoe) cannot recover it" }
+  ]
+}

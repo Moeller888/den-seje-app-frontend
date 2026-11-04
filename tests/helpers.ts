@@ -4,6 +4,7 @@
  */
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
+import { readFileSync } from "fs";
 import * as path from "path";
 import { readRequiredSecret, derivedPassword } from "./test-credentials.mjs";
 
@@ -62,6 +63,25 @@ export const PUBLIC_API_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY ?? "").trim(
 export const STUDENT_TEMP_PASSWORD        = derivedPassword("STUDENT_TEMP_PASSWORD");
 export const STUDENT2_FRESH_TEMP_PASSWORD = derivedPassword("STUDENT2_FRESH_TEMP_PASSWORD");
 export const STUDENT2_NEW_PASSWORD        = derivedPassword("STUDENT2_NEW_PASSWORD");
+
+const CHECKOUT_LOGIN_JS = path.resolve(__dirname, "../js/login.js");
+
+/**
+ * Serve js/login.js from this checkout instead of the live site. Call it before opening login.html.
+ *
+ * The suite runs against the live site, which serves main's frontend until a change is merged. A
+ * PR that changes where login sends a user (pupils -> hub.html) would otherwise be tested against
+ * main's login.js and wait for a page it never reaches. After merge the live file is the same
+ * bytes, so the overlay changes nothing (the same pattern as stav-til.spec.ts).
+ */
+export async function serveCheckoutLogin(page: any): Promise<void> {
+  const body = readFileSync(CHECKOUT_LOGIN_JS, "utf8");
+  await page.route(`${PROD}/js/login.js`, (route: any) => route.fulfill({
+    status: 200,
+    headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" },
+    body,
+  }));
+}
 
 /**
  * Log in as the test teacher and wait for teacher.html to load.

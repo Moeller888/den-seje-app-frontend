@@ -1,0 +1,169 @@
+{
+  "decision": "D-326",
+  "kind": "owner visual approval of concrete items",
+  "recordedBy": "D-326",
+  "date": "2026-11-03",
+  "ownerWords": "de to første er godkendt — then: \"Registrér min allerede givne godkendelse af de to første varianter i D-325: originalfarve og lys sand. Sort + gummi er ikke omfattet.\"",
+  "scope": "the two concrete ankle-boot layers exactly as D-325 rendered and showed them; NOT automatic mass production, NOT the method in general, NOT another rendering, colour or source",
+  "approved": [
+    {
+      "id": "AB1-BOOT-ORIGINAL",
+      "design": "original colour",
+      "label": "Ankelstøvler · original brun",
+      "proposedRuntimeItem": "shoes-ankleboots-ab1-original",
+      "colours": {
+        "kind": "the source's own colours through master v5 (no recolour)",
+        "description": "AB-1's own warm mid-brown upper and rim, dark brown sole"
+      },
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d325-ab1-dev/layers/original-colour.png",
+        "fileSha256": "8b97a21d7c43b5c31d8d4e893862faa18d8b63e97b3c318b6b153f22775b950c",
+        "bytes": 76201,
+        "pixelSha256": "eae9e8803fe15b1389eb3d4b05252894f09ae76d06d42b8aa04108d6e07356e2"
+      },
+      "shownRenderings": {
+        "top-tee-hip-cream+bottom-skirt-sand": {
+          "fileSha256": "824de2d92f38336a7438d45aa9e6a93a4b68619c4f4e0148022bf8df324e1d10",
+          "bytes": 736477,
+          "pixelSha256": "2f3e699a8878576128ffac314a080ead1ce31338bf9f518b7c786b95186e0d6d"
+        },
+        "top-tee-hip-cream+bottom-shorts-navy": {
+          "fileSha256": "e21ced684fa089049fdd514acc5d3eb4d68c124d6fefa7d469576ff2d5f27d60",
+          "bytes": 728352,
+          "pixelSha256": "c3f27deca0b5a423f669af672105b3f449500eaeab52d2fe9d1b33feede62728"
+        },
+        "top-tee-hip-cream+bottom-capri-lightblue": {
+          "fileSha256": "665ac3c2215edf42b25c68fa5247bb447850480a731a2099be9ccb68609a63ed",
+          "bytes": 749244,
+          "pixelSha256": "a8f82417867f16ab24349a768aa15bfdeb8ca2da86e7e3a87fd0016832ba84df"
+        },
+        "top-tee-hip-cream+bottom-trousers-square-olive": {
+          "fileSha256": "cb5e0054ef97b3f213e3de516f11a4110c4928959c9c428bc8c2aab17ac477a6",
+          "bytes": 728881,
+          "pixelSha256": "91e14b1003030b23858d3bb85270450775b39000098be5f8b8402f66c0c7a747"
+        },
+        "top-tee-hip-cream+bottom-trousers-square-navy": {
+          "fileSha256": "3ae8e4fa301583e7f256d2ab22e4ef2340dae089ea0c731f33d39a9a1ef4c81f",
+          "bytes": 686794,
+          "pixelSha256": "a1f20dd170cd2e3f40a65100c1dbf3e39dd4f1d8b895473e37ee3ba524032b62"
+        },
+        "top-tee-hip-cream+bottom-trousers-square-sand": {
+          "fileSha256": "51d7325da2199e5105aa882b13e4e768b66b3a7be625a71ae42081630879186a",
+          "bytes": 706813,
+          "pixelSha256": "ba79776875000a2074a81ad3c39bb3da66234506d2314654877dff36e46d0257"
+        }
+      }
+    },
+    {
+      "id": "AB1-BOOT-LIGHTSAND",
+      "design": "light sand suede (SYNTHETIC)",
+      "label": "Ankelstøvler · lys sand",
+      "proposedRuntimeItem": "shoes-ankleboots-ab1-lightsand",
+      "colours": {
+        "kind": "synthetic design through master v5",
+        "upper": [
+          214,
+          190,
+          150
+        ],
+        "rim": [
+          196,
+          170,
+          130
+        ],
+        "sole": [
+          238,
+          232,
+          220
+        ],
+        "description": "light sand upper and rim, light off-white sole; approved AS SHOWN — the plan's design name 'light sand suede (SYNTHETIC)' is a historical key: the material is NOT documented suede (the surface reads glossier than suede, D-325)"
+      },
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d325-ab1-dev/layers/light-sand-suede.png",
+        "fileSha256": "209db9f13c55ea9035c47d3af24099fc9133ff2988c9aaf27208f4b9d44afac8",
+        "bytes": 79834,
+        "pixelSha256": "ab1a973b51359e6ae0b333e6722c5baf756eba08d920ac985fb7fab06bf21a55"
+      },
+      "shownRenderings": {
+        "top-tee-hip-cream+bottom-skirt-sand": {
+          "fileSha256": "1468b0c3e11933c4fc2b4fd543df673949364a504679fa573d9b3d4e2ab06da8",
+          "bytes": 739934,
+          "pixelSha256": "662a4e97db3726b51e006ed579ce9931a3344f52f721ef632f3c14a1d9e0edde"
+        },
+        "top-tee-hip-cream+bottom-shorts-navy": {
+          "fileSha256": "4fc8490cb5ef8d016988f478c839a64bf68dfea00ea5f161fdbf840a41fef02c",
+          "bytes": 731795,
+          "pixelSha256": "4ff040f427cf182d5493dd5216634fe96178a5891aba06f84aff68d23c1d8b3d"
+        },
+        "top-tee-hip-cream+bottom-capri-lightblue": {
+          "fileSha256": "b56a008feace0b28004b16c66ccf2ce9d5bf9ecd4fb6841d8706225542540487",
+          "bytes": 752666,
+          "pixelSha256": "21877b14fc9415902ae84601cff9a24ed0243ba6e50f1e864b5b3a1f7e0d5c67"
+        },
+        "top-tee-hip-cream+bottom-trousers-square-olive": {
+          "fileSha256": "d9dc47d4b0b014f11dfd973287434ec0f5bf9f3da3e7544a2186f1fee4bcbc0b",
+          "bytes": 731810,
+          "pixelSha256": "b595e354445c42265659d8cf61ded815e352f189111e2ab4c65ebfdeb2216229"
+        },
+        "top-tee-hip-cream+bottom-trousers-square-navy": {
+          "fileSha256": "ccd348574f9cb6697cc7d7ff3fd0a6b9c34e0f47ffaf9c952fbe553763752011",
+          "bytes": 689463,
+          "pixelSha256": "4ba46b6734eb5531a18fbfd526d308edfcd6f313e662e8dfba9389febb3558a6"
+        },
+        "top-tee-hip-cream+bottom-trousers-square-sand": {
+          "fileSha256": "d4aa72212db54902ac75868337c45564bd44b1b4b415c10d5397a9f624b7a972",
+          "bytes": 708171,
+          "pixelSha256": "5aa093246304ffe6e9c7d14d86a41393a72eecaf8a280e09700989d688b4f09f"
+        }
+      }
+    }
+  ],
+  "notApproved": [
+    {
+      "id": "AB1-BOOT-BLACKGUM",
+      "design": "contrast black + gum (SYNTHETIC)",
+      "reason": "not covered by the owner's approval; D-325: not finished (stepped heel edge, dark welt fragments)",
+      "layerPixelSha256": "7a769bc8d536e4cf2482f3ab1212fe97684af6161e3ba3101c0583c371c4c176"
+    }
+  ],
+  "provenance": {
+    "source": {
+      "call": "AB-1-shoes-ankleboot-tight-k4",
+      "request": "req_634eff68b30d420bbe1b49366aebb82e",
+      "imageSha256": "9edfa6c2a6050aad8671eb684e16360cdcb566669b8e65bf9d4e887792526126",
+      "decision": "D-320/D-324"
+    },
+    "plan": {
+      "file": "tools/avatar/fixtures/northstar-wardrobe/shoe-source/ab-plan-v1.json",
+      "sha256": "691218ebe3a076dee54e6e3da3e5480bc641e3297f073660c433907ead0815a4"
+    },
+    "contract": {
+      "file": "tools/avatar/fixtures/northstar-wardrobe/shoe-cuts/ankle-boot-v3.json",
+      "contractVersion": 3,
+      "sha256": "b5bfc9745ec6f2b49fe1515efb1a62096762633e516fbe6e3594c001be570693",
+      "seedRule": "zone-v1",
+      "seedRuleAtK": "zone-v1-k-follows-1x"
+    },
+    "seeds": {
+      "file": "tools/avatar/northstar-shoe-cut-seeds.mjs",
+      "sha256": "48fdd5f3bda821486af88b82bb78daa0ee485841ad4b8a8a41bc3a40788e3d7f"
+    },
+    "master": {
+      "file": "tools/avatar/northstar-shoe-master-v5.mjs",
+      "revision": "shoe-master-v5-field",
+      "sha256": "11b69f60a968872114c773f9ec7fdce8632375b96eec291d8eaa05b88922f001"
+    },
+    "study": {
+      "file": "tools/avatar/northstar-shoe-cut-dev-study.mjs",
+      "sha256": "321d2e5c7f88862b28ec1ad6d6cbf5a4c32973104c2cf140f5e5c3a03be6332a",
+      "mergedIn": "243477a8a95fe383800ffb0545c5722080f7f9a0 (PR #566)"
+    }
+  },
+  "historyKept": [
+    "D-324: AB-1 is REJECTED SOURCE by the locked D-319 evaluation (contract v2's sole seeds on a line); unchanged",
+    "D-325 technical FAILs stand: original colour ΔE p95 0.0568 (limit 0.045); line contrast below 0.2 (upper 0.082, rim 0.047, sole 0.010); the variants inherit the ΔE",
+    "D-325 development caveat: contract v3 and zone-v1 were developed WITH knowledge of AB-1 — not independently validated; one source",
+    "this approval is a decision about these two concrete items; it does not change any automatic class and documents no method"
+  ],
+  "notIncluded": "no publication, runtime integration, catalogue, shop, pupil or flag change; no image call, retouch or change of the approved layers"
+}

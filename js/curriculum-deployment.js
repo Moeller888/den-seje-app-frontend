@@ -8,7 +8,8 @@
 // Migration: supabase/migrations/20260526000200_democracy_power_curriculum.sql
 // Rows inserted: 40 (dp_001–dp_040)
 // Domain key: metadata->>'domain' = 'democracy_power'
-// Rollback: DELETE FROM public.questions WHERE metadata->>'domain' = 'democracy_power';
+// Rollback (D-298 H2: archive, never delete answered questions):
+//   UPDATE public.questions SET is_active = false WHERE metadata->>'domain' = 'democracy_power';
 //
 // SCHEMA CONSTRAINTS DISCOVERED (production questions table)
 // ----------------------------------------------------------
@@ -72,7 +73,7 @@ export const CURRICULUM_DEPLOYMENT = {
     filter: 'none on is_active in get-next-question/index.ts',
   },
 
-  rollback: "DELETE FROM public.questions WHERE metadata->>'domain' = 'democracy_power'",
+  rollback: "UPDATE public.questions SET is_active = false WHERE metadata->>'domain' = 'democracy_power'",
 
   sources: [
     { range: 'dp_001–dp_010', file: 'js/gold-standard-objects.js',  export: 'GOLD_STANDARD_OBJECTS' },

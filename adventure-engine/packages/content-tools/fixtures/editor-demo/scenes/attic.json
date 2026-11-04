@@ -1,0 +1,105 @@
+{
+  "actorZones": [
+    {
+      "actor": "bo",
+      "polygon": [
+        [
+          860,
+          450
+        ],
+        [
+          940,
+          450
+        ],
+        [
+          940,
+          650
+        ],
+        [
+          860,
+          650
+        ]
+      ],
+      "talkSpot": "talk"
+    }
+  ],
+  "cutscenes": {
+    "dawn": {
+      "skippable": true,
+      "variants": {
+        "da": {
+          "durationMs": 2000,
+          "timeline": [
+            {
+              "asset": "img.dawn",
+              "atMs": 0,
+              "textKey": "cut.dawn"
+            }
+          ]
+        },
+        "default": {
+          "durationMs": 2000,
+          "timeline": [
+            {
+              "asset": "img.dawn",
+              "atMs": 0
+            }
+          ]
+        }
+      }
+    }
+  },
+  "defaultSpot": "hatch",
+  "entry": "attic#enter",
+  "id": "attic",
+  "layers": [
+    {
+      "assets": {
+        "default": "bg.attic"
+      },
+      "depth": 0,
+      "id": "back"
+    }
+  ],
+  "nameKey": "s.attic",
+  "size": {
+    "height": 720,
+    "width": 1280
+  },
+  "spots": {
+    "bo": {
+      "x": 900,
+      "y": 640
+    },
+    "hatch": {
+      "facing": "right",
+      "x": 200,
+      "y": 650
+    },
+    "talk": {
+      "facing": "right",
+      "x": 760,
+      "y": 650
+    }
+  },
+  "walkable": [
+    [
+      [
+        0,
+        590
+      ],
+      [
+        1280,
+        590
+      ],
+      [
+        1280,
+        720
+      ],
+      [
+        0,
+        720
+      ]
+    ]
+  ]
+}

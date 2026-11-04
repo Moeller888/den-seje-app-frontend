@@ -1,0 +1,53 @@
+{
+  "decision": "D-281",
+  "kind": "the unambiguous description of the solid trousers the owner approved as CANDIDATES (D-279); the only list the D-281 build may read. Not an item approval.",
+  "owner": {
+    "message": "de ensfarvede bukser er godkendt som kandidater",
+    "date": "2026-10-31",
+    "recordedIn": "docs/decisions/D-279.md (PR #507)",
+    "scope": "the solid variants shown for review: navy and sand through pants-master-v2; the candidate approval is not to be asked again"
+  },
+  "master": {
+    "revision": "pants-master-v2",
+    "spec": "SPEC_V2 in tools/avatar/northstar-pants-master.mjs (D-279)",
+    "moduleSha256": "8786c19611f760ce544c35c7921eea0eb894f91e188af608fe64989202d8dfde",
+    "renderModule": "tools/avatar/northstar-tee-master.mjs (render, hash-locked by D-267/D-270)",
+    "renderModuleSha256": "6a4b650cb8d8cbd162bc5a8563a59b4b27ac5fa2dfcd0459a359bb405f881038",
+    "cut": "trousers-square",
+    "source": "bottom-trousers-square-olive"
+  },
+  "study": {
+    "dir": "<Documents>/DenSejeApp-artefacts/d-277-pants-v2/",
+    "recordSha256": "bc0ab3873ab1bd8e0adecdcfc7150d65f914392497c253fe20f7f4edad386b26",
+    "layersSha256": "8c8a6005dcc0efd57caf912d65f8935d2bd879fb4183796f315b641dfc72292f"
+  },
+  "candidates": {
+    "TS-NAV": {
+      "item": "bottom-trousers-square-navy",
+      "label": "Lige bukser · navy",
+      "variant": "solid navy (SYNTHETIC)",
+      "rgb": [48, 66, 110],
+      "layerPngSha256": "1787e386c352f7341e0450eea377fab71015330eda2b2e3b381c894a1537fcb3"
+    },
+    "TS-SND": {
+      "item": "bottom-trousers-square-sand",
+      "label": "Lige bukser · sand",
+      "variant": "solid sand (SYNTHETIC)",
+      "rgb": [214, 190, 140],
+      "layerPngSha256": "a41cdd20de338866fa8099993fc18abd21686ffcf197ab04a66a6a8b77f4dc99"
+    }
+  },
+  "notCandidates": {
+    "stripe (SYNTHETIC, along the leg, 24 px)": "technical sample only (D-279: flat over the folds, offset pieces in the waistband)",
+    "check (SYNTHETIC gingham, 28 px)": "technical sample only (D-279: steps and waves at the knee folds)"
+  },
+  "controlledCombinations": {
+    "D-279": {
+      "tops": ["top-tee-hip-blue", "top-tee-hip-cream"],
+      "shoes": ["shoes-sneakers-white", "shoes-ankleboots-brown", "shoes-sneakers-beige", "shoes-boots-laceup-black"],
+      "result": "8/8 outfit checks pass for both candidates, as the original trousers"
+    },
+    "D-281": "the 16 approved print tees (D-274) x the same four shoes: checked by the D-281 build, recorded in docs/decisions/D-281.md"
+  },
+  "notCovered": "item approval, publication of derived assets, runtime integration, catalogue or shop entries, pupil activation and flag changes — each needs its own owner permission"
+}

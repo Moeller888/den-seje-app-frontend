@@ -1,0 +1,66 @@
+{
+  "id": "bo_talk",
+  "kind": "dialog",
+  "nodes": [
+    {
+      "id": "bo0",
+      "modal": true,
+      "name": "hello",
+      "next": [
+        "bo1"
+      ],
+      "type": "entry"
+    },
+    {
+      "id": "bo1",
+      "next": [
+        "bo2"
+      ],
+      "speaker": "bo",
+      "textKey": "bo.hello",
+      "type": "say"
+    },
+    {
+      "id": "bo2",
+      "next": [
+        "bo3",
+        {
+          "order": 1,
+          "to": "bo5"
+        }
+      ],
+      "type": "choice"
+    },
+    {
+      "id": "bo3",
+      "next": [
+        "bo4"
+      ],
+      "speaker": "mira",
+      "textKey": "bo.ask_light",
+      "type": "say"
+    },
+    {
+      "id": "bo4",
+      "next": [
+        "bo2"
+      ],
+      "speaker": "bo",
+      "textKey": "bo.light",
+      "type": "say"
+    },
+    {
+      "id": "bo5",
+      "next": [
+        "bo6"
+      ],
+      "speaker": "mira",
+      "textKey": "bo.bye",
+      "type": "say"
+    },
+    {
+      "id": "bo6",
+      "type": "end_dialog"
+    }
+  ]
+}

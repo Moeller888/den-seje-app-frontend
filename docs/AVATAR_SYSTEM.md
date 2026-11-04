@@ -27,6 +27,21 @@ art layer behind them can be upgraded without a rewrite.
 
 ## 2. Current state (the honest picture)
 
+- **Northstar test wardrobe (browser opt-in only) — status after D-314, owner-tested and approved in the app (2026-11-02).**
+  - **What works in the opt-in** (`avatar.html?northstar=1`, `localStorage` only; `AVATAR_NORTHSTAR_WARDROBE = false`; no shop, catalogue, ordinary pupil activation or flag change):
+    - **Tops:** the cream and blue tees, and 16 print tees (teapot and shield in six colours, fox in four; D-274/D-275).
+    - **Bottoms:** sand skirt, navy shorts, light-blue capri, olive trousers, and the solid navy and sand trousers (D-281/D-283).
+    - **Shoes:** the four original items (beige and white sneakers, black lace-up boots, brown ankle boots) and the four SV1-V5 low sneakers (chalk, charcoal, navy/white, burgundy/gum; D-305/D-308).
+    - **Base:** the 19 ready K outfits.
+  - **SV1-V5 shoe combinations:** 326 approved (D-305's 21 + D-314's 305; `NORTHSTAR_SV1_SHOE_COMBOS`), 323 reachable in the current panel. The 3 cream tee + olive trousers combinations are approved but unreachable: no K outfit pairs them, and none was added for it.
+  - **Remaining limits:**
+    - Every choice is gated by explicit lists over the whole effective outfit: print tees only on the cream-tee outfits K01–K09; trousers only on D-281's checked top/shoe pairs; SV1 shoes only on the 326.
+    - Charcoal with long trousers (37) is excluded (COMBO-2 at leg/shoe; a separate decision), and the blue tee + skirt is a known fault.
+    - The figure has a neutral expression and does not blink; equipped cosmetics other than aura/back fall back to today's avatar.
+    - SV-1 is a rejected source by D-299's original rules, and master v5 is not independently validated (the approval covers the concrete items shown).
+    - The old reference sneaker's stroke tip is unfixed.
+  - **Not documented:** mass production across new cuts. Every working item family so far is one cut with colour or print variants. A new cut (another top, bottom or shoe shape) needs its own source, master and checks before variants can follow.
+  - See `docs/decisions/D-314.md` and the D-242 … D-314 entries below.
 - **`AVATAR_V2 = true` is LIVE in production** (`js/avatar-layers.js:230`, commit `52f8365`,
   2026-06-25). The C2 render path is the default for users.
 - **But the art is a placeholder.** The live render loads **flat hand-authored SVGs**
@@ -385,7 +400,427 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Northstar independent validation — D-235: six new frozen calls authorised, not executed.**
+- **Sweaters in the Northstar opt-in — D-337 (published and integrated behind the opt-in; flag still false; no catalogue, shop or ordinary pupil view change).**
+  - **Published.** The 15 D-336 files are published byte for byte; their hashes were checked before publication.
+  - **Order.** `northstarPlanFor` draws the hip seam after the shoes and before the bottom; the sweater's body and rib are drawn in front.
+  - **Choice.** The "Trøje" row offers 6 sweaters for exactly the 30 approved combinations (24 reachable). Outside the list the outfit's own top is shown and the stored choice is kept, also after a reload.
+  - **Verified.** The runtime is byte-identical to the 30 approved renderings. The Chromium baseline, figure (right hip ≤ 2 levels), choice, blocked and failure checks pass. See `docs/decisions/D-337.md`.
+- **Sweater combinations approved — D-336 (owner visual approval of 30; files staged privately; NOT published or integrated; flag false).**
+  - **Approved.** Heather and navy, each plain or with the teapot or fox print, with skirt, capri and olive, navy and sand trousers and beige sneakers: 30 combos in `ls2-owner-approval-v1.json`. Navy shorts are outside the approval.
+  - **Staged.** 15 runtime files reproduce all 30 approved renderings byte for byte when the hip seam is drawn behind the bottom (`planWithHipSeam`).
+  - **Reachable.** 24 of the 30 can be reached in today's opt-in; the olive ones cannot.
+  - **Next.** Publishing and integration need the owner's permission; the wording is in `docs/decisions/D-336.md`.
+- **Sweater master v2 — D-335 (offline; 30 candidates for the owner's visual review, not approved; nothing published or integrated; no runtime change).**
+  - **Sleeve line fixed.** The cut's own layer split sends every fabric pixel over C's arm, its soft edge included, to the sleeve layer. Warm pixels on heather fell from 117 to 6. D-333's alpha cause was wrong.
+  - **Hip seam.** The 52 hip pixels are their own layer, drawn behind the bottom (order body · shoes · hip seam · bottom · top body · arms · sleeves · head). The light notch with long trousers is gone, and skirt and capri stay clean. Outfits pass 42/42 with 0 enclosed holes and no double contour; the bottoms' soft edge differs by at most 9 levels.
+  - **Local renderer.** northstarCompose with the one extra draw step equals the checked picture byte for byte.
+  - **To integrate.** This needs that draw step in `northstarPlanFor` and a published seam file. Both need owner permission. Navy shorts are held out by the owner.
+  - See `docs/decisions/D-335.md`.
+- **Long-sleeve master prototype — D-333 (offline; 0 image calls; nothing published or integrated; no design approved).**
+  - **Source.** One master (`ls-master-v1`) on the existing green sweater (d239), with D-264's method unchanged; only the per-cut data differ.
+  - **Designs.** Heather and navy, plain and with the approved teapot and fox prints. The prints use one placement: D-269's chest-center box on C. The fraction rule is undefined on a long sleeve.
+  - **Fit.** Fit, cuffs, wrists and armhole gap are clean. Outfits pass 35/42; shorts fail COMBO-6, like the source sweater itself.
+  - **Open, one-time per cut.** A warm dotted line along C's arm on light colours, and the hip corner fails against shorts. See `docs/decisions/D-333.md`. D-333's cause for the line (the source's alpha) was wrong; D-335 corrected it.
+- **Owner feedback on D-331 (2026-11-03):** the boots look fine in the opt-in, a visual confirmation of the test integration (registered by D-333).
+- **AB-1 ankle boots in the Northstar opt-in — D-331 (LIVE in the opt-in; flag still false; no catalogue, shop or ordinary pupil view change).**
+  - **Published.** The 4 D-326 files are published byte for byte; their hashes were checked before publication.
+  - **Offered.** `AB1-BOOT-ORIGINAL` and `AB1-BOOT-LIGHTSAND` are offered in the "Sko" row for exactly the 180 combinations in `NORTHSTAR_AB1_BOOT_COMBOS`. 10 were shown to the owner and 170 checked technically.
+  - **Rule.** The whole effective outfit decides. Outside the list, the outfit's own shoes are shown, also after a reload.
+  - **Verified.** The runtime is byte-identical in 180/180 cases. The Chromium baseline, figure, choice, blocked and failure checks pass. See `docs/decisions/D-331.md`.
+- **Two AB-1 ankle boots approved by the owner — D-326 (registration + private preparation; NOT published, NOT integrated; flag false; 0 image calls).**
+  - **Approved.** `AB1-BOOT-ORIGINAL` (original colour) and `AB1-BOOT-LIGHTSAND` (light sand, approved as shown — not documented suede). Black + gum is not covered. See `ab1-boot-owner-approval-v1.json`.
+  - **History kept.** D-324's rejection, D-325's technical FAILs (ΔE p95 0.0568, line contrast below 0.2) and its development caveat stay as history.
+  - **Staged privately.** The 4 runtime files are 2 layers and 2 covering masks; the shadow is the published ankle boot's, via `shadowsOf`. They are byte-identical to the 12 shown renderings in the browser's own compose.
+  - **Combinations.** The opt-in could reach 180 combinations (90 outfits × 2). The 170 not shown in D-325 were checked: 170/170 PASS and byte-identical at runtime.
+  - **Next.** Publishing and integration need the owner's separate permission (wording in `docs/decisions/D-326.md`).
+- **Robust field labelling — D-325 (offline development study on AB-1; 0 image calls; contract v3 developed WITH knowledge of AB-1, so NOT independently validated; D-324's verdict and D-320's closure unchanged; no item approved).**
+  - **Cause.** v2's fixed sole seed (y 1488) sat in the old drawing's 2 px welt band; AB-1 draws the sole 2 px higher, so that row is a line.
+  - **Rule `zone-v1`.** `northstar-shoe-cut-seeds.mjs` and `ankle-boot-v3.json` find each field in a fixed zone by its safe pixels (at least 2 px from any line). Missing, ambiguous and merged fields are refused, and every choice is logged. At K, the fields decided at 1x are followed (`zone-v1-k-follows-1x`).
+  - **Locked files unchanged.** The D-318/D-319 files, contract v2 and the sneaker stay as they were.
+  - **Chain on AB-1.**
+    - All fields resolve, and the outfits pass 18/18.
+    - Technically, the original colour's ΔE p95 is 0.057 (limit 0.045), and line contrast is below 0.2 (the dark sole; the ink rule counts painted shading as line).
+    - Visually, the original colour and light sand look finished at app size and may go to owner review with the caveat visible. Black + gum is not finished (stepped heel edge, dark welt fragments).
+  - **Adapter.** The adapter's "next" hint now names the D-319 evaluator; no guard changed.
+  - See `docs/decisions/D-325.md`.
+- **AB-1 result — D-324 (one call sent and received, about $0.0564; REJECTED SOURCE by the locked D-319 evaluation; D-320 closed; no item approved).**
+  - **Rejected on one rule.** The source passed every quality and fit rule: detail at K, no stroke tips, no skin remnants, no glow, a closed separate rim band, shape, covering and opening. The contract's sole seeds (y 1488) lie on a drawn line between a welt band and the sole, so the fields could not be built. The chain, the designs and the outfits were therefore not measurable.
+  - **Possible false alarm.** The seed placement is recorded separately as a possible false alarm. The verdict stands. See `docs/decisions/D-324.md`.
+- **Ankle-boot source attempt prepared — D-319 (locked plan) and D-320 (authorisation of one call AB-1; prepared, NOT executed; 0 image calls; no item approved).**
+  - **Lock.** `ab-plan-v1.json` pins contract v2 (upper, rim and sole fields), the cut kit, the cut evaluator and the reference builder, master v5, the prompt, the model and parameters, three designs, the evaluation and `ACCEPT`.
+  - **Image 1.** A guide layer (stroke tips and skin specks dropped in the opening band). It is guidance, not image quality.
+  - **Clarified before the lock.** The original colour's ΔE p95 is master-bound (sneaker 0.032, boot 0.038), not a source fault. The boot's line contrast is only 0.047, so line and volume floors are absolute. Skin remnants are measured on the source at K.
+  - **Rehearsal.** The whole chain was rehearsed on the old source, which is rejected as expected. Estimate about $0.06, at most about $0.07. See `docs/decisions/D-319.md` and `D-320.md`.
+- **Shoe cut kit — D-318 (offline; 0 image calls; no asset, runtime or flag change).**
+  - **Contracts and method.** One contract per shoe cut (`fixtures/northstar-wardrobe/shoe-cuts/sneaker-low.json`, `ankle-boot.json`) holds crop, K, seeds and fields, the opening, covering, placement, bottoms and review regions. The shared method is `northstar-shoe-cut-kit.mjs`; the locked files are unchanged.
+  - **Results.** The kit reproduces the four approved SV1-V5 layers and their covering masks byte for byte. The new opening check (collar or shaft) classifies overlap and skin in the opening versus material on the shin, foot through the shoe and holes; it gets 15/15 real and negative cases right. Its tolerances are not yet independently validated.
+  - **Ankle boot.** The rehearsal on the existing dark source is technically clean (18/18 outfits) but visually limited by the source: stroke tips and a ragged shaft top. See `docs/decisions/D-318.md`.
+- **326 SV1-V5 shoe combinations in the opt-in — D-314 (the owner approved D-312's 305 candidates; no asset changed; flag false).**
+  - **Runtime.** `NORTHSTAR_SV1_SHOE_COMBOS` = D-305's 21 + D-314's 305 (`sv1-shoe-tee-owner-approval-v1.json`): the cream, blue and 16 print tees. 323 reachable, all byte-identical to the approved renderings. Charcoal with long trousers (37) stays refused on every top, also after a reload or a change.
+  - **Panel.** Only two reasons remain: "Vælg først et outfit." and "Koks er ikke godkendt med lange bukser." See `docs/decisions/D-314.md`.
+- **SV1-V5 shoes × blue and print tees — D-312 (offline check; candidates NOT approved; runtime list unchanged at 21).**
+  - **Checked.** 342 new combinations the opt-in can already compose. 305 technical PASS, all byte-identical in the runtime with no missing assets. 37 FAIL, exactly charcoal × long trousers (COMBO-2, held out).
+  - **Recommendation.** Extend the approval list with the 305 candidates in `sv1-shoe-tee-candidates-v1.json` (blue tee 17, print tees 288). This needs the owner's approval before `NORTHSTAR_SV1_SHOE_COMBOS` changes. See `docs/decisions/D-312.md`.
+- **SV1-V5 shoes in the Northstar opt-in — D-308 (the 8 D-305 files published with exact hashes; a shoe choice is shown only on the 21 approved combinations; flag false).**
+  - **Runtime.** `NORTHSTAR_SV1_SHOES` (4 shoes) and `NORTHSTAR_SV1_SHOE_COMBOS` (the 21 combinations). `northstarShoeAllowed` judges the whole effective outfit after the print-tee and trousers choices. Anything else keeps the outfit's own shoes, and the stored choice stays untouched. 18 combinations are reachable; the 3 olive ones are not, and no outfit was added. The panel has a "Sko" row with a reason for every unavailable choice.
+  - **Verified.** On the published files the result is byte-identical to the 18 approved D-304 renderings. In Chromium, 27 baseline pages are identical to main and choice, reload, return, blocked state and asset fallback all pass. See `docs/decisions/D-308.md`.
+- **SV1-V5 shoes approved — D-305 (owner's visual approval of 21 concrete combinations; layers staged privately, NOT published or integrated; flag false; D-301/D-302 and v5's missing independent validation stand).**
+  - **Approval.** `sv1-v5-owner-approval-v1.json` lists the 21 IDs: chalk, navy/white and burgundy/gum × six bottoms, and charcoal × skirt, shorts and capri. Charcoal × three long trousers is not approved.
+  - **Staged.** 8 files (4 shoe layers and 4 covering masks; the shadow reuses `shoes-sneakers-beige`) are lossless. The browser's plan and compose are byte-identical to the 21 approved renderings.
+  - **Plan.** An explicit combination list in the opt-in, with fallback to the outfit's own shoes; 18 of the 21 are reachable. Publishing and integration need the owner's separate permission, worded in `docs/decisions/D-305.md`.
+- **SV-1 + v5 candidate package — D-304 (for the owner's visual review; NOT approved; 0 image calls; D-301 stands; v5 not validated).**
+  - **Package.** `sv1-v5-candidates-v1.json` pins the source, processing, master v5, colours, covering, method files and each layer by sha256 for `SV1-V5-CHALK`, `-CHARCOAL`, `-NAVYWHITE` and `-BURGUNDYGUM`.
+  - **Results.** 21/24 technical PASS. Charcoal × three long trousers stays COMBO-2 FAIL [KNOWN_D291], diagnosed as a false alarm: the top lace's own edge under the hem, a weakness visible only magnified. No real image fault was found.
+  - **Recommended for review.** 21 combinations. The private page is under `<Documents>/DenSejeApp-artefacts/d304-sv1-v5-candidates/`. See `docs/decisions/D-304.md`.
+- **SV-1 offline follow-up — D-302 (0 image calls; D-301's REJECTED SOURCE unchanged; master v5 is a development prototype, not validated; no shoe approved).**
+  - **Collar.** The alarms are not image faults. Of the 162 ankle px, 133 lie on a legitimate tongue in front of the ankle and 29 on the collar side; the "3 px" is one antialiased pixel. The 6 "inside" px are one column where the opening's V dips lower and C's ankle shows through the opening. The check's reference assumption is too narrow; the locked verdict stands.
+  - **Colour line.** The cause is a closed field without a seed (the band between the upper|sole seam and the sole's inner line), split pixel by pixel by the breadth-first labelling. v5 (`northstar-shoe-master-v5.mjs`; v4 untouched) applies one rule: a closed field takes one material as a whole. Fixed on both shoes in all five colours, the chain measures still pass, and sole grain halves. See `docs/decisions/D-302.md`.
+- **SV-1 result — D-301 (one call sent and received; REJECTED SOURCE by the locked evaluation; D-300 closed; method INCOMPLETE pending the owner's visual review; no shoe approved).**
+  - **Passed.** The independent source passed every quality and processing rule: detail 1 px, line inventory 0.89–1.04×, volume ≥ 0.75×, antialiasing 99 %, no halo left. The chain kept the lines in all five colours.
+  - **Rejected.** The collar check v2 rejected it: a band 3 px over the ankle (limit 2) and 6 px of foot exposed inside the shoe. Every variant is therefore NOT USABLE. Outfits: 27 technical PASS, 3 COMBO-2 (KNOWN_D291, charcoal × trousers).
+  - **Separate findings.** A possible false alarm: the collar reads naturally at 1:1. A possible missed alarm: a colour line at the three-field toe corner in the contrast designs (v2 and v4).
+  - See `docs/decisions/D-301.md`.
+- **Shoe validation prepared — D-299 (method lock and plan) and D-300 (authorisation of one call SV-1; prepared, NOT executed; 0 image calls; no shoe approved).**
+  - **Lock.** D-297's method is pinned by sha256 in `sv-plan-v1.json`: master v4, evaluation v2, the K-source geometry, the new evaluator `northstar-shoe-validation-evaluate.mjs`, the measures and the unchanged outfit check. Its parameters are tested against the code, and the adapter refuses a send if any file differs on origin/main.
+  - **New rules.** Painted volume: upper, toe cap and sole must keep ≥ 0.7× the published drawing's. Antialiasing is measured on the source, ≥ 50 % of the silhouette edge, because the 4× downscale alone makes partial alpha.
+  - **Classes.** Source, variant (five designs) and combination (30) are each automatic PASS/FAIL. Usable requires PASS plus the owner's visual OK. A visual OK never turns FAIL into PASS. COMBO-2 on D-291's nine pairs is KNOWN_D291, any other is NEW, and both stay FAIL. The method is CONFIRMED only when the visual verdicts agree.
+  - **Call.** SV-1 reuses D-294's design; the prompt has one added collar sentence. Estimate about $0.06, at most about $0.07. See `docs/decisions/D-299.md` and `docs/decisions/D-300.md`.
+- **Shoe evaluation v2 and shoe master v4 — D-297 (offline; 0 image calls; SS-1 stays rejected; v1–v3 unchanged; no shoe approved).**
+  - **Collar.** `collarCheck` replaces pixel counts with the 2-D distance to the reference collar plus the consequence on C (band over the ankle, exposed band, foot exposed inside the shoe, background inside the shoe). It is right on all 9 known good/bad cases, where D-294's counts were wrong on 4. SS-1 still fails (a local 5 px deviation).
+  - **Halo.** D-296's 611 px counted the new drawing's own outline; the real glow in the avatar is 39 px at alpha ≈ 1. A fixed alpha floor of 16 is rejected (it leaves a stronger glow and cuts real antialiasing). The rule is to drop partial alpha more than 3 source px from the solid shoe; a glow closer than that is caught by the detail rule.
+  - **Lines.** The line measures now run on each drawing's own lines, and `splitAlong` tells a zigzag along a line (0.553) from a drawing (0.035). Master v4 (`lineBlend: "nearer"`) keeps each side's own line, with no heavier laces or extra grain. At 1× the published 2 px lines limit the gain; COMBO-2 with long trousers is unchanged (D-291).
+  - **Recommendation.** The method (K-source, halo distance + detail rule, collar check v2, source/chain line checks, master v4) is ready for later independent validation. The blocker is that no accepted source exists. See `docs/decisions/D-297.md`.
+- **SS-1 result — D-296 (one call sent and received; REJECTED by the D-294 check; D-295 closed; no shoe approved; the raster problem not solved).**
+  - **Source.** Really drawn at 4× (1 px transitions), with the right size and place (IoU 0.97, shift −1,1), an antialiased collar and no skin.
+  - **Rejection.** The collar line deviates 1–2 px: 96 px over the ankle (limit 40) and 41 px of exposed ankle (limit 20). There is also a faint glow (611 px at mean alpha 26).
+  - **Evaluation and master.** The locked chain measures used the old drawing's line positions, which is invalid for a new drawing. Measured on its own lines, there is no smoothing loss, but the master's colour-border fault persists (navy 57 %).
+  - **Next.** Rule decisions (collar distance, alpha floor, own-line measures) and the master border must be settled before any new call. See `docs/decisions/D-296.md`.
+- **A tight shoe source at K = 4 — D-294 plan and evaluation, D-295 authorisation of at most one call (prepared, NOT executed; 0 image calls; no shoe to approval; the raster problem not recorded as solved).**
+  - **Geometry.** CROP x 320–704, y 1270–1526 at K = 4 gives one 1536×1024 `images/edits` call. Its one reference is the published sneaker's crop enlarged ×4, and C is never sent. The source maps to the avatar by a premultiplied 4×4 area average and one global shift of at most 2 px; no scale, warp, per-shoe move or retouch.
+  - **Rejection.** A source fails on detail (transitions ≤ 2 source px, so an enlargement fails), per-shoe IoU ≥ 0.95, size ratio 0.96–1.04 (R1's problem), skin ≤ 3 px, paint over the ankle, covering change, and seeds that do not land in fields.
+  - **Evaluation.** `northstar-shoe-source-evaluate.mjs` keeps source and master apart (published v2 at 1× | new v2 at K | new v3 at K) and adds a smoothing guard: line contrast must stay at least 0.9× the published source's. A rehearsal on the enlarged copy is rejected, and its smoother edge numbers are shown to come from lost seams.
+  - **Master at K.** Running the master at K softens line flanks, but does not fix split lines at colour borders: that is a master decision (v3's rule fixes it but darkens the seams).
+  - See `docs/decisions/D-294.md` and `docs/decisions/D-295.md`.
+- **Shoe raster and steps — D-293 (offline analysis; prototype `shoe-master-v3-edge` not recommended as is; the D-291 approval direction is stopped; no shoe approved).**
+  - **Source.** The shoe is drawn at its own resolution: about 140 px per shoe, 2 px lines. The silhouette is antialiased, but the collar top is binary (59.5 % full-alpha edge, from the extraction cut at C's ankle). The inner lines already have 37 % hard steps in the source itself.
+  - **Review chain.** The D-289/D-291 sheets enlarged with nearest neighbour, which showed the source's own pixels as steps. Chromium at 110×165 and 300×450, DPR 1–3, shows clean edges.
+  - **Master.** v2 added outline steps on dark and contrast designs (up to 60 % against 28 %) and split lines at colour borders (51 % against 27 %). v3 reduces these to 33–44 % and 13–15 %, but makes lines heavier where light meets dark and adds grain on light toe caps.
+  - **Recommendation.** A better source (a tight higher-resolution shoe crop, as D-119's hair) and a collar antialiasing rule in the extraction. See `docs/decisions/D-293.md`.
+- **Shoe master v2 — D-291 (successor to D-289; offline; v1 kept and verified pixel for pixel; nothing published, offered or approved).**
+  - **Rule.** One general rule in OKLab lightness. The painting is split into volume (smoothed) and grain. Volume gets the room the material has above and below its base; grain is never enlarged. A too-light material's base is fitted so its highlights fit. Inner lines stay at least 0.08 L darker than their field.
+  - **Result.** On charcoal the grain falls from 0.061 to 0.017 (source 0.021) and the line contrast rises from 0.12 to 0.21. The chalk sole's volume is restored to the source's. The original colour reproduces the source.
+  - **COMBO-2 under long trousers.** Charcoal and navy+white fail as in v1, and burgundy+gum now also fails, because its lines are darker by design. The check's own flagged pixels are the shoe's drawn inner lines (lace edges, the eyelet seam, the tongue line) 1–3 px under the hem. There is 0 px of the shoe's outer contour among them and the highlights are minor. The results stay FAIL; the assisted diagnosis is recorded apart and the owner decides. See `docs/decisions/D-291.md`.
+- **Shoe master on the low sneaker — D-289 (offline prototype `shoe-master-v1`; no call; nothing published, offered or approved).**
+  - **Cut.** `shoes-sneakers-beige`, chosen for source quality: 2 % clipped, against 62 % for the white sneakers; the black and brown boots are 81–90 % dark. It has no findings and five K outfits.
+  - **Method.** The drawing's own ink lines split the shoe into fields, labelled once per cut by 22 seed points. The shading is carried in linear light: shadows are multiplied and highlights added. The alpha is never changed, so fit and covering stay the cut's. A design is one colour per field (upper, toe, sole, laces, tongue).
+  - **Results.** Four SYNTHETIC samples, with 0 colour residue. Mid tones and panel contrasts are strongest. A very dark material amplifies the painted grain and trips `COMBO-2` under long trousers (laces under the hem, D-253's sensitivity). A very light material flattens the sole's highlight.
+  - **Recommendation.** One general `shoe-master-v2` highlight rule before any candidate. Boots need their own cut. See `docs/decisions/D-289.md`.
+- **Solid trousers in the opt-in — D-283 (the owner approved TS-NAV and TS-SND as items and their 2 layers for publication; flag false).**
+  - **Published.** `bottom-trousers-square-{navy,sand}-pants-v1.webp` with D-281's sha256; the olive trousers' published shadow is reused through `shadowsOf`; the manifest has a D-281 extension (65 files).
+  - **Choice.** A "Bukser" row in the panel (`avatar_northstar_pants`), and "Outfittets egen underdel" returns to the outfit's own bottom. The trousers are offered only on checked top × shoe pairs (`NORTHSTAR_SOLID_PANTS_CHECKED`); all 55 reachable pairs are checked, so all 19 K outfits allow them.
+  - **Verified.** 110 reachable outfits are byte-identical to the pipeline on the published files. In Chromium: 21 pages are unchanged without a choice; the figure is within 2 levels of the reference; choice, reload, switching, return and the missing-layer fallback all work. See `docs/decisions/D-283.md`.
+- **Solid trousers as items — D-281 (prepared offline; 2 layers staged privately; the owner then approved both as items, see D-283).**
+  - **Candidates.** `TS-NAV` (`bottom-trousers-square-navy`, [48, 66, 110]) and `TS-SND` (`bottom-trousers-square-sand`, [214, 190, 140]) through `pants-master-v2`, pinned in `tools/avatar/fixtures/northstar-wardrobe/pants-master/ps-candidates-v1.json`.
+  - **Checks.** The layers equal D-279's rendering, and their alpha equals the olive trousers'. The olive trousers' published shadow is reused. Runtime equivalence and the outfit check pass 144/144: both candidates × blue, cream and the 16 print tees × four shoes.
+  - **Print tees.** Geometry is clean with every print tee. Five colour pairs are advisory-weak: navy on navy, and mustard on sand.
+  - **Decided.** The owner approved both, including the five low-contrast pairs. See `docs/decisions/D-281.md`.
+- **Pants master v2 — D-279 (successor to D-276; offline; v1 kept; colour-only rules, no geometry change; the owner approved the solid trousers (navy, sand) as candidates, not as items; nothing published).**
+  - **Waistband.** It is taken only under the cut's top edge: 0 px outside the waist, against 209 in v1.
+  - **Outer edge.** The cut's outer edge takes the outline's ink: the outline's own partial edge pixels and the partial fabric just outside it, 8,444 px, colour only.
+    - This removes the double contour at laced black boots for every material: sand and stripe now pass all 8 combinations.
+    - A hem geometry change was compared: it did not fix the contour and made navy worse.
+  - **Readiness.** Solid trousers are candidates for the owner's visual review. Patterns stay technical samples (flat over the folds, small steps in the check).
+  - See `docs/decisions/D-279.md`.
+- **Pants master on trousers-square — D-276 (offline prototype; no call; nothing published or approved; succeeded by D-279).**
+  - **Method.** D-264's master carried over to R1's bottom cut (K17/K18, the only cut reaching the shoes).
+    - Per-cut data: a straight centre seam to the crotch point (511, 893), a 6 px waistband, two leg panels each along its own (normalised) axis from the crotch.
+    - The tee master's `render` and `seamLine` are reused unchanged; folds and shading are carried by the same ratio.
+  - **Result.**
+    - The alpha is kept: no jump inside a panel, no mirrored leg.
+    - Fold strokes are carried. Navy, sand, stripe and check read clearly at 110×165.
+    - Patterns lie nearly flat (check: small steps).
+  - **Double contour.** The double contour at laced black boots with light fabric is an existing hem/boot geometry: the original recoloured without the master shows it too. It is kept as a poor combination.
+  - **Recommendation.** Suitable for this cut family for solids and simple geometric patterns, with these limits. See `docs/decisions/D-276.md`.
+- **Print tees in the Northstar opt-in — D-275 (32 layers published with the owner's D-274 permission; flag stays false; no catalogue, shop or pupil change; the owner confirmed the test integration works, D-276).**
+  - **Where.** `avatar.html?northstar=1` → pick K01–K09 → the row "T-shirt med tryk (til K01–K09)" (16 approved IDs).
+    The choice lives in this browser only (`avatar_northstar_tee`); a tee is ignored on K10–K19. `?northstar=0` forgets it.
+  - **Runtime.** `NORTHSTAR_PRINT_TEES` holds exactly the approval file's 16 IDs. Their items reuse the cream tee's published skin shadows (`shadowsOf`).
+    The figure key is `K…+TP-…`. `assets/avatar-northstar/` now holds 63 files (D-242's 31 + D-274's 32, manifest extension).
+  - **Verified.**
+    - 153 outfits (144 with a print) are byte-identical to the pipeline on the published files.
+    - In Chromium the figure matches the Node composite (≤2 levels).
+    - Without the opt-in 18 pages are identical to main.
+    - The panel's choice, reload and return to today's avatar work, and a missing layer gives today's avatar.
+  - See `docs/decisions/D-275.md`.
+- **Tee print family, owner approval and runtime layers — D-274 (16 of 18 approved by the owner; the 32 layers published by D-275).**
+  - **Approved.** The owner approved all 16 D-272 candidates; TP-FOX-COR and TP-FOX-MUS are not covered.
+    The approval file `tp-owner-approval-v1.json` is the only list a build reads.
+  - **Layers.** `build-northstar-tee-print-layers.mjs` rebuilds each approved combination under the D-270 lock.
+    - It writes only the 32 tee layers (top-body, sleeves) as lossless WebP to a private staging directory.
+    - Each layer is checked against D-271's record and the cream tee's alpha.
+    - Each combination composes byte-identically through the browser's `northstarCompose`.
+    - The skin shadow is the published cream tee's, byte-identical.
+  - **Missing.** The owner's permission to publish the 32 listed files under `assets/avatar-northstar/` (D-242's exception covers only its 31). See `docs/decisions/D-274.md`.
+- **Tee print family, approval pack — D-272 (owner decision recorded in D-274: 16 of 18 approved; no call, no integration).**
+  - **Candidates.** 16 advisory candidates (ChatGPT's selection, not an owner approval) with stable IDs `TP-<FOX|TEA|SHD>-<CRM|HTH|NAV|COR|FOR|MUS>`.
+    The 2 non-candidates are shown apart with their reason: TP-FOX-COR and TP-FOX-MUS.
+  - **Inputs.** D-271's 18 results are kept unchanged; the candidate fixture is `tp-approval-candidates-v1.json`.
+  - **Pack.** `northstar-tee-print-approval-pack.mjs` writes a private pack.
+    - `manifest.json` keeps the technical, advisory and owner statuses separate.
+    - `index.html` has a local-only review with nothing pre-selected.
+  - **Owner decision.** The owner replies `D-272 GODKENDT: …` / `D-272 AFVIST: …`.
+  - **Next.** The integration plan (approved IDs only; needs a public-asset permission) is in `docs/decisions/D-272.md`.
+- **Independent validation of large central prints, result — D-271 (all three D-270 calls sent once and received; D-270 closed; no further call).**
+  - **Yield.** 3 of 3 delivered, and all three passed the delivery checks.
+  - **Placement.** OK in 18 of 18 combinations; nothing is cut or touches the neck, seams or armpits.
+  - **Visual.**
+    - The teapot and the shield are recognised at 110×165 on all six shirt colours and work as marks at 52×78.
+    - The fox is recognised on 4 of 6; it is weak on coral and mustard, close to its own orange.
+  - **Contrast check.** The classes agree with the visual review in 15 of 18 combinations. It misses a frame drawn in another colour (teapot on heather, shield on coral and mustard).
+  - **Known limits.** The master's limits show in close-up.
+  - **Recommendation.** Keep chest-center and D-269's rule. Next is an owner visual review of the private preview; no call is authorised. See `docs/decisions/D-271.md`.
+- **Independent validation of large central prints — D-270 (3 single-use calls authorised; executed and closed by D-271: 3 spent and received).**
+  - **The three calls.** Each is `images/generations` with a transparent background, 1024², one compact motif per call; no image or reference is sent:
+    - TPV-1: a fox (animal);
+    - TPV-2: a teapot (object);
+    - TPV-3: a shield with a lightning bolt (emblem).
+  - **Unchanged.** D-269's chest-center box and size rule on the locked D-264 master; the modules and the fingerprint are pinned.
+  - **Delivery checks.** D-267's print checks, plus single shape, compact format and no broad decoration.
+  - **Contrast check.** It is advisory and uses OKLab separation of the motif's fill and edge from the shirt. Results are clear, borderline (to visual review) or weak (a poor combination); clear is not a pass.
+  - **Shirt colours.** Six fixed colours: cream, heather, navy, coral, forest, mustard.
+  - **Reporting.** Yield and quality are reported apart. Every result is kept.
+  - **Execution.** Done on a separate owner instruction and recorded in D-271. See `docs/decisions/D-270.md`.
+- **Print family on the tee master — D-269 (offline study; no call; the D-264 master unchanged; nothing approved).**
+  - **Placements.** Two fixed boxes on the body panel, as fractions of the cut, inside a safe area at least 10 px from the rib bands, armhole seams, contour and arms:
+    - `chest-left` (0.30 × 0.30 body widths at the master's anchor);
+    - `chest-center` (0.58 × 0.52 at 0.39 of the cut height).
+  - **Size rule.** The motif's visible content (alpha ≥ 8 box, never the canvas) is scaled as large as the box allows, capped at 50% of the box area in ink.
+    The whole illustration is kept, with one constant and no per-motif parameters.
+  - **Result.** 48/48 renders pass the automatic checks; the alpha is unchanged and the print path is byte-identical to the master's at the anchor.
+    - Visually, only `chest-center` gives a legible shape at 110×165 (the planet about 16×11 px) and a recognisable figure at 52×78.
+    - `chest-left` stays a small mark in the app.
+    - Large prints reveal the master's displacement (slightly wavy outlines, nearest-sample steps) and its flat chest.
+    - Coral shows that the family needs a colour-contrast rule.
+  - **Recommendation.** `chest-center` with the size rule. The next step is a visual owner review of the private preview. See `docs/decisions/D-269.md`.
+- **Generated material on the tee master, result — D-268 (both D-267 calls sent once and received; D-267 closed; no further call).**
+  - **Automatic.** Both images passed every material check, and the master check on C held: fingerprint matched, 0 holes, fit OK, outfits 8/8.
+    Both were classified as requiring visual review.
+  - **Visual: TMG-1 swatch.** It is clean and seamless with 4×4 repeats.
+    On the master it is practically identical to the local twin; the only difference is a faint woven grain, visible only in close-ups.
+    The wavy, stepped band edges, the neck-rib line showing through and the dark ticks at the cuffs appear on the twin too, so they are mapping faults (D-264).
+    Answer: no visible value over the local pattern.
+  - **Visual: TMG-2 print.** It is clean and transparent, with no halo or shadow, and in Northstar's cartoon style.
+    It reads as a planet at full size and at 110×165, but the face is lost at app size and it is a spot at 52×78.
+    Answer: a usable new design, with the anchor's size as its limit.
+  - **Recommendation.** Leave patterned fabric to local patterns. Keep GPT for prints and other illustrated details.
+    The next step is an owner decision about a small print family. No call is authorised. See `docs/decisions/D-268.md`.
+- **Generated material on the tee master — D-267 (2 single-use calls authorised; executed and closed by D-268: 2 spent and received).**
+  - **The two calls.** Both are `images/generations` with no image or reference sent (C is never sent):
+    - TMG-1: a seamless gingham swatch, 4×4 repeats, opaque;
+    - TMG-2: a standalone chest print on a transparent background.
+  - **Locked.**
+    - The D-264 master: its fingerprint on C, its revision and spec, and seven module hashes.
+    - The rules: the swatch tile is 0.5 × body width; the print is its alpha square at the anchor width.
+    - The checks and their thresholds.
+
+    The adapter and the evaluation refuse a changed master.
+  - **Material checks.** Seamless, repeat count, baked shading, details, transparency, fringe, shadow/glow, specks and flat colours.
+    They were tested on SYNTHETIC positive and negative examples.
+  - **Local twin.** A gingham through the same master separates material faults from mapping faults.
+  - **Visual criteria.** These are never automatic.
+  - **Execution.** Done on a separate owner instruction and recorded in D-268. See `docs/decisions/D-267.md`.
+- **Tee master — D-264 (offline prototype; no call; recommendation 1: promising enough for a later generated-material test).**
+  - **What.** `northstar-tee-master.mjs`: one-time data for the tee-hip cut. It has:
+    - a panel map split at the drawn armhole seams, not at C's arm mask;
+    - the cut's own contour;
+    - one luminance-ratio map carrying seams, rib, hem stitch, fold strokes and shading;
+    - a fixed pattern displacement of at most 3 px;
+    - sleeve axes;
+    - a chest-print anchor.
+  - **Per design.** Only material changes: a colour or seamless swatch, optional trim, and a print at an existing anchor.
+  - **Tested designs.** Plain cream and blue (K colours), SYNTHETIC stripes, tartan and a chest print.
+  - **Checks.** 0 holes, fit OK, outfits 8/8.
+  - **Visual result.**
+    - Plain designs carry the original's painting.
+    - Patterns change at the real seam and keep the fold strokes, with no double shadows.
+  - **Limits.**
+    - Patterns stay near-planar over broad areas.
+    - Highlights are clipped, and fold strokes are weaker on dark fabric.
+    - Each cut needs a clean painted neutral item.
+  - **Status.** Nothing is integrated. See `docs/decisions/D-264.md`.
+- **r1-m1 quality reference — D-262 (offline; no call; recommendation 2: a limited product family).**
+  - **Clean reference.** Clean material (approved K-set colours and SYNTHETIC seamless stripes and tartan) laid on the tee-hip cut
+    shows which faults come from the source swatches and which from the method.
+  - **Source-swatch faults, fixed by a clean seamless swatch with wrap tiling.** Ghost pocket, pleats, mirror axis, painted fold
+    strokes.
+  - **Method limits.**
+    - Patterns read as a flat print.
+    - Pattern breaks run down the chest side, because the sleeve boundary is C's arm mask and not the armhole.
+    - Northstar's crisp fold strokes are lost, because lines and fold strokes cannot be separated in a finished picture.
+    - A ratio shade restores the shading strength.
+  - **Swatch checks.** New checks on the swatch itself (seam, flatness, faint details) catch the ghost pocket and the cut-out seam.
+    Painted fold strokes and pleats are left to the eye.
+  - **Next.** No image test now: first decide per-cut panel maps, layered source art and UV. See `docs/decisions/D-262.md`.
+- **Geometry-free material laid on by the cut — D-260 (offline hypothesis r1-m1; no call).**
+  - **Method.** `northstar-r1-material.mjs`: the model would deliver only a flat fabric swatch, a trim swatch and separate details.
+    The cut supplies silhouette, fold shade, sleeve split, bands, construction lines and detail anchors. Swatches are mirror-tiled
+    (sleeves turned with the arm) and shaded by the cut.
+  - **Study.** On real generated material already in the project (R1C-1, R1-1, b1 breton and tartan): 0 holes, fitCheck passed
+    and 8/8 outfits matching the template for all three designs. Neck, cuffs and armpits are clean.
+  - **What the quality depends on.** The swatch must carry no details (a ghost pocket), no baked pleats or folds, and must tile
+    seamlessly. The pattern lies flat over the folds.
+  - **Recommendation.** Promising. Next, test whether the model can deliver a seamless flat swatch and a separate detail; one
+    proposed call, NOT authorised. See `docs/decisions/D-260.md`.
+- **R1C-1 sent and received — D-259: technically rejected; D-258 closed; this variant stopped.**
+  - **What the model ignored.** It drew a free-standing tee again (about 1.47×) with no bleed (estimated 2 px) and its own rib
+    widths. On C that leaves holes at the armpits and double band lines at the neck and cuffs; coverage, holes, trim and fit fail.
+  - **What it delivered.** New material, a whole pocket and soft folds; it obeyed "no outline", and no grey leaked.
+  - **Limitation.** The model does not deliver geometry (placement, bleed or band widths) and must not be relied on for it.
+  - **Next step.** A new owner decision: geometry-free material laid on by the cut, or stop R1 as an automatic path. See
+    `docs/decisions/D-259.md`.
+- **R1C authorised — D-258: one one-shot call, R1C-1, NOT EXECUTED (the execution is a separate owner instruction).**
+  - **Adapter and evaluation.** `openai-send-northstar-r1c-d258.mjs` follows the D-235/D-255 pattern, with Image 1 the bleed
+    canvas v2 and Image 2 C. `northstar-r1c-evaluate.mjs` runs the placement, the automatic checks, the sheets and the record.
+  - **Placement.** s1 against the cut's core grown by the ESTIMATED bleed b (0–30 px). A fixed 16 px reference turned a wider or
+    narrower bleed into a wrong scale.
+  - **Canvas v2.** No drawn lines (v1 carried the template's own rib line, seams and hem stitch) and no dark ring in the bleed.
+  - **Line detector.** Contrast, a thin valley, and an axis rule. It finds brown lines, not colour steps, shadows or corners.
+    Holes are counted before the lines.
+  - **Proven locally.** Checked on 4 positive and 7 negative constructed examples and on R1-1. Visual criteria are never
+    automatic passes.
+  - **Cost.** About $0.07 (prices re-verified 2026-10-30). See `docs/decisions/D-258.md`.
+- **D-255 closed and r1-c1 proposed — D-257 (no call; one call proposed, not authorised).**
+  - **Closed.** R1-1 is spent (technically rejected). R1-2 and R1-3 are CLOSED_UNUSED, with no claims; the adapter refuses all
+    three.
+  - **r1-c1.** The cut owns geometry AND construction; GPT owns the design:
+    - the material is painted with a 16 px bleed and no outline;
+    - the cut's reusable construction layer supplies the band masks (neck rib, cuffs) and every line (contour, band edges, hem
+      stitch) in Northstar ink;
+    - GPT paints the bands' fabric where the canvas marks them;
+    - holes are never hidden, not even under a line.
+  - **Checks (no colour classes).** Coverage before crop, the trim edge by shape (P90 ≤ 2 px), a second outline, and clipped
+    details. R1-1 itself, which was not asked for bands, has its rib 5.5–7.5 px wider than the cut's band.
+  - **Plan.** `r1c-plan-v1.json`: one call, R1C-1, about $0.07. NOT authorised. See `docs/decisions/D-257.md`.
+- **R1-1 offline: one uniform scale + translation — D-256 (hypothesis s1; no call; D-255's result unchanged).**
+  - **D-255 status.** R1-1 was sent once and is technically rejected under r1-v1: a free-standing product shot at twice the
+    cut's size. R1-2 and R1-3 are unsent; both permissions are still UNSPENT.
+  - **What s1 finds.** One uniform scale (0.504) and one shift, found automatically, fit R1-1 to tee-hip with IoU 0.976. The
+    proportions match within a few px.
+  - **What fails.** The output's own silhouette edge leaves visible faults at the seams once cut by r1-v1: holes at the armpits,
+    a white sliver and a double contour at the neck, and a clipped cuff. FIT-4 fails.
+  - **Recommendation.** Separate design and geometry differently: GPT supplies material with bleed and no outer outline, and the
+    cut alone supplies alpha, contour and seams. One proposed call, not authorised. See `docs/decisions/D-256.md`.
+- **R1 experiment authorised — D-255: three one-shot calls, NOT EXECUTED (the execution is a separate owner instruction).**
+  - **Adapter.** `tools/avatar/openai-send-northstar-r1-d255.mjs`, the D-235 pattern: Image 1 is the cut's private canvas, Image 2
+    is C. Prompts, canvases, plan and model are pinned. There is no retry, reserve or fallback.
+  - **Gate.** Each received picture needs its R1 record (`northstar-r1-evaluate.mjs`) before the next call. Coverage of the template
+    core below 0.80 stops the run.
+  - **Acceptance.** It goes beyond the fixed alpha: real material over the core, details against the cut, double outlines, pattern
+    across body and sleeves, and no skin or background. COMBO-2's pattern sensitivity is reported apart.
+  - **Cost.** About $0.21 (an estimate; prices re-verified 2026-10-29). See `docs/decisions/D-255.md`.
+- **R1, the garment generated apart from the body — D-253 (plan only; no call sent; production stays d240).**
+  - **Method.** `tools/avatar/northstar-r1-garment.mjs` (`r1-v1`). A cut is a fixed garment form taken once from an existing
+    extracted item: silhouette, alpha, fold shading, contour, layer split, shadow and covering. A generated item supplies only
+    the material inside it.
+  - **Post-processing.** One integer translation, the template's alpha, and the cut's contour. Holes are measured and never
+    filled. Nothing is done per item.
+  - **Local proof.** `tools/avatar/northstar-r1-proof.mjs` runs simulated outputs only. Shifts are recovered exactly, alpha is
+    identical, and fitCheck is OK for skin-coloured material too. 18 of 20 outfits match the template item; the other two show
+    that COMBO-2 is sensitive to patterns at seams.
+  - **Plan.** `fixtures/northstar-wardrobe/r1/r1-plan-v1.json`: three calls (skin-near top, houndstooth bottom, skin-near
+    ankle boot), at most $0.21. It is NOT authorised.
+  - **Recommendation.** Run the three calls after a separate authorisation. See `docs/decisions/D-253.md`.
+- **Contour experiment A closed — D-252: not fit for general automatic extraction in its current form; production stays d240.**
+  - **Finding.** a2 takes C's own body contour into the item (neck and shoulder line beyond a neckline, the arm line under a
+    sleeve hem, the leg line above a shoe collar) on 14 of 26 items. The cause is a1's bounding-line rule, and it also explains
+    the 3 px outfit hole.
+  - **Why it was missed.** D-251's check covered only the front zone (hands, arms, base garments), and the visual review was too
+    narrow.
+  - **D-251.** Its recommendation of an independent validation is withdrawn; its measurements stand as history.
+  - **The four-call validation.** It was never authorised or sent. No image permission is active.
+  - **What comes next.** The requirements for a future method and two directions for a later owner decision are recorded in
+    `docs/decisions/D-252.md`.
+- **Experiment A revision a2 — D-251 (experiment only; production stays d240; recommendation WITHDRAWN by D-252).**
+  - **Method.** `tools/avatar/northstar-shape-extract-a2.mjs`: the layer contract decides which lines may close a region. C's
+    pixels of the layers in front of the category never join the item, and their lines never close.
+  - **Result.** On the 26 existing pictures (seen before, so not a validation): 0 px added in front, no regression of the 20, and
+    breton and high-tops OK. Skin-near fabric is kept. Outfits: 152 of 153 comparable combinations are identical to production; one
+    3 px hole appears at a shoe edge in an outfit that production already rejects.
+  - **Decision.** a2 is fit for a later independent validation, which needs new pictures and a separate authorisation. See
+    `docs/decisions/D-251.md`.
+- **Experiment A, shape-based extraction offline — D-250 (experiment only; production stays d240).**
+  - **Method.** `tools/avatar/northstar-shape-extract.mjs` (`a1`) adds, on top of the production layer, only repainted regions
+    closed by the item or a drawn line. Regions left as C are uncertain and never filled; open ones are never filled.
+  - **Sets.** Development: b1's five. Regression (after freezing): the 21 earlier items. This is a regression check, not an
+    independent validation.
+  - **Result.** Breton and high-tops are now technically OK. Peach and desert boots recover their fabric but stay rejected. Tops and
+    shoes show no regression. Every bottom falsely gains C's fingertips and the base top's waist line.
+  - **Recommendation.** A bounded remainder: revision `a2` that excludes C's own body contours and the other category's base edge
+    as closing lines, or reject A. See `docs/decisions/D-250.md`.
+- **Batch b1 closed after the checkpoint STOP — D-248.** 6 calls spent (5 pictures, jeans uncertain), 22 closed unused; C1
+  failed. Only the tartan skirt was technically OK (with the blue tee). Skin-near colours over C's skin are lost by the
+  colour-based extraction, and stripe edges trigger G-2 falsely. `rawRoot` fixed. Method note: the current extraction cannot reach
+  thousands of freely combinable items; next, test contour-based (colour-independent) identification offline on the existing
+  pictures. See `docs/decisions/D-248.md`.
+- **Batch b1 authorised — D-246: at most 24 + 4 calls; NOT EXECUTED (the execution is a separate owner instruction).**
+  - **Adapter.** `tools/avatar/openai-send-northstar-batch-b1.mjs`, the D-235 one-shot model. Before every send it re-composes and
+    validates the prompt. It enforces the order, a pipeline record per received picture, the second format/moderation/G-1 stops,
+    9 technical rejections, `B1-STOP.json`, the checkpoint gate (`B1-CHECKPOINT.json`, C1–C5) and the reserve rule.
+  - **Files.** Authorisation in `batches/b1-authorisation-v1.json`; the plan stays unauthorised. Technical pass = candidate only;
+    nothing published. See `docs/decisions/D-246.md`.
+  - **D-247.** Call 1 received (technically rejected, G-2). Call 2 (jeans) was an uncertain dispatch: closed as spent, never resent;
+    the batch continues under D-246's rules. See `docs/decisions/D-247.md`.
+- **b1 plan corrected — D-245 (before any authorisation; no calls).**
+  - **Prompts.** Strict lookups and `validatePrompt` on every finished prompt; readable `batches/b1-prompts-v1.md`.
+  - **Prompt defect.** The five bottom calls of D-228/D-235 were sent with "undefined" instead of the bottoms instruction
+    (`prompt-defect-bottoms-d245.json`). Their results stand; conclusions in D-231/D-232/D-238/D-239 are corrected by notes.
+  - **Catalogue.** Usable candidates, the investigation rate and the freely combinable set (every combination approved) are
+    reported apart; only the set is offered as freely combinable.
+  - **Scope and checkpoint.** Scope rules against C's picture and the layer contract (no torso skin, no neck band, one garment,
+    the envelopes); a fixed six-call checkpoint C1–C5.
+  - **Price and review.** Documented `gpt-image-2.5-sunburst` price; the enforceable cap is 28 calls (≈ $1.91); the assistant
+    reviews first, the owner decides a short list. See `docs/decisions/D-245.md`.
+- **Northstar batch production flow — D-244: batch b1 (24 designs) planned, NOT authorised; no calls.**
+  - **Flow.** `tools/avatar/northstar-batch.mjs`: design file → frozen prompts → unauthorised call plan with cost → chunked
+    `runPipeline` runs → status register (afvist / kræver-gennemgang / kandidat / godkendt / uafprøvet; a technical pass is never an
+    approval; nothing hidden) → private export in D-242's format. The pipeline registers batch items from design files.
+  - **Finding.** D-228/D-235 sent their five bottom prompts with "undefined" instead of the bottoms' contract sentence; b1 sends it.
+  - **Ask.** At most 28 calls, $10 ceiling (estimate $1.89–$7.91). See `docs/decisions/D-244.md`.
+- **Northstar wardrobe in the renderer — D-242: flag `AVATAR_NORTHSTAR_WARDROBE = false`, browser opt-in; not activated for
+  pupils; no calls.**
+  - **Where (corrected by D-253).** It can be tried on lærlig.dk through a browser opt-in (`avatar.html?northstar=1`), not
+    only locally. All 31 layers and the panel are served (checked 2026-10-29). The owner's approval of the prototype's look and
+    test function stands; it is not a production approval.
+  - **Path.** `mountC2Avatar` tries the C figure first (quiz, hub, avatar; aura/back only), composing it once at 1024×1536 with
+    the pipeline's own arithmetic (`northstarCompose`). Any load failure or other equipped slot → today's avatar, whole.
+  - **Assets.** 31 lossless WebP layers in `assets/avatar-northstar/` (owner exception to D-127 §2, public; `manifest.json`); D-275 added D-274's 32 print-tee layers under its own permission.
+    All 19 K outfits are byte-identical to the pipeline. With the flag off, 54 browser pages are pixel-identical to main.
+  - **Opt-in.** `avatar.html?northstar=1` (on lærlig.dk or locally), then a K outfit in the panel (stored in localStorage only).
+  - **Limits.** No blink and neutral expression only; no hair/skin/eye variation; no head items. See `docs/decisions/D-242.md`.
+- **Northstar assistant review — D-240: method d240 (the assistant's review, not the owner's approval; no calls).**
+  - **Fixed.** The brown ankle boot's arch (K16, K18, K19): what a closed shoe hides is taken from the picture's own opaque
+    pixels joined to the shoe (`coverFromPicture`, 40 px). Nothing is painted; open footwear is untouched; the other five
+    shoes are byte-identical.
+  - **Correct and kept.** K17's ankle triangle and the beige sneakers' collar wedge are C's own skin with the picture's
+    shadow. The K01–K03 hem step is not a fault. All K01–K19 await the owner. See `docs/decisions/D-240.md`.
+- **Northstar targeted correction — D-239: method d239 (development, not a validation; no calls).**
+  - **Corrected diagnoses.** N2's cut was a remnant of the limb's contour below the cuff, removed in the extraction. MF-2 is
+    the top's open hip corner, not the trousers. MF-1 was shaded-skin antialias (corrected) plus a real gap between hem and
+    shoe (now checked).
+  - **Outfit check d239.** Partial-alpha edges are the item's own. COMBO-5 catches skin between a hem and a shoe; COMBO-6
+    catches a notch where C's base is left uncovered at the waist. SC-W4 now judges lines by contrast. Manual findings live in
+    the review register (F-013 … F-019).
+  - **Result.** Every status change was reviewed: 0 false rejections, 0 regressions. Ready (technically OK, no open finding):
+    15/48 in D-235, 6/40 in D-228, 0/18 in the pilot — only outfits with the corner-covering tops N1 and V1. Byte identity is
+    verified for the pilot only. See `docs/decisions/D-239.md`.
+- **Northstar independent validation results — D-238: six new calls sent, decision: targeted correction.**
+  - **Result.** Under d232 as frozen, all six new items are technically OK (T 6/6) and 30 of 48 planned outfits pass (K 30;
+    missing and rejected stay in the denominator). There are two manual findings, both in the black trousers (skin-coloured
+    pieces along the hem; a notch at the hips). Contract v2 is met in full by none (C 0/6).
+  - **Rule.** The pre-registered rule gives a targeted correction as a new method version, then a new small independent test.
+    The candidates are COMBO-1d without the limb exit (all 12 N2 outfits), dark-outline and hem-antialias extraction, and
+    SC-W4 on black fabric. See `docs/decisions/D-238.md`.
+- **Northstar independent validation — D-235: six new frozen calls authorised, executed and closed by D-238.**
   - **Why.** D-232's 38/40 re-evaluated pictures that shaped the method. D-235 tests d232 and seam-contract-v2 on six new
     designs: two tops, two bottoms and two closed shoes (three light, skin-near; three dark).
   - **Frozen.** Method d232 is pinned with its definition and code. Image 2 is the v2 sheet; the shoe sheet is D-228's. The

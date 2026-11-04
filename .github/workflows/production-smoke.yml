@@ -1,0 +1,49 @@
+name: Production Smoke
+# D-110 phase D2 — a small, READ-ONLY check of the public production deployment after a push to main.
+# It waits for Cloudflare's deploy of this exact commit, then compares what https://lærlig.dk serves
+# byte-for-byte with the bundle this checkout builds, checks that internal paths are not served, and
+# sends a CORS preflight (OPTIONS) to two Edge Functions. Everything it may request, and why none of it
+# can change data, is listed in tools/production-smoke.mjs.
+#
+# No production secret, no repository variable, no account, no login, no shared E2E lock. The only
+# credential is this workflow's own automatic GitHub token (secrets.GITHUB_TOKEN), read-only (contents +
+# checks), used for two GitHub API reads and sent nowhere else. The old production-facing suite (playwright.yml) is unchanged by this workflow.
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: read
+
+# A newer push to main cancels the overtaken run (it could only ever end "superseded"). A manual dispatch
+# gets a group of its own, so a push and a dispatch never cancel each other.
+concurrency:
+  group: >-
+    ${{ github.event_name == 'workflow_dispatch'
+      && format('production-smoke-dispatch-{0}', github.run_id)
+      || format('production-smoke-{0}-{1}', github.event_name, github.ref) }}
+  cancel-in-progress: true
+
+jobs:
+  production-smoke:
+    runs-on: ubuntu-latest
+    # Deploy wait (20 x 30 s) + content retries (6 x 20 s) + the comparisons themselves.
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      # The bundle this commit deploys: the same build Cloudflare runs, from the same checkout.
+      - name: Build the bundle of this commit
+        run: node tools/cloudflare-build-static.mjs
+      - name: Read-only production smoke
+        env:
+          HEAD_SHA: ${{ github.sha }}
+          # The automatic workflow token (read-only by the permissions above), not a stored secret.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node tools/production-smoke.mjs

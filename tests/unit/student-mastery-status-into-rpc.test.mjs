@@ -200,9 +200,12 @@ test("the migration sorts after every migration that touches either object", () 
       executable(readFileSync(join(dir, n), "utf8"))))
     .sort();
   assert.ok(touching.includes("20260927000000_student_mastery_status_into_rpc.sql"));
-  assert.equal(touching[touching.length - 1],
-    "20260927000000_student_mastery_status_into_rpc.sql",
-    "it must apply last among them");
+  // The one documented successor, 20261029150000_teacher_stats_from_answers, recomputes two of the
+  // six columns from the answers and keeps the gate, the shape and the grants; its own suite
+  // (teacher-stats-from-answers-migration-run) pins that. Anything else after this file is a defect.
+  const after = touching.slice(touching.indexOf("20260927000000_student_mastery_status_into_rpc.sql") + 1);
+  assert.deepEqual(after, ["20261029150000_teacher_stats_from_answers.sql"],
+    "it must apply last among them, followed only by the documented successor");
   assert.ok(touching.includes("20260926000000_teacher_student_overview_to_rpc.sql"),
     "the prior migration also touches the function and must sort before this one");
 });

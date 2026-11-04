@@ -1,0 +1,204 @@
+{
+  "decision": "D-270",
+  "plan": "tp-validation-v1",
+  "status": "PLAN — the calls are authorised only by D-270's status token and the authorisation file's unspent entries; this file never authorises by itself",
+  "authorisesImageRequest": false,
+  "question": "Do new, compact, clearly different illustrations — placed by D-269's unchanged rule in D-269's chest-center box on the unchanged D-264 master — give a recognisable main form at 110x165, a distinct graphic mark at 52x78, and Northstar's drawn quality in close-up, on a fixed set of shirt colours?",
+  "advisory": "ChatGPT's assessment (advisory, recorded as given): the chest-center placement is promising at 110x165. No item is approved by the owner.",
+  "deliveries": "three separate transparent images, one motif per call; never one sheet with several motifs (no segmentation after receipt)",
+  "lock": {
+    "master": {
+      "revision": "tee-master-v1",
+      "specSha256": "498ad293d1e1b1d4ba0faa272251260586a03b96c0d0381b7e02417f0cdc3006",
+      "cut": "tee-hip",
+      "from": "top-tee-hip-cream"
+    },
+    "placement": {
+      "name": "chest-center",
+      "spec": {
+        "x": 0,
+        "y": 0.39,
+        "width": 0.58,
+        "height": 0.52
+      },
+      "boxOnC": [
+        437,
+        537,
+        150,
+        135
+      ],
+      "margin": 10
+    },
+    "sizeRule": {
+      "alphaBox": 8,
+      "inkShare": 0.5,
+      "samples": 8,
+      "statement": "the motif's visible content (the alpha >= 8 box, never the transparent canvas) is cropped and scaled as large as the box allows (contain, aspect kept, nothing cut), capped at inkShare of the box's area in ink; premultiplied area resample; one constant for every motif (D-269, unchanged)"
+    },
+    "masterFingerprint": "e50483aa973d7181db0b8a8e7e8f09acc03ca6f162da96fcf3ec8729e7e8e026",
+    "modules": {
+      "tools/avatar/northstar-tee-master.mjs": "6a4b650cb8d8cbd162bc5a8563a59b4b27ac5fa2dfcd0459a359bb405f881038",
+      "tools/avatar/northstar-tee-material.mjs": "1c92255a9db6cfa8842c5d7c837096f3e8bb57ae09001da8b2ba50235595d7c5",
+      "tools/avatar/northstar-tee-master-study.mjs": "19bf411d6082891771ba233ab1acff2fa70e583226901cae87d244760ed941a7",
+      "tools/avatar/northstar-r1c-evaluate.mjs": "6bd18fffdf989243529266626518994548e4acd341b961d5cffc196f2f914a80",
+      "tools/avatar/northstar-r1-construction.mjs": "19ac018a6a3dc8cd8937e96a48fa11be78deb50bb4bbd6a12da24f38a5fe22f4",
+      "tools/avatar/northstar-r1-material.mjs": "3ea49ce7088f0b62c0c49043a7104f8baa353e76236da6824cffd98138e7e262",
+      "tools/avatar/northstar-r1-similarity.mjs": "306cfa4ce7ea1768c82ada2baf2e50cc40931e201e802ec6a9ac994d6a0c5365",
+      "tools/avatar/northstar-tee-print-family.mjs": "7155a4193bcf961ce06f948be3e63c1bd8a148f8aa1f9ff52510eefec5e35521",
+      "tools/avatar/northstar-tee-print-validation.mjs": "e8b88f902c80352ab05e0f6a33cbb6129b861954c78ac7522e5171764b799f5f"
+    },
+    "noChangeAfterReceipt": "the master, its mapping, the box, the size rule, the checks and their thresholds are not changed after receipt; the evaluation refuses a module or fingerprint that differs; no motif is retouched, re-centred, recoloured or masked"
+  },
+  "colours": {
+    "cream": "the cut's own fabric (median of top-tee-hip-cream on C)",
+    "heather": [
+      158,
+      160,
+      164
+    ],
+    "navy": [
+      38,
+      50,
+      92
+    ],
+    "coral": [
+      214,
+      96,
+      82
+    ],
+    "forest": [
+      46,
+      94,
+      62
+    ],
+    "mustard": [
+      222,
+      172,
+      58
+    ]
+  },
+  "accept": {
+    "delivery": {
+      "printChecks": "D-267's (northstar-tee-material.mjs printChecks)",
+      "compact": {
+        "aspect": [
+          0.6,
+          1.6666666666666667
+        ],
+        "inkShareMin": 0.45,
+        "components": 1
+      }
+    },
+    "contrast": {
+      "seenDE": 0.1,
+      "strongDE": 0.15,
+      "bridge": 0.03,
+      "clear": {
+        "silhouette": 0.95,
+        "visibleShare": 0.6,
+        "strongShare": 0.7
+      },
+      "weak": {
+        "silhouette": 0.8,
+        "visibleShare": 0.25
+      }
+    },
+    "visual": [
+      "110x165: the motif's main form is recognised (what it is: the animal, the object, the emblem) — the face and small details are not required",
+      "52x78: the motif reads as a small graphic mark (a distinct shape and colour on the shirt), not as a smudge",
+      "close-up (2x): Northstar's drawn quality — even bold outline, flat cel colours, clean edges, no colour rim, no halo, no shadow",
+      "the motif itself: one compact shape, a strong silhouette, few large colour fields; no text, no small face details, no loose stars or broad decoration",
+      "each shirt colour: the silhouette and the main colour fields hold against the shirt; the contrast class is advisory and never a pass",
+      "placement: balanced on the chest under the neck rib, nothing cut, clear of the seams and armpits (D-269's box, unchanged)"
+    ],
+    "visualIsNeverAutomatic": true,
+    "classes": {
+      "deliveryRejected": "a delivery check failed or a format reject at receipt; the motif is still kept, rendered and shown",
+      "requiresVisualReview": "every delivered motif that passes the delivery checks; never an automatic pass",
+      "usable": "only after the owner's visual review"
+    },
+    "contrastClasses": "clear / borderline / weak per motif and shirt colour; advisory, never a pass mark: clear still needs the visual review, borderline goes to it explicitly, weak is reported as a poor combination and kept"
+  },
+  "reporting": "the yield of the generation (delivered, delivery checks passed) and the quality of the chosen combinations (visual, per motif and colour) are reported apart; every result is kept, rejected motifs and poor colour combinations too",
+  "knownLimits": [
+    "D-264/D-269: the master's displacement gives large prints slightly wavy outlines and nearest-sample steps; the chest is drawn flat, so a print does not follow folds",
+    "D-269: a small light speck at the neck rib on the plain shirt (not from the prints)",
+    "D-269: the chest-center box is wider than tall (150 x 135 px on C); a motif's format decides how much of the box it gets",
+    "the contrast check measures colour separation from the shirt; it does not judge legibility, appeal or style"
+  ],
+  "evaluation": "node tools/avatar/northstar-tee-print-validation.mjs --from-calls --out <dir outside the repo>: the lock, the delivery checks, the motif placed by D-269's rule on every shirt colour, the contrast class, sheets (raw, torso, close-up 2x, 110x165 and 52x78 actual and 3x), a private preview and the record (never rewritten)",
+  "calls": [
+    {
+      "callId": "TPV-1-tee-print-animal-fox",
+      "order": 1,
+      "delivery": "print-animal",
+      "purpose": "one compact animal motif as a large central chest print (D-269's chest-center box and size rule, unchanged)",
+      "motif": {
+        "what": "a fox sitting in side profile with its big bushy tail curled around its feet. A warm orange body, a cream chest and tail tip, dark brown legs and ear tips. The face is reduced to one small solid dark eye: no mouth, no eyebrows, no whiskers.",
+        "why": "a living creature with a silhouette that is recognised by its outline alone (pointed ears, the curled bushy tail); the face is reduced to one eye so it does not depend on small details; orange is close to coral and mustard, so the contrast check meets a real borderline case"
+      },
+      "endpoint": "https://api.openai.com/v1/images/generations",
+      "parameters": {
+        "size": "1024x1024",
+        "quality": "high",
+        "n": 1,
+        "output_format": "png",
+        "background": "transparent"
+      },
+      "references": [],
+      "prompt": {
+        "text": "Create one standalone graphic for a large chest print on the T-shirt of a children's cartoon game avatar, on a fully transparent background: a fox sitting in side profile with its big bushy tail curled around its feet. A warm orange body, a cream chest and tail tip, dark brown legs and ear tips. The face is reduced to one small solid dark eye: no mouth, no eyebrows, no whiskers. Flat print-ready artwork in a clean cel-shaded cartoon style: one bold dark navy outline of even weight around the whole silhouette, thinner navy lines between the colour areas, and a few large flat colour areas, each solid with at most one hard-edged darker tone; no gradients, no texture, no small details. One single compact shape with a strong, instantly recognisable silhouette, centred and upright, about as wide as it is tall, filling about 80 percent of the image; an empty transparent margin on every side, nothing touches the image edges. No text, letters or numbers. No separate decorations around it: no stars, sparkles, dots, lines, speed lines or other shapes. No T-shirt, no fabric, no mockup, no background colour, no white sticker border, no drop shadow, no glow, no frame.",
+        "bytes": 1172,
+        "sha256": "84956a3316911ea93d31238694f912bc310aefaf8ab0cc88084fcdbbd225ba63"
+      }
+    },
+    {
+      "callId": "TPV-2-tee-print-object-teapot",
+      "order": 2,
+      "delivery": "print-object",
+      "purpose": "one compact object motif as a large central chest print (D-269's chest-center box and size rule, unchanged)",
+      "motif": {
+        "what": "a round, chubby teapot seen from the side, with a short spout, a looped handle and a lid with a round knob. A sky-blue body, a white band around the middle and a white lid knob.",
+        "why": "a man-made object with a classic, unmistakable silhouette (spout, handle, knob) in one piece; sky-blue and white are cool and light, so the dark and warm shirts and the light ones test it from both sides"
+      },
+      "endpoint": "https://api.openai.com/v1/images/generations",
+      "parameters": {
+        "size": "1024x1024",
+        "quality": "high",
+        "n": 1,
+        "output_format": "png",
+        "background": "transparent"
+      },
+      "references": [],
+      "prompt": {
+        "text": "Create one standalone graphic for a large chest print on the T-shirt of a children's cartoon game avatar, on a fully transparent background: a round, chubby teapot seen from the side, with a short spout, a looped handle and a lid with a round knob. A sky-blue body, a white band around the middle and a white lid knob. Flat print-ready artwork in a clean cel-shaded cartoon style: one bold dark navy outline of even weight around the whole silhouette, thinner navy lines between the colour areas, and a few large flat colour areas, each solid with at most one hard-edged darker tone; no gradients, no texture, no small details. One single compact shape with a strong, instantly recognisable silhouette, centred and upright, about as wide as it is tall, filling about 80 percent of the image; an empty transparent margin on every side, nothing touches the image edges. No text, letters or numbers. No separate decorations around it: no stars, sparkles, dots, lines, speed lines or other shapes. No T-shirt, no fabric, no mockup, no background colour, no white sticker border, no drop shadow, no glow, no frame.",
+        "bytes": 1109,
+        "sha256": "bdd76078a36d6f85b2cda50bdd82c9d14af5c93cf3a0236dc97f8c72d7d152e5"
+      }
+    },
+    {
+      "callId": "TPV-3-tee-print-emblem-shield",
+      "order": 3,
+      "delivery": "print-emblem",
+      "purpose": "one compact emblem motif as a large central chest print (D-269's chest-center box and size rule, unchanged)",
+      "motif": {
+        "what": "a heraldic shield emblem with one big zigzag lightning bolt across it. A red shield with a wide golden-yellow rim and a white lightning bolt.",
+        "why": "an emblem: a strong geometric outline with a bold internal sign, the most graphic of the three; red against coral and the yellow rim against mustard are the planned hard cases for the contrast check"
+      },
+      "endpoint": "https://api.openai.com/v1/images/generations",
+      "parameters": {
+        "size": "1024x1024",
+        "quality": "high",
+        "n": 1,
+        "output_format": "png",
+        "background": "transparent"
+      },
+      "references": [],
+      "prompt": {
+        "text": "Create one standalone graphic for a large chest print on the T-shirt of a children's cartoon game avatar, on a fully transparent background: a heraldic shield emblem with one big zigzag lightning bolt across it. A red shield with a wide golden-yellow rim and a white lightning bolt. Flat print-ready artwork in a clean cel-shaded cartoon style: one bold dark navy outline of even weight around the whole silhouette, thinner navy lines between the colour areas, and a few large flat colour areas, each solid with at most one hard-edged darker tone; no gradients, no texture, no small details. One single compact shape with a strong, instantly recognisable silhouette, centred and upright, about as wide as it is tall, filling about 80 percent of the image; an empty transparent margin on every side, nothing touches the image edges. No text, letters or numbers. No separate decorations around it: no stars, sparkles, dots, lines, speed lines or other shapes. No T-shirt, no fabric, no mockup, no background colour, no white sticker border, no drop shadow, no glow, no frame.",
+        "bytes": 1073,
+        "sha256": "c4202266905fc69c70880c4ddb7052946b53a1a2c6f880c6975d921a0fda164e"
+      }
+    }
+  ]
+}

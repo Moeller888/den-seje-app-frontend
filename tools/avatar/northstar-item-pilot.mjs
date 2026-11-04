@@ -28,7 +28,7 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const DECISION = "D-207";
 /** D-218: each item's declared COVERING rule (body visibility when worn): closed footwear hides the foot inside its outline; sandals
  *  are open and keep C's toes; no other item hides body. A rule of the item type, never of one picture. */
-export const COVERING = Object.freeze({ "shoes-sneakers-white": "closed-footwear", "shoes-boots-black": "closed-footwear", "shoes-sandals-brown": "open-footwear", "shoes-ankleboots-brown": "closed-footwear", "shoes-sneakers-beige": "closed-footwear", "shoes-boots-laceup-black": "closed-footwear" });
+const BUILT_IN_COVERING = Object.freeze({ "shoes-sneakers-white": "closed-footwear", "shoes-boots-black": "closed-footwear", "shoes-sandals-brown": "open-footwear", "shoes-ankleboots-brown": "closed-footwear", "shoes-sneakers-beige": "closed-footwear", "shoes-boots-laceup-black": "closed-footwear" });
 /** D-222: the rules every item of a category gets — none is set per picture. Shoes take their covering from the item's TYPE. */
 export const CATEGORY_RULES = Object.freeze({
   top: { layers: ["topBody", "sleeves"], split: "a top's pixels over C's arms are sleeves", extraction: "D-216 rules 1–7 + D-213 G-3 hand guard", skinShadow: "D-222", contourEdgeUnmix: "D-222", covering: "none", checks: ["FIT-1…FIT-5v2", "FIT-6v2 (D-222 compact crossing)", "FIT-4 (D-222 C's exterior)", "VIS-1", "VIS-2", "Q-1…Q-3"] },
@@ -42,7 +42,24 @@ export const ITEMS = Object.freeze({ "top-tank-teal": "top", "top-tee-red": "top
 export const VALIDATION_ITEMS = Object.freeze({ "top-tee-hip-blue": "top", "top-longsleeve-waist-purple": "top", "bottom-trousers-square-olive": "bottom", "bottom-capri-lightblue": "bottom", "bottom-skirt-band-orange": "bottom", "shoes-ankleboots-brown": "shoes" });
 /** D-235: the six new items of the independent validation of method d232 and seam-contract-v2 (N1 … N6). */
 export const INDEPENDENT_ITEMS = Object.freeze({ "top-tee-hip-cream": "top", "top-longsleeve-waist-navy": "top", "bottom-trousers-black": "bottom", "bottom-skirt-sand": "bottom", "shoes-sneakers-beige": "shoes", "shoes-boots-laceup-black": "shoes" });
-export const ITEM_CATEGORY = Object.freeze({ ...ITEMS, ...VALIDATION_ITEMS, ...INDEPENDENT_ITEMS });
+/** D-244: items registered by a batch design file (fixtures/northstar-wardrobe/batches/<batch>-designs-v<n>.json) — the scalable
+ *  successor of the tables above: each design declares its category and, for shoes, its covering; it is ruled by its category like
+ *  every item above. A batch can never redefine a known item, and open footwear (sandals) stays parked. Read once, in file order. */
+export const BATCH_DIR = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "northstar-wardrobe", "batches");
+export const BATCH_ITEMS = (() => {
+  const out = {}, known = { ...ITEMS, ...VALIDATION_ITEMS, ...INDEPENDENT_ITEMS };
+  const files = existsSync(BATCH_DIR) ? readdirSync(BATCH_DIR).filter((f) => /^[a-z0-9]+-designs-v\d+\.json$/.test(f)).sort() : [];
+  for (const f of files) { const b = JSON.parse(readFileSync(join(BATCH_DIR, f), "utf8"));
+    for (const d of b.designs || []) {
+      if (!d || typeof d.id !== "string" || known[d.id] || out[d.id]) throw new Error(f + ": a missing or repeated item id " + (d && d.id));
+      if (!["top", "bottom", "shoes"].includes(d.category) || !d.id.startsWith(d.category + "-")) throw new Error(f + ": " + d.id + " has no valid category");
+      const covering = d.category === "shoes" ? d.covering : "none";
+      if (d.category === "shoes" && covering !== "closed-footwear") throw new Error(f + ": " + d.id + " — only closed footwear (sandals are parked)");
+      out[d.id] = Object.freeze({ batch: b.batch, category: d.category, type: d.type, covering }); } }
+  return Object.freeze(out);
+})();
+export const COVERING = Object.freeze({ ...BUILT_IN_COVERING, ...Object.fromEntries(Object.entries(BATCH_ITEMS).filter(([, d]) => d.category === "shoes").map(([id, d]) => [id, d.covering])) });
+export const ITEM_CATEGORY = Object.freeze({ ...ITEMS, ...VALIDATION_ITEMS, ...INDEPENDENT_ITEMS, ...Object.fromEntries(Object.entries(BATCH_ITEMS).map(([id, d]) => [id, d.category])) });
 const { W, H, N } = WR, Mo = WR.maskOps, sha = (b) => createHash("sha256").update(b).digest("hex"), count = (m) => { let n = 0; for (let i = 0; i < N; i++) if (m[i]) n++; return n; };
 export const CHANGE_TOL = 24;   // D-197's changeTol: a generated pixel differing from C by more than this has changed
 export const STRONG_TOL = 40;   // D-210 (D-208: 60): new paint when no pixel of C within EXPLAIN_PX lies within this of it (see colourDist).
@@ -98,8 +115,10 @@ export const METHODS = Object.freeze({
   d223: { fitRevision: "d222", shadowDarkness: "luminance", ownBaseRim: "beyond-outline", closeOverOtherBase: true, outfitRevision: "d223", what: "D-223 — D-222's method, and at a seam between categories: (2) a rim of the item's own base garment that C explains and that lies beyond the item's own outline (> EXPLAIN_PX + 1 from its new paint and base interior) is the base garment redrawn, gone at runtime — not the item; (3) the closing — a gap ≤ 6 px between the item's own core — may cross another category's base" },
   d225: { fitRevision: "d222", shadowDarkness: "luminance", ownBaseRim: "beyond-outline", closeOverOtherBase: true, outfitRevision: "d225", what: "D-225 — D-223's extraction and checks; the outfit check's double contour with gaps up to 3 px as written (D-223 stopped at 2); items are also measured against the seam contract (seam-contract-v1)" },
   d232: { fitRevision: "d232", shadowDarkness: "luminance", shadowHue: "c-own", remnantChroma: true, limbExit: true, ownBaseRim: "beyond-outline", closeOverOtherBase: true, outfitRevision: "d225", contract: "seam-contract-v2", what: "D-232 — D-225's method, with three general corrections: a skin shadow shifts the hue no more than C's own skin shading does (orange fabric over skin is fabric); G-2 counts a base pixel as unchanged only when its chroma is unchanged too (dark fabric shading is no grey remnant); a thin contour line hanging below a hem or a cuff is the limb's redrawn contour, not garment, and FIT-6v2 reports a limb leaving a garment at its end (fitCheck d232). Items are measured against seam-contract-v2" },
+  d239: { fitRevision: "d232", shadowDarkness: "luminance", shadowHue: "c-own", remnantChroma: true, limbExit: true, limbExitDetached: true, unmixPictureSkin: true, ownBaseRim: "beyond-outline", closeOverOtherBase: true, outfitRevision: "d239", contract: "seam-contract-v2", contractRevision: "d239", what: "D-239 — D-232's method with two general extraction corrections found on D-235's pictures (development material, not a validation): paint left detached after the limb exit leaves the item, as rule (5) has it; a contour edge mixed with the picture's own (shaded) skin is unmixed like one mixed with C's. The outfit check revision d239 adds a skin sliver between a long hem and a shoe and a notch in the figure's outline; SC-W4 judges a line by its contrast, not by dark fabric" },
+  d240: { fitRevision: "d232", shadowDarkness: "luminance", shadowHue: "c-own", remnantChroma: true, limbExit: true, limbExitDetached: true, unmixPictureSkin: true, ownBaseRim: "beyond-outline", closeOverOtherBase: true, coverFromPicture: true, outfitRevision: "d239", contract: "seam-contract-v2", contractRevision: "d239", what: "D-240 — D-239's method; and what a closed shoe hides it takes from the picture: where the covering rule hides C's foot, the picture paints opaquely and the paint joins the shoe, the shoe's own pixel is the item (the ankle boot's arch: its outline over C's equally dark foot contour was explained away, and the hidden foot left holes of background beside the sole). Nothing is painted; open footwear is not concerned" },
 });
-export const METHOD = "d232";
+export const METHOD = "d240";
 /** Process one generated picture of one item on a prepared base (C, or a stand-in in CI). */
 export function processItem(w, base, T, category, raw, { itemId = null, method = METHOD } = {}) {
   if (T.revision !== "d213") throw new Error("processItem needs templatesC(w, base, { revision: \"d213\" })");
@@ -185,6 +204,16 @@ export function processItem(w, base, T, category, raw, { itemId = null, method =
       if (body) { openings++; continue; } filledHoles++;
       for (const i of px) if (O[i * 4 + 3] > 0 && t.allowed[i] && !t.protect[i] && !other[i]) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; ruleOf[i] = 7; holePx++; } }
     obs.enclosedHolesFilled = filledHoles; obs.enclosedHolePxFromPicture = holePx; obs.bodyOpenings = openings; }
+  // D-240 WHAT A CLOSED SHOE HIDES, FROM THE PICTURE (D-218: an item replaces what it hides). The covering rule hides C's foot under a
+  // closed shoe; where the picture paints that hidden area opaquely and the paint joins the shoe, the paint is the shoe's — also
+  // where C explained it (the boot's dark outline over C's dark foot contour). Grown from the shoe over 4-connected hidden pixels of
+  // the picture, inside the envelope; never painted, and open footwear (sandals: the toes stay C's) is not concerned.
+  if (M.coverFromPicture && category === "shoes" && itemId && COVERING[itemId] === "closed-footwear") {
+    const hid = BC.regionsC(w, base, T, category, { covering: "closed-footwear" }).hidden({ shoes: item }), st = []; let taken = 0;
+    for (let i = 441 * W; i < N; i++) if (im[i]) st.push(i);
+    while (st.length) { const i = st.pop(), x = i % W; for (const j of [i - 1, i + 1, i - W, i + W]) { if (j < 0 || j >= N || Math.abs((j % W) - x) > 1 || im[j]) continue;
+      if (!hid[j] || O[j * 4 + 3] < 128 || !t.allowed[j] || t.protect[j]) continue; item.set(O.subarray(j * 4, j * 4 + 4), j * 4); im[j] = 1; ruleOf[j] = 8; taken++; st.push(j); } }
+    obs.coverFromPicturePx = taken; }
   // D-223 (A) continued: a base rim left out may only VANISH — at the figure's outline, reaching C's exterior or the canvas through
   // transparent pixels (as D-222's FIT-4 judges it). A rim the item and C's minimum items would enclose is seam material between
   // garments (the shorts' side contour under the top at the hip): it is restored, or the item would have a hole.
@@ -253,7 +282,15 @@ export function processItem(w, base, T, category, raw, { itemId = null, method =
       for (let dx = -2; dx <= 2; dx++) if (x + dx >= 0 && x + dx < W && lastWide[x + dx] > y) wideBelow = true;
       if (wideBelow || colourDist(O, i, F, 0) <= STRONG_TOL) continue;
       item.fill(0, i * 4, i * 4 + 4); im[i] = 0; ruleOf[i] = 0; removed++; }
-    obs.limbExitRemovedPx = removed; }
+    obs.limbExitRemovedPx = removed;
+    // D-239: what the limb exit leaves no longer connected to the garment is the limb's contour too (its antialias in the
+    // fabric's colour hung below a cuff, 7 rows under it — over the arm a speck, in an outfit a "cut"): rule (5) again, as written
+    if (M.limbExitDetached) { const seen = new Uint8Array(N); let detached = 0;
+      for (let s0 = 441 * W; s0 < N; s0++) { if (!im[s0] || seen[s0]) continue; const q = [s0], px = []; seen[s0] = 1; let keep = false;
+        while (q.length) { const i = q.pop(); px.push(i); if (t.mustCover[i]) keep = true; const x = i % W;
+          for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const j = i + dy * W + dx; if (x + dx < 0 || x + dx >= W || j < 0 || j >= N) continue; if (im[j] && !seen[j]) { seen[j] = 1; q.push(j); } } }
+        if (keep) continue; for (const i of px) { item.fill(0, i * 4, i * 4 + 4); im[i] = 0; ruleOf[i] = 0; detached++; } }
+      obs.limbExitDetachedPx = detached; } }
   // D-222 CONTOUR EDGE OVER SKIN: the garment's outline is antialiased against C's skin in the picture — a pixel there is a MIX of the
   // contour's ink and the skin below it. Taken as it is, it carries skin colour into the item, and over another item (a trouser hem
   // over a boot) it shows as a reddish dotted line. At the garment's edge (its antialias: ≤ 1 px from C's visible, opaque skin outside the item), a pixel
@@ -272,9 +309,18 @@ export function processItem(w, base, T, category, raw, { itemId = null, method =
       const x = i % W; let K = -1, kl = 1e9;
       for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { if (x + dx < 0 || x + dx >= W) continue; const j = i + dy * W + dx; if (j < 0 || j >= N || !im[j] || classify(O, j) !== "ink") continue; const l = src[j * 4] + src[j * 4 + 1] + src[j * 4 + 2]; if (l < kl) { kl = l; K = j; } }
       if (K < 0) continue; let num = 0, den = 0; for (let c = 0; c < 3; c++) { const d = C[i * 4 + c] - src[K * 4 + c]; num += (C[i * 4 + c] - O[i * 4 + c]) * d; den += d * d; }
-      const a = den > 0 ? num / den : 0; if (!(a > 0 && a < 1)) continue;
-      if ([0, 1, 2].some((c) => Math.abs(O[i * 4 + c] - (a * src[K * 4 + c] + (1 - a) * C[i * 4 + c])) > UNMIX_RESIDUAL)) continue;
-      item.set([src[K * 4], src[K * 4 + 1], src[K * 4 + 2], Math.round(a * O[i * 4 + 3])], i * 4); unmixed++; } }
+      const a = den > 0 ? num / den : 0; if (!(a > 0 && a < 1) && !M.unmixPictureSkin) continue;
+      let alpha = a;
+      if (!(a > 0 && a < 1) || [0, 1, 2].some((c) => Math.abs(O[i * 4 + c] - (a * src[K * 4 + c] + (1 - a) * C[i * 4 + c])) > UNMIX_RESIDUAL)) {
+        // D-239 (MF-1): the edge is mixed with the picture's OWN skin beside it — shaded under a hem — not with C's: the same line,
+        // from the ink to the picture's non-item skin neighbour (4-connected); fabric (no such line) is never touched
+        if (!M.unmixPictureSkin) continue; alpha = -1;
+        for (const j of [i - W, i + W, i - 1, i + 1]) { if (j < 0 || j >= N || im[j] || O[j * 4 + 3] < 128 || classify(O, j) !== "skin") continue;
+          let nu = 0, de = 0; for (let c = 0; c < 3; c++) { const d = O[j * 4 + c] - src[K * 4 + c]; nu += (O[j * 4 + c] - O[i * 4 + c]) * d; de += d * d; }
+          const b = de > 0 ? nu / de : 0; if (!(b > 0 && b < 1)) continue;
+          if ([0, 1, 2].every((c) => Math.abs(O[i * 4 + c] - (b * src[K * 4 + c] + (1 - b) * O[j * 4 + c])) <= UNMIX_RESIDUAL)) { alpha = b; break; } }
+        if (alpha < 0) continue; }
+      item.set([src[K * 4], src[K * 4 + 1], src[K * 4 + 2], Math.round(alpha * O[i * 4 + 3])], i * 4); unmixed++; } }
   obs.contourUnmixedPx = unmixed;
   // the layer split: a top's pixels over C's arm pixels are sleeves, the rest its body
   let layers;
@@ -369,7 +415,7 @@ export function validateManifest(m) {
   const seen = new Set(); for (const it of m.items) {
     if (!it || typeof it.id !== "string" || seen.has(it.id)) throw new Error("manifest: a missing or repeated item id"); seen.add(it.id);
     if (ITEM_CATEGORY[it.id] !== it.category) throw new Error("manifest: " + it.id + " is not a " + it.category);
-    const cov = it.category === "shoes" ? COVERING_BY_TYPE[it.type] : "none"; if (!cov || cov !== it.covering || (COVERING[it.id] || "none") !== cov) throw new Error("manifest: " + it.id + " covering " + it.covering + " is not its type's rule");
+    const cov = it.category === "shoes" ? (BATCH_ITEMS[it.id] ? BATCH_ITEMS[it.id].covering : COVERING_BY_TYPE[it.type]) : "none"; if (!cov || cov !== it.covering || (COVERING[it.id] || "none") !== cov) throw new Error("manifest: " + it.id + " covering " + it.covering + " is not its type's rule");
     if (typeof it.raw !== "string" || !/^[0-9a-f]{64}$/.test(it.rawSha256 || "")) throw new Error("manifest: " + it.id + " needs a raw path and its pinned sha256"); }
   return true; }
 export function runPipeline(w, base, T, manifest, readRaw, OUT, { cSha256 = null, register = null } = {}) {
@@ -384,11 +430,11 @@ export function runPipeline(w, base, T, manifest, readRaw, OUT, { cSha256 = null
     processed[it.id] = { item: it.id, category: it.category, ok: rep.ok, layers, shadow, faults: rep.faults };
     const openF = openFindingsFor(register, [it.id]).filter((id) => !register.findings.find((f) => f.id === id).subject.with);
     // D-225: each item measured against the seam contract — a report for these pilot pictures, made before the contract existed
-    const sc = (method === "d225" || method === "d232") && Object.keys(layers).length ? BC.contractCheck(w, base, T, it.category, layers, { contract: method === "d232" ? BC.SEAM_CONTRACT_V2 : BC.SEAM_CONTRACT_V1 }) : null;
+    const sc = (method === "d225" || method === "d232" || method === "d239" || method === "d240") && Object.keys(layers).length ? BC.contractCheck(w, base, T, it.category, layers, { contract: method === "d225" ? BC.SEAM_CONTRACT_V1 : BC.SEAM_CONTRACT_V2, revision: METHODS[method].contractRevision || "v1" }) : null;
     items[it.id] = { category: it.category, type: it.type, covering: it.covering, rawSha256: it.rawSha256, technicallyOk: rep.ok, status: !rep.ok ? "rejected" : openF.length ? "technically-ok-open-finding" : "technically-ok", openFindings: openF,
       ...(sc ? { seamContract: { version: sc.version, complies: sc.ok, failed: sc.checks.filter((c) => !c.ok).map((c) => ({ id: c.id, value: c.value })) } } : {}), faults: rep.faults, extractionRulePx: rep.extractionRulePx, files: Object.fromEntries(Object.entries(rep.files).map(([n, f]) => [n, f.sha256])), reportSha256: sha(readFileSync(join(d, "report.json"))) }; });
   const pkgDir = join(OUT, "package"); mkdirSync(pkgDir, { recursive: true }); const pkg = packageOutfits(w, base, manifest, processed, pkgDir, { register });
-  const run = { decision: method === "d232" ? "D-232" : method === "d225" ? "D-225" : "D-223", method, registerSha256: register ? sha(Buffer.from(JSON.stringify(register))) : null, methodWhat: METHODS[method].what, c: { sha256: cSha256 }, manifestSha256: sha(Buffer.from(JSON.stringify(manifest))), code: codeHashes(), items, package: pkg,
+  const run = { decision: method === "d240" ? "D-240" : method === "d239" ? "D-239" : method === "d232" ? "D-232" : method === "d225" ? "D-225" : "D-223", method, registerSha256: register ? sha(Buffer.from(JSON.stringify(register))) : null, methodWhat: METHODS[method].what, c: { sha256: cSha256 }, manifestSha256: sha(Buffer.from(JSON.stringify(manifest))), code: codeHashes(), items, package: pkg,
     note: "Technically OK is not visual approval; an open finding keeps an item or outfit from being ready. The same manifest, register, raws, C and code give the same bytes (no timestamps, no per-picture settings)." };
   writeFileSync(join(OUT, "run.json"), JSON.stringify(run, null, 2) + "\n"); return run; }
 /** D-223: the seams an outfit is looked at closely (×2): neck/collar, both hips, both wrists, the legs and shoes. */
@@ -425,7 +471,8 @@ export function packageOutfits(w, base, manifest, processed, OUT, { register = n
     const P = BF.layerProof(w, base.R, base.Z, { ...min, ...t.layers, ...b.layers, ...s.layers }, { sep: base.sep, headSeam: "d201", hide: hideC, enclosure: "c-exterior" }); let comp = P.dressedRuntime;
     for (const p of [t, b, s]) if (p.shadow) comp = applyShadow(comp, P.stack, p.shadow);
     const ids = [t.item, b.item, s.item], name = ids.join("+"), oc = BC.outfitCheck(w, base, P, { revision: METHODS[manifest.method].outfitRevision || "d223" }), open = openFindingsFor(register, ids);
-    const value = (id) => oc.checks.find((c) => c.id === id).value, faults = [...value("COMBO-1a-SEAM-BACKGROUND").slits, ...value("COMBO-1d-CUT-IN-GARMENT").cuts, ...value("COMBO-2-DOUBLE-CONTOUR").doubles];
+    const value = (id) => (oc.checks.find((c) => c.id === id) || { value: null }).value, faults = [...value("COMBO-1a-SEAM-BACKGROUND").slits, ...value("COMBO-1d-CUT-IN-GARMENT").cuts, ...value("COMBO-2-DOUBLE-CONTOUR").doubles,
+      ...((value("COMBO-5-HEM-SHOE-SKIN") || {}).slivers || []), ...((value("COMBO-6-UNCOVERED-BASE") || {}).notches || [])];   // D-239: the two new checks (revision d239 only)
     const corners = [...value("COMBO-1a-SEAM-BACKGROUND").crossings, ...value("COMBO-1d-CUT-IN-GARMENT").crossings];
     const status = !oc.ok ? "rejected" : open.length ? "technically-ok-open-finding" : "technically-ok";
     outfits[name] = { status, openFindings: open, failedChecks: oc.checks.filter((c) => !c.ok).map((c) => c.id), faults: faults.map((f) => ({ seam: f.seam, box: f.box, px: f.px })), reportedCrossings: corners.length };
@@ -496,7 +543,10 @@ if (isMain) {
   if (existsSync(OUT) && readdirSync(OUT).length) { console.error("--out must be empty"); process.exit(1); } mkdirSync(OUT, { recursive: true });
   const w = WR.buildWardrobe(), base = BC.prepareBase(w, Uint8ClampedArray.from(decodePng(readC()).px)), T = BC.templatesC(w, base, { revision: "d213" });
   if (ri >= 0) { const man = JSON.parse(readFileSync(resolve(a[ri + 1]), "utf8")), root = resolve(homedir(), "Documents", "DenSejeApp-artefacts", man.rawRoot);
-    const register = man.findingsRegister ? JSON.parse(readFileSync(join(REPO, ...man.findingsRegister.split("/")), "utf8")) : null;
+    const reg0 = man.findingsRegister ? JSON.parse(readFileSync(join(REPO, ...man.findingsRegister.split("/")), "utf8")) : null;
+    // D-239: the review findings (manual quality findings, a register of their own so the findings register stays pinned) join it
+    const regR = man.reviewRegister ? JSON.parse(readFileSync(join(REPO, ...man.reviewRegister.split("/")), "utf8")) : null;
+    const register = reg0 && regR ? { ...reg0, findings: [...reg0.findings, ...regR.findings] } : reg0;
     const r = runPipeline(w, base, T, man, (rel) => readFileSync(join(root, rel)), OUT, { cSha256: BC.C_RAW_SHA256, register });
     console.log(JSON.stringify({ method: r.method, items: Object.fromEntries(Object.entries(r.items).map(([k, v]) => [k, v.status])), outfits: r.package.summary, rejectedItems: r.package.rejected.map((x) => x.item) }, null, 2)); }
   else if (ei >= 0) { const r = evidence(w, base, T, a[ii + 1], readFileSync(resolve(a[ei + 1])), OUT); console.log(JSON.stringify({ item: r.item, ok: r.ok, covering: r.covering, measures: r.measures }, null, 2)); }

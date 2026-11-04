@@ -1,0 +1,98 @@
+{
+  "decision": "D-239",
+  "note": "Manual quality findings (D-238's MF-1 and MF-2) in a register of their own: the findings register stays byte for byte the one D-223, D-225, D-231 and D-232 pinned. A pipeline run reads both when its manifest names reviewRegister. An open finding keeps an outfit from being ready, whatever the automatic checks say. D-239 adds F-015 … F-019: the tops whose open hip corners leave bites below COMBO-6's threshold.",
+  "findings": [
+    {
+      "id": "F-013",
+      "subject": {
+        "item": "bottom-trousers-black"
+      },
+      "where": "the hem over a shoe, y ≈ 1374–1382 (both legs)",
+      "image": "<Documents>/DenSejeApp-artefacts/d-235-independent-validation/manual/hem-n3-white.png",
+      "what": "D-238 MF-1: skin-coloured pieces along the hem — (a) the hem contour antialiased with the picture's SHADED skin, left opaque in the layer (orange dots over a black boot; the mechanism of F-001), corrected in method d239 by unmixing against the picture's own skin; (b) C's ankle seen 6–7 rows between the hem and a low shoe's front collar (an orange wedge over the white sneakers) — a real gap, no extraction fault, caught in d239 by the outfit check COMBO-5. Open until the owner has reviewed the d239 result.",
+      "foundBy": "manual",
+      "foundUnder": "d232",
+      "status": "open",
+      "decision": "D-238 found, D-239 corrected (a) and checks (b)"
+    },
+    {
+      "id": "F-014",
+      "subject": {
+        "item": "top-tank-teal",
+        "with": "bottom-trousers-black"
+      },
+      "where": "both hips just below the tank, y ≈ 780–797",
+      "image": "<Documents>/DenSejeApp-artefacts/d-235-independent-validation/manual/hip-tank-n3.png",
+      "what": "D-238 MF-2: a notch in the outline at the hips. Not the trousers' layer: their outline there lies over C's base-top corner, another category's base, which an item never takes; the tank leaves that corner open (SC-W2, F-011/F-012's kind), so nothing covers it and background shows. The picture of the top lacks the fabric — marked, never filled: caught in d239 by the outfit check COMBO-6. Open until the owner has reviewed.",
+      "foundBy": "manual",
+      "foundUnder": "d232",
+      "status": "open",
+      "decision": "D-238 found, D-239 checks it"
+    },
+    {
+      "id": "F-015",
+      "subject": {
+        "item": "top-tank-teal"
+      },
+      "where": "both hips, the rows of C's base-top corner just above its base shorts (y ≈ 770–815)",
+      "image": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/review/r10-ready-hips-1.png, r10-ready-hips-2.png",
+      "what": "the tank (pilot) leaves C's base-top hip corners open (SC-W2): no bottom may take another category's base, so every outfit with it shows background at the hips. COMBO-6 (d239) rejects the deep notches (≥ 3 rows 3 px deep with a 3 px step in the outline); smaller bites of 1–3 px stay visible at full size in outfits the checks pass. The picture lacks the fabric — marked, never filled. A top that covers its corners (N1, V1) leaves none.",
+      "foundBy": "manual",
+      "foundUnder": "d239",
+      "status": "open",
+      "decision": "D-239 review of the status changes"
+    },
+    {
+      "id": "F-016",
+      "subject": {
+        "item": "top-tee-red"
+      },
+      "where": "both hips, the rows of C's base-top corner just above its base shorts (y ≈ 770–815)",
+      "image": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/review/r10-ready-hips-1.png, r10-ready-hips-2.png",
+      "what": "the red tee (pilot) leaves C's base-top hip corners open (SC-W2): no bottom may take another category's base, so every outfit with it shows background at the hips. COMBO-6 (d239) rejects the deep notches (≥ 3 rows 3 px deep with a 3 px step in the outline); smaller bites of 1–3 px stay visible at full size in outfits the checks pass. The picture lacks the fabric — marked, never filled. A top that covers its corners (N1, V1) leaves none.",
+      "foundBy": "manual",
+      "foundUnder": "d239",
+      "status": "open",
+      "decision": "D-239 review of the status changes"
+    },
+    {
+      "id": "F-017",
+      "subject": {
+        "item": "top-sweater-green"
+      },
+      "where": "both hips, the rows of C's base-top corner just above its base shorts (y ≈ 770–815)",
+      "image": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/review/r10-ready-hips-1.png, r10-ready-hips-2.png",
+      "what": "the green sweater (pilot) leaves C's base-top hip corners open (SC-W2): no bottom may take another category's base, so every outfit with it shows background at the hips. COMBO-6 (d239) rejects the deep notches (≥ 3 rows 3 px deep with a 3 px step in the outline); smaller bites of 1–3 px stay visible at full size in outfits the checks pass. The picture lacks the fabric — marked, never filled. A top that covers its corners (N1, V1) leaves none.",
+      "foundBy": "manual",
+      "foundUnder": "d239",
+      "status": "open",
+      "decision": "D-239 review of the status changes"
+    },
+    {
+      "id": "F-018",
+      "subject": {
+        "item": "top-longsleeve-waist-purple"
+      },
+      "where": "both hips, the rows of C's base-top corner just above its base shorts (y ≈ 770–815)",
+      "image": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/review/r10-ready-hips-1.png, r10-ready-hips-2.png",
+      "what": "the purple long-sleeve V2 (D-228) leaves C's base-top hip corners open (SC-W2): no bottom may take another category's base, so every outfit with it shows background at the hips. COMBO-6 (d239) rejects the deep notches (≥ 3 rows 3 px deep with a 3 px step in the outline); smaller bites of 1–3 px stay visible at full size in outfits the checks pass. The picture lacks the fabric — marked, never filled. A top that covers its corners (N1, V1) leaves none.",
+      "foundBy": "manual",
+      "foundUnder": "d239",
+      "status": "open",
+      "decision": "D-239 review of the status changes"
+    },
+    {
+      "id": "F-019",
+      "subject": {
+        "item": "top-longsleeve-waist-navy"
+      },
+      "where": "both hips, the rows of C's base-top corner just above its base shorts (y ≈ 770–815)",
+      "image": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/review/r10-ready-hips-1.png, r10-ready-hips-2.png",
+      "what": "the navy long-sleeve N2 (D-235) leaves C's base-top hip corners open (SC-W2): no bottom may take another category's base, so every outfit with it shows background at the hips. COMBO-6 (d239) rejects the deep notches (≥ 3 rows 3 px deep with a 3 px step in the outline); smaller bites of 1–3 px stay visible at full size in outfits the checks pass. The picture lacks the fabric — marked, never filled. A top that covers its corners (N1, V1) leaves none.",
+      "foundBy": "manual",
+      "foundUnder": "d239",
+      "status": "open",
+      "decision": "D-239 review of the status changes"
+    }
+  ]
+}

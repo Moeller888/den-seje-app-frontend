@@ -1,0 +1,153 @@
+/* Match par (js/match-pairs.js). Selectors start with #options so they outrank the quiz page's
+   `#options button` rule (id specificity), exactly like the read-aloud row does. State rules add
+   .match-pairs as well, so they also outrank `#options button:hover:not(:disabled)` — on a touch screen
+   the last tapped item keeps :hover, which would otherwise hide its pair colour.
+   Uses the theme tokens from css/theme.css; every pairing is shown by colour AND a pair number. */
+
+#options .match-pairs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+#options .match-instructions {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+#options .match-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: repeat(var(--match-rows, 2), auto);
+  column-gap: 12px;
+}
+
+/* Each column spans every row and shares the rows with the other column (subgrid), so a long text on
+   one side makes the whole row taller and the two columns stay level. Without subgrid support the
+   columns simply stack their items independently. */
+#options .match-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+@supports (grid-template-rows: subgrid) {
+  #options .match-column {
+    display: grid;
+    grid-row: 1 / -1;
+    grid-template-rows: subgrid;
+    row-gap: 8px;
+  }
+}
+
+#options button.match-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 52px;            /* ≥ 44px touch target */
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 16px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;     /* long words wrap instead of overflowing a phone-width column */
+  border-width: 2px;
+  touch-action: manipulation;  /* no double-tap zoom delay on tablets and phones */
+}
+
+#options .match-item-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#options .match-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 13px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #10102a;
+}
+
+#options .match-badge:empty { display: none; }
+
+#options button.match-item:focus-visible {
+  outline: 3px solid var(--text-bright);
+  outline-offset: 2px;
+}
+
+#options .match-pairs button.match-item.is-selected {
+  background: var(--btn-bg-hover);
+  color: var(--text-bright);
+  border-color: var(--text-bright);
+  border-style: dashed;
+  box-shadow: 0 0 0 3px var(--accent);
+}
+
+#options .match-pairs button.match-item.is-connected {
+  color: var(--text-bright);
+  border-width: 3px;
+  padding: 9px 11px;           /* keeps the outer size when the border grows */
+}
+
+/* Six pair colours, chosen to stay distinct from each other on the dark themes; the number in the
+   badge carries the same information for anyone who cannot tell them apart. */
+#options .match-pairs button.match-item.match-c1 { border-color: #4fc3f7; background: rgba(79, 195, 247, 0.16); }  #options .match-c1 .match-badge { background: #4fc3f7; }
+#options .match-pairs button.match-item.match-c2 { border-color: #ffb74d; background: rgba(255, 183, 77, 0.16); }  #options .match-c2 .match-badge { background: #ffb74d; }
+#options .match-pairs button.match-item.match-c3 { border-color: #ce93d8; background: rgba(206, 147, 216, 0.18); } #options .match-c3 .match-badge { background: #ce93d8; }
+#options .match-pairs button.match-item.match-c4 { border-color: #aed581; background: rgba(174, 213, 129, 0.16); } #options .match-c4 .match-badge { background: #aed581; }
+#options .match-pairs button.match-item.match-c5 { border-color: #f48fb1; background: rgba(244, 143, 177, 0.16); } #options .match-c5 .match-badge { background: #f48fb1; }
+#options .match-pairs button.match-item.match-c6 { border-color: #fff176; background: rgba(255, 241, 118, 0.14); } #options .match-c6 .match-badge { background: #fff176; }
+
+#options .match-progress {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+/* Visually hidden, still read by screen readers. */
+#options .match-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* After grading. Disabled items keep full opacity so the result stays readable. */
+#options .match-pairs button.match-item.match-ok,
+#options .match-pairs button.match-item.match-wrong { opacity: 1; }
+#options .match-pairs button.match-item.match-ok { background: var(--correct-bg); border-color: var(--success); border-style: solid; }
+#options .match-pairs button.match-item.match-wrong { background: var(--error-bg); border-color: var(--error-bright); border-style: solid; }
+
+#options .match-mark {
+  flex: 0 0 auto;
+  font-weight: bold;
+  font-size: 18px;
+}
+#options .match-ok .match-mark { color: var(--success-text); }
+#options .match-wrong .match-mark { color: var(--error-bright); }
+
+#options .match-solution {
+  list-style: none;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  font-size: 15px;
+  line-height: 1.6;
+}
+#options .match-solution li::before { content: "✗ "; color: var(--error-bright); }
+#options .match-solution li.match-solution-ok::before { content: "✓ "; color: var(--success-text); }
+
+@media (prefers-reduced-motion: no-preference) {
+  #options button.match-item { transition: background 0.12s, border-color 0.12s, box-shadow 0.12s; }
+}

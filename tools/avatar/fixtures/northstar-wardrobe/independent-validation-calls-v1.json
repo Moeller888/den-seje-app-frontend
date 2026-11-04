@@ -1,6 +1,6 @@
 {
   "decision": "D-235",
-  "status": "AUTHORISED BY THE OWNER (2026-10-27) — at most 6 new calls, one per new item N1 … N6; NOT EXECUTED; execution needs the owner's separate instruction after this file is merged",
+  "status": "EXECUTED 2026-10-27 — 6 of 6 new calls sent once each, no stop; every entry SPENT and closed by D-238; no further call under D-235",
   "meta": {
     "authorisesImageRequest": false,
     "why": "authorisation is the exact token in D-235's decision status plus this file's unspent entries, never a general boolean",
@@ -12,9 +12,11 @@
     "reserve": 0,
     "retries": 0,
     "fallback": 0,
-    "actuallySent": 0,
+    "actuallySent": 6,
     "oneCallPerItem": true,
-    "reusesEarlierPermissions": false
+    "reusesEarlierPermissions": false,
+    "closed": true,
+    "recordedBy": "D-238"
   },
   "privacy": {
     "cSentToApi": "allowed for this experiment only (owner, 2026-10-27)",
@@ -192,8 +194,15 @@
         "eventsFilename": "D-235-new-N1.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-235-independent-validation/D-235-new-N1/d235.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_68d62be646bb4671914b3da24a453645",
+        "imageSha256": "9c7e2215905099f33914c2addce072c06c62669e93090341a56695e41041f770"
+      },
+      "recordedBy": "D-238",
+      "closedBy": "D-238"
     },
     {
       "callId": "D-235-new-N2",
@@ -223,8 +232,15 @@
         "eventsFilename": "D-235-new-N2.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-235-independent-validation/D-235-new-N2/d235.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_dec50756ce5243d0975a8760ab610a74",
+        "imageSha256": "4654e46d7387d67d7a66f166d3467cc668e4b9e45989ff042172e67fca2c20bf"
+      },
+      "recordedBy": "D-238",
+      "closedBy": "D-238"
     },
     {
       "callId": "D-235-new-N3",
@@ -255,8 +271,15 @@
         "eventsFilename": "D-235-new-N3.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-235-independent-validation/D-235-new-N3/d235.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_c5664f2d35ef473a84ede73718f38ebe",
+        "imageSha256": "c21b18ebfc5d00f064023c58f8df225fcd1f1ad8bfb211798bd37c36c2d96646"
+      },
+      "recordedBy": "D-238",
+      "closedBy": "D-238"
     },
     {
       "callId": "D-235-new-N4",
@@ -287,8 +310,15 @@
         "eventsFilename": "D-235-new-N4.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-235-independent-validation/D-235-new-N4/d235.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_57a6cf97cfb244d98962b5f3e1cc7c0a",
+        "imageSha256": "fbd992ecc1131ebb976353fd308d6243612b097322918e0e7ae300967ec44976"
+      },
+      "recordedBy": "D-238",
+      "closedBy": "D-238"
     },
     {
       "callId": "D-235-new-N5",
@@ -317,8 +347,15 @@
         "eventsFilename": "D-235-new-N5.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-235-independent-validation/D-235-new-N5/d235.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_b5738eb4fc854e27a53026a7152988f9",
+        "imageSha256": "471a5c2e8a06cd25e4959701268e46fc351d116f99e93ea22d688f1a58a55644"
+      },
+      "recordedBy": "D-238",
+      "closedBy": "D-238"
     },
     {
       "callId": "D-235-new-N6",
@@ -347,8 +384,15 @@
         "eventsFilename": "D-235-new-N6.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-235-independent-validation/D-235-new-N6/d235.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_da7fc13de05f4d15b7060bf881117eee",
+        "imageSha256": "0b73a1fb3ad15c0f85ff4557f64149ce5f04ba2687e74ad0c707193193db1cd7"
+      },
+      "recordedBy": "D-238",
+      "closedBy": "D-238"
     }
   ],
   "matrix": {

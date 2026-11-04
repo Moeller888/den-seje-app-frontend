@@ -1,0 +1,3174 @@
+{
+  "source": {
+    "commit": "2d8577cd1303cdc2705c988f97a722caf4ea9086",
+    "note": "written from process-event on main after #377 (Match par) and #464 (D-254), before H5 PR 3; NOT deployed (production runs version 34)"
+  },
+  "cases": {
+    "unauthorized": {
+      "status": 401,
+      "body": "{\"error\":\"Unauthorized\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        }
+      ],
+      "logs": []
+    },
+    "invalid json": {
+      "status": 400,
+      "body": "{\"error\":\"Invalid JSON body\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        }
+      ],
+      "logs": []
+    },
+    "missing answer": {
+      "status": 400,
+      "body": "{\"error\":\"Missing required fields\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        }
+      ],
+      "logs": []
+    },
+    "missing instance id": {
+      "status": 400,
+      "body": "{\"error\":\"Missing required fields\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        }
+      ],
+      "logs": []
+    },
+    "instance not found": {
+      "status": 500,
+      "body": "{\"error\":\"Instance not found\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "nope"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "ERR INSTANCE ERROR: null"
+      ]
+    },
+    "instance read error": {
+      "status": 500,
+      "body": "{\"error\":\"Instance not found\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "ERR INSTANCE ERROR: {\"message\":\"read failed\"}"
+      ]
+    },
+    "foreign instance": {
+      "status": 403,
+      "body": "{\"error\":\"Forbidden\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "foreign-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": []
+    },
+    "no backend key": {
+      "status": 500,
+      "body": "{\"error\":\"Server configuration error\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        }
+      ],
+      "logs": [
+        "ERR ADMIN CLIENT ERROR: No privileged Supabase key available: neither SUPABASE_SECRET_KEYS nor SUPABASE_SERVICE_ROLE_KEY is set"
+      ]
+    },
+    "mc correct": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"a\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "mc-1",
+                "p_answer": "a",
+                "p_question_shown_at": 1789999990000
+              }
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"mc\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"correct\"}"
+      ]
+    },
+    "mc incorrect": {
+      "status": 200,
+      "body": "{\"status\":\"incorrect\",\"correct_answer\":\"a\",\"review_text\":\"Husk: R\",\"misconception_type\":\"M-type\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "mc-1",
+                "p_answer": "b",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "misconception_signal": "M-type"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"mc\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"incorrect\"}"
+      ]
+    },
+    "mc incorrect no meta": {
+      "status": 200,
+      "body": "{\"status\":\"incorrect\",\"correct_answer\":\"a\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "nometa-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "nometa-1",
+                "p_answer": "b",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "nometa-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"mc\",\"answerType\":\"short\",\"hasReviewText\":false,\"misconceptionType\":null}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"incorrect\"}"
+      ]
+    },
+    "mc misconception fails": {
+      "status": 200,
+      "body": "{\"status\":\"incorrect\",\"correct_answer\":\"a\",\"review_text\":\"Husk: R\",\"misconception_type\":\"M-type\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "mc-1",
+                "p_answer": "b",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "misconception_signal": "M-type"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"mc\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"incorrect\"}",
+        "ERR INSTANCE WRITE FAILED: {\"field\":\"misconception_signal\",\"instance_id\":\"mc-1\",\"reason\":\"no_row\",\"rows\":0,\"code\":null,\"fatal\":false}"
+      ]
+    },
+    "mc review update fails": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"a\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "mc-1",
+                "p_answer": "a",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"mc\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"correct\"}",
+        "ERR REVIEW UPDATE ERROR: {\"message\":\"no row\"}"
+      ]
+    },
+    "mc rpc error": {
+      "status": 500,
+      "body": "{\"error\":\"boom\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "mc-1",
+                "p_answer": "a",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"mc\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "ERR RPC ERROR: {\"code\":\"P0001\",\"message\":\"boom\"}"
+      ]
+    },
+    "mc rpc no data": {
+      "status": 200,
+      "body": "{\"status\":\"pending\",\"correct_answer\":\"a\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "mc-1",
+                "p_answer": "a",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"mc\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"pending\"}"
+      ]
+    },
+    "mc already answered": {
+      "status": 200,
+      "body": "{\"status\":\"already_answered\",\"correct_answer\":\"a\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "mc-1",
+                "p_answer": "a",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"mc\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"already_answered\"}"
+      ]
+    },
+    "number correct": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"42\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "num-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "num-1",
+                "p_answer": "42",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "num-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"number\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"correct\"}"
+      ]
+    },
+    "number incorrect": {
+      "status": 200,
+      "body": "{\"status\":\"incorrect\",\"correct_answer\":\"42\",\"review_text\":\"Husk: R\",\"misconception_type\":\"M-type\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "num-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "num-1",
+                "p_answer": "41",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "misconception_signal": "M-type"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "num-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "num-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"number\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"incorrect\"}"
+      ]
+    },
+    "text correct": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"Paris\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "txt-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_text_answer",
+          "ops": [
+            [
+              "args",
+              {
+                "p_instance_id": "txt-1",
+                "p_user_id": "stu-1",
+                "p_user_answer": " paris. ",
+                "p_is_correct": true
+              }
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"text\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: SHORT TEXT → correct",
+        "LOG PROCESS TEXT ANSWER RESULT: {\"status\":\"processed\"}"
+      ]
+    },
+    "text accepted variant": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"Paris\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "txt-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_text_answer",
+          "ops": [
+            [
+              "args",
+              {
+                "p_instance_id": "txt-1",
+                "p_user_id": "stu-1",
+                "p_user_answer": "Paris by",
+                "p_is_correct": true
+              }
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"text\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: SHORT TEXT → correct",
+        "LOG PROCESS TEXT ANSWER RESULT: {\"status\":\"processed\"}"
+      ]
+    },
+    "text incorrect": {
+      "status": 200,
+      "body": "{\"status\":\"incorrect\",\"correct_answer\":\"Paris\",\"review_text\":\"Husk: R\",\"misconception_type\":\"M-type\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "txt-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_text_answer",
+          "ops": [
+            [
+              "args",
+              {
+                "p_instance_id": "txt-1",
+                "p_user_id": "stu-1",
+                "p_user_answer": "Lyon",
+                "p_is_correct": false
+              }
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "misconception_signal": "M-type"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "txt-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"text\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: SHORT TEXT → incorrect",
+        "LOG PROCESS TEXT ANSWER RESULT: {\"status\":\"processed\"}"
+      ]
+    },
+    "text misconception fails": {
+      "status": 200,
+      "body": "{\"status\":\"incorrect\",\"correct_answer\":\"Paris\",\"review_text\":\"Husk: R\",\"misconception_type\":\"M-type\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "txt-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_text_answer",
+          "ops": [
+            [
+              "args",
+              {
+                "p_instance_id": "txt-1",
+                "p_user_id": "stu-1",
+                "p_user_answer": "Lyon",
+                "p_is_correct": false
+              }
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "misconception_signal": "M-type"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "txt-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"text\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: SHORT TEXT → incorrect",
+        "LOG PROCESS TEXT ANSWER RESULT: {\"status\":\"processed\"}",
+        "ERR INSTANCE WRITE FAILED: {\"field\":\"misconception_signal\",\"instance_id\":\"txt-1\",\"reason\":\"no_row\",\"rows\":0,\"code\":null,\"fatal\":false}"
+      ]
+    },
+    "text rpc error": {
+      "status": 500,
+      "body": "{\"error\":\"boom\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "txt-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_text_answer",
+          "ops": [
+            [
+              "args",
+              {
+                "p_instance_id": "txt-1",
+                "p_user_id": "stu-1",
+                "p_user_answer": "Paris",
+                "p_is_correct": true
+              }
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"text\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: SHORT TEXT → correct",
+        "ERR PROCESS TEXT ANSWER ERROR: {\"code\":\"P0001\",\"message\":\"boom\"}"
+      ]
+    },
+    "long too short": {
+      "status": 400,
+      "body": "{\"status\":\"invalid\",\"error\":\"Svar skal være mindst 20 ord\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "long-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"text\",\"answerType\":\"long\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG DEBUG wordCount: 3"
+      ]
+    },
+    "long saved": {
+      "status": 200,
+      "body": "{\"status\":\"pending\",\"correct_answer\":null,\"review_text\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "long-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "user_answer": "ord0 ord1 ord2 ord3 ord4 ord5 ord6 ord7 ord8 ord9 ord10 ord11 ord12 ord13 ord14 ord15 ord16 ord17 ord18 ord19 ord20 ord21 ord22 ord23 ord24"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "long-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"text\",\"answerType\":\"long\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG DEBUG wordCount: 25",
+        "LOG FLOW: LONG → pending"
+      ]
+    },
+    "long save no row": {
+      "status": 500,
+      "body": "{\"error\":\"Could not save answer\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "long-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "user_answer": "ord0 ord1 ord2 ord3 ord4 ord5 ord6 ord7 ord8 ord9 ord10 ord11 ord12 ord13 ord14 ord15 ord16 ord17 ord18 ord19 ord20 ord21 ord22 ord23 ord24"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "long-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"text\",\"answerType\":\"long\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG DEBUG wordCount: 25",
+        "ERR LONG SAVE ERROR: {\"instance_id\":\"long-1\",\"reason\":\"no_row\",\"rows\":0,\"code\":null}"
+      ]
+    },
+    "extra unrelated fields": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"a\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "mc-1",
+                "p_answer": "a",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "mc-1"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"mc\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"correct\"}"
+      ]
+    },
+    "match 2 pairs correct": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"0:1,1:0\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "match-2",
+                "p_answer": "0:1,1:0",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"correct\"}"
+      ]
+    },
+    "match 2 pairs wrong": {
+      "status": 200,
+      "body": "{\"status\":\"incorrect\",\"correct_answer\":\"0:1,1:0\",\"review_text\":\"Husk: R\",\"misconception_type\":\"M-type\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "match-2",
+                "p_answer": "0:0,1:1",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "misconception_signal": "M-type"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"incorrect\"}"
+      ]
+    },
+    "match 3 pairs correct": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"0:2,1:0,2:1\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-3"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "match-3",
+                "p_answer": "0:2,1:0,2:1",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-3"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"correct\"}"
+      ]
+    },
+    "match 3 pairs wrong": {
+      "status": 200,
+      "body": "{\"status\":\"incorrect\",\"correct_answer\":\"0:2,1:0,2:1\",\"review_text\":\"Husk: R\",\"misconception_type\":\"M-type\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-3"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "match-3",
+                "p_answer": "0:0,1:2,2:1",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "misconception_signal": "M-type"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-3"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-3"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"incorrect\"}"
+      ]
+    },
+    "match 4 pairs correct": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"0:3,1:2,2:0,3:1\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-4"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "match-4",
+                "p_answer": "0:3,1:2,2:0,3:1",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-4"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"correct\"}"
+      ]
+    },
+    "match 4 pairs wrong": {
+      "status": 200,
+      "body": "{\"status\":\"incorrect\",\"correct_answer\":\"0:3,1:2,2:0,3:1\",\"review_text\":\"Husk: R\",\"misconception_type\":\"M-type\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-4"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "match-4",
+                "p_answer": "0:2,1:3,2:0,3:1",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "misconception_signal": "M-type"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-4"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-4"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"incorrect\"}"
+      ]
+    },
+    "match 5 pairs correct": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"0:4,1:0,2:3,3:1,4:2\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-5"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "match-5",
+                "p_answer": "0:4,1:0,2:3,3:1,4:2",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-5"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"correct\"}"
+      ]
+    },
+    "match 5 pairs wrong": {
+      "status": 200,
+      "body": "{\"status\":\"incorrect\",\"correct_answer\":\"0:4,1:0,2:3,3:1,4:2\",\"review_text\":\"Husk: R\",\"misconception_type\":\"M-type\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-5"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "match-5",
+                "p_answer": "0:0,1:4,2:3,3:1,4:2",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "misconception_signal": "M-type"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-5"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-5"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"incorrect\"}"
+      ]
+    },
+    "match 6 pairs correct": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"0:5,1:3,2:1,3:0,4:4,5:2\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-6"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "match-6",
+                "p_answer": "0:5,1:3,2:1,3:0,4:4,5:2",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-6"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"correct\"}"
+      ]
+    },
+    "match 6 pairs wrong": {
+      "status": 200,
+      "body": "{\"status\":\"incorrect\",\"correct_answer\":\"0:5,1:3,2:1,3:0,4:4,5:2\",\"review_text\":\"Husk: R\",\"misconception_type\":\"M-type\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-6"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "match-6",
+                "p_answer": "0:3,1:5,2:1,3:0,4:4,5:2",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "misconception_signal": "M-type"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-6"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ],
+            [
+              "select",
+              "id"
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-6"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"incorrect\"}"
+      ]
+    },
+    "match invalid: too few connections": {
+      "status": 400,
+      "body": "{\"status\":\"invalid\",\"error\":\"Forbind alle par, før du sender.\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}"
+      ]
+    },
+    "match invalid: too many connections": {
+      "status": 400,
+      "body": "{\"status\":\"invalid\",\"error\":\"Forbind alle par, før du sender.\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}"
+      ]
+    },
+    "match invalid: index out of range": {
+      "status": 400,
+      "body": "{\"status\":\"invalid\",\"error\":\"Forbind alle par, før du sender.\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}"
+      ]
+    },
+    "match invalid: negative index": {
+      "status": 400,
+      "body": "{\"status\":\"invalid\",\"error\":\"Forbind alle par, før du sender.\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}"
+      ]
+    },
+    "match invalid: duplicate left": {
+      "status": 400,
+      "body": "{\"status\":\"invalid\",\"error\":\"Forbind alle par, før du sender.\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}"
+      ]
+    },
+    "match invalid: duplicate right": {
+      "status": 400,
+      "body": "{\"status\":\"invalid\",\"error\":\"Forbind alle par, før du sender.\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}"
+      ]
+    },
+    "match invalid: not a pair": {
+      "status": 400,
+      "body": "{\"status\":\"invalid\",\"error\":\"Forbind alle par, før du sender.\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}"
+      ]
+    },
+    "match invalid: not json": {
+      "status": 400,
+      "body": "{\"status\":\"invalid\",\"error\":\"Forbind alle par, før du sender.\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}"
+      ]
+    },
+    "match invalid: too long": {
+      "status": 400,
+      "body": "{\"status\":\"invalid\",\"error\":\"Forbind alle par, før du sender.\"}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-2"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}"
+      ]
+    },
+    "match parsed array": {
+      "status": 200,
+      "body": "{\"status\":\"correct\",\"correct_answer\":\"0:2,1:0,2:1\",\"review_text\":null,\"misconception_type\":null}",
+      "calls": [
+        {
+          "createClient": "user",
+          "auth": "pupil-jwt"
+        },
+        {
+          "client": "user",
+          "kind": "auth.getUser"
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "select",
+              "\n        correct_answer,\n        student_id,\n        questions (\n          answer_format,\n          answer_type,\n          content,\n          metadata\n        )\n      "
+            ],
+            [
+              "eq",
+              "id",
+              "match-3"
+            ],
+            [
+              "maybeSingle"
+            ]
+          ]
+        },
+        {
+          "createClient": "admin",
+          "auth": "none"
+        },
+        {
+          "client": "admin",
+          "kind": "rpc",
+          "name": "process_question_attempt",
+          "ops": [
+            [
+              "args",
+              {
+                "p_student_id": "stu-1",
+                "p_question_instance_id": "match-3",
+                "p_answer": "0:2,1:0,2:1",
+                "p_question_shown_at": 1790000000000
+              }
+            ]
+          ]
+        },
+        {
+          "client": "user",
+          "kind": "from",
+          "name": "question_instances",
+          "ops": [
+            [
+              "update",
+              {
+                "next_review_at": "<ts>"
+              }
+            ],
+            [
+              "eq",
+              "id",
+              "match-3"
+            ],
+            [
+              "eq",
+              "student_id",
+              "stu-1"
+            ]
+          ]
+        }
+      ],
+      "logs": [
+        "LOG DEBUG META: {\"format\":\"match\",\"answerType\":\"short\",\"hasReviewText\":true,\"misconceptionType\":\"M-type\"}",
+        "LOG FLOW: MC/NUMBER/MATCH → process_question_attempt",
+        "LOG DEBUG MC RESULT: {\"status\":\"correct\"}"
+      ]
+    }
+  }
+}

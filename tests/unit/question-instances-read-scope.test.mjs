@@ -264,6 +264,96 @@ const REVIEWED_LATER_READERS = {
     "authenticated (revoked from PUBLIC, anon and service_role). It NARROWS who can reach the read; " +
     "no policy, RLS or table privilege on question_instances is touched (proven in " +
     "student-rpc-caller-scope-migration-run.test.mjs).",
+  "20261027120000_repeat_answer_coin_reward.sql":
+    "D-211: re-creates process_question_attempt from the exact live body of 20261018143726 (guarded on " +
+    "md5(prosrc)), changing ONLY the repeat award to 1 coin + 2 XP. The single read of question_instances " +
+    "is unchanged — one instance matched on BOTH id and student_id — and CREATE OR REPLACE keeps EXECUTE " +
+    "backend only; no policy, RLS or privilege on question_instances is touched (proven in " +
+    "repeat-answer-coin-reward-migration-run.test.mjs).",
+  "20261029120000_difficulty_scale_b.sql":
+    "adds new functions only, each SECURITY INVOKER with search_path public, pg_temp and EXECUTE revoked " +
+    "from PUBLIC, anon and authenticated, granted to service_role only — so even a caller who obtained " +
+    "EXECUTE would read with its own privileges and RLS. get_level_questions_for_student reads " +
+    "question_instances only in a NOT EXISTS (qi.student_id = the given id AND qi.question_id = q.id) and " +
+    "returns no instance column. request_repeat_level_question_for_student is #351's servable repeat with " +
+    "the same reads and the same single UPDATE scoped to id AND student_id; it returns only an id. " +
+    "advance_student_level reads only the given student's own first, auto-graded verdicts (id, was_correct) " +
+    "and returns a level, never instance data; its writes go to student_subject_level and the new table " +
+    "student_level_fold_log (RLS on, no policies, no client privileges). It also adds the plain index " +
+    "idx_qi_student_answered. No policy, RLS, table privilege or existing function on question_instances " +
+    "is touched (proven in difficulty-scale-b-migration-run.test.mjs).",
+  "20261029150000_teacher_stats_from_answers.sql":
+    "redefines get_teacher_visibility and get_student_overview with the same caller gates, signatures, " +
+    "RETURNS TABLE and EXECUTE statements; only the statistics below the gate change. Both read " +
+    "question_instances for the caller's own pupils only (get_teacher_visibility: student_id IN the " +
+    "teacher's pupils; get_student_overview: the one pupil the gate admitted) and return aggregates " +
+    "(counts, a percentage, a trend), never an instance column. No policy, RLS, table privilege or " +
+    "other function on question_instances is touched (proven in " +
+    "teacher-stats-from-answers-migration-run.test.mjs).",
+  "20261029170000_mc_grading_compensation.sql":
+    "a one-off, owner-run data fix (D-254) in an anonymous DO block — no function, nothing a client can " +
+    "call. It reads question_instances only to resolve two attempts of one question by SHA-256 of their id " +
+    "(id, student_id) and returns nothing to anyone. Its writes go to student_progress and the new table " +
+    "progress_corrections (RLS on, no policies, REVOKE ALL from PUBLIC, anon, authenticated and " +
+    "service_role). No policy, RLS, table privilege or row of question_instances is touched (proven in " +
+    "mc-grading-compensation-migration-run.test.mjs).",
+  "20261030211428_question_attempts_v2.sql":
+    "process_question_attempt_v2 and process_text_answer_v2 (D-266, H5) read one instance matched on " +
+    "BOTH id and the given student_id (SELECT … FOR UPDATE) and return only that pupil's own result " +
+    "(status, the key shown, amounts) — the same read process_question_attempt makes. EXECUTE is " +
+    "service_role only (process-event after auth.getUser() and the ownership check), never anon or " +
+    "authenticated. No policy, RLS or table privilege on question_instances is touched (proven in " +
+    "question-attempts-v2-migration-run.test.mjs).",
+  "20261031190000_reward_integrity_server_authority.sql":
+    "D-278: re-creates update_best_session_streak and set_night_correct (SECURITY DEFINER, search_path " +
+    "public, pg_temp, EXECUTE revoked from PUBLIC and anon). Each reads only the CALLER's own answered " +
+    "rows (student_id = auth.uid(): was_correct, answered_at) to decide a flag on the caller's own " +
+    "student_progress row, and returns void — no instance data reaches anyone. No policy, RLS or table " +
+    "privilege on question_instances is touched (proven in " +
+    "reward-integrity-server-authority-migration-run.test.mjs).",
+  "20261031194600_mc_length_cue_answer_paths.sql":
+    "D-280 part 1: process_question_attempt and the three repeat functions keep their reads exactly " +
+    "(one instance by id and student_id; the pupil's own answered instances); after a reopen a second " +
+    "statement sets that one MC instance's correct_answer to its question's content.correct, never " +
+    "returned to anyone but the grader. EXECUTE stays service_role only. No policy, RLS or table " +
+    "privilege on question_instances is touched (proven in mc-length-cue-top10-migration-run.test.mjs).",
+  "20261031194700_mc_length_cue_top10.sql":
+    "D-280 part 2: an owner-run DO block locks the open instances of ten questions by question_id, " +
+    "checks their keys against the reviewed set and re-keys them; it returns nothing but a count in a " +
+    "NOTICE. No policy, RLS or table privilege on question_instances is touched (proven in " +
+    "mc-length-cue-top10-migration-run.test.mjs).",
+  "20261101140000_deactivate_two_misgraded_questions.sql":
+    "D-290 G2: an owner-run DO block reads question_instances only as count(*) of the open instances " +
+    "of two named questions (a guard that must find 0), returns nothing to anyone and writes only " +
+    "questions.is_active. The open-round guard is a BEFORE INSERT/UPDATE trigger on question_instances " +
+    "whose SECURITY DEFINER function (EXECUTE revoked from every role, so nothing a client can call) " +
+    "reads one questions row's is_active FOR SHARE and returns the row being written or refuses it; it " +
+    "reads no instance and returns no data. No policy, RLS, table privilege or existing row of " +
+    "question_instances is touched (proven in deactivate-two-misgraded-questions-migration-run.test.mjs).",
+  "20261101150000_grading_meaningful_characters.sql":
+    "D-290 G1: re-creates process_question_attempt from D-280's body with only its three grading lines " +
+    "changed; the single read of question_instances (one instance by id AND student_id) is unchanged and " +
+    "its result reaches only the grader. The two new helpers read no table. EXECUTE stays service_role " +
+    "only. No policy, RLS or table privilege on question_instances is touched (proven in " +
+    "grading-meaningful-characters-migration-run.test.mjs).",
+  "20261101190000_question_attempts_v2_bootstrap.sql":
+    "H5 integration: creates (on a database without H5) or verifies (on one with it) exactly the objects " +
+    "of 20261030211428 — its sections 1–6 EXECUTEd byte for byte — so it reads question_instances exactly " +
+    "as that file's _v2 functions do (one instance by id and student_id, service_role only). Its state " +
+    "check reads only the catalog; it also takes EXECUTE on process_question_attempt_v2 from service_role until " +
+    "20261101190100 aligns the grading. No policy, RLS or table privilege on question_instances is touched " +
+    "(proven in question-attempts-v2-bootstrap.test.mjs: both histories end in the same public schema).",
+  "20261101190100_question_attempts_v2_align_grading.sql":
+    "H5 integration: re-creates process_question_attempt_v2 with D-280's alias rule (= 2 becomes >= 2) and " +
+    "G1's comparison (normalize_choice_answer / normalize_number_answer) only; its read is unchanged (one " +
+    "instance by id and student_id), EXECUTE is service_role only. No policy, RLS or table privilege on " +
+    "question_instances is touched (proven in question-attempts-v2-bootstrap.test.mjs).",
+  "20261103110000_l1_k1_attempt_context.sql":
+    "L1 K1: re-creates the two _v2 functions with mode and hints; their read of question_instances is " +
+    "unchanged (one instance by id AND student_id, FOR UPDATE) — the only new use is that row's created_at " +
+    "for the technical interval, stored in the pupil's own attempt. EXECUTE is service_role only. No " +
+    "policy, RLS or table privilege on question_instances is touched (proven in " +
+    "l1-k1-attempt-context-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -390,7 +480,20 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261016160000_answer_keys_server_side_rpcs.sql",
      "20261018143726_fix_danish_question_bank_text.sql",
      "20261019150000_question_format_mix.sql",
-     "20261025120000_student_rpc_caller_scope.sql"],
+     "20261025120000_student_rpc_caller_scope.sql",
+     "20261027120000_repeat_answer_coin_reward.sql",
+     "20261029120000_difficulty_scale_b.sql",
+     "20261029150000_teacher_stats_from_answers.sql",
+     "20261029170000_mc_grading_compensation.sql",
+     "20261030211428_question_attempts_v2.sql",
+     "20261031190000_reward_integrity_server_authority.sql",
+     "20261031194600_mc_length_cue_answer_paths.sql",
+     "20261031194700_mc_length_cue_top10.sql",
+     "20261101140000_deactivate_two_misgraded_questions.sql",
+     "20261101150000_grading_meaningful_characters.sql",
+     "20261101190000_question_attempts_v2_bootstrap.sql",
+     "20261101190100_question_attempts_v2_align_grading.sql",
+     "20261103110000_l1_k1_attempt_context.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

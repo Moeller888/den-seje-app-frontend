@@ -1,0 +1,1697 @@
+{
+  "decision": "D-239",
+  "method": "d239",
+  "imageCalls": 0,
+  "status": "a targeted correction developed on D-235's six pictures (development material) and checked on D-207's and D-228's — nothing here is an independent validation; D-238's result stands unchanged (T 6/6, K 30/48, MF 2, decision: targeted correction)",
+  "correctedDiagnoses": [
+    "D-238 named N2's 12 rejections a missing limb exit in the outfit check. Wrong: a remnant of the limb's contour hung 7 rows below the cuff (fabric-coloured antialias the D-232 limb exit kept, left detached when the ink between was removed); the check saw sleeve – arm – sleeve and was right. Corrected in the extraction, not by an exception in the check",
+    "D-238 named MF-2 (N3) an extraction fault of the black trousers. Wrong: their outline there lies over C's base-top corner (another category's base, never taken); the tank leaves that corner open, and the same notch is there with the pilot's navy shorts. The picture of the top lacks the fabric: marked (COMBO-6, F-014, F-015), not filled",
+    "D-238's MF-1 had two parts: (a) the hem contour mixed with the picture's shaded skin (F-001's mechanism) — an extraction fault, corrected; (b) C's ankle between a full-length hem and a low sneaker's front collar — a real gap, now checked (COMBO-5)"
+  ],
+  "corrections": {
+    "extraction": {
+      "limbExitDetached": "after the limb exit, paint no longer connected to the garment leaves the item (rule (5) again)",
+      "unmixPictureSkin": "a contour edge mixed with the picture's own skin beside it (shaded under a hem) is unmixed to ink at partial alpha, as one mixed with C's skin (D-222)"
+    },
+    "outfitCheck": {
+      "revision": "d239",
+      "kept": "every d225 check unchanged",
+      "edge": "COMBO-1d reads an item pixel at partial alpha as that item's edge, not body",
+      "COMBO5": "skin ≤ 2 × SLIVER_PX rows between a hem and the shoe right below it fails; a longer ankle is an opening by design",
+      "COMBO6": "C's base at the waist seam left uncovered as a notch (≥ 3 rows 3 px deep and a ≥ 3 px step in the outline) fails; a 1–2 px rim along a gliding outline does not"
+    },
+    "contract": {
+      "SCW4": "revision d239: a line is a row that differs from the fabric 3 rows above and below by ≥ 40 in luminance, both sides the same way — plain dark fabric has none; v1 counted any ink-dark pixel"
+    },
+    "review": "manual findings in findings-register-review.json (F-013 … F-019) beside the pinned findings register; an open one keeps its outfits from being ready"
+  },
+  "removedBeforeRecording": "an own-base-rim rule (restore a rim within the item's own height) built on the wrong MF-2 diagnosis; inert on every picture, so it was taken out rather than kept untested",
+  "sets": {
+    "d235": {
+      "label": "D-235's 48-outfit matrix — development material for d239 now; D-238's independent result stands",
+      "beforeMethod": "d232 (D-238)",
+      "runs": {
+        "count": 1,
+        "byteIdentity": "not verified — a second full run was deferred (memory); the run's code and manifest hashes equal the method's"
+      },
+      "code": {
+        "northstar-item-pilot.mjs": "71247ba829e6305623c65ef15e4b5d3b5a9b6901fa78c8fedb74a1327b86f996",
+        "northstar-base-figure-c.mjs": "a43bf3c1e8d42c88ff01e9966059233f5605d05a87ebda09180530d13c6b57e0",
+        "northstar-base-figure.mjs": "a99235c19e7d69c9b4d3f37856be3bad41028860b340031df60596cb2b418b47",
+        "northstar-wardrobe.mjs": "3ab2b98e4eabfb8a76a7f31643cd8e568158775a0f3a7614d3cf4b4cc1e7ce0b",
+        "northstar-wardrobe-poc.mjs": "62440bb7a5e12eafd7cc6286720e3c27449cc001cd4972dab8c486fe3df6d877",
+        "r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+        "r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+        "r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+        "clean-r2-hair-alpha.mjs": "239c69e8a9ffc8621e6a5f17584143f7103c9ea6bf86974c664ce7c2304defbe"
+      },
+      "manifestSha256": "f9bdc62f9dd7fa989c60a4408b42a06196cd8a995692872b47dc55d6b265bb5b",
+      "outfits": 48,
+      "d232": {
+        "pass": 30,
+        "summary": {
+          "technicallyOk": 30,
+          "technicallyOkOpenFinding": 0,
+          "rejected": 18
+        }
+      },
+      "d239": {
+        "passChecks": 26,
+        "rejected": 22,
+        "ready": 15,
+        "notReadyOpenFinding": 11,
+        "rejectedItems": []
+      },
+      "statusChanges": [
+        {
+          "outfit": "top-tee-hip-cream+bottom-trousers-black+shoes-sneakers-white",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-5-HEM-SHOE-SKIN"
+          ],
+          "class": "existing fault now detected",
+          "why": "C's ankle 6–10 rows between the full-length black hem and the white sneaker's front collar (D-238 MF-1b) — a long hem, not an opening by design"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-trousers-black+shoes-sneakers-beige",
+          "d232": "rejected COMBO-1d-CUT-IN-GARMENT,COMBO-2-DOUBLE-CONTOUR",
+          "d239": "rejected COMBO-2-DOUBLE-CONTOUR,COMBO-6-UNCOVERED-BASE",
+          "class": "existing fault, now named right",
+          "why": "N2's open hip corners (COMBO-6) instead of its sleeve remnant (COMBO-1d, corrected)"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-trousers-black+shoes-boots-laceup-black",
+          "d232": "rejected COMBO-1d-CUT-IN-GARMENT",
+          "d239": "rejected COMBO-6-UNCOVERED-BASE",
+          "class": "existing fault, now named right",
+          "why": "N2's open hip corners (COMBO-6) instead of its sleeve remnant (COMBO-1d, corrected)"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-trousers-black+shoes-sneakers-white",
+          "d232": "rejected COMBO-1d-CUT-IN-GARMENT",
+          "d239": "rejected COMBO-5-HEM-SHOE-SKIN,COMBO-6-UNCOVERED-BASE",
+          "class": "existing fault, now named right",
+          "why": "N2's open hip corners (COMBO-6) instead of its sleeve remnant (COMBO-1d, corrected)"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-skirt-sand+shoes-sneakers-beige",
+          "d232": "rejected",
+          "d239": "technically-ok",
+          "d239Failed": [],
+          "class": "corrected extraction fault",
+          "why": "the N2 sleeve's limb-contour remnant 7 rows below the cuff (COMBO-1d) is gone: d239 removes paint the limb exit leaves detached"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-skirt-sand+shoes-boots-laceup-black",
+          "d232": "rejected",
+          "d239": "technically-ok",
+          "d239Failed": [],
+          "class": "corrected extraction fault",
+          "why": "the N2 sleeve's limb-contour remnant 7 rows below the cuff (COMBO-1d) is gone: d239 removes paint the limb exit leaves detached"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-skirt-sand+shoes-sneakers-white",
+          "d232": "rejected",
+          "d239": "technically-ok",
+          "d239Failed": [],
+          "class": "corrected extraction fault",
+          "why": "the N2 sleeve's limb-contour remnant 7 rows below the cuff (COMBO-1d) is gone: d239 removes paint the limb exit leaves detached"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-shorts-navy+shoes-sneakers-beige",
+          "d232": "rejected COMBO-1d-CUT-IN-GARMENT",
+          "d239": "rejected COMBO-6-UNCOVERED-BASE",
+          "class": "existing fault, now named right",
+          "why": "N2's open hip corners (COMBO-6) instead of its sleeve remnant (COMBO-1d, corrected)"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-shorts-navy+shoes-boots-laceup-black",
+          "d232": "rejected COMBO-1d-CUT-IN-GARMENT",
+          "d239": "rejected COMBO-6-UNCOVERED-BASE",
+          "class": "existing fault, now named right",
+          "why": "N2's open hip corners (COMBO-6) instead of its sleeve remnant (COMBO-1d, corrected)"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-shorts-navy+shoes-sneakers-white",
+          "d232": "rejected COMBO-1d-CUT-IN-GARMENT",
+          "d239": "rejected COMBO-6-UNCOVERED-BASE",
+          "class": "existing fault, now named right",
+          "why": "N2's open hip corners (COMBO-6) instead of its sleeve remnant (COMBO-1d, corrected)"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-capri-lightblue+shoes-sneakers-beige",
+          "d232": "rejected",
+          "d239": "technically-ok",
+          "d239Failed": [],
+          "class": "corrected extraction fault",
+          "why": "the N2 sleeve's limb-contour remnant 7 rows below the cuff (COMBO-1d) is gone: d239 removes paint the limb exit leaves detached"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-capri-lightblue+shoes-boots-laceup-black",
+          "d232": "rejected",
+          "d239": "technically-ok",
+          "d239Failed": [],
+          "class": "corrected extraction fault",
+          "why": "the N2 sleeve's limb-contour remnant 7 rows below the cuff (COMBO-1d) is gone: d239 removes paint the limb exit leaves detached"
+        },
+        {
+          "outfit": "top-longsleeve-waist-navy+bottom-capri-lightblue+shoes-sneakers-white",
+          "d232": "rejected",
+          "d239": "technically-ok",
+          "d239Failed": [],
+          "class": "corrected extraction fault",
+          "why": "the N2 sleeve's limb-contour remnant 7 rows below the cuff (COMBO-1d) is gone: d239 removes paint the limb exit leaves detached"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-trousers-black+shoes-sneakers-beige",
+          "d232": "rejected COMBO-2-DOUBLE-CONTOUR",
+          "d239": "rejected COMBO-2-DOUBLE-CONTOUR,COMBO-6-UNCOVERED-BASE",
+          "class": "existing fault, now named right",
+          "why": "N2's open hip corners (COMBO-6) instead of its sleeve remnant (COMBO-1d, corrected)"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-trousers-black+shoes-boots-laceup-black",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-trousers-black+shoes-sneakers-white",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-5-HEM-SHOE-SKIN",
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "C's ankle 6–10 rows between the full-length black hem and the white sneaker's front collar (D-238 MF-1b) — a long hem, not an opening by design"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-skirt-sand+shoes-sneakers-beige",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-skirt-sand+shoes-boots-laceup-black",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-skirt-sand+shoes-sneakers-white",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-shorts-navy+shoes-sneakers-beige",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-shorts-navy+shoes-boots-laceup-black",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tee-hip-blue+bottom-trousers-black+shoes-sneakers-white",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-5-HEM-SHOE-SKIN"
+          ],
+          "class": "existing fault now detected",
+          "why": "C's ankle 6–10 rows between the full-length black hem and the white sneaker's front collar (D-238 MF-1b) — a long hem, not an opening by design"
+        }
+      ],
+      "changeClasses": {
+        "existing fault now detected": 10,
+        "existing fault, now named right": 7,
+        "corrected extraction fault": 6
+      },
+      "perOutfit": {
+        "top-tee-hip-cream+bottom-trousers-black+shoes-sneakers-beige": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "openFindingsNow": [
+            "F-013"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tee-hip-cream+bottom-trousers-black+shoes-boots-laceup-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-013"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-hip-cream+bottom-trousers-black+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-5-HEM-SHOE-SKIN"
+          ],
+          "openFindingsNow": [
+            "F-013"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-beige": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-boots-laceup-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-sneakers-beige": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-boots-laceup-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-sneakers-beige": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-boots-laceup-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-longsleeve-waist-navy+bottom-trousers-black+shoes-sneakers-beige": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT",
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-2-DOUBLE-CONTOUR",
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-013",
+            "F-019"
+          ],
+          "readiness": "rejected"
+        },
+        "top-longsleeve-waist-navy+bottom-trousers-black+shoes-boots-laceup-black": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-013",
+            "F-019"
+          ],
+          "readiness": "rejected"
+        },
+        "top-longsleeve-waist-navy+bottom-trousers-black+shoes-sneakers-white": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-5-HEM-SHOE-SKIN",
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-013",
+            "F-019"
+          ],
+          "readiness": "rejected"
+        },
+        "top-longsleeve-waist-navy+bottom-skirt-sand+shoes-sneakers-beige": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-019"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-navy+bottom-skirt-sand+shoes-boots-laceup-black": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-019"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-navy+bottom-skirt-sand+shoes-sneakers-white": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-019"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-navy+bottom-shorts-navy+shoes-sneakers-beige": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-019"
+          ],
+          "readiness": "rejected"
+        },
+        "top-longsleeve-waist-navy+bottom-shorts-navy+shoes-boots-laceup-black": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-019"
+          ],
+          "readiness": "rejected"
+        },
+        "top-longsleeve-waist-navy+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-019"
+          ],
+          "readiness": "rejected"
+        },
+        "top-longsleeve-waist-navy+bottom-capri-lightblue+shoes-sneakers-beige": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-019"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-navy+bottom-capri-lightblue+shoes-boots-laceup-black": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-019"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-navy+bottom-capri-lightblue+shoes-sneakers-white": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-019"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tank-teal+bottom-trousers-black+shoes-sneakers-beige": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-2-DOUBLE-CONTOUR",
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-013",
+            "F-014",
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-trousers-black+shoes-boots-laceup-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-013",
+            "F-014",
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-trousers-black+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-5-HEM-SHOE-SKIN",
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-013",
+            "F-014",
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-skirt-sand+shoes-sneakers-beige": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-skirt-sand+shoes-boots-laceup-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-skirt-sand+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-shorts-navy+shoes-sneakers-beige": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-shorts-navy+shoes-boots-laceup-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-capri-lightblue+shoes-sneakers-beige": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tank-teal+bottom-capri-lightblue+shoes-boots-laceup-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tank-teal+bottom-capri-lightblue+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-hip-blue+bottom-trousers-black+shoes-sneakers-beige": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "openFindingsNow": [
+            "F-013"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tee-hip-blue+bottom-trousers-black+shoes-boots-laceup-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-013"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-hip-blue+bottom-trousers-black+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-5-HEM-SHOE-SKIN"
+          ],
+          "openFindingsNow": [
+            "F-013"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-beige": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "openFindingsNow": [],
+          "readiness": "rejected"
+        },
+        "top-tee-hip-blue+bottom-skirt-sand+shoes-boots-laceup-black": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "openFindingsNow": [],
+          "readiness": "rejected"
+        },
+        "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-white": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "openFindingsNow": [],
+          "readiness": "rejected"
+        },
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-sneakers-beige": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-boots-laceup-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-sneakers-beige": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-boots-laceup-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        }
+      },
+      "readyOutfits": [
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-beige",
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-boots-laceup-black",
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-white",
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-sneakers-beige",
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-boots-laceup-black",
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-sneakers-white",
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-sneakers-beige",
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-boots-laceup-black",
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-sneakers-white",
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-sneakers-beige",
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-boots-laceup-black",
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-sneakers-white",
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-sneakers-beige",
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-boots-laceup-black",
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-sneakers-white"
+      ]
+    },
+    "d228": {
+      "label": "D-228's 40-outfit matrix",
+      "beforeMethod": "d232 (D-232)",
+      "runs": {
+        "count": 1,
+        "byteIdentity": "not verified — a second full run was deferred (memory); the run's code and manifest hashes equal the method's"
+      },
+      "code": {
+        "northstar-item-pilot.mjs": "71247ba829e6305623c65ef15e4b5d3b5a9b6901fa78c8fedb74a1327b86f996",
+        "northstar-base-figure-c.mjs": "a43bf3c1e8d42c88ff01e9966059233f5605d05a87ebda09180530d13c6b57e0",
+        "northstar-base-figure.mjs": "a99235c19e7d69c9b4d3f37856be3bad41028860b340031df60596cb2b418b47",
+        "northstar-wardrobe.mjs": "3ab2b98e4eabfb8a76a7f31643cd8e568158775a0f3a7614d3cf4b4cc1e7ce0b",
+        "northstar-wardrobe-poc.mjs": "62440bb7a5e12eafd7cc6286720e3c27449cc001cd4972dab8c486fe3df6d877",
+        "r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+        "r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+        "r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+        "clean-r2-hair-alpha.mjs": "239c69e8a9ffc8621e6a5f17584143f7103c9ea6bf86974c664ce7c2304defbe"
+      },
+      "manifestSha256": "e772b57330ffd3fb6adb6c522e734816c605df1d7c080eccd616f941a3578489",
+      "outfits": 40,
+      "d232": {
+        "pass": 38,
+        "summary": {
+          "technicallyOk": 38,
+          "technicallyOkOpenFinding": 0,
+          "rejected": 2
+        }
+      },
+      "d239": {
+        "passChecks": 32,
+        "rejected": 8,
+        "ready": 6,
+        "notReadyOpenFinding": 26,
+        "rejectedItems": []
+      },
+      "statusChanges": [
+        {
+          "outfit": "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-shorts-navy+shoes-ankleboots-brown",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-skirt-band-orange+shoes-sneakers-white",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-skirt-band-orange+shoes-ankleboots-brown",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-sweater-green+bottom-shorts-navy+shoes-sneakers-white",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-sweater-green+bottom-shorts-navy+shoes-ankleboots-brown",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        }
+      ],
+      "changeClasses": {
+        "existing fault now detected": 6
+      },
+      "perOutfit": {
+        "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-shorts-navy+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-trousers-square-olive+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tank-teal+bottom-trousers-square-olive+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tank-teal+bottom-capri-lightblue+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tank-teal+bottom-capri-lightblue+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tank-teal+bottom-skirt-band-orange+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-skirt-band-orange+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tee-red+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-shorts-navy+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-trousers-square-olive+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-trousers-square-olive+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-capri-lightblue+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-capri-lightblue+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-skirt-band-orange+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-skirt-band-orange+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-sweater-green+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-017"
+          ],
+          "readiness": "rejected"
+        },
+        "top-sweater-green+bottom-shorts-navy+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-017"
+          ],
+          "readiness": "rejected"
+        },
+        "top-sweater-green+bottom-trousers-square-olive+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-017"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-sweater-green+bottom-trousers-square-olive+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-017"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-sweater-green+bottom-capri-lightblue+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-017"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-sweater-green+bottom-capri-lightblue+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-017"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-sweater-green+bottom-skirt-band-orange+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-017"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-sweater-green+bottom-skirt-band-orange+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-017"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-blue+bottom-trousers-square-olive+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-blue+bottom-trousers-square-olive+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [],
+          "readiness": "ready (technically OK, no open finding — not the owner's visual approval)"
+        },
+        "top-tee-hip-blue+bottom-skirt-band-orange+shoes-sneakers-white": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "openFindingsNow": [],
+          "readiness": "rejected"
+        },
+        "top-tee-hip-blue+bottom-skirt-band-orange+shoes-ankleboots-brown": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "openFindingsNow": [],
+          "readiness": "rejected"
+        },
+        "top-longsleeve-waist-purple+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-018"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-purple+bottom-shorts-navy+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-018"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-purple+bottom-trousers-square-olive+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-018"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-purple+bottom-trousers-square-olive+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-018"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-purple+bottom-capri-lightblue+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-018"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-purple+bottom-capri-lightblue+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-018"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-purple+bottom-skirt-band-orange+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-018"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-longsleeve-waist-purple+bottom-skirt-band-orange+shoes-ankleboots-brown": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-018"
+          ],
+          "readiness": "not ready (open finding)"
+        }
+      },
+      "readyOutfits": [
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-sneakers-white",
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-ankleboots-brown",
+        "top-tee-hip-blue+bottom-trousers-square-olive+shoes-sneakers-white",
+        "top-tee-hip-blue+bottom-trousers-square-olive+shoes-ankleboots-brown",
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-sneakers-white",
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-ankleboots-brown"
+      ]
+    },
+    "pilot": {
+      "label": "the nine D-207 pilot pictures, 18 outfits",
+      "beforeMethod": "d232 (D-232)",
+      "runs": {
+        "count": 2,
+        "byteIdentity": "verified: 161 picture and layer files byte-identical; run.json identical apart from the register-dependent fields (the second run read F-015 … F-019)"
+      },
+      "code": {
+        "northstar-item-pilot.mjs": "71247ba829e6305623c65ef15e4b5d3b5a9b6901fa78c8fedb74a1327b86f996",
+        "northstar-base-figure-c.mjs": "a43bf3c1e8d42c88ff01e9966059233f5605d05a87ebda09180530d13c6b57e0",
+        "northstar-base-figure.mjs": "a99235c19e7d69c9b4d3f37856be3bad41028860b340031df60596cb2b418b47",
+        "northstar-wardrobe.mjs": "3ab2b98e4eabfb8a76a7f31643cd8e568158775a0f3a7614d3cf4b4cc1e7ce0b",
+        "northstar-wardrobe-poc.mjs": "62440bb7a5e12eafd7cc6286720e3c27449cc001cd4972dab8c486fe3df6d877",
+        "r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+        "r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+        "r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+        "clean-r2-hair-alpha.mjs": "239c69e8a9ffc8621e6a5f17584143f7103c9ea6bf86974c664ce7c2304defbe"
+      },
+      "manifestSha256": "0d68200ca5fe1db2d2b982d88a886e3bf860b33e11b193cd8548ee33e4f98144",
+      "outfits": 18,
+      "d232": {
+        "pass": 16,
+        "summary": {
+          "technicallyOk": 10,
+          "technicallyOkOpenFinding": 6,
+          "rejected": 2
+        }
+      },
+      "d239": {
+        "passChecks": 10,
+        "rejected": 8,
+        "ready": 0,
+        "notReadyOpenFinding": 10,
+        "rejectedItems": [
+          "shoes-sandals-brown"
+        ]
+      },
+      "statusChanges": [
+        {
+          "outfit": "top-tank-teal+bottom-shorts-navy+shoes-boots-black",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-skirt-plum+shoes-boots-black",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-tank-teal+bottom-skirt-plum+shoes-sneakers-white",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-sweater-green+bottom-shorts-navy+shoes-boots-black",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        },
+        {
+          "outfit": "top-sweater-green+bottom-shorts-navy+shoes-sneakers-white",
+          "d232": "technically-ok",
+          "d239": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "class": "existing fault now detected",
+          "why": "the top leaves C's base-top hip corner open (SC-W2); background shows at the hip as a notch, the same in d232's picture — the contract asks every top to cover these corners, so nothing outside the intended garment form is required"
+        }
+      ],
+      "changeClasses": {
+        "existing fault now detected": 6
+      },
+      "perOutfit": {
+        "top-tank-teal+bottom-shorts-navy+shoes-boots-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-trousers-khaki+shoes-boots-black": {
+          "d232": "technically-ok-open-finding",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-001",
+            "F-006",
+            "F-015"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tank-teal+bottom-trousers-khaki+shoes-sneakers-white": {
+          "d232": "technically-ok-open-finding",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-010",
+            "F-015"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tank-teal+bottom-skirt-plum+shoes-boots-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tank-teal+bottom-skirt-plum+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-015"
+          ],
+          "readiness": "rejected"
+        },
+        "top-tee-red+bottom-shorts-navy+shoes-boots-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-trousers-khaki+shoes-boots-black": {
+          "d232": "technically-ok-open-finding",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-001",
+            "F-006",
+            "F-011",
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-trousers-khaki+shoes-sneakers-white": {
+          "d232": "technically-ok-open-finding",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-010",
+            "F-011",
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-skirt-plum+shoes-boots-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-tee-red+bottom-skirt-plum+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-016"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-sweater-green+bottom-shorts-navy+shoes-boots-black": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-017"
+          ],
+          "readiness": "rejected"
+        },
+        "top-sweater-green+bottom-shorts-navy+shoes-sneakers-white": {
+          "d232": "technically-ok",
+          "d232Failed": [],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-6-UNCOVERED-BASE"
+          ],
+          "openFindingsNow": [
+            "F-017"
+          ],
+          "readiness": "rejected"
+        },
+        "top-sweater-green+bottom-trousers-khaki+shoes-boots-black": {
+          "d232": "technically-ok-open-finding",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-001",
+            "F-006",
+            "F-012",
+            "F-017"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-sweater-green+bottom-trousers-khaki+shoes-sneakers-white": {
+          "d232": "technically-ok-open-finding",
+          "d232Failed": [],
+          "d239Run": "technically-ok-open-finding",
+          "d239Failed": [],
+          "openFindingsNow": [
+            "F-010",
+            "F-012",
+            "F-017"
+          ],
+          "readiness": "not ready (open finding)"
+        },
+        "top-sweater-green+bottom-skirt-plum+shoes-boots-black": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "openFindingsNow": [
+            "F-007",
+            "F-017"
+          ],
+          "readiness": "rejected"
+        },
+        "top-sweater-green+bottom-skirt-plum+shoes-sneakers-white": {
+          "d232": "rejected",
+          "d232Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "d239Run": "rejected",
+          "d239Failed": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "openFindingsNow": [
+            "F-007",
+            "F-017"
+          ],
+          "readiness": "rejected"
+        }
+      },
+      "readyOutfits": []
+    }
+  },
+  "review": {
+    "method": "every status change at × 4 before and after with the faults framed (review/r01 … r09); the outfits the checks pass with a corner-open top at × 3 (r10); the corner-covering tops at × 3 (r11)",
+    "falseRejections": 0,
+    "regressions": 0,
+    "unresolved": 0,
+    "missedByChecks": [
+      "smaller hip bites (1–3 px) of the corner-open tops (tank, red tee, sweater, V2, N2) in outfits the checks pass — registered F-015 … F-019",
+      "the tank's left hip with the plum, sand and orange skirts (a bite with specks, below COMBO-6's threshold) — under F-015",
+      "a dotted, broken outline at the tank + khaki right hip — under F-015"
+    ],
+    "cleanWhereCornersCovered": "N1 and V1 (tops that cover C's hip corners): no bite at either hip in 8 of 8 combinations (r11)"
+  },
+  "validatedChecks": {
+    "onStandIn": "tests/unit/avatar-northstar-targeted-correction-d239.test.mjs: each correction and check with its fault stimulus; a real cut, missing sleeve fabric and a wrong order still fail; an ankle by design and a hem over the shoe pass; a 1 px rim passes",
+    "onC": "the review above: every status change classified; no false rejection or regression found; COMBO-6 misses bites below its threshold (registered, not hidden)"
+  },
+  "remainingInTheRawMaterial": [
+    "tops that leave C's hip corners open: tank, red tee, sweater (D-207), V2 (D-228), N2 (D-235) — their pictures lack the fabric",
+    "the black trousers N3 end 6–10 rows above a low shoe's front (a real gap with the white sneakers; a double contour with the beige N5)",
+    "the sand skirt N4 is 33 px wider than SC-W6 and doubles the outline under the hip tee V1",
+    "the sandals (D-207): generated feet narrower than C's (unchanged)"
+  ],
+  "toolCanSolve": [
+    "every extraction fault found here (corrected)",
+    "detection of hem/shoe skin slivers and deep hip notches (added)",
+    "SC-W4 on dark fabric (corrected)"
+  ],
+  "needsOtherPictures": [
+    "tops that cover C's base-top hip corners (SC-W2)",
+    "full hems that meet the shoe (SC-L1 with the shoe's front collar)",
+    "bottoms within the hip lanes (SC-W6)"
+  ]
+}

@@ -38,11 +38,11 @@ const mapAnswerFormat = (() => {
 })();
 
 // ── 1. Interaction kinds ─────────────────────────────────────────────────────────────────────────
-test("registry: exactly one base kind (choice); Match par is registered but NOT servable", () => {
+test("registry: exactly one base kind (choice); Match par has its renderer but is NOT servable", () => {
   assert.equal(BASE_KIND, "choice");
   assert.deepEqual(KIND_ORDER, ["choice", "short_text", "long_text", "number", "force_text", "match_pairs"]);
   assert.equal(INTERACTION_KINDS.match_pairs.servable, false);
-  assert.equal(INTERACTION_KINDS.match_pairs.renderer, null);
+  assert.equal(INTERACTION_KINDS.match_pairs.renderer, "match_pairs");
   for (const k of KIND_ORDER.filter((k) => k !== "match_pairs")) assert.equal(INTERACTION_KINDS[k].servable, true, k);
   assert.equal(isServableKind("match_pairs"), false);
   assert.equal(isServableKind(null), false);
@@ -435,7 +435,15 @@ test("index.ts: v2 judges repeats on the servable pool; v1 keeps the old repeat 
 
 test("index.ts: due, new and repeat paths all take the format from wireFormat and skip an unservable row", () => {
   assert.equal((INDEX_CODE.match(/mapAnswerFormat\(/g) ?? []).length, 2, "the definition and wireFormat's v1 branch only");
-  assert.equal((INDEX_CODE.match(/= wireFormat\((q|rq)\);\s*if \((format|resolved) === null\) throw new Error\(`Unservable format: /g) ?? []).length, 3);
+  // Due, new and repeat — in that order. Due and repeat format the row they serve: the delivered version
+  // when K1_SERVED_SNAPSHOT is on and the round has one, otherwise the question row exactly as before
+  // (q = delivered ?? instance.questions; src = delivered ?? rq).
+  assert.deepEqual([...INDEX_CODE.matchAll(/= wireFormat\((\w+)\);\s*if \((format|resolved) === null\) throw new Error\(`Unservable format: /g)].map((m) => m[1]),
+    ["q", "q", "src"]);
+  assert.match(INDEX_CODE, /const q = delivered \?\? instance\.questions;/);
+  assert.match(INDEX_CODE, /const src = delivered \?\? rq;/);
+  assert.match(INDEX_CODE, /const delivered = servedSnapshot \? await deliveredFor\(instance\.id\) : null;/);
+  assert.match(INDEX_CODE, /const delivered = servedSnapshot \? await deliveredFor\(repeatRow\.id\) : null;/);
   assert.ok(INDEX_CODE.indexOf("const wireFormat =") < INDEX_CODE.indexOf("for (const instance of sortedDue)"));
 });
 
@@ -450,7 +458,10 @@ test("index.ts: v2 orders by the mix plan and never by the request's band", () =
 test("index.ts: the FORMAT_MIX logs carry no pupil identity, no answer and no key", () => {
   const logs = [...INDEX_CODE.matchAll(/console\.log\("FORMAT_MIX:", JSON\.stringify\(\{([\s\S]*?)\}\)\);/g)].map((m) => m[1]);
   assert.equal(logs.length, 2, "the v2 and the shadow log");
+  // Each log names the pupil only by the one-way pseudonym, computed right before it from the verified id.
+  assert.equal((INDEX_CODE.match(/const pupil = await pupilLogHash\(student_id\);\s*console\.log\("FORMAT_MIX:"/g) ?? []).length, 2);
   for (const body of logs) {
+    assert.match(body, /engine: mixEngine, pupil, \.\.\.plan\.decision,/);
     for (const forbidden of ["student_id", "user", "correct", "normalized", "content", "answer", "email", "name"]) {
       assert.equal(new RegExp(String.raw`\b${forbidden}\b`, "i").test(body), false, `FORMAT_MIX must not log ${forbidden}`);
     }
@@ -475,7 +486,8 @@ test("index.ts: shadow serves v1; a shadow failure is logged and never changes t
 test("index.ts: both engines feed the same insert loop, public DTO and answer-key path", () => {
   const loop = INDEX_CODE.slice(INDEX_CODE.indexOf("for (const q of sortedQuestions)"));
   assert.match(loop, /normalized = normalizeContent\(q\.content, format\);/);
-  assert.match(loop, /pub = toPublicQuestion\(q\.content, format, q\.metadata\);/);
+  // The fourth argument is the instance key; only Match par reads it, to lay out its shuffled column.
+  assert.match(loop, /pub = toPublicQuestion\(q\.content, format, q\.metadata, normalized\.correct\);/);
   assert.match(loop, /correctAnswer: normalized\.correct,/);
   assert.match(INDEX_CODE, /content: inserted\.pub\.content,/);
   // The due (spaced repetition / interrupted request) step still runs before any new question.
