@@ -1,3 +1,4 @@
+import type { AttemptObservation } from "./evidence.ts";
 import type { Action, Evidence, InteractionKind, Mode, Purpose, StimulusOption } from "./protocol.ts";
 import { ServiceError, type ServiceHint, type ServiceResult, type ServiceTask, type Submission, type TaskQuery, type TaskService } from "./service.ts";
 
@@ -14,6 +15,11 @@ import { ServiceError, type ServiceHint, type ServiceResult, type ServiceTask, t
 export interface FakeItem {
   readonly id: string;
   readonly objectiveId: string;
+  /**
+   * Optional: the decision point (contextKey) this item answers. Lets one OBJECTIVE carry several steps
+   * (practice, revision, transfer, revisit) without inventing an objective per step (D-330).
+   */
+  readonly contextKey?: string;
   readonly kind: InteractionKind;
   readonly prompt: string;
   readonly options: readonly StimulusOption[] | null;
@@ -36,6 +42,8 @@ interface Instance {
   readonly contextKey: string;
   hintsUsed: number;
   result: ServiceResult | null;
+  /** When the verdict was given (ISO), for the evidence view. */
+  answeredAt: string | null;
   readonly submissions: Map<string, ServiceResult>;
 }
 
@@ -98,10 +106,10 @@ export class FakeTaskService implements TaskService {
     await this.gate("fetchTask");
     if (this.open !== null) return this.view(this.open); // one open instance per pupil
     const answered = new Set([...this.instances.values()].filter((i) => i.result !== null).map((i) => i.item.id));
-    const candidates = this.items.filter((it) => it.objectiveId === q.objectiveId && q.kinds.includes(it.kind));
+    const candidates = this.items.filter((it) => it.objectiveId === q.objectiveId && q.kinds.includes(it.kind) && (it.contextKey === undefined || it.contextKey === q.contextKey));
     if (candidates.length === 0) throw new ServiceError("unavailable", false, "no item for this objective and these kinds");
     const item = candidates.find((it) => !answered.has(it.id)) ?? (candidates[0] as FakeItem);
-    const inst: Instance = { id: `inst-${this.nextId++}`, item, mode: MODE_FOR[q.purpose], contextKey: q.contextKey, hintsUsed: 0, result: null, submissions: new Map() };
+    const inst: Instance = { id: `inst-${this.nextId++}`, item, mode: MODE_FOR[q.purpose], contextKey: q.contextKey, hintsUsed: 0, result: null, answeredAt: null, submissions: new Map() };
     this.instances.set(inst.id, inst);
     this.open = inst;
     return this.view(inst);
@@ -129,6 +137,7 @@ export class FakeTaskService implements TaskService {
     // Reward exactly once, on the first correct answer of the instance (D-211: 10 XP + 5 coins).
     if (correct) this.ledger.push({ instanceId: inst.id, xp: 10, coins: 5 });
     inst.result = result;
+    inst.answeredAt = new Date(this.clock()).toISOString();
     inst.submissions.set(s.submissionId, result);
     if (this.open === inst) this.open = null;
     return result;
@@ -141,6 +150,35 @@ export class FakeTaskService implements TaskService {
     if (inst.result !== null || level !== inst.hintsUsed + 1 || level > inst.item.hints.length) throw new ServiceError("invalid", false, "hint not available");
     inst.hintsUsed = level; // the server's own log decides "assisted"
     return { level, text: inst.item.hints[level - 1] as string, hintsRemaining: inst.item.hints.length - level };
+  }
+
+  /** Injectable clock (tests, and the demo's "fast-forward"). */
+  clock: () => number = () => Date.now();
+
+  /**
+   * D-330: what this TEST ADAPTER observed, as evidence-chain observations (source "testadapter"). It knows
+   * mode and hints — the real server does not register them yet (L1 K1, PR #536). Never server evidence.
+   */
+  observations(): AttemptObservation[] {
+    return [...this.instances.values()]
+      .filter((i) => i.result !== null && i.answeredAt !== null)
+      .map((i) => ({
+        kind: "attempt",
+        source: "testadapter",
+        objective: i.item.objectiveId,
+        at: i.answeredAt as string,
+        instanceId: i.id,
+        roundNo: 1,
+        submissionId: [...i.submissions.keys()][0] ?? null,
+        grading: "auto",
+        wasCorrect: i.result?.outcome === "correct",
+        isRepeat: false,
+        mode: i.mode,
+        hintsUsed: i.hintsUsed,
+        situation: i.item.id,
+        // Constructed teaching material: not statically validated (K5).
+        evidenceValid: null,
+      }));
   }
 
   private view(i: Instance): ServiceTask {

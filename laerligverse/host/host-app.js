@@ -6,7 +6,7 @@
 // fill in the configuration and the Content-Security-Policy. In Lærlig it would use the existing
 // supabase-js session (supabaseSessionProvider) instead of the local password sign-in shown here.
 import { assertOrigin, createLaerligverseHost, passwordSessionProvider } from "./host-core.js";
-import { BridgeHost } from "./bridge/index.js";
+import { BridgeHost, assessObjectives } from "./bridge/index.js";
 
 const $ = (id) => /** @type {HTMLElement} */ (document.getElementById(id));
 const body = document.body;
@@ -50,6 +50,14 @@ function readConfig() {
       assertOrigin(new URL(c.supabaseUrl).origin);
       if (typeof c.anonKey !== "string" || c.anonKey.length === 0) return null;
     }
+    // D-330: optional, non-production only. A malformed value refuses the page rather than being ignored.
+    if (c.objectiveMap !== undefined && c.objectiveMap !== null) {
+      if (typeof c.objectiveMap !== "object" || Array.isArray(c.objectiveMap)) return null;
+      for (const [k, v] of Object.entries(c.objectiveMap)) {
+        if (typeof k !== "string" || k.length === 0 || typeof v !== "string" || !/^[a-z][a-z0-9_]{0,63}$/.test(v)) return null;
+      }
+    }
+    if (c.h5 !== undefined && typeof c.h5 !== "boolean") return null;
   } catch {
     return null;
   }
@@ -75,12 +83,13 @@ async function startDidacticDemo(c) {
   $("lv-session").textContent = "ingen (testadapter)";
   body.dataset.session = "test-adapter";
   const { FakeTaskService, ARCHIVE_ITEMS } = await import("./dev/test-adapter.js");
+  const service = new FakeTaskService(ARCHIVE_ITEMS);
   const frame = /** @type {HTMLIFrameElement} */ ($("lv-game"));
   const host = new BridgeHost({
     gameOrigin: assertOrigin(c.gameOrigin),
     gameWindow: frame.contentWindow,
     post: (m) => frame.contentWindow?.postMessage(m, c.gameOrigin),
-    service: new FakeTaskService(ARCHIVE_ITEMS),
+    service,
     randomId: () => crypto.randomUUID(),
     store: sessionStorage,
     onReject: (reason) => (body.dataset.lastReject = reason),
@@ -88,12 +97,64 @@ async function startDidacticDemo(c) {
   window.addEventListener("message", (e) => {
     void host.onMessage({ origin: e.origin, source: e.source, data: e.data }).then(() => {
       if (host.sessionNonce !== null) linked();
+      renderEvidence(assessObjectives(service.observations()));
     });
   });
+  $("lv-evidence-panel").hidden = false;
+  renderEvidence([]);
   $("lv-game-region").hidden = false;
   frame.src = c.gameUrl;
   body.dataset.state = "running";
   say("Spillet indlæses.");
+}
+
+const STATE_LABEL = {
+  introduced: "Introduceret",
+  practised: "Øvet",
+  supported: "Støttet præstation",
+  independent: "Selvstændig præstation",
+  applied: "Anvendelse i ny situation",
+  revisited: "Genbesøg",
+  documentedProgression: "Dokumenteret progression",
+};
+const STATUS_LABEL = { observed: "observeret", not_observed: "ikke observeret", unknown: "ukendt" };
+
+/** D-330: the evidence chain's classification of what the TEST ADAPTER observed — never server evidence. */
+function renderEvidence(assessments) {
+  const box = $("lv-evidence-body");
+  box.replaceChildren();
+  if (assessments.length === 0) {
+    box.append(Object.assign(document.createElement("p"), { textContent: "Endnu ingen besvarede opgaver." }));
+    return;
+  }
+  for (const a of assessments) {
+    const table = document.createElement("table");
+    table.dataset.objective = a.objective;
+    const cap = document.createElement("caption");
+    cap.textContent = `Mål (prototype-id): ${a.objective}`;
+    table.append(cap);
+    const tbody = document.createElement("tbody");
+    for (const [key, label] of Object.entries(STATE_LABEL)) {
+      const v = a.states[key];
+      const tr = document.createElement("tr");
+      tr.dataset.state = key;
+      const th = Object.assign(document.createElement("th"), { scope: "row", textContent: label });
+      const td = Object.assign(document.createElement("td"), { textContent: `${STATUS_LABEL[v.status]} — ${v.why.join(" ")}` });
+      td.dataset.status = v.status;
+      tr.append(th, td);
+      tbody.append(tr);
+    }
+    const eligible = a.evidence.filter((e) => e.eligible).length;
+    const tr = document.createElement("tr");
+    tr.dataset.state = "evidence";
+    tr.append(
+      Object.assign(document.createElement("th"), { scope: "row", textContent: "Kan bruges som evidens (K4)" }),
+      Object.assign(document.createElement("td"), { textContent: `${eligible} af ${a.evidence.length} svar. ${a.evidence[0] ? "Fx: " + (a.evidence[0].reasons.join("; ") || "opfylder K4") : ""}` }),
+    );
+    tbody.append(tr);
+    table.append(tbody);
+    box.append(table);
+  }
 }
 
 function start(c) {
@@ -146,6 +207,8 @@ function start(c) {
       anonKey: c.anonKey,
       subject: c.subject ?? "historie",
       flags: reportedFlag,
+      objectiveMap: c.objectiveMap ?? null,
+      h5Submissions: c.h5 === true,
       randomId: () => crypto.randomUUID(),
       store: sessionStorage,
       onEvent: (e) => {

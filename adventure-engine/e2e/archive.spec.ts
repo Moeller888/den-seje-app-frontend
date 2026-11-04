@@ -359,6 +359,57 @@ test.describe("Arkivskabet v2 — the full learning sequence (D-322)", () => {
   });
 });
 
+test.describe("Arkivskabet — the evidence view (D-330): a correct answer is not documented learning", () => {
+  const row = (page: Page, state: string) => page.locator(`#evidence-body table[data-objective="hist.besaettelsen.h4"] tr[data-state="${state}"] td`);
+
+  test("one objective through the whole sequence: supported → independent → applied → revisited, and still no documented progression", async ({ page }) => {
+    const f = await openTask(page);
+    await expect(page.locator("#evidence-body")).toContainText("Endnu ingen besvarede opgaver.");
+    // Practice WITH a hint: practised and supported — not independent.
+    await f.locator("#lv-hint").click();
+    await investigate(f);
+    await choose(f, "kilde_a");
+    await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "correct");
+    await expect(row(page, "practised")).toHaveAttribute("data-status", "observed");
+    await expect(row(page, "supported")).toHaveAttribute("data-status", "observed");
+    await expect(row(page, "independent")).toHaveAttribute("data-status", "not_observed");
+    await f.locator("#lv-close").click();
+    await confirmLine(page, "line.unlocked");
+    // Transfer without help, in a situation never practised: independent AND applied.
+    await useCabinet(page);
+    await confirmLine(page, "line.drawer");
+    // Wait for the NEW task before turning documents (the previous sheet's buttons are still in the DOM).
+    await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "open");
+    await expect(f.locator("#lv-prompt")).toContainText("almindelig dansker i København");
+    await investigate(f);
+    await choose(f, "kilde_f", "til");
+    await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "correct");
+    await expect(row(page, "independent")).toHaveAttribute("data-status", "observed");
+    await expect(row(page, "applied")).toHaveAttribute("data-status", "observed");
+    await expect(row(page, "revisited")).toHaveAttribute("data-status", "not_observed");
+    await f.locator("#lv-close").click();
+    await confirmLine(page, "line.drawer_done");
+    await f.locator("#lv-reflection-text").fill("Afsenderen kan have et formål og skrive længe efter.");
+    await f.locator("#lv-reflection-compare").click();
+    await f.locator("#lv-reflection-next").click();
+    // The game's "fast-forward" is a story device; time passes only on the TEST ADAPTER's clock (host tool).
+    await page.locator("#advance-clock").click();
+    await f.locator("#lv-revisit-start").click();
+    await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "open");
+    await expect(f.locator("#lv-prompt")).toContainText("kæmpet");
+    await investigate(f);
+    await choose(f, "gb_rapport");
+    await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "correct");
+    await expect(row(page, "revisited")).toHaveAttribute("data-status", "observed");
+    await expect(row(page, "revisited")).toContainText("FORSLAG");
+    // Everything the working model can show — and still: not documented progression, nothing usable as evidence.
+    await expect(row(page, "documentedProgression")).toHaveAttribute("data-status", "not_observed");
+    await expect(row(page, "evidence")).toHaveAttribute("data-eligible", "0");
+    await expect(row(page, "introduced")).not.toHaveAttribute("data-status", "observed");
+    await expect(page.locator("#evidence-body")).not.toContainText(/mestret|master/i);
+  });
+});
+
 test.describe("Arkivskabet — isolation and sender checks", () => {
   test("the game, on its own origin, cannot read the host's session storage", async ({ page }) => {
     await startGame(page);
