@@ -435,7 +435,15 @@ test("index.ts: v2 judges repeats on the servable pool; v1 keeps the old repeat 
 
 test("index.ts: due, new and repeat paths all take the format from wireFormat and skip an unservable row", () => {
   assert.equal((INDEX_CODE.match(/mapAnswerFormat\(/g) ?? []).length, 2, "the definition and wireFormat's v1 branch only");
-  assert.equal((INDEX_CODE.match(/= wireFormat\((q|rq)\);\s*if \((format|resolved) === null\) throw new Error\(`Unservable format: /g) ?? []).length, 3);
+  // Due, new and repeat — in that order. Due and repeat format the row they serve: the delivered version
+  // when K1_SERVED_SNAPSHOT is on and the round has one, otherwise the question row exactly as before
+  // (q = delivered ?? instance.questions; src = delivered ?? rq).
+  assert.deepEqual([...INDEX_CODE.matchAll(/= wireFormat\((\w+)\);\s*if \((format|resolved) === null\) throw new Error\(`Unservable format: /g)].map((m) => m[1]),
+    ["q", "q", "src"]);
+  assert.match(INDEX_CODE, /const q = delivered \?\? instance\.questions;/);
+  assert.match(INDEX_CODE, /const src = delivered \?\? rq;/);
+  assert.match(INDEX_CODE, /const delivered = servedSnapshot \? await deliveredFor\(instance\.id\) : null;/);
+  assert.match(INDEX_CODE, /const delivered = servedSnapshot \? await deliveredFor\(repeatRow\.id\) : null;/);
   assert.ok(INDEX_CODE.indexOf("const wireFormat =") < INDEX_CODE.indexOf("for (const instance of sortedDue)"));
 });
 
