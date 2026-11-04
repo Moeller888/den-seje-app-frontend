@@ -12,6 +12,7 @@ import { servableWireFormat } from "../_shared/interaction-kinds.ts";
 import { pupilLogHash } from "./log-pseudonym.ts";
 import { createMatchKey, parseMatchPairs } from "../_shared/match-pairs.ts";
 import { chooseSelectionRoute, loadLevelPlan, resolveLevelEngine, type LevelReadClient } from "./level-flow.ts";
+import { SERVED_SNAPSHOT_ENV, deliveredQuestion, deliveryProposal, servedSnapshotEnabled } from "./served-snapshot.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -177,6 +178,11 @@ serve(async (req) => {
     // runs exactly as before; "v1" changes only step 2 (new questions) and step 3 (repeat RPC).
     const levelEngine = resolveLevelEngine(Deno.env.get("LEVEL_ENGINE"));
     const route = chooseSelectionRoute(mixEngine, levelEngine);
+    // L1 K1 (Edge secret K1_SERVED_SNAPSHOT, ./served-snapshot.ts): unset = everything below runs exactly
+    // as before; "on" (only after migration 20261103110000) makes every response and the recorded delivered
+    // version the same: new instances propose the row they are built from, open and repeated rounds are
+    // served from their snapshot.
+    const servedSnapshot = servedSnapshotEnabled(Deno.env.get(SERVED_SNAPSHOT_ENV));
     const wireFormat = (row: { answer_format?: unknown; answer_type?: unknown; content?: unknown }): string | null =>
       mixEngine === "v2" ? servableWireFormat(row) : mapAnswerFormat(row.answer_format as string | null);
 
@@ -196,6 +202,21 @@ serve(async (req) => {
       if (keyError) throw new InstanceKeyReadError(`Match key read failed for ${instanceId}: ${keyError.message}`);
       const keyRow = Array.isArray(keyRows) && keyRows.length > 0 ? keyRows[0] : null;
       return keyRow ? keyRow.correct_answer : null;
+    };
+
+    // K1 only (K1_SERVED_SNAPSHOT=on): the delivered version of an instance, read on the backend client,
+    // scoped to the verified student — a separate read, so with the switch off every read is exactly as
+    // before. A failed read is a backend error (500), never a silent fallback to the question row.
+    const deliveredFor = async (instanceId: string) => {
+      const { data: rows, error } = await admin()
+        .from("question_instances")
+        .select("served_snapshot")
+        .eq("id", instanceId)
+        .eq("student_id", student_id)
+        .limit(1);
+      if (error) throw new InstanceKeyReadError(`Served snapshot read failed for ${instanceId}: ${error.message}`);
+      const row = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+      return deliveredQuestion(row ? (row as { served_snapshot?: unknown }).served_snapshot : null);
     };
 
     // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
@@ -238,23 +259,30 @@ serve(async (req) => {
     );
 
     for (const instance of sortedDue) {
-      const q = instance.questions;
-      if (!q) continue;
+      if (!instance.questions) continue;
       // D-329 rule 3: an open instance of ANOTHER objective is neither served as this objective's
-      // question nor released — explicit conflict, no side effect on the ordinary quiz.
-      if (!openInstanceMatches(targeting, q.learning_objective)) {
+      // question nor released — explicit conflict, no side effect on the ordinary quiz. The objective is
+      // the question row's (routing), whatever version K1 delivers.
+      if (!openInstanceMatches(targeting, instance.questions.learning_objective)) {
         return new Response(JSON.stringify({ error: "open_question_other_objective" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 409,
         });
       }
-      // Outside the try: an invalid round fails loud instead of being skipped like bad content.
+      // Outside the try: an invalid round, or a malformed delivered version, fails loud instead of being
+      // skipped like bad content.
       const roundNo = roundNoOf(instance);
+      // K1: an open round with a delivered version is served FROM it (a reload never shows a later edit);
+      // without one it is served from the question row as before (version unknown).
+      const delivered = servedSnapshot ? await deliveredFor(instance.id) : null;
+      const q = delivered ?? instance.questions;
 
       try {
         const format = wireFormat(q);
         if (format === null) throw new Error(`Unservable format: ${q.answer_format}`);
-        const instanceKey = await matchInstanceKey(format, instance.id);
+        const instanceKey = delivered
+          ? (format === "match" ? delivered.key : undefined)
+          : await matchInstanceKey(format, instance.id);
         const pub = toPublicQuestion(q.content, format, q.metadata, instanceKey);
 
         return new Response(
@@ -399,6 +427,9 @@ serve(async (req) => {
         questionId: q.id,
         correctAnswer: normalized.correct,
         nowIso: new Date().toISOString(),
+        // K1: the row this response is built from; the database refuses the insert (40001) if the
+        // question changed since it was read, and the next candidate is tried.
+        servedSnapshot: servedSnapshot ? deliveryProposal(q) : undefined,
       });
 
       if (error) {
@@ -511,11 +542,16 @@ serve(async (req) => {
           if (rq && rq.is_active !== false) {
             // The reopened round, read back after the reopen (outside the try, so it fails loud).
             const roundNo = roundNoOf(repeatRow);
+            // K1: the reopen took the round's snapshot in the same statement; serve FROM it.
+            const delivered = servedSnapshot ? await deliveredFor(repeatRow.id) : null;
+            const src = delivered ?? rq;
             try {
-              const format = wireFormat(rq);
-              if (format === null) throw new Error(`Unservable format: ${rq.answer_format}`);
-              const instanceKey = await matchInstanceKey(format, repeatRow.id);
-              const pub = toPublicQuestion(rq.content, format, rq.metadata, instanceKey);
+              const format = wireFormat(src);
+              if (format === null) throw new Error(`Unservable format: ${src.answer_format}`);
+              const instanceKey = delivered
+                ? (format === "match" ? delivered.key : undefined)
+                : await matchInstanceKey(format, repeatRow.id);
+              const pub = toPublicQuestion(src.content, format, src.metadata, instanceKey);
 
               return new Response(
                 JSON.stringify({
@@ -523,7 +559,7 @@ serve(async (req) => {
                   round_no: roundNo,
                   content: pub.content,
                   answer_format: format,
-                  answer_type: rq.answer_type || "short",
+                  answer_type: src.answer_type || "short",
                   metadata: pub.metadata,
                   wave_phase: wavePhase,
                   // D-329: echoed only when targeting, so the caller can verify it got the objective it asked for.

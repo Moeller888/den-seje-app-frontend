@@ -50,10 +50,10 @@ første række skrives. Den mergede fil ændres ikke.
 |---|---|---|---|
 | `mode` | `text NOT NULL CHECK (mode IN ('quiz_v1','diagnostic','practice','check','review','application'))`. Ingen standardværdi. | `'quiz_v1'` (sendes af serveren) | L5: tilstanden, opgaven blev serveret i, registreres på instansen af `get-next-question` |
 | `hints_used` | `smallint NOT NULL CHECK (hints_used BETWEEN 0 AND 3)` | `0` | L3: tælles fra en serverlog over hint-anmodninger |
-| `server_interval_ms` | `integer NULL CHECK (server_interval_ms >= 0)` | `answered_at − question_instances.created_at`, kun for `attempt_no = 1`. Ellers `NULL`. | Suppleres af `presented_interval_ms` (K9) |
-| `objective_ids` | `uuid[] NULL` | `NULL` | L2: øjebliksbillede af opgavens kobling på svartidspunktet. Det udfyldes aldrig bagudrettet. |
-| `objective_mapping_version` *(ny)* | `integer NULL` | `NULL` | L2: den version af koblingen, der gav `objective_ids` (K8) |
-| `question_content_sha256` *(ny)* | `text NOT NULL` | SHA-256 af opgavens indhold og facit, som serveren havde ved svaret | — |
+| `server_interval_ms` | `integer NULL CHECK (server_interval_ms BETWEEN 0 AND 3600000)` (D-334) | `answered_at − served_at` (eller `created_at` for en runde uden kendt version), kun for `attempt_no = 1`. Negativ eller over 1 time giver `NULL`; værdien afkortes aldrig. Ellers `NULL`. | Suppleres af `presented_interval_ms` (K9) |
+| `objective_ids` | `uuid[] NULL`. Enten er både array og version `NULL`, eller også har arrayet mindst ét mål, intet `NULL`-element og en version ≥ 1 (D-334) | `NULL` | L2: øjebliksbillede af opgavens kobling på svartidspunktet. Det udfyldes aldrig bagudrettet. |
+| `objective_mapping_version` *(ny)* | `integer NULL`, se `objective_ids` | `NULL` | L2: den version af koblingen, der gav `objective_ids` (K8) |
+| `question_content_sha256` *(ny)* | `text NULL` (D-334). `NULL` betyder ukendt version | Kopien af rundens `question_instances.served_content_sha256`, altså den **serverudleverede** version. `NULL` for runder uden kendt version, og en ukendt version er aldrig evidens for mestring | — |
 
 **`server_interval_ms` er et teknisk tidsinterval, ikke elevens svartid (Q4):**
 - Den måler tiden fra serveren *oprettede* instansen, til serveren *modtog* svaret. Den indeholder
@@ -68,9 +68,21 @@ første række skrives. Den mergede fil ændres ikke.
   vurdere, om en elev er "langsom".
 - Formålet (gættesignal) skrives ind i privatlivsdokumentationen, før kolonnen anvendes.
 
-**`question_content_sha256` (begrundet af Q2):** Rettes en opgave senere (tekst, svarmuligheder eller
-facit), kan man se, hvilken version hvert gammelt svar blev givet til. Gamle resultaters betydning
-kan derfor ikke ændre sig ubemærket.
+**`question_content_sha256` (begrundet af Q2, præciseret af D-334):** Rettes en opgave senere (tekst,
+svarmuligheder eller facit), kan man se, hvilken version hvert gammelt svar blev givet til.
+- **Hvor fingeraftrykket kommer fra:** den version, serveren *udleverede* til runden, ikke opgaven
+  på svartidspunktet. Det gemmes som `served_snapshot`, `served_content_sha256` og `served_at` på
+  `question_instances`.
+- **Hvordan versionen fastholdes:**
+  - get-next-question bygger svaret ud fra præcis den snapshot. Databasen afviser en udlevering,
+    der er bygget ud fra en ældre version.
+  - Runden bedømmes ud fra snapshot'et.
+  - En genindlæsning eller senere redigering ændrer ikke rundens version.
+  - En ny gentagelsesrunde får sit eget snapshot.
+- **"Udleveret" er ikke det samme som "vist for eleven".** Det sidste kræver K9.
+- **Ældre runder** har ingen kendt version. Deres fingeraftryk er `NULL`, aldrig et gættet hash.
+
+Gamle resultaters betydning kan derfor ikke ændre sig ubemærket.
 
 **Kodeændringer i samme PR:**
 - `process_question_attempt_v2` og `process_text_answer_v2` genskabes med `p_mode` og `p_hints_used`.

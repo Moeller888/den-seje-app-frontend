@@ -160,14 +160,16 @@ test("an incomplete or malformed H5 request is rejected before anything is read 
 // ── Routing and arguments ────────────────────────────────────────────────────────────────────────
 test("MC, number and short text go to their _v2 function, through the admin client, with the verified user", async () => {
   const cases = [
-    ["mc-1", "a", V2.mc, { p_student_id: STUDENT, p_question_instance_id: "mc-1", p_answer: "a", p_round_no: 2, p_submission_id: SUB, p_review_text: "Husk: R", p_misconception_type: "M-type" }],
-    ["num-1", "41", V2.mc, { p_student_id: STUDENT, p_question_instance_id: "num-1", p_answer: "41", p_round_no: 2, p_submission_id: SUB, p_review_text: "Husk: R", p_misconception_type: "M-type" }],
-    ["txt-1", " paris. ", V2.text, { p_instance_id: "txt-1", p_user_id: STUDENT, p_user_answer: " paris. ", p_is_correct: true, p_round_no: 2, p_submission_id: SUB, p_review_text: "Husk: R", p_misconception_type: "M-type" }],
-    ["txt-1", "Lyon", V2.text, { p_instance_id: "txt-1", p_user_id: STUDENT, p_user_answer: "Lyon", p_is_correct: false, p_round_no: 2, p_submission_id: SUB, p_review_text: "Husk: R", p_misconception_type: "M-type" }],
+    ["mc-1", "a", V2.mc, { p_student_id: STUDENT, p_question_instance_id: "mc-1", p_answer: "a", p_round_no: 2, p_submission_id: SUB, p_review_text: "Husk: R", p_misconception_type: "M-type", p_mode: "quiz_v1", p_hints_used: 0 }],
+    ["num-1", "41", V2.mc, { p_student_id: STUDENT, p_question_instance_id: "num-1", p_answer: "41", p_round_no: 2, p_submission_id: SUB, p_review_text: "Husk: R", p_misconception_type: "M-type", p_mode: "quiz_v1", p_hints_used: 0 }],
+    ["txt-1", " paris. ", V2.text, { p_instance_id: "txt-1", p_user_id: STUDENT, p_user_answer: " paris. ", p_is_correct: true, p_round_no: 2, p_submission_id: SUB, p_review_text: "Husk: R", p_misconception_type: "M-type", p_mode: "quiz_v1", p_hints_used: 0 }],
+    ["txt-1", "Lyon", V2.text, { p_instance_id: "txt-1", p_user_id: STUDENT, p_user_answer: "Lyon", p_is_correct: false, p_round_no: 2, p_submission_id: SUB, p_review_text: "Husk: R", p_misconception_type: "M-type", p_mode: "quiz_v1", p_hints_used: 0 }],
   ];
   for (const [instance, answer, fn, args] of cases) {
-    // A manipulated body cannot choose the pupil.
-    const body = h5Body(instance, answer, { round_no: 2, student_id: "stu-2", user_id: "stu-2", p_student_id: "stu-2" });
+    // A manipulated body cannot choose the pupil — nor the activity mode or the hints (L1 K1: the
+    // server sends 'quiz_v1' and 0; fields with these names in the body are ignored).
+    const body = h5Body(instance, answer, { round_no: 2, student_id: "stu-2", user_id: "stu-2", p_student_id: "stu-2",
+      mode: "diagnostic", p_mode: "diagnostic", hints_used: 3, p_hints_used: 3 });
     const r = await send({ body, backend: v2Returns(recorded({ round_no: 2 })) });
     const label = `${instance} ${answer}`;
     assert.equal(r.status, 200, label);
@@ -452,4 +454,15 @@ test("replyForV2 is the single mapping: every outcome has a fixed status", () =>
   assert.deepEqual(statuses, {
     recorded: 200, replay: 200, round_closed: 409, stale_round: 409, submission_conflict: 409, not_found: 404, invalid_request: 400,
   });
+});
+
+test("L1 K1: the database refusing the server-decided mode or hints is a 500, never a 400 the client could act on", async () => {
+  const { replyForV2: reply } = await import("../../supabase/functions/process-event/answer-v2.ts");
+  for (const reason of ["invalid_mode", "invalid_hints"]) {
+    const r = reply({ outcome: "invalid_request", reason }, 1);
+    assert.equal(r.status, 500, reason);
+    assert.deepEqual(r.body, { error: "Could not process answer" });
+    assert.match(r.problem, new RegExp(reason));
+  }
+  assert.equal(reply({ outcome: "invalid_request", reason: "invalid_round" }, 1).status, 400, "client-caused reasons stay 400");
 });
