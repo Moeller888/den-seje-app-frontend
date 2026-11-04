@@ -72,8 +72,8 @@ export function validateExport(raw, expectedIds, { requireAllApproved = false, c
   const problems = [];
   const text = Buffer.isBuffer(raw) ? raw.toString("utf8") : String(raw ?? "");
   const hash = sha256(Buffer.isBuffer(raw) ? raw : Buffer.from(text, "utf8"));
-  // Escapes, so this file itself contains no mojibake: U+FFFD, and "Ã" followed by "¦", "¸" or "¥" (æ, ø, å read as cp1252).
-  if (/�|Ã[¦¸¥]/.test(text)) problems.push("the file contains mojibake or a replacement character");
+  // Written with escapes, so this file contains no mojibake itself: U+FFFD, and U+00C3 followed by U+00A6/U+00B8/U+00A5 (æ, ø, å decoded as cp1252).
+  if (/\uFFFD|\u00C3[\u00A6\u00B8\u00A5]/.test(text)) problems.push("the file contains mojibake or a replacement character");
   let data = null;
   try {
     data = JSON.parse(text);

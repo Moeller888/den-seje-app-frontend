@@ -70,7 +70,7 @@ test("validateExport refuses incomplete, unknown, duplicated, unsigned or not-fu
   assert.ok(ok(comment, { requireAllApproved: true }).some((p) => /intro-2: has a comment/.test(p)));
   const fix = exportOf(); fix.elementer.t1864.status = "skal_rettes";
   assert.ok(ok(fix).some((p) => /without a requested change/.test(p)));
-  assert.ok(validateExport(JSON.stringify(exportOf({ laerer: "Ã¸" })), IDS).problems.some((p) => /mojibake/.test(p)));
+  assert.ok(validateExport(JSON.stringify(exportOf({ laerer: "\u00C3\u00B8" })), IDS).problems.some((p) => /mojibake/.test(p)));
 });
 
 test("a new review page writes the fingerprints it showed; registering against changed content is refused", async () => {
