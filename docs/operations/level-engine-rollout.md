@@ -4,8 +4,10 @@
 A er anvendt og verificeret (`20261030045204 difficulty_scale_a`, 2026-10-30, trin 4). Migration B er
 anvendt og verificeret (`20261030094958 difficulty_scale_b`, 2026-10-30, første del af trin 5).
 Rettelsen af tabelkommentaren er anvendt og verificeret (`20261030182931 student_subject_level_comment`,
-2026-10-30, §2.4). Niveaumotoren er **ikke** deployet: `get-next-question` er version 179, som hverken indeholder eller
-kalder B's funktioner, så motoren er effektivt inaktiv. Arkitektur:
+2026-10-30, §2.4). `get-next-question` version 180 (`1aee47a`) er deployet 2026-10-31 med motoren
+**slukket** (`LEVEL_ENGINE` findes ikke). Observationen af det slukkede deploy er **afsluttet
+2026-11-02** (§3.1, "Observation af version 180"): normal skoletrafik og ingen regressionssignaler.
+Motoren er ikke aktiveret for nogen elev. Arkitektur:
 [`docs/ARCHITECTURE.md` §6 "Difficulty scale 1–10.000"](../ARCHITECTURE.md). Design og beslutninger:
 `docs/difficulty-scale-design.md` (B1–B8, E1–E5, vej A).
 
@@ -108,10 +110,58 @@ historik. **Grænse:** kandidatvalget skal være under 50 ms for engelsk med alt
 det over, skal årsagen findes, før flaget slås til (§4, risiko R7).
 
 ### 2.6 Aktivering af `LEVEL_ENGINE=v1`
-Flaget er **globalt** (ingen styring pr. elev), så aktivering rammer alle elever på én gang:
+**Bred aktivering er blokeret** (R3, R7) og kræver ejerens særskilte beslutning. Første skridt er
+canary'en i §2.6.1, ikke `v1`.
+
+`v1` er **globalt** (ingen styring pr. elev), så aktivering rammer alle elever på én gang:
 - Slå det til på et roligt tidspunkt. Test straks med en testelev i hvert fag: `LEVEL_ENGINE:`-linjen
   i loggen skal vise `level`, `newly_folded` og `candidates > 0`.
 - Overvåg 500-fejl i `get-next-question` den første time.
+
+### 2.6.1 Canary pr. elev: `LEVEL_ENGINE=canary` (R2)
+**Status:** bygget, **ikke** deployet og **ikke** aktiveret. Deploy, oprettelse af secrets og aktivering
+kræver hver ejerens særskilte godkendelse.
+
+**Kontrakten (fail closed).** Koden er `resolveLevelEngineForStudent` og `parseCanaryAllowlist` i
+`supabase/functions/get-next-question/level-flow.ts`.
+- `LEVEL_ENGINE` skal være præcis `canary`. Alle andre værdier end `canary` og `v1` betyder slukket,
+  som hidtil. `v1` beholder sin betydning: alle elever.
+- Allowlisten er Edge-secret'en `LEVEL_ENGINE_CANARY_STUDENT_IDS`: et JSON-array af elevernes
+  auth-bruger-id'er som UUID'er med små bogstaver, fx `["<uuid-1>","<uuid-2>"]`. Den læses kun, når
+  `LEVEL_ENGINE` er `canary`.
+- **Lukker til slukket for alle**, hvis allowlisten mangler, er tom, ikke er gyldig JSON, ikke er et
+  array, er længere end 1.024 tegn eller har flere end **10 forskellige** UUID'er. Det samme gælder,
+  hvis blot ét element ikke er en gyldig UUID: forkert type, store bogstaver, uden bindestreger,
+  nil-UUID eller mellemrum/linjeskift inde i strengen. Et ugyldigt element kasseres altså ikke
+  enkeltvis: hele listen lukker.
+- Dubletter tæller én gang. JSON-mellemrum mellem elementerne er tilladt.
+- Id'et, der sammenlignes, er den **verificerede** auth-brugers `user.id`. Requestens body,
+  `user_metadata` og `app_metadata` bruges aldrig.
+- Står id'et på listen, læses brugerens egen `profiles.role` (som brugeren selv, under RLS). Kun
+  `student` får motoren. Alt andet, også en manglende række, går den slukkede vej. Fejler læsningen,
+  svarer funktionen 500.
+- En bruger uden for listen, og alle ved en lukket liste, går **præcis** den slukkede vej: samme kald,
+  argumenter, svar og loglinjer, uden rolle-læsning. En elev på listen går præcis den vej, `v1` ville
+  give den elev, plus den ene rolle-læsning.
+- **Intet logges om canary'en:** ingen UUID, ingen listeværdi og intet om, hvorfor listen lukkede. En
+  forkert sat liste ses derfor kun ved, at der ikke kommer `LEVEL_ENGINE:`-linjer. `LEVEL_ENGINE:`-
+  linjen for en canary-elev er den samme som under `v1` og indeholder ingen id'er.
+
+**Tests:** `tests/unit/get-next-question-level-canary.test.mjs` (unit-CI) dækker manglende, tom og
+ugyldig JSON, ugyldige UUID'er, dubletter og mellemrum, flere end 10 UUID'er, tilladt og ikke-tilladt
+elev, ikke-elev på listen, fejl i rolle-læsningen, spoofing via body og metadata, slukket-paritet uden
+kald til B's funktioner eller niveautabellerne, og at ingen loglinje indeholder en UUID eller
+listeværdien. Release-gaten (§3.1) kører desuden `canary` uden allowliste mod version 179.
+
+**Aktivering (kun med ejerens GO for hvert punkt):**
+1. Deploy af kandidaten (§3.1) med `LEVEL_ENGINE` stadig ikke sat.
+2. Opret `LEVEL_ENGINE_CANARY_STUDENT_IDS` med de godkendte elev-id'er. Id'erne skrives aldrig i
+   repository'et, PR'er, rapporter eller logs.
+3. Sæt `LEVEL_ENGINE=canary`, og kontrollér, at `LEVEL_ENGINE:`-linjer kun kommer fra canary-eleverne,
+   og at 5xx er som før.
+
+**Rollback:** fjern `LEVEL_ENGINE` (eller sæt den til en slukket værdi). Det kræver ingen deploy. En
+fjernet eller tømt allowliste lukker også canary'en for alle.
 
 ### 2.7 Indhold (efter stikprøvekontrollen)
 ```sql
@@ -130,7 +180,7 @@ FROM public.questions WHERE metadata ? 'level_batch' GROUP BY 1 ORDER BY 1;
 
 | Situation | Handling | Konsekvens |
 |---|---|---|
-| Niveaumotoren opfører sig forkert | Fjern Edge-secret'en `LEVEL_ENGINE` | Øjeblikkeligt tilbage til den hidtidige udvælgelse, uden deploy. `student_subject_level` og `student_level_fold_log` bliver liggende (læses ikke) |
+| Niveaumotoren opfører sig forkert (`v1` eller `canary`) | Fjern Edge-secret'en `LEVEL_ENGINE` | Øjeblikkeligt tilbage til den hidtidige udvælgelse, uden deploy. `student_subject_level` og `student_level_fold_log` bliver liggende (læses ikke) |
 | Formatblandingen opfører sig forkert | Fjern `QUESTION_MIX_ENGINE` | Tilbage til `v1` uden deploy |
 | Et aktiveret indholdsportion har fejl | `UPDATE public.questions SET is_active = false WHERE metadata->>'level_batch' = '<portion>'` | Opgaverne serveres ikke længere. Allerede besvarede instanser bevares |
 | Ny Edge-kode skal ud | Deploy rollback-kilden for `get-next-question` (§3.1) | Kræver, at flagene er slået fra først |
@@ -161,7 +211,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat | dette repository | 15 | `4a89e9e6e33b363c9e8360bb81b19077dcb26c4791c3a086a66c73386b718f8d` |
+| Kandidat | dette repository | 15 | `1f508a8459f5141f1e629dec94ec979ce34bafdcecdbc650b8d6db2a2f7c3bbe` |
+| Forrige kandidat (før R2-canary'en, §2.6.1) | main før canary'en | 15 | `4a89e9e6e33b363c9e8360bb81b19077dcb26c4791c3a086a66c73386b718f8d` |
 | Forrige kandidat (før L1 K1's `served-snapshot.ts`) | main før K1 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
 | Forrige kandidat (Match par #377, før log-pseudonym #379) | main før #379 | 13 | `2ce45c7eaa113a9bda93d342e77e51e53efbe3b53ea64aeabaec0bb9dda3560e` |
 | Forrige kandidat (H5 PR 2, før Match par #377) | main før #377 | 12 | `a52e2da432f61fb7cdcf38827529526a33e9b0d6ad123cc0a91095cb4d30ebc3` |
@@ -172,7 +223,9 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 Kandidaten adskiller sig fra version 179 i `index.ts` (niveaugrenen, låsningen, H5's `round_no` og
 Match par's nøglelæsning), `instance-insert.ts` (læser `repeat_count` tilbage, H5),
 `_shared/interaction-kinds.ts` og `_shared/question-dto.ts` (Match par) og i de nye `level-flow.ts` og
-`_shared/match-pairs.ts` og `log-pseudonym.ts` (PR #379) samt L1 K1's `served-snapshot.ts`. De øvrige 7 filer er byte-identiske. L1 K1 er slået fra, medmindre Edge-secret'en `K1_SERVED_SNAPSHOT` er præcis `on`; slået fra laver den præcis de samme kald som før (slukket-pariteten). Slået til læser den instansens udleverede version i en særskilt backend-læsning og sender et udleveringsforslag med indsættelsen. Den må først slås til, når migration `20261103110000` er anvendt. Fra version 180 adskiller den sig ved
+`_shared/match-pairs.ts` og `log-pseudonym.ts` (PR #379) samt L1 K1's `served-snapshot.ts`.
+R2-canary'en (§2.6.1) ændrer `level-flow.ts` og `index.ts`. Slukket laver den præcis de samme kald som
+før. De øvrige 7 filer er byte-identiske. L1 K1 er slået fra, medmindre Edge-secret'en `K1_SERVED_SNAPSHOT` er præcis `on`; slået fra laver den præcis de samme kald som før (slukket-pariteten). Slået til læser den instansens udleverede version i en særskilt backend-læsning og sender et udleveringsforslag med indsættelsen. Den må først slås til, når migration `20261103110000` er anvendt. Fra version 180 adskiller den sig ved
 H5's `round_no` (D-266, H5 PR 2): et nyt svarfelt og `repeat_count` i de tre læsninger, der udleverer
 en instans. Slukket-pariteten fjerner præcis den forskel efter at have kontrolleret den, og resten skal
 stadig være identisk med version 179. Match par (PR #377) læser instansens nøgle i en særskilt
@@ -186,6 +239,16 @@ Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "F
 kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten
 gennemgås igen.
+
+**Observation af version 180 (afsluttet 2026-11-02).** Læsende kontroller 2026-11-01 og 2026-11-02, kun
+med aggregerede tal. Version 180 var uændret (`ACTIVE`, `verify_jwt` false, manifest `a6a874…`),
+`LEVEL_ENGINE` fandtes ikke, og begge niveautabeller havde 0 rækker. Fra deployet til 2026-11-02
+15:35 UTC var der 124 POST og 83 OPTIONS fra browsere og 2 POST og 66 OPTIONS fra automatik. Alle
+svarede 2xx: 0 med 4xx og 0 med 5xx. Funktionsloggen havde 0 fejlniveau-linjer, 0
+`EDGE FUNCTION ERROR` og 0 `LEVEL_ENGINE:`-linjer. Mandag 2026-11-02 brugte 7 elevkonti (ikke
+testkonti) funktionen og fik 76 opgaver, mest engelsk i 7. klasse. Weekendkontrollen alene var ikke
+nok, fordi kun én konto brugte funktionen. Gentagelse og "ingen flere opgaver" dækkes af release-gaten
+og isolated-e2e, ikke af observationen.
 
 **Rollback-mål før H5-aktivering: version 180 fra `1aee47a`.** Version 180 er den version, kandidaten
 afløser. Et deploy af kandidaten rulles derfor tilbage til version 180, ikke til version 179: version
@@ -239,7 +302,7 @@ reference.
 **Slukket-paritet** (`tests/unit/get-next-question-release-gate.test.mjs`, i unit-CI).
 - **Hvad testen kører:** den rigtige `index.ts` i Node mod en registrerende supabase-js-stand-in.
 - **Flagværdier:** `LEVEL_ENGINE` mangler eller er `""`, `"false"`, `"true"`, `"0"`, `"off"`,
-  `"V1"` eller `" v1"`.
+  `"V1"`, `" v1"` eller `"canary"` uden allowliste (§2.6.1).
 - **Variationer:** alle tre `QUESTION_MIX_ENGINE`-tilstande, historie og engelsk, og fem situationer
   (forfalden, ny, gentagelse, ingen opgaver, RPC-fejl).
 - **Krav:** status, svar, alle backend-kald med argumenter og loglinjer skal være identiske med
@@ -479,7 +542,7 @@ at blive sprunget over. Lokalt springes den over, medmindre `LEVEL_ENGINE_PG_URL
 | # | Risiko | Afbødning |
 |---|---|---|
 | R1 | Kandidatvalget kaldte `question_is_servable()` for **alle** fagets aktive opgaver (51–178 ms ved 6.090 aktive engelske) | **Løst i migration B (2026-10-22):** kandidatvinduet (§4.1) giver samme svar på 7 ms median med højst 600 kald. Mål stadig i produktion (§2.5) |
-| R2 | Flaget er globalt, så der er ingen pilot på enkelte elever | Aktivér på et roligt tidspunkt, test straks med en testelev og rul tilbage ved at fjerne flaget (§2.6) |
+| R2 | `v1` er globalt, så der er ingen pilot på enkelte elever | **Åben.** Canary pr. elev er bygget (`LEVEL_ENGINE=canary`, højst 10 elever, fail closed, §2.6.1), men hverken deployet eller aktiveret. Indtil da: aktivér på et roligt tidspunkt, test straks med en testelev og rul tilbage ved at fjerne flaget (§2.6) |
 | R3 | Første kald folder hele elevens historik i faget. Elever med lang historik flyttes mange niveauer på én gang | Det er tilsigtet: den tidligere historik giver det bedste startestimat. Trinene bliver mindre med antal svar. Kan ses i fold-loggen |
 | R4 | Samtidighedstesten kræver en rigtig PostgreSQL | **Løst:** den kører i unit-jobbet mod en PostgreSQL 17.6-servicecontainer og fejler, hvis serveren mangler (§4.5) |
 | R5 | Placeringstesten måler kun historie, så engelsk og dansk starter på klassetrinnets startbånd | Bevidst (B9 er udskudt). De store første trin flytter eleven hurtigt |

@@ -1,6 +1,7 @@
 // The level engine (sværhedsskala 1–10.000) for get-next-question: which new questions are tried first
-// when the Edge secret LEVEL_ENGINE is "v1". Unset (or anything else) = "off" = today's selection,
-// byte-for-byte: nothing in this file is called.
+// when the Edge secret LEVEL_ENGINE is "v1" (every pupil) or "canary" (allowlisted pupils only, see
+// resolveLevelEngineForStudent). Unset (or anything else) = "off" = today's selection, byte-for-byte:
+// nothing in this file is called.
 //
 // THE FLOW, per request, through the BACKEND client and always for the verified student id:
 //   1. advance_student_level(student, subject, grade) — creates the pupil's level for the subject on
@@ -28,6 +29,48 @@ import { planNextQuestions, toMixHistory, type MixCandidate, type MixEngine } fr
 export type LevelEngine = "off" | "v1";
 export function resolveLevelEngine(value: unknown): LevelEngine {
   return value === "v1" ? "v1" : "off";
+}
+
+// THE PER-PUPIL CANARY (risk R2). LEVEL_ENGINE = "canary" turns the engine on for the pupils on an
+// explicit allowlist only, and leaves everyone else on the off path, call for call. The allowlist is the
+// Edge secret LEVEL_ENGINE_CANARY_STUDENT_IDS: a strict JSON array of lowercase auth user ids (UUIDs),
+// at most CANARY_MAX_STUDENTS distinct ones. FAIL CLOSED: a missing, empty, malformed or oversized list
+// (or any invalid entry) means "off" for everyone. Duplicates count once; JSON whitespace between the
+// entries is allowed, whitespace inside an entry is not. The id compared is the verified auth user's id
+// (index.ts passes user.id) — never the request body, never user/app metadata. Nothing here logs.
+export const LEVEL_ENGINE_CANARY = "canary";
+export const CANARY_ALLOWLIST_ENV = "LEVEL_ENGINE_CANARY_STUDENT_IDS";
+export const CANARY_MAX_STUDENTS = 10;
+export const CANARY_MAX_RAW_LENGTH = 1024;
+const CANARY_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const NIL_UUID = "00000000-0000-0000-0000-000000000000";
+
+// The allowlist, or null when it must close (then nobody is on it).
+export function parseCanaryAllowlist(raw: unknown): ReadonlySet<string> | null {
+  if (typeof raw !== "string" || raw.length === 0 || raw.length > CANARY_MAX_RAW_LENGTH) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) return null;
+  const ids = new Set<string>();
+  for (const entry of parsed) {
+    if (typeof entry !== "string" || !CANARY_UUID.test(entry) || entry === NIL_UUID) return null;
+    ids.add(entry);
+  }
+  return ids.size <= CANARY_MAX_STUDENTS ? ids : null;
+}
+
+// The engine for THIS request. "v1" keeps its meaning (everyone); "canary" is "v1" only for a verified
+// pupil on a valid allowlist. readAllowlist is called only under "canary", so every other value reads
+// exactly what it read before.
+export function resolveLevelEngineForStudent(flag: unknown, readAllowlist: () => unknown, studentId: unknown): LevelEngine {
+  if (flag !== LEVEL_ENGINE_CANARY) return resolveLevelEngine(flag);
+  if (typeof studentId !== "string") return "off";
+  const ids = parseCanaryAllowlist(readAllowlist());
+  return ids !== null && ids.has(studentId) ? "v1" : "off";
 }
 
 export const LEVEL_RPC = "advance_student_level";
