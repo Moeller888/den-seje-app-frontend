@@ -1,10 +1,16 @@
 // RUNTIME proof for migration 20261027160000_revoke_truncate_maintain_api_roles (D-237). The SQL file is
 // executed UNMODIFIED against a real PostgreSQL (PGlite, in-process — no Docker, no network).
 //
-// Fixture: every table and view in production's public schema, by name and kind, with production's
-// exact relacl (read 2026-10-27, catalog only — PROD_ACL below). The relations are stubs (one column):
-// this migration touches privileges only, so the columns do not matter — and the repository cannot
-// recreate the real tables (D-110). Owner: a non-superuser role standing in for Supabase's postgres.
+// Three different things, kept apart:
+//   1. SNAPSHOT_2026_10_27 — the HISTORICAL catalog read this migration was written from.
+//   2. SNAPSHOT_2026_11_04 — a later, DATED catalog read (pg_class.relacl and relkind of every table and
+//      view in public, read-only, 2026-11-04). It is a record of that day, not a live comparison: no
+//      test here reads production. PROD_ACL, the fixture's input, is this snapshot.
+//   3. The SYNTHETIC PGlite fixture built from PROD_ACL. The relations are stubs (one column): this
+//      migration touches privileges only, so the columns do not matter — and the repository cannot
+//      recreate the real tables (D-110). Owner: a non-superuser role standing in for Supabase's postgres.
+// Before applying, a fresh read-only preflight must show production still equals the snapshot used
+// here (docs/decisions/D-237.md, "Produktion").
 //
 // HONEST LIMITS: PGlite is PostgreSQL 18, production 17.6 (MAINTAIN exists in both). Column-level
 // grants are out of scope — this migration issues table-level REVOKEs only, which never touch them.
@@ -22,7 +28,7 @@ const SQL = readFileSync(join(ROOT, "supabase", "migrations", FILE), "utf8").spl
 // Production relacl per relation in public, owner postgres (r = table, v = view). Read 2026-10-27.
 const ALL4 = "postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres";
 const SVC = "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres";
-const PROD_ACL = {
+const SNAPSHOT_2026_10_27 = {
   achievements: ["r", ALL4],
   analytics_question_attempts: ["v", SVC],
   analytics_student_summary: ["v", SVC],
@@ -66,6 +72,24 @@ const PROD_ACL = {
   ww2_taxonomy_audit: ["v", SVC],
 };
 
+// Read-only catalog, 2026-11-04. Compared relation by relation with SNAPSHOT_2026_10_27: 40 of its 41
+// relations are identical; these four entries are the whole difference.
+const CHANGED_SINCE_2026_10_27 = {
+  // Narrowed since: anon and authenticated lost INSERT, UPDATE and DELETE (D-278 reward integrity).
+  student_weekly_quest_progress: ["r", "postgres=arwdDxtm/postgres,anon=rDxtm/postgres,authenticated=rDxtm/postgres,service_role=arwdDxtm/postgres"],
+};
+const ADDED_SINCE_2026_10_27 = {
+  progress_corrections: ["r", "postgres=arwdDxtm/postgres"],
+  student_level_fold_log: ["r", SVC],
+  student_subject_level: ["r", "postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres"],
+};
+const SNAPSHOT_2026_11_04 = Object.fromEntries(Object.entries({
+  ...SNAPSHOT_2026_10_27, ...CHANGED_SINCE_2026_10_27, ...ADDED_SINCE_2026_10_27,
+}).sort(([a], [b]) => a.localeCompare(b)));
+
+// The fixture's input: the most recent verified snapshot.
+const PROD_ACL = SNAPSHOT_2026_11_04;
+
 const LETTER = { a: "INSERT", r: "SELECT", w: "UPDATE", d: "DELETE", D: "TRUNCATE", x: "REFERENCES", t: "TRIGGER", m: "MAINTAIN" };
 const API = ["anon", "authenticated"];
 const parse = (acl) => Object.fromEntries(acl.split(",").map((e) => { const [who, rest] = e.split("="); return [who, rest.split("/")[0]]; }));
@@ -95,6 +119,8 @@ async function freshDb() {
     await db.exec(kind === "r"
       ? `CREATE TABLE public.${name} (id int); ALTER TABLE public.${name} ENABLE ROW LEVEL SECURITY;`
       : `CREATE VIEW public.${name} AS SELECT id FROM public._base;`);
+    // Makes the owner's ACL explicit, as production's is; PUBLIC holds nothing on these relations.
+    await db.exec(`REVOKE ALL ON public.${name} FROM PUBLIC;`);
     for (const [who, letters] of Object.entries(parse(acl))) {
       if (who === "postgres") continue;
       const privs = [...letters].map((l) => LETTER[l]).join(", ");
@@ -125,7 +151,7 @@ async function as(db, role, sql) {
   }
 }
 
-test("fixture = production: every relation carries production's exact ACL", async () => {
+test("fixture = the 2026-11-04 catalog snapshot: every relation carries that snapshot's exact ACL (not a live read)", async () => {
   const db = await freshDb();
   const got = await acls(db);
   assert.deepEqual(Object.keys(got), Object.keys(PROD_ACL).sort());
@@ -159,7 +185,13 @@ test("after: no API role holds TRUNCATE or MAINTAIN anywhere in public; service_
         WHERE has_table_privilege(x0.role, c.oid, p)) x
     WHERE c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r', 'v') AND c.relname <> '_base'`);
   assert.deepEqual(r.rows.filter((x) => x.role !== "service_role"), []);
-  assert.equal(r.rows.filter((x) => x.role === "service_role").length, Object.keys(PROD_ACL).length * 2);
+  // service_role keeps exactly what the snapshot gives it, relation by relation (progress_corrections,
+  // added after 2026-10-27, grants service_role nothing — so not "every relation").
+  const svcExpected = Object.entries(PROD_ACL).flatMap(([name, [, acl]]) =>
+    [["D", "TRUNCATE"], ["m", "MAINTAIN"]].filter(([l]) => (parse(acl).service_role ?? "").includes(l)).map(([, p]) => `${name}:${p}`)).sort();
+  const svcGot = r.rows.filter((x) => x.role === "service_role").map((x) => `${x.relname}:${x.priv}`).sort();
+  assert.deepEqual(svcGot, svcExpected);
+  assert.equal(svcExpected.length, (Object.keys(PROD_ACL).length - 1) * 2, "all but progress_corrections");
 });
 
 for (const role of API) {
@@ -175,6 +207,13 @@ for (const role of API) {
     }
   });
 }
+
+test("the 2026-11-04 snapshot changes nothing for D-237: the same relations hold TRUNCATE or MAINTAIN as on 2026-10-27", () => {
+  const needing = (snap) => Object.entries(snap).filter(([, [, acl]]) => API.some((r) => /[Dm]/.test(parse(acl)[r] ?? ""))).map(([n]) => n).sort();
+  assert.deepEqual(needing(SNAPSHOT_2026_11_04), needing(SNAPSHOT_2026_10_27));
+  assert.equal(needing(SNAPSHOT_2026_11_04).length, 32, "30 tables + 2 views");
+  for (const name of Object.keys(ADDED_SINCE_2026_10_27)) assert.ok(!needing(SNAPSHOT_2026_11_04).includes(name), name);
+});
 
 test("the migration lists exactly the relations that held TRUNCATE or MAINTAIN for an API role", () => {
   const listed = (re) => [...SQL.replace(/--[^\n]*/g, "").matchAll(re)].map((m) => m[1]);
@@ -198,4 +237,82 @@ test("re-running the migration is harmless", async () => {
   const once = await acls(db);
   await migrate(db);
   assert.deepEqual(await acls(db), once);
+});
+
+// ── The read-only preflight and the rollback generator (docs/operations/revoke-truncate-maintain-*) ──
+
+const PREFLIGHT = readFileSync(join(ROOT, "docs", "operations", "revoke-truncate-maintain-preflight.sql"), "utf8");
+const statementsOf = (sql) => sql.split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n")
+  .split(/;\s*$/m).map((s) => s.trim()).filter(Boolean);
+const section = (name) => {
+  const m = PREFLIGHT.match(new RegExp(String.raw`-- BEGIN ${name}\r?\n([\s\S]*?)-- END ${name}`));
+  assert.ok(m, `section ${name} present`);
+  return m[1];
+};
+
+async function withLedger(db) {
+  // Synthetic stand-in for Supabase's migration ledger: empty, as production's has no D-237 entry.
+  await db.exec("CREATE SCHEMA supabase_migrations; CREATE TABLE supabase_migrations.schema_migrations (version text, name text);");
+  return db;
+}
+/** Every statement of the preflight file, run in one READ ONLY transaction (a write would raise). */
+async function runPreflight(db) {
+  const results = [];
+  await db.exec("BEGIN TRANSACTION READ ONLY");
+  try {
+    for (const s of statementsOf(PREFLIGHT)) results.push((await db.query(s)).rows);
+  } finally {
+    await db.exec("ROLLBACK");
+  }
+  return results;
+}
+
+test("preflight: the file is read-only SQL and every stop check returns 0 rows on the 2026-11-04 fixture", async () => {
+  // Keywords are checked outside string literals (the generator's format() text contains 'GRANT'); every
+  // statement must start with SELECT or WITH; and the READ ONLY transaction below would reject a write.
+  const code = statementsOf(PREFLIGHT).map((s) => s.replace(/'(?:[^']|'')*'/g, "''"));
+  assert.doesNotMatch(code.join("\n"), /\b(INSERT|UPDATE|DELETE|GRANT|REVOKE|CREATE|DROP|ALTER|TRUNCATE|SET|COPY|DO|CALL)\b/i);
+  for (const s of code) assert.match(s, /^(SELECT|WITH)\b/i, s.slice(0, 60));
+  const db = await withLedger(await freshDb());
+  const [ledger, missing, drift, options, members, snapshot, rollback] = await runPreflight(db);
+  assert.deepEqual([ledger, missing, drift, options, members], [[], [], [], [], []]);
+  // _base is the fixture's own helper table (views select from it); it does not exist in production.
+  assert.deepEqual(snapshot.map((r) => r.relname).filter((n) => n !== "_base"), Object.keys(PROD_ACL).sort(),
+    "the snapshot covers every relation");
+  assert.ok(rollback.length > 0, "the generator emits the rollback statements");
+});
+
+test("preflight: its expected list is exactly the migration's list", () => {
+  const fromPreflight = [...section("EXPECTED-RELATIONS").matchAll(/\('([a-z_]+)'\)/g)].map((m) => m[1]).sort();
+  const fromMigration = [...SQL.replace(/--[^\n]*/g, "").matchAll(/public\.(\w+)/g)].map((m) => m[1]).sort();
+  assert.deepEqual(fromPreflight, fromMigration);
+});
+
+test("preflight: drift stops it — an extra API TRUNCATE grant, a grant option and an inherited role are each reported", async () => {
+  const db = await withLedger(await freshDb());
+  await db.exec(`SET ROLE dbowner;
+    GRANT TRUNCATE ON public.student_subject_level TO authenticated;
+    GRANT MAINTAIN ON public.profiles TO anon WITH GRANT OPTION;
+    RESET ROLE;
+    CREATE ROLE extra NOLOGIN; GRANT extra TO anon;`);
+  const [, , drift, options, members] = await runPreflight(db);
+  assert.deepEqual(drift.map((r) => [r.problem, r.relname]), [["holds but not listed", "student_subject_level"]]);
+  assert.deepEqual(options.map((r) => [r.relname, r.grantee, r.privilege_type, r.is_grantable]), [["profiles", "anon", "MAINTAIN", true]]);
+  assert.equal(members.length, 1);
+});
+
+test("rollback: the statements generated before the migration restore every ACL exactly, and change nothing else", async () => {
+  const db = await withLedger(await freshDb());
+  const before = await acls(db);
+  await db.exec("BEGIN TRANSACTION READ ONLY");
+  const generated = (await db.query(statementsOf(section("ROLLBACK-GENERATOR"))[0])).rows.map((r) => r.rollback_sql);
+  await db.exec("ROLLBACK");
+  for (const g of generated) assert.match(g, /^GRANT (TRUNCATE, MAINTAIN|TRUNCATE|MAINTAIN) ON TABLE public\.[a-z_]+ TO (anon|authenticated);$/, g);
+  assert.ok(generated.every((g) => !/service_role|PUBLIC|ALL/.test(g)), "only the two API roles, only the two privileges");
+  await migrate(db);
+  assert.notDeepEqual(await acls(db), before, "the migration changed the ACLs");
+  await db.exec("SET ROLE dbowner;");
+  for (const g of generated) await db.exec(g);
+  await db.exec("RESET ROLE;");
+  assert.deepEqual(await acls(db), before, "rollback restores the snapshot's ACL on every relation");
 });

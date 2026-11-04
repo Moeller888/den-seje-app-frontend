@@ -21,6 +21,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
+import { isReviewedD237 } from "../support/d237-guard-exception.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const FILE = "20261016150000_analytics_views_lockdown.sql";
@@ -448,7 +449,9 @@ test("the migration sorts after every migration that touches the six views", () 
   const names = new RegExp(String.raw`\b(?:public\.)?(?:${ALL_VIEWS.join("|")})\b`, "i");
   const executable = (body) => body.split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
   const touching = readdirSync(dir).filter((f) => /^\d{14}_.+\.sql$/.test(f))
-    .filter((f) => names.test(executable(readFileSync(join(dir, f), "utf8")))).sort();
+    .filter((f) => names.test(executable(readFileSync(join(dir, f), "utf8"))))
+    // D-237 only revokes MAINTAIN on two of the views; the one reviewed, hash-pinned exception.
+    .filter((f) => !isReviewedD237(dir, f)).sort();
   assert.ok(touching.includes(FILE), "this migration must be present in the tree");
   assert.equal(touching[touching.length - 1], FILE,
     `a later migration touches the locked views and could re-open them: ${touching.filter((f) => f > FILE).join(", ")}`);
