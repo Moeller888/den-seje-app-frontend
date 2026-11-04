@@ -10,7 +10,10 @@ import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
 import { servableWireFormat } from "../_shared/interaction-kinds.ts";
 import { pupilLogHash } from "./log-pseudonym.ts";
 import { createMatchKey, parseMatchPairs } from "../_shared/match-pairs.ts";
-import { chooseSelectionRoute, loadLevelPlan, resolveLevelEngine, type LevelReadClient } from "./level-flow.ts";
+import {
+  CANARY_ALLOWLIST_ENV, LEVEL_ENGINE_CANARY, chooseSelectionRoute, loadLevelPlan, resolveLevelEngineForStudent,
+  type LevelReadClient,
+} from "./level-flow.ts";
 import { SERVED_SNAPSHOT_ENV, deliveredQuestion, deliveryProposal, servedSnapshotEnabled } from "./served-snapshot.ts";
 
 const corsHeaders = {
@@ -159,7 +162,19 @@ serve(async (req) => {
     const mixEngine = resolveMixEngine(Deno.env.get("QUESTION_MIX_ENGINE"));
     // The level engine (Edge secret LEVEL_ENGINE, ./level-flow.ts). Unset = "off" = everything below
     // runs exactly as before; "v1" changes only step 2 (new questions) and step 3 (repeat RPC).
-    const levelEngine = resolveLevelEngine(Deno.env.get("LEVEL_ENGINE"));
+    // "canary" = "v1" only for the verified user on the allowlist LEVEL_ENGINE_CANARY_STUDENT_IDS, and
+    // only if that user's own profile is a pupil; anyone else, or a bad list, gets "off" call for call.
+    const levelFlag = Deno.env.get("LEVEL_ENGINE");
+    let levelEngine = resolveLevelEngineForStudent(levelFlag, () => Deno.env.get(CANARY_ALLOWLIST_ENV), student_id);
+    if (levelEngine === "v1" && levelFlag === LEVEL_ENGINE_CANARY) {
+      const { data: roleRow, error: roleError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", student_id)
+        .maybeSingle();
+      if (roleError) throw roleError;
+      if ((roleRow as { role?: unknown } | null)?.role !== "student") levelEngine = "off";
+    }
     const route = chooseSelectionRoute(mixEngine, levelEngine);
     // L1 K1 (Edge secret K1_SERVED_SNAPSHOT, ./served-snapshot.ts): unset = everything below runs exactly
     // as before; "on" (only after migration 20261103110000) makes every response and the recorded delivered

@@ -1,7 +1,7 @@
 // Release gate for get-next-question (docs/operations/level-engine-rollout.md §3.1).
 //
-// 1. Off-parity: the real index.ts, with LEVEL_ENGINE missing, empty, "false", "true", "0", "off", "V1"
-//    or " v1", behaves exactly as the deployed version 179 (commit 21ec9ff): the same status, body,
+// 1. Off-parity: the real index.ts, with LEVEL_ENGINE missing, empty, "false", "true", "0", "off", "V1",
+//    " v1" or "canary" without an allowlist, behaves exactly as the deployed version 179 (commit 21ec9ff): the same status, body,
 //    backend calls with their arguments and log lines, for every QUESTION_MIX_ENGINE mode, both
 //    subjects and five situations. The v179 side is tests/fixtures/gnq-v179-parity.json, written by
 //    `node tools/edge/gnq-release.mjs golden` from 21ec9ff through the same harness.
@@ -104,7 +104,7 @@ test("the first request of a fresh isolate (key-source log included) matches v17
   assert.ok(warmup.logs.some((l) => l.includes("[supabase-keys]")), "the once-per-isolate log is part of the comparison");
 });
 
-test("LEVEL_ENGINE off (missing, empty, false, true, 0, off, V1, \" v1\"): identical to v179 in status, body, calls and logs, apart from round_no and the FORMAT_MIX pupil", async () => {
+test("LEVEL_ENGINE off (missing, empty, false, true, 0, off, V1, \" v1\", canary without allowlist): identical to v179 in status, body, calls and logs, apart from round_no and the FORMAT_MIX pupil", async () => {
   const { handler } = await loaded;
   let runs = 0;
   for (const level of OFF_VALUES) for (const mix of MIX_VALUES) for (const subject of SUBJECTS) for (const s of SCENARIOS) {

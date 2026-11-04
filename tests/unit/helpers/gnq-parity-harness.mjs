@@ -32,7 +32,7 @@ export function createClient(_url, key, opts) {
   const client = key === "SERVICE" ? "admin" : "user";
   T().push({ createClient: client, auth: opts?.global?.headers?.Authorization ? "pupil-jwt" : "none" });
   return {
-    auth: { getUser: async () => { T().push({ client, kind: "auth.getUser" }); return { data: { user: { id: "stu-1" } }, error: null }; } },
+    auth: { getUser: async () => { T().push({ client, kind: "auth.getUser" }); return { data: { user: globalThis.__gnqUser ?? { id: "stu-1" } }, error: null }; } },
     from: (table) => chain("from", table, client, []),
     rpc: (fn, args) => chain("rpc", fn, client, [["args", args]]),
   };
@@ -80,7 +80,8 @@ export async function loadHandler(indexPath) {
 // ── The fixed backend every version sees ───────────────────────────────────────────────────────────
 export const B_FUNCTIONS = Object.freeze(["advance_student_level", "get_level_questions_for_student", "request_repeat_level_question_for_student"]);
 export const LEVEL_TABLES = Object.freeze(["student_subject_level", "student_level_fold_log"]);
-export const OFF_VALUES = Object.freeze([undefined, "", "false", "true", "0", "off", "V1", " v1"]);
+// "canary" without LEVEL_ENGINE_CANARY_STUDENT_IDS closes to off for everyone (./level-flow.ts).
+export const OFF_VALUES = Object.freeze([undefined, "", "false", "true", "0", "off", "V1", " v1", "canary"]);
 export const MIX_VALUES = Object.freeze([undefined, "shadow", "v2"]);
 export const SUBJECTS = Object.freeze(["historie", "engelsk"]);
 export const SCENARIOS = Object.freeze(["due", "new", "repeat", "none", "error"]);
@@ -90,10 +91,14 @@ const MCQ = (id, extra = {}) => ({
   answer_format: "mc", answer_type: "short", metadata: {}, difficulty_band: 3, ...extra,
 });
 
-function scenario(s) {
+function scenario(s, role) {
   return (kind, name, ops) => {
     const has = (op, ...a) => ops.some((o) => o[0] === op && a.every((x, i) => o[i + 1] === x));
-    if (kind === "from" && name === "profiles") return { data: { active_domains: ["vikings"], selected_grade: 7 }, error: null };
+    if (kind === "from" && name === "profiles") {
+      // The canary's role read (select "role") answers from the case's role; v179 never makes it.
+      if (has("select", "role")) return { data: role === null ? null : { role }, error: null };
+      return { data: { active_domains: ["vikings"], selected_grade: 7 }, error: null };
+    }
     if (kind === "from" && name === "question_instances") {
       if (ops.some((o) => o[0] === "insert")) return { data: [{ id: "new-inst", repeat_count: 0 }], error: null };
       if (has("eq", "answered", false)) {
@@ -130,12 +135,16 @@ const show = (x) => (typeof x === "string" ? x : x instanceof Error ? x.message 
 // One request: status, body, every backend call (with arguments) and every log line.
 // Optional: patch(kind, name, ops, result) → result replaces one backend answer (the rows carry
 // repeat_count as the database does, so versions that ignore it are unaffected), and extraBody adds
-// fields to the request body (what a manipulated client could send).
-export async function runCase(handler, { mix, level, subject, scenario: s, patch, extraBody }) {
+// fields to the request body (what a manipulated client could send). The canary: canaryIds is the raw
+// LEVEL_ENGINE_CANARY_STUDENT_IDS value (unset when omitted), user the verified auth user (default
+// { id: "stu-1" }, as v179's golden) and role that user's profiles.role (default "student"; null = no row).
+export async function runCase(handler, { mix, level, subject, scenario: s, patch, extraBody, canaryIds, user, role = "student" }) {
   setEnv("QUESTION_MIX_ENGINE", mix);
   setEnv("LEVEL_ENGINE", level);
+  setEnv("LEVEL_ENGINE_CANARY_STUDENT_IDS", canaryIds);
+  globalThis.__gnqUser = user;
   globalThis.__gnqTrace = [];
-  const base = scenario(s);
+  const base = scenario(s, role);
   globalThis.__gnqScenario = patch ? (kind, name, ops) => patch(kind, name, ops, base(kind, name, ops)) : base;
   const logs = [];
   const { log, error } = console;
