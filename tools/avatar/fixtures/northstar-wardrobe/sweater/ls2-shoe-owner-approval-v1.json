@@ -1,0 +1,1464 @@
+{
+  "decision": "D-340",
+  "kind": "owner visual approval of concrete combinations",
+  "recordedBy": "D-340",
+  "date": "2026-11-04",
+  "ownerWords": "Registrér ejerens godkendelse af præcis de 240 kombinationer i D-339’s ls2-shoe-candidates-v1.json.",
+  "basis": {
+    "candidates": {
+      "file": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-shoe-candidates-v1.json",
+      "sha256": "c0a5dc6c6117a672282a890b8c4c3c946422b1b20130f25e8d75d45968135b41",
+      "decision": "D-339",
+      "mergedIn": "56886aa7c6ad4eaba0188068f3750287f693aa5e (PR #580)"
+    },
+    "earlierApproval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json (D-336, 30 with the beige sneakers)"
+  },
+  "scope": "exactly the 240 combinations of the candidate file, as D-339 rendered and checked them (the D-337 runtime: hip seam behind the bottom, the sweater in front); NOT other bottoms, shoes or tops",
+  "combinations": [
+    {
+      "id": "LS2-HEATHER--skirt-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--ab1-original",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--ab1-original",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--ab1-original",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--ab1-original",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--ab1-original",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--ab1-original",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--sv1-chalk",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--sv1-chalk",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--sv1-chalk",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--sv1-chalk",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--sv1-chalk",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--sv1-chalk",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--sv1-charcoal",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--sv1-charcoal",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--sv1-charcoal",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--sv1-charcoal",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--sv1-charcoal",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--sv1-charcoal",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--sneakers-white",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--sneakers-white",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--sneakers-white",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--sneakers-white",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--sneakers-white",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--sneakers-white",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--ab1-lightsand",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--ab1-lightsand",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--ab1-lightsand",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--ab1-lightsand",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--ab1-lightsand",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--ab1-lightsand",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--ab1-original",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--ab1-original",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--ab1-original",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--ab1-original",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--ab1-original",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--ab1-original",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--ankleboots-brown",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--ankleboots-brown",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--ankleboots-brown",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--ankleboots-brown",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--ankleboots-brown",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--ankleboots-brown",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--boots-laceup-black",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--boots-laceup-black",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--boots-laceup-black",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--boots-laceup-black",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--boots-laceup-black",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--boots-laceup-black",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--sv1-chalk",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--sv1-chalk",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--sv1-chalk",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--sv1-chalk",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--sv1-chalk",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--sv1-chalk",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--sv1-charcoal",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--sv1-charcoal",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--sv1-charcoal",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--sv1-charcoal",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--sv1-charcoal",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--sv1-charcoal",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal"
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--sv1-navywhite",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--sv1-navywhite",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--sv1-navywhite",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--sv1-navywhite",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--sv1-navywhite",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--sv1-navywhite",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--sneakers-white",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--sneakers-white",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--sneakers-white",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--sneakers-white",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--sneakers-white",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--sneakers-white",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--ab1-lightsand",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--ab1-lightsand",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--ab1-lightsand",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--ab1-lightsand",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--ab1-lightsand",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--ab1-lightsand",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--ab1-original",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--ab1-original",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--ab1-original",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--ab1-original",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--ab1-original",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--ab1-original",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--ankleboots-brown",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--ankleboots-brown",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--ankleboots-brown",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--ankleboots-brown",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--ankleboots-brown",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--ankleboots-brown",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--sv1-chalk",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--sv1-chalk",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--sv1-chalk",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--sv1-chalk",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--sv1-chalk",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--sv1-chalk",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--sv1-navywhite",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--sv1-navywhite",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--sv1-navywhite",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--sv1-navywhite",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--sv1-navywhite",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--sv1-navywhite",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--sneakers-white",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--sneakers-white",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--sneakers-white",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--sneakers-white",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--sneakers-white",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--sneakers-white",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--ab1-lightsand",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--ab1-lightsand",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--ab1-lightsand",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--ab1-lightsand",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--ab1-lightsand",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--ab1-lightsand",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--ab1-original",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--ab1-original",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--ab1-original",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--ab1-original",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--ab1-original",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--ab1-original",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--ankleboots-brown",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--ankleboots-brown",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--ankleboots-brown",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--ankleboots-brown",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--ankleboots-brown",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--ankleboots-brown",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--boots-laceup-black",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--boots-laceup-black",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--boots-laceup-black",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--boots-laceup-black",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--boots-laceup-black",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--boots-laceup-black",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--sv1-chalk",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--sv1-chalk",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--sv1-chalk",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--sv1-chalk",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--sv1-chalk",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--sv1-chalk",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--sv1-navywhite",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--sv1-navywhite",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--sv1-navywhite",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--sv1-navywhite",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--sv1-navywhite",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--sv1-navywhite",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--sneakers-white",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--sneakers-white",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--sneakers-white",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--sneakers-white",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--sneakers-white",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--sneakers-white",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--ab1-lightsand",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--ab1-original",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--ab1-original",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--ab1-original",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--ab1-original",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--ab1-original",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--ab1-original",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--ankleboots-brown",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--ankleboots-brown",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--ankleboots-brown",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--ankleboots-brown",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--ankleboots-brown",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--ankleboots-brown",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--boots-laceup-black",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--sv1-burgundygum",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--sv1-chalk",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--sv1-chalk",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--sv1-chalk",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--sv1-chalk",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--sv1-chalk",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--sv1-chalk",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--sv1-navywhite",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite"
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--sneakers-white",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--sneakers-white",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--sneakers-white",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--sneakers-white",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--sneakers-white",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white"
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--sneakers-white",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white"
+    }
+  ],
+  "restrictionsKept": [
+    "bottom-shorts-navy: outside (D-336)",
+    "SV1-V5-CHARCOAL with long trousers: outside (D-305/D-314)"
+  ],
+  "notIncluded": "no new or changed image, public file, catalogue, shop, pupil or flag change"
+}

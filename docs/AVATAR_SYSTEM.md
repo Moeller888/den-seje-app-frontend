@@ -400,6 +400,9 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Sweater list extended — D-340 (owner approved D-339's 240; NORTHSTAR_LS2_COMBOS = 30 + 240 = 270, 264 reachable; no new file; flag false).**
+  - **Rule unchanged.** The whole effective outfit decides; shorts are never on the list, and charcoal SV1 only with skirt and capri.
+  - **Verified.** The runtime is byte-identical for all 270. The Chromium baseline, figure with the new shoes, choice with shoe change, shorts fallback with reload and return, blocked and failure checks pass. See `docs/decisions/D-340.md`.
 - **Sweaters with the other shoes — D-339 (offline; 240 candidates for the owner's visual review, not approved; runtime list unchanged at 30).**
   - **Candidates.** 6 sweaters × 40 reachable bottom × shoe pairs. All pass, with 0 enclosed holes and runtime byte-identical.
   - **Reused reviews.** Above row 1280 each candidate is pixel-identical to the approved D-336 sweater; below it, to an approved tee outfit. Only the 54 sweater × shoe colour pairs are new to judge.

@@ -29,6 +29,6 @@ test("D-339 the review groups: 5 hip joins, 40 hem joins (both already reviewed)
   for (const c of K.candidates) { assert.equal(c.evidence.technical, "PASS"); assert.equal(c.evidence.enclosedPx, 0); assert.equal(c.evidence.runtimeBytesDiffering, 0); assert.ok(c.evidence.hipOpen.right <= 1 && c.evidence.hipOpen.left === 0); }
 });
 
-test("D-339 nothing is extended: the runtime list stays D-336's 30, the flag false", () => {
-  assert.equal(AL.NORTHSTAR_LS2_COMBOS.length, 30); assert.ok(AL.NORTHSTAR_LS2_COMBOS.every((k) => k.endsWith("+shoes-sneakers-beige"))); assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
+test("D-339 itself extended nothing; D-340 then put exactly these 240 on the runtime list (with D-336's 30); the flag false", () => {
+  const keys = K.candidates.map((c) => c.top + "+" + c.bottom + "+" + c.shoes); assert.ok(keys.every((k) => AL.NORTHSTAR_LS2_COMBOS.includes(k))); assert.equal(AL.NORTHSTAR_LS2_COMBOS.length, 270); assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
 });

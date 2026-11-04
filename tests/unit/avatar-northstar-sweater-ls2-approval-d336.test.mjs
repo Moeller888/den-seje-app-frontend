@@ -61,10 +61,10 @@ const STAGED = { "top-sweater-ls2-heather-top-body-v1.webp": "0ad6d6adbc0399d2f9
   "top-sweater-ls2-hip-seam-v1.webp": "953ed60f4f9298352eaf040bc61020f04b4fb2deb5d0d8e575945c97cd5358ac", "top-sweater-ls2-shadow-body-v1.webp": "68a1f71d0574ad2fddd0184280a652663335db851a3e3751bf0274231da5b6c2",
   "top-sweater-ls2-shadow-arms-v1.webp": "fe9c36b61f72d96d58a1c272613a3575cb9b8301a577fb6ed71f616fda421bf4" };
 
-test("D-336/D-337 published under the owner's permission: exactly the 15 registered files; the sweaters offered for exactly the 30; flag false", () => {
+test("D-336/D-337 published under the owner's permission: exactly the 15 registered files; the sweaters offered for the 30 (D-340: part of 270); flag false", () => {
   const pub = readdirSync(join(ROOT, "assets", "avatar-northstar")).filter((f) => f.includes("sweater")).sort(); assert.deepEqual(pub, Object.keys(STAGED).sort());
   for (const [f, h] of Object.entries(STAGED)) assert.equal(sha(readFileSync(join(ROOT, "assets", "avatar-northstar", f))), h, f);
-  assert.deepEqual([...AL.NORTHSTAR_LS2_COMBOS].sort(), A.combinations.map((c) => c.top + "+" + c.bottom + "+" + c.shoes).sort());
+  const mine = A.combinations.map((c) => c.top + "+" + c.bottom + "+" + c.shoes); assert.ok(mine.every((k) => AL.NORTHSTAR_LS2_COMBOS.includes(k)));   // D-340 extended the list to 270
   for (const d of Object.values(A.designs)) { const it = AL.NORTHSTAR_ITEMS[d.proposedRuntimeItem]; assert.equal(it.shadowsOf, P.CUT_ITEM); assert.equal(it.hipSeam, P.HIP_SEAM_FILE); }
   assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
 });
