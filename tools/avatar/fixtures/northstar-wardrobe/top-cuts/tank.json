@@ -1,0 +1,33 @@
+{
+  "id": "tank",
+  "label": "Tanktop",
+  "contract": "top-cut-v1",
+  "family": "tank",
+  "note": "D-342's third cut, offline only: the existing teal tank top (D-207's pilot item, processed by method d239 in D-239's final1-pilot run, technically OK) through the kit's shared path; nothing approved, published or integrated",
+  "source": {
+    "item": "top-tank-teal",
+    "run": "d-239-targeted-correction/final1-pilot",
+    "method": "d239",
+    "template": "item-layers",
+    "from": "R1.templateFromLayers of the processed item's layers and skin shadow"
+  },
+  "panels": {
+    "seams": null,
+    "seamSearchPx": 8,
+    "extendPx": 14,
+    "armpitOut": null
+  },
+  "warp": { "cylinder": 0.1, "foldMaxPx": 3, "foldBlur": 14 },
+  "sleeves": { "kind": "none", "layerSplitFromArmAlpha": 128 },
+  "cuffs": null,
+  "trim": { "bands": "none" },
+  "print": { "rule": "D-269 chest-center", "boxOnC": [437, 537, 150, 135], "boxFrom": "the box on C, unchanged (its safe-area clearance on this cut is measured)" },
+  "shadow": { "from": "the cut item's skin shadow", "split": "arms where C's arm alpha >= 128, body elsewhere on C's body (D-242)", "publishedAs": null },
+  "hipSeam": { "rule": "LS2.hipSeamLayer", "rows": [-20, 80], "drawn": "after the shoes, before the bottom", "publishedAs": null },
+  "runtime": { "layers": ["top-body"], "shadows": ["body", "arms"] },
+  "control": null,
+  "oneTimeWork": [
+    "the contract itself: source item, no seams (sleeveless), the warp and print box copied from the tee",
+    "the choice to apply the hip-seam rule (the tank leaves C's base top open at both hips, D-239)"
+  ]
+}
