@@ -174,7 +174,8 @@ test("a well-timed early jump clears the first hazard", () => {
 test("the Hop page is internal, pays nothing and goes back to the menu", () => {
   const page = read("hop.html");
   assert.match(page, /noindex/);
-  assert.match(page, /href="spil\.html\?fane=minigames"/);
+  assert.match(page, /href="index\.html"/);   // D-347: back to the quiz, not to a game menu
+  assert.equal(page.includes("spil.html"), false);
   assert.match(page, /src="js\/hop\.js"/);
   const js = read("js/hop.js");
   assert.equal(js.includes(".rpc("), false, "Hop pays no coins");

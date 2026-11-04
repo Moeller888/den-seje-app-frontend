@@ -68,7 +68,8 @@ test("the next arc lies ahead of the needle in the direction it travels", () => 
 test("the Nål page is internal, pays nothing and goes back to the menu", () => {
   const page = read("naal.html");
   assert.match(page, /noindex/);
-  assert.match(page, /href="spil\.html\?fane=minigames"/);
+  assert.match(page, /href="index\.html"/);   // D-347: back to the quiz, not to a game menu
+  assert.equal(page.includes("spil.html"), false);
   assert.match(page, /src="js\/naal\.js"/);
   const js = read("js/naal.js");
   assert.equal(js.includes(".rpc("), false, "Nål pays no coins");

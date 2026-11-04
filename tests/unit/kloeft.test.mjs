@@ -54,7 +54,8 @@ test("level with the cleft is a hit, its middle third is perfect", () => {
 test("the Kløft page is internal, pays nothing and goes back to the menu", () => {
   const page = read("kloeft.html");
   assert.match(page, /noindex/);
-  assert.match(page, /href="spil\.html\?fane=minigames"/);
+  assert.match(page, /href="index\.html"/);   // D-347: back to the quiz, not to a game menu
+  assert.equal(page.includes("spil.html"), false);
   assert.match(page, /src="js\/kloeft\.js"/);
   const js = read("js/kloeft.js");
   assert.equal(js.includes(".rpc("), false, "Kløft pays no coins");

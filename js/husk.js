@@ -4,6 +4,7 @@
 // The board is plain buttons, so it works with a keyboard and a screen reader as it is.
 
 import { supabase } from "../supabaseClient.js";
+import { enterBreakGame } from "./minigame-pass.js";
 import { loadTheme } from "./themeManager.js";
 import { attachReadAloudControl, stopReadAloud } from "./read-aloud/adapters/quiz.js";
 import { boardFor, missLimit, deal, flipTile, closePair } from "./husk-logic.js";
@@ -320,9 +321,14 @@ function endRound() {
   }
   setScreen("over");
   $("husk-again")?.focus();
+  pass?.endRound();
 }
 
+// D-347: the game is a spillepause — one round per accepted offer, redeemed on the server.
+let pass = null;
+
 function startRound() {
+  if (!pass || !pass.beginRound()) return;
   stopReadAloud();
   unlockAudio();
   clearTimers();
@@ -360,6 +366,9 @@ async function main() {
     const { data } = await supabase.auth.getSession();
     if (!data.session) window.location.replace("login.html");
   });
+
+  pass = await enterBreakGame({ client: supabase, gameKey: "husk" });
+  if (!pass) return;
 
   const lead = $("husk-lead");
   if (lead) attachReadAloudControl(lead, lead.textContent || "");

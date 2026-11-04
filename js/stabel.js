@@ -5,6 +5,7 @@
 // alternating axes, the overhang falls off, perfect drops chain into a combo.
 
 import { supabase } from "../supabaseClient.js";
+import { enterBreakGame } from "./minigame-pass.js";
 import { loadTheme } from "./themeManager.js";
 import { attachReadAloudControl, stopReadAloud } from "./read-aloud/adapters/quiz.js";
 import { placePlate, grownSize, sweepSpeed, PERFECT_UNIT } from "./stabel-logic.js";
@@ -485,6 +486,7 @@ function showOver() {
   }
   setScreen("over");
   $("stabel-again")?.focus();
+  pass?.endRound();
 }
 
 function step(dt) {
@@ -572,7 +574,11 @@ async function claimCoins(plates, round) {
   }
 }
 
+// D-347: the game is a spillepause — one round per accepted offer, redeemed on the server.
+let pass = null;
+
 function startRound() {
+  if (!pass || !pass.beginRound()) return;
   stopReadAloud();
   state.round += 1;
   unlockAudio();
@@ -622,6 +628,9 @@ async function main() {
     const { data } = await supabase.auth.getSession();
     if (!data.session) window.location.replace("login.html");
   });
+
+  pass = await enterBreakGame({ client: supabase, gameKey: "stabel" });
+  if (!pass) return;
 
   const canvas = $("stabel-canvas");
   const ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;
