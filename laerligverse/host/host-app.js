@@ -96,7 +96,7 @@ async function startDidacticDemo(c) {
   // The revisit needs time to pass: only the TEST ADAPTER's clock moves (a simulation, never retention evidence).
   let clockOffset = 0;
   service.clock = () => Date.now() + clockOffset;
-  const refreshDev = () => renderDevPanel({ objective: OBJECTIVE, policy, service });
+  const refreshDev = () => renderDevPanel({ objective: OBJECTIVE, policy, service, clockOffset });
   $("lv-dev-clock").addEventListener("click", () => {
     clockOffset += 20 * 3_600_000;
     $("lv-dev-clock-state").textContent = `Simuleret tid: +${clockOffset / 3_600_000} timer`;
@@ -141,7 +141,7 @@ const STEP_LABEL = {
  * D-338 DEVELOPER VIEW (local demo only, separate from the pupil's view): what the "server" — here the test
  * adapter running the server's own policy — decided and observed. No token, no key, nothing secret.
  */
-function renderDevPanel({ objective, policy, service }) {
+function renderDevPanel({ objective, policy, service, clockOffset = 0 }) {
   // The server's NEXT decision now (a side-effect-free preview), not the step of the task already served.
   const d = service.previewSequence(objective.id);
   const obs = service.observations();
@@ -155,10 +155,43 @@ function renderDevPanel({ objective, policy, service }) {
     ["Seneste serverresultat", last ? (last.wasCorrect ? "rigtigt" : "forkert") : "—"],
     ["Registreret hjælp", last ? `${last.hintsUsed} hints (testadapteren kender hjælpen; Lærligs server gør ikke før L1 K1)` : "—"],
     ["Evidensstatus", last ? "ikke evidens: kilden er testadapteren, K5 er ikke fastslået, og introduktionen er ikke registreret" : "—"],
+    // D-341: what is observed vs what is MISSING, the time basis, the possible next steps and the open owner decision.
+    ["Observeret", observedOf(obs)],
+    ["Mangler for at kunne tale om læring", MISSING_EVIDENCE],
+    ["Tid", clockOffset === 0 ? "rigtig tid" : `SIMULERET: testadapterens ur er +${clockOffset / 3_600_000} timer foran. Et genbesøg i simuleret tid er aldrig fastholdelse`],
+    ["Mulige næste trin", d === null ? "spillet bestemmer" : d.state === "step" ? (NEXT_OPTIONS[d.step] ?? "—") : d.state === "waiting" ? "genbesøg, når tiden er gået" : "ingen"],
+    ["Åben LP-13-beslutning", d === null ? "LP-13 (hele sekvenspolitikken)" : d.state === "step" ? (OPEN_DECISION[d.step] ?? "—") : d.state === "waiting" ? OPEN_DECISION.revisit : OPEN_DECISION.complete],
   ];
   const dl = $("lv-dev-body");
   dl.replaceChildren();
   for (const [k, v] of rows) dl.append(Object.assign(document.createElement("dt"), { textContent: k }), Object.assign(document.createElement("dd"), { textContent: v }));
+}
+
+/** D-341: the five steps' possible successors under the PROVISIONAL policy (laerligverse-test-policy-v0). */
+const NEXT_OPTIONS = {
+  guided_practice: "forkert svar → 5 · Revision; rigtigt svar → 6 · Selvstændig anvendelse",
+  revision: "6 · Selvstændig anvendelse (uanset svaret; højst én revision)",
+  independent_application: "7 · Overførsel (uanset svaret)",
+  transfer: "8 · Genbesøg, tidligst 20 timer efter overførslen",
+  revisit: "forløbet er gennemført (betyder kun: alle trin har et svar)",
+};
+
+/** D-341: the owner decision (docs/laerligverse/lp13-beslutningskatalog.md) each step is still waiting for. */
+const OPEN_DECISION = {
+  guided_practice: "LP13-1 (hvad udløser revision) og LP13-3 (må hints tælle) er ikke besluttet",
+  revision: "LP13-2 (hvor mange revisioner, og hvad sker der ved fortsat forkert) er ikke besluttet",
+  independent_application: "LP13-4 (skal et forkert svar her føre tilbage til øvelse) er ikke besluttet",
+  transfer: "LP13-5 (hvad tæller som overførsel) er ikke besluttet",
+  revisit: "LP13-6 (genbesøgsinterval; 20 timer er et forslag) er ikke besluttet",
+  complete: "LP13-7 (hvad »gennemført« må hedde over for elev og lærer) er ikke besluttet; mestring er IKKE en del af politikken",
+};
+
+const MISSING_EVIDENCE = "begrundelse for valget, tidsforbrug, hjælp på serveren (L1 K1 ikke anvendt), introduktion registreret, fastholdelse i rigtig tid, overførsel til et andet fag/emne, og en ejergodkendt politik (LP-13)";
+
+function observedOf(obs) {
+  if (obs.length === 0) return "intet endnu";
+  const right = obs.filter((o) => o.wasCorrect).length;
+  return `${obs.length} besvarelse(r), ${right} rigtige, ${obs.length - right} forkerte (testadapteren; valg og rigtigt/forkert, ikke hvordan eleven tænkte)`;
 }
 
 function whyStep(step, obs) {
