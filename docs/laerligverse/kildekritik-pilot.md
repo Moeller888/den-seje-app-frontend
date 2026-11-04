@@ -214,7 +214,7 @@ lærerobservation og elevfeedback. Ingen af dem sender data til Lærlig.
 | | **A. Lille gennemførlighedspilot** | **B. Én klasse, præ/post** | **C. Sammenligning** |
 |---|---|---|---|
 | Elever | 4–6 | én klasse (ca. 20–25) | to parallelle klasser (ca. 40–50) eller én klasse delt i to |
-| Arbejdstid, lærer | ca. 2 t (1 lektion + 30 min bedømmelse + 15 min opfølgning) | ca. 5 t (2 lektioner, bedømmelse af ca. 100 ark, genbedømmelse af 10) | ca. 9 t (4 lektioner, ca. 200 ark, genbedømmelse) |
+| Arbejdstid, lærer | ca. 2½ t (en dobbeltlektion + 30 min bedømmelse + 15 min opfølgning) | ca. 5 t (en dobbeltlektion + 15 min efter 7 dage, bedømmelse af ca. 100 ark, genbedømmelse af 10) | ca. 9 t (4 lektioner, ca. 200 ark, genbedømmelse) |
 | Krav til læreren | historielærer, der har godkendt prøverne; tid til at observere hver elev | samme + blind bedømmelse (bland ark) | samme + den samme lærer i begge grupper; referenceaktivitet på papir med **samme kilder, påstande og feedback** som spillet; A/B byttes for halvdelen |
 | Teknik | den lokale demo på en lærer-pc (`serve-local.mjs`, testadapter); ingen konti | samme på klassens maskiner, eller demoen på en skole-pc pr. elevpar | samme |
 | Data | papir: delscorer, noter, feedback; ingen navne | registreringsskemaet, pseudonymer | samme + `gruppe` |

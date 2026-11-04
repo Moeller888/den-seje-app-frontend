@@ -34,7 +34,9 @@ Foreslået klassetrin: 6.–8. (forslag, ikke afprøvet).
 | Transfertest (T), samme dag | 10 |
 | Elevfeedback | 3 |
 | Forsinket test (C), efter reel tid (forslag: 7 dage, LP13-6) | 12 |
-| **I alt** | ca. 70 min fordelt på to dage |
+| **I alt** | dag 1: ca. 60 min (en dobbeltlektion; én lektion på 45 min er for lidt); dag 2: 12 min |
+
+Kan dag 1 ikke rumme en dobbeltlektion, så tag prætesten i en tidligere lektion (højst 1–2 dage før), og notér det.
 
 ## 4. Lærervejledning
 
