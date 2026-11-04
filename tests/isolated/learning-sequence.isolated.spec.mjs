@@ -13,6 +13,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { assertIsolated, SYNTHETIC_EMAIL_DOMAIN } from "./isolation-guard.mjs";
 import { startHarness, HOST_ORIGIN, GAME_ORIGIN } from "./laerligverse-harness/serve-harness.mjs";
+import { K1_GAP, k1InStack } from "./k1-probe.mjs";
 
 assertIsolated(process.env);
 
@@ -30,7 +31,9 @@ const CONTEXT_OF_STEP = Object.fromEntries(FIXTURE.map((r) => [r.learning_step, 
 test.describe.configure({ mode: "serial" });
 
 let harness;
+let K1;
 test.beforeAll(async ({ request }) => {
+  K1 = await k1InStack(request, SUPA, svc);
   const have = await (await request.get(`${SUPA}/rest/v1/questions?select=id&learning_objective=eq.${OBJECTIVE}`, { headers: svc })).json();
   if (have.length === 0) {
     const rows = FIXTURE.map((r) => ({
@@ -112,6 +115,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
   });
 
   test("pupil B: wrong practice → revision → (wrong again) → application → transfer; then the revisit WAITS", async ({ request }, testInfo) => {
+    test.fail(!K1, K1_GAP);
     const p = await makePupil(request, "b", testInfo.project.name);
     await step(request, p, "guided_practice", false);
     await step(request, p, "revision", false);
@@ -124,6 +128,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
   });
 
   test("pupil C: right practice → NO revision → application; rewards come from the server only", async ({ request }, testInfo) => {
+    test.fail(!K1, K1_GAP);
     const p = await makePupil(request, "c", testInfo.project.name);
     const before = await progress(request, p);
     await step(request, p, "guided_practice", true);
@@ -132,6 +137,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
   });
 
   test("pupil D: the step survives a NEW login (another token, as on another device); an open round resumes, not duplicated", async ({ request }, testInfo) => {
+    test.fail(!K1, K1_GAP);
     const p = await makePupil(request, "d", testInfo.project.name);
     await step(request, p, "guided_practice", false);
     const open = await (await next(request, p)).json();
@@ -143,6 +149,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
   });
 
   test("two tabs + replay: concurrent 'next' gives ONE instance; two submissions of the same round record ONE attempt; a replay changes nothing", async ({ request }, testInfo) => {
+    test.fail(!K1, K1_GAP);
     const p = await makePupil(request, "tabs", testInfo.project.name);
     const rs = await Promise.all([next(request, p), next(request, p)]);
     const ids = new Set();
@@ -168,6 +175,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
   });
 
   test("the revisit opens only when due (TEST MANIPULATION of answered_at, labelled), then the sequence completes", async ({ request }, testInfo) => {
+    test.fail(!K1, K1_GAP);
     const p = await makePupil(request, "revisit", testInfo.project.name);
     await step(request, p, "guided_practice", true);
     await step(request, p, "independent_application", true);
@@ -182,6 +190,23 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
     expect(await (await next(request, p)).json()).toMatchObject({ step: "sequence_complete", learning_objective: OBJECTIVE });
   });
 
+  test("D-341 characterization: WITHOUT K1 in the stack an H5 submission fails safely — 500, no attempt, no reward, the round stays open", async ({ request }, testInfo) => {
+    test.skip(K1, "K1 is in the isolated stack: the gap is closed, the ordinary H5 tests prove the path");
+    const p = await makePupil(request, "k1gap", testInfo.project.name);
+    const before = await progress(request, p);
+    const s = await (await next(request, p)).json();
+    expect(s).toMatchObject({ learning_step: "guided_practice" });
+    const r = await answer(request, p, s, ITEM.guided_practice.content.correct);
+    expect(r.status()).toBe(500);
+    expect(await r.json()).toEqual({ error: "Could not process answer" });
+    expect(await attempts(request, p)).toEqual([]);
+    expect(await progress(request, p)).toEqual(before);
+    const inst = await (await request.get(`${SUPA}/rest/v1/question_instances?select=answered&id=eq.${s.question_instance_id}`, { headers: svc })).json();
+    expect(inst).toEqual([{ answered: false }]);
+    // Not stuck: the same open round is resumed, not duplicated.
+    expect(await (await next(request, p)).json()).toMatchObject({ learning_step: "guided_practice", question_instance_id: s.question_instance_id });
+  });
+
   test("off path: without `sequence` the same objective is served untagged-aware but WITHOUT a step (today's targeting)", async ({ request }, testInfo) => {
     const p = await makePupil(request, "off", testInfo.project.name);
     const r = await request.post(`${SUPA}/functions/v1/get-next-question`, { headers: { apikey: ANON, authorization: `Bearer ${p.token}`, ...json }, data: { subject: "historie", learning_objective: OBJECTIVE } });
@@ -193,6 +218,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
 });
 
 test("through the real host page: the server's step decides the world's activity — a wrong practice answer makes the NEXT activity a revision", async ({ page, request, browserName }) => {
+  test.fail(!K1, K1_GAP);
   const p = await makePupil(request, "host", browserName);
   await page.goto(`${HOST_ORIGIN}/`);
   await page.locator("#lv-email").fill(p.email);

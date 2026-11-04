@@ -131,5 +131,71 @@ end MC.
 5. Tærsklerne for at fortsætte, revidere eller stoppe (forslag i D-323 §6.3).
 6. Samtykke og information til forældre efter skolens praksis. Data opbevares kun hos skolen og læreren, og
    intet sendes til Lærlig.
-7. Teknik: Arkivskabet i piloten kører på **testadapteren** (lokal demo), indtil serveren kan vælge opgaver
-   pr. læringstrin. Lærligs server registrerer da intet; præ/post foregår på papir.
+7. Teknik: Arkivskabet i piloten kører på **testadapteren** (lokal demo). Serveren *kan* nu vælge opgaver pr.
+   læringstrin (D-338), men kun i den isolerede teststak, og funktionen er slået fra. At bruge den med rigtige
+   elever kræver deploy, migrationer (H5, L1 K1) og særskilte GO'er. Indtil da registrerer Lærligs server
+   intet; præ/post foregår på papir.
+8. LP-13-beslutningerne i `lp13-beslutningskatalog.md` (mindst LP13-1 til LP13-4, LP13-6 og LP13-7).
+
+---
+
+## 9. Kontrol af falske effekter (D-341)
+
+| Trussel | Hvordan den ville se ud | Kontrol |
+|---|---|---|
+| Testeffekt | Posttest er bedre, fordi eleven har set prætesten | Parallelle, ikke identiske opgaver; design B eller C |
+| Gæt | MC rigtigt uden forståelse (25 %) | Rubrik på åbne svar (PR-3/PO-3) vægtes tungere end MC |
+| Overfladeheuristik | »Vælg altid dagbogen/den personlige kilde« | Mindst én opgave, hvor den personlige kilde er det forkerte svar (PR-2/PO-2: »kan ikke«) |
+| Lærereffekt | Læreren underviser ekstra i spilklassen | Samme lærer, samme tid, ingen ekstra gennemgang; lærerens noter |
+| Nyhedseffekt | Spillet er spændende første gang | Forsinket genbesøg (GB-1); spørg ikke kun lige efter |
+| Simuleret tid | Et »genbesøg« i demoen, efter knappen »+20 timer« | Bruges aldrig i piloten. Kun GB-1 på papir efter reel tid tæller |
+| Frafald | Kun de stærke elever er med til GB-1 | Rapportér frafald pr. gruppe; analysér kun elever med alle målinger, og rapportér resten |
+| Bedømmerbias | Bedømmeren ved, hvilken gruppe svaret kommer fra | Bedømmeren ser ikke gruppe eller tidspunkt (præ/post blandes) |
+
+## 10. Dataordbog (kun hos skolen/læreren; intet sendes til Lærlig)
+
+| Felt | Type | Værdier | Bemærkning |
+|---|---|---|---|
+| `elev_kode` | tekst | fx `A07` | Pseudonym, som kun læreren kan koble til en elev. Ingen navne i filen |
+| `gruppe` | tekst | `spil`, `papir` (design B) / `spil_foerst`, `papir_foerst` (C) | |
+| `pr1`, `po1`, `ov1`, `gb1` | 0/1 | rigtigt/forkert | MC |
+| `pr2`, `po2` | 0/1 | rigtigt/forkert | »kan ikke«-opgaven |
+| `pr3_*`, `po3_*` | 0–2 | pr. rubrikkriterium | §7 |
+| `fravaer_*` | ja/nej | pr. måling | Fravær er IKKE 0 point |
+| `gb_dage` | heltal | dage mellem post og GB-1 | Rigtig tid |
+| `noter` | tekst | lærerens observation | Ingen personoplysninger |
+
+## 11. Analyseplan (fastlægges FØR data ses)
+
+1. **Gennemførlighed:** andel elever, der gennemfører hele forløbet; tidsforbrug; lærerens noter om
+   forvirring.
+2. **Præstation:** gennemsnit og fordeling af `po1+po2` og rubrikken på `po3`, pr. gruppe.
+3. **Ændring:** `post − præ` pr. elev (MC og rubrik). Rapportér median og spredning. Ingen p-værdier med
+   1–2 klasser; brug kun beskrivende tal.
+4. **Overførsel:** andel rigtige på `ov1` pr. gruppe.
+5. **Fastholdelse:** `gb1` sammenlignet med `po1`, kun for elever med begge. Rapportér frafald.
+6. **Skelneevne:** opgaver, som (næsten) alle eller ingen løser, markeres til revision.
+7. **Rapportform:** »Vi observerede …«, aldrig »forløbet virker«.
+
+## 12. Minimumskrav før en pilot
+
+- Lærergennemgangen er afsluttet: alle 12 elementer har en afgørelse, ingen er »Skal rettes« uden
+  rettelse, og læreren har skrevet navn og dato (D-341-siden kræver det).
+- Paralleltestene er prøvet på 2–3 elever uden for piloten.
+- LP-13-beslutningerne i §8 er truffet.
+- Samtykke/information efter skolens praksis.
+- Ingen elevkonti oprettes til piloten, og Lærligs server modtager ingen pilotdata.
+
+## 13. Håndtering af fravær
+
+- En elev, der mangler en måling, får `fravaer_* = ja`. Målingen tæller ikke som 0.
+- Prætest mangler → eleven indgår ikke i `post − præ`, men gerne i gennemførlighed.
+- GB-1 mangler → eleven indgår ikke i fastholdelse. Rapportér antallet pr. gruppe.
+
+## 14. Privatliv
+
+- Filen indeholder kun pseudonymer; nøglen (kode → elev) bliver hos læreren og slettes efter skolens praksis.
+- Intet uploades til Lærlig, Supabase, Cloudflare eller andre tjenester.
+- Lærergennemgangssiden (`node tools/laerligverse/serve-review.mjs`) kører kun på lærerens egen computer
+  (127.0.0.1) og gemmer intet på en server.
+

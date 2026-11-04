@@ -41,3 +41,31 @@ test("the server fixture is a clearly named TEST objective, with one back per op
     for (const d of r.content.option_details) assert.ok(d.length <= 400 && /^Afsender: /.test(d), r.tag);
   }
 });
+
+test("D-341: the three teacher decisions (+ the non-decision default), a change request for 'skal_rettes', and a localhost-only server", async () => {
+  assert.deepEqual([...STATUSES], ["ikke_gennemgaaet", "godkendt", "skal_rettes", "afvist"]);
+  const page = readFileSync(HTML, "utf8");
+  for (const label of ["Godkendt", "Skal rettes", "Afvist", "Hvad skal rettes?", "Progression til næste trin", "Kendt faglig usikkerhed", "Observation (registreres)"]) assert.ok(page.includes(label), label);
+  // Nothing is pre-approved: every radio group starts on "ikke gennemgået".
+  const checked = [...page.matchAll(/<input type="radio" name="st-[^"]+" value="([a-z_]+)" checked>/g)].map((m) => m[1]);
+  assert.ok(checked.length >= 12 && checked.every((v) => v === "ikke_gennemgaaet"));
+  const { HOST, reviewHandler } = await import("../../tools/laerligverse/serve-review.mjs");
+  assert.equal(HOST, "127.0.0.1");
+  const res = (url, method = "GET") => {
+    const out = { status: 0, headers: {}, body: "" };
+    reviewHandler(() => "<html>page</html>")({ url, method }, { writeHead: (s, h) => { out.status = s; out.headers = h; }, end: (b) => { out.body = String(b); } });
+    return out;
+  };
+  assert.equal(res("/").status, 200);
+  assert.equal(res("/").headers["cache-control"], "no-store");
+  for (const bad of ["/../package.json", "/docs/laerligverse/kildekritik-godkendelse.json", "/x", "/%2e%2e/secret"]) assert.equal(res(bad).status, 404, bad);
+  assert.equal(res("/", "POST").status, 404);
+});
+
+test("D-341: the review page's script PARSES (F5's page had a raw newline in a string literal — save/load never ran)", async () => {
+  const { Script } = await import("node:vm");
+  const page = readFileSync(HTML, "utf8");
+  const scripts = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+  assert.equal(scripts.length, 1);
+  assert.doesNotThrow(() => new Script(scripts[0]));
+});

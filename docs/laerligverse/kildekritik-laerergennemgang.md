@@ -4,9 +4,10 @@
 
 **Sådan bruges pakken:** Læs hvert element. Skriv din afgørelse i `docs/laerligverse/kildekritik-godkendelse.json`:
 - `godkendt`
-- `godkendt_med_aendringer` (skriv ændringerne i `kommentar`)
+- `skal_rettes` (skriv, hvad der skal rettes, i `aendringer`)
 - `afvist`
-- `kraever_undersoegelse`
+
+Det er lettest at bruge den lokale side: `node tools/laerligverse/serve-review.mjs` og derefter http://127.0.0.1:4340/.
 
 Intet er godkendt, før du har skrevet det. Værktøjet ændrer aldrig en afgørelse.
 
@@ -149,6 +150,9 @@ Element-id: `h4-kilde`
 - **Fagligt mål:** Eleven kan identificere en historisk kildes afsender, tidspunkt, modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som belæg for.
 - **Progression:** P3: undersøger kilder med støtte og vælger den bedst egnede
 - **Servertrin (D-338):** `guided_practice`. Serveren udleverer opgaven, når eleven er på dette trin (foreløbig testpolitik, LP-13)
+- **Progression til næste trin:** Næste: revision, hvis svaret er forkert, ellers selvstændig anvendelse. Det er en foreløbig testpolitik (LP-13).
+- **Observation (hvad platformen registrerer):** Serveren registrerer valgt kilde, rigtigt/forkert, tidspunkt og runde (H5, kun i testmiljøet). Den registrerer ikke elevens begrundelse, hvilke dokumenter der blev vendt, tidsforbrug eller hjælp (L1 K1 er ikke anvendt).
+- **Kendt faglig usikkerhed:** Proklamationen er parafraseret (»bevare ro og orden«). Kontrollér parafrasen mod originalteksten.
 - **Forudsat viden:** Introkortene: 9. april 1940 og de fire spørgsmål. Arkivkortet (afsender/tid/modtager/formål)
 - **Træner:** At matche påstandens indhold (hvis ønske) med kildens afsender og tidspunkt
 - **Forventet elevhandling:** Vender alle fire dokumenter, vælger en kilde og angiver, hvad der afgjorde valget
@@ -195,6 +199,9 @@ Element-id: `h4-kilde-revision`
 - **Fagligt mål:** Eleven kan identificere en historisk kildes afsender, tidspunkt, modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som belæg for.
 - **Progression:** P4: anvender feedbacken på en ny, beslægtet påstand
 - **Servertrin (D-338):** `revision`. Serveren udleverer opgaven, når eleven er på dette trin (foreløbig testpolitik, LP-13)
+- **Progression til næste trin:** Næste: selvstændig anvendelse, uanset svaret (højst én revision). Det er en foreløbig testpolitik (LP-13).
+- **Observation (hvad platformen registrerer):** Serveren registrerer valgt kilde, rigtigt/forkert, tidspunkt og runde (H5, kun i testmiljøet). Den registrerer ikke elevens begrundelse, hvilke dokumenter der blev vendt, tidsforbrug eller hjælp (L1 K1 er ikke anvendt).
+- **Kendt faglig usikkerhed:** Ordren er et konstrueret eksempel. Kontrollér fremstillingen af regeringens og hærledelsens rolle den 9. april 1940.
 - **Forudsat viden:** Feedbacken fra trin 3
 - **Træner:** Samme princip på en ny påstand og nye kilder: kilden fra dem, påstanden handler om, mens det skete
 - **Forventet elevhandling:** Vender dokumenterne, vælger og begrunder igen
@@ -239,6 +246,9 @@ Element-id: `h4-overfoersel`
 - **Fagligt mål:** Eleven kan identificere en historisk kildes afsender, tidspunkt, modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som belæg for.
 - **Progression:** P5: anvender principperne på en ny påstand uden hjælp
 - **Servertrin (D-338):** `independent_application`. Serveren udleverer opgaven, når eleven er på dette trin (foreløbig testpolitik, LP-13)
+- **Progression til næste trin:** Næste: overførsel.
+- **Observation (hvad platformen registrerer):** Serveren registrerer valgt kilde, rigtigt/forkert, tidspunkt og runde (H5, kun i testmiljøet). Den registrerer ikke elevens begrundelse, hvilke dokumenter der blev vendt, tidsforbrug eller hjælp (L1 K1 er ikke anvendt).
+- **Kendt faglig usikkerhed:** Dagbogen er konstrueret. Kontrollér, at den er entydigt den bedste kilde til påstanden om én københavners oplevelse.
 - **Forudsat viden:** Trin 1–5
 - **Træner:** At se, at den bedste kilde afhænger af påstanden (proklamationen er nu forkert)
 - **Forventet elevhandling:** Vender dokumenterne og vælger uden hints
@@ -298,6 +308,9 @@ Element-id: `t1864`
 - **Fagligt mål:** Eleven kan identificere en historisk kildes afsender, tidspunkt, modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som belæg for.
 - **Progression:** P6: overfører metoden til en anden periode
 - **Servertrin (D-338):** `transfer`. Serveren udleverer opgaven, når eleven er på dette trin (foreløbig testpolitik, LP-13)
+- **Progression til næste trin:** Næste: genbesøg, tidligst 20 timer efter overførslen (forslag; i demoen er tiden simuleret).
+- **Observation (hvad platformen registrerer):** Serveren registrerer valgt kilde, rigtigt/forkert, tidspunkt og runde (H5, kun i testmiljøet). Den registrerer ikke elevens begrundelse, hvilke dokumenter der blev vendt, tidsforbrug eller hjælp (L1 K1 er ikke anvendt).
+- **Kendt faglig usikkerhed:** Kontrollér baggrundsteksten: krigen mod Preussen og Østrig, Dybbøl-skanserne og stormen den 18. april 1864.
 - **Forudsat viden:** Trin 1–6 og baggrundsteksten i opgaven (1864 introduceres ikke andre steder)
 - **Træner:** Den samme kildekritiske metode i en ny periode med nye kildetyper (brev, mindetale, modpartens avis, tv-serie)
 - **Forventet elevhandling:** Læser baggrunden, vender dokumenterne og vælger uden hints
@@ -339,6 +352,9 @@ Element-id: `h4-genbesoeg`
 - **Fagligt mål:** Eleven kan identificere en historisk kildes afsender, tidspunkt, modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som belæg for.
 - **Progression:** P7: gentager præstationen senere
 - **Servertrin (D-338):** `revisit`. Serveren udleverer opgaven, når eleven er på dette trin (foreløbig testpolitik, LP-13)
+- **Progression til næste trin:** Næste: forløbet er gennemført. Det betyder kun, at alle trin har et svar, ikke at målet er mestret.
+- **Observation (hvad platformen registrerer):** Serveren registrerer valgt kilde, rigtigt/forkert, tidspunkt og runde (H5, kun i testmiljøet). Den registrerer ikke elevens begrundelse, hvilke dokumenter der blev vendt, tidsforbrug eller hjælp (L1 K1 er ikke anvendt).
+- **Kendt faglig usikkerhed:** Kontrollér, at der blev kæmpet nogle steder den 9. april 1940 (bl.a. i Sønderjylland og ved Amalienborg).
 - **Forudsat viden:** Trin 1–7 og et tidsinterval (i prototypen simuleret)
 - **Træner:** Fastholdelse af metoden
 - **Forventet elevhandling:** Vender dokumenterne og vælger uden hints

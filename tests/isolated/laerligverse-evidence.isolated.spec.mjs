@@ -14,6 +14,7 @@ import { test, expect } from "@playwright/test";
 import { createHash } from "node:crypto";
 import { assertIsolated, SYNTHETIC_EMAIL_DOMAIN } from "./isolation-guard.mjs";
 import { startHarness, HOST_ORIGIN, GAME_ORIGIN } from "./laerligverse-harness/serve-harness.mjs";
+import { K1_GAP, k1InStack } from "./k1-probe.mjs";
 import { assessObjectives, observationFromAttemptRow } from "../../laerligverse/host/bridge/evidence.js";
 
 assertIsolated(process.env);
@@ -29,7 +30,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 test.describe.configure({ mode: "serial" });
 
 let harness;
-test.beforeAll(async () => {
+let K1;
+test.beforeAll(async ({ request }) => {
+  K1 = await k1InStack(request, SUPA, { apikey: SERVICE, authorization: `Bearer ${SERVICE}` });
   harness = await startHarness({ host: "f3", supabaseUrl: SUPA, anonKey: ANON, objectiveMap: { "hist.besaettelsen.h4": "world_war_2" }, h5: true });
 });
 test.afterAll(async () => {
@@ -93,6 +96,7 @@ async function classify(request, pupil) {
 }
 
 test("F4 CHAIN: the host maps the world's objective, the server targets it, H5 registers the attempt with the host's submission id; the classifier keeps 'correct' apart from 'learned'", async ({ page, request, browserName }) => {
+  test.fail(!K1, K1_GAP);
   const pupil = await makePupil(request, "chain", browserName);
   const calls = trackRequests(page);
   const before = await progress(request, pupil);
@@ -129,6 +133,7 @@ test("F4 CHAIN: the host maps the world's objective, the server targets it, H5 r
 });
 
 test("a wrong answer is registered as an attempt that pays nothing; a REPEAT round is a new attempt (is_repeat, 2 XP/1 coin) with a new submission id", async ({ page, request, browserName }) => {
+  test.fail(!K1, K1_GAP);
   const pupil = await makePupil(request, "repeat", browserName);
   const f = await signIn(page, pupil);
   await f.locator("#use-cabinet").click();
