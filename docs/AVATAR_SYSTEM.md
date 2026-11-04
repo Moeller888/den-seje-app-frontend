@@ -400,6 +400,12 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Tank top family — D-345 (offline; 264 candidates for the owner's review, NOT approved; runtime layers staged privately; nothing published or integrated; flag false).**
+  - **Pairs from tee approvals only.** 6 designs × 44 (bottom, shoes) pairs with a tee approval gives 264. Olive with beige sneakers (no tee approval) and the navy shorts are excluded. List: `tools/avatar/fixtures/northstar-wardrobe/tank/tank-family-candidates-v1.json`.
+  - **Checked.** 264 of 264 pass with 0 enclosed holes. The feet match an approved tee outfit and the rest matches the reviewed tank outfit with beige sneakers, both pixel for pixel, so only the colour pairs are new.
+  - **tank-v3.** The hem junction's opaque section fades over 10 rows, which removes D-343's 1 px step. `tank-v2` is kept.
+  - **Staged privately.** 8 `top-tank-*` files (6 bodies, the shadow, the junction) rebuild all 264 byte for byte through `northstarPlanFor`/`northstarCompose` with a table; no app code is needed. PR #590 (D-343) is blocked by the Playwright install timeout in CI.
+  - See `docs/decisions/D-345.md`.
 - **Tank top's own side — D-343 (offline; 30 candidates for the owner's visual review, NOT approved; nothing published or integrated; flag false).**
   - **Rule.** `K.hemJunctionLayer` replaces the sweater's hip seam for the tank (contract `top-cuts/tank-v2.json`; D-342's `tank.json` kept as the historical trial). It continues the tank's contour only from each hem corner down along C's outline, behind the bottom; the side above the hem is left alone. It is opaque in the first 24 rows below the corner, then C's own soft edge. The cut is not widened: the 7 design layers are pixel-identical to D-342's.
   - **Checked.** 42 of 42 outfits pass (7 designs × 6 bottoms × beige sneakers; D-342: 35 of 42), with 0 enclosed holes. No ragged extra contour and no light notch, reviewed on light and dark, at hips, armholes, neck and print, and at app size. Navy shorts are a technical control only. The tee and sweater still reproduce byte for byte.

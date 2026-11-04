@@ -66,6 +66,7 @@ export function checkCut(c) {
     if (c.hipSeam && (c.hipSeam.rule !== "LS2.hipSeamLayer" || JSON.stringify(c.hipSeam.rows) !== JSON.stringify(LS2.HIP_ROWS))) p.push("hipSeam: only LS2.hipSeamLayer with its rows " + JSON.stringify(LS2.HIP_ROWS) + " is implemented");
     const j = c.hemJunction; if (j && (j.rule !== "K.hemJunctionLayer" || !Number.isInteger(j.outlinePx) || j.outlinePx < 1 || !Number.isInteger(j.rowsBelowShortsTop) || j.rowsBelowShortsTop < 0)) p.push("hemJunction: K.hemJunctionLayer with integer outlinePx >= 1 and rowsBelowShortsTop >= 0");
     if (j && !(Number.isInteger(j.opaqueRowsBelowHem) && j.opaqueRowsBelowHem >= 0)) p.push("hemJunction.opaqueRowsBelowHem: an integer >= 0");
+    if (j && j.opaqueTaperRows !== undefined && !(Number.isInteger(j.opaqueTaperRows) && j.opaqueTaperRows >= 0)) p.push("hemJunction.opaqueTaperRows: an integer >= 0");
     if (c.hipSeam && j) p.push("a cut has at most one layer behind the bottom (hipSeam or hemJunction)");
     for (const k of ["cylinder", "foldMaxPx", "foldBlur"]) if (typeof c.warp[k] !== "number") p.push("warp." + k);
     if (!Array.isArray(c.oneTimeWork) || !c.oneTimeWork.length) p.push("oneTimeWork: what was done by hand, once");
@@ -126,7 +127,9 @@ export function hipSeam(ctx) { if (!ctx.c.hipSeam) return null; return LS2.hipSe
  *  OR belong to C's base top, 4-connected to the cut; ink = the median of the cut's own contour ink. Alpha: OPAQUE in the first
  *  opaqueRowsBelowHem rows below each side's hem corner, where the layer bridges the top and the bottom (the existing bottoms leave their
  *  fill transparent just inside their contour where C's base top lay, so C's soft outline there let the background through as a 1 px light
- *  seam between two dark strokes, D-343); C's own alpha below (opaque there drew a hard stepped edge outside a narrower bottom's contour). Unlike the hip seam it
+ *  seam between two dark strokes, D-343); C's own alpha below (opaque there drew a hard stepped edge outside a narrower bottom's contour).
+ *  D-345: opaqueTaperRows (default 0, D-343's step) fades the opaque section into C's alpha over that many rows (a 1 px step at the end of
+ *  the opaque section, seen from x2 on the long trousers, D-343). Unlike the hip seam it
  *  leaves the side ABOVE the hem alone (there C's 1-2 px outline beyond the cut lies against the background; inking it gave the ragged
  *  extra contour, D-342). One layer for the cut: it looks at no bottom and no design. */
 export function hemJunctionLayer(ctx) {
@@ -139,7 +142,8 @@ export function hemJunctionLayer(ctx) {
   while (q.length) { const i = q.pop(), x = i % W; for (const k of [i - 1, i + 1, i - W, i + W]) { if (Math.abs((k % W) - x) > 1 || add[k] || !cand(k)) continue; add[k] = 1; q.push(k); } }
   const ink = [0, 1, 2].map((k) => { const v = []; for (let i = 0; i < N; i++) if (t.contour[i * 4 + 3] >= 200) v.push(t.contour[i * 4 + k]); v.sort((a, b) => a - b); return v.length ? v[v.length >> 1] : 30; });
   const layer = new Uint8ClampedArray(N * 4); let n = 0, x0 = W, y0 = N, x1 = -1, y1 = -1;
-  for (let i = 0; i < N; i++) { if (!add[i]) continue; const yy = (i / W) | 0, hm = i % W < W / 2 ? hem.left : hem.right; layer.set([...ink, yy <= hm + j.opaqueRowsBelowHem ? 255 : base.R[i * 4 + 3]], i * 4); n++; const x = i % W, y = (i / W) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  for (let i = 0; i < N; i++) { if (!add[i]) continue; const yy = (i / W) | 0, hm = i % W < W / 2 ? hem.left : hem.right, r = yy - (hm + j.opaqueRowsBelowHem), T = j.opaqueTaperRows || 0, ca = base.R[i * 4 + 3];
+    layer.set([...ink, r <= 0 ? 255 : r <= T ? Math.round(255 + (ca - 255) * (r / (T + 1))) : ca], i * 4); n++; const x = i % W, y = (i / W) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
   return { layer, addedPx: n, box: n ? [x0, y0, x1, y1] : null, ink, hem, shortsTop };
 }
 
