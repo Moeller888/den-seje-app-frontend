@@ -400,6 +400,12 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Top cut kit — D-342 (offline; one shared path for tops with per-cut contracts; the tee and sweater reproduce their approved layers byte for byte; a tank top tried; nothing approved, published or integrated).**
+  - **Kit.** `tools/avatar/northstar-top-cut-kit.mjs` only calls the locked method files (tee master, long-sleeve master v1/v2, print family), with every cut-specific number in a contract under `tools/avatar/fixtures/northstar-wardrobe/top-cuts/` (`tee-hip`, `sweater-long`, `tank`).
+  - **Control.** With the tee and sweater contracts the kit rebuilds the 16 approved print tees, the 6 approved sweaters, the sweater's hip seam and both cuts' skin shadows: 0 bytes differ from the published files; the tee master keeps D-267's locked fingerprint.
+  - **Tank top (offline trial).** It fits all 7 designs and the print is safe. With the hip seam, 35 of 42 outfits pass; the skirt fails as the source item does. The sweater's hip-seam rule leaves a ragged extra contour along the tank's narrower side (34–104 open px at the right hip). One per-cut rule — a side fill to C's hip line — is needed first.
+  - **Owner feedback on D-340 (2026-11-04).** The extended sweater wardrobe looks fine in the opt-in.
+  - See `docs/decisions/D-342.md`.
 - **Sweater list extended — D-340 (owner approved D-339's 240; NORTHSTAR_LS2_COMBOS = 30 + 240 = 270, 264 reachable; no new file; flag false).**
   - **Rule unchanged.** The whole effective outfit decides; shorts are never on the list, and charcoal SV1 only with skirt and capri.
   - **Verified.** The runtime is byte-identical for all 270. The Chromium baseline, figure with the new shoes, choice with shoe change, shorts fallback with reload and return, blocked and failure checks pass. See `docs/decisions/D-340.md`.
