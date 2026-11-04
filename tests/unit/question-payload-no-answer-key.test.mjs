@@ -145,7 +145,11 @@ test("the key-bearing reads run on the backend client, scoped to the verified st
   // key (correct_answer of a "match" row, PR #377), under the same rule. The fourth (D-329) is the
   // lost-race check of a targeted request: it reads ONLY the id of the pupil's open instance.
   const reads = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.from\("question_instances"\)[\s\S]*?;/g)].map((m) => m[0]);
-  assert.equal(reads.length, 4);
+  assert.equal(reads.length, 5);
+  // D-338: the step-history read carries no content and no key — only the verdict, time and step tag.
+  const history = reads.filter((r) => /questions!inner\(learning_objective, metadata\)/.test(r));
+  assert.equal(history.length, 1);
+  assert.equal(/content|correct_answer/.test(history[0]), false);
   const idOnly = reads.filter((r) => /\.select\("id"\)/.test(r));
   assert.equal(idOnly.length, 1, "exactly one id-only read (D-329)");
   assert.match(idOnly[0], /\.eq\("student_id", student_id\)\s*\.eq\("answered", false\)/);

@@ -61,6 +61,22 @@ export function normaliseText(s: string): string {
   return s.trim().replace(/\s+/g, " ").toLocaleLowerCase("da-DK");
 }
 
+/**
+ * D-338: an injected server-sequence policy (in the demo: the generated JS of
+ * supabase/functions/_shared/learning-sequence.ts — the very file get-next-question runs). With it, the test
+ * adapter decides the step from its OWN history, exactly as the server does; the world only asks for "next".
+ */
+export interface FakeSequence {
+  nextStep(
+    history: ReadonlyArray<{ step: string | null; answered: boolean; wasCorrect: boolean | null; answeredAt: string | null }>,
+    nowMs: number,
+  ): { state: "step"; step: string; mode: string } | { state: "waiting"; step: string; dueAt: string } | { state: "complete" };
+  /** item contextKey → server step id. */
+  readonly stepOfContext: Readonly<Record<string, string>>;
+  /** server step id → the contextKey the world shows. */
+  readonly contextOfStep: Readonly<Record<string, string>>;
+}
+
 export class FakeTaskService implements TaskService {
   /** Default: imitates a backend with idempotent submission (H5). Tests can switch it off. */
   submitRetry: "server-idempotent" | "none" = "server-idempotent";
@@ -75,7 +91,12 @@ export class FakeTaskService implements TaskService {
   private nextId = 1;
   private readonly failures: InjectedFailure[] = [];
 
-  constructor(items: readonly FakeItem[]) {
+  /** D-338: the last sequence decision (for a developer view). Null without a sequence. */
+  lastDecision: ReturnType<FakeSequence["nextStep"]> | null = null;
+  private readonly sequence: FakeSequence | null;
+
+  constructor(items: readonly FakeItem[], options: { sequence?: FakeSequence } = {}) {
+    this.sequence = options.sequence ?? null;
     this.items = items;
   }
 
@@ -105,6 +126,7 @@ export class FakeTaskService implements TaskService {
   async fetchTask(q: TaskQuery): Promise<ServiceTask> {
     await this.gate("fetchTask");
     if (this.open !== null) return this.view(this.open); // one open instance per pupil
+    if (this.sequence !== null) return this.fetchInSequence(q, this.sequence);
     const answered = new Set([...this.instances.values()].filter((i) => i.result !== null).map((i) => i.item.id));
     const candidates = this.items.filter((it) => it.objectiveId === q.objectiveId && q.kinds.includes(it.kind) && (it.contextKey === undefined || it.contextKey === q.contextKey));
     if (candidates.length === 0) throw new ServiceError("unavailable", false, "no item for this objective and these kinds");
@@ -150,6 +172,37 @@ export class FakeTaskService implements TaskService {
     if (inst.result !== null || level !== inst.hintsUsed + 1 || level > inst.item.hints.length) throw new ServiceError("invalid", false, "hint not available");
     inst.hintsUsed = level; // the server's own log decides "assisted"
     return { level, text: inst.item.hints[level - 1] as string, hintsRemaining: inst.item.hints.length - level };
+  }
+
+  /** D-338: the decision the sequence WOULD make now, without serving anything (developer view only). */
+  previewSequence(objectiveId: string): ReturnType<FakeSequence["nextStep"]> | null {
+    if (this.sequence === null) return null;
+    const seq = this.sequence;
+    const mine = [...this.instances.values()].filter((i) => i.item.objectiveId === objectiveId);
+    return seq.nextStep(mine.map((i) => ({ step: seq.stepOfContext[i.item.contextKey ?? ""] ?? null, answered: i.result !== null, wasCorrect: i.result === null ? null : i.result.outcome === "correct", answeredAt: i.answeredAt })), this.clock());
+  }
+
+  /** D-338: the SERVER decides the step from its own history; the world's contextKey is not trusted. */
+  private fetchInSequence(q: TaskQuery, seq: FakeSequence): ServiceTask {
+    const mine = [...this.instances.values()].filter((i) => i.item.objectiveId === q.objectiveId);
+    const history = mine.map((i) => ({
+      step: seq.stepOfContext[i.item.contextKey ?? ""] ?? null,
+      answered: i.result !== null,
+      wasCorrect: i.result === null ? null : i.result.outcome === "correct",
+      answeredAt: i.answeredAt,
+    }));
+    const decision = seq.nextStep(history, this.clock());
+    this.lastDecision = decision;
+    if (decision.state === "complete") throw new ServiceError("unavailable", false, "sequence_complete");
+    if (decision.state === "waiting") throw new ServiceError("unavailable", false, `sequence_waiting until ${decision.dueAt}`);
+    const context = seq.contextOfStep[decision.step];
+    const answered = new Set(mine.filter((i) => i.result !== null).map((i) => i.item.id));
+    const item = this.items.find((it) => it.objectiveId === q.objectiveId && it.contextKey === context && q.kinds.includes(it.kind) && !answered.has(it.id));
+    if (item === undefined || context === undefined) throw new ServiceError("unavailable", false, `step_exhausted: ${decision.step}`);
+    const inst: Instance = { id: `inst-${this.nextId++}`, item, mode: decision.mode as Mode, contextKey: context, hintsUsed: 0, result: null, answeredAt: null, submissions: new Map() };
+    this.instances.set(inst.id, inst);
+    this.open = inst;
+    return this.view(inst);
   }
 
   /** Injectable clock (tests, and the demo's "fast-forward"). */

@@ -55,7 +55,7 @@ if (backend === "test-adapter") {
     env: { ...process.env, VITE_LV_HOST_ORIGIN: HOST_ORIGIN, VITE_LV_GAME_ORIGIN: GAME_ORIGIN },
   });
   if (r.status !== 0) process.exit(r.status ?? 1);
-  const page = renderHostPage({ mode: "local-preview", backend: "test-adapter", gameOrigin: GAME_ORIGIN, gameUrl: `${GAME_ORIGIN}/game.html` });
+  const page = renderHostPage({ mode: "local-preview", backend: "test-adapter", gameOrigin: GAME_ORIGIN, gameUrl: `${GAME_ORIGIN}/game.html`, sequence: !process.argv.includes("--no-sequence") });
   await listen(hostHandler(page, { dev: true }), 4330);
   await listen(staticHandler(out), 4331);
   console.log(`\nDidaktisk demo (TESTADAPTER — intet registreres hos Lærlig):\n  åbn ${HOST_ORIGIN}/\n  spillet kører på ${GAME_ORIGIN}\nCtrl+C stopper.`);

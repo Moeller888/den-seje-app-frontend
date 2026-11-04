@@ -41,7 +41,7 @@ test.beforeAll(async ({ request }) => {
     const rows = FIXTURE.map((r) => ({
       type: "mc_single", content: r.content, difficulty: 500, is_active: true, question_type: "auto",
       learning_objective: r.learning_objective, answer_format: "mc", answer_type: "short",
-      metadata: { domain: r.learning_objective, concepts: ["kildekritik"], cognitive_skill: "analysis", synthetic: true, fixture: "D-332" },
+      metadata: { domain: r.learning_objective, concepts: ["kildekritik"], cognitive_skill: "analysis", synthetic: true, fixture: "D-332", learning_step: r.learning_step },
       target_grade: 8, difficulty_band: 3,
     }));
     const ins = await request.post(`${SUPA}/rest/v1/questions`, { headers: { ...svc, ...json, prefer: "return=minimal" }, data: rows });

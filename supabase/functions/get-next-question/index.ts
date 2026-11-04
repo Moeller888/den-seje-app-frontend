@@ -5,6 +5,7 @@ import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
 import { deriveQuestionScope } from "./scope.ts";
 import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
+import { checkRequestedStep, historyFromRows, nextStep, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
 import { sortByWave } from "./wave-order.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
@@ -148,6 +149,38 @@ serve(async (req) => {
       scope.subjectDomains = [targeting.objective];
       console.log("OBJECTIVE_TARGETING:", { objective: targeting.objective });
     }
+
+    // Server-directed sequence (D-338, ../_shared/learning-sequence.ts): OFF unless the Edge secret
+    // LAERLIGVERSE_SEQUENCE is "on", objective targeting is on, AND the request asks for it. The SERVER derives
+    // the pupil's current step from its own history in the objective; the client may only name the step it
+    // expects (a stale or manipulated one is refused). Off: no read, no change — the calls are as before.
+    let sequence: Extract<SequenceDecision, { state: "step" }> | null = null;
+    if (targeting.mode === "on" && Deno.env.get("LAERLIGVERSE_SEQUENCE") === "on" && body?.sequence === true) {
+      const { data: historyRows, error: historyError } = await admin()
+        .from("question_instances")
+        .select("answered, was_correct, answered_at, questions!inner(learning_objective, metadata)")
+        .eq("student_id", student_id)
+        .eq("questions.learning_objective", targeting.objective);
+      if (historyError) throw historyError;
+      const decision = nextStep(historyFromRows(historyRows), Date.now());
+      const requested = checkRequestedStep(body?.learning_step, decision);
+      if (!requested.ok) {
+        return new Response(JSON.stringify({ error: requested.error }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: requested.status,
+        });
+      }
+      if (decision.state !== "step") {
+        return new Response(JSON.stringify(decision.state === "complete"
+          ? { step: "sequence_complete", learning_objective: targeting.objective, policy: decision.policy }
+          : { step: "sequence_waiting", learning_objective: targeting.objective, learning_step: decision.step, due_at: decision.dueAt, policy: decision.policy }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+      sequence = decision;
+      console.log("LEARNING_SEQUENCE:", { step: decision.step, policy: decision.policy });
+    }
     const selectedGrade  = scope.grade;
     const subjectDomains = scope.subjectDomains;
 
@@ -248,6 +281,13 @@ serve(async (req) => {
           status: 409,
         });
       }
+      // D-338: in a sequence, an open round is resumed only in the step the server decided.
+      if (sequence !== null && stepOf(q.metadata) !== sequence.step) {
+        return new Response(JSON.stringify({ error: "open_question_other_step" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        });
+      }
       // Outside the try: an invalid round fails loud instead of being skipped like bad content.
       const roundNo = roundNoOf(instance);
 
@@ -268,6 +308,8 @@ serve(async (req) => {
             wave_phase: wavePhase,
             // D-329: echoed only when targeting, so the caller can verify it got the objective it asked for.
             ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
+            // D-338: the server's step and activity mode, only in a sequence.
+            ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -374,6 +416,8 @@ serve(async (req) => {
 
     for (const q of sortedQuestions) {
       if (!q.content) continue;
+      // D-338: in a sequence, only the questions tagged with the server's current step are candidates.
+      if (sequence !== null && stepOf(q.metadata) !== sequence.step) continue;
 
       let format: string;
       let normalized: any;
@@ -444,7 +488,9 @@ serve(async (req) => {
           status: 409,
         });
       }
-      return new Response(JSON.stringify({ step: "no_questions", reason: "objective_exhausted" }), {
+      return new Response(JSON.stringify(sequence !== null
+        ? { step: "no_questions", reason: "step_exhausted", learning_step: sequence.step }
+        : { step: "no_questions", reason: "objective_exhausted" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -528,6 +574,8 @@ serve(async (req) => {
                   wave_phase: wavePhase,
                   // D-329: echoed only when targeting, so the caller can verify it got the objective it asked for.
                   ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
+                  // D-338: the server's step and activity mode, only in a sequence.
+                  ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
                   is_repeat: true,
                 }),
                 {
@@ -571,6 +619,8 @@ serve(async (req) => {
         wave_phase: wavePhase,
         // D-329: echoed only when targeting, so the caller can verify it got the objective it asked for.
         ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
+        // D-338: the server's step and activity mode, only in a sequence.
+        ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
