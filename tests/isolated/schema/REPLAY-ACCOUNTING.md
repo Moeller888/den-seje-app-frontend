@@ -61,6 +61,10 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
     `20261101190100_question_attempts_v2_align_grading` (H5-integrationen). Produktionen har hverken
     `question_attempts` eller `_v2`-funktionerne (katalog, 2026-11-02). Begge filer kræver G1 først,
     og G1 er anvendt.
+  - `20261103100000_question_attempts_history_no_action` (D-327, H5-sporet): ændrer
+    `question_attempts_instance_fkey` til `ON DELETE NO ACTION`. Produktionen har ikke
+    `question_attempts`, fordi H5 ikke er anvendt. Filen kræver H5-bootstrappen og alignmentet først og
+    skal anvendes før H5-aktivering.
 
   D-284 og D-286 blev ved en fejl ikke skrevet på listen, da de blev merget, og blev derfor afspillet
   her.

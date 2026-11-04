@@ -400,6 +400,44 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Sweaters with the other shoes — D-339 (offline; 240 candidates for the owner's visual review, not approved; runtime list unchanged at 30).**
+  - **Candidates.** 6 sweaters × 40 reachable bottom × shoe pairs. All pass, with 0 enclosed holes and runtime byte-identical.
+  - **Reused reviews.** Above row 1280 each candidate is pixel-identical to the approved D-336 sweater; below it, to an approved tee outfit. Only the 54 sweater × shoe colour pairs are new to judge.
+  - **Owner feedback on D-337 (2026-11-04).** The sweaters look fine in the opt-in.
+  - See `docs/decisions/D-339.md`.
+- **Sweaters in the Northstar opt-in — D-337 (published and integrated behind the opt-in; flag still false; no catalogue, shop or ordinary pupil view change).**
+  - **Published.** The 15 D-336 files are published byte for byte; their hashes were checked before publication.
+  - **Order.** `northstarPlanFor` draws the hip seam after the shoes and before the bottom; the sweater's body and rib are drawn in front.
+  - **Choice.** The "Trøje" row offers 6 sweaters for exactly the 30 approved combinations (24 reachable). Outside the list the outfit's own top is shown and the stored choice is kept, also after a reload.
+  - **Verified.** The runtime is byte-identical to the 30 approved renderings. The Chromium baseline, figure (right hip ≤ 2 levels), choice, blocked and failure checks pass. See `docs/decisions/D-337.md`.
+- **Sweater combinations approved — D-336 (owner visual approval of 30; files staged privately; NOT published or integrated; flag false).**
+  - **Approved.** Heather and navy, each plain or with the teapot or fox print, with skirt, capri and olive, navy and sand trousers and beige sneakers: 30 combos in `ls2-owner-approval-v1.json`. Navy shorts are outside the approval.
+  - **Staged.** 15 runtime files reproduce all 30 approved renderings byte for byte when the hip seam is drawn behind the bottom (`planWithHipSeam`).
+  - **Reachable.** 24 of the 30 can be reached in today's opt-in; the olive ones cannot.
+  - **Next.** Publishing and integration need the owner's permission; the wording is in `docs/decisions/D-336.md`.
+- **Sweater master v2 — D-335 (offline; 30 candidates for the owner's visual review, not approved; nothing published or integrated; no runtime change).**
+  - **Sleeve line fixed.** The cut's own layer split sends every fabric pixel over C's arm, its soft edge included, to the sleeve layer. Warm pixels on heather fell from 117 to 6. D-333's alpha cause was wrong.
+  - **Hip seam.** The 52 hip pixels are their own layer, drawn behind the bottom (order body · shoes · hip seam · bottom · top body · arms · sleeves · head). The light notch with long trousers is gone, and skirt and capri stay clean. Outfits pass 42/42 with 0 enclosed holes and no double contour; the bottoms' soft edge differs by at most 9 levels.
+  - **Local renderer.** northstarCompose with the one extra draw step equals the checked picture byte for byte.
+  - **To integrate.** This needs that draw step in `northstarPlanFor` and a published seam file. Both need owner permission. Navy shorts are held out by the owner.
+  - See `docs/decisions/D-335.md`.
+- **Long-sleeve master prototype — D-333 (offline; 0 image calls; nothing published or integrated; no design approved).**
+  - **Source.** One master (`ls-master-v1`) on the existing green sweater (d239), with D-264's method unchanged; only the per-cut data differ.
+  - **Designs.** Heather and navy, plain and with the approved teapot and fox prints. The prints use one placement: D-269's chest-center box on C. The fraction rule is undefined on a long sleeve.
+  - **Fit.** Fit, cuffs, wrists and armhole gap are clean. Outfits pass 35/42; shorts fail COMBO-6, like the source sweater itself.
+  - **Open, one-time per cut.** A warm dotted line along C's arm on light colours, and the hip corner fails against shorts. See `docs/decisions/D-333.md`. D-333's cause for the line (the source's alpha) was wrong; D-335 corrected it.
+- **Owner feedback on D-331 (2026-11-03):** the boots look fine in the opt-in, a visual confirmation of the test integration (registered by D-333).
+- **AB-1 ankle boots in the Northstar opt-in — D-331 (LIVE in the opt-in; flag still false; no catalogue, shop or ordinary pupil view change).**
+  - **Published.** The 4 D-326 files are published byte for byte; their hashes were checked before publication.
+  - **Offered.** `AB1-BOOT-ORIGINAL` and `AB1-BOOT-LIGHTSAND` are offered in the "Sko" row for exactly the 180 combinations in `NORTHSTAR_AB1_BOOT_COMBOS`. 10 were shown to the owner and 170 checked technically.
+  - **Rule.** The whole effective outfit decides. Outside the list, the outfit's own shoes are shown, also after a reload.
+  - **Verified.** The runtime is byte-identical in 180/180 cases. The Chromium baseline, figure, choice, blocked and failure checks pass. See `docs/decisions/D-331.md`.
+- **Two AB-1 ankle boots approved by the owner — D-326 (registration + private preparation; NOT published, NOT integrated; flag false; 0 image calls).**
+  - **Approved.** `AB1-BOOT-ORIGINAL` (original colour) and `AB1-BOOT-LIGHTSAND` (light sand, approved as shown — not documented suede). Black + gum is not covered. See `ab1-boot-owner-approval-v1.json`.
+  - **History kept.** D-324's rejection, D-325's technical FAILs (ΔE p95 0.0568, line contrast below 0.2) and its development caveat stay as history.
+  - **Staged privately.** The 4 runtime files are 2 layers and 2 covering masks; the shadow is the published ankle boot's, via `shadowsOf`. They are byte-identical to the 12 shown renderings in the browser's own compose.
+  - **Combinations.** The opt-in could reach 180 combinations (90 outfits × 2). The 170 not shown in D-325 were checked: 170/170 PASS and byte-identical at runtime.
+  - **Next.** Publishing and integration need the owner's separate permission (wording in `docs/decisions/D-326.md`).
 - **Robust field labelling — D-325 (offline development study on AB-1; 0 image calls; contract v3 developed WITH knowledge of AB-1, so NOT independently validated; D-324's verdict and D-320's closure unchanged; no item approved).**
   - **Cause.** v2's fixed sole seed (y 1488) sat in the old drawing's 2 px welt band; AB-1 draws the sole 2 px higher, so that row is a line.
   - **Rule `zone-v1`.** `northstar-shoe-cut-seeds.mjs` and `ankle-boot-v3.json` find each field in a fixed zone by its safe pixels (at least 2 px from any line). Missing, ambiguous and merged fields are refused, and every choice is logged. At K, the fields decided at 1x are followed (`zone-v1-k-follows-1x`).

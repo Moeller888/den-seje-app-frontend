@@ -1,0 +1,5560 @@
+{
+  "decision": "D-339",
+  "kind": "candidates for the owner's visual review — NOT approved; the runtime list NORTHSTAR_LS2_COMBOS is unchanged until the owner approves an extension",
+  "basis": {
+    "approval": "ls2-owner-approval-v1.json (D-336, 30 combinations with the beige sneakers)",
+    "runtime": "D-337 (merge 311827f): the hip seam behind the bottom, the sweater in front",
+    "main": "41aebf4"
+  },
+  "rule": "every (bottom, shoes) pair a sweater can reach today with the skirt, capri, olive, navy or sand trousers and shoes other than the beige sneakers (the browser's own functions), x the 6 sweaters; the navy shorts stay outside (D-336) and charcoal with long trousers stays outside (D-305/D-314: not reachable)",
+  "reviewGroups": {
+    "hip": {
+      "count": 5,
+      "note": "the sweater's hip join over each bottom — above row 1280 every candidate is pixel-identical to the owner-approved D-336 rendering of the same sweater and bottom; already reviewed"
+    },
+    "hem": {
+      "count": 40,
+      "note": "the hem, shoe and foot of each (bottom, shoes) pair — from row 1280 down every candidate is pixel-identical to an approved tee outfit with that pair; already reviewed"
+    },
+    "colour": {
+      "count": 54,
+      "note": "the one NEW thing to judge: each sweater design with each shoe colour (6 x 9)"
+    }
+  },
+  "candidates": [
+    {
+      "id": "LS2-HEATHER--skirt-sand--ab1-lightsand",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--ab1-lightsand",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--ab1-lightsand",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--ab1-lightsand",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--ab1-lightsand",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--ab1-lightsand",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--ab1-original",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--ab1-original",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--ab1-original",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--ab1-original",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-original",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--ab1-original",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-original",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--ab1-original",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+ab1-original",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--boots-laceup-black",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--skirt-sand (D-336)",
+        "feetIdenticalTo": "K02 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--boots-laceup-black",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER-FOX+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K02 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--boots-laceup-black",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K02 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--boots-laceup-black",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--skirt-sand (D-336)",
+        "feetIdenticalTo": "K02 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--boots-laceup-black",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY-FOX+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K02 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--boots-laceup-black",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K02 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--sv1-burgundygum",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--sv1-burgundygum",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--sv1-burgundygum",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--sv1-burgundygum",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--sv1-burgundygum",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--sv1-burgundygum",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--sv1-chalk",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--sv1-chalk",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--sv1-chalk",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--sv1-chalk",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--sv1-chalk",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--sv1-chalk",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--sv1-charcoal",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-charcoal",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--sv1-charcoal",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-charcoal",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--sv1-charcoal",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-charcoal",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--sv1-charcoal",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-charcoal",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--sv1-charcoal",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-charcoal",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--sv1-charcoal",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-charcoal",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--sv1-navywhite",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--sv1-navywhite",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--sv1-navywhite",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--sv1-navywhite",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--sv1-navywhite",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--sv1-navywhite",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K01+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--skirt-sand--sneakers-white",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--skirt-sand (D-336)",
+        "feetIdenticalTo": "K03 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--skirt-sand--sneakers-white",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K03 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--skirt-sand--sneakers-white",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K03 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY--skirt-sand--sneakers-white",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--skirt-sand (D-336)",
+        "feetIdenticalTo": "K03 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--skirt-sand--sneakers-white",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--skirt-sand (D-336)",
+        "feetIdenticalTo": "K03 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--skirt-sand--sneakers-white",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:skirt-sand",
+        "hem": "HEM:skirt-sand+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--skirt-sand (D-336)",
+        "feetIdenticalTo": "K03 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--ab1-lightsand",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--ab1-lightsand",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--ab1-lightsand",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--ab1-lightsand",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--ab1-lightsand",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--ab1-lightsand",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--ab1-original",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--ab1-original",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--ab1-original",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--ab1-original",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-original",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--ab1-original",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-original",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--ab1-original",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ab1-original",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--ankleboots-brown",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K19 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--ankleboots-brown",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K19 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--ankleboots-brown",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K19 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--ankleboots-brown",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K19 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--ankleboots-brown",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K19 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--ankleboots-brown",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K19 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--boots-laceup-black",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K08 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--boots-laceup-black",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER-FOX+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K08 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--boots-laceup-black",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K08 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--boots-laceup-black",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K08 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--boots-laceup-black",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY-FOX+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K08 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--boots-laceup-black",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K08 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--sv1-burgundygum",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--sv1-burgundygum",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--sv1-burgundygum",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--sv1-burgundygum",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--sv1-burgundygum",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--sv1-burgundygum",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--sv1-chalk",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--sv1-chalk",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--sv1-chalk",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--sv1-chalk",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--sv1-chalk",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--sv1-chalk",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--sv1-charcoal",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-charcoal",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--sv1-charcoal",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-charcoal",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--sv1-charcoal",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-charcoal",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--sv1-charcoal",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-charcoal",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--sv1-charcoal",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-charcoal",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--sv1-charcoal",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-charcoal",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-charcoal"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-CHARCOAL (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--sv1-navywhite",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--sv1-navywhite",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--sv1-navywhite",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--sv1-navywhite",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--sv1-navywhite",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--sv1-navywhite",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K07+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--capri-lightblue--sneakers-white",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K09 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--capri-lightblue--sneakers-white",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K09 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--capri-lightblue--sneakers-white",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K09 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY--capri-lightblue--sneakers-white",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K09 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--capri-lightblue--sneakers-white",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K09 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--capri-lightblue--sneakers-white",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:capri-lightblue",
+        "hem": "HEM:capri-lightblue+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 0,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--capri-lightblue (D-336)",
+        "feetIdenticalTo": "K09 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--ab1-lightsand",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--ab1-lightsand",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--ab1-lightsand",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--ab1-lightsand",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--ab1-lightsand",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--ab1-lightsand",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--ab1-original",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--ab1-original",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--ab1-original",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--ab1-original",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-original",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--ab1-original",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-original",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--ab1-original",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ab1-original",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--ankleboots-brown",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K18 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--ankleboots-brown",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K18 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--ankleboots-brown",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K18 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--ankleboots-brown",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K18 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--ankleboots-brown",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K18 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--ankleboots-brown",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K18 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--sv1-burgundygum",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--sv1-burgundygum",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--sv1-burgundygum",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--sv1-burgundygum",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--sv1-burgundygum",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--sv1-burgundygum",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--sv1-chalk",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--sv1-chalk",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--sv1-chalk",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--sv1-chalk",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--sv1-chalk",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--sv1-chalk",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--sv1-navywhite",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--sv1-navywhite",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--sv1-navywhite",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--sv1-navywhite",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--sv1-navywhite",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--sv1-navywhite",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-olive--sneakers-white",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-olive--sneakers-white",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-olive--sneakers-white",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-olive--sneakers-white",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-olive--sneakers-white",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-olive--sneakers-white",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-olive",
+        "hem": "HEM:trousers-square-olive+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-olive (D-336)",
+        "feetIdenticalTo": "K17 (D-242 K outfits)"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--ab1-lightsand",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--ab1-lightsand",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--ab1-lightsand",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--ab1-lightsand",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--ab1-lightsand",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--ab1-lightsand",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--ab1-original",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--ab1-original",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--ab1-original",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--ab1-original",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-original",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--ab1-original",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-original",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--ab1-original",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ab1-original",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--ankleboots-brown",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K16+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--ankleboots-brown",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K16+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--ankleboots-brown",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K16+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--ankleboots-brown",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K16+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--ankleboots-brown",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K16+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--ankleboots-brown",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K16+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--boots-laceup-black",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K02+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--boots-laceup-black",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER-FOX+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K02+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--boots-laceup-black",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K02+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--boots-laceup-black",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K02+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--boots-laceup-black",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY-FOX+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K02+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--boots-laceup-black",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K02+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--sv1-burgundygum",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--sv1-burgundygum",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--sv1-burgundygum",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--sv1-burgundygum",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--sv1-burgundygum",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--sv1-burgundygum",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--sv1-chalk",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--sv1-chalk",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--sv1-chalk",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--sv1-chalk",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--sv1-chalk",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--sv1-chalk",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--sv1-navywhite",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--sv1-navywhite",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--sv1-navywhite",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--sv1-navywhite",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--sv1-navywhite",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--sv1-navywhite",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K01+TS-NAV+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-navy--sneakers-white",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K03+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-navy--sneakers-white",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K03+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-navy--sneakers-white",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K03+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-navy--sneakers-white",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K03+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-navy--sneakers-white",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K03+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-navy--sneakers-white",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-navy",
+        "hem": "HEM:trousers-square-navy+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-navy (D-336)",
+        "feetIdenticalTo": "K03+TS-NAV (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--ab1-lightsand",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--ab1-lightsand",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--ab1-lightsand",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--ab1-lightsand",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--ab1-lightsand",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--ab1-lightsand",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-lightsand",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-ab1-lightsand"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-LIGHTSAND (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--ab1-original",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--ab1-original",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--ab1-original",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-original",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--ab1-original",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-original",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--ab1-original",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-original",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--ab1-original",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ab1-original",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-ab1-original"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+AB1-BOOT-ORIGINAL (D-326/D-331 (AB-1 boots))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--ankleboots-brown",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K16+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--ankleboots-brown",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER-FOX+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K16+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--ankleboots-brown",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ankleboots-brown",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K16+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--ankleboots-brown",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K16+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--ankleboots-brown",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY-FOX+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K16+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--ankleboots-brown",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+ankleboots-brown",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+ankleboots-brown"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K16+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--boots-laceup-black",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K02+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--boots-laceup-black",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER-FOX+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K02+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--boots-laceup-black",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K02+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--boots-laceup-black",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K02+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--boots-laceup-black",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY-FOX+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K02+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--boots-laceup-black",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+boots-laceup-black",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+boots-laceup-black"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K02+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--sv1-burgundygum",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--sv1-burgundygum",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--sv1-burgundygum",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--sv1-burgundygum",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--sv1-burgundygum",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--sv1-burgundygum",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-burgundygum",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-burgundygum"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-BURGUNDYGUM (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--sv1-chalk",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--sv1-chalk",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--sv1-chalk",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--sv1-chalk",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--sv1-chalk",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--sv1-chalk",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-chalk",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-chalk"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-CHALK (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--sv1-navywhite",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--sv1-navywhite",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--sv1-navywhite",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--sv1-navywhite",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--sv1-navywhite",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--sv1-navywhite",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sv1-navywhite",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-low-sv1-navywhite"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K01+TS-SND+SV1-V5-NAVYWHITE (D-305/D-314 (SV1 shoes))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER--trousers-square-sand--sneakers-white",
+      "design": "LS2-HEATHER",
+      "top": "top-sweater-ls2-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K03+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-FOX--trousers-square-sand--sneakers-white",
+      "design": "LS2-HEATHER-FOX",
+      "top": "top-sweater-ls2-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER-FOX+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K03+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-HEATHER-TEAPOT--trousers-square-sand--sneakers-white",
+      "design": "LS2-HEATHER-TEAPOT",
+      "top": "top-sweater-ls2-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sneakers-white",
+        "colour": "COLOUR:LS2-HEATHER-TEAPOT+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-HEATHER-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K03+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY--trousers-square-sand--sneakers-white",
+      "design": "LS2-NAVY",
+      "top": "top-sweater-ls2-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K03+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-FOX--trousers-square-sand--sneakers-white",
+      "design": "LS2-NAVY-FOX",
+      "top": "top-sweater-ls2-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY-FOX+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-FOX--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K03+TS-SND (D-281/D-283 (trousers))"
+      }
+    },
+    {
+      "id": "LS2-NAVY-TEAPOT--trousers-square-sand--sneakers-white",
+      "design": "LS2-NAVY-TEAPOT",
+      "top": "top-sweater-ls2-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "groups": {
+        "hip": "HIP:trousers-square-sand",
+        "hem": "HEM:trousers-square-sand+sneakers-white",
+        "colour": "COLOUR:LS2-NAVY-TEAPOT+sneakers-white"
+      },
+      "evidence": {
+        "technical": "PASS",
+        "enclosedPx": 0,
+        "hipOpen": {
+          "right": 1,
+          "left": 0
+        },
+        "runtimeBytesDiffering": 0,
+        "aboveFeetIdenticalTo": "LS2-NAVY-TEAPOT--trousers-square-sand (D-336)",
+        "feetIdenticalTo": "K03+TS-SND (D-281/D-283 (trousers))"
+      }
+    }
+  ],
+  "count": 240,
+  "heldOut": [
+    {
+      "what": "bottom-shorts-navy with every shoe",
+      "reason": "outside D-336's approval (the owner holds the navy shorts out until checked separately)"
+    },
+    {
+      "what": "SV1-V5-CHARCOAL with long trousers",
+      "reason": "the existing restriction (D-305/D-314); not reachable"
+    }
+  ],
+  "notes": {
+    "preexisting": "a small warm speck on the inner side of the right white sneaker (sneakers-white) with long trousers is pixel-identical in the approved tee outfits (K17, D-283) — not new, not caused by the sweater"
+  }
+}

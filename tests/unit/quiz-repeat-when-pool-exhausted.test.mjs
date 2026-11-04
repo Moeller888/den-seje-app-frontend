@@ -347,6 +347,16 @@ const REVIEWED_LATER_REPEAT_USERS = {
   "20261101190100_question_attempts_v2_align_grading.sql":
     "H5 integration: re-creates only process_question_attempt_v2 (D-280's alias rule); it redefines none " +
     "of this migration's functions and does not touch question_instances.",
+  "20261103110000_l1_k1_attempt_context.sql":
+    "L1 K1: adds six columns to question_attempts and re-creates only process_question_attempt_v2 and " +
+    "process_text_answer_v2 with two more parameters (mode, hints) whose bodies are the previous ones plus " +
+    "K1's lines (proven in l1-k1-attempt-context-migration-run.test.mjs: same outcomes, amounts, streak and " +
+    "quests). It redefines none of this migration's functions. Its two question_instances statements " +
+    "(D-334, pinned below) add the delivered-version columns served_snapshot / served_content_sha256 / " +
+    "served_at and the trigger question_instances_served_snapshot, which only sets or preserves those three " +
+    "columns: it never changes answered, repeat_count, correct_answer or any other column, so every repeat " +
+    "rule of this migration (reopen, award, close) is untouched (l1-k1-attempt-context-migration-run proves " +
+    "the outcomes, amounts, streak and quests unchanged with and without a snapshot).",
 };
 
 // The only question_instances statements a reviewed later user may contain, each exactly once.
@@ -358,6 +368,24 @@ const H5_QUESTION_INSTANCES_STATEMENTS = [
 const REVIEWED_QUESTION_INSTANCES_CHANGES = {
   "20261030211428_question_attempts_v2.sql": H5_QUESTION_INSTANCES_STATEMENTS,
   "20261101190000_question_attempts_v2_bootstrap.sql": H5_QUESTION_INSTANCES_STATEMENTS,
+  // L1 K1 (D-334): the delivered-version columns and the trigger that owns them.
+  "20261103110000_l1_k1_attempt_context.sql": [
+    [
+      "ALTER TABLE public.question_instances",
+      "    ADD COLUMN served_snapshot jsonb,",
+      "    ADD COLUMN served_content_sha256 text",
+      "      CONSTRAINT question_instances_served_sha256_check CHECK (served_content_sha256 ~ '^[0-9a-f]{64}$'),",
+      "    ADD COLUMN served_at timestamptz,",
+      "    ADD CONSTRAINT question_instances_served_all_or_none_check",
+      "      CHECK ((served_snapshot IS NULL) = (served_content_sha256 IS NULL)",
+      "         AND (served_snapshot IS NULL) = (served_at IS NULL))",
+    ].join("\n"),
+    [
+      "CREATE TRIGGER question_instances_served_snapshot",
+      "  BEFORE INSERT OR UPDATE ON public.question_instances",
+      "  FOR EACH ROW EXECUTE FUNCTION public.question_instances_served_snapshot()",
+    ].join("\n"),
+  ],
 };
 
 test("reviewed later repeat users redefine none of this migration's functions", () => {
@@ -366,7 +394,7 @@ test("reviewed later repeat users redefine none of this migration's functions", 
     ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql",
       "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql",
       "20261030211428_question_attempts_v2.sql", "20261101190000_question_attempts_v2_bootstrap.sql",
-      "20261101190100_question_attempts_v2_align_grading.sql"],
+      "20261101190100_question_attempts_v2_align_grading.sql", "20261103110000_l1_k1_attempt_context.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
