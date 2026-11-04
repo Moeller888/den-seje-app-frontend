@@ -110,6 +110,8 @@ export function extractSchemaPart(file, sql) {
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
 export const NOT_IN_PRODUCTION = Object.freeze({
+  "20261027160000_revoke_truncate_maintain_api_roles.sql":
+    "D-237, not applied in production (no ledger entry, and anon/authenticated still hold TRUNCATE and MAINTAIN on the 30 tables and MAINTAIN on the 2 views, catalog 2026-11-04); applying it needs its own owner GO",
   "20261031230000_claim_daily_reward_exactly_once.sql":
     "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
   "20261101120000_night_owl_stop_new_awards.sql":

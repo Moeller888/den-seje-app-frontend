@@ -16,6 +16,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { isReviewedD237 } from "../support/d237-guard-exception.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const MIGRATION = "supabase/migrations/20260924000000_teacher_spotlights_read_scope.sql";
@@ -194,6 +195,8 @@ test("the migration sorts after every migration that touches teacher_spotlights"
   const touching = readdirSync(dir)
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
     .filter((n) => /teacher_spotlights/i.test(executable(readFileSync(join(dir, n), "utf8"))))
+    // D-237 only revokes TRUNCATE and MAINTAIN; the one reviewed, hash-pinned exception.
+    .filter((n) => !isReviewedD237(dir, n))
     .sort();
   assert.ok(touching.includes("20260924000000_teacher_spotlights_read_scope.sql"));
   assert.equal(touching[touching.length - 1],
