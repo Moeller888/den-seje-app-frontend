@@ -400,6 +400,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Sweaters with the other shoes — D-339 (offline; 240 candidates for the owner's visual review, not approved; runtime list unchanged at 30).**
+  - **Candidates.** 6 sweaters × 40 reachable bottom × shoe pairs. All pass, with 0 enclosed holes and runtime byte-identical.
+  - **Reused reviews.** Above row 1280 each candidate is pixel-identical to the approved D-336 sweater; below it, to an approved tee outfit. Only the 54 sweater × shoe colour pairs are new to judge.
+  - **Owner feedback on D-337 (2026-11-04).** The sweaters look fine in the opt-in.
+  - See `docs/decisions/D-339.md`.
 - **Sweaters in the Northstar opt-in — D-337 (published and integrated behind the opt-in; flag still false; no catalogue, shop or ordinary pupil view change).**
   - **Published.** The 15 D-336 files are published byte for byte; their hashes were checked before publication.
   - **Order.** `northstarPlanFor` draws the hip seam after the shoes and before the bottom; the sweater's body and rib are drawn in front.
