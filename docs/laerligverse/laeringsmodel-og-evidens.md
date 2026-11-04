@@ -13,6 +13,9 @@ varig læring (Soderstrom & Bjork 2015).
 
 ---
 
+> **F8 (D-344):** hvad der konkret skal måles for `kildekritik.ophav`, prøverne v1, rubrikken og generalprøven står i
+> `laeringsmaaling.md`; lærerpakken i `laererpakke/`.
+
 ## 1. Læringsmodellen: syv niveauer
 
 Niveauerne er en **beskrivelsesmodel** for, hvilke observationer der skal til, før man må bruge et ord om en

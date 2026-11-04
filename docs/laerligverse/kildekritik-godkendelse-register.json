@@ -1,0 +1,24 @@
+{
+  "_om": "D-344: lærerens godkendelse bundet til det indhold, der blev godkendt. Genereret af tools/laerligverse/approval-register.mjs. Ret ikke i hånden. Godkendelsen er faglig og er IKKE et GO til produktion, elevpilot, LP-13 eller merge.",
+  "godkendelsesfil": "docs/laerligverse/kildekritik-godkendelse.json",
+  "original_filnavn": "kildekritik-godkendelse (1).json",
+  "sha256": "8cd7d9698dea96b550e4b7ee3728e4ca5e2d74b0231ead49b179fd3a3a453d6d",
+  "laerer": "Christopher Møller",
+  "dato": "04-11-2026",
+  "indholdsversion": "25db5141683dc26efcad41b0f52be4574e836af8",
+  "antal": 12,
+  "fingeraftryk": {
+    "maal": "d34441876286ab6bbb7c7ce5711a399ee9e283d6f24353ff1ce14685179ddfec",
+    "intro-1": "6523f67302966b677156e734014a624aa5d72cb489c9173029c2f429094c9de0",
+    "intro-2": "345ef0f384b415e0ef5887061c4455919f47636d03ca0b6a44cb2600965443c3",
+    "intro-3": "76c32c79a418ab45ae5a166820a5f4229d14a836d99fb9cf9571a2e83b530407",
+    "intro-tjek": "2bf42813b67efb4b2ad09a78cac6ff30c0756e5cfd413ddc2256f7b9da9a61f5",
+    "arkivkort": "080e078e4c47535aec66a28f0bd5033ecf35988fcb9f69b22184b0a1cb154e5a",
+    "h4-kilde": "1cd46126aefa195807d58c8e473083c773d9e6b3cdfff4149c55edfabb76e9a5",
+    "h4-kilde-revision": "1ea96ffc8b6460e73588a8185ea89bfe1e67c1e6e2e9cd27635428f2f158e08f",
+    "h4-overfoersel": "322fa7ce0f9bc09dc4e7665afbc2a772c32ccb6f29eb92a6c73933f5a894613b",
+    "refleksion": "93ac43b7b4ea5501ef1b7bee03e67370320c8e4c7da457adced19ff06808765a",
+    "t1864": "74b1e3e0bb86a90545ee744e7e7d4bba77e20ad9d1d22f563afe4615724546e1",
+    "h4-genbesoeg": "19e70a955fb83cfa0caa471ecb70b5a20caaadd69459cf35f49d46d134a3655c"
+  }
+}

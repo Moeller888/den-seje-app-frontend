@@ -1,65 +1,65 @@
 {
   "_om": "Lærerens afgørelser (D-332/D-341). Tilladte status: ikke_gennemgaaet, godkendt, skal_rettes, afvist. Værktøjet overskriver aldrig en afgørelse.",
-  "laerer": "",
-  "dato": "",
+  "laerer": "Christopher Møller",
+  "dato": "04-11-2026",
   "elementer": {
     "maal": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     },
     "intro-1": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     },
     "intro-2": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     },
     "intro-3": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     },
     "intro-tjek": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     },
     "arkivkort": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     },
     "h4-kilde": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     },
     "h4-kilde-revision": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     },
     "h4-overfoersel": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     },
     "refleksion": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     },
     "t1864": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     },
     "h4-genbesoeg": {
-      "status": "ikke_gennemgaaet",
+      "status": "godkendt",
       "kommentar": "",
       "aendringer": ""
     }
