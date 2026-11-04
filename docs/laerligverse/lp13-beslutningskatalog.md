@@ -102,3 +102,31 @@ evidens (L5).
 
 Ingen af disse godkendelser omfatter deploy, migration eller aktivering for rigtige elever. Det kræver
 særskilte GO'er.
+
+---
+
+## Beslutningsskema (F8, D-344)
+
+Kort grundlag til Christopher. **Godkendelsen af Arkivskabets indhold (04-11-2026) godkender ikke nogen af
+reglerne.** Ingen af dem er implementeret som produktionsregel. Den kørende testpolitik v0 er stadig »test«.
+Henvisningerne til forskning er de primærkilder, der allerede er verificeret i `laeringsmodel-og-evidens.md` §2.1
+og `docs/learning-progression-source-verification.md`. Ingen af dem dokumenterer en effekt for Lærlig.
+
+| Regel | Hvad skal besluttes? | Muligheder | Anbefaling | Hvorfor / forskning | Stærke og svage elever | Teknisk betydning | Sådan testes den | Hvis vi vælger forkert |
+|---|---|---|---|---|---|---|---|---|
+| **LP13-1** Revision | Hvad sender en elev til revision efter øvelsen (trin 3, proklamationen)? | A: seneste svar forkert · B: forkert eller hints · C: altid | **A** til piloten, B som mål | Feedback virker bedst, når den bruges på en ny opgave (Hattie & Timperley 2007). B kræver hints på serveren | Svag elev (generalprøvens A): får revisionen (ordren). Stærk elev (C): springer den over, uden spildtid. Et heldigt gæt slipper også | Ingen ændring: det er v0's regel. B kræver L1 K1 + L5 | Unit (`learning-sequence`), generalprøven (elev A får revision, C gør ikke) | For streng (C): stærke elever keder sig. For mild (A): en gætter slipper for øvelse. Det opdages på papirprøverne |
+| **LP13-2** Antal revisioner | Hvor mange gange, og hvad sker der ved fortsat forkert svar? | A: højst én · B: op til to + lærermarkering · C: til rigtigt | **A**, og **aldrig C** | C giver gættesløjfer (25 % pr. forsøg) og »rigtigt til sidst«, som betyder lidt | Svag elev går videre uden at have forstået. Læreren er i lokalet i piloten | Ingen ændring | Unit: anden forkert revision → selvstændig anvendelse | A: eleven går videre for tidligt; det ses i posttesten. C: eleven sidder fast |
+| **LP13-3** Hints | Må et svar med hjælp tælle som selvstændig præstation? | A: hints kun i øvelse, tæller aldrig · B: overalt, fratrukket · C: ingen hints | **A** | »The assistance dilemma« (Koedinger & Aleven 2007): hjælp hjælper læringen, men skjuler, hvad eleven kan alene | Svag elev får hjælp, hvor der øves (trin 3 og 5 har hints). Stærk elev mister intet | Spillet viser allerede hints kun i øvelse. Serveren kender dem ikke (K1) | Generalprøven: hints registreres kun i klienten; dataflow-testen | B uden validering: en vilkårlig vægt. C: svage elever opgiver |
+| **LP13-4** Forkert i selvstændig anvendelse | Hvad sker der efter et forkert svar i trin 6 (dagbogen)? | A: videre til overførsel · B: tilbage til øvelse + nyt tjek · C: lærermarkering | **A** til piloten | B kræver flere godkendte opgaver pr. trin (i dag én) | Svag elev går videre med en registreret fejl. Stærk elev uændret | Ingen ændring | Unit + generalprøven (elev A: forkert i trin 6 → 1864) | A: et hul skjules for eleven, men ikke for læreren (posttest) |
+| **LP13-5** Overførsel | Hvad må kaldes overførsel? | A: ny periode, samme opgaveform · B: + ny opgaveform · C: andet fag | **A**, kaldet »overførsel til en ny periode« | Nær vs. fjern transfer (Barnett & Ceci 2002). Spillets 1864 er nær transfer; papirets T er lidt længere | Ingen forskel | Ingen | Ordlyd i dev-panel og lærerpakke | At kalde nær transfer »overførsel« uden forbehold overvurderer |
+| **LP13-6** Genbesøg og forsinket test | To tal: (1) hvor længe efter overførslen kommer spillets genbesøg (et nyt *øve*-tidspunkt), og (2) hvor længe efter posttesten kommer den forsinkede test C (*målingen*)? | Genbesøg: A 20 timer · B 1–3 dage · C 7 dage. Forsinket test: A 7 dage · B 2–4 uger | **Forsinket test: 7 dage. Genbesøg: 1–3 dage** (begge forslag) | Cepeda m.fl. 2008: ved en testforsinkelse på 1 uge var det bedste mellemrum mellem øvesessionerne ca. 20–40 % af forsinkelsen, dvs. ca. 1½–3 dage. Det gælder voksne og faktaviden, så den præcise længde er en heuristik (`learning-progression-source-verification.md` §6). Forsinket test og genbesøg må ikke blandes sammen: et genbesøg er øvelse, ikke en måling af fastholdelse | Fravær rammer svage elever mest; rapportér frafald | `REVISIT_AFTER_HOURS` er i dag 20 (test). En ændring kræver kode og tests i F6-sporet samt et GO. Den forsinkede test er papir og kræver ingen kode | Unit på `nextStep` med reelle datoer; aldrig »+20 timer«; den forsinkede test dateres i `C_dage_efter_post` | For kort testforsinkelse: kortvarig hukommelse kaldes fastholdelse. For langt: frafald. Genbesøg som måling: øvelseseffekt tolkes som fastholdelse |
+| **LP13-7** Status | Hvad må et færdigt forløb hedde? | A: »alle trin har et svar« · B: »Gennemført forløb« + lærertabel · C: »Mestret« | **B, og aldrig C** | Én opgave pr. trin kan ikke dokumentere mestring (Soderstrom & Bjork 2015; Pelánek & Řihák 2017) | Stærk elev får ingen falsk ros, svag elev ingen falsk dom | Ingen produktionskode. Dev-panelet siger allerede A | Unit på teksterne (ingen »mestr«); rubrikken har ingen grænse | C: læreren og eleven tror, at noget er lært, som ikke er målt |
+
+**Til GO (samlet):**
+
+1. LP13-1 A, LP13-2 A, LP13-3 A og LP13-4 A som pilotpolitik.
+2. LP13-6: forsinket test efter 7 dage; genbesøg i spillet efter 1–3 dage (to separate tal).
+3. LP13-7 B.
+4. Et nyt politik-id `laerligverse-pilot-policy-v1`, når 1–3 er besluttet.
+
+Intet af dette er et GO til deploy, migration eller rigtige elever.

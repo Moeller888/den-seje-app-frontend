@@ -8,6 +8,11 @@ indsamles ingen data. Den generelle evalueringsmodel står i
 modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som
 belæg for.
 
+> **F8 (D-344): §1–5 og §7 er afløst af måleopgaverne v1** i `docs/laerligverse/laererpakke/` (genereret fra
+> `tools/laerligverse/assessment-v1.mjs`), se `docs/laerligverse/laeringsmaaling.md` §3. Grunden: i §1, §3 og §5 er
+> det rigtige svar hver gang den personlige kilde, så »vælg altid dagbogen« gav fuldt hus. Kildesættene herunder er
+> genbrugt i v1's del 3. Teksten står uændret som historik. §8–14 gælder stadig, suppleret af §15–18.
+
 Alle opgaver nedenfor er **nye** og **konstrueret undervisningsmateriale**. De er ikke kopier af øveopgaverne
 i spillet, og de skal godkendes af en historielærer sammen med lærergennemgangspakken.
 
@@ -199,3 +204,81 @@ end MC.
 - Lærergennemgangssiden (`node tools/laerligverse/serve-review.mjs`) kører kun på lærerens egen computer
   (127.0.0.1) og gemmer intet på en server.
 
+---
+
+## 15. Tre pilotdesigns (F8, D-344)
+
+Alle tre bruger lærerpakken v1 (`laererpakke/`): prætest A, Arkivskabet, posttest B, transfertest T, forsinket test C,
+lærerobservation og elevfeedback. Ingen af dem sender data til Lærlig.
+
+| | **A. Lille gennemførlighedspilot** | **B. Én klasse, præ/post** | **C. Sammenligning** |
+|---|---|---|---|
+| Elever | 4–6 | én klasse (ca. 20–25) | to parallelle klasser (ca. 40–50) eller én klasse delt i to |
+| Arbejdstid, lærer | ca. 2 t (1 lektion + 30 min bedømmelse + 15 min opfølgning) | ca. 5 t (2 lektioner, bedømmelse af ca. 100 ark, genbedømmelse af 10) | ca. 9 t (4 lektioner, ca. 200 ark, genbedømmelse) |
+| Krav til læreren | historielærer, der har godkendt prøverne; tid til at observere hver elev | samme + blind bedømmelse (bland ark) | samme + den samme lærer i begge grupper; referenceaktivitet på papir med **samme kilder, påstande og feedback** som spillet; A/B byttes for halvdelen |
+| Teknik | den lokale demo på en lærer-pc (`serve-local.mjs`, testadapter); ingen konti | samme på klassens maskiner, eller demoen på en skole-pc pr. elevpar | samme |
+| Data | papir: delscorer, noter, feedback; ingen navne | registreringsskemaet, pseudonymer | samme + `gruppe` |
+| Mulige konklusioner | om forløbet kan gennemføres; om eleverne forstår opgaverne og spillet; om prøverne skelner (loft/gulv); tekniske fejl | beskrivende: fordeling af delscorer før og efter; transfer; fastholdelse; skelneevne pr. opgave | om spillet tilføjer noget ud over *indholdet* — kun som en tendens, ikke en kausal effekt med 1–2 klasser |
+| Begrænsninger | ingen tal kan generaliseres | ingen kontrolgruppe: testeffekt, lærer og form kan forklare en ændring | klasser er aldrig ens; to klasser = én sammenligning; kræver mere af skolen |
+| Risiko for fejlkonklusion | lav (der konkluderes intet om læring) | **middel:** fristelsen til at kalde en stigning »effekt« | middel: en lille forskel mellem to klasser tages for et resultat |
+
+**Anbefaling: design A først, derefter B.** Grunde:
+
+1. Prøverne v1 er ikke afprøvet, og rubrikforsøget fandt fem tvetydigheder (`laeringsmaaling.md` §5). De skal
+   afprøves på få elever, før en hel klasse bruger dem.
+2. Spillet har ingen oplæsning (`laeringsmaaling.md` §6), og vi ved ikke, hvordan ordblinde elever klarer
+   bagsiderne. Det ser man i en lille gruppe.
+3. Design C giver kun mening, når A og B fungerer og referenceaktiviteten er lavet og godkendt.
+
+## 16. Pilotprotokol (design A → B)
+
+| Trin | Hvad | Hvem | Tid |
+|---|---|---|---|
+| 0 | GO'er: prøverne godkendt af en lærer; LP-13 (mindst LP13-1–4, -6, -7) besluttet; skolens tilladelse og information (§17) | Christopher, skolen | — |
+| 1 | Elevkoder; koblingen kode → elev bliver hos læreren | lærer | 10 min |
+| 2 | Prætest A (oplæsning tilladt for alle, noteres) | lærer | 12 min |
+| 3 | Introduktion i Arkivskabet: tre kort og et tjek | elev | 5 min |
+| 4 | Arkivskabet: trin 3–8 i den lokale demo. Genbesøget springes over i piloten, så »+20 timer« bruges ikke | elev; lærer observerer (lærervejledning §7) | 15–20 min |
+| 5 | Posttest B, straks efter | lærer | 12 min |
+| 6 | Transfertest T | lærer | 10 min |
+| 7 | Elevfeedback (4 spørgsmål) | lærer | 3 min |
+| 8 | Forsinket test C efter reel tid (forslag 7 dage, LP13-6). Ingen ny undervisning imellem | lærer | 12 min |
+| 9 | Bedømmelse: blandede ark, rubrik, 10 genbedømt af en kollega | lærer + kollega | 30–60 min |
+| 10 | Analyse efter §11 og lærervejledning §9; rapport med »vi observerede …« | Christopher | — |
+
+**Stopkriterier undervejs:**
+
+- en elev bliver ked af det eller sidder fast i mere end 5 min, uden at hjælp virker;
+- en teknisk fejl stopper spillet;
+- læreren vurderer, at en opgave er fagligt forkert.
+
+Stop for den elev, og notér det. Data fra en stoppet elev bruges kun i gennemførligheden.
+
+## 17. Spørgsmål om databeskyttelse til særskilt vurdering
+
+F8 tager **ingen** juridisk stilling til samtykke eller behandlingsgrundlag. Spørgsmålene skal afklares af skolen, kommunen
+eller en rådgiver, før en pilot:
+
+1. **Hvilke oplysninger indsamles?** Delscorer, lærernoter, elevfeedback, klassetrin, brug af støtte. Er
+   oplysningen om oplæsning eller ordblindhed en *helbreds*- eller anden særlig kategori, og må den så
+   registreres?
+2. **Er personhenførbare data nødvendige?** Forslaget bruger pseudonymer. Koblingen kode → elev hos læreren gør
+   dem stadig personoplysninger. Er det nødvendigt, eller kan forsinket test kobles på anden måde?
+3. **Opbevaring:** Papir og regneark hos læreren/skolen. Hvilket system må skolen bruge? Intet hos Lærlig.
+4. **Adgang:** Kun læreren og den kollega, der genbedømmer. Må Christopher se pseudonymiserede delscorer?
+5. **Opbevaringstid og sletning:** Hvor længe, og hvem sletter koblingen og arkene?
+6. **Information:** Hvad skal elever og forældre have at vide, og af hvem? Kræver skolen samtykke, eller er det
+   almindelig undervisning med en evaluering?
+7. **Godkendelser:** Skal skoleledelse, kommune eller forældreråd godkende? Gælder der regler for forsøg i
+   undervisningen?
+8. **Lærlig som aktør:** Bliver Lærlig databehandler, hvis Christopher får data? Kræves en aftale?
+
+## 18. Status (F8)
+
+| Del | Status |
+|---|---|
+| Arkivskabets 12 elementer | **Godkendt** af Christopher Møller 04-11-2026 |
+| Prøverne v1 | **Afventer** særskilt faglig godkendelse |
+| LP-13 | **Afventer** beslutning |
+| Elevpilot | **Ikke autoriseret** |
+| Produktion | **Ikke autoriseret** |
