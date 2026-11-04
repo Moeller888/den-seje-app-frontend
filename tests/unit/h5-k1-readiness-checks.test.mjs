@@ -24,6 +24,11 @@
 //   8. Ledger and gates: schema ahead of the ledger, a wrong migration name, versions in the wrong order and
 //      a missing step all make LED-01 false and close every gate; an ok = NULL row is never a pass (a
 //      missing pinned function makes PRE-01 NULL and GATE-A1 false); the row count matches runbook §4.
+//   9. CUT-01 means the legacy path is EFFECTIVELY closed (runbook §9.2), not only that service_role lost
+//      EXECUTE: it turns false on a PUBLIC grant (read from the ACL, PUBLIC is not a role), a direct grant to
+//      a runtime role, role inheritance, SET ROLE from a NOINHERIT login role (authenticator → service_role),
+//      another non-superuser role holding EXECUTE, a wrapper function, a dependent view, and a DROP/CREATE
+//      under production's default privileges — and true again once each path is closed.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -57,9 +62,12 @@ const LEDGER_SQL = `CREATE SCHEMA IF NOT EXISTS supabase_migrations;
   CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations (version text PRIMARY KEY, name text, statements text[]);`;
 // The cutover registration contract of runbook §9.1 — a SYNTHETIC stand-in for what the M2 PR will create.
 const CUTOVER_SQL = `CREATE TABLE public.answer_path_cutovers (cutover text PRIMARY KEY CHECK (cutover IN ('h5_m2')),
-  effective_at timestamptz NOT NULL, migration text NOT NULL);`;
-const M2_SQL = `REVOKE EXECUTE ON FUNCTION public.process_question_attempt(uuid,uuid,text,bigint) FROM service_role;
-  REVOKE EXECUTE ON FUNCTION public.process_text_answer(uuid,uuid,text,boolean) FROM service_role;`;
+  effective_at timestamptz NOT NULL, closed_before timestamptz NOT NULL, migration text NOT NULL,
+  CHECK (closed_before <= effective_at));`;
+const PQA = "public.process_question_attempt(uuid,uuid,text,bigint)";
+const PTA = "public.process_text_answer(uuid,uuid,text,boolean)";
+const M2_SQL = `REVOKE EXECUTE ON FUNCTION ${PQA} FROM service_role;
+  REVOKE EXECUTE ON FUNCTION ${PTA} FROM service_role;`;
 
 function block(marker) {
   const m = new RegExp("```sql\\n(-- " + marker + "[\\s\\S]*?)```").exec(RUNBOOK);
@@ -134,7 +142,8 @@ test("1. the checks file and both integrity blocks are read-only", () => {
   for (const kw of writing) assert.doesNotMatch(code, new RegExp(`\\b${kw}\\b`, "i"), `${kw} outside comments/literals`);
   const allowed = new Set(["to_regprocedure", "to_regclass", "md5", "max", "bool_and", "bool_or", "count",
     "coalesce", "left", "concat_ws", "string_agg", "array_agg", "unnest", "format_type", "has_table_privilege",
-    "has_function_privilege", "has_column_privilege", "pg_get_constraintdef", "pg_stat_get_live_tuples"]);
+    "has_function_privilege", "has_column_privilege", "pg_get_constraintdef", "pg_stat_get_live_tuples",
+    "pg_has_role", "aclexplode", "acldefault"]);
   const keywords = new Set(["values", "select", "from", "and", "or", "not", "when", "then", "else", "case", "filter",
     "over", "on", "where", "in", "exists", "any", "all", "array", "as", "join", "with", "ordinality"]);
   for (const m of code.matchAll(/\b([a-z_][a-z0-9_]*)\s*\(/gi)) {
@@ -144,7 +153,7 @@ test("1. the checks file and both integrity blocks are read-only", () => {
     if (keywords.has(name)) continue;
     assert.ok(allowed.has(name), `function ${name}() is not in the read-only set`);
   }
-  for (const b of [INTEGRITY_1(), INTEGRITY_2()]) {
+  for (const b of [INTEGRITY_1(), INTEGRITY_2(), block("H5-K1 M2 CALL PATHS")]) {
     const s = strip(b);
     assert.match(s.trim(), /^SELECT\b/i);
     for (const kw of ["INSERT", "UPDATE", "DELETE", "TRUNCATE", "ALTER", "CREATE", "DROP", "GRANT", "REVOKE", "INTO"]) {
@@ -254,10 +263,14 @@ test("6b–d. legacy between A8 and M2, a synthetic T, and a legacy answer after
   assert.equal(i["INT-B0"].ok, null, "INT-B0 is never a criterion");
   assert.equal(i["INT-B"].ok, null, "not evaluable without T");
   for (const id of ["INT-C", "INT-D", "INT-E"]) assert.equal(i[id].ok, true, id);
-  // M2 + the registration of T in one transaction (the contract of runbook §9.1), synthetic
-  await d.exec(`${CUTOVER_SQL}
-    BEGIN; ${M2_SQL}
-    INSERT INTO public.answer_path_cutovers VALUES ('h5_m2', clock_timestamp(), 'synthetic-m2.sql'); COMMIT;`);
+  // M2 in the order of runbook §9.3, synthetic: transaction 1 closes (T is missing → CUT-02 false),
+  // transaction 2 creates the registration table and its row together, only afterwards (the drain itself
+  // needs real concurrency: the M2 PR, §9.4)
+  await d.exec(`BEGIN; ${M2_SQL} COMMIT;`);
+  assert.equal((await checks(d))["CUT-02"].ok, false, "between transaction 1 and 2: NO-GO");
+  await d.exec(`BEGIN; ${CUTOVER_SQL}
+    INSERT INTO public.answer_path_cutovers (cutover, effective_at, closed_before, migration)
+    VALUES ('h5_m2', clock_timestamp(), clock_timestamp(), 'synthetic-m2.sql'); COMMIT;`);
   assert.equal((await checks(d))["CUT-02"].ok, true);
   let j = await rowsOf(d, INTEGRITY_2());
   assert.equal(j["CUT-T"].ok, true);
@@ -344,4 +357,74 @@ test("8d. the row count matches runbook §4", async () => {
   assert.equal(rows.filter((r) => r.phase === "gate").length, Number(m[3]));
   assert.equal(rows.length, Number(m[2]) + 1 + Number(m[3]));
   assert.match(CHECKS_SQL, new RegExp(`i alt ${m[1]} rækker`), "the SQL header states the same count");
+});
+
+test("9a–f. CUT-01 detects every effective access path to the legacy functions (runbook §9.2)", async () => {
+  const d = await db(FULL);
+  const cut = async () => (await checks(d))["CUT-01"];
+  const closed = async (why) => {
+    const c = await cut();
+    assert.equal(c.ok, true, `${why}: ${c.actual}`);
+    assert.match(c.actual, /^runtime=ingen; PUBLIC=false; øvrige roller=ingen; kaldere=0; afhængige=0; /);
+  };
+  const open = async (why, ...patterns) => {
+    const c = await cut();
+    assert.equal(c.ok, false, `${why}: ${c.actual}`);
+    for (const p of patterns) assert.match(c.actual, p, why);
+  };
+
+  await open("before M2", /runtime=service_role→service_role/, /øvrige roller=service_role/, /authenticator=fraværende/);
+  await d.exec(M2_SQL);
+  await closed("after M2");
+
+  // 9a. PUBLIC is not a role: the grant is read from the ACL (grantee 0) — and every role inherits it
+  await d.exec(`GRANT EXECUTE ON FUNCTION ${PQA} TO PUBLIC`);
+  await open("PUBLIC grant", /PUBLIC=true/, /anon→anon/, /authenticated→authenticated/);
+  await d.exec(`REVOKE EXECUTE ON FUNCTION ${PQA} FROM PUBLIC`);
+  await closed("PUBLIC revoked");
+
+  // 9b. a direct grant to a runtime role
+  await d.exec(`GRANT EXECUTE ON FUNCTION ${PTA} TO authenticated`);
+  await open("direct grant", /runtime=authenticated→authenticated/);
+  await d.exec(`REVOKE EXECUTE ON FUNCTION ${PTA} FROM authenticated`);
+  await closed("direct grant revoked");
+
+  // 9c. role inheritance, and another non-superuser role that holds EXECUTE on its own
+  await d.exec(`CREATE ROLE legacy_caller NOLOGIN; GRANT EXECUTE ON FUNCTION ${PQA} TO legacy_caller;
+    GRANT legacy_caller TO authenticated`);
+  await open("inheritance", /authenticated→legacy_caller/, /øvrige roller=.*legacy_caller/);
+  await d.exec("REVOKE legacy_caller FROM authenticated");
+  await open("a non-runtime role still holds EXECUTE", /runtime=ingen/, /øvrige roller=legacy_caller/);
+  await d.exec(`REVOKE EXECUTE ON FUNCTION ${PQA} FROM legacy_caller; DROP ROLE legacy_caller`);
+  await closed("inheritance closed");
+
+  // 9d. SET ROLE: a NOINHERIT login role (PostgREST's authenticator) is a MEMBER of service_role —
+  //     has_function_privilege('authenticator', …) is false, yet it calls as service_role
+  await d.exec("CREATE ROLE authenticator NOINHERIT LOGIN; GRANT service_role TO authenticator");
+  await closed("authenticator exists, M2 done");
+  assert.match((await cut()).actual, /authenticator=findes/);
+  await d.exec(`GRANT EXECUTE ON FUNCTION ${PTA} TO service_role`);
+  await open("SET ROLE path", /authenticator→service_role/, /service_role→service_role/);
+  await d.exec(`REVOKE EXECUTE ON FUNCTION ${PTA} FROM service_role`);
+  await closed("SET ROLE path closed");
+
+  // 9e. indirect call paths: a SECURITY DEFINER wrapper, and a view (a pg_depend dependent)
+  await d.exec(`CREATE FUNCTION public.legacy_wrapper() RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS
+    $f$ BEGIN PERFORM public.process_text_answer(NULL::uuid, NULL::uuid, NULL::text, NULL::boolean); END $f$`);
+  await open("wrapper", /kaldere=1/);
+  await d.exec("DROP FUNCTION public.legacy_wrapper()");
+  await d.exec(`CREATE VIEW public.legacy_view AS
+    SELECT public.process_question_attempt(NULL::uuid, NULL::uuid, NULL::text, NULL::bigint) AS r`);
+  await open("dependent view", /afhængige=[1-9]/);
+  await d.exec("DROP VIEW public.legacy_view");
+  await closed("indirect paths removed");
+
+  // 9f. DROP/CREATE under production's default privileges (verified 2026-11-04) gives the access back
+  await d.exec("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated, service_role");
+  const sig = (await d.query(`SELECT pg_get_function_arguments(p.oid) AS a, pg_get_function_result(p.oid) AS r
+    FROM pg_proc p WHERE p.oid = '${PTA}'::regprocedure`)).rows[0];
+  await d.exec(`DROP FUNCTION ${PTA};
+    CREATE FUNCTION public.process_text_answer(${sig.a}) RETURNS ${sig.r} LANGUAGE plpgsql SECURITY DEFINER AS
+    $f$ BEGIN RAISE EXCEPTION 'recreated'; END $f$`);
+  await open("DROP/CREATE", /PUBLIC=true/, /anon→anon/, /authenticated→authenticated/, /service_role→service_role/);
 });

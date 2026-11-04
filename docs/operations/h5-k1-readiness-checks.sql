@@ -4,7 +4,8 @@
 -- Brug: én SELECT-sætning. Kør den, som den står (fx via Supabase-MCP execute_sql eller psql), før og
 -- efter hvert trin i docs/operations/h5-k1-activation-runbook.md. Den ændrer intet:
 --   * kun SELECT og læsning af systemkataloger (pg_proc, pg_class, pg_constraint, pg_trigger,
---     pg_attribute, pg_policy) og privilegiefunktioner (has_*_privilege);
+--     pg_attribute, pg_policy, pg_roles, pg_namespace, pg_depend), ACL'er (aclexplode, acldefault) og
+--     privilegiefunktioner (has_*_privilege, pg_has_role);
 --   * tabellen public.question_attempts nævnes aldrig direkte: alt om den slås op i kataloget via
 --     to_regclass, så filen kan køres, før den findes. Antallet af rækker er et ESTIMAT fra
 --     statistikken (pg_stat_get_live_tuples) — K1-migrationen kontrollerer selv atomart, at tabellen er
@@ -30,8 +31,9 @@
 --   align     20261101190100_question_attempts_v2_align_grading.sql er anvendt
 --   d327      20261103100000_question_attempts_history_no_action.sql er anvendt
 --   k1        20261103110000_l1_k1_attempt_context.sql er anvendt
---   cutover   M2: service_role har mistet EXECUTE på de to legacy-svarfunktioner (IKKE implementeret
---             endnu — design §PR 5, D-273); CUT-02: cutover-tidspunktet T er registreret (kontrakt, §9)
+--   cutover   M2 (IKKE implementeret endnu — design §PR 5, D-273). CUT-01: ingen runtime-rolle kan udføre de
+--             to legacy-svarfunktioner — direkte, via PUBLIC, rollearv eller SET ROLE — og intet andet
+--             kalder dem (runbook §9.2); CUT-02: cutover-tidspunktet T er registreret (kontrakt, §9.1)
 --   integrity estimeret antal forsøg (præcise integritetskontroller: runbook §8)
 --   ledger    supabase_migrations.schema_migrations; LED-01 sammenholder ledgeren med skemaets fase
 --   security  separat sikkerhedsspor (R6/R7) — blokerer ikke aktiveringen
@@ -119,6 +121,38 @@ st AS (
          WHEN s.qa IS NOT NULL THEN 1
          ELSE 0 END AS schema_stage
   FROM s
+),
+-- Effektiv adgang til de to legacy-svarfunktioner (CUT-01, runbook §9.2). PUBLIC er ikke en rolle: den
+-- læses i ACL'en (grantee 0 i aclexplode), og en NULL-ACL betyder standardrettighederne, hvor PUBLIC har
+-- EXECUTE. Rollearv og SET ROLE: for hver runtime-rolle prøves enhver rolle, den er MEDLEM af (også uden
+-- INHERIT, som authenticator → service_role), med has_function_privilege, der selv regner arv med.
+lg AS (
+  SELECT st.*,
+    (SELECT string_agg(DISTINCT rt.rolname || '→' || x.rolname, ', ')
+       FROM pg_catalog.pg_roles rt
+       CROSS JOIN pg_catalog.pg_roles x
+       CROSS JOIN (VALUES (st.pqa_oid), (st.pta_oid)) AS lf(oid)
+      WHERE rt.rolname IN ('anon', 'authenticated', 'service_role', 'authenticator')
+        AND lf.oid IS NOT NULL
+        AND pg_has_role(rt.oid, x.oid, 'MEMBER')
+        AND has_function_privilege(x.oid, lf.oid, 'EXECUTE')) AS legacy_runtime,
+    EXISTS (SELECT 1 FROM pg_catalog.pg_proc p
+              CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) AS a
+             WHERE p.oid IN (st.pqa_oid, st.pta_oid) AND a.grantee = 0 AND a.privilege_type = 'EXECUTE') AS legacy_public,
+    (SELECT string_agg(DISTINCT x.rolname, ', ')
+       FROM pg_catalog.pg_proc p
+       CROSS JOIN pg_catalog.pg_roles x
+      WHERE p.oid IN (st.pqa_oid, st.pta_oid) AND NOT x.rolsuper AND x.oid <> p.proowner
+        AND has_function_privilege(x.oid, p.oid, 'EXECUTE')) AS legacy_other_roles,
+    (SELECT count(*) FROM pg_catalog.pg_proc q JOIN pg_catalog.pg_namespace n ON n.oid = q.pronamespace
+      WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
+        AND q.oid NOT IN (SELECT fn.oid FROM fn WHERE fn.oid IS NOT NULL AND fn.k IN ('pqa', 'pta'))
+        AND q.prosrc ~* '\m(process_question_attempt|process_text_answer)\s*\(') AS legacy_callers,
+    (SELECT count(*) FROM pg_catalog.pg_depend dp
+      WHERE dp.refclassid = 'pg_catalog.pg_proc'::regclass AND dp.refobjid IN (st.pqa_oid, st.pta_oid)
+        AND dp.deptype IN ('n', 'a')) AS legacy_dependents,
+    EXISTS (SELECT 1 FROM pg_catalog.pg_roles r WHERE r.rolname = 'authenticator') AS has_authenticator
+  FROM st
 ),
 checks AS (
 SELECT check_id, phase, expected, actual, ok, ord FROM (
@@ -342,11 +376,17 @@ SELECT 'K1-05', 'k1', 'K1-funktionerne: EXECUTE kun service_role, SECURITY DEFIN
 
 -- ── cutover: M2 (ikke implementeret endnu) ───────────────────────────────────────────────────────
 UNION ALL
-SELECT 'CUT-01', 'cutover', 'M2 udført: service_role har ikke EXECUTE på process_question_attempt og process_text_answer (legacy)',
-       'pqa=' || coalesce(has_function_privilege('service_role', s.pqa_oid, 'EXECUTE')::text, 'mangler')
-       || ' pta=' || coalesce(has_function_privilege('service_role', s.pta_oid, 'EXECUTE')::text, 'mangler'),
-       coalesce(NOT has_function_privilege('service_role', s.pqa_oid, 'EXECUTE')
-         AND NOT has_function_privilege('service_role', s.pta_oid, 'EXECUTE'), false), 50 FROM s
+SELECT 'CUT-01', 'cutover', 'M2 udført og legacy-vejen effektivt lukket: ingen runtime-rolle (anon, authenticated, service_role, authenticator) kan udføre process_question_attempt eller process_text_answer — hverken direkte, via PUBLIC, via rollearv eller via SET ROLE; ingen anden ikke-superbruger end ejeren har EXECUTE; ingen anden funktion og intet afhængigt objekt kalder dem (runbook §9.2)',
+       CASE WHEN lg.pqa_oid IS NULL OR lg.pta_oid IS NULL THEN 'mangler' ELSE
+         concat_ws('; ', 'runtime=' || coalesce(lg.legacy_runtime, 'ingen'),
+                   'PUBLIC=' || lg.legacy_public::text,
+                   'øvrige roller=' || coalesce(lg.legacy_other_roles, 'ingen'),
+                   'kaldere=' || lg.legacy_callers::text,
+                   'afhængige=' || lg.legacy_dependents::text,
+                   'authenticator=' || CASE WHEN lg.has_authenticator THEN 'findes' ELSE 'fraværende' END) END,
+       coalesce(lg.pqa_oid IS NOT NULL AND lg.pta_oid IS NOT NULL
+         AND lg.legacy_runtime IS NULL AND NOT lg.legacy_public AND lg.legacy_other_roles IS NULL
+         AND lg.legacy_callers = 0 AND lg.legacy_dependents = 0, false), 50 FROM lg
 UNION ALL
 SELECT 'CUT-02', 'cutover', 'efter M2: det faktiske cutover-tidspunkt T er registreret vedvarende i public.answer_path_cutovers (kontrakt, runbook §9); før M2 ikke relevant',
        CASE WHEN NOT coalesce(NOT has_function_privilege('service_role', s.pqa_oid, 'EXECUTE')
