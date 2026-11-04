@@ -926,8 +926,8 @@ function _nsShoeList(shoe) {
 // D-336/D-337: the 6 owner-approved sweaters (D-336's approval file ls2-owner-approval-v1.json; D-335 v3). One cut (top-sweater-ls2):
 // its skin shadow is published once (shadowsOf) and so is its HIP SEAM, a small layer of the cut's own outline drawn BEHIND the bottom
 // (after the shoes, before the bottom's first draw) — a bottom narrower than C at the hip leaves it visible and closed, a wider one
-// covers it; the sweater's body and rib are drawn in front as any top. The owner approved 30 concrete combinations, all with the beige
-// sneakers: a sweater replaces the top ONLY where the whole effective outfit (after the print tee, the trousers and the shoe) with this
+// covers it; the sweater's body and rib are drawn in front as any top. The owner approved 30 concrete combinations with the beige
+// sneakers (D-336) and 240 with the other shoes (D-339/D-340): a sweater replaces the top ONLY where the whole effective outfit (after the print tee, the trousers and the shoe) with this
 // sweater is one of NORTHSTAR_LS2_COMBOS; anywhere else the outfit keeps its own top and the stored choice stays untouched.
 export const NORTHSTAR_LS2_BASE = "top-sweater-ls2";
 export const NORTHSTAR_LS2_HIP_SEAM = "top-sweater-ls2-hip-seam-v1.webp";
@@ -940,10 +940,22 @@ export const NORTHSTAR_LS2_SWEATERS = Object.freeze({
   "LS2-NAVY-TEAPOT": _SW("navy-teapot", "Sweater · navy · tekande"),
   "LS2-NAVY-FOX": _SW("navy-fox", "Sweater · navy · ræv"),
 });
-// The 30 approved combinations (top+bottom+shoes): each sweater over the skirt, capri and the olive, navy and sand trousers, with the
-// beige sneakers. 24 are reachable with today's outfits; the 6 with olive trousers are not (olive is only worn with other shoes).
+// The approved combinations (top+bottom+shoes), per shoe the bottoms each sweater is approved with: D-336's 30 with the beige sneakers
+// (ls2-owner-approval-v1.json) and D-340's 240 with the other shoes (ls2-shoe-owner-approval-v1.json) — 270. The navy shorts are never
+// on it, and the charcoal SV1 sneakers only with the skirt and capri. 264 are reachable with today's outfits; the 6 with olive trousers
+// and the beige sneakers are not (olive is only worn with other shoes).
+const _LS2_FIVE = ["skirt-sand", "capri-lightblue", "trousers-square-olive", "trousers-square-navy", "trousers-square-sand"];
+const _LS2_SHOES = Object.freeze({
+  "shoes-sneakers-beige": _LS2_FIVE,
+  "shoes-ankleboots-ab1-lightsand": _LS2_FIVE, "shoes-ankleboots-ab1-original": _LS2_FIVE,
+  "shoes-ankleboots-brown": ["capri-lightblue", "trousers-square-olive", "trousers-square-navy", "trousers-square-sand"],
+  "shoes-boots-laceup-black": ["skirt-sand", "capri-lightblue", "trousers-square-navy", "trousers-square-sand"],
+  "shoes-sneakers-low-sv1-burgundygum": _LS2_FIVE, "shoes-sneakers-low-sv1-chalk": _LS2_FIVE, "shoes-sneakers-low-sv1-navywhite": _LS2_FIVE,
+  "shoes-sneakers-low-sv1-charcoal": ["skirt-sand", "capri-lightblue"],
+  "shoes-sneakers-white": _LS2_FIVE,
+});
 export const NORTHSTAR_LS2_COMBOS = Object.freeze(Object.values(NORTHSTAR_LS2_SWEATERS).flatMap((sw) =>
-  ["skirt-sand", "capri-lightblue", "trousers-square-olive", "trousers-square-navy", "trousers-square-sand"].map((b) => sw.item + "+bottom-" + b + "+shoes-sneakers-beige")));
+  Object.entries(_LS2_SHOES).flatMap(([shoes, bottoms]) => bottoms.map((b) => sw.item + "+bottom-" + b + "+" + shoes))));
 // The ten items: their layers and their skin-shadow parts (multiply; on C's body, on C's arms); then the print tees, the trousers,
 // the SV1-V5 shoes, the AB-1 boots and the sweaters (with their hip seam).
 export const NORTHSTAR_ITEMS = Object.freeze({
@@ -1060,7 +1072,7 @@ export function northstarSelectedSweater() {
   return typeof s === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_LS2_SWEATERS, s) ? s : null;
 }
 // A sweater replaces the top only where the WHOLE effective outfit — the K outfit after an allowed print tee, allowed trousers and an
-// allowed shoe, with this sweater — is one of the 30 approved combinations.
+// allowed shoe, with this sweater — is one of the approved combinations (NORTHSTAR_LS2_COMBOS).
 export function northstarSweaterAllowed(key, tee, pants, shoe, sweater) {
   return _nsSweaterFits(_nsWithShoe(key, tee, pants, shoe), sweater);
 }

@@ -13,7 +13,7 @@
 // tees); the reasons name what is still not approved. D-331: the row also offers the 2 owner-approved AB-1 ankle boots (D-326), each
 // against its own list of 180 combinations; the same rule, store and fallback.
 // D-337: a fifth row offers the 6 owner-approved sweaters (D-336) only where the whole effective outfit with the sweater is one of the
-// 30 approved combinations (beige sneakers); stored the same way (avatar_northstar_sweater); "Outfittets egen top" returns.
+// approved combinations (D-336's 30 with the beige sneakers, D-340's 240 with the other shoes); stored the same way (avatar_northstar_sweater); "Outfittets egen top" returns.
 import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor } from "./avatar-layers.js";
 
 function store(key, value) {
@@ -122,11 +122,11 @@ function shoeReason(key, tee, pants) {
   return "Kombinationen er ikke godkendt.";
 }
 
-// Why a sweater cannot be chosen for this outfit (the owner approved 30 concrete combinations: each sweater over the skirt, capri and the
-// olive, navy and sand trousers, with the beige sneakers).
+// Why a sweater cannot be chosen for this outfit (the owner approved each sweater over the skirt, capri and the olive, navy and sand
+// trousers with the shoes each was checked with — never with the shorts, and the charcoal sneakers only with the skirt and capri).
 function sweaterReason(key, tee, pants, shoe) {
   const o = northstarOutfitFor(key, tee, pants, shoe);
   if (!o) return "Vælg først et outfit.";
-  if (o.shoes !== "shoes-sneakers-beige") return "Trøjerne er kun godkendt med de beige sneakers.";
-  return "Trøjerne er kun godkendt med nederdel, capri og lange bukser.";
+  if (/shorts/.test(o.bottom)) return "Trøjerne er ikke godkendt med shorts.";
+  return "Kombinationen er ikke godkendt.";
 }
