@@ -45,13 +45,14 @@ test("lærergennemgang: intet er forhåndsgodkendt; afgørelser gemmes og indlæ
   // An ASCII temp path: setInputFiles cannot read a non-ASCII Windows path in Chromium/Firefox (a teacher picks the file in a dialog).
   const saved = join(mkdtempSync(join(tmpdir(), "lv-review-")), "afgoerelser.json");
   await download.saveAs(saved);
-  const data = JSON.parse(readFileSync(saved, "utf8"));
+  type Decision = { status: string; kommentar: string; aendringer: string };
+  const data = JSON.parse(readFileSync(saved, "utf8")) as { laerer: string; dato: string; elementer: Record<string, Decision> };
   expect(data.laerer).toBe("Test Lærer");
   expect(data.dato).toBe("2026-11-04");
   expect(data.elementer["h4-kilde"]).toEqual({ status: "godkendt", kommentar: "Fin kilde. Æøå bevares.", aendringer: "" });
   expect(data.elementer.t1864).toEqual({ status: "skal_rettes", kommentar: "", aendringer: "Tilføj, at Dybbøl blev stormet den 18. april." });
   expect(data.elementer["h4-genbesoeg"].status).toBe("afvist");
-  expect(Object.values(data.elementer).filter((v: any) => v.status === "ikke_gennemgaaet").length).toBe(ids.length - 3);
+  expect(Object.values(data.elementer).filter((v) => v.status === "ikke_gennemgaaet").length).toBe(ids.length - 3);
 
   // A fresh page (nothing remembered) loads the file back: every value restored.
   await page.goto(PAGE);
