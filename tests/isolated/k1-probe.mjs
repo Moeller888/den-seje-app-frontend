@@ -10,6 +10,8 @@
 // (test.fail) while K1 is absent: if they start passing without K1, the run turns red and the finding must be
 // re-examined; once K1 is in the stack they run as ordinary tests again. A separate characterization test
 // proves the fail-safe behaviour (500, no attempt, no reward, the round stays open).
+// While K1 is absent, the marked tests get a longer test timeout: a host-page assertion waits 30 s, which
+// equals the default test timeout — without it Playwright reports "timedOut", not the expected "failed".
 export const K1_GAP = "D-341: L1 K1 is not in the isolated stack, so process-event's H5 call (p_mode/p_hints_used) cannot reach the 7-parameter _v2 — expected to fail until the K1/H5 owner closes the gap";
 
 /** true = K1 columns exist; false = absent (PostgREST 400 for the unknown column); anything else fails loud. */

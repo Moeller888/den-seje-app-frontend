@@ -97,6 +97,7 @@ async function classify(request, pupil) {
 
 test("F4 CHAIN: the host maps the world's objective, the server targets it, H5 registers the attempt with the host's submission id; the classifier keeps 'correct' apart from 'learned'", async ({ page, request, browserName }) => {
   test.fail(!K1, K1_GAP);
+  if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
   const pupil = await makePupil(request, "chain", browserName);
   const calls = trackRequests(page);
   const before = await progress(request, pupil);
@@ -134,6 +135,7 @@ test("F4 CHAIN: the host maps the world's objective, the server targets it, H5 r
 
 test("a wrong answer is registered as an attempt that pays nothing; a REPEAT round is a new attempt (is_repeat, 2 XP/1 coin) with a new submission id", async ({ page, request, browserName }) => {
   test.fail(!K1, K1_GAP);
+  if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
   const pupil = await makePupil(request, "repeat", browserName);
   const f = await signIn(page, pupil);
   await f.locator("#use-cabinet").click();

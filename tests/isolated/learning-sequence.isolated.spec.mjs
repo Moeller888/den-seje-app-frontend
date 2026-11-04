@@ -116,6 +116,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
 
   test("pupil B: wrong practice → revision → (wrong again) → application → transfer; then the revisit WAITS", async ({ request }, testInfo) => {
     test.fail(!K1, K1_GAP);
+    if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
     const p = await makePupil(request, "b", testInfo.project.name);
     await step(request, p, "guided_practice", false);
     await step(request, p, "revision", false);
@@ -129,6 +130,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
 
   test("pupil C: right practice → NO revision → application; rewards come from the server only", async ({ request }, testInfo) => {
     test.fail(!K1, K1_GAP);
+    if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
     const p = await makePupil(request, "c", testInfo.project.name);
     const before = await progress(request, p);
     await step(request, p, "guided_practice", true);
@@ -138,6 +140,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
 
   test("pupil D: the step survives a NEW login (another token, as on another device); an open round resumes, not duplicated", async ({ request }, testInfo) => {
     test.fail(!K1, K1_GAP);
+    if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
     const p = await makePupil(request, "d", testInfo.project.name);
     await step(request, p, "guided_practice", false);
     const open = await (await next(request, p)).json();
@@ -150,6 +153,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
 
   test("two tabs + replay: concurrent 'next' gives ONE instance; two submissions of the same round record ONE attempt; a replay changes nothing", async ({ request }, testInfo) => {
     test.fail(!K1, K1_GAP);
+    if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
     const p = await makePupil(request, "tabs", testInfo.project.name);
     const rs = await Promise.all([next(request, p), next(request, p)]);
     const ids = new Set();
@@ -176,6 +180,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
 
   test("the revisit opens only when due (TEST MANIPULATION of answered_at, labelled), then the sequence completes", async ({ request }, testInfo) => {
     test.fail(!K1, K1_GAP);
+    if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
     const p = await makePupil(request, "revisit", testInfo.project.name);
     await step(request, p, "guided_practice", true);
     await step(request, p, "independent_application", true);
@@ -219,6 +224,7 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
 
 test("through the real host page: the server's step decides the world's activity — a wrong practice answer makes the NEXT activity a revision", async ({ page, request, browserName }) => {
   test.fail(!K1, K1_GAP);
+  if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
   const p = await makePupil(request, "host", browserName);
   await page.goto(`${HOST_ORIGIN}/`);
   await page.locator("#lv-email").fill(p.email);

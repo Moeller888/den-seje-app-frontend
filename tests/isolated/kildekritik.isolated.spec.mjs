@@ -81,6 +81,7 @@ const attempts = async (request, p) => await (await request.get(`${SUPA}/rest/v1
 
 test("the precise objective serves ONLY the reviewed items, with their backs and without their keys; the server grades with the reviewed key and registers every attempt; then 'exhausted', never a repeat", async ({ request }, testInfo) => {
   test.fail(!K1, K1_GAP);
+  if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
   test.skip(testInfo.project.name !== "chromium", "backend path: once per run");
   const p = await makePupil(request, "http", testInfo.project.name);
   const seen = [];
@@ -123,6 +124,7 @@ test("the precise objective serves ONLY the reviewed items, with their backs and
 
 test("through the real host page: the game receives the documents' backs for the precise objective, and no token or key; the server grades", async ({ page, request, browserName }) => {
   test.fail(!K1, K1_GAP);
+  if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
   const p = await makePupil(request, "host", browserName);
   await page.goto(`${HOST_ORIGIN}/`);
   await page.locator("#lv-email").fill(p.email);
