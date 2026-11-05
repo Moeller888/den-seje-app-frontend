@@ -3,6 +3,7 @@
 // The shaft is drawn on a canvas in the theme's colours. Rules live in js/kloeft-logic.js.
 
 import { supabase } from "../supabaseClient.js";
+import { enterBreakGame } from "./minigame-pass.js";
 import { loadTheme } from "./themeManager.js";
 import { attachReadAloudControl, stopReadAloud } from "./read-aloud/adapters/quiz.js";
 import { START_Y, FLOOR, PERFECT_FRACTION, difficulty, cleftCenter, inCleft, isPerfect } from "./kloeft-logic.js";
@@ -335,6 +336,7 @@ function showOver(record) {
   }
   setScreen("over");
   $("kloeft-again")?.focus();
+  pass?.endRound();
 }
 
 function step(dt) {
@@ -369,7 +371,11 @@ function frame(now) {
   state.raf = requestAnimationFrame(frame);
 }
 
+// D-347: the game is a spillepause — one round per accepted offer, redeemed on the server.
+let pass = null;
+
 function startRound() {
+  if (!pass || !pass.beginRound()) return;
   stopReadAloud();
   unlockAudio();
   clearTimeout(state.overTimer);
@@ -414,6 +420,9 @@ async function main() {
     const { data } = await supabase.auth.getSession();
     if (!data.session) window.location.replace("login.html");
   });
+
+  pass = await enterBreakGame({ client: supabase, gameKey: "kloeft" });
+  if (!pass) return;
 
   const canvas = $("kloeft-canvas");
   const ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;

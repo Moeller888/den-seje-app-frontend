@@ -10,6 +10,7 @@
   <title>Stabel – DEN SEJE APP</title>
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/read-aloud.css">
+  <link rel="stylesheet" href="css/minigame-break.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -178,13 +179,6 @@
       color: var(--text-bright);
       margin: 12px 0 8px;
     }
-    .stabel-coins {
-      font-size: 16px;
-      font-weight: bold;
-      color: var(--text-bright);
-      min-height: 1.4em;
-      margin-bottom: 12px;
-    }
     .stabel-over-line {
       font-size: 16px;
       line-height: 1.4;
@@ -199,13 +193,13 @@
 <body>
 <div class="stabel-shell" id="stabel-root" data-screen="intro">
   <div class="stabel-topbar">
-    <a class="stabel-back" href="spil.html?fane=minigames">← Minigames</a>
+    <a class="stabel-back" href="index.html">← Quizzen</a>
     <div class="stabel-title">Stabel</div>
     <button type="button" class="stabel-mute" id="stabel-mute" aria-pressed="false">Lyd til</button>
   </div>
 
   <section id="stabel-intro">
-    <p class="stabel-lead" id="stabel-lead">En plade glider frem og tilbage. Klik, når den ligger over den under. Det, der stikker ud, skæres fra. Rammer du præcist, bliver det perfekt, og tre perfekte i træk gør pladen lidt større igen. Rammer du forbi, stopper tårnet. Hver plade giver 1 mønt, højst 50 mønter om dagen.</p>
+    <p class="stabel-lead" id="stabel-lead">En plade glider frem og tilbage. Klik, når den ligger over den under. Det, der stikker ud, skæres fra. Rammer du præcist, bliver det perfekt, og tre perfekte i træk gør pladen lidt større igen. Rammer du forbi, stopper tårnet. Stabel giver ingen mønter.</p>
     <p class="stabel-note" id="stabel-best"></p>
     <button type="button" class="stabel-cta stabel-cta--primary" id="stabel-start">Start</button>
   </section>
@@ -228,11 +222,10 @@
   <section id="stabel-over" hidden>
     <h2 class="stabel-hero" id="stabel-over-title">Tårnet står</h2>
     <p class="stabel-over-line" id="stabel-over-line"></p>
-    <p class="stabel-coins" id="stabel-coins" aria-live="polite"></p>
     <p class="stabel-note" id="stabel-best-over"></p>
     <div class="stabel-actions">
       <button type="button" class="stabel-cta stabel-cta--primary" id="stabel-again">Igen</button>
-      <a class="stabel-cta stabel-back" href="spil.html?fane=minigames">Tilbage til minigames</a>
+      <a class="stabel-cta stabel-back" href="index.html">Tilbage til quizzen</a>
     </div>
   </section>
 </div>

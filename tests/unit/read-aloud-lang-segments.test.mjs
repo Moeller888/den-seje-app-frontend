@@ -96,6 +96,23 @@ test("quotes inside a Danish option are English", () => {
     "[EN:'Their'] betyder deres, [EN:'there'] betyder der");
 });
 
+test("'Hvilket ord passer' options are English even when they look Danish", () => {
+  assert.deepEqual(opts("Hvilket ord passer: 'She had her bag ___ on the train.'", ["stole", "stealing", "stolen", "to steal"]),
+    ["[EN:stole]", "[EN:stealing]", "[EN:stolen]", "[EN:to steal]"]);
+  assert.deepEqual(opts("Hvilket ord passer: 'Those ___ are very tall.'", ["mans", "men", "man", "mens"]),
+    ["[EN:mans]", "[EN:men]", "[EN:man]", "[EN:mens]"]);
+  assert.deepEqual(opts("Hvilken form passer: 'Last summer my parents ___ a new car.'", ["buyed", "bought", "brought", "buy"]),
+    ["[EN:buyed]", "[EN:bought]", "[EN:brought]", "[EN:buy]"]);
+});
+
+test("Danish -ing nouns asked for 'på engelsk' are read in Danish", () => {
+  for (const word of ["udfordring", "regering", "ligestilling", "kvittering"]) {
+    assert.equal(q(`Hvad hedder '${word}' på engelsk?`), `Hvad hedder '${word}' på engelsk?`);
+  }
+  assert.equal(q("Hvilket ord betyder næsten det samme som 'astonished'?"),
+    "Hvilket ord betyder næsten det samme som [EN:'astonished'?]");
+});
+
 test("Danish loanwords do not switch a Danish option", () => {
   assert.deepEqual(opts("Læs: 'Ali was ill on Monday.' Hvorfor var Ali ikke i skole?",
     ["Det var weekend", "Han var syg"]), ["Det var weekend", "Han var syg"]);
