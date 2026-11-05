@@ -250,6 +250,9 @@ test("app.js: the stimulus is cleared for every question, shown above it, and a 
   assert.match(block, /return;/);
   assert.match(app, /logError\("INVALID_STIMULUS"/);
   assert.match(app, /attachReadAloud: attachReadAloudControl,/);
+  assert.match(app, /readAloudContext: \{ subject: currentSubject, target: "source" \},/);
+  const ra = read("js/read-aloud/adapters/quiz.js");
+  assert.match(ra, /context\.target === "source" \? "kilden" : "spørgsmålet"/);
   const html = read("index.html");
   assert.match(html, /<div id="stimulus" hidden><\/div>\s*<div id="question">/);
   assert.match(html, /<link rel="stylesheet" href="css\/stimulus\.css">/);

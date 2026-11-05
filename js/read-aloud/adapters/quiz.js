@@ -151,7 +151,9 @@ export function attachReadAloudControl(container, text, context) {
     restart.type = "button";
     restart.className = "read-aloud-restart";
     restart.textContent = "↺ Forfra";
-    restart.setAttribute("aria-label", "Læs spørgsmålet forfra");
+    // F-07: a stimulus source gets its own name, so a screen reader never says "spørgsmålet" for it.
+    const what = context && typeof context === "object" && context.target === "source" ? "kilden" : "spørgsmålet";
+    restart.setAttribute("aria-label", `Læs ${what} forfra`);
 
     const rateField = labelledSelect("Tempo", "read-aloud-rate");
     for (const rate of RATES) {
@@ -177,7 +179,7 @@ export function attachReadAloudControl(container, text, context) {
       toggle.textContent = speaking ? "Ⅱ Pause" : paused ? "▶ Fortsæt" : "▶ Læs op";
       toggle.setAttribute("aria-label", speaking
         ? "Sæt oplæsningen på pause"
-        : paused ? "Fortsæt oplæsningen" : "Læs spørgsmålet højt");
+        : paused ? "Fortsæt oplæsningen" : `Læs ${what} højt`);
       restart.disabled = state === "idle";
       player.dataset.state = state;
       status.textContent = speaking ? "Læser højt" : paused ? "Oplæsning på pause" : "Klar";

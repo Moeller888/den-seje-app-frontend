@@ -1661,7 +1661,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     stimulusElement.appendChild(buildStimulus(document, stimulus, {
       attachReadAloud: attachReadAloudControl,
-      readAloudContext: { subject: currentSubject },
+      readAloudContext: { subject: currentSubject, target: "source" },
     }));
     stimulusElement.hidden = false;
     return true;

@@ -159,6 +159,9 @@ const VIEWPORTS = [
 
 for (const v of VIEWPORTS) {
   test(`${v.name}: introduktion → forståelsestjek → selvstændig anvendelse, end to end`, async ({ browser }) => {
+    // Five questions in one test, each with the quiz's own transition delay (600 ms after a right answer,
+    // the reflection after a wrong one): one flow needs a flow-sized budget. Assertions are unchanged.
+    test.slow();
     const { page, answers, payloads } = await openQuiz(browser, v.viewport, ROWS, { hasTouch: v.hasTouch });
     const [s1, s2, s3, s4] = STEPS.map((s) => s.row.content);
 
@@ -203,6 +206,10 @@ for (const v of VIEWPORTS) {
     await expect(fig3.locator("blockquote")).toContainText("Valgret til Folkethinget har enhver uberygtet Mand");
     await expect(fig3.locator("blockquote")).toContainText("b) nyder eller har nydt Understøttelse af Fattigvæsenet");
     await expect(fig3.locator("figcaption")).toContainText("Offentligt domæne");
+    // The source's read-aloud player names the source, the question's player the question.
+    await expect(fig3.locator("button.read-aloud-toggle")).toHaveAttribute("aria-label", "Læs kilden højt");
+    await expect(fig3.locator("button.read-aloud-restart")).toHaveAttribute("aria-label", "Læs kilden forfra");
+    await expect(page.locator("#question button.read-aloud-toggle")).toHaveAttribute("aria-label", "Læs spørgsmålet højt");
     await noOverflow(page);
     const input = page.locator("#options input");
     await input.fill("30");
