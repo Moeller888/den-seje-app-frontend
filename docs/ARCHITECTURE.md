@@ -145,8 +145,13 @@ Schema and most content are managed as **versioned SQL migrations** in `supabase
   `misconception_signal`), `student_progress` (xp, coins, mastery, counters).
   `question_instances` is the pupil's **current state** per question (`UNIQUE (student_id,
   question_id)`), not an answer log: a repeat reopens the same row and overwrites the earlier answer.
-  The chosen fix, an append-only `question_attempts` log, is designed but not built — see
-  [`question-attempts-design.md`](question-attempts-design.md).
+  The chosen fix is an append-only `question_attempts` log (H5); see
+  [`question-attempts-design.md`](question-attempts-design.md). **Status 2026-11-04:**
+  - The schema exists in production: bootstrap `20261104095423`, alignment `20261104140659`, and
+    D-327 `20261104163310` (an attempt survives deletion of its instance).
+  - The table is EMPTY and nothing writes it yet. `process-event` v34 calls only the legacy RPCs, and
+    the client's `ENABLE_H5_SUBMISSIONS` is `false`.
+  - K1 (`20261103110000`), the `process-event` deploy and activation each need a separate owner GO.
 - **Learning engine metadata / concept state:** `learning_engine_metadata`, concept-state RPC,
   grade/difficulty schema, plus topic "content sprint" migrations (Vikings, Cold War, etc.).
 - **Economy / shop:** `shop_items`, shop inventory/purchases, atomic purchase + RLS hardening.
@@ -497,7 +502,8 @@ once**, in `(answered_at, id)` order behind a cursor, under a row lock. Seed: a 
 `placement_sessions.band`, else the grade's start band, else 2; the fold restarts from the seed when
 the seed changes or the cursor's instance is gone. Why stateful: `question_instances` keeps only the
 latest verdict per instance (a repeat overwrites it), and no per-attempt log is live
-(`question_attempt_audit` and `analytics_question_attempts` have had no writes since 2026-03-08). A
+(`question_attempt_audit` and `analytics_question_attempts` have had no writes since 2026-03-08; H5's
+`question_attempts` exists since 2026-11-04 but stays empty until H5 is activated). A
 replay of the newest N verdicts forgot earned progression — 12 correct answers reached band 5, 60
 further alternating answers dropped it back to 1. The fold relies on one invariant: the answer RPCs
 write `answered_at = now()` in the same UPDATE as the verdict, and a pupil's next answer starts only
