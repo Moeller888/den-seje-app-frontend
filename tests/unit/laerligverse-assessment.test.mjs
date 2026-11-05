@@ -10,11 +10,13 @@ import { ARCHIVE_ITEMS } from "../../laerligverse/host/dev/archive-items.js";
 
 const words = (t) => t.trim().split(/\s+/).length;
 
-test("the material is a proposal awaiting its OWN teacher approval, never covered by the Arkivskab approval", () => {
-  assert.equal(APPROVAL.status, "afventer_laerergodkendelse");
+test("the material has its OWN teacher approval (v1.5, 05-11-2026), never covered by the Arkivskab approval", () => {
+  // v1.2 and v1.4 were approved and are history; v1.5 is approved in full (D-346 §18). Not a GO for a pilot.
+  assert.equal(APPROVAL.status, "godkendt");
+  assert.match(APPROVAL.text, /ikke et GO til elevpilot/);
   for (const f of [...Object.values(FORMS), TRANSFER]) assert.equal(f.source.status, "didaktisk konstrueret", f.id);
   const guide = readFileSync(TEACHER, "utf8");
-  assert.match(guide, /Prøverne i denne pakke .* \| \*\*Afventer særskilt faglig godkendelse\*\*/);
+  assert.match(guide, /Prøverne og rubrikken i denne pakke .* \| \*\*Godkendt\*\* af Christopher Møller 05-11-2026/);
   assert.match(guide, /Elevpilot \| \*\*Ikke autoriseret\*\*/);
 });
 
@@ -22,22 +24,33 @@ test("forms A, B and C are parallel: same parts, same claim pattern, comparable 
   const lens = [];
   for (const f of Object.values(FORMS)) {
     assert.equal(f.part1.questions.length, 4, f.id);
-    assert.deepEqual(f.part2.claims.map((c) => c.answer), ["ja", "nej", "nej"], f.id);
+    // Same claim pattern (v1.2: two "ja", two "nej", one claim of each type)…
+    assert.deepEqual(f.part2.claims.map((c) => c.answer).sort(), ["ja", "ja", "nej", "nej"], f.id);
+    assert.deepEqual(f.part2.claims.map((c) => c.type).sort(), ["J1", "J2", "N1", "N2"], f.id);
     assert.equal(f.part3.sources.length, 4, f.id);
     assert.equal(f.part3.claims.length, 2, f.id);
-    // a = the personal source, b = the official one: "always the diary" gets only one right.
+    // One personal and one official answer: "always the diary" gets only one right.
+    assert.deepEqual(f.part3.claims.map((c) => c.sourceKind).sort(), ["officiel", "personlig"], f.id);
     assert.notEqual(f.part3.claims[0].answer, f.part3.claims[1].answer, f.id);
+    // B2 always asks for the justification of the PERSONAL claim, so the reasoning task is the same kind.
+    assert.equal(f.part3.claims.find((c) => c.id === f.part3.reasonFor)?.sourceKind, "personlig", f.id);
     for (const c of f.part3.claims) assert.ok(f.part3.sources.some((s) => s.label === c.answer), `${f.id}${c.id}`);
     lens.push(words(f.source.text));
     assert.ok(f.frameToCheck.length > 40, f.id);
   }
+  // F9: …but NOT in the same positions. A pupil who memorises the pretest's answer order ("ja, nej, nej, ja"; "a is the
+  // diary") must gain nothing on the posttest or the delayed test.
+  const p2 = Object.values(FORMS).map((f) => f.part2.claims.map((c) => c.answer).join(","));
+  assert.equal(new Set(p2).size, p2.length, `part 2 answer orders repeat: ${p2}`);
+  const p3 = Object.values(FORMS).map((f) => f.part3.claims.map((c) => c.sourceKind).join(","));
+  assert.ok(new Set(p3).size > 1, `part 3 always has the personal source in the same position: ${p3}`);
   assert.ok(Math.max(...lens) - Math.min(...lens) <= 25, `source lengths ${lens}`);
   assert.ok(Math.max(...lens) <= 70, "keep the reading load low");
 });
 
 test("the transfer test uses NEW material: none of its sources or the forms' sources appear in the game's items", () => {
   const game = JSON.stringify(ARCHIVE_ITEMS);
-  for (const t of ["Nordvask", "Magistraten", "Sundhedskommissionen", "amtmanden", "Statistik", "Reklame"]) assert.equal(game.includes(t), false, t);
+  for (const t of ["Lyngvask", "Nordvask", "Magistraten", "Sundhedskommissionen", "amtmanden", "Statistik", "Reklame"]) assert.equal(game.includes(t), false, t);
   assert.notEqual(TRANSFER.source.kind, "Dagbog");
   assert.equal(TRANSFER.choice.claims.length, 2);
 });
@@ -53,14 +66,15 @@ test("the student sheets contain no answer key; the teacher guide has every key;
 });
 
 test("subscores never become one total or a mastery verdict, and a bad level fails loud", () => {
-  const s = subscores("A", { part2: ["ja", "nej", "nej"], part3: { a: "Dagbog", b: "Skolereglement" } }, { R1: 1, R2: 1, R3: 2, R4: 2, B1: 2, B2: 2 });
+  const s = subscores("A", { part2: ["ja", "nej", "nej", "ja"], part3: { a: "Dagbog", b: "Skolereglement" } }, { R1: 1, R2: 1, R3: 2, R4: 2, B1: 2, B2: 2 });
+  assert.equal(s.valg, 6);
   assert.deepEqual(Object.keys(s).sort(), ["begrundelse", "identifikation", "part3BothRight", "valg"]);
   assert.equal(JSON.stringify(s).includes("mestr"), false);
   assert.throws(() => subscores("A", {}, { R1: 1, R2: 1, R3: 3, R4: 0, B1: 0, B2: 0 }), /R3: level 3/);
   assert.throws(() => scoreChoices("Z", {}), /unknown form/);
   assert.equal(scoreChoices("A", null).V, 0);
   const max = Object.values(CRITERIA).reduce((n, c) => n + c.max, 0);
-  assert.equal(max, 15);
+  assert.equal(max, 16);
 });
 
 test("rubric trial on synthetic answers: the rubric separates the seven kinds — and flags what it cannot decide", () => {
@@ -76,12 +90,16 @@ test("rubric trial on synthetic answers: the rubric separates the seven kinds �
   assert.ok(guess.flags.some((f) => /uden begrundelse/.test(f)));
   assert.deepEqual(good.flags, []);
   assert.ok(rows["forkert, men med relevant ræsonnement"].flags.some((f) => /begrunder fagligt, men vælger forkert/.test(f)));
-  assert.ok(rows["delvist korrekt"].flags.some((f) => /emne, ikke afsenderens hensigt/.test(f)));
+  // v1.4 (P1): the topic answer »den handler om kolera« is 0 in R4, not an imprecise purpose, so it is not flagged as one.
+  assert.equal(SYNTHETIC_RESPONSES.find((r) => r.id === "S3").levels.R4, 0);
+  assert.equal(rows["delvist korrekt"].flags.some((f) => /upræcist/.test(f)), false);
   assert.ok(rows["forveksling af modtager og formål"].flags.some((f) => /byttet om/.test(f)));
-  assert.ok(rows["misforstået afsender"].identifikation <= 1);
+  // S6 (følgefejl, decided 05-11-2026): one confusion counts once — R1 0, but R3/R4 scored from the pupil's own sender.
+  assert.equal(rows["misforstået afsender"].identifikation, 4);
+  assert.ok(rows["misforstået afsender"].flags.some((f) => /^følgefejl/.test(f)));
   // Every ambiguity found while scoring is written down.
   assert.ok(SYNTHETIC_RESPONSES.filter((r) => r.note).length >= 5);
-  assert.equal(flags({ valg: 5, begrundelse: 4, part3BothRight: true, identifikation: 6 }, { R3: 2, R4: 2 }).length, 0);
+  assert.equal(flags({ valg: 6, begrundelse: 4, part3BothRight: true, identifikation: 6 }, { R3: 2, R4: 2 }).length, 0);
 });
 
 test("rehearsal: three synthetic pupils through the REAL sequence function (test policy v0, LP-13 undecided)", () => {

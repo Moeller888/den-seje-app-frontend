@@ -236,13 +236,13 @@ lærerobservation og elevfeedback. Ingen af dem sender data til Lærlig.
 |---|---|---|---|
 | 0 | GO'er: prøverne godkendt af en lærer; LP-13 (mindst LP13-1–4, -6, -7) besluttet; skolens tilladelse og information (§17) | Christopher, skolen | — |
 | 1 | Elevkoder; koblingen kode → elev bliver hos læreren | lærer | 10 min |
-| 2 | Prætest A (oplæsning tilladt for alle, noteres) | lærer | 12 min |
+| 2 | Prætest A (oplæsning tilladt for alle, noteres; side 1 samles ind før side 2) | lærer | 13 min |
 | 3 | Introduktion i Arkivskabet: tre kort og et tjek | elev | 5 min |
 | 4 | Arkivskabet: trin 3–8 i den lokale demo. Genbesøget springes over i piloten, så »+20 timer« bruges ikke | elev; lærer observerer (lærervejledning §7) | 15–20 min |
-| 5 | Posttest B, straks efter | lærer | 12 min |
+| 5 | Posttest B, straks efter | lærer | 13 min |
 | 6 | Transfertest T | lærer | 10 min |
 | 7 | Elevfeedback (4 spørgsmål) | lærer | 3 min |
-| 8 | Forsinket test C efter reel tid (forslag 7 dage, LP13-6). Ingen ny undervisning imellem | lærer | 12 min |
+| 8 | Forsinket test C efter reel tid (forslag 7 dage, LP13-6). Ingen ny undervisning imellem | lærer | 13 min |
 | 9 | Bedømmelse: blandede ark, rubrik, 10 genbedømt af en kollega | lærer + kollega | 30–60 min |
 | 10 | Analyse efter §11 og lærervejledning §9; rapport med »vi observerede …« | Christopher | — |
 

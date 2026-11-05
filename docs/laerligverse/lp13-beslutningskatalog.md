@@ -92,6 +92,27 @@ evidens (L5).
 
 ---
 
+## Registrerede valg (05-11-2026)
+
+Christophers valg står i `docs/laerligverse/proeve-godkendelse-2026-11-05.json` og er registreret i
+`docs/laerligverse/proeve-godkendelse-register.json` (D-346 §12, §14). Alle svarer til anbefalingen:
+
+| Regel | Valg | Betydning |
+|---|---|---|
+| LP13-1 | A | Revision, når seneste svar i øvelsen er forkert |
+| LP13-2 | A | Højst én revision, derefter videre |
+| LP13-3 | A | Hints kun i øvelse; tæller aldrig som selvstændig præstation |
+| LP13-4 | A | Forkert i selvstændig anvendelse → videre til overførsel |
+| LP13-5 | A | Ny periode, samme opgaveform, kaldet »overførsel til en ny periode« |
+| LP13-6 genbesøg | B | Spillets genbesøg efter 1–3 dage (i dag 20 timer i testpolitikken) |
+| LP13-6 forsinket test | A | Forsinket test C efter 7 dage |
+| LP13-7 | B | »Gennemført forløb« + en tabel til læreren; aldrig »mestret« |
+| Pilot | A | Lille gennemførlighedspilot (4–6 elever) |
+
+**Ikke implementeret og ikke aktiveret.** Testpolitikken v0 (`laerligverse-test-policy-v0`,
+`REVISIT_AFTER_HOURS = 20`) er uændret. Implementeringen kræver et særskilt spor og et GO, og en pilot kræver sit
+eget GO.
+
 ## Det skal Christopher godkende (samlet)
 
 1. LP13-1 A, LP13-2 A, LP13-3 A, LP13-4 A som **pilotpolitik** (ikke produktion).
