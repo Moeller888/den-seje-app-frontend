@@ -56,7 +56,7 @@ Elevarkene (`elevark.md`) indeholder ikke facit.
 
 **Materialestatus:** kilden er *didaktisk konstrueret*: et opfundet brev af en ægte kildetype. Det er ikke en original, en forkortelse eller en parafrase.
 
-**Historisk ramme, som du skal kontrollere:** Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 forudsætter, at tusindvis døde (kontrollér tallet). Påstand 4 forudsætter, at fattige familier boede i fugtige kælderboliger.
+**Historisk ramme, som du skal kontrollere:** Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 nævner, at tusindvis døde (sandt for hele epidemien; kontrollér tallet), men spørger om, hvad lægen mente i juli. Påstand 4 forudsætter, at fattige familier ved havnen boede i fugtige kælderboliger.
 
 | Del 1 | Kriterium | Accepterede svar (eksempler) |
 |---|---|---|
@@ -68,9 +68,9 @@ Elevarkene (`elevark.md`) indeholder ikke facit.
 | Del 2 | Type | Facit | Hvorfor |
 |---|---|---|---|
 | 1. Lægen mente, at de dårlige boliger var med til at gøre folk syge. | J1 | **ja** | Afsenderens egen opfattelse: lægen skriver det selv. Det gælder, også selv om han vil have penge. |
-| 2. Koleraen kostede tusindvis af københavnere livet i 1853. | N2 | **nej** | Påstanden er sand, men brevet kan ikke belægge den: det nævner hundrede syge, lægen har besøgt, ikke dødstallet for byen. |
-| 3. Lægen fik de penge til lazarettet, som han bad Magistraten om. | N1 | **nej** | Det passer, at lægen bad om penge. Men brevet er skrevet, før Magistraten svarede, så det viser ikke, hvad der skete bagefter. |
-| 4. I 1853 boede nogle af de syge i København i fugtige kældre. | J2 | **ja** | Lægen har selv besøgt de syge samme år. Han vil have penge og kan overdrive, men påstanden er forsigtig (»nogle«), så brevet kan bruges som belæg. |
+| 2. Lægen mente, at koleraen havde kostet tusindvis af københavnere livet. | N2 | **nej** | Det passer, at tusindvis døde i 1853, og at lægen skrev om koleraen. Men brevet nævner hundrede syge, han har besøgt, og ingen døde. Det kan ikke vise, at han mente det. |
+| 3. Magistraten gav penge til et lazaret ved havnen. | N1 | **nej** | Lægen beder om pengene, men brevet er skrevet, før Magistraten svarede. Det viser ikke, hvad der skete bagefter. |
+| 4. I 1853 boede de fleste syge ved havnen i fugtige kældre. | J2 | **ja** | Lægen har selv besøgt de syge samme år og skriver, at de fleste bor i fugtige kældre. Han vil have penge og kan overdrive, men som øjenvidne kan han bruges som belæg for det. |
 
 Typerne er de samme i A, B og C: **J1** afsenderens egen holdning eller handling (ja) · **J2** et forhold, kilden kan belægge, uden at afsenderen nævnes (ja) · **N1** hvad der skete bagefter (nej) · **N2** mere, end afsenderen kunne vide eller skrev om (nej). Afsenderen nævnes i én ja- og én nej-påstand, så »ja, når afsenderen er nævnt« ikke virker.
 

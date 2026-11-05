@@ -68,7 +68,7 @@ export const FORMS = Object.freeze({
   A: form({
     id: "A", role: "prætest", minutes: 13,
     title: "Kolera i København 1853",
-    frameToCheck: "Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 forudsætter, at tusindvis døde (kontrollér tallet). Påstand 4 forudsætter, at fattige familier boede i fugtige kælderboliger.",
+    frameToCheck: "Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 nævner, at tusindvis døde (sandt for hele epidemien; kontrollér tallet), men spørger om, hvad lægen mente i juli. Påstand 4 forudsætter, at fattige familier ved havnen boede i fugtige kælderboliger.",
     source: {
       kind: "Brev", status: "didaktisk konstrueret",
       header: "Brev skrevet i København, juli 1853. Underskrevet: J. Holm, læge.",
@@ -82,9 +82,9 @@ export const FORMS = Object.freeze({
     part2: {
       claims: [
         { type: "J1", text: "Lægen mente, at de dårlige boliger var med til at gøre folk syge.", answer: "ja", why: "Afsenderens egen opfattelse: lægen skriver det selv. Det gælder, også selv om han vil have penge." },
-        { type: "N2", text: "Koleraen kostede tusindvis af københavnere livet i 1853.", answer: "nej", why: "Påstanden er sand, men brevet kan ikke belægge den: det nævner hundrede syge, lægen har besøgt, ikke dødstallet for byen." },
-        { type: "N1", text: "Lægen fik de penge til lazarettet, som han bad Magistraten om.", answer: "nej", why: "Det passer, at lægen bad om penge. Men brevet er skrevet, før Magistraten svarede, så det viser ikke, hvad der skete bagefter." },
-        { type: "J2", text: "I 1853 boede nogle af de syge i København i fugtige kældre.", answer: "ja", why: "Lægen har selv besøgt de syge samme år. Han vil have penge og kan overdrive, men påstanden er forsigtig (»nogle«), så brevet kan bruges som belæg." },
+        { type: "N2", text: "Lægen mente, at koleraen havde kostet tusindvis af københavnere livet.", answer: "nej", why: "Det passer, at tusindvis døde i 1853, og at lægen skrev om koleraen. Men brevet nævner hundrede syge, han har besøgt, og ingen døde. Det kan ikke vise, at han mente det." },
+        { type: "N1", text: "Magistraten gav penge til et lazaret ved havnen.", answer: "nej", why: "Lægen beder om pengene, men brevet er skrevet, før Magistraten svarede. Det viser ikke, hvad der skete bagefter." },
+        { type: "J2", text: "I 1853 boede de fleste syge ved havnen i fugtige kældre.", answer: "ja", why: "Lægen har selv besøgt de syge samme år og skriver, at de fleste bor i fugtige kældre. Han vil have penge og kan overdrive, men som øjenvidne kan han bruges som belæg for det." },
       ],
     },
     part3: {

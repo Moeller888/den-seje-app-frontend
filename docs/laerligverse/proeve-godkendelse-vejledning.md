@@ -39,7 +39,11 @@ sig før og nu. Under »Til læreren« ved hver prøve står ændringerne ord fo
 - de nye påstande i del 2 (fire i stedet for tre) og om facit er fagligt rigtigt;
 - de nye kilder i del 3 (B: en erindring; C: en køreplan og en erindring);
 - at side 1 skal samles ind, før eleven får side 2;
-- T, spørgsmål 1: et »nej« uden begrundelse giver stadig 1 point. Det kræver en rubrikændring (dit valg).
+- T, spørgsmål 1: et »nej« uden begrundelse giver stadig 1 point. Beslut det i afsnit E under »Transfertestens T1«.
+  Rubrikken ændres først efter din beslutning.
+
+Afsnittet »Sammenlignelighed af A, B og C« viser, hvad der er målt i teksten, hvad der er skønnet, og hvad
+kun elevsvar kan vise.
 
 Du kan prøve oplæsning af elevteksten med afkrydsningsfeltet »Prøv oplæsning« øverst. Det bruger kun en lokal
 dansk stemme på din computer, hvis der er en.

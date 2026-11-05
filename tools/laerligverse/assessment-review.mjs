@@ -19,6 +19,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CRITERIA, FORMS, HANDOVER, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
 import { CHOICE_STRATEGIES, PART2_STRATEGIES, audit, loadBefore } from "./shortcut-audit.mjs";
+import { comparability } from "./comparability.mjs";
 import { SYNTHETIC_RESPONSES } from "./rehearsal.mjs";
 import { stableJson } from "./review-pack.mjs";
 import { duplicateKeys } from "./approval-register.mjs";
@@ -47,10 +48,9 @@ export const FORM_REVIEW = Object.freeze({
     rationale: "Prætest før introduktionen. Afsender og tid står i overskriften (let), modtager og formål skal udledes af teksten (sværere). Del 2 og 3 måler, om eleven kan afgøre, hvad kilden kan bruges til.",
     weaknesses: [
       "Kilden er den længste (58 ord) og har tre svære ord (Magistraten, lazaret, rendestene, med ordforklaring). A kan derfor være en anelse sværere end B og C.",
-      "I A alene giver reglerne »ja ved holdningsord« og »nej ved mængdeord« stadig 3 af 4 i del 2. På tværs af A, B og C er de på gætteniveau.",
-      "Påstand 4 (ja) kræver, at eleven ser, at lægen selv har set de syge, og at påstanden er forsigtig (»nogle«). En elev, der tænker »han vil have penge, så han overdriver«, svarer nej (som det syntetiske svar S4). Det er tilsigtet, men gør påstanden svær.",
+      "Påstand 4 (ja) kræver, at eleven ser, at lægen selv har set de syge. En elev, der tænker »han vil have penge, så han overdriver«, svarer nej (som det syntetiske svar S4). Det er tilsigtet.",
     ],
-    changes: "Del 2 havde én ja-påstand, og den var den eneste, der begyndte med afsenderen og havde et holdningsord. Nu har del 2 fire påstande: afsenderen nævnes i én ja- og én nej-påstand, og ja-påstandene er ikke længere de længste. Del 3's påstande deler ikke længere ord med det rigtige svars beskrivelse. Del 1 afleveres, før eleven får del 2 og 3.",
+    changes: "Del 2 havde én ja-påstand, og den var den eneste, der begyndte med afsenderen og havde et holdningsord. Nu har del 2 fire påstande: afsenderen nævnes i én ja- og én nej-påstand, og ja-påstandene er ikke længere de længste. I anden runde (G10) er påstand 2, 3 og 4 omskrevet, så A er bygget som B og C: holdningsordet står også i en nej-påstand, og mængdeord står i både en ja- og en nej-påstand. Del 3's påstande deler ikke længere ord med det rigtige svars beskrivelse. Del 1 afleveres, før eleven får del 2 og 3.",
   },
   B: {
     verified: "Den spanske syge 1918: ca. 0,4 % af befolkningen døde (lex.dk »den spanske syge«); skoler blev lukket lokalt, fx i Thisted i oktober 1918 (Arkiv Thy). En lukning i Aarhus er IKKE kontrolleret — opslaget er konstrueret.",
@@ -89,6 +89,7 @@ export const SHORTCUT_FINDINGS = Object.freeze([
   { id: "G7", pattern: "For lette distraktorer. C havde en lærebog fra 2000 og et maleri fra 1900, B en jubilæumstale fra 1935: lette at fravælge uden at tænke på formål.", fix: "Hver prøve har nu to personlige kilder (en fra tiden og en skrevet årtier senere) og to officielle kilder fra tiden med forskellige formål.", strategies: ["samme-aar", "altid-personlig", "samtidig-personlig", "laengste-beskrivelse"] },
   { id: "G8", pattern: "Spørgsmålene giver svarene. Del 2 nævnte modtageren og formålet (»Magistraten gav lægen de penge, han bad om«, »hjælp fra staten«), som eleven skal finde i del 1. I T stod reklamens formål i kildetabellen ved siden af spørgsmål 1–2.", fix: "Side 1 (del 1, i T spørgsmål 1–2) afleveres, før eleven får side 2. Kilden står igen øverst på side 2.", strategies: [] },
   { id: "G9", pattern: "Prætestens facit. Den, der huskede prætestens rækkefølge, kunne bruge det omvendte (2 af 3), og i C stod del 3's svar på de samme pladser i tabellen som i A.", fix: "To prøver har samme facit på præcis 2 af 4 pladser i del 2, og del 3's svar står på andre pladser end i A.", strategies: ["praetest-raekkefoelge", "praetest-omvendt", "praetest-position", "praetest-undgaa", "foerste-kilde"] },
+  { id: "G10", pattern: "Testvane i prætesten (fundet i e64942b2). I A stod holdningsordet »mente« kun i ja-påstanden, og det store tal »tusindvis« kun i en nej-påstand. To almindelige tommelfingerregler hos testvante elever (»det, afsenderen mener, kan kilden vise« og »store tal og absolutte ord er forkerte«) gav derfor 3 af 4 i A, men ikke i B og C. Det kan løfte prætesten og skjule fremgang.", fix: "A's nej-påstand 2 er nu en holdningspåstand, som brevet ikke kan belægge (»Lægen mente, at koleraen havde kostet tusindvis …«), som N2 i B og C. Påstand 4 bruger brevets eget mængdeord (»de fleste«). Påstand 3 nævner ikke længere afsenderen. Alle regler giver nu 2 af 4 i A (testet).", strategies: ["holdningsord", "maengdeord-nej", "laengst-ja"] },
 ]);
 
 /** What is NOT fixed: for the teacher to know or decide. */
@@ -160,6 +161,23 @@ export const AMBIGUITIES = Object.freeze([
   },
 ]);
 
+/** Rubric questions that are NOT among F8's five ambiguities, but need the teacher's decision before scoring (F9). */
+export const RUBRIC_DECISIONS = Object.freeze([
+  {
+    id: "T1", criterion: "T1 Vurdering (transfertest)",
+    task: "Transfertest T, spørgsmål 1: »Kan reklamen bruges som belæg for, at de fleste danske familier havde en vaskemaskine i 1962? Forklar dit svar.«",
+    current: "Rubrikken i dag: 0 = svarer ja eller intet svar · 1 = svarer nej uden at sige hvorfor · 2 = svarer nej: en reklame viser, hvad firmaet ville sælge, ikke hvor mange der havde en maskine.",
+    why: "Spørgsmålet har altid svaret »nej«, og et »nej« kan gættes (50 %) eller komme af en generel mistro til reklamer, som ikke bruger kildens ophav. Et bart »nej« giver i dag 1 af 2 point. I A, B og C tæller et rigtigt ja/nej i Valg, og begrundelsen bedømmes for sig (B1). T1 blander de to.",
+    options: [
+      { id: "behold", label: "Behold: et »nej« uden begrundelse giver T1 = 1", effect: "Uændret. En elev, der gætter, får i snit 0,5 point på T1 uden kildekritik." },
+      { id: "nul", label: "Ret: T1 = 1 kræver en begrundelse, også en svag (»det står der ikke«); et bart »nej« giver 0", effect: "Gæt giver 0. Selve vurderingen kan ikke ses i data." },
+      { id: "saerskilt", label: "Ret og rapportér særskilt: et bart »nej« giver T1 = 0, men svaret (ja/nej) noteres for sig i en ny kolonne", effect: "Gæt giver 0 i T1. Vurderingen alene kan stadig ses, som Valg i A, B og C, men tæller ikke som forståelse. Kræver en ny kolonne i registreringsskemaet." },
+    ],
+    recommendation: "saerskilt",
+    recommendationWhy: "Det følger A, B og C, hvor valget og begrundelsen tælles hver for sig. Et kort, mundtligt »nej, de vil jo sælge« tæller som begrundelse (mundtlige svar er tilladt for alle), så pointet kræver kildekritik, ikke skrivefærdighed. Rubrikken ændres først efter din beslutning.",
+  },
+]);
+
 /** The LP-13 decisions — NOT part of approving the tests. From lp13-beslutningskatalog.md. */
 export const LP13 = Object.freeze([
   { id: "LP13-1", title: "Hvad sender eleven til revision efter øvelsen?", options: [["A", "Seneste svar i øvelsen er forkert (testpolitikken i dag)"], ["B", "Forkert svar ELLER brugte hints (kræver hints på serveren)"], ["C", "Altid revision"]], recommendation: "A" },
@@ -183,7 +201,7 @@ export function contentFingerprints({ forms = FORMS, transfer = TRANSFER } = {})
     B: sha(stableJson({ form: forms.B, shared, review: FORM_REVIEW.B })),
     T: sha(stableJson({ form: transfer, shared, review: FORM_REVIEW.T })),
     C: sha(stableJson({ form: forms.C, shared, review: FORM_REVIEW.C })),
-    rubrik: sha(stableJson({ CRITERIA, TRANSFER_CRITERIA, AMBIGUITIES })),
+    rubrik: sha(stableJson({ CRITERIA, TRANSFER_CRITERIA, AMBIGUITIES, RUBRIC_DECISIONS })),
   };
 }
 
@@ -257,6 +275,13 @@ function ambiguity(a) {
     + `<fieldset class="dec"><legend>Din beslutning om ${esc(a.id)}</legend>${opts}<p><strong>Min anbefaling:</strong> ${esc(a.recommendationWhy)}</p><label class="c">Kommentar <textarea name="tvk-${a.id}" rows="2"></textarea></label></fieldset></section>`;
 }
 
+function rubricDecision(d) {
+  const opts = [`<label><input type="radio" name="rb-${d.id}" value="${UNDECIDED}" checked> Ikke besluttet</label>`]
+    .concat(d.options.map((o) => `<label><input type="radio" name="rb-${d.id}" value="${esc(o.id)}"> ${esc(o.label)}${o.id === d.recommendation ? " <em>(anbefalet)</em>" : ""} <span class="eff">— ${esc(o.effect)}</span></label>`)).join("");
+  return `<section class="amb" id="rb-${d.id}"><h3>${esc(d.id)} (${esc(d.criterion)})</h3><p><strong>Opgaven:</strong> ${esc(d.task)}</p><p>${esc(d.current)}</p><p><strong>Hvorfor det skal besluttes:</strong> ${esc(d.why)}</p>`
+    + `<fieldset class="dec"><legend>Din beslutning om ${esc(d.id)}</legend>${opts}<p><strong>Min anbefaling:</strong> ${esc(d.recommendationWhy)}</p><label class="c">Kommentar <textarea name="rbk-${d.id}" rows="2"></textarea></label></fieldset></section>`;
+}
+
 function lp13(d) {
   const opts = [`<label><input type="radio" name="lp-${d.id}" value="${UNDECIDED}" checked> Ikke besluttet</label>`]
     .concat(d.options.map(([v, l]) => `<label><input type="radio" name="lp-${d.id}" value="${v}"> ${v}: ${esc(l)}${v === d.recommendation ? " <em>(anbefalet)</em>" : ""}</label>`)).join("");
@@ -304,6 +329,28 @@ function shortcutSection() {
     + `<p class="note">Ændringerne i hver prøve står under »Til læreren« ved prøven (før og nu, ord for ord). Fordi indholdet er ændret, står alle prøver som »Ikke gennemgået«.</p></section>`;
 }
 
+/** A, B and C side by side: measured from the text, judged by hand, and what only pupil answers can show. */
+function comparabilitySection() {
+  const c = comparability();
+  const rows = [
+    ["Tid (skøn, ikke målt)", (m) => `${m.minutes} min`],
+    ["Kildens ord / sætninger", (m) => `${m.sourceWords} / ${m.sourceSentences}`],
+    ["Kildens LIX (lav = let)", (m) => m.sourceLix],
+    ["Lange ord i kilden (over 6 bogstaver)", (m) => m.sourceLongWords],
+    ["Forklarede ord", (m) => m.glossary],
+    ["Del 2: ord i påstandene / LIX", (m) => `${m.part2ClaimWords} / ${m.part2ClaimLix}`],
+    ["Del 2: typer i rækkefølge / facit", (m) => `${m.part2Types} / ${m.part2Key}`],
+    ["Del 3: ord (kildebeskrivelser og påstande)", (m) => m.part3Words],
+    ["Alt, eleven læser: ord / LIX", (m) => `${m.totalWords} / ${m.totalLix}`],
+  ];
+  const judged = [["Modtager (R3)", "receiver"], ["Formål (R4)", "purpose"], ["Del 2", "part2"], ["Del 3's emne", "part3Topic"], ["Forventet sværhed", "expected"]];
+  return `<section class="ov" id="sammenlignelighed"><h2>Sammenlignelighed af A, B og C (F9)</h2>`
+    + `<p>Samme opbygning: fire spørgsmål i del 1, fire påstande af de samme fire typer i del 2, to kildevalg og to begrundelser i del 3. Tallene herunder er <strong>målt</strong> på teksten. Vurderingerne er <strong>skøn</strong>. Om formerne faktisk er lige svære, kan kun elevsvar vise.</p>`
+    + `<h3>Målt</h3><table><thead><tr><th></th>${c.forms.map((m) => `<th>${m.id}</th>`).join("")}</tr></thead><tbody>${rows.map(([k, f]) => `<tr><td>${esc(k)}</td>${c.forms.map((m) => `<td>${esc(f(m))}</td>`).join("")}</tr>`).join("")}</tbody></table>`
+    + `<h3>Skønnet (ikke målt)</h3><table><thead><tr><th></th>${c.forms.map((m) => `<th>${m.id}</th>`).join("")}</tr></thead><tbody>${judged.map(([k, f]) => `<tr><td>${esc(k)}</td>${c.forms.map((m) => `<td>${esc(c.judged[m.id][f])}</td>`).join("")}</tr>`).join("")}</tbody></table>`
+    + `<h3>Kræver elevbesvarelser</h3><ul>${c.needsPupilData.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></section>`;
+}
+
 export function html() {
   const fps = contentFingerprints();
   const forms = { A: FORMS.A, B: FORMS.B, T: TRANSFER, C: FORMS.C };
@@ -345,6 +392,7 @@ fieldset{border:1px dashed var(--line);border-radius:6px;margin-top:10px}fieldse
 <tr><td>Elevpilot og produktion</td><td><strong>Ikke autoriseret</strong></td></tr></tbody></table>
 <p><label><input type="checkbox" id="ra-on"> Prøv oplæsning af elevteksten (prototype, slået fra som standard). Bruger kun stemmer, som browseren angiver som lokale på denne computer; ingen tekst sendes af siden.</label> <span id="ra-voice" class="note"></span></p></section>
 ${shortcutSection()}
+${comparabilitySection()}
 <h2 class="sep">B. Prætest</h2>${testSection("A")}
 <h2 class="sep">C. Posttest</h2>${testSection("B")}
 <h2 class="sep">D. Transfer og forsinket test</h2>${testSection("T")}${testSection("C")}
@@ -352,7 +400,9 @@ ${shortcutSection()}
 <section class="el" id="rubrik" data-status="ikke_gennemgaaet"><h2>${esc(titleOf.rubrik)}</h2>
 <p>Tre delscorer, som rapporteres hver for sig. Ingen samlet score og ingen grænse for »mestret«.</p>${rubricTable(CRITERIA)}<h4>Transfertest</h4>${rubricTable(TRANSFER_CRITERIA)}
 <h4>De fem tvivlstilfælde (fra bedømmelsesforsøget med syntetiske svar)</h4><p class="note">Dine valg her ændrer ikke rubrikken af sig selv. De bliver gemt i filen, og rubrikken rettes først bagefter, efter din beslutning.</p>
-${AMBIGUITIES.map(ambiguity).join("\n")}${decision("rubrik")}</section>
+${AMBIGUITIES.map(ambiguity).join("\n")}
+<h4>Transfertestens T1 (fundet i F9)</h4><p class="note">Ikke et af de fem tvivlstilfælde, men et spørgsmål om rubrikken, som du skal afgøre. Dit valg ændrer ikke rubrikken af sig selv.</p>
+${RUBRIC_DECISIONS.map(rubricDecision).join("\n")}${decision("rubrik")}</section>
 <h2 class="sep">F. Beslutninger om læringsprogression (LP-13)</h2>
 <section class="ov" id="lp13"><p><strong>Dette er ikke en del af godkendelsen af prøvernes faglige indhold.</strong> Valgene gemmes i samme fil, men aktiverer intet: ingen regel ændres i spillet eller på serveren, før der er givet et særskilt GO.</p>
 ${LP13.map(lp13).join("\n")}</section>
@@ -362,6 +412,7 @@ const STATUSES = ${JSON.stringify(STATUSES)};
 const FIELDS = ${JSON.stringify(FIELDS.map(([k]) => k))};
 const AMB = ${JSON.stringify(AMBIGUITIES.map((a) => ({ id: a.id, values: a.options.map((o) => o.id) })))};
 const LPS = ${JSON.stringify(LP13.map((d) => ({ id: d.id, values: d.options.map(([v]) => v) })))};
+const RBS = ${JSON.stringify(RUBRIC_DECISIONS.map((d) => ({ id: d.id, values: d.options.map((o) => o.id) })))};
 const FP = ${JSON.stringify(fps)};
 const FORMAT = ${JSON.stringify(FORMAT)};
 const VERSION = ${JSON.stringify(VERSION)};
@@ -374,8 +425,9 @@ function collect() {
   const proever = {};
   for (const id of ITEMS) { const o = { status: radio("st-" + id) || "ikke_gennemgaaet" }; for (const f of FIELDS) o[f] = $('textarea[name="' + f + "-" + id + '"]').value; proever[id] = o; }
   const tvetydigheder = {}; for (const a of AMB) tvetydigheder[a.id] = { valg: radio("tv-" + a.id) || UNDECIDED, kommentar: $('textarea[name="tvk-' + a.id + '"]').value };
+  const rubrikbeslutninger = {}; for (const d of RBS) rubrikbeslutninger[d.id] = { valg: radio("rb-" + d.id) || UNDECIDED, kommentar: $('textarea[name="rbk-' + d.id + '"]').value };
   const lp13 = {}; for (const d of LPS) lp13[d.id] = { valg: radio("lp-" + d.id) || UNDECIDED, kommentar: $('textarea[name="lpk-' + d.id + '"]').value };
-  return { _om: "Lærerens afgørelser om prøverne (D-346). Gemmes kun som fil; intet sendes eller aktiveres.", format: FORMAT, version: VERSION, laerer: $("#laerer").value, dato: $("#dato").value, indhold: FP, proever, tvetydigheder, lp13 };
+  return { _om: "Lærerens afgørelser om prøverne (D-346). Gemmes kun som fil; intet sendes eller aktiveres.", format: FORMAT, version: VERSION, laerer: $("#laerer").value, dato: $("#dato").value, indhold: FP, proever, tvetydigheder, rubrikbeslutninger, lp13 };
 }
 function count() {
   const d = collect();
@@ -389,7 +441,7 @@ count();
 function msg(t) { $("#msg").textContent = t; }
 $("#save").addEventListener("click", () => {
   const d = collect();
-  const decided = ITEMS.some((id) => d.proever[id].status !== "ikke_gennemgaaet") || AMB.some((a) => d.tvetydigheder[a.id].valg !== UNDECIDED) || LPS.some((x) => d.lp13[x.id].valg !== UNDECIDED);
+  const decided = ITEMS.some((id) => d.proever[id].status !== "ikke_gennemgaaet") || AMB.some((a) => d.tvetydigheder[a.id].valg !== UNDECIDED) || RBS.some((x) => d.rubrikbeslutninger[x.id].valg !== UNDECIDED) || LPS.some((x) => d.lp13[x.id].valg !== UNDECIDED);
   if (decided && (!d.laerer.trim() || !d.dato.trim())) { msg("Skriv dit navn og datoen, før du gemmer afgørelser."); return; }
   const missing = ITEMS.filter((id) => d.proever[id].status === "skal_rettes" && !d.proever[id].aendringer.trim());
   if (missing.length) { msg("Skriv, hvad der skal rettes, for: " + missing.join(", ")); return; }
@@ -420,6 +472,7 @@ function applyFile(d) {
     } else { setRadio("st-" + id, status); note.textContent = ""; note.hidden = true; }
   }
   for (const a of AMB) { const v = (d.tvetydigheder || {})[a.id] || {}; if (!setRadio("tv-" + a.id, a.values.includes(v.valg) ? v.valg : UNDECIDED)) setRadio("tv-" + a.id, UNDECIDED); $('textarea[name="tvk-' + a.id + '"]').value = typeof v.kommentar === "string" ? v.kommentar : ""; }
+  for (const x of RBS) { const v = (d.rubrikbeslutninger || {})[x.id] || {}; if (!setRadio("rb-" + x.id, x.values.includes(v.valg) ? v.valg : UNDECIDED)) setRadio("rb-" + x.id, UNDECIDED); $('textarea[name="rbk-' + x.id + '"]').value = typeof v.kommentar === "string" ? v.kommentar : ""; }
   for (const x of LPS) { const v = (d.lp13 || {})[x.id] || {}; if (!setRadio("lp-" + x.id, x.values.includes(v.valg) ? v.valg : UNDECIDED)) setRadio("lp-" + x.id, UNDECIDED); $('textarea[name="lpk-' + x.id + '"]').value = typeof v.kommentar === "string" ? v.kommentar : ""; }
   count();
   return stale;
@@ -487,7 +540,7 @@ export function validateReviewExport(raw) {
   if (d === null || typeof d !== "object" || Array.isArray(d)) return { problems: ["the top level is not an object"], stale: [] };
   for (const k of duplicateKeys(text)) problems.push(`appears more than once in the same object: ${k}`);
   if (d.format !== FORMAT) problems.push(`format is ${d.format}, expected ${FORMAT}`);
-  const ok = new Set(["_om", "format", "version", "laerer", "dato", "indhold", "proever", "tvetydigheder", "lp13"]);
+  const ok = new Set(["_om", "format", "version", "laerer", "dato", "indhold", "proever", "tvetydigheder", "rubrikbeslutninger", "lp13"]);
   for (const k of Object.keys(d)) if (!ok.has(k)) problems.push(`unknown top-level field: ${k}`);
   const p = d.proever ?? {};
   for (const id of ITEMS) if (!(id in p)) problems.push(`missing test: ${id}`);
@@ -501,12 +554,17 @@ export function validateReviewExport(raw) {
     const v = d.tvetydigheder?.[a.id]?.valg;
     if (v !== UNDECIDED && !a.options.some((o) => o.id === v)) problems.push(`${a.id}: invalid choice ${v}`);
   }
+  for (const x of RUBRIC_DECISIONS) {
+    const v = d.rubrikbeslutninger?.[x.id]?.valg ?? UNDECIDED;
+    if (v !== UNDECIDED && !x.options.some((o) => o.id === v)) problems.push(`${x.id}: invalid choice ${v}`);
+  }
   for (const x of LP13) {
     const v = d.lp13?.[x.id]?.valg;
     if (v !== UNDECIDED && !x.options.some(([o]) => o === v)) problems.push(`${x.id}: invalid choice ${v}`);
   }
   const decided = Object.values(p).some((v) => v?.status !== "ikke_gennemgaaet")
     || AMBIGUITIES.some((a) => (d.tvetydigheder?.[a.id]?.valg ?? UNDECIDED) !== UNDECIDED)
+    || RUBRIC_DECISIONS.some((x) => (d.rubrikbeslutninger?.[x.id]?.valg ?? UNDECIDED) !== UNDECIDED)
     || LP13.some((x) => (d.lp13?.[x.id]?.valg ?? UNDECIDED) !== UNDECIDED);
   if (decided && (!String(d.laerer ?? "").trim() || !String(d.dato ?? "").trim())) problems.push("decisions without a teacher name or date");
   const fps = contentFingerprints();

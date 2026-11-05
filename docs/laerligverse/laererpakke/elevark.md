@@ -60,9 +60,9 @@ Kan kilden bruges som belæg for påstanden? Sæt kryds ved ja eller nej.
 | Påstand | Ja | Nej |
 |---|---|---|
 | 1. Lægen mente, at de dårlige boliger var med til at gøre folk syge. | ☐ | ☐ |
-| 2. Koleraen kostede tusindvis af københavnere livet i 1853. | ☐ | ☐ |
-| 3. Lægen fik de penge til lazarettet, som han bad Magistraten om. | ☐ | ☐ |
-| 4. I 1853 boede nogle af de syge i København i fugtige kældre. | ☐ | ☐ |
+| 2. Lægen mente, at koleraen havde kostet tusindvis af københavnere livet. | ☐ | ☐ |
+| 3. Magistraten gav penge til et lazaret ved havnen. | ☐ | ☐ |
+| 4. I 1853 boede de fleste syge ved havnen i fugtige kældre. | ☐ | ☐ |
 
 Vælg én af påstandene ovenfor. Forklar dit svar ud fra, hvem der har lavet kilden, til hvem og hvorfor (1–3 sætninger).
 

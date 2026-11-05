@@ -17,7 +17,7 @@ const FIELDS = ["faglig", "historisk", "sprog", "svaerhed", "elevforstaaelse", "
 type Item = Record<string, string>;
 type Saved = {
   format: string; laerer: string; dato: string; indhold: Record<string, string>;
-  proever: Record<string, Item>; tvetydigheder: Record<string, { valg: string; kommentar: string }>; lp13: Record<string, { valg: string; kommentar: string }>;
+  proever: Record<string, Item>; tvetydigheder: Record<string, { valg: string; kommentar: string }>; rubrikbeslutninger: Record<string, { valg: string; kommentar: string }>; lp13: Record<string, { valg: string; kommentar: string }>;
 };
 
 function watchNetwork(page: Page): string[] {
@@ -41,6 +41,7 @@ test("prøvegodkendelse: intet er forhåndsgodkendt; afgørelser, kommentarer, t
   await expect(page.locator("#count")).toHaveText("0 af 5 gennemgået · 0 af 5 tvivlstilfælde");
   await expect(page.locator('input[name="tv-S4"][value="ikke_besluttet"]')).toBeChecked();
   await expect(page.locator('input[name="lp-LP13-7"][value="ikke_besluttet"]')).toBeChecked();
+  await expect(page.locator('input[name="rb-T1"][value="ikke_besluttet"]')).toBeChecked();
   // The key is behind the teacher's fold.
   await expect(page.locator("#A details.teacher")).not.toHaveAttribute("open", "");
 
@@ -51,6 +52,8 @@ test("prøvegodkendelse: intet er forhåndsgodkendt; afgørelser, kommentarer, t
   await page.locator('input[name="tv-S4"][value="1"]').check();
   await page.locator('textarea[name="tvk-S4"]').fill("Ræsonnementet bruger ophavet forkert.");
   await page.locator('input[name="lp-LP13-1"][value="A"]').check();
+  await page.locator('input[name="rb-T1"][value="saerskilt"]').check();
+  await page.locator('textarea[name="rbk-T1"]').fill("Et bart nej giver 0; svaret noteres for sig.");
   await page.locator('input[name="lp-genbesoeg"][value="B"]').check();
   await expect(page.locator("#count")).toHaveText("3 af 5 gennemgået · 1 af 5 tvivlstilfælde");
   await expect(page.locator("#B")).toHaveAttribute("data-status", "skal_rettes");
@@ -76,6 +79,7 @@ test("prøvegodkendelse: intet er forhåndsgodkendt; afgørelser, kommentarer, t
   expect(data.tvetydigheder.S4).toEqual({ valg: "1", kommentar: "Ræsonnementet bruger ophavet forkert." });
   expect(data.tvetydigheder.S2?.valg).toBe("ikke_besluttet");
   expect(data.lp13["LP13-1"]?.valg).toBe("A");
+  expect(data.rubrikbeslutninger.T1).toEqual({ valg: "saerskilt", kommentar: "Et bart nej giver 0; svaret noteres for sig." });
   expect(data.lp13.genbesoeg?.valg).toBe("B");
   expect(data.lp13.pilot?.valg).toBe("ikke_besluttet");
 
@@ -93,6 +97,8 @@ test("prøvegodkendelse: intet er forhåndsgodkendt; afgørelser, kommentarer, t
   await expect(page.locator('input[name="tv-S4"][value="1"]')).toBeChecked();
   await expect(page.locator('textarea[name="tvk-S4"]')).toHaveValue("Ræsonnementet bruger ophavet forkert.");
   await expect(page.locator('input[name="lp-genbesoeg"][value="B"]')).toBeChecked();
+  await expect(page.locator('input[name="rb-T1"][value="saerskilt"]')).toBeChecked();
+  await expect(page.locator('textarea[name="rbk-T1"]')).toHaveValue("Et bart nej giver 0; svaret noteres for sig.");
   await expect(page.locator("#count")).toHaveText("3 af 5 gennemgået · 1 af 5 tvivlstilfælde");
   // Saving again gives the same decisions (no loss on a round trip).
   const again = await saveTo(page, "proeve2.json");

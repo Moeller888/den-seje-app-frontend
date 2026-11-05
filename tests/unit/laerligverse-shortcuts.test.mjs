@@ -6,7 +6,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { FORMS, HANDOVER, TRANSFER } from "../../tools/laerligverse/assessment-v1.mjs";
 import { STUDENT } from "../../tools/laerligverse/assessment-pack.mjs";
-import { PAGE, SHORTCUT_FINDINGS } from "../../tools/laerligverse/assessment-review.mjs";
+import { AMBIGUITIES, LP13, PAGE, RUBRIC_DECISIONS, SHORTCUT_FINDINGS, validateReviewExport, FORMAT, contentFingerprints } from "../../tools/laerligverse/assessment-review.mjs";
+import { NEEDS_PUPIL_DATA, comparability, lix } from "../../tools/laerligverse/comparability.mjs";
+import { TRANSFER_CRITERIA } from "../../tools/laerligverse/assessment-v1.mjs";
 import { CHOICE_STRATEGIES, PART2_STRATEGIES, PERSONAL_LABELS, SENDER_TERMS, audit, cueWords, loadBefore, positionAgreement, words } from "../../tools/laerligverse/shortcut-audit.mjs";
 
 const after = audit(FORMS, TRANSFER);
@@ -31,8 +33,15 @@ test("part 2: no rule-based strategy gets a whole test right, and none beats gue
     for (const [id, p] of Object.entries(r.per)) assert.ok(p.right < p.of, `${r.id} solves ${id}`);
     assert.ok(r.right / r.of <= 7 / 12, `${r.id}: ${r.right}/${r.of}`);
   }
-  // G1–G4 at chance (50 %) in total.
-  for (const id of ["afsender-naevnt", "afsender-foerst", "holdningsord", "laengst-ja", "altid-nej", "altid-ja", "ordoverlap"]) assert.equal(row(after.part2, id).pct, 50, id);
+  // G1–G4 at chance in total: neither the rule nor its opposite gains more than 10 percentage points.
+  for (const id of ["afsender-naevnt", "afsender-foerst", "holdningsord", "maengdeord-nej", "laengst-ja", "altid-nej", "altid-ja", "ordoverlap"]) {
+    const pct = row(after.part2, id).pct;
+    assert.ok(pct >= 40 && pct <= 60, `${id}: ${pct} %`);
+  }
+});
+
+test("G10: in the pretest A every rule — and its opposite — scores exactly 2 of 4 (no test-wise rule of thumb helps)", () => {
+  for (const r of after.part2) if (r.per.A) assert.equal(r.per.A.right, 2, `${r.id}: ${r.per.A.right}/4 in A`);
 });
 
 test("G1: the sender is named in a 'ja' AND a 'nej' claim in every form, and every form has the same four claim types", () => {
@@ -98,7 +107,7 @@ test("G8: part 1 (in T: questions 1–2) is handed in before the page that names
 test("every finding names its strategies, and every strategy is run", () => {
   const ids = new Set([...PART2_STRATEGIES, ...CHOICE_STRATEGIES].map((s) => s.id));
   for (const g of SHORTCUT_FINDINGS) for (const s of g.strategies) assert.ok(ids.has(s), `${g.id}: ${s}`);
-  assert.deepEqual(SHORTCUT_FINDINGS.map((g) => g.id), ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9"]);
+  assert.deepEqual(SHORTCUT_FINDINGS.map((g) => g.id), ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10"]);
 });
 
 test("the approval page shows the shortcut check, the exact before/after text, and the page break in every test", () => {
@@ -114,4 +123,35 @@ test("the approval page shows the shortcut check, the exact before/after text, a
   assert.equal((h.match(/<table class="diff">/g) ?? []).length, 4);
   // Nothing is pre-approved: every test and the rubric start as "Ikke gennemgået".
   for (const id of ["A", "B", "T", "C", "rubrik"]) assert.match(h, new RegExp(`name="st-${id}" value="ikke_gennemgaaet" checked`));
+});
+
+test("T1 is a separate teacher decision: shown undecided, recommended, validated — and the rubric itself is NOT changed", () => {
+  const h = readFileSync(PAGE, "utf8");
+  assert.deepEqual(RUBRIC_DECISIONS.map((d) => d.id), ["T1"]);
+  assert.match(h, /name="rb-T1" value="ikke_besluttet" checked/);
+  for (const o of RUBRIC_DECISIONS[0].options) assert.match(h, new RegExp(`name="rb-T1" value="${o.id}"`));
+  assert.ok(RUBRIC_DECISIONS[0].options.some((o) => o.id === RUBRIC_DECISIONS[0].recommendation));
+  // The rubric still gives 1 point for a bare "nej" until the teacher decides.
+  assert.equal(TRANSFER_CRITERIA.T1.levels[1], "svarer nej uden at sige hvorfor");
+  const base = { format: FORMAT, laerer: "", dato: "", indhold: contentFingerprints(), proever: Object.fromEntries(["A", "B", "T", "C", "rubrik"].map((id) => [id, { status: "ikke_gennemgaaet" }])),
+    tvetydigheder: Object.fromEntries(AMBIGUITIES.map((a) => [a.id, { valg: "ikke_besluttet" }])), lp13: Object.fromEntries(LP13.map((x) => [x.id, { valg: "ikke_besluttet" }])) };
+  assert.deepEqual(validateReviewExport(JSON.stringify(base)).problems, []);
+  assert.match(validateReviewExport(JSON.stringify({ ...base, rubrikbeslutninger: { T1: { valg: "hack" } } })).problems.join(), /T1: invalid choice hack/);
+  assert.match(validateReviewExport(JSON.stringify({ ...base, rubrikbeslutninger: { T1: { valg: "saerskilt" } } })).problems.join(), /without a teacher name/);
+});
+
+test("comparability: A, B and C have the same structure; the measures are on the page; what needs pupil data is said", () => {
+  const c = comparability();
+  for (const m of c.forms) {
+    assert.equal(m.minutes, 13, m.id);
+    assert.deepEqual(m.part2Types.split(" ").sort(), ["J1", "J2", "N1", "N2"], m.id);
+    assert.ok(m.totalLix >= 25 && m.totalLix <= 44, `${m.id}: LIX ${m.totalLix} (easy–medium)`);
+  }
+  const total = c.forms.map((m) => m.totalWords);
+  assert.ok(Math.max(...total) / Math.min(...total) <= 1.2, `reading load ${total}`);
+  // 6 words, 2 sentences, 1 word over six letters: 3 + 100/6 = 19.7 → 20.
+  assert.equal(lix("Et kort ord. En sætning mere."), 20);
+  const h = readFileSync(PAGE, "utf8");
+  assert.ok(h.includes('id="sammenlignelighed"'));
+  for (const t of NEEDS_PUPIL_DATA) assert.ok(h.includes(t.replace(/&/g, "&amp;")), t.slice(0, 40));
 });
