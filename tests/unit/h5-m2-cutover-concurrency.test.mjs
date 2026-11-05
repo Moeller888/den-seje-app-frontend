@@ -333,7 +333,10 @@ test("5. negative control: a copy without pg_stat_clear_snapshot never sees A's 
   const CLEAR = "PERFORM pg_stat_clear_snapshot();";
   assert.equal(real.split(CLEAR).length, 2, "the real file clears the snapshot exactly once, inside the drain loop");
   const stale = real.replace(CLEAR, "NULL; -- negative control: snapshot NOT cleared");
-  assert.ok(!stale.includes("pg_stat_clear_snapshot"), "the copy has no clear left");
+  // Executable lines only: the file's header comment names pg_stat_clear_snapshot as well.
+  const code = (sql) => sql.split("\n").map((l) => l.replace(/--.*$/, "")).join("\n");
+  assert.equal(code(real).split("pg_stat_clear_snapshot").length, 2, "the real file calls it exactly once");
+  assert.ok(!code(stale).includes("pg_stat_clear_snapshot"), "the copy has no clear left");
 
   const db = await k1InUse();
   const qiA = await serve(db, 1);
