@@ -989,6 +989,15 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   af netop den migration. Opgaverne uden niveau tælles i den rigtige database, før migration A
   anvendes. Der skrives ikke flere portioner. En dokumenteret stikprøvekontrol skal ligge før
   aktiveringen.
+- **Ejerbeslutning 2026-11-05 (designets §11):** erstatter stoppet ved 3.000. Målet er nu **5.000 nye
+  engelskopgaver** i 31 migrationer:
+  - `grade6_9` 120;
+  - `pilot` og `batch2`–`batch6` 500 hver;
+  - `batch7`–`batch10` 470 hver, heraf 1.380 skrevet fra bunden og 500 omvendte ordforrådsopgaver.
+
+  Alle indsættes **inaktive** med eksplicit niveau og CEFR og er dækket af
+  `tests/unit/english-5000-migrations-run.test.mjs`. Intet er anvendt eller aktiveret. Hver
+  migration og hver aktivering kræver sin egen ejergodkendelse.
 - Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
   `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.
