@@ -1,0 +1,4 @@
+# Byte-exact copy of a DEPLOYED Edge Function bundle and its patched deploy payload.
+# deployed-v18/ is the rollback source, so every file here is stored and checked out exactly as
+# written; git must never normalise line endings in this folder.
+* -text
