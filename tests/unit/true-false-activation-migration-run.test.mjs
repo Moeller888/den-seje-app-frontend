@@ -65,8 +65,11 @@ const accepted = async (db, row) => { try { await insert(db, row); return true; 
 const FORMATS = ["mc", "mc_single", "number", "numbers", "text", "match", "match_pairs", "true_false", "MC", "Text", " mc",
   "longtext", "mc_number", "drag_drop", "", null];
 const TYPES = ["short", "long", "Long", "", null, "medium", " short"];
+// Match par's own activation (F-03, 20261105141500) is a separate file: after THIS one alone, "match" is
+// still not servable in SQL, whatever the registry says (tests/unit/match-pairs-activation-migration-run).
 const servableAfterActivation = (row) => {
   const kind = classifyQuestion(row);
+  if (kind === "match_pairs") return false;
   return kind === "true_false" ? true : isServableKind(kind);
 };
 

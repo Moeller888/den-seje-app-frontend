@@ -144,9 +144,10 @@ test("toPublicQuestion: a Match par payload carries the two lists and nothing th
   assert.deepEqual(toPublicQuestion({ question: "q", options: ["a", "b"] }, "mc", null, key).content, { question: "q", options: ["a", "b"] });
 });
 
-test("v1 safety: a match row reaching the old MC mapping is refused, never shown as multiple choice", () => {
-  // get-next-question's v1 mapAnswerFormat maps "match" to "mc"; the MC payload needs options, which a
-  // match row must not have (parseMatchPairs refuses options), so the row is skipped.
+test("v1 safety: a match row reaching the MC mapping is refused, never shown as multiple choice", () => {
+  // get-next-question's v1 mapAnswerFormat maps "match" to "match" since F-03 (the version deployed in
+  // production before it maps it to "mc"). Either way a match row is never shown as MC: the MC payload
+  // needs options, which a match row must not have (parseMatchPairs refuses options), so it is skipped.
   assert.throws(() => toPublicQuestion(CONTENT, "mc", null), /MC question missing valid options/);
   const index = read("supabase/functions/get-next-question/index.ts");
   const norm = index.match(/function normalizeContent\(raw: any, answer_format: string\) \{[\s\S]*?\n\}/)[0];
@@ -155,18 +156,24 @@ test("v1 safety: a match row reaching the old MC mapping is refused, never shown
 
 // ── Registry, renderer, servability ───────────────────────────────────────────────────────────
 
-test("registry: Match par is classified, rendered by match_pairs, and still NOT servable", () => {
+test("registry: Match par is classified, rendered by match_pairs, and servable (F-03)", () => {
   const row = { answer_format: "match", answer_type: "short", content: CONTENT };
   assert.equal(classifyQuestion(row), "match_pairs");
   assert.equal(INTERACTION_KINDS.match_pairs.renderer, ANSWER_RENDERERS.MATCH_PAIRS);
   assert.equal(resolveAnswerRenderer(row), "match_pairs");
-  assert.equal(INTERACTION_KINDS.match_pairs.servable, false);
-  assert.equal(servableWireFormat(row), null);
-  // The SQL twin is untouched and still says no to "match" explicitly.
+  assert.equal(INTERACTION_KINDS.match_pairs.servable, true);
+  assert.equal(servableWireFormat(row), "match");
+  // force_text or a long answer type is never Match par.
+  assert.equal(servableWireFormat({ ...row, content: { ...CONTENT, force_text: true } }), null);
+  assert.equal(servableWireFormat({ ...row, answer_type: "long" }), null);
+  // The SQL twin: 20261019150000 says no explicitly; the activation migration 20261105141500 changes exactly
+  // that line (tests/unit/match-pairs-activation-migration-run.test.mjs runs it).
   const sql = read("supabase/migrations/20261019150000_question_format_mix.sql");
   const fn = sql.match(/CREATE FUNCTION public\.question_is_servable\([\s\S]*?\n\$\$;/)[0];
   assert.match(fn, /WHEN p_answer_format = 'match' THEN false/);
   assert.equal((fn.match(/'match'/g) ?? []).length, 1);
+  const activation = read("supabase/migrations/20261105141500_match_pairs_activation.sql");
+  assert.ok(activation.includes("WHEN p_answer_format = ''match'' THEN (p_content -> ''force_text'') IS DISTINCT FROM ''true''::jsonb"));
 });
 
 // ── The answer shape ──────────────────────────────────────────────────────────────────────────

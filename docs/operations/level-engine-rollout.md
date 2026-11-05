@@ -233,7 +233,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (F-02 Sandt/falsk, PR #607) — **ikke deployet** | dette repository | 16 | `00ddba65243d69fffeb9ea8f7b01714d5745cf7bfe0945330123919b3237f1ca` |
+| Kandidat (F-03 Match par, stablet på F-02) — **ikke deployet** | dette repository | 16 | `aff655c8cd81f457fd9338c3056e6f89eaf227d239d79746fdb64c6866830fa1` |
+| Forrige kandidat (F-02 Sandt/falsk, PR #607) — **ikke deployet** | `feat/f02-true-false` (`98ee4cd7`) | 16 | `00ddba65243d69fffeb9ea8f7b01714d5745cf7bfe0945330123919b3237f1ca` |
 | Deployet i produktion 2026-11-04 (`a7450b0f`, version 181 og senere secret-versioner) | `a7450b0f` | 15 | `1f508a8459f5141f1e629dec94ec979ce34bafdcecdbc650b8d6db2a2f7c3bbe` |
 | Forrige kandidat (før R2-canary'en, §2.6.1) | main før canary'en | 15 | `4a89e9e6e33b363c9e8360bb81b19077dcb26c4791c3a086a66c73386b718f8d` |
 | Forrige kandidat (før L1 K1's `served-snapshot.ts`) | main før K1 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
@@ -251,6 +252,16 @@ så en række med en forkert nøgle springes over i stedet for at blive udlevere
 filer), og Sandt/falsk er ikke servable, så ingen elev kan få en `true_false`-opgave, før ejeren har
 godkendt aktiveringen (`docs/ARCHITECTURE.md`, Sandt/falsk) og et særskilt deploy. Kodestien for
 andre opgaveformer er uændret (slukket-pariteten ovenfor er grøn med den nye graf).
+
+**F-03 Match par ændrer ikke grafen (stadig 16 filer), kun to af filerne.** `_shared/interaction-kinds.ts`
+gør `match_pairs` servable, og `index.ts`'s v1-`mapAnswerFormat` oversætter `"match"` til `"match"` og
+springer ethvert andet ukendt format over (`null`) i stedet for at sende det som `"mc"`. De øvrige 14
+filer er byte-identiske med F-02-kandidaten. Kandidaten er **ikke** deployet, og den må **først**
+deployes, når produktionstrin Q-21 (process-event-deployet i H5/K1-kæden) er live og verificeret: den
+deployede process-event (v34-kode) har ingen Match par-sti og ville rette et Match par-svar som MC.
+Rækkefølgen er Q-21 → dette deploy → migration `20261105141500_match_pairs_activation.sql` → indhold,
+hvert trin med sit eget GO fra ejeren. Deployet alene er ufarligt: produktionens constraints afviser
+enhver `match`-række, indtil migrationen er anvendt. Slukket-pariteten ovenfor er grøn med den nye graf.
 
 Kandidaten adskiller sig fra version 179 i `index.ts` (niveaugrenen, låsningen, H5's `round_no` og
 Match par's nøglelæsning), `instance-insert.ts` (læser `repeat_count` tilbage, H5),

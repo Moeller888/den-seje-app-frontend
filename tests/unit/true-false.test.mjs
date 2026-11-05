@@ -140,7 +140,8 @@ test("public payload: only the statement leaves — no key, no options, no expla
   // A row that breaks the contract is refused here — before get-next-question inserts the instance.
   assert.throws(() => toPublicQuestion({ ...CONTENT, correct: "ja" }, "true_false", null), /needs correct/);
   assert.throws(() => toPublicQuestion({ ...CONTENT, options: ["Sandt", "Falsk"] }, "true_false", null), /must not carry options/);
-  // Under v1 a stored true_false row is mapped to "mc" and has no options: skipped, never shown as MC.
+  // Under the deployed v1 (before F-03) a stored true_false row is mapped to "mc" and has no options: skipped,
+  // never shown as MC. Since F-03 v1 skips it before that (mapAnswerFormat null).
   assert.throws(() => toPublicQuestion(CONTENT, "mc", null), /MC question missing valid options/);
 });
 
@@ -153,10 +154,10 @@ const fromIndex = (re, sig, plain) => {
   return new Function(`return (${m[0].replace(sig, plain)});`)();
 };
 
-test("get-next-question: v1 maps true_false to mc (then skipped for lack of options); the key is content.correct", () => {
+test("get-next-question: v1 skips true_false (mapAnswerFormat null since F-03, never \"mc\"); the key is content.correct", () => {
   const mapAnswerFormat = fromIndex(/function mapAnswerFormat\(format: string \| null\) \{[\s\S]*?\n\}/,
     "format: string | null", "format");
-  assert.equal(mapAnswerFormat("true_false"), "mc");
+  assert.equal(mapAnswerFormat("true_false"), null);
   // normalizeContent as-is (its Match par branch needs createMatchKey, which a true_false row never reaches).
   const src = INDEX_CODE.match(/function normalizeContent\(raw: any, answer_format: string\) \{[\s\S]*?\n\}/);
   assert.ok(src, "normalizeContent not found in index.ts");

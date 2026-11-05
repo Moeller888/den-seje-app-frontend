@@ -38,16 +38,16 @@ const mapAnswerFormat = (() => {
 })();
 
 // ── 1. Interaction kinds ─────────────────────────────────────────────────────────────────────────
-test("registry: exactly one base kind (choice); Match par and Sandt/falsk have renderers but are NOT servable", () => {
+test("registry: exactly one base kind (choice); Match par is servable (F-03), Sandt/falsk has its renderer but is NOT", () => {
   assert.equal(BASE_KIND, "choice");
   assert.deepEqual(KIND_ORDER, ["choice", "short_text", "long_text", "number", "force_text", "match_pairs", "true_false"]);
-  assert.equal(INTERACTION_KINDS.match_pairs.servable, false);
+  assert.equal(INTERACTION_KINDS.match_pairs.servable, true);
   assert.equal(INTERACTION_KINDS.match_pairs.renderer, "match_pairs");
   assert.equal(INTERACTION_KINDS.true_false.servable, false);
   assert.equal(INTERACTION_KINDS.true_false.renderer, "true_false");
-  const builtNotServable = ["match_pairs", "true_false"];
+  const builtNotServable = ["true_false"];
   for (const k of KIND_ORDER.filter((k) => !builtNotServable.includes(k))) assert.equal(INTERACTION_KINDS[k].servable, true, k);
-  assert.equal(isServableKind("match_pairs"), false);
+  assert.equal(isServableKind("match_pairs"), true);
   assert.equal(isServableKind("true_false"), false);
   assert.equal(isServableKind(null), false);
 });
@@ -102,9 +102,10 @@ test("classifyQuestion agrees with the browser renderer AND the server's mapAnsw
     const spec = INTERACTION_KINDS[kind];
     if (spec.renderer !== null) assert.equal(resolveAnswerRenderer(row), spec.renderer, JSON.stringify(row));
     else assert.equal(resolveAnswerRenderer(row), "unsupported", JSON.stringify(row));
-    // Match par and Sandt/falsk: v1's mapAnswerFormat says "mc" (the row has no options and is skipped);
-    // only the registry's own wire format is ever sent for them.
-    if (kind !== "match_pairs" && kind !== "true_false") assert.equal(mapAnswerFormat(answer_format), spec.wireFormat, JSON.stringify(row));
+    // Sandt/falsk: v1's mapAnswerFormat skips it (null); only the registry's own wire format is ever sent.
+    // Match par: v1 knows "match" since F-03 and agrees with the registry.
+    if (kind !== "true_false") assert.equal(mapAnswerFormat(answer_format), spec.wireFormat, JSON.stringify(row));
+    else assert.equal(mapAnswerFormat(answer_format), null, JSON.stringify(row));
   }
   assert.ok(named >= 7, "the matrix must exercise every named kind");
 });
@@ -274,15 +275,26 @@ test("mix: within a kind — band tier first, then wave score, then a fresh doma
   assert.deepEqual(p.ordered.map((q) => q.id), ["mc-2", "mc-1", "mc-3", "mc-0"]);
 });
 
-test("mix: only servable kinds are ever ordered — Match par and unclassifiable rows are dropped", () => {
-  const cands = [mc(0), match(0), match(1), { id: "x", answer_format: "drag_drop" }, { id: 5, answer_format: "mc" }, null];
+test("mix: only servable kinds are ever ordered — Sandt/falsk and unclassifiable rows are dropped", () => {
+  const tf = (i) => ({ id: `tf-${i}`, answer_format: "true_false", answer_type: "short",
+    content: { question: `s${i}`, correct: "Sandt" }, difficulty_band: 1, learning_objective: "vikings", metadata: null });
+  const cands = [mc(0), tf(0), tf(1), { id: "x", answer_format: "drag_drop" }, { id: 5, answer_format: "mc" }, null];
   const p = plan(cands, hist(...Array(20).fill("choice")));
   assert.deepEqual(p.ordered.map((q) => q.id), ["mc-0"]);
   assert.equal(p.decision.dropped, 5);
-  const only = plan([match(0)], []);
+  const only = plan([tf(0)], []);
   assert.deepEqual(only.ordered, []);
   assert.equal(only.decision.kind, null);
   assert.equal(only.decision.reason, "empty");
+});
+
+test("mix: Match par is servable (F-03) — ordered like any other non-base kind, never dropped", () => {
+  const p = plan([mc(0), match(0), match(1)], hist(...Array(20).fill("choice")));
+  assert.equal(p.decision.dropped, 0);
+  assert.equal(p.decision.kind, "match_pairs");
+  assert.deepEqual(p.ordered.map((q) => q.id).sort(), ["ma-0", "ma-1", "mc-0"]);
+  const only = plan([match(0)], []);
+  assert.deepEqual(only.ordered.map((q) => q.id), ["ma-0"]);
 });
 
 test("mix: long answers are never chosen by quota, only when nothing else is left", () => {
@@ -419,9 +431,11 @@ test("servableWireFormat: the registry's wire format — null, never \"mc\", for
   assert.equal(servableWireFormat({ answer_format: "text", answer_type: "long" }), "text");
   assert.equal(servableWireFormat({ answer_format: "number" }), "number");
   assert.equal(servableWireFormat({ answer_format: "mc", content: { force_text: true } }), "mc");
-  for (const f of ["match", "matching", "drag_drop", "MC", "", null]) {
+  assert.equal(servableWireFormat({ answer_format: "match" }), "match");
+  assert.equal(mapAnswerFormat("match"), "match", "v1 knows Match par since F-03");
+  for (const f of ["matching", "match_pairs", "true_false", "drag_drop", "MC", "", null]) {
     assert.equal(servableWireFormat({ answer_format: f }), null, String(f));
-    assert.equal(mapAnswerFormat(f), "mc", `v1's mapAnswerFormat still says "mc" for ${f} — the debt v2 removes`);
+    assert.equal(mapAnswerFormat(f), null, `v1's mapAnswerFormat skips ${f}, never "mc" (F-03)`);
   }
 });
 

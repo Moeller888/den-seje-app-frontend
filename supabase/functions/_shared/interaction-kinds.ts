@@ -5,8 +5,8 @@
 // WHY A REGISTRY
 // A question's kind is spread over three stored fields (answer_format, answer_type, content.force_text),
 // and the server and the browser each derived it on their own:
-//   * get-next-question mapAnswerFormat() maps ANY unknown answer_format to "mc", so a future
-//     "match" (Match par) row would be handed to the browser as multiple choice;
+//   * get-next-question mapAnswerFormat() (v1) once mapped ANY unknown answer_format to "mc"; since F-03
+//     it knows "match" and returns null (skip) for any other unknown format;
 //   * process-event treats answer_type "long" as teacher-graded whatever answer_format says;
 //   * js/answer-input.js resolveAnswerRenderer() decides what the pupil actually sees.
 // classifyQuestion() names the kind only where those three agree, and returns null otherwise. A null
@@ -22,9 +22,11 @@
 //                acts. Long answers are served when the pool holds nothing else, never to fill a share.
 //   number       answer_format "…number…"                auto-graded   renderer "number"
 //   force_text   content.force_text === true (non-long)   auto-graded   renderer "force_text"
-//   match_pairs  answer_format "match" (ROADMAP #13)      auto-graded   renderer "match_pairs" — BUILT, NOT
-//                servable: contract, key and answer shape in _shared/match-pairs.ts; graded by
-//                process_question_attempt like MC (process-event canonicalises the connections first)
+//   match_pairs  answer_format "match" (ROADMAP #13)      auto-graded   renderer "match_pairs" — SERVABLE
+//                (F-03, step 3 below): contract, key and answer shape in _shared/match-pairs.ts; graded by
+//                process_question_attempt like MC (process-event canonicalises the connections first —
+//                only the repository's process-event does; production needs step Q-21 first, see
+//                migration 20261105141500)
 //   true_false   answer_format "true_false" (F-02)        auto-graded   renderer "true_false" — BUILT, NOT
 //                servable: contract and key in _shared/true-false.ts; the key is the option text
 //                ("Sandt"/"Falsk"), so process_question_attempt grades it with normalize_choice_answer
@@ -41,7 +43,7 @@
 // none of them is modelled yet, so a reader must treat null as "unknown", never as 0. Nothing on the
 // serving or grading path reads this field today.
 //
-// ADDING A KIND (Match par and Sandt/falsk have done steps 1 and 2) — the order matters, each step is its own reviewed
+// ADDING A KIND (Sandt/falsk has done steps 1 and 2, Match par all three) — the order matters, each step is its own reviewed
 // change:
 //   1. add the entry below with servable: false (content may then be authored, inactive or not,
 //      and is never served);
@@ -53,12 +55,12 @@
 // step 3: it decides what the candidate window and the repeat exhaustion check count as servable, and
 // tests/unit/question-format-mix-migration-run.test.mjs fails while the two disagree. The candidate
 // window itself needs no change: it stratifies by the stored fields, not by kind names.
-// Match par, step 3 also: get-next-question's v1 mapAnswerFormat still maps "match" to "mc" (the row is
-// then skipped, because it has no options), so Match par reaches pupils only under QUESTION_MIX_ENGINE=v2
-// until v1 is retired or taught "match" in the same reviewed change. The same holds for "true_false".
-// Both also need a reviewed migration before a row can even be STORED: production's questions table
-// checks answer_format (questions_answer_format_check: mc, number, text) and content
-// (content_valid_check: content.type mc/text/number), and neither admits "match" or "true_false".
+// Step 3 also teaches get-next-question's v1 mapAnswerFormat the kind's wire format: v1 serves every pupil
+// today (QUESTION_MIX_ENGINE is shadow), and an unknown format there is skipped (null), never sent as
+// "mc". Match par did this in F-03 ("match"); "true_false" is still skipped by v1.
+// A kind also needs a reviewed migration before a row can even be STORED: production's questions table
+// checks answer_format (questions_answer_format_check) and content (content_valid_check). Match par's is
+// 20261105141500 (it also flips question_is_servable), Sandt/falsk's 20261105120000; neither is applied.
 //
 // Pure TypeScript with no Deno or network imports, so the Node unit suite tests exactly what the
 // Edge Functions run.
@@ -97,7 +99,7 @@ export const INTERACTION_KINDS: Readonly<Record<InteractionKind, Readonly<Intera
   long_text:   Object.freeze({ wireFormat: "text",        renderer: "long_text",  servable: true,  base: false, maxShare: 0,    teacherGraded: true,  guessFloor: null }),
   number:      Object.freeze({ wireFormat: "number",      renderer: "number",     servable: true,  base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
   force_text:  Object.freeze({ wireFormat: "mc",          renderer: "force_text", servable: true,  base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
-  match_pairs: Object.freeze({ wireFormat: "match",       renderer: "match_pairs", servable: false, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
+  match_pairs: Object.freeze({ wireFormat: "match",       renderer: "match_pairs", servable: true,  base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
   true_false:  Object.freeze({ wireFormat: "true_false",  renderer: "true_false", servable: false, base: false, maxShare: 0,    teacherGraded: false, guessFloor: 0.5 }),
 });
 

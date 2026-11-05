@@ -19,14 +19,14 @@
 //   * Answers are graded by the real public.process_question_attempt_v2, as process-event calls it (mode
 //     'quiz_v1', no hints).
 //
-// TEST-ONLY RELAXATIONS (each one is needed only for the Match par case, 4, and nothing else uses them)
+// TEST-ONLY RELAXATION (needed only for the Match par case, 4, and the unsupported-format case, 5)
 //   a. questions_answer_format_check is dropped in the throwaway database: production's CHECK predates
-//      Match par and admits no "match" row, so production holds none.
-//   b. Match par is still NOT servable (interaction-kinds.ts, servable: false), so no production path can
-//      serve it. Case 4 loads a second copy of the handler in which ONLY that registry flag is true — the
-//      step 3 the registry describes — and serves with QUESTION_MIX_ENGINE=v2 (v1 maps "match" to "mc").
-//      The round is created as gnq's new-question path would create it (key + proposal), because the v2
-//      candidate window is not part of this database. Case 5 shows the unmodified handler still refuses it.
+//      Match par and Sandt/falsk and admits neither row (Match par's activation migration 20261105141500
+//      and Sandt/falsk's 20261105120000 are not applied), so production holds none.
+// Match par is servable since F-03 (interaction-kinds.ts, and v1's mapAnswerFormat knows "match"), so
+// case 4 runs the unmodified handler under v1 and v2. The round is created as gnq's new-question path
+// would create it (key + proposal), because the candidate windows are not part of this database. Case 5
+// uses Sandt/falsk, which is still not servable, to show an unsupported delivered format is refused.
 //
 // CASES (owner's list, Opgave B)
 //   1. a new question gets a correct, server-delivered snapshot; the response is built from it and the
@@ -109,7 +109,7 @@ async function createDatabase() {
   await su.x(extractFunction(RPCS, "get_unserved_questions_for_student"));
   await su.x(`REVOKE ALL ON FUNCTION public.get_unserved_questions_for_student(uuid, smallint, text[]) FROM PUBLIC, anon, authenticated;
     GRANT EXECUTE ON FUNCTION public.get_unserved_questions_for_student(uuid, smallint, text[]) TO service_role;`);
-  // Relaxation a (Match par only, see the header).
+  // Relaxation a (Match par and the unsupported Sandt/falsk case only, see the header).
   await su.x("ALTER TABLE public.questions DROP CONSTRAINT questions_answer_format_check");
   return su;
 }
@@ -239,34 +239,20 @@ export function createClient(_url, key) {
   };
 }`;
 const dataUrl = (src) => "data:text/javascript," + encodeURIComponent(src);
-// Relaxation b: the copy loaded with ?k1match=1 (and only it) sees Match par as servable.
-const MATCH_TAG = "k1match=1";
-const MATCH_REGISTRY_LINE = /(match_pairs: Object\.freeze\(\{ wireFormat: "match",\s+renderer: "match_pairs", servable: )false/;
 registerHooks({
   resolve(specifier, context, next) {
     if (specifier === SERVE_URL) return { url: dataUrl(STUB_SERVE), shortCircuit: true };
     if (specifier.startsWith(SUPABASE_PREFIX)) return { url: dataUrl(STUB_SUPABASE), shortCircuit: true };
-    const r = next(specifier, context);
-    if (context.parentURL?.includes(MATCH_TAG) && r.url.startsWith("file:") && r.url.endsWith(".ts")) {
-      return { ...r, url: `${r.url}?${MATCH_TAG}` };
-    }
-    return r;
-  },
-  load(url, context, next) {
-    const r = next(url, context);
-    if (!url.includes(MATCH_TAG) || !url.includes("/_shared/interaction-kinds.ts")) return r;
-    const src = String(r.source);
-    assert.match(src, MATCH_REGISTRY_LINE, "the registry line this test flips has changed");
-    return { ...r, source: src.replace(MATCH_REGISTRY_LINE, "$1true") };
+    return next(specifier, context);
   },
 });
 
 const ENV = new Map([["SUPABASE_URL", "http://stub"], ["SUPABASE_SERVICE_ROLE_KEY", "SERVICE"], ["SUPABASE_ANON_KEY", "ANON"]]);
 globalThis.Deno = { env: { get: (k) => ENV.get(k), set: (k, v) => ENV.set(k, v), delete: (k) => ENV.delete(k) } };
 globalThis.__k1Backend = backend;
-async function loadHandler(matchServable = false) {
+async function loadHandler() {
   globalThis.__gnqHandlers = [];
-  await import(pathToFileURL(INDEX).href + (matchServable ? `?${MATCH_TAG}` : ""));
+  await import(pathToFileURL(INDEX).href);
   assert.equal(globalThis.__gnqHandlers.length, 1);
   return globalThis.__gnqHandlers[0];
 }
@@ -474,14 +460,17 @@ test("L1 K1 delivered version, end to end through the real get-next-question han
     const delivered = await assertSnapshotOf(qi, q);
     await edit(q, B);
     await su.q("UPDATE public.question_instances SET correct_answer = '0:1,1:2,2:0' WHERE id = $1", [qi]);
-    const matchHandler = await loadHandler(true);
-    const res = await gnq(matchHandler, p, { k1: true, mix: "v2" });
-    assertPublic(res);
-    assert.equal(res.body.answer_format, "match");
-    // Layout from the stored round's key: right display position j shows pairs[i].right where key[i] = j.
-    assert.deepEqual(res.body.content.match.left, ["Danmark", "Norge", "Sverige"]);
-    assert.deepEqual(res.body.content.match.right, ["Oslo", "Stockholm", "København"]);
-    assert.equal(res.calls.some((c) => /SELECT t\.correct_answer/.test(c.sql)), false, "K1 on: no separate key read");
+    // v1 (today's engine, mapAnswerFormat) and v2 (the registry) serve the same open round the same way.
+    for (const mix of [undefined, "v2"]) {
+      const res = await gnq(handler, p, { k1: true, mix });
+      assertPublic(res);
+      assert.equal(res.body.question_instance_id, qi, `mix=${mix}`);
+      assert.equal(res.body.answer_format, "match", `mix=${mix}`);
+      // Layout from the stored round's key: right display position j shows pairs[i].right where key[i] = j.
+      assert.deepEqual(res.body.content.match.left, ["Danmark", "Norge", "Sverige"]);
+      assert.deepEqual(res.body.content.match.right, ["Oslo", "Stockholm", "København"]);
+      assert.equal(res.calls.some((c) => /SELECT t\.correct_answer/.test(c.sql)), false, "K1 on: no separate key read");
+    }
     // Graded against the same key: the connections the pupil sees as right are right.
     const g = await answer(p, qi, KEY, 1);
     assert.equal(g.status, "correct");
@@ -491,12 +480,13 @@ test("L1 K1 delivered version, end to end through the real get-next-question han
   });
 
   await t.test("5. an unsupported format in a delivered version is still refused", async () => {
-    const q = await question("enlightenment", { question: "K1-5: Forbind", correct: "-",
-      pairs: [{ left: "a", right: "b" }, { left: "c", right: "d" }] }, { format: "match", grade: 9 });
+    // Sandt/falsk: built, NOT servable — v1 skips it (mapAnswerFormat null) and v2 too (registry).
+    const q = await question("enlightenment", { question: "K1-5: Solen er en stjerne.", correct: "Sandt" },
+      { format: "true_false", grade: 9 });
     const p = await pupil(["revolutions_democracy"]);
     const [row] = await su.q("SELECT content, metadata, answer_format, answer_type FROM public.questions WHERE id = $1", [q]);
     const [{ id: qi }] = await as(mainConn, "service_role", null, `INSERT INTO public.question_instances (student_id, question_id,
-      correct_answer, next_review_at, served_snapshot) VALUES ($1, $2, '0:1,1:0', now(), $3::jsonb) RETURNING id`, [p, q, JSON.stringify(row)]);
+      correct_answer, next_review_at, served_snapshot) VALUES ($1, $2, 'Sandt', now(), $3::jsonb) RETURNING id`, [p, q, JSON.stringify(row)]);
     assert.ok((await instance(qi)).served_snapshot);
     for (const mix of [undefined, "v2"]) {
       const res = await gnq(handler, p, { k1: true, mix });

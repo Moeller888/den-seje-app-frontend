@@ -163,7 +163,7 @@ test("the runbook records this tree's candidate manifest, the pinned supabase-js
   assert.ok(m.files.includes("functions/_shared/true-false.ts"), "F-02: question-dto checks true_false content");
   assert.ok(m.files.includes("functions/get-next-question/served-snapshot.ts"), "L1 K1");
   assert.ok(m.files.includes("functions/get-next-question/level-flow.ts"));
-  assert.ok(m.files.includes("functions/_shared/match-pairs.ts"));
+  assert.ok(m.files.includes("functions/_shared/match-pairs.ts"), "F-03: Match par is servable from this graph");
   assert.ok(m.files.includes("functions/get-next-question/log-pseudonym.ts"));
   assert.ok(RUNBOOK.includes(m.hash), `runbook §3.1 must name the candidate manifest ${m.hash}`);
   assert.ok(RUNBOOK.includes(`supabase-js@${SUPABASE_JS_VERSION}`));

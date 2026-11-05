@@ -31,12 +31,16 @@ function makeAdminClient() {
   return createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), ADMIN_CLIENT_OPTIONS);
 }
 
+// v1's wire format for a stored answer_format, or null = skip the row. An unknown or missing format is
+// never sent as "mc" (F-03): it is skipped like any row the client cannot show. "match" is Match par
+// (../_shared/match-pairs.ts, servable since F-03); "true_false" is not taught here yet, so v1 skips it.
 function mapAnswerFormat(format: string | null) {
-  if (!format) return "mc";
+  if (!format) return null;
   if (format.startsWith("mc")) return "mc";
   if (format.includes("number")) return "number";
   if (format.includes("text")) return "text";
-  return "mc";
+  if (format === "match") return "match";
+  return null;
 }
 
 // The round the pupil is answering (D-266, H5): round_no = question_instances.repeat_count + 1 of the
@@ -158,7 +162,8 @@ serve(async (req) => {
 
     // Which selection runs (step 2 explains the modes). Under "v2" every path — due, new, repeat — takes
     // the browser's answer_format from the interaction-kind registry, so a format the client cannot
-    // show is skipped instead of falling back to "mc"; v1 keeps mapAnswerFormat unchanged.
+    // show is skipped instead of falling back to "mc"; v1 uses mapAnswerFormat, which also skips (null) an
+    // unknown format since F-03.
     const mixEngine = resolveMixEngine(Deno.env.get("QUESTION_MIX_ENGINE"));
     // The level engine (Edge secret LEVEL_ENGINE, ./level-flow.ts). Unset = "off" = everything below
     // runs exactly as before; "v1" changes only step 2 (new questions) and step 3 (repeat RPC).
