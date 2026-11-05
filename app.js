@@ -15,6 +15,7 @@ import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { prepareChoiceOptions } from "./js/answer-options.js";
 import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer, shortTextCorrection } from "./js/answer-input.js";
 import { buildMatchPairsAnswer, matchCorrectionText, readMatchLayout } from "./js/match-pairs.js";
+import { buildTrueFalseAnswer, readTrueFalseContent } from "./js/true-false.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 import { attachReadAloudControl, attachOptionReadAloudControl, stopReadAloud } from "./js/read-aloud/adapters/quiz.js";
@@ -1497,6 +1498,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       logError("INVALID_MATCH_LAYOUT", { format });
     }
 
+    if (renderer === ANSWER_RENDERERS.TRUE_FALSE) {
+      // Sandt/falsk (js/true-false.js): the server sent only the statement, already shown above with its
+      // read-aloud player; the two answers are fixed. Feedback is the normal choice feedback below.
+      // A payload that breaks the contract falls through to the visible "unsupported" error below.
+      if (readTrueFalseContent(content)) {
+        const control = buildTrueFalseAnswer(document, {
+          onSubmit: submitAnswer,
+          describedBy: questionElement.id,
+        });
+        optionsContainer.appendChild(control.root);
+        return true;
+      }
+      logError("INVALID_TRUE_FALSE_CONTENT", { format });
+    }
+
     if (renderer === ANSWER_RENDERERS.LONG_TEXT) {
       const textarea = document.createElement("textarea");
 
@@ -1522,7 +1538,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       return true;
     }
 
-    if (renderer === ANSWER_RENDERERS.UNSUPPORTED || renderer === ANSWER_RENDERERS.MATCH_PAIRS) {
+    if (renderer === ANSWER_RENDERERS.UNSUPPORTED || renderer === ANSWER_RENDERERS.MATCH_PAIRS
+      || renderer === ANSWER_RENDERERS.TRUE_FALSE) {
       // An interaction type this client has no renderer for must fail loud — never fall through
       // to option buttons (ARCHITECTURE.md → Question Interaction model, rule 2).
       logError("UNSUPPORTED_ANSWER_FORMAT", { format, answer_type: question.answer_type ?? null });

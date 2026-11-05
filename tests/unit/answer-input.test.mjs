@@ -104,9 +104,11 @@ test("mc and number keep their renderers", () => {
 });
 
 test("an unknown or missing format is unsupported — never silently option buttons", () => {
-  for (const f of ["true_false", "cloze", "order", "", null, undefined, 42]) {
+  for (const f of ["multi_select", "truefalse", "cloze", "order", "", null, undefined, 42]) {
     assert.equal(resolveAnswerRenderer(q(f, "short")), ANSWER_RENDERERS.UNSUPPORTED, String(f));
   }
+  // "true_false" used to be listed here; it is now a built kind with its own renderer (js/true-false.js).
+  assert.equal(resolveAnswerRenderer(q("true_false", "short")), ANSWER_RENDERERS.TRUE_FALSE);
 });
 
 test("malformed questions never throw", () => {

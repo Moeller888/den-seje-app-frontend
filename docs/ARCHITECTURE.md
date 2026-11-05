@@ -472,11 +472,12 @@ from the registry (`servableWireFormat`): an unknown format is skipped and logge
 
 **One servable rule in two languages.** `public.question_is_servable(answer_format, answer_type,
 content)` is the SQL twin of the registry (`classifyQuestion` + `servable`); a PGlite parity test runs
-both over a 210-case matrix, so they can only change together.
+both over a 224-case matrix, so they can only change together.
 
 **Interaction kinds** — one registry, `supabase/functions/_shared/interaction-kinds.ts`:
 `choice` (base kind) · `short_text` (Stav til) · `long_text` (teacher-graded) · `number` ·
-`force_text` · `match_pairs` (renderer and grading built 2026-10-22, **not servable**). `classifyQuestion` names a kind only
+`force_text` · `match_pairs` (renderer and grading built 2026-10-22, **not servable**) · `true_false`
+(Sandt/falsk, F-02, built 2026-11-05, **not servable**). `classifyQuestion` names a kind only
 where `mapAnswerFormat` (server), `process-event` (grading) and `resolveAnswerRenderer` (browser) agree
 (a parity test runs all three); anything else is `null` and never served by `v2`. Long answers have
 `maxShare 0`: `process-event` keeps a long answer open until the teacher grades it, so a long question
@@ -540,6 +541,27 @@ also* teach v1's `mapAnswerFormat` `"match"` (today it maps it to `"mc"`, and th
 for lack of options) or retire v1; show a Match par `user_answer` to teachers as pairs in words
 (`js/student-detail.js` prints it raw, as it does for MC); and add the content through a reviewed
 migration.
+
+**Sandt/falsk (`true_false`, F-02) — steps 1 and 2 done (2026-11-05), step 3 NOT done: not servable.**
+Contract in `supabase/functions/_shared/true-false.ts`. Stored row: `answer_format = 'true_false'`,
+`answer_type = 'short'`, `content = { question: <udsagnet>, correct: "Sandt" | "Falsk" }`, no `options`,
+an explanation of *why* in `review_text` recommended. *Key:* `content.correct` itself — the option text,
+as for MC (`get-next-question` already stores `content.correct` for any format that is not `mc`/`match`;
+the DTO validates the contract before the instance is inserted). *Payload:* `content.question` only; the
+two answers are fixed and never carry a marker. *Grading:* `process-event` sends the answer text to
+`process_question_attempt` (neither long, `text` nor `match`), which compares it with
+`normalize_choice_answer` — **graded and paid exactly like MC, no change in `process-event` or SQL**
+(PGlite proof: `tests/unit/true-false-grading.test.mjs`). *Own wire format* `true_false`, not `mc`: the
+browser pads `answer_format = "mc"` to four options with legacy years (`js/answer-options.js`).
+*Browser:* `js/true-false.js` (two large buttons, Enter/Space, arrows, `aria-pressed`, the statement read
+aloud by the quiz's player, the quiz's normal choice feedback), `css/true-false.css`, demo
+`tools/true-false/demo.html` (local only). *Registry:* `maxShare 0`, `guessFloor 0.5` — a guess is right
+half the time, so a correct answer is route information, never mastery evidence
+(`docs/learning-progression-design.md`); `guessFloor` is `null` for every other kind and nothing on the
+serving path reads it. *Step 3 needs:* a reviewed migration (production's `questions_answer_format_check`
+and `content_valid_check` reject the row today, and `question_is_servable` must flip in the same PR),
+then a `get-next-question` deploy and owner GO; v1's `mapAnswerFormat` maps it to `"mc"` and skips it,
+so it reaches pupils only under `QUESTION_MIX_ENGINE=v2`.
 
 **Activation order** (each step its own owner authorisation): security review → apply the migration
 (D-110, `apply_migration`) → deploy `get-next-question` (diff live vs repo first) → set
