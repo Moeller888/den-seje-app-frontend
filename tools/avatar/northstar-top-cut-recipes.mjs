@@ -8,6 +8,7 @@
 //   pattern types — stripes: two colours, horizontal, a period and a share; check: two-colour gingham (the mix where bands cross);
 //                  dots: round dots on a square lattice, offset every other row.
 //   motif — only existing, allowed chest motifs (MOTIFS); the print goes through PF.placePrint at the cut's print box.
+//   trim — D-352: optionally a fabric for the cut's trim bands (rib, cuff, binding), laid only where the cut has bands.
 // Every swatch is seamless (its edges wrap) and deterministic (a fixed seed), anti-aliased analytically where a pattern has edges.
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -50,6 +51,7 @@ export function checkRecipes(R) {
     if ((r.group === "pattern") !== PATTERNS.includes(f.type)) p.push(at + ": a pattern recipe has a pattern type and only then");
     if ((r.group === "motif") !== !!r.motif) p.push(at + ": a motif recipe names a motif and only then");
     if (r.motif && !MOTIFS[r.motif]) p.push(at + ": motif must be one of " + Object.keys(MOTIFS).join(", "));
+    if (r.trim !== undefined && !(r.trim && [...FABRICS, ...PATTERNS].includes(r.trim.type) && rgb(r.trim.base))) p.push(at + ": trim is a fabric { type, base } (D-352)");
     for (const k of ["period", "share", "cell", "radius", "spread", "seed"]) if (f[k] !== undefined && !(typeof f[k] === "number" && f[k] > 0)) p.push(at + ": fabric." + k + " > 0"); }
   const n = (g) => list.filter((r) => r.group === g).length;
   if (list.length !== 12 || n("fabric") !== 4 || n("pattern") !== 4 || n("motif") !== 4) p.push("12 recipes: 4 fabric, 4 pattern, 4 motif");
