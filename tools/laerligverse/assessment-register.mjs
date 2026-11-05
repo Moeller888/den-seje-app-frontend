@@ -7,6 +7,11 @@
 //                                                                           never a final registration (see below)
 //   node tools/laerligverse/assessment-register.mjs register-received        v1.5: register the archived v1.4 file once
 //                                                                           its conflicts are settled by the teacher
+//   node tools/laerligverse/assessment-register.mjs register-final <export.json>
+//                                                                           v1.5: a file on the CURRENT version, with no
+//                                                                           stale decision and no conflict: stored byte
+//                                                                           for byte under its date and version, with
+//                                                                           its own register; never overwrites another
 //   node tools/laerligverse/assessment-register.mjs --check                  print the status of every approval; exit 1
 //                                                                           only if the register or the stored file
 //                                                                           has been tampered with
@@ -27,7 +32,8 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ITEMS, RECEIVED_FILE, REGISTER_V14_FILE, SUPPLEMENTS, contentFingerprints, decisionConflicts, validateReviewExport } from "./assessment-review.mjs";
+import { ITEMS, RECEIVED_FILE, REGISTER_V14_FILE, SUPPLEMENTS, contentFingerprints, decisionConflicts, newestRegistered, registerFileFor, versionedRegisters, validateReviewExport } from "./assessment-review.mjs";
+import { VERSION } from "./assessment-v1.mjs";
 export { SUPPLEMENTS };
 
 const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
@@ -127,9 +133,37 @@ export function readRegisterV14() {
   return existsSync(REGISTER_V14_FILE) ? JSON.parse(readFileSync(REGISTER_V14_FILE, "utf8")) : null;
 }
 
-/** The newest register: v1.4 once registered, else v1.2. An older register is history. */
+/** The newest register (highest version: v1.5, v1.4, …, else v1.2). An older register is history. */
 export function newestRegister() {
-  return readRegisterV14() ?? readRegister();
+  return newestRegistered() ?? readRegister();
+}
+
+/** Where a final file on `version`, saved on `dato` (DD-MM-ÅÅÅÅ), is stored. */
+export function storedFileFor(version, dato) {
+  const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(String(dato ?? "").trim());
+  if (!m) throw new Error(`date "${dato}" is not DD-MM-ÅÅÅÅ`);
+  const v = String(version).replace("kildekritik-maaling-", "");
+  return join(ROOT, "docs", "laerligverse", `proeve-godkendelse-${m[3]}-${m[2]}-${m[1]}-${v}.json`);
+}
+
+/** Integrity of every versioned register: the stored bytes, and that the register is the file's own decision. */
+export function versionedRegisterProblems() {
+  const problems = [];
+  for (const { file, reg } of versionedRegisters()) {
+    const stored = join(ROOT, reg.godkendelsesfil);
+    if (!existsSync(stored)) { problems.push(`${file}: the stored file ${reg.godkendelsesfil} is missing`); continue; }
+    const bytes = readFileSync(stored);
+    if (sha256(bytes) !== reg.sha256) problems.push(`${file}: the stored file is not the registered export (SHA-256 differs)`);
+    const data = JSON.parse(bytes.toString("utf8"));
+    if (data.version !== reg.version) problems.push(`${file}: the version is not the file's`);
+    for (const id of ITEMS) if (reg.afgoerelser?.[id]?.fingeraftryk !== data.indhold?.[id] || reg.afgoerelser?.[id]?.status !== data.proever?.[id]?.status) problems.push(`${file}: ${id} is not the file's decision`);
+    for (const [id, v] of Object.entries(data.tvetydigheder ?? {})) if (reg.tvetydigheder?.[id]?.valg !== v.valg) problems.push(`${file}: ${id} is not the file's decision`);
+    // A register is a consistent approval: its decisions may not conflict with the rubric it was registered on.
+    if (data.indhold?.rubrik === contentFingerprints().rubrik) for (const c of decisionConflicts(data.tvetydigheder)) problems.push(`${file}: ${c.text}`);
+  }
+  const versions = versionedRegisters().map((x) => x.reg.version);
+  if (new Set(versions).size !== versions.length) problems.push("two registers for the same version");
+  return problems;
 }
 
 export function approvalStatus({ reg = newestRegister(), current = contentFingerprints() } = {}) {
@@ -234,10 +268,11 @@ export function receiptProblems() {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const [cmd, file] = process.argv.slice(2);
   if (cmd === "--check") {
-    const problems = [...integrityProblems(), ...receiptProblems()];
+    const problems = [...integrityProblems(), ...receiptProblems(), ...versionedRegisterProblems()];
     for (const p of problems) console.error(p);
     if (problems.length === 0) for (const [id, s] of Object.entries(approvalStatus())) console.log(`${id}: ${s.status}${s.uaendret ? "" : ` (registreret ${s.registreret} på ${s.registreretFingeraftryk.slice(0, 8)}…, nu ${s.nuvaerendeFingeraftryk.slice(0, 8)}…)`}`);
     const rec = readReceipt();
+    if (problems.length === 0) for (const { reg } of versionedRegisters()) console.log(`register ${reg.version}: ${reg.sha256.slice(0, 8)}… (${reg.laerer}, ${reg.dato})`);
     if (problems.length === 0 && rec) console.log(readRegisterV14() ? `v1.4-fil ${rec.sha256.slice(0, 8)}…: registreret (kvitteringen ved modtagelsen: ${rec.status}${rec.konflikter.length ? `, ${rec.konflikter.map((c) => c.id).join(", ")} afklaret` : ""})` : `v1.4-fil ${rec.sha256.slice(0, 8)}…: ${rec.status}${rec.konflikter.length ? ` (${rec.konflikter.map((c) => c.id).join(", ")})` : ""}`);
     process.exit(problems.length === 0 ? 0 : 1);
   }
@@ -251,6 +286,45 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     writeFileSync(STORED, raw);
     writeFileSync(REGISTER, JSON.stringify(registerEntry(raw, { source: basename(file), contentCommit: gitHead() }), null, 2) + "\n");
     console.log(`registered → ${relative(ROOT, STORED)}, ${relative(ROOT, REGISTER)}`);
+    process.exit(0);
+  }
+  if (cmd === "register-final" && file) {
+    const raw = readFileSync(file);
+    const data = JSON.parse(raw.toString("utf8"));
+    const res = validateReviewExport(raw);
+    const problems = [...res.problems, ...res.stale.map((id) => `${id}: the content changed between the review and now — cannot register`)];
+    if (data.version !== VERSION) problems.push(`the file is on ${data.version}, the material is ${VERSION}`);
+    for (const c of decisionConflicts(data.tvetydigheder)) problems.push(`conflict with the rubric: ${c.text}`);
+    let stored, regFile;
+    try { stored = storedFileFor(data.version, data.dato); regFile = registerFileFor(data.version); } catch (e) { problems.push(e.message); }
+    if (stored && existsSync(stored) && sha256(readFileSync(stored)) !== sha256(raw)) problems.push(`${relative(ROOT, stored)} already holds a different file; refusing to overwrite it`);
+    if (stored && [STORED, ARCHIVED_V14].includes(stored)) problems.push("would overwrite an earlier approval");
+    if (regFile && existsSync(regFile)) problems.push(`${relative(ROOT, regFile)} already exists; refusing to overwrite it`);
+    console.log(`sha256 ${sha256(raw)}`);
+    for (const p of problems) console.error(p);
+    if (problems.length > 0) process.exit(1);
+    writeFileSync(stored, raw);
+    const decided = (o) => Object.fromEntries(Object.entries(o ?? {}).map(([k, v]) => [k, { valg: v.valg, kilde: "fil" }]));
+    const entry = {
+      _om: `D-346: lærerens godkendelse af ${data.version}, bundet til det indhold, den blev givet på. Genereret af tools/laerligverse/assessment-register.mjs register-final. Ret ikke i hånden. En godkendelse gælder kun indhold, hvis fingeraftryk er uændret. Godkendelserne er faglige og er IKKE et GO til elevpilot, produktion, LP-13 eller merge.`,
+      godkendelsesfil: relative(ROOT, stored).split("\\").join("/"),
+      original_filnavn: basename(file),
+      sha256: sha256(raw),
+      format: data.format,
+      version: data.version,
+      rubrikversion: data.rubrikversion,
+      laerer: data.laerer,
+      dato: data.dato,
+      bemaerkninger: remarksOn(data),
+      afgoerelser: Object.fromEntries(ITEMS.map((id) => [id, { status: data.proever[id].status, fingeraftryk: data.indhold[id] }])),
+      tvetydigheder: decided(data.tvetydigheder),
+      rubrikbeslutninger: decided(data.rubrikbeslutninger),
+      lp13: decided(data.lp13),
+      registreret_paa: gitHead(),
+    };
+    writeFileSync(regFile, JSON.stringify(entry, null, 2) + "\n");
+    console.log(`registered → ${relative(ROOT, stored)}, ${relative(ROOT, regFile)}`);
+    for (const [id, st] of Object.entries(approvalStatus({ reg: entry }))) console.log(`${id}: ${st.status}`);
     process.exit(0);
   }
   if (cmd === "register-received") {
@@ -308,6 +382,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     for (const c of rec.konflikter) console.log(`conflict: ${c.text}`);
     process.exit(0);
   }
-  console.error("usage: assessment-register.mjs register <export.json> | archive <export.json> | register-received | --check");
+  console.error("usage: assessment-register.mjs register <export.json> | archive <export.json> | register-received | register-final <export.json> | --check");
   process.exit(2);
 }

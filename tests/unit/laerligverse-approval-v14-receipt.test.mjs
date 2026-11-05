@@ -57,7 +57,7 @@ test("S2 = 2 is kept exactly as the teacher chose it — never turned back into 
   // On the page, the newest decision at S2 is the file's 2 — not the earlier supplement's 1.
   const page = readFileSync(PAGE, "utf8");
   const s2 = page.slice(page.indexOf('id="tv-S2"'), page.indexOf("</section>", page.indexOf('id="tv-S2"')));
-  assert.match(s2, /Nyeste lærerbeslutning:<\/strong> 2 point: hensigten i ét ord er nok/);
+  assert.match(s2, /(Nyeste lærerbeslutning|Registreret beslutning):<\/strong> 2 point: hensigten i ét ord er nok/);
   assert.equal(s2.includes("Registreret beslutning:</strong> 1 point"), false);
 });
 
@@ -82,16 +82,15 @@ test("the conflict at arrival is kept as history; v1.5 settles it, so S2 = 2 now
   assert.match(page, /data-received="registreret"/);
 });
 
-test("the v1.2 approval is untouched; the v1.4 approval applies only where the content is unchanged (A, T)", () => {
+test("the v1.2 approval is untouched; the v1.4 approval applied only where the content was unchanged (A, T)", () => {
   assert.equal(sha(readFileSync(STORED)), V12_SHA);
   assert.notEqual(ARCHIVED_V14, STORED);
   assert.equal(readRegister().version, "kildekritik-maaling-v1.2");
   assert.deepEqual(integrityProblems(), []);
   const want = { A: "godkendt", T: "godkendt", B: PENDING, C: PENDING, rubrik: PENDING };
-  for (const id of ITEMS) {
-    assert.equal(currentStatus()[id].status, want[id], id);
-    assert.equal(approvalStatus()[id].status, want[id], id);
-  }
+  // The v1.4 register, applied to the content now: A and T unchanged, the rest changed in v1.5. (The current status
+  // comes from the newer v1.5 register; see laerligverse-approval-v15.test.mjs.)
+  for (const id of ITEMS) assert.equal(approvalStatus({ reg: readRegisterV14() })[id].status, want[id], id);
   // The v1.4 register records the file's own decisions, S2 = 2 among them.
   const reg = readRegisterV14();
   assert.equal(reg.sha256, V14_SHA);

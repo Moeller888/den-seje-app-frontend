@@ -14,7 +14,7 @@
 // is loaded into a page whose content has changed, the affected decision is reset to "Ikke gennemgået" (with its
 // old status shown), so a stale approval can never be exported as if it applied to the new content.
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CALIBRATION, CRITERIA, FORMS, HANDOVER, MUNDTLIG_OPFOELGNING, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, RUBRIC_VERSION, SCORING_RULES, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
@@ -451,8 +451,12 @@ function ambiguity(a) {
 
 /** The decision in force for an ambiguity: from the registered file, or from a supplement — with its origin. */
 function registeredAmbiguity(id) {
-  // v1.4: the newest decision is the teacher's v1.4 file (received, not yet finally registered); it takes precedence
-  // over the v1.2 file and the written supplement.
+  // The newest registered file decides (v1.5 and later), then the v1.4 file, then the v1.2 file and its supplement.
+  const newest = newestRegistered();
+  if (newest && newest.version !== "kildekritik-maaling-v1.4") {
+    const v = newest.tvetydigheder?.[id];
+    if (v && v.valg !== UNDECIDED) return { valg: v.valg, kilde: `filen ${newest.godkendelsesfil.split("/").pop()} (lærer »${newest.laerer}«, dato »${newest.dato}«), registreret som ${newest.version}` };
+  }
   const rec = received();
   const v14 = rec?.tvetydigheder?.[id];
   if (v14 && v14.valg !== UNDECIDED) return { valg: v14.valg, nyeste: true, kilde: `filen ${rec.fil.split("/").pop()} (lærer »${rec.laerer}«, dato »${rec.dato}«)${rec.bekraeftelser?.[id] ? `; ${rec.bekraeftelser[id]}` : ""}${rec.erstatter?.[id] ? `; erstatter ${rec.erstatter[id]}` : ""}` };
@@ -469,12 +473,37 @@ export function registeredV14() {
   return existsSync(REGISTER_V14_FILE) ? JSON.parse(readFileSync(REGISTER_V14_FILE, "utf8")) : null;
 }
 
+const REG_DIR = join(ROOT, "docs", "laerligverse");
+const verNum = (v) => String(v).replace(/^.*v/, "").split(".").map(Number);
+const cmpVer = (a, b) => { const x = verNum(a), y = verNum(b); for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) - (y[i] ?? 0); return 0; };
+
+/** The register file of a version (v1.4 and later): docs/laerligverse/proeve-godkendelse-register-v1.5.json. */
+export function registerFileFor(version) {
+  const v = String(version ?? "").replace("kildekritik-maaling-", "");
+  if (!/^v\d+\.\d+$/.test(v)) throw new Error(`not a version: ${version}`);
+  return join(REG_DIR, `proeve-godkendelse-register-${v}.json`);
+}
+
+/** Every versioned register (v1.4 and later), oldest first. The v1.2 register is read by registered(). */
+export function versionedRegisters() {
+  if (!existsSync(REG_DIR)) return [];
+  return readdirSync(REG_DIR).filter((f) => /^proeve-godkendelse-register-v\d+\.\d+\.json$/.test(f))
+    .map((f) => ({ file: f, reg: JSON.parse(readFileSync(join(REG_DIR, f), "utf8")) }))
+    .sort((a, b) => cmpVer(a.reg.version, b.reg.version));
+}
+
+/** The newest versioned register, or null. */
+export function newestRegistered() {
+  const all = versionedRegisters();
+  return all.length ? all[all.length - 1].reg : null;
+}
+
 /**
  * Status of each item now: an approval applies only to the content whose fingerprint it was saved with. The NEWEST
  * register decides (v1.4, then v1.2); an older approval is history and never applies to newer content.
  */
 export function currentStatus() {
-  const reg = registeredV14() ?? registered();
+  const reg = newestRegistered() ?? registered();
   const fps = contentFingerprints();
   const ver = (r) => String(r.version ?? "").replace("kildekritik-maaling-", "");
   return Object.fromEntries(ITEMS.map((id) => {
@@ -620,12 +649,25 @@ function receivedRow() {
   return `<tr><td>Din fil om ${esc(r.version)} (${esc(r.dato)})</td><td data-received="${esc(reg ? "registreret" : r.status)}"><strong>${esc(state)}</strong> (SHA-256 ${esc(r.sha256.slice(0, 8))}…): ${esc(what)}.${esc(res)}${esc(why)}</td></tr>`;
 }
 
+/** The overview row for the newest final registration (v1.5 and later). */
+function finalRow() {
+  const r = newestRegistered();
+  if (!r || r.version === "kildekritik-maaling-v1.4") return "";
+  const what = ITEMS.map((id) => `${id} ${LABEL[r.afgoerelser[id].status] ?? r.afgoerelser[id].status}`).join(", ");
+  return `<tr><td>Din fil om ${esc(r.version)} (${esc(r.dato)})</td><td data-final="${esc(r.version)}"><strong>Registreret</strong> (SHA-256 ${esc(r.sha256.slice(0, 8))}…): ${esc(what)}.</td></tr>`;
+}
+
 /** The one open question, while the teacher's decisions conflict with the rubric as it is now. */
 function openQuestion() {
   const r = received();
   if (!r || !liveConflicts().length || !r.spoergsmaal) return "";
   const q = r.spoergsmaal;
   return `<div class="conflict" id="aaben-afklaring"><h3>Afventer din afklaring</h3><p>${esc(q.tekst)}</p><ul>${q.svar.map((o) => `<li><strong>${esc(o.svar)}:</strong> ${esc(o.konsekvens)}</li>`).join("")}</ul></div>`;
+}
+
+/** Which parts await the teacher now, from the real status — never a hand-written claim. */
+export function pendingItems(status = currentStatus()) {
+  return ITEMS.filter((id) => status[id].status !== "godkendt");
 }
 
 function roundSection(status) {
@@ -635,10 +677,13 @@ function roundSection(status) {
   }).join("");
   return `<section class="ov" id="runde"><h2>Denne gennemgang: ${esc(ROUND.version)}</h2>${openQuestion()}`
     + `<p><strong>Du vurderer:</strong> prøverne ${esc(VERSION)} og rubrikken ${esc(RUBRIC_VERSION)}. Dine godkendelser af version 1.2 og 1.4 (begge 05-11-2026) er gemt uændret som historik. En godkendelse gælder kun indhold, der er uændret siden.</p>`
-    + `<p><strong>Klar til godkendelse:</strong> ${esc(ROUND.ready)}</p>`
+    + (pendingItems(status).length
+      ? `<p><strong>Klar til godkendelse:</strong> ${esc(ROUND.ready)}</p>`
+      : `<p data-alle-godkendt="ja"><strong>Alle fem dele er godkendt</strong> (${esc(VERSION)}, rubrik ${esc(RUBRIC_VERSION)}): ${esc(newestRegistered()?.laerer ?? "")}, ${esc(newestRegistered()?.dato ?? "")}. Intet afventer din faglige godkendelse. Godkendelsen er ikke et GO til elevpilot, merge eller produktion.</p>`)
     + `<table><thead><tr><th>Del</th><th>Ændret i denne runde</th><th>Hvad det betyder fagligt</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`
     + `<p class="note">Den præcise før/efter-tekst står under »Til læreren« ved hver prøve og under »Ændret efter din godkendelse« i rubrikken.</p>`
-    + `<h3>Det skal du beslutte</h3><ol>${ROUND.open.map((t) => `<li>${esc(t)}</li>`).join("")}</ol></section>`;
+    + (pendingItems(status).length ? `<h3>Det skal du beslutte</h3><ol>${ROUND.open.map((t) => `<li>${esc(t)}</li>`).join("")}</ol>` : "")
+    + `</section>`;
 }
 
 /** The historical fact check, per finding, with sources and what was changed. */
@@ -750,7 +795,7 @@ fieldset{border:1px dashed var(--line);border-radius:6px;margin-top:10px}fieldse
 ${ITEMS.map((id) => `<tr><td>${esc(titleOf[id])}</td><td data-reg="${id}"><strong>${esc(status[id].text)}</strong></td></tr>`).join("")}
 <tr><td>De fem tvivlstilfælde i rubrikken</td><td><strong>Besluttet</strong> i din fil om v1.4 (S2 = 2, S3 = 1, S4 = 1, S6 følgefejl, S7 spørg; afsnit E). S2 = 2 gælder i alle prøver efter din afklaring. Indbygget i rubrikken ${esc(RUBRIC_VERSION)} sammen med principperne P1–P5</td></tr>
 <tr><td>LP-13 (læringsprogression)</td><td><strong>Valg registreret</strong> fra filen (afsnit F) — ikke en del af prøvegodkendelsen, og intet er aktiveret</td></tr>
-${receivedRow()}
+${receivedRow()}${finalRow()}
 <tr><td>Elevpilot og produktion</td><td><strong>Ikke autoriseret</strong></td></tr></tbody></table>
 <p><label><input type="checkbox" id="ra-on"> Prøv oplæsning af elevteksten (prototype, slået fra som standard). Bruger kun stemmer, som browseren angiver som lokale på denne computer; ingen tekst sendes af siden.</label> <span id="ra-voice" class="note"></span></p></section>
 ${roundSection(status)}

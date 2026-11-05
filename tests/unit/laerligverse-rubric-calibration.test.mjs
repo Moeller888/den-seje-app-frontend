@@ -175,16 +175,17 @@ test("an export is version-bound and valid; a missing or short teacher name and 
   assert.match(page, /rubrikversion: RUBRIC_VERSION/);
 });
 
-test("the page states the version, what changed and why, what needs approval, what is still to decide, and readiness", () => {
+test("the page states the version, what changed and why, and the real status — all five approved on v1.5, nothing left to decide", () => {
   const page = readFileSync(PAGE, "utf8");
   assert.match(page, /id="runde"/);
   assert.ok(page.includes(`Denne gennemgang: ${VERSION}`));
-  // v1.5: A and T keep the v1.4 approval (unchanged); the rubric, B and C await a renewed one.
-  for (const id of ["A", "T"]) assert.match(page, new RegExp(`data-round="${id}"><strong>Godkendt 05-11-2026 \\(v1\\.4, uændret siden\\)`));
-  for (const id of ["B", "C", "rubrik"]) assert.match(page, new RegExp(`data-round="${id}"><strong>Afventer fornyet lærergodkendelse`));
-  assert.match(page, /Klar til godkendelse:/);
+  // v1.5 approved in full (05-11-2026): the status comes from the register, and nothing is shown as still to decide.
+  for (const id of ITEMS) assert.match(page, new RegExp(`data-round="${id}"><strong>Godkendt 05-11-2026 \\(v1\\.5, uændret siden\\)`));
+  assert.match(page, /data-alle-godkendt="ja"/);
+  assert.match(page, /ikke et GO til elevpilot, merge eller produktion/);
+  assert.equal(/Klar til godkendelse:/.test(page), false);
+  assert.equal(/<h3>Det skal du beslutte<\/h3>/.test(page), false);
   assert.match(page, /Hvad det betyder fagligt/);
-  assert.ok(ROUND.open.some((t) => /rubrikken/.test(t) && /B og C/.test(t)));
   // The rubric's change since the v1.4 approval is shown word for word.
   assert.match(page, /id="rubrik-siden-v14"/);
   assert.match(page, /id="ankersvar"/);

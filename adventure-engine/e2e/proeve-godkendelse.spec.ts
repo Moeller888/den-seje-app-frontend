@@ -157,10 +157,9 @@ test("prøvegodkendelse: lærerens registrerede fil (05-11-2026) — ændret ind
   const path = join(mkdtempSync(join(tmpdir(), "lv-proeve-reg-")), "registreret.json");
   writeFileSync(path, readFileSync(src));
   await page.goto(PAGE);
-  // The overview states the real status from the newest register (v1.4): A and T approved and unchanged; the rest
-  // changed in v1.5 and await a renewed approval. Nothing is shown as approved for changed content.
-  for (const id of ["A", "T"]) await expect(page.locator(`td[data-reg="${id}"]`)).toContainText("Godkendt 05-11-2026 (v1.4, uændret siden)");
-  for (const id of ["B", "C", "rubrik"]) await expect(page.locator(`td[data-reg="${id}"]`)).toContainText("Afventer fornyet lærergodkendelse");
+  // The overview states the real status from the newest register (v1.5, approved in full 05-11-2026).
+  for (const id of ITEMS) await expect(page.locator(`td[data-reg="${id}"]`)).toContainText("Godkendt 05-11-2026 (v1.5, uændret siden)");
+  await expect(page.locator('[data-alle-godkendt="ja"]')).toBeVisible();
   await page.locator("#load").setInputFiles(path);
   // All five changed after the approval (fact check + the decided rules), so all five must be reviewed again.
   await expect(page.locator("#msg")).toHaveText("Afgørelser indlæst. Ændret indhold skal gennemgås igen: A, B, T, C, rubrik");
@@ -176,13 +175,13 @@ test("prøvegodkendelse: lærerens registrerede fil (05-11-2026) — ændret ind
   for (const id of ["S2", "S3", "S4"]) await expect(page.locator(`input[name="tv-${id}"][value="ikke_besluttet"]`)).toBeChecked();
   await expect(page.locator('input[name="rb-T1"][value="saerskilt"]')).toBeChecked();
   for (const [id, v] of Object.entries(original.lp13)) await expect(page.locator(`input[name="lp-${id}"][value="${v.valg}"]`)).toBeChecked();
-  // The newest decision and its origin are visible at each ambiguity: the teacher's v1.4 file. S2 = 2 is shown as
-  // chosen; the conflict with rubric v1.4 is settled by v1.5, so no conflict note and no open question remain.
-  await expect(page.locator("#tv-S2 .reg")).toContainText("Nyeste lærerbeslutning: 2 point: hensigten i ét ord er nok");
-  await expect(page.locator("#tv-S2 .reg")).toContainText("erstatter supplement-2026-11-05 (S2 = 1)");
+  // The registered decision and its origin are visible at each ambiguity: the teacher's v1.5 file. S2 = 2 is shown
+  // as chosen; the conflict with rubric v1.4 was settled by v1.5, so no conflict note and no open question remain.
+  await expect(page.locator("#tv-S2 .reg")).toContainText("Registreret beslutning: 2 point: hensigten i ét ord er nok");
+  await expect(page.locator("#tv-S2 .reg")).toContainText("registreret som kildekritik-maaling-v1.5");
   await expect(page.locator('[data-conflict="S2"]')).toHaveCount(0);
   await expect(page.locator("#aaben-afklaring")).toHaveCount(0);
-  await expect(page.locator("#tv-S6 .reg")).toContainText("proeve-godkendelse-2026-11-05-v1.4.json");
+  await expect(page.locator("#tv-S6 .reg")).toContainText("proeve-godkendelse-2026-11-05-v1.5.json");
   await expect(page.locator('td[data-received="registreret"]')).toContainText("I alle prøver");
   await expect(page.locator("#runde h2")).toHaveText("Denne gennemgang: kildekritik-maaling-v1.5");
   // A new file needs a full name (»chri« is not) and a full date in DD-MM-ÅÅÅÅ.

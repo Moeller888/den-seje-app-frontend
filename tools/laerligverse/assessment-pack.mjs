@@ -92,7 +92,7 @@ export function teacherGuide() {
   L.push("# Lærerpakke: kildekritik i Arkivskabet (D-344, F8)", "", GEN, "", STATUS, "");
   L.push("## Godkendelsesstatus", "", "| Del | Status |", "|---|---|");
   L.push("| Arkivskabets 12 læringselementer | **Godkendt** af Christopher Møller 04-11-2026 (`docs/laerligverse/kildekritik-godkendelse-register.json`, SHA-256 `8cd7d969…`) |");
-  L.push(`| Prøverne og rubrikken i denne pakke (${VERSION}, ${RUBRIC_VERSION}) | **Afventer fornyet lærergodkendelse.** Version 1.2 blev godkendt 05-11-2026 (\`docs/laerligverse/proeve-godkendelse-register.json\`); 1.4 har historiske rettelser, de besluttede bedømmelsesregler og en rettet rubrik (emne er ikke formål, samme standard i A, B og C) |`);
+  L.push(`| Prøverne og rubrikken i denne pakke (${VERSION}, ${RUBRIC_VERSION}) | **Godkendt** af Christopher Møller 05-11-2026 (\`docs/laerligverse/proeve-godkendelse-register-v1.5.json\`). Tidligere godkendelser (v1.2, v1.4) er bevaret som historik |`);
   L.push("| LP-13-regler (sekvenspolitikken) | **Valg registreret 05-11-2026, ikke aktiveret** (`docs/laerligverse/proeve-godkendelse-register.json`; betydning i `docs/laerligverse/lp13-beslutningskatalog.md`) |");
   L.push("| Elevpilot | **Ikke autoriseret** |", "| Produktionsintegration | **Ikke autoriseret** |", "");
   L.push("## 1. Forløbet kort", "");

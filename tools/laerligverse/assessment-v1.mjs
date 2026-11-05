@@ -30,8 +30,8 @@
 
 export const VERSION = "kildekritik-maaling-v1.5";
 export const APPROVAL = Object.freeze({
-  status: "afventer_fornyet_laerergodkendelse",
-  text: "Delvist godkendt. Version 1.4 blev godkendt 05-11-2026 med S2 = 2; version 1.5 bygger S2 = 2 ind i rubrikken i alle prøver. A og T er uændrede og godkendt; rubrikken, B og C afventer fornyet lærergodkendelse. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.",
+  status: "godkendt",
+  text: "Godkendt. Christopher Møller godkendte prøverne A, B, T, C og rubrikken i version 1.5 den 05-11-2026 (docs/laerligverse/proeve-godkendelse-register-v1.5.json). Godkendelsen gælder kun dette indhold og er ikke et GO til elevpilot, produktion eller merge. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.",
 });
 
 /**

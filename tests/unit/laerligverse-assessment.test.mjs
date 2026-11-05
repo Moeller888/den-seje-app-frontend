@@ -10,12 +10,13 @@ import { ARCHIVE_ITEMS } from "../../laerligverse/host/dev/archive-items.js";
 
 const words = (t) => t.trim().split(/\s+/).length;
 
-test("the material awaits its OWN (renewed) teacher approval, never covered by the Arkivskab approval", () => {
-  // v1.2 was approved 05-11-2026; v1.3 changed after that approval, so it awaits a renewed approval (D-346 §11–12).
-  assert.equal(APPROVAL.status, "afventer_fornyet_laerergodkendelse");
+test("the material has its OWN teacher approval (v1.5, 05-11-2026), never covered by the Arkivskab approval", () => {
+  // v1.2 and v1.4 were approved and are history; v1.5 is approved in full (D-346 §18). Not a GO for a pilot.
+  assert.equal(APPROVAL.status, "godkendt");
+  assert.match(APPROVAL.text, /ikke et GO til elevpilot/);
   for (const f of [...Object.values(FORMS), TRANSFER]) assert.equal(f.source.status, "didaktisk konstrueret", f.id);
   const guide = readFileSync(TEACHER, "utf8");
-  assert.match(guide, /Prøverne og rubrikken i denne pakke .* \| \*\*Afventer fornyet lærergodkendelse\.\*\*/);
+  assert.match(guide, /Prøverne og rubrikken i denne pakke .* \| \*\*Godkendt\*\* af Christopher Møller 05-11-2026/);
   assert.match(guide, /Elevpilot \| \*\*Ikke autoriseret\*\*/);
 });
 

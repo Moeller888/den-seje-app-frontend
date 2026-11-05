@@ -2,7 +2,7 @@
 
 > **GENERERET** af `tools/laerligverse/assessment-pack.mjs` fra `tools/laerligverse/assessment-v1.mjs`. Ret ikke her.
 
-> **Status: Delvist godkendt. Version 1.4 blev godkendt 05-11-2026 med S2 = 2; version 1.5 bygger S2 = 2 ind i rubrikken i alle prøver. A og T er uændrede og godkendt; rubrikken, B og C afventer fornyet lærergodkendelse. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.**
+> **Status: Godkendt. Christopher Møller godkendte prøverne A, B, T, C og rubrikken i version 1.5 den 05-11-2026 (docs/laerligverse/proeve-godkendelse-register-v1.5.json). Godkendelsen gælder kun dette indhold og er ikke et GO til elevpilot, produktion eller merge. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.**
 
 Til læreren: Hver opgave printes for sig, side 1 og side 2 på hvert sit ark. Eleven får kun den opgave, der skal bruges den dag. Saml side 1 ind, før eleven får side 2: side 2 nævner modtager og formål og ville ellers give svarene i del 1. Facit står i `laerervejledning.md`, aldrig her.
 

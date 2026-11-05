@@ -2,14 +2,14 @@
 
 > **GENERERET** af `tools/laerligverse/assessment-pack.mjs` fra `tools/laerligverse/assessment-v1.mjs`. Ret ikke her.
 
-> **Status: Delvist godkendt. Version 1.4 blev godkendt 05-11-2026 med S2 = 2; version 1.5 bygger S2 = 2 ind i rubrikken i alle prøver. A og T er uændrede og godkendt; rubrikken, B og C afventer fornyet lærergodkendelse. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.**
+> **Status: Godkendt. Christopher Møller godkendte prøverne A, B, T, C og rubrikken i version 1.5 den 05-11-2026 (docs/laerligverse/proeve-godkendelse-register-v1.5.json). Godkendelsen gælder kun dette indhold og er ikke et GO til elevpilot, produktion eller merge. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.**
 
 ## Godkendelsesstatus
 
 | Del | Status |
 |---|---|
 | Arkivskabets 12 læringselementer | **Godkendt** af Christopher Møller 04-11-2026 (`docs/laerligverse/kildekritik-godkendelse-register.json`, SHA-256 `8cd7d969…`) |
-| Prøverne og rubrikken i denne pakke (kildekritik-maaling-v1.5, kildekritik-rubrik-v1.5) | **Afventer fornyet lærergodkendelse.** Version 1.2 blev godkendt 05-11-2026 (`docs/laerligverse/proeve-godkendelse-register.json`); 1.4 har historiske rettelser, de besluttede bedømmelsesregler og en rettet rubrik (emne er ikke formål, samme standard i A, B og C) |
+| Prøverne og rubrikken i denne pakke (kildekritik-maaling-v1.5, kildekritik-rubrik-v1.5) | **Godkendt** af Christopher Møller 05-11-2026 (`docs/laerligverse/proeve-godkendelse-register-v1.5.json`). Tidligere godkendelser (v1.2, v1.4) er bevaret som historik |
 | LP-13-regler (sekvenspolitikken) | **Valg registreret 05-11-2026, ikke aktiveret** (`docs/laerligverse/proeve-godkendelse-register.json`; betydning i `docs/laerligverse/lp13-beslutningskatalog.md`) |
 | Elevpilot | **Ikke autoriseret** |
 | Produktionsintegration | **Ikke autoriseret** |
