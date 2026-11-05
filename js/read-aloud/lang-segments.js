@@ -68,7 +68,8 @@ const DA_WORDS = new Set((
   "hej farvel tak undskyld velkommen tillykke fødselsdag godmorgen godnat goddag " +
   "værsgo pas tag gave gaver fest jul nytår ferie sommerferie " +
   "butikken butik åbnede lukket købte boller bager bageriet personen person " +
-  "hvad hedder hvordan hvem gamle gammel yndlingsdyr yndlings gerne mens"
+  "hvad hedder hvordan hvem gamle gammel yndlingsdyr yndlings gerne mens " +
+  "udfordring regering ligestilling kvittering"
 ).split(/\s+/).filter(Boolean));
 
 // English words (lowercase). Function words + common school/everyday vocabulary.
@@ -99,6 +100,7 @@ const EN_WORDS = new Set((
   "cooks wash clean draw drew drawn feel felt keep kept leave left meet met pay paid " +
   "send win won lose lost choose chose break broke broken forget forgot understand " +
   "arrive arrived ask asked answer answered skate cry laugh smile hurry " +
+  "astonished stolen stealing " +
   "boy girl man woman men women child children people baby family mum mom dad mother " +
   "father brother sister sisters brothers grandma grandmother grandpa grandfather aunt " +
   "uncle friend friends teacher pupil student class school home house room kitchen " +
@@ -334,6 +336,7 @@ function optionFrameLang(question) {
   const quoted = chunks.filter((c) => c.quoted).map((c) => c.text).join(" ");
   if (frame.indexOf("på engelsk") !== -1) return "en";
   if (/samme som|modsatte/.test(frame)) return "en"; // synonym / opposite of an English word
+  if (/^\s*hvilke[nt]?\s+(ord|form)\s+passer\b/.test(frame)) return "en"; // English word in an English sentence
   if (quoted && (textLang(quoted) || quotePrior(frame)) === "da") return "en";
   if (/^\s*læs\s*:/.test(frame)) return "da";
   if (/\bhvad\s+betyder\b/.test(frame)) return "da";

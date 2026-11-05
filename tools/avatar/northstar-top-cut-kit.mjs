@@ -26,6 +26,7 @@ import * as IP from "./northstar-item-pilot.mjs";
 import * as R1 from "./northstar-r1-garment.mjs";
 import * as RC from "./northstar-r1c-evaluate.mjs";
 import * as TM from "./northstar-tee-master.mjs";
+import * as S1 from "./northstar-r1-similarity.mjs";
 import * as LS from "./northstar-longsleeve-master.mjs";
 import * as LS2 from "./northstar-longsleeve-master-v2.mjs";
 import * as PF from "./northstar-tee-print-family.mjs";
@@ -104,10 +105,32 @@ export function buildMaster(c, t, src) {
 /** Everything a cut needs to render: { c, E, t, src, bands, master, origin }. */
 export function prepare(c, E = envC()) { const { t, src, bands, origin } = cutOf(c, E); return { c, E, t, src, bands, origin, master: buildMaster(c, t, src) }; }
 
-/** A design on the cut: { rgb: [r,g,b], print?: prepared image (PF.prepareFor's img) }. Returns the full layer, its split by the cut's rule
- *  and the print's placement. */
+/** D-351 — the kit's FABRIC SAMPLER (FABRIC_SAMPLER): TM.render's material mapping (the same panel coordinates — the body planar from the
+ *  cut's bounding box, each sleeve along its axis — the same displacement, the same shading ratio, the cut's contour ink on top), but the
+ *  swatch is sampled BILINEARLY (wrapping) instead of at the nearest pixel. TM.render (locked) samples the nearest swatch pixel; with the
+ *  fold displacement that steps a pattern's sharp edge by whole pixels (a 1 px staircase on stripes, frayed dots, seen at x3 in D-351's
+ *  first pass). A colour design never comes here (renderDesign keeps TM.render for it), so every approved item is rendered as before. */
+export const FABRIC_SAMPLER = "kit-fabric-bilinear-v1";
+export function renderFabric(master, t, swatch) {
+  const g = S1.geometry(t.core), [bx0, by0] = g.bbox, out = new Uint8ClampedArray(N * 4), sw = swatch.w, sh = swatch.h, P = swatch.px;
+  const m = (a, n) => ((a % n) + n) % n;
+  for (let i = 0; i < N; i++) { if (!t.alpha[i]) continue; const x = i % W, y = (i / W) | 0, p = master.panel[i] < 0 ? 0 : master.panel[i];
+    let u, v; if (p === 0) { u = x - bx0; v = y - by0; } else { const a = master.axes[p - 1], th = a.angle - Math.PI / 2, dx = x - a.origin[0], dy = y - a.origin[1]; u = dx * Math.cos(-th) - dy * Math.sin(-th); v = dx * Math.sin(-th) + dy * Math.cos(-th); }
+    u += master.disp[i * 2]; v += master.disp[i * 2 + 1];
+    // the swatch pixel (X, Y) covers [X, X+1): its centre is X + 0.5 (TM.render's nearest pick of floor(u) is the pixel whose cell holds u)
+    const fu = u - 0.5, fv = v - 0.5, x0 = Math.floor(fu), y0 = Math.floor(fv), ax = fu - x0, ay = fv - y0, X0 = m(x0, sw), X1 = m(x0 + 1, sw), Y0 = m(y0, sh), Y1 = m(y0 + 1, sh), f = master.ratio[i];
+    for (let q = 0; q < 3; q++) { const c = (P[(Y0 * sw + X0) * 4 + q] * (1 - ax) + P[(Y0 * sw + X1) * 4 + q] * ax) * (1 - ay) + (P[(Y1 * sw + X0) * 4 + q] * (1 - ax) + P[(Y1 * sw + X1) * 4 + q] * ax) * ay; out[i * 4 + q] = Math.min(255, Math.round(c * f)); }
+    out[i * 4 + 3] = t.alpha[i]; }
+  // the contour: the cut's own outer ink, on top, absolute (TM.render's rule)
+  for (let i = 0; i < N; i++) { const a = t.contour[i * 4 + 3]; if (!a) continue; const kk = a / 255; for (let q = 0; q < 3; q++) out[i * 4 + q] = Math.round(t.contour[i * 4 + q] * kk + out[i * 4 + q] * (1 - kk)); }
+  return { layer: out };
+}
+
+/** A design on the cut: { rgb: [r,g,b] | swatch: seamless { w, h, px }, print?: prepared image (PF.prepareFor's img) }. Returns the full
+ *  layer, its split by the cut's rule and the print's placement. D-351: a swatch (a fabric or pattern recipe, northstar-top-cut-recipes.mjs)
+ *  is laid by renderFabric (the same mapping, sampled bilinearly); an rgb design is rendered by TM.render exactly as before. */
 export function renderDesign(ctx, design) {
-  const { c, t, master, E, bands } = ctx, plain = TM.render(master, t, E.base, bands, { body: design.rgb });
+  const { c, t, master, E, bands } = ctx, plain = design.swatch ? renderFabric(master, t, design.swatch) : TM.render(master, t, E.base, bands, { body: design.rgb });
   let layer = plain.layer, print = null;
   if (design.print) { const p = PF.placePrint(master, t, E.base, plain.layer, design.print, c.print.boxOnC); layer = p.layer; print = { at: p.at, footprintPx: p.footprint.length, onContour: p.onContour, footprint: p.footprint }; }
   const sp = LS2.splitLayers(layer, E.base, c.sleeves.layerSplitFromArmAlpha);
