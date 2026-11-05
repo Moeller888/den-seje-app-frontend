@@ -107,9 +107,13 @@ jobs:
         run: ${{ fromJSON(needs.plan.outputs.runs) }}
     steps:
       - uses: actions/checkout@v4
+      # Pinned to 24 (CI-01): lts/* moved to Node 26, and Playwright 1.59.1's zip extraction never
+      # finishes on Node 26.13.0 — a cold `playwright install` hung after "100% of 170.4 MiB" until the
+      # 15-min step timeout (runs 41898476479, 41966246165, 41971066554). The last cold install that
+      # worked ran on v24.22.0 (run 41125092989). Revisit when Playwright is upgraded.
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 24
 
       - name: Guard — refuse anything that is not isolated
         run: |
@@ -157,6 +161,9 @@ jobs:
       - name: Install Playwright browsers
         if: needs.plan.outputs.scope != 'docs-md'
         timeout-minutes: 15
+        env:
+          # Logs each download/extract phase, so a stall shows WHERE it stopped (CI-01).
+          DEBUG: pw:install
         run: |
           set -euo pipefail
           # Keep what apt downloads, so a miss on main can refill the cache (same as playwright.yml).

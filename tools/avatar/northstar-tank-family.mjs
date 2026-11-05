@@ -63,8 +63,8 @@ export function combinations(AL) {
 function decoder(DW) { const tmp = join(tmpdir(), "d345-" + process.pid); mkdirSync(tmp, { recursive: true }); const cache = new Map();
   return { dec: (f, dir = PUB) => { const key = dir + "|" + f; if (!cache.has(key)) { const o = join(tmp, "x.png"); execFileSync(DW, ["-quiet", join(dir, f), "-o", o]); cache.set(key, loadPx(o)); } return cache.get(key); }, cache, done: () => rmSync(tmp, { recursive: true, force: true }) }; }
 
-/** The bottoms and shoes as items with their skin shadows (D-339's way: pinned runs, the published solid trousers, SV1 and AB-1). */
-function partners(AL, dec) {
+/** The bottoms and shoes as items with their skin shadows (D-339's way: pinned runs, the published solid trousers, SV1 and AB-1); D-351 reuses it). */
+export function partners(AL, dec) {
   const spec = JSON.parse(readFileSync(join(ROOT, "tools", "avatar", "fixtures", "northstar-wardrobe", "runtime-assets-inputs-d242.json"), "utf8"));
   const base0 = ["bottom-skirt-sand", "bottom-capri-lightblue", "bottom-trousers-square-olive", BEIGE, "shoes-boots-laceup-black", "shoes-sneakers-white", "shoes-ankleboots-brown"], { P } = loadItems(Object.fromEntries(base0.map((id) => [id, spec.items[id]])));
   for (const p of Object.values(AL.NORTHSTAR_SOLID_PANTS)) P[p.item] = { item: p.item, layers: { pants: dec(p.item + "-pants-v1.webp") }, shadow: P[AL.NORTHSTAR_SOLID_PANTS_BASE].shadow, category: "bottom", covering: "none" };

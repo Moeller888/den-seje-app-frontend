@@ -35,7 +35,7 @@ Hvert trin herunder kræver **sin egen ejergodkendelse**. Migrationer anvendes k
 | 3 | Deploy `get-next-question` fra `main` med `QUESTION_MIX_ENGINE` **ikke sat** og `LEVEL_ENGINE` **ikke sat**; smoke-test den hidtidige adfærd | Trin 2. Diff live mod repo først (kendt drift i nøgle-resolveren) | §2.2 |
 | 4 | Godkend og anvend `20261020120000_difficulty_scale_a` | Trin 3. Optællingen af opgaver uden niveau er gjort 2026-10-22: 0 mangler klassetrin/bånd | §2.3. **Udført 2026-10-30:** produktionspost `20261030045204 difficulty_scale_a`, verificeret (§2.3) |
 | 5 | Først derefter: godkend og anvend `20261029120000_difficulty_scale_b`, deploy `get-next-question` med niveaumotoren (flaget stadig ikke sat), og behandl `LEVEL_ENGINE=v1` som en særskilt beslutning | Trin 4 | §2.4–§2.6. **B udført 2026-10-30:** produktionspost `20261030094958 difficulty_scale_b`, verificeret (§2.4). Deploy og `LEVEL_ENGINE` udestår |
-| 6 | Indholdet (#358–#365) indsættes **inaktivt**; stikprøvekontrol (E5); aktivering pr. portion | Trin 5, niveaumotoren kører | §2.7 |
+| 6 | Indholdet indsættes **inaktivt**: siden ejerbeslutningen 2026-11-05 er det 5.000 engelskopgaver i 31 migrationer (`grade6_9`, `pilot`, `batch2`–`batch10`; designets §11). Derefter stikprøvekontrol (E5) og aktivering pr. portion | Trin 5, niveaumotoren kører | §2.7 |
 
 Koden i `get-next-question` kan deployes, før B er anvendt: med `LEVEL_ENGINE` ikke sat kalder den
 ingen af B's funktioner. Med `LEVEL_ENGINE=v1` uden B fejler den **højlydt** (500), aldrig stille.
@@ -191,6 +191,8 @@ fjernet eller tømt allowliste lukker også canary'en for alle.
 SELECT metadata->>'level_batch' AS batch, count(*), bool_and(NOT is_active) AS alle_inaktive,
        bool_and(difficulty_level IS NOT NULL) AS alle_med_niveau
 FROM public.questions WHERE metadata ? 'level_batch' GROUP BY 1 ORDER BY 1;
+-- Forventet før aktivering: grade6_9 120, pilot og batch2-batch6 500 hver, batch7-batch10 470
+-- hver (5.000 i alt), alle inaktive og med niveau.
 -- Aktivering pr. portion (egen godkendelse pr. portion):
 -- UPDATE public.questions SET is_active = true
 -- WHERE learning_objective = 'english' AND metadata->>'level_batch' = 'pilot';

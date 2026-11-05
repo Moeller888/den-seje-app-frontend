@@ -3,6 +3,7 @@
 // The dial is drawn on a canvas in the theme's colours. Rules live in js/naal-logic.js.
 
 import { supabase } from "../supabaseClient.js";
+import { enterBreakGame } from "./minigame-pass.js";
 import { loadTheme } from "./themeManager.js";
 import { attachReadAloudControl, stopReadAloud } from "./read-aloud/adapters/quiz.js";
 import { TAU, norm, angDist, inArc, isPerfect, difficulty, flipsAfter, nextArcStart, PERFECT_FRACTION } from "./naal-logic.js";
@@ -346,6 +347,7 @@ function showOver(record) {
   }
   setScreen("over");
   $("naal-again")?.focus();
+  pass?.endRound();
 }
 
 // Moves the needle in small slices, so a fast needle can never jump over an arc unseen.
@@ -397,7 +399,11 @@ function frame(now) {
   state.raf = requestAnimationFrame(frame);
 }
 
+// D-347: the game is a spillepause — one round per accepted offer, redeemed on the server.
+let pass = null;
+
 function startRound() {
+  if (!pass || !pass.beginRound()) return;
   stopReadAloud();
   unlockAudio();
   clearTimeout(state.overTimer);
@@ -445,6 +451,9 @@ async function main() {
     const { data } = await supabase.auth.getSession();
     if (!data.session) window.location.replace("login.html");
   });
+
+  pass = await enterBreakGame({ client: supabase, gameKey: "naal" });
+  if (!pass) return;
 
   const canvas = $("naal-canvas");
   const ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;

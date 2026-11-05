@@ -984,10 +984,10 @@ function _nsTopList(top) {
   return null;
 }
 // The ten items: their layers and their skin-shadow parts (multiply; on C's body, on C's arms); then the print tees, the trousers,
-// the SV1-V5 shoes, the AB-1 boots and the sweaters (with their hip seam).
+// the SV1-V5 shoes, the AB-1 boots and the sweaters (with their hip seam). layerRev 2 on the tees: D-349's layer files (U-343-1).
 export const NORTHSTAR_ITEMS = Object.freeze({
-  "top-tee-hip-cream":            { category: "top",    layers: ["top-body", "sleeves"], shadows: ["body", "arms"] },
-  "top-tee-hip-blue":             { category: "top",    layers: ["top-body", "sleeves"], shadows: ["arms"] },
+  "top-tee-hip-cream":            { category: "top",    layers: ["top-body", "sleeves"], shadows: ["body", "arms"], layerRev: 2 },
+  "top-tee-hip-blue":             { category: "top",    layers: ["top-body", "sleeves"], shadows: ["arms"], layerRev: 2 },
   "bottom-skirt-sand":            { category: "bottom", layers: ["pants"],               shadows: ["body", "arms"] },
   "bottom-shorts-navy":           { category: "bottom", layers: ["pants"],               shadows: ["body"] },
   "bottom-capri-lightblue":       { category: "bottom", layers: ["pants"],               shadows: ["body"] },
@@ -996,7 +996,7 @@ export const NORTHSTAR_ITEMS = Object.freeze({
   "shoes-boots-laceup-black":     { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
   "shoes-sneakers-white":         { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
   "shoes-ankleboots-brown":       { category: "shoes",  layers: ["shoes"],               shadows: ["body"], closed: true },
-  ...Object.fromEntries(Object.values(NORTHSTAR_PRINT_TEES).map((t) => [t.item, Object.freeze({ category: "top", layers: ["top-body", "sleeves"], shadows: ["body", "arms"], shadowsOf: NORTHSTAR_PRINT_TEE_BASE })])),
+  ...Object.fromEntries(Object.values(NORTHSTAR_PRINT_TEES).map((t) => [t.item, Object.freeze({ category: "top", layers: ["top-body", "sleeves"], shadows: ["body", "arms"], shadowsOf: NORTHSTAR_PRINT_TEE_BASE, layerRev: 2 })])),
   ...Object.fromEntries(Object.values(NORTHSTAR_SOLID_PANTS).map((p) => [p.item, Object.freeze({ category: "bottom", layers: ["pants"], shadows: ["body"], shadowsOf: NORTHSTAR_SOLID_PANTS_BASE })])),
   ...Object.fromEntries(Object.values(NORTHSTAR_SV1_SHOES).map((s) => [s.item, Object.freeze({ category: "shoes", layers: ["shoes"], shadows: ["body"], closed: true, shadowsOf: NORTHSTAR_SV1_SHOE_BASE })])),
   ...Object.fromEntries(Object.values(NORTHSTAR_AB1_BOOTS).map((b) => [b.item, Object.freeze({ category: "shoes", layers: ["shoes"], shadows: ["body"], closed: true, shadowsOf: NORTHSTAR_AB1_BOOT_BASE })])),
@@ -1146,7 +1146,9 @@ export function northstarPlanFor(o, itemTable = NORTHSTAR_ITEMS, basePath = NORT
   if (NORTHSTAR_KNOWN_FAULTY.indexOf(ids.join("+")) !== -1) return null;
   const cut = items[2].closed ? _nsSrc("hide-" + o.shoes + "-v1.webp") : null;
   const figure = (file) => ({ op: "draw", src: _nsSrc(file), figure: true, cut });
-  const layer = (id, l) => ({ op: "draw", src: _nsSrc(id + "-" + l + "-v1.webp") });
+  // D-349: an item's layer files carry its layerRev (default 1), so a repaired layer set is a new file version, never new bytes under an
+  // old name; the 18 tees set 2 (their re-split top-body and sleeve layers, U-343-1), their shadows stay v1
+  const layer = (id, l) => ({ op: "draw", src: _nsSrc(id + "-" + l + "-v" + (itemTable[id].layerRev || 1) + ".webp") });
   return [
     figure(NORTHSTAR_FIGURE.body),
     ...items[2].layers.map((l) => layer(o.shoes, l)),
