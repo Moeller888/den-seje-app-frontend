@@ -57,8 +57,8 @@ Beslutningerne blev formuleret i en audit af læringsfundamentet den 2026-11-04 
 | **A7** | Sæt Edge-secret `K1_SERVED_SNAPSHOT=on` | — | Secret | Særskilt |
 | **A8** | Frontend: `ENABLE_H5_SUBMISSIONS = true` | `js/answer-submission.js:31` (egen PR, CI grøn, merge → Cloudflare-deploy) | Commit/PR/merge | Særskilt (hver for sig) |
 | **A9** | Observation 48–72 timer | §8 | Drift | — |
-| **A10a** | **M2, transaktion 1 — luk:** legacy-vejen lukkes effektivt for `process_question_attempt(uuid,uuid,text,bigint)` og `process_text_answer(uuid,uuid,text,boolean)` (§9.2) | `supabase/migrations/20261105120000_h5_m2_close_legacy_answer_path.sql` | `apply_migration` (navn `h5_m2_close_legacy_answer_path`), alene | Særskilt |
-| **A10b** | **M2, transaktion 2 — dræn og registrér T** (§9.3). Først når A10a er committet | `supabase/migrations/20261105120100_h5_m2_register_cutover.sql` | `apply_migration` (navn `h5_m2_register_cutover`), alene | Særskilt |
+| **A10a** | **M2, transaktion 1 — luk:** legacy-vejen lukkes effektivt for `process_question_attempt(uuid,uuid,text,bigint)` og `process_text_answer(uuid,uuid,text,boolean)` (§9.2) | `supabase/migrations/20261105180000_h5_m2_close_legacy_answer_path.sql` | `apply_migration` (navn `h5_m2_close_legacy_answer_path`), alene | Særskilt |
+| **A10b** | **M2, transaktion 2 — dræn og registrér T** (§9.3). Først når A10a er committet | `supabase/migrations/20261105180100_h5_m2_register_cutover.sql` | `apply_migration` (navn `h5_m2_register_cutover`), alene | Særskilt |
 
 **Hvorfor denne rækkefølge:**
 
@@ -417,8 +417,8 @@ SELECT count(*) AS jobs,
 
 | Trin | Fil | Hvad den gør |
 |---|---|---|
-| A10a | `supabase/migrations/20261105120000_h5_m2_close_legacy_answer_path.sql` | Først en vagt: K1 er anvendt med de gennemgåede `_v2`-kroppe; `service_role` kan udføre `_v2`; der er mindst ét forsøg i `question_attempts`; ingen runtime-rolle er medlem af legacy-ejeren; der er ingen kaldere, afhængige eller cron-job. Derefter `REVOKE EXECUTE` fra `PUBLIC` og fra **enhver** tildeling i ACL'en undtagen ejeren, og så påstanden fra `CUT-01`. Ét DO-blok, `lock_timeout` 5 s. Ingen kroppe, ingen `DROP`/`CREATE`, ingen rækker |
-| A10b | `supabase/migrations/20261105120100_h5_m2_register_cutover.sql` | Først en vagt: legacy er lukket (A10a er committet), og rollen kan se andre sessioner. Så `closed_before := clock_timestamp()` og dræn: der ventes, til ingen klientsession **i samme database** har en transaktion med `xact_start < closed_before`, højst 30 s. Først derefter oprettes `answer_path_cutovers` med triggere og rettigheder, og rækken `h5_m2` indsættes. Ét DO-blok. En ny kørsel efter succes ændrer intet |
+| A10a | `supabase/migrations/20261105180000_h5_m2_close_legacy_answer_path.sql` | Først en vagt: K1 er anvendt med de gennemgåede `_v2`-kroppe; `service_role` kan udføre `_v2`; der er mindst ét forsøg i `question_attempts`; ingen runtime-rolle er medlem af legacy-ejeren; der er ingen kaldere, afhængige eller cron-job. Derefter `REVOKE EXECUTE` fra `PUBLIC` og fra **enhver** tildeling i ACL'en undtagen ejeren, og så påstanden fra `CUT-01`. Ét DO-blok, `lock_timeout` 5 s. Ingen kroppe, ingen `DROP`/`CREATE`, ingen rækker |
+| A10b | `supabase/migrations/20261105180100_h5_m2_register_cutover.sql` | Først en vagt: legacy er lukket (A10a er committet), og rollen kan se andre sessioner. Så `closed_before := clock_timestamp()` og dræn: der ventes, til ingen klientsession **i samme database** har en transaktion med `xact_start < closed_before`, højst 30 s. Først derefter oprettes `answer_path_cutovers` med triggere og rettigheder, og rækken `h5_m2` indsættes. Ét DO-blok. En ny kørsel efter succes ændrer intet |
 | Rollback | `docs/operations/h5-m2-rollback.md` | Fejltabel for hvert delskridt og R1 (genåbn kun for `service_role`) |
 
 **Er rækkefølgen gennemførlig med projektets værktøjer?** Ja:
@@ -450,9 +450,9 @@ SELECT count(*) AS jobs,
 | # | Handling | Forventet tilstand bagefter | NO-GO, hvis |
 |---|---|---|---|
 | 1 | Readiness, cron-blok og arkiv (punkt 3–5 ovenfor), read-only | Som forudsætningerne | Afvigelse |
-| 2 | **A10a:** `apply_migration` med `20261105120000_…` | DB: `CUT-01` = true, `CUT-02` = false. API: legacy-anmodninger → 426 `client_outdated`; H5 virker uændret | Migrationen afvises (intet ændret; læs fejlteksten) |
+| 2 | **A10a:** `apply_migration` med `20261105180000_…` | DB: `CUT-01` = true, `CUT-02` = false. API: legacy-anmodninger → 426 `client_outdated`; H5 virker uændret | Migrationen afvises (intet ændret; læs fejlteksten) |
 | 3 | Åbne transaktioner (punkt 6), read-only | Ingen ældre end få sekunder | Lange transaktioner: undersøg før trin 4 |
-| 4 | **A10b:** `apply_migration` med `20261105120100_…`, straks efter trin 2 og 3 | DB: `CUT-01` = `CUT-02` = true; §8 blok 2: `CUT-T` = true, INT-B = 0 | Tidsgrænse eller anden afvisning. Tilstanden er "lukket, T mangler", som er sikker; se `docs/operations/h5-m2-rollback.md` §2 |
+| 4 | **A10b:** `apply_migration` med `20261105180100_…`, straks efter trin 2 og 3 | DB: `CUT-01` = `CUT-02` = true; §8 blok 2: `CUT-T` = true, INT-B = 0 | Tidsgrænse eller anden afvisning. Tilstanden er "lukket, T mangler", som er sikker; se `docs/operations/h5-m2-rollback.md` §2 |
 | 5 | Readiness og §8 blok 1 og 2, read-only; post i `docs/operations/production-actions/` med `effective_at` og `closed_before` | Som ovenfor | Afvigelse |
 
 **Overvågning efter aktivering** (de første 48 timer, derefter dagligt i en uge):

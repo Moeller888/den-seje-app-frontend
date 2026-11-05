@@ -357,11 +357,11 @@ const REVIEWED_LATER_REPEAT_USERS = {
     "columns: it never changes answered, repeat_count, correct_answer or any other column, so every repeat " +
     "rule of this migration (reopen, award, close) is untouched (l1-k1-attempt-context-migration-run proves " +
     "the outcomes, amounts, streak and quests unchanged with and without a snapshot).",
-  "20261105120000_h5_m2_close_legacy_answer_path.sql":
+  "20261105180000_h5_m2_close_legacy_answer_path.sql":
     "H5 M2 transaction 1: names process_question_attempt / process_text_answer only to look them up, check " +
     "who may call them and REVOKE EXECUTE from every grantee but the owner. It redefines no function, changes " +
     "no body and writes no row (h5-m2-cutover-migration-run.test.mjs: fingerprint differs only in the two ACLs).",
-  "20261105120100_h5_m2_register_cutover.sql":
+  "20261105180100_h5_m2_register_cutover.sql":
     "H5 M2 transaction 2: names the legacy functions only to assert that transaction 1 closed them; it creates " +
     "answer_path_cutovers and its append-only trigger function, and redefines none of this migration's " +
     "functions (h5-m2-cutover-migration-run.test.mjs).",
@@ -403,7 +403,7 @@ test("reviewed later repeat users redefine none of this migration's functions", 
       "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql",
       "20261030211428_question_attempts_v2.sql", "20261101190000_question_attempts_v2_bootstrap.sql",
       "20261101190100_question_attempts_v2_align_grading.sql", "20261103110000_l1_k1_attempt_context.sql",
-      "20261105120000_h5_m2_close_legacy_answer_path.sql", "20261105120100_h5_m2_register_cutover.sql"],
+      "20261105180000_h5_m2_close_legacy_answer_path.sql", "20261105180100_h5_m2_register_cutover.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);

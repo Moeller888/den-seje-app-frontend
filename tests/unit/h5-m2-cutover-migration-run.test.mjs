@@ -1,6 +1,6 @@
 // RUNTIME proof for H5 M2 (runbook docs/operations/h5-k1-activation-runbook.md §9, A10a/A10b), PGlite:
-//   20261105120000_h5_m2_close_legacy_answer_path.sql  — transaction 1, close
-//   20261105120100_h5_m2_register_cutover.sql          — transaction 2, drain + register T
+//   20261105180000_h5_m2_close_legacy_answer_path.sql  — transaction 1, close
+//   20261105180100_h5_m2_register_cutover.sql          — transaction 2, drain + register T
 // and the reopen block R1 in docs/operations/h5-m2-rollback.md. All three run UNMODIFIED, on the merged
 // H5 chain in production's order (G1 → bootstrap → alignment → D-327 → K1, with G2 and D-316 as
 // production has them) and the readiness file of PR #583. Synthetic pupils only.
@@ -24,8 +24,8 @@ import { isRevokedLegacyRpc } from "../../supabase/functions/process-event/answe
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const MIG_DIR = join(ROOT, "supabase", "migrations");
-const CLOSE = "20261105120000_h5_m2_close_legacy_answer_path.sql";
-const REGISTER = "20261105120100_h5_m2_register_cutover.sql";
+const CLOSE = "20261105180000_h5_m2_close_legacy_answer_path.sql";
+const REGISTER = "20261105180100_h5_m2_register_cutover.sql";
 const D316 = "20261102100000_release_open_rounds_on_inactive_questions.sql";
 const D327 = "20261103100000_question_attempts_history_no_action.sql";
 const K1 = "20261103110000_l1_k1_attempt_context.sql";

@@ -11,7 +11,7 @@
 -- docs/migration-workflow-policy.md): apply_migration only (name h5_m2_close_legacy_answer_path), never
 -- `supabase db push`. It is INACTIVE until the owner has decided B1–B4 (runbook §1.1) and A1–A9 are
 -- done. It must be applied ALONE, as its own apply_migration call, and COMMITTED before transaction 2
--- (20261105120100_h5_m2_register_cutover.sql) starts — never both in one call or one transaction:
+-- (20261105180100_h5_m2_register_cutover.sql) starts — never both in one call or one transaction:
 -- transaction 2 waits for answers that passed the permission check BEFORE this commit (§9.3).
 --
 -- WHAT CHANGES (and nothing else)
@@ -164,6 +164,6 @@ BEGIN
     RAISE EXCEPTION 'M2 (luk): andre roller end ejeren kan stadig udføre legacy-funktionerne (%); alt rulles tilbage', v_found;
   END IF;
 
-  RAISE NOTICE 'M2 (luk): legacy-vejen er lukket for alle runtime-roller. T er IKKE registreret — kør transaktion 2 (20261105120100) som særskilt trin.';
+  RAISE NOTICE 'M2 (luk): legacy-vejen er lukket for alle runtime-roller. T er IKKE registreret — kør transaktion 2 (20261105180100) som særskilt trin.';
 END
 $m2close$;

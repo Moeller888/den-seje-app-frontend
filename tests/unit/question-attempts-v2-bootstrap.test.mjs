@@ -106,12 +106,12 @@ async function effects(db, pupil) {
 const H5_SURFACE = /\bFUNCTION\s+public\.(process_question_attempt|process_text_answer|release_open_question_outside|request_repeat_\w+)\s*\(|\bquestion_attempts\b|question_instances_round_guard|question_instances_id_student_id_key|\bUPDATE\s+(public\.)?question_instances\b[\s\S]{0,400}?\b(answered|repeat_count)\b/i;
 // L1 K1 (20261103110000) was reviewed: it requires the aligned _v2 and D-327, adds columns to
 // question_attempts and question_instances, and re-creates only the two _v2 functions (l1-k1-attempt-context-migration-run).
-// H5 M2 transaction 1 (20261105120000) was reviewed: it only READS question_attempts (count, its guard) and
+// H5 M2 transaction 1 (20261105180000) was reviewed: it only READS question_attempts (count, its guard) and
 // revokes EXECUTE on the two legacy functions; no body, no DDL on H5's objects (h5-m2-cutover-migration-run).
 const REVIEWED_H5_SURFACE_AFTER_D280 = Object.freeze([G1, BOOTSTRAP, ALIGN, "20261102100000_release_open_rounds_on_inactive_questions.sql",
   "20261103100000_question_attempts_history_no_action.sql",
   "20261103110000_l1_k1_attempt_context.sql",
-  "20261105120000_h5_m2_close_legacy_answer_path.sql"]);
+  "20261105180000_h5_m2_close_legacy_answer_path.sql"]);
 
 test("the two files: unique versions, after their prerequisites, adjacent; later H5-surface changes need review", () => {
   const files = readdirSync(join(ROOT, "supabase", "migrations")).filter((f) => /^\d{14}_.+\.sql$/.test(f)).sort();

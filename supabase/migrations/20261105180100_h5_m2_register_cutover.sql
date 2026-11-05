@@ -5,7 +5,7 @@
 -- NOT APPLIED IN PRODUCTION. Applying it needs a separate owner authorisation (D-110,
 -- docs/migration-workflow-policy.md): apply_migration only (name h5_m2_register_cutover), never
 -- `supabase db push`. INACTIVE until B1–B4 are decided. Apply it ALONE, AFTER transaction 1
--- (20261105120000_h5_m2_close_legacy_answer_path.sql) has been committed by its own apply_migration call.
+-- (20261105180000_h5_m2_close_legacy_answer_path.sql) has been committed by its own apply_migration call.
 --
 -- WHY A SECOND TRANSACTION: REVOKE neither waits for nor stops a legacy call that already passed the
 -- permission check, and legacy answers carry answered_at = now() = their TRANSACTION START. If T were
@@ -47,7 +47,7 @@
 
 DO $m2register$
 DECLARE
-  c_file constant text := '20261105120100_h5_m2_register_cutover.sql';
+  c_file constant text := '20261105180100_h5_m2_register_cutover.sql';
   v_pqa oid := to_regprocedure('public.process_question_attempt(uuid,uuid,text,bigint)');
   v_pta oid := to_regprocedure('public.process_text_answer(uuid,uuid,text,boolean)');
   v_legacy oid[];
@@ -91,7 +91,7 @@ BEGIN
      OR EXISTS (SELECT 1 FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
                  WHERE n.nspname = 'public' AND p.proname IN ('process_question_attempt', 'process_text_answer')
                    AND p.oid <> ALL (v_legacy)) THEN
-    RAISE EXCEPTION 'M2 (registrér): legacy-vejen er ikke lukket (%) — anvend og commit transaktion 1 (20261105120000) først; intet ændret',
+    RAISE EXCEPTION 'M2 (registrér): legacy-vejen er ikke lukket (%) — anvend og commit transaktion 1 (20261105180000) først; intet ændret',
       coalesce(v_found, 'PUBLIC, anden rolle eller en anden funktion med legacy-navnet');
   END IF;
 
@@ -140,7 +140,7 @@ BEGIN
     CONSTRAINT answer_path_cutovers_closed_before_effective CHECK (closed_before <= effective_at)
   );
   COMMENT ON TABLE public.answer_path_cutovers IS
-    'H5 M2: the documented cutover time T per answer path (runbook §9.1). Append-only; written once by 20261105120100.';
+    'H5 M2: the documented cutover time T per answer path (runbook §9.1). Append-only; written once by 20261105180100.';
   ALTER TABLE public.answer_path_cutovers ENABLE ROW LEVEL SECURITY;
   REVOKE ALL ON TABLE public.answer_path_cutovers FROM PUBLIC, anon, authenticated, service_role;
   GRANT SELECT ON TABLE public.answer_path_cutovers TO service_role;

@@ -1,8 +1,8 @@
 # H5 M2 — tilbageførsel og fejlhåndtering ved cutover
 
 Migrationer:
-- `supabase/migrations/20261105120000_h5_m2_close_legacy_answer_path.sql`: transaktion 1, **luk**;
-- `supabase/migrations/20261105120100_h5_m2_register_cutover.sql`: transaktion 2, **dræn og registrér T**.
+- `supabase/migrations/20261105180000_h5_m2_close_legacy_answer_path.sql`: transaktion 1, **luk**;
+- `supabase/migrations/20261105180100_h5_m2_register_cutover.sql`: transaktion 2, **dræn og registrér T**.
 
 Procedure og kriterier står i `docs/operations/h5-k1-activation-runbook.md` §9. Hver handling her er
 en **særskilt produktionshandling** med ejerens særskilte GO. Den køres som ét `apply_migration`-kald

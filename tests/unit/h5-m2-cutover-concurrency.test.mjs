@@ -53,8 +53,8 @@ test("a real PostgreSQL server is present where it is required (CI)", { skip: !R
 
 const D327 = "20261103100000_question_attempts_history_no_action.sql";
 const K1 = "20261103110000_l1_k1_attempt_context.sql";
-const CLOSE = "20261105120000_h5_m2_close_legacy_answer_path.sql";
-const REGISTER = "20261105120100_h5_m2_register_cutover.sql";
+const CLOSE = "20261105180000_h5_m2_close_legacy_answer_path.sql";
+const REGISTER = "20261105180100_h5_m2_register_cutover.sql";
 const RUNBOOK = readFileSync(join(ROOT, "docs", "operations", "h5-k1-activation-runbook.md"), "utf8").split("\r\n").join("\n");
 const ROLLBACK_DOC = readFileSync(join(ROOT, "docs", "operations", "h5-m2-rollback.md"), "utf8").split("\r\n").join("\n");
 function sqlBlock(text, marker) {
