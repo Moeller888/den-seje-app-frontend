@@ -174,9 +174,13 @@ test("prøvegodkendelse: lærerens registrerede fil (05-11-2026) — ændret ind
   for (const id of ["S2", "S3", "S4"]) await expect(page.locator(`input[name="tv-${id}"][value="ikke_besluttet"]`)).toBeChecked();
   await expect(page.locator('input[name="rb-T1"][value="saerskilt"]')).toBeChecked();
   for (const [id, v] of Object.entries(original.lp13)) await expect(page.locator(`input[name="lp-${id}"][value="${v.valg}"]`)).toBeChecked();
-  // The registered decision and its origin are visible at each ambiguity.
-  await expect(page.locator("#tv-S2 .reg")).toContainText("supplement-2026-11-05");
-  await expect(page.locator("#tv-S6 .reg")).toContainText("proeve-godkendelse-2026-11-05.json");
+  // The newest decision and its origin are visible at each ambiguity: since 05-11-2026 the teacher's v1.4 file
+  // (received, not yet finally registered). S2 = 2 is shown as chosen, with the conflict with the rubric beside it.
+  await expect(page.locator("#tv-S2 .reg")).toContainText("Nyeste lærerbeslutning: 2 point: hensigten i ét ord er nok");
+  await expect(page.locator("#tv-S2 .reg")).toContainText("erstatter supplement-2026-11-05 (S2 = 1)");
+  await expect(page.locator('#tv-S2 [data-conflict="S2"]')).toContainText("Modstrid med rubrikken");
+  await expect(page.locator("#tv-S6 .reg")).toContainText("proeve-godkendelse-2026-11-05-v1.4.json");
+  await expect(page.locator("#aaben-afklaring")).toContainText("Skal S2 = 2 gælde i alle tre prøver");
   // v1.4: the page states what is being reviewed and that all five await a renewed approval.
   await expect(page.locator("#runde h2")).toHaveText("Denne gennemgang: kildekritik-maaling-v1.4");
   for (const id of ITEMS) await expect(page.locator(`td[data-round="${id}"]`)).toContainText("Afventer fornyet lærergodkendelse");

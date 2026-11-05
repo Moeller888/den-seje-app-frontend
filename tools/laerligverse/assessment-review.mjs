@@ -28,6 +28,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const PAGE = join(ROOT, "docs", "laerligverse", "proeve-godkendelse.html");
 export const REGISTER_FILE = join(ROOT, "docs", "laerligverse", "proeve-godkendelse-register.json");
 export const APPROVED_FIXTURE = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "assessment-v1.2-godkendt.json");
+/** v1.4: the teacher's file of 05-11-2026 on v1.4, archived byte for byte, and its receipt (assessment-register.mjs archive). */
+export const RECEIVED_FILE = join(ROOT, "docs", "laerligverse", "proeve-godkendelse-v1.4-modtaget.json");
 export const FORMAT = "laerligverse-proeve-godkendelse/1";
 export const ITEMS = Object.freeze(["A", "B", "T", "C", "rubrik"]);
 export const STATUSES = Object.freeze(["ikke_gennemgaaet", "godkendt", "skal_rettes", "afvist"]);
@@ -311,6 +313,44 @@ export const SUPPLEMENTS = Object.freeze([
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
+/**
+ * v1.4: each rubric ambiguity was decided on ONE synthetic answer. Here: that answer as an anchor, and the level each
+ * option gives it. A decided option whose level differs from the rubric's anchor is a CONFLICT between the teacher's
+ * decision and the rubric: it is shown, never resolved silently. (Not part of any fingerprint: it reads the rubric,
+ * it does not change it.)
+ */
+export const AMBIGUITY_ANCHORS = Object.freeze({
+  S2: { form: "A", criterion: "R4", answer: "penge", levels: { 2: 2, 1: 1, mundtlig: null } },
+  S3: { form: "A", criterion: "B2", answer: "Skolereglementet, for det handler om skolen.", levels: { 1: 1, 0: 0 } },
+  S4: { form: "A", criterion: "B1", answer: "Påstand 1: nej. Lægen vil have penge, så han gør det måske værre, end det er.", levels: { 2: 2, 1: 1 } },
+});
+
+/** Conflicts between decided ambiguity options and the rubric's anchors. `tvetydigheder` = { id: { valg } }. */
+export function decisionConflicts(tvetydigheder) {
+  const out = [];
+  for (const [id, t] of Object.entries(AMBIGUITY_ANCHORS)) {
+    const valg = tvetydigheder?.[id]?.valg;
+    if (valg === undefined || valg === UNDECIDED) continue;
+    const want = t.levels[valg];
+    if (want === null || want === undefined) continue;
+    const anchor = CALIBRATION.find((a) => a.form === t.form && a.criterion === t.criterion && a.answer === t.answer);
+    if (!anchor) { out.push({ id, valg, text: `${id}: ankersvaret »${t.answer}« findes ikke i rubrikken` }); continue; }
+    if (anchor.level !== want) {
+      const opt = AMBIGUITIES.find((a) => a.id === id)?.options.find((o) => o.id === valg);
+      out.push({
+        id, valg, anchorLevel: anchor.level, decidedLevel: want, criterion: t.criterion, form: t.form, answer: t.answer,
+        text: `${id} = ${valg} (»${opt?.label ?? valg}«) giver »${t.answer}« ${want} point i ${t.criterion} (prøve ${t.form}). Den godkendte rubrik ${RUBRIC_VERSION} giver samme svar ${anchor.level} point (regel ${anchor.rule}, ankersvar og niveautekst).`,
+      });
+    }
+  }
+  return out;
+}
+
+/** The receipt of the v1.4 file (or null). Read directly, so this module has no import cycle. */
+export function received() {
+  return existsSync(RECEIVED_FILE) ? JSON.parse(readFileSync(RECEIVED_FILE, "utf8")) : null;
+}
+
 /** The registered decisions (or null before any registration), read directly so this module has no import cycle. */
 export function registered() {
   return existsSync(REGISTER_FILE) ? JSON.parse(readFileSync(REGISTER_FILE, "utf8")) : null;
@@ -394,10 +434,12 @@ function ambiguity(a) {
   const text = s?.text?.[a.answerKey] ?? "";
   const extra = Object.entries(s?.text ?? {}).filter(([k]) => k !== a.answerKey).map(([k, v]) => `${k}: »${esc(v)}«`).join(" · ");
   const opts = [`<label><input type="radio" name="tv-${a.id}" value="${UNDECIDED}" checked> Ikke besluttet</label>`]
-    .concat(a.options.map((o) => `<label><input type="radio" name="tv-${a.id}" value="${esc(o.id)}"> ${esc(o.label)}${o.id === a.recommendation ? " <em>(anbefalet)</em>" : ""} <span class="eff">— ${esc(o.effect)}</span></label>`)).join("");
+    .concat(a.options.map((o) => `<label><input type="radio" name="tv-${a.id}" value="${esc(o.id)}"> ${esc(o.label)}${o.id === a.recommendation ? " <em>(anbefalet i F8, før rubrik v1.4)</em>" : ""} <span class="eff">— ${esc(o.effect)}</span></label>`)).join("");
   const reg = registeredAmbiguity(a.id);
-  const regLine = reg ? `<p class="reg"><strong>Registreret beslutning:</strong> ${esc(a.options.find((o) => o.id === reg.valg)?.label ?? reg.valg)} <span class="eff">— kilde: ${esc(reg.kilde)}</span></p>` : "";
-  return `<section class="amb" id="tv-${a.id}"><h3>${esc(a.id)} · ${esc(s?.kind ?? "")} (${esc(a.criterion)})</h3>${regLine}`
+  const regLine = reg ? `<p class="reg"><strong>${reg.nyeste ? "Nyeste lærerbeslutning" : "Registreret beslutning"}:</strong> ${esc(a.options.find((o) => o.id === reg.valg)?.label ?? reg.valg)} <span class="eff">— kilde: ${esc(reg.kilde)}</span></p>` : "";
+  const conflict = (received()?.konflikter ?? []).find((c) => c.id === a.id);
+  const conflictLine = conflict ? `<p class="conflict" data-conflict="${esc(a.id)}">Modstrid med rubrikken: ${esc(conflict.text)} Afventer din afklaring (se »Denne gennemgang«).</p>` : "";
+  return `<section class="amb" id="tv-${a.id}"><h3>${esc(a.id)} · ${esc(s?.kind ?? "")} (${esc(a.criterion)})</h3>${regLine}${conflictLine}`
     + `<p><strong>Opgaven:</strong> ${esc(a.task)}</p><p><strong>Det syntetiske elevsvar</strong> (konstrueret, ikke en elev): »${esc(text)}«${extra ? `<br><span class="eff">Resten af svaret: ${extra}</span>` : ""}</p>`
     + `<p><strong>Foreslået bedømmelse (F8):</strong> ${esc(a.proposed)}</p><p><strong>Hvorfor det er svært:</strong> ${esc(a.why)}</p>`
     + `<fieldset class="dec"><legend>Din beslutning om ${esc(a.id)}</legend>${opts}<p><strong>Min anbefaling:</strong> ${esc(a.recommendationWhy)}</p><label class="c">Kommentar <textarea name="tvk-${a.id}" rows="2"></textarea></label></fieldset></section>`;
@@ -405,6 +447,11 @@ function ambiguity(a) {
 
 /** The decision in force for an ambiguity: from the registered file, or from a supplement — with its origin. */
 function registeredAmbiguity(id) {
+  // v1.4: the newest decision is the teacher's v1.4 file (received, not yet finally registered); it takes precedence
+  // over the v1.2 file and the written supplement.
+  const rec = received();
+  const v14 = rec?.tvetydigheder?.[id];
+  if (v14 && v14.valg !== UNDECIDED) return { valg: v14.valg, nyeste: true, kilde: `filen ${rec.fil.split("/").pop()} (lærer »${rec.laerer}«, dato »${rec.dato}«)${rec.bekraeftelser?.[id] ? `; ${rec.bekraeftelser[id]}` : ""}${rec.erstatter?.[id] ? `; erstatter ${rec.erstatter[id]}` : ""}` };
   const reg = registered();
   if (!reg) return null;
   const v = reg.tvetydigheder?.[id];
@@ -514,12 +561,30 @@ export const ROUND = Object.freeze({
   ],
 });
 
+/** The overview row for the v1.4 file: received and verified, and whether it is finally registered. */
+function receivedRow() {
+  const r = received();
+  if (!r) return "";
+  const what = ITEMS.map((id) => `${id} ${LABEL[r.afgoerelser[id].status] ?? r.afgoerelser[id].status}`).join(", ");
+  const state = r.status === "registreret" ? "Registreret" : "Modtaget og verificeret — ikke endeligt registreret";
+  const why = (r.konflikter ?? []).length ? ` Afventer din afklaring: ${(r.konflikter ?? []).map((c) => c.text).join(" ")}` : "";
+  return `<tr><td>Din fil om ${esc(r.version)} (${esc(r.dato)})</td><td data-received="${esc(r.status)}"><strong>${esc(state)}</strong> (SHA-256 ${esc(r.sha256.slice(0, 8))}…): ${esc(what)}.${esc(why)}</td></tr>`;
+}
+
+/** v1.4: the one open question, when the teacher's decisions conflict with the rubric. */
+function openQuestion() {
+  const r = received();
+  if (!r || !(r.konflikter ?? []).length || !r.spoergsmaal) return "";
+  const q = r.spoergsmaal;
+  return `<div class="conflict" id="aaben-afklaring"><h3>Afventer din afklaring</h3><p>${esc(q.tekst)}</p><ul>${q.svar.map((o) => `<li><strong>${esc(o.svar)}:</strong> ${esc(o.konsekvens)}</li>`).join("")}</ul></div>`;
+}
+
 function roundSection(status) {
   const rows = ITEMS.map((id) => {
     const r = id === "rubrik" ? { v14: ROUND.rubricChange, meaning: ROUND.rubricMeaning } : FORM_REVIEW[id];
     return `<tr><td>${esc(titleOf[id])}</td><td>${esc(r.v14 ?? "")}</td><td>${esc(r.meaning ?? "")}</td><td data-round="${id}"><strong>${esc(status[id].text)}</strong></td></tr>`;
   }).join("");
-  return `<section class="ov" id="runde"><h2>Denne gennemgang: ${esc(ROUND.version)}</h2>`
+  return `<section class="ov" id="runde"><h2>Denne gennemgang: ${esc(ROUND.version)}</h2>${openQuestion()}`
     + `<p><strong>Du vurderer:</strong> prøverne ${esc(VERSION)} og rubrikken ${esc(RUBRIC_VERSION)}. Du godkendte version 1.2 den 05-11-2026; den godkendelse er gemt uændret som historik og gælder ikke denne version.</p>`
     + `<p><strong>Klar til godkendelse:</strong> ${esc(ROUND.ready)}</p>`
     + `<table><thead><tr><th>Del</th><th>Ændret i denne runde</th><th>Hvad det betyder fagligt</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`
@@ -620,7 +685,7 @@ fieldset{border:1px dashed var(--line);border-radius:6px;margin-top:10px}fieldse
 .bar input[type=text]{font:inherit;padding:4px}button{font:inherit;padding:6px 12px}.note,.eff{font-size:14px;color:var(--muted)}
 .el[data-status="godkendt"]{border-left:6px solid var(--ok)}.el[data-status="skal_rettes"]{border-left:6px solid var(--warn)}.el[data-status="afvist"]{border-left:6px solid var(--bad)}
 .brk{border-top:2px dashed var(--line);margin:12px 0 8px;padding-top:6px}table.diff td{font-size:14px}
-.stale{color:var(--bad);font-weight:600}.reg{border-left:4px solid var(--ok);padding-left:8px}table.since td{font-size:14px}#count{font-weight:600}.sep{border-top:3px double var(--line);margin-top:28px;padding-top:6px}
+.stale,.conflict{color:var(--bad);font-weight:600}.reg{border-left:4px solid var(--ok);padding-left:8px}table.since td{font-size:14px}#count{font-weight:600}.sep{border-top:3px double var(--line);margin-top:28px;padding-top:6px}
 </style></head><body>
 <h1>Prøvegodkendelse: kildekritik (D-346)</h1>
 <p class="note">Genereret af tools/laerligverse/assessment-review.mjs fra de samme data som elevarkene (${esc(VERSION)}, rubrik ${esc(RUBRIC_VERSION)}). Siden virker uden internet og gemmer intet selv: tryk »Gem afgørelser som fil«. Intet er godkendt, før du har valgt det.</p>
@@ -636,6 +701,7 @@ fieldset{border:1px dashed var(--line);border-radius:6px;margin-top:10px}fieldse
 ${ITEMS.map((id) => `<tr><td>${esc(titleOf[id])}</td><td data-reg="${id}"><strong>${esc(status[id].text)}</strong></td></tr>`).join("")}
 <tr><td>De fem tvivlstilfælde i rubrikken</td><td><strong>Besluttet</strong>: S6 og S7 i filen, S2, S3 og S4 i et særskilt supplement (afsnit E). Indbygget i rubrikken ${esc(RUBRIC_VERSION)} sammen med principperne P1–P5</td></tr>
 <tr><td>LP-13 (læringsprogression)</td><td><strong>Valg registreret</strong> fra filen (afsnit F) — ikke en del af prøvegodkendelsen, og intet er aktiveret</td></tr>
+${receivedRow()}
 <tr><td>Elevpilot og produktion</td><td><strong>Ikke autoriseret</strong></td></tr></tbody></table>
 <p><label><input type="checkbox" id="ra-on"> Prøv oplæsning af elevteksten (prototype, slået fra som standard). Bruger kun stemmer, som browseren angiver som lokale på denne computer; ingen tekst sendes af siden.</label> <span id="ra-voice" class="note"></span></p></section>
 ${roundSection(status)}

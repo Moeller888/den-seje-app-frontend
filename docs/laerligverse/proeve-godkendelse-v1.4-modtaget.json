@@ -1,0 +1,140 @@
+{
+  "_om": "D-346 §16: lærerens fil om v1.4, modtaget og verificeret. Genereret af tools/laerligverse/assessment-register.mjs archive. Ret ikke i hånden. Status »modtaget_afventer_faglig_afklaring« betyder: filen er lærerens ægte udsagn, men den er IKKE registreret som endelig, fagligt konsistent godkendelse. Intet er et GO til elevpilot, produktion, LP-13 eller merge.",
+  "status": "modtaget_afventer_faglig_afklaring",
+  "fil": "docs/laerligverse/proeve-godkendelse-2026-11-05-v1.4.json",
+  "original_filnavn": "proeve-godkendelse (2).json",
+  "sha256": "94b1f1631a9ac74e40220aa577bee5b4eaee90d10e1d0236bb28efc83f776c26",
+  "format": "laerligverse-proeve-godkendelse/1",
+  "version": "kildekritik-maaling-v1.4",
+  "rubrikversion": "kildekritik-rubrik-v1.4",
+  "laerer": "Christopher møller",
+  "dato": "05-11-2026",
+  "bemaerkninger": [],
+  "indholdsversion": "d4e2f3e92ac55698ea9849357055b1b9e9accf53",
+  "fingeraftryk_stemmer": {
+    "A": true,
+    "B": true,
+    "T": true,
+    "C": true,
+    "rubrik": true
+  },
+  "afgoerelser": {
+    "A": {
+      "status": "godkendt",
+      "fingeraftryk": "4d71ac22bf2d8da716ca01574933328dc327ee283f5446bb5326d89763139c5a"
+    },
+    "B": {
+      "status": "godkendt",
+      "fingeraftryk": "3abb09d8e596c48eb305f505168ed3edffb467833e408bd43ab7d49d3785347f"
+    },
+    "T": {
+      "status": "godkendt",
+      "fingeraftryk": "bfb9fbb5eed21be9c4a8a3907ecc8493c817995fa97528986d2e20f8d01c4543"
+    },
+    "C": {
+      "status": "godkendt",
+      "fingeraftryk": "e447393825fa6c2d4e55c33d52acaf85746780235dfe1e7388f54948603ab392"
+    },
+    "rubrik": {
+      "status": "godkendt",
+      "fingeraftryk": "653b9b9456a5b0c8bb3ea9b71059b20c40302f8bd3a51d505770870c3e3db660"
+    }
+  },
+  "tvetydigheder": {
+    "S2": {
+      "valg": "2",
+      "kilde": "fil"
+    },
+    "S3": {
+      "valg": "1",
+      "kilde": "fil"
+    },
+    "S4": {
+      "valg": "1",
+      "kilde": "fil"
+    },
+    "S6": {
+      "valg": "foelgefejl",
+      "kilde": "fil"
+    },
+    "S7": {
+      "valg": "spoerg",
+      "kilde": "fil"
+    }
+  },
+  "rubrikbeslutninger": {
+    "T1": {
+      "valg": "saerskilt",
+      "kilde": "fil"
+    }
+  },
+  "lp13": {
+    "LP13-1": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-2": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-3": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-4": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-5": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "genbesoeg": {
+      "valg": "B",
+      "kilde": "fil"
+    },
+    "forsinket": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-7": {
+      "valg": "B",
+      "kilde": "fil"
+    },
+    "pilot": {
+      "valg": "A",
+      "kilde": "fil"
+    }
+  },
+  "bekraeftelser": {
+    "S2": "S2 = 2 bekræftet over for udvikleren 05-11-2026: »Det var meningen.« Ikke en tastefejl; må ikke ændres til 1"
+  },
+  "erstatter": {
+    "S2": "supplement-2026-11-05 (S2 = 1)"
+  },
+  "konflikter": [
+    {
+      "id": "S2",
+      "valg": "2",
+      "anchorLevel": 1,
+      "decidedLevel": 2,
+      "criterion": "R4",
+      "form": "A",
+      "answer": "penge",
+      "text": "S2 = 2 (»2 point: hensigten i ét ord er nok«) giver »penge« 2 point i R4 (prøve A). Den godkendte rubrik kildekritik-rubrik-v1.4 giver samme svar 1 point (regel S2, ankersvar og niveautekst)."
+    }
+  ],
+  "spoergsmaal": {
+    "tekst": "Du har valgt S2 = 2: afsenderens hensigt nævnt alene (»penge«) giver fuld score. Den rubrik, du godkendte samtidig (v1.4), giver det samme svar 1. Skal S2 = 2 gælde i alle tre prøver, eller kun for svaret »penge« i prætest A?",
+    "svar": [
+      {
+        "svar": "I alle prøver (generel regel)",
+        "konsekvens": "Rubrikken bliver v1.5: R4 giver 2 for afsenderens hensigt, også i ét ord (»penge«, »penge og korn«, »at advare«, »at begrænse smitten«), 1 kun for en hensigt, der er for vag til at høre til netop denne kilde (»hjælp«, »råd«), og 0 som nu (emne, standardsvar, modtager). Ankersvarene, S2-reglen og S7-eksemplerne rettes. Du skal godkende rubrikken igen og B og C, fordi deres lærertekst i dag siger, at disse svar giver 1. A og T beholder din godkendelse. R4 skelner derefter ikke mellem at kende hensigten og at forklare den. Det er den løsning, der holder A, B og C ens."
+      },
+      {
+        "svar": "Kun »penge« i prætest A (afgrænset undtagelse)",
+        "konsekvens": "Rubrikken får én dokumenteret undtagelse: »penge« i A giver 2, mens tilsvarende svar i B og C (»penge og korn«, »at advare«) fortsat giver 1. Kun rubrikken skal godkendes igen. Men prætesten bliver mildere end posttesten på dette punkt, så fremgangen fra A til B i R4 måles for lavt. Det fraråder jeg."
+      }
+    ]
+  }
+}
