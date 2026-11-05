@@ -116,6 +116,10 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
   "20261103110000_l1_k1_attempt_context.sql":
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
+  "20261105120000_h5_m2_close_legacy_answer_path.sql":
+    "H5 M2 transaction 1, not applied in production (inactive until B1–B4): it revokes the legacy answer functions from every runtime role; the isolated stack still answers through them",
+  "20261105120100_h5_m2_register_cutover.sql":
+    "H5 M2 transaction 2, not applied in production (inactive until B1–B4): it creates answer_path_cutovers and registers T after draining in-flight legacy calls; it requires transaction 1",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision

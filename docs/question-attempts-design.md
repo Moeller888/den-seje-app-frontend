@@ -339,7 +339,7 @@ ikke en ejerbeslutning:
 | PR 2 | `get-next-question` udleverer `round_no` | PR #494 merget 2026-10-31. Deployet som v181 2026-11-04 |
 | PR 3 | `process-event` sender `round_no` og `submission_id` til `_v2` | PR #498 merget 2026-10-31 (siden udvidet med K1's `p_mode`/`p_hints_used`, #536). Ikke deployet; produktionen kører v34 |
 | PR 4 | `app.js`: `submission_id`, låst genforsøg, sessionStorage pr. elev | PR #504 merget 2026-10-31. Live med `ENABLE_H5_SUBMISSIONS = false` |
-| PR 5 | Aktivering (M2) | ikke startet; særskilt ejer-GO |
+| PR 5 | Aktivering (M2) | udviklet som Draft PR (to migrationer: luk → dræn og registrér T; `docs/operations/h5-k1-activation-runbook.md` §9.5); ikke anvendt; særskilt ejer-GO |
 | PR 6 | Mulig oprydning af den gamle gren i `process-event` | ikke defineret, ikke godkendt |
 
 Rollback følger D-273: før aktivering kan `get-next-question` rulles tilbage til version 180, hvis
