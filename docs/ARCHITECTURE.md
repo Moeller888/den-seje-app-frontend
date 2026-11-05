@@ -582,7 +582,9 @@ reward path (no separate mechanism); repeat rules are unchanged; the teacher vie
 checks apart from the more reliable progress measures. No fixed share (the 15 % cap) is decided yet, and
 a later multi-statement true/false form is a separate kind, not built now.
 
-*Implemented (not applied, PR stacked on #607):* migration `20261105115000_true_false_mastery_exclusion`
+*Implemented (not applied, PR #623; the ONE carrier, owner's choice 2026-11-05 — PR #621 / D-353, which
+covered only the two folds through a helper, is superseded and must never be applied alongside it):*
+migration `20261105115000_true_false_mastery_exclusion`
 adds one predicate — `answer_format` `true_false` does not count — to every function that turns verdicts
 into level, band or teacher progress: `advance_student_level`, `advance_student_band`,
 `get_teacher_visibility`, `get_student_overview`, `get_concept_states` (each body is production's plus that
@@ -591,7 +593,10 @@ folds; `update_mastery` has no caller. In the browser, `app.js` lets a true_fals
 session wave nor the persisted difficulty band (`answerSteersDifficulty`), and `student-detail.js` shows
 true_false as "Forståelsestjek" apart from the domain precision (`js/progress-evidence.js`). The rule is
 the registry's: a kind with `guessFloor` ≥ 0.5 is excluded (pinned by
-`tests/unit/true-false-mastery-exclusion-run.test.mjs`). **The migration must be applied BEFORE the
+`tests/unit/true-false-mastery-exclusion-run.test.mjs`); real answers through both answer paths (legacy
+and H5 `_v2`: XP/coins as MC, double submit, manipulation, repeats, other formats unchanged, negative
+control) are pinned by `tests/unit/true-false-mastery-exclusion-answer-path.test.mjs`, ported from #621.
+**The migration must be applied BEFORE the
 activation migration below**, or a true_false answer could be folded (the fold log is append-only).
 
 *Step 3 — activation spec (each item its own owner GO, in this order):*
