@@ -77,7 +77,21 @@ Det er **ikke** en del af prøvegodkendelsen. Vælg det, du er klar til at beslu
 5. **Aflevering:** Lad filen ligge i Downloads, og sig til i en ny opgave. Den registreres så byte for byte med
    SHA-256, ligesom Arkivskabets godkendelse blev det i F8.
 
-## 6. Hvad sker der bagefter?
+## 6. Fornyet gennemgang efter 05-11-2026 (v1.3)
+
+Din fil fra 05-11-2026 er registreret byte for byte (D-346 §12). Efter faktatjekket og dine bedømmelsesregler er
+alle fem elementer ændret, så de skal gennemgås igen:
+
+1. Åbn `docs/laerligverse/proeve-godkendelse.html` som fil.
+2. Vælg »Indlæs tidligere afgørelser«, og vælg din fil fra 05-11-2026. Siden markerer A, B, T, C og rubrikken som
+   ændrede. S6, S7, T1 og LP-13 indlæses. S2, S3 og S4 står som »Ikke besluttet«, fordi de ikke er i filen: vælg
+   dem igen (dit supplement: 1, 1, 1).
+3. Under »Til læreren« ved hver prøve viser tabellen »Ændret efter din godkendelse« præcis den tekst, der er ændret.
+   Rubrikkens ændringer og dine regler med eksempler står i afsnit E.
+4. Læs »Historisk faktatjek« øverst.
+5. Skriv dit fulde navn og datoen som DD-MM-ÅÅÅÅ, og gem.
+
+## 7. Hvad sker der bagefter?
 
 - **Godkendt:** prøven registreres og bindes til sit fingeraftryk. Ændres den senere, kræves en ny gennemgang.
 - **Skal rettes:** rettelserne indføres, og prøven kommer frem til ny gennemgang.

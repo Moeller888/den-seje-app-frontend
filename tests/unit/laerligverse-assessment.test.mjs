@@ -10,11 +10,12 @@ import { ARCHIVE_ITEMS } from "../../laerligverse/host/dev/archive-items.js";
 
 const words = (t) => t.trim().split(/\s+/).length;
 
-test("the material is a proposal awaiting its OWN teacher approval, never covered by the Arkivskab approval", () => {
-  assert.equal(APPROVAL.status, "afventer_laerergodkendelse");
+test("the material awaits its OWN (renewed) teacher approval, never covered by the Arkivskab approval", () => {
+  // v1.2 was approved 05-11-2026; v1.3 changed after that approval, so it awaits a renewed approval (D-346 §11–12).
+  assert.equal(APPROVAL.status, "afventer_fornyet_laerergodkendelse");
   for (const f of [...Object.values(FORMS), TRANSFER]) assert.equal(f.source.status, "didaktisk konstrueret", f.id);
   const guide = readFileSync(TEACHER, "utf8");
-  assert.match(guide, /Prøverne i denne pakke .* \| \*\*Afventer særskilt faglig godkendelse\*\*/);
+  assert.match(guide, /Prøverne og rubrikken i denne pakke .* \| \*\*Afventer fornyet lærergodkendelse\.\*\*/);
   assert.match(guide, /Elevpilot \| \*\*Ikke autoriseret\*\*/);
 });
 
@@ -48,7 +49,7 @@ test("forms A, B and C are parallel: same parts, same claim pattern, comparable 
 
 test("the transfer test uses NEW material: none of its sources or the forms' sources appear in the game's items", () => {
   const game = JSON.stringify(ARCHIVE_ITEMS);
-  for (const t of ["Nordvask", "Magistraten", "Sundhedskommissionen", "amtmanden", "Statistik", "Reklame"]) assert.equal(game.includes(t), false, t);
+  for (const t of ["Lyngvask", "Nordvask", "Magistraten", "Sundhedskommissionen", "amtmanden", "Statistik", "Reklame"]) assert.equal(game.includes(t), false, t);
   assert.notEqual(TRANSFER.source.kind, "Dagbog");
   assert.equal(TRANSFER.choice.claims.length, 2);
 });
@@ -88,9 +89,11 @@ test("rubric trial on synthetic answers: the rubric separates the seven kinds �
   assert.ok(guess.flags.some((f) => /uden begrundelse/.test(f)));
   assert.deepEqual(good.flags, []);
   assert.ok(rows["forkert, men med relevant ræsonnement"].flags.some((f) => /begrunder fagligt, men vælger forkert/.test(f)));
-  assert.ok(rows["delvist korrekt"].flags.some((f) => /emne, ikke afsenderens hensigt/.test(f)));
+  assert.ok(rows["delvist korrekt"].flags.some((f) => /besvaret med kildens emne/.test(f)));
   assert.ok(rows["forveksling af modtager og formål"].flags.some((f) => /byttet om/.test(f)));
-  assert.ok(rows["misforstået afsender"].identifikation <= 1);
+  // S6 (følgefejl, decided 05-11-2026): one confusion counts once — R1 0, but R3/R4 scored from the pupil's own sender.
+  assert.equal(rows["misforstået afsender"].identifikation, 4);
+  assert.ok(rows["misforstået afsender"].flags.some((f) => /^følgefejl/.test(f)));
   // Every ambiguity found while scoring is written down.
   assert.ok(SYNTHETIC_RESPONSES.filter((r) => r.note).length >= 5);
   assert.equal(flags({ valg: 6, begrundelse: 4, part3BothRight: true, identifikation: 6 }, { R3: 2, R4: 2 }).length, 0);

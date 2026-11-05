@@ -2,7 +2,7 @@
 
 > **GENERERET** af `tools/laerligverse/assessment-pack.mjs` fra `tools/laerligverse/assessment-v1.mjs`. Ret ikke her.
 
-> **Status: Forslag. Ikke godkendt af en lærer. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.**
+> **Status: Afventer fornyet lærergodkendelse. Version 1.2 blev godkendt 05-11-2026; version 1.3 har historiske rettelser og de besluttede bedømmelsesregler og er endnu ikke godkendt. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.**
 
 Til læreren: Hver opgave printes for sig, side 1 og side 2 på hvert sit ark. Eleven får kun den opgave, der skal bruges den dag. Saml side 1 ind, før eleven får side 2: side 2 nævner modtager og formål og ville ellers give svarene i del 1. Facit står i `laerervejledning.md`, aldrig her.
 
@@ -14,7 +14,7 @@ Læs kilden. Du må gerne få den læst op. Du må svare med få ord.
 
 **Brev skrevet i København, juli 1853. Underskrevet: J. Holm, læge.**
 
-> Til Magistraten. I de sidste tre uger har jeg besøgt over hundrede syge i gaderne ved havnen. De fleste bor i trange, fugtige kældre med åbne rendestene. Jeg beder derfor Magistraten om penge til at rydde gårdene og til et lazaret, hvor de syge kan ligge. Sker der intet, frygter jeg, at sygdommen spreder sig til hele byen.
+> Til Magistraten. I de sidste tre uger har jeg besøgt over hundrede syge i gaderne ved havnen. Mange af dem bor i trange, fugtige kældre med åbne rendestene. Jeg beder derfor Magistraten om penge til at rydde gårdene og til et lazaret, hvor de syge kan ligge. Sker der intet, frygter jeg, at sygdommen spreder sig til hele byen.
 
 *Ord:* Magistraten = byens styre · lazaret = et midlertidigt sygehus · rendestene = åbne render til spildevand
 
@@ -49,7 +49,7 @@ Navn eller elevkode: ______________________
 
 **Brev skrevet i København, juli 1853. Underskrevet: J. Holm, læge.**
 
-> Til Magistraten. I de sidste tre uger har jeg besøgt over hundrede syge i gaderne ved havnen. De fleste bor i trange, fugtige kældre med åbne rendestene. Jeg beder derfor Magistraten om penge til at rydde gårdene og til et lazaret, hvor de syge kan ligge. Sker der intet, frygter jeg, at sygdommen spreder sig til hele byen.
+> Til Magistraten. I de sidste tre uger har jeg besøgt over hundrede syge i gaderne ved havnen. Mange af dem bor i trange, fugtige kældre med åbne rendestene. Jeg beder derfor Magistraten om penge til at rydde gårdene og til et lazaret, hvor de syge kan ligge. Sker der intet, frygter jeg, at sygdommen spreder sig til hele byen.
 
 *Ord:* Magistraten = byens styre · lazaret = et midlertidigt sygehus · rendestene = åbne render til spildevand
 
@@ -62,7 +62,7 @@ Kan kilden bruges som belæg for påstanden? Sæt kryds ved ja eller nej.
 | 1. Lægen mente, at de dårlige boliger var med til at gøre folk syge. | ☐ | ☐ |
 | 2. Lægen mente, at koleraen havde kostet tusindvis af københavnere livet. | ☐ | ☐ |
 | 3. Magistraten gav penge til et lazaret ved havnen. | ☐ | ☐ |
-| 4. I 1853 boede de fleste syge ved havnen i fugtige kældre. | ☐ | ☐ |
+| 4. I 1853 boede flere af de syge ved havnen i fugtige kældre. | ☐ | ☐ |
 
 Vælg én af påstandene ovenfor. Forklar dit svar ud fra, hvem der har lavet kilden, til hvem og hvorfor (1–3 sætninger).
 
@@ -101,9 +101,9 @@ Navn eller elevkode: ______________________    Dato: __________
 
 Læs kilden. Du må gerne få den læst op. Du må svare med få ord.
 
-**Opslag hængt op i Aarhus, oktober 1918. Underskrevet: Sundhedskommissionen.**
+**Meddelelse i en avis i Aarhus, slutningen af oktober 1918. Underskrevet: Sundhedskommissionen.**
 
-> Influenzaen breder sig hurtigt i byen. Undgå forsamlinger, besøg ikke syge, og hold børn hjemme, hvis de har feber. Byens skoler holdes lukket i otte dage. Følg disse råd for jeres egen og naboernes skyld.
+> Influenzaen breder sig hurtigt i byen. Undgå større møder og forsamlinger, og besøg ikke syge. Børn, der er syge eller har syge i hjemmet, skal blive hjemme fra skole. Følg disse råd for jeres egen og naboernes skyld.
 
 *Ord:* Sundhedskommissionen = byens udvalg for sundhed · forsamlinger = når mange mennesker samles
 
@@ -136,9 +136,9 @@ Læs kilden. Du må gerne få den læst op. Du må svare med få ord.
 
 Navn eller elevkode: ______________________
 
-**Opslag hængt op i Aarhus, oktober 1918. Underskrevet: Sundhedskommissionen.**
+**Meddelelse i en avis i Aarhus, slutningen af oktober 1918. Underskrevet: Sundhedskommissionen.**
 
-> Influenzaen breder sig hurtigt i byen. Undgå forsamlinger, besøg ikke syge, og hold børn hjemme, hvis de har feber. Byens skoler holdes lukket i otte dage. Følg disse råd for jeres egen og naboernes skyld.
+> Influenzaen breder sig hurtigt i byen. Undgå større møder og forsamlinger, og besøg ikke syge. Børn, der er syge eller har syge i hjemmet, skal blive hjemme fra skole. Følg disse råd for jeres egen og naboernes skyld.
 
 *Ord:* Sundhedskommissionen = byens udvalg for sundhed · forsamlinger = når mange mennesker samles
 
@@ -150,8 +150,8 @@ Kan kilden bruges som belæg for påstanden? Sæt kryds ved ja eller nej.
 |---|---|---|
 | 1. Borgerne i Aarhus fulgte rådene og holdt sig hjemme. | ☐ | ☐ |
 | 2. Sundhedskommissionen ønskede, at borgerne holdt sig fra forsamlinger. | ☐ | ☐ |
-| 3. Sundhedskommissionen vidste, at lukkede skoler ville stoppe smitten. | ☐ | ☐ |
-| 4. I oktober 1918 blev det bestemt at lukke skolerne i Aarhus. | ☐ | ☐ |
+| 3. Sundhedskommissionen vidste, at influenzaen snart ville stoppe. | ☐ | ☐ |
+| 4. I oktober 1918 bredte influenzaen sig i Aarhus. | ☐ | ☐ |
 
 Vælg én af påstandene ovenfor. Forklar dit svar ud fra, hvem der har lavet kilden, til hvem og hvorfor (1–3 sætninger).
 
@@ -190,9 +190,9 @@ Navn eller elevkode: ______________________    Dato: __________
 
 Læs kilden. Du må gerne få den læst op. Du må svare med få ord.
 
-**Reklame i et dansk ugeblad, 1962. Fra firmaet Nordvask.**
+**Reklame i et dansk ugeblad, 1962. Fra firmaet Lyngvask.**
 
-> Fri for vaskedagen! Med Nordvask 60 er tøjet rent på en time, mens De drikker kaffe. Enhver moderne husmor har fortjent en Nordvask.
+> Fri for vaskedagen! Med Lyngvask 60 er tøjet rent på en time, mens De drikker kaffe. Enhver moderne husmor har fortjent en Lyngvask.
 
 1. Kan reklamen bruges som belæg for, at de fleste danske familier havde en vaskemaskine i 1962? Forklar dit svar.
 
@@ -217,16 +217,16 @@ Læs kilden. Du må gerne få den læst op. Du må svare med få ord.
 
 Navn eller elevkode: ______________________
 
-**Reklame i et dansk ugeblad, 1962. Fra firmaet Nordvask.**
+**Reklame i et dansk ugeblad, 1962. Fra firmaet Lyngvask.**
 
-> Fri for vaskedagen! Med Nordvask 60 er tøjet rent på en time, mens De drikker kaffe. Enhver moderne husmor har fortjent en Nordvask.
+> Fri for vaskedagen! Med Lyngvask 60 er tøjet rent på en time, mens De drikker kaffe. Enhver moderne husmor har fortjent en Lyngvask.
 
 3. Her er fire kilder. Vælg den kilde, der er bedst til at undersøge hver påstand.
 
 | Kilde | Hvem · hvornår · til hvem · hvorfor |
 |---|---|
 | Brev | en husmor · 1962 · hendes søster · at fortælle om sin nye vaskemaskine |
-| Reklame | firmaet Nordvask · 1962 · ugebladets kvindelige læsere · at sælge vaskemaskiner til hjemmet |
+| Reklame | firmaet Lyngvask · 1962 · ugebladets kvindelige læsere · at sælge vaskemaskiner til hjemmet |
 | Statistik | et statistikkontor · 1965 · politikere og forskere · at opgøre, hvad husstandene ejede |
 | Erindring | en kvinde · 2010 · bogens læsere · at fortælle om sit liv |
 
@@ -247,7 +247,7 @@ Navn eller elevkode: ______________________    Dato: __________
 
 Læs kilden. Du må gerne få den læst op. Du må svare med få ord.
 
-**Indberetning skrevet i Nykøbing Falster, 15. november 1872. Underskrevet: amtmanden.**
+**Indberetning skrevet 15. november 1872. Underskrevet: amtmanden over Maribo Amt (Lolland-Falster).**
 
 > Stormfloden natten til den 13. november har sat store dele af kysten under vand. Mange familier har mistet deres huse og deres dyr. Jeg anmoder om, at staten hurtigst muligt sender penge og korn, så de ramte kan klare vinteren.
 
@@ -282,7 +282,7 @@ Læs kilden. Du må gerne få den læst op. Du må svare med få ord.
 
 Navn eller elevkode: ______________________
 
-**Indberetning skrevet i Nykøbing Falster, 15. november 1872. Underskrevet: amtmanden.**
+**Indberetning skrevet 15. november 1872. Underskrevet: amtmanden over Maribo Amt (Lolland-Falster).**
 
 > Stormfloden natten til den 13. november har sat store dele af kysten under vand. Mange familier har mistet deres huse og deres dyr. Jeg anmoder om, at staten hurtigst muligt sender penge og korn, så de ramte kan klare vinteren.
 

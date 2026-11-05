@@ -149,6 +149,40 @@ test("prøvegodkendelse: ugyldige og fjendtlige filer afvises eller vises som re
   expect(requests).toEqual([]);
 });
 
+test("prøvegodkendelse: lærerens registrerede fil (05-11-2026) — ændret indhold nulstilles, S6/S7/T1/LP-13 bevares, ny dato skal være DD-MM-ÅÅÅÅ", async ({ page }) => {
+  const requests = watchNetwork(page);
+  // The registered original, copied to an ASCII temp path (setInputFiles cannot read non-ASCII Windows paths).
+  const src = new URL("../../docs/laerligverse/proeve-godkendelse-2026-11-05.json", import.meta.url);
+  const original = JSON.parse(readFileSync(src, "utf8")) as Saved;
+  const path = join(mkdtempSync(join(tmpdir(), "lv-proeve-reg-")), "registreret.json");
+  writeFileSync(path, readFileSync(src));
+  await page.goto(PAGE);
+  // The overview states the real status from the register; nothing is shown as approved for changed content.
+  for (const id of ITEMS) await expect(page.locator(`td[data-reg="${id}"]`)).toContainText("Afventer fornyet lærergodkendelse");
+  await page.locator("#load").setInputFiles(path);
+  // All five changed after the approval (fact check + the decided rules), so all five must be reviewed again.
+  await expect(page.locator("#msg")).toHaveText("Afgørelser indlæst. Ændret indhold skal gennemgås igen: A, B, T, C, rubrik");
+  for (const id of ITEMS) {
+    await expect(page.locator(`input[name="st-${id}"][value="ikke_gennemgaaet"]`)).toBeChecked();
+    await expect(page.locator(`#${id} .stale`)).toHaveText("Indholdet er ændret efter din afgørelse (Godkendt). Gennemgå det igen.");
+  }
+  // The original values are loaded as they are — not corrected silently.
+  await expect(page.locator("#laerer")).toHaveValue("chri");
+  await expect(page.locator("#dato")).toHaveValue("05-11/2026");
+  await expect(page.locator('input[name="tv-S6"][value="foelgefejl"]')).toBeChecked();
+  await expect(page.locator('input[name="tv-S7"][value="spoerg"]')).toBeChecked();
+  for (const id of ["S2", "S3", "S4"]) await expect(page.locator(`input[name="tv-${id}"][value="ikke_besluttet"]`)).toBeChecked();
+  await expect(page.locator('input[name="rb-T1"][value="saerskilt"]')).toBeChecked();
+  for (const [id, v] of Object.entries(original.lp13)) await expect(page.locator(`input[name="lp-${id}"][value="${v.valg}"]`)).toBeChecked();
+  // The registered decision and its origin are visible at each ambiguity.
+  await expect(page.locator("#tv-S2 .reg")).toContainText("supplement-2026-11-05");
+  await expect(page.locator("#tv-S6 .reg")).toContainText("proeve-godkendelse-2026-11-05.json");
+  // A new file needs a full date in DD-MM-ÅÅÅÅ.
+  await page.locator("#save").click();
+  await expect(page.locator("#msg")).toHaveText("Skriv datoen som DD-MM-ÅÅÅÅ, fx 05-11-2026.");
+  expect(requests).toEqual([]);
+});
+
 /** A fake speechSynthesis, installed before the page runs: records every call; voices set per test. */
 async function fakeSpeech(page: Page, voices: { name: string; lang: string; localService: boolean }[]) {
   await page.addInitScript((vs) => {

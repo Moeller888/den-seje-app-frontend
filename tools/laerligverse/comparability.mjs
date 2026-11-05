@@ -64,14 +64,14 @@ export const JUDGED = Object.freeze({
     expected: "Længste kilde, flest lange ord og tre forklarede ord. Forventet: en anelse sværere end B og C i del 1.",
   },
   B: {
-    receiver: "Står ikke direkte; kan udledes af »jeres egen og naboernes skyld« og opslaget i byen (borgerne).",
+    receiver: "Står ikke direkte; kan udledes af »jeres egen og naboernes skyld« og meddelelsen i byens avis (borgerne).",
     purpose: "Står direkte som opfordringer (»Undgå …«, »Følg disse råd …«).",
-    part2: "N2 (»vidste, at lukkede skoler ville stoppe smitten«) kræver, at eleven skelner mellem et råd og viden om virkningen.",
+    part2: "N2 (»vidste, at influenzaen snart ville stoppe«) kræver, at eleven skelner mellem et råd og viden om, hvordan det går.",
     part3Topic: "Fabrik 1910: mindre kendt end skole, kendt fra historieundervisningen.",
     expected: "Korteste kilde og letteste modtager i del 1, sværeste N2 i del 2. Forventet: samlet tæt på A; del 1 måske lettere.",
   },
   C: {
-    receiver: "Står ikke som modtager, men »staten« nævnes i anmodningen. Skal udledes (statens embedsmand → staten).",
+    receiver: "Står ikke som modtager, men »staten« nævnes i anmodningen. Skal udledes (amtmanden over Maribo Amt, statens embedsmand → staten).",
     purpose: "Står direkte (»Jeg anmoder om, at staten … sender penge og korn«).",
     part2: "N2 (»hele Danmark lige hårdt«) kræver, at eleven ser, at amtmanden kun skriver om sit område.",
     part3Topic: "Jernbane 1847: længst tilbage i tid; to kilder fra jernbaneselskabet skal skelnes på formål.",

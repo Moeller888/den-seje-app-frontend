@@ -9,7 +9,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { APPROVAL, CRITERIA, FORMS, HANDOVER, MINUTES, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
+import { APPROVAL, CRITERIA, FORMS, HANDOVER, MINUTES, MUNDTLIG_OPFOELGNING, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, RUBRIC_VERSION, SCORING_RULES, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const DIR = join(ROOT, "docs", "laerligverse", "laererpakke");
@@ -92,8 +92,8 @@ export function teacherGuide() {
   L.push("# Lærerpakke: kildekritik i Arkivskabet (D-344, F8)", "", GEN, "", STATUS, "");
   L.push("## Godkendelsesstatus", "", "| Del | Status |", "|---|---|");
   L.push("| Arkivskabets 12 læringselementer | **Godkendt** af Christopher Møller 04-11-2026 (`docs/laerligverse/kildekritik-godkendelse-register.json`, SHA-256 `8cd7d969…`) |");
-  L.push(`| Prøverne i denne pakke (${VERSION}) | **Afventer særskilt faglig godkendelse** |`);
-  L.push("| LP-13-regler (sekvenspolitikken) | **Afventer beslutning** (`docs/laerligverse/lp13-beslutningskatalog.md`) |");
+  L.push(`| Prøverne og rubrikken i denne pakke (${VERSION}, ${RUBRIC_VERSION}) | **Afventer fornyet lærergodkendelse.** Version 1.2 blev godkendt 05-11-2026 (\`docs/laerligverse/proeve-godkendelse-register.json\`); 1.3 har historiske rettelser og de besluttede bedømmelsesregler |`);
+  L.push("| LP-13-regler (sekvenspolitikken) | **Valg registreret 05-11-2026, ikke aktiveret** (`docs/laerligverse/proeve-godkendelse-register.json`; betydning i `docs/laerligverse/lp13-beslutningskatalog.md`) |");
   L.push("| Elevpilot | **Ikke autoriseret** |", "| Produktionsintegration | **Ikke autoriseret** |", "");
   L.push("## 1. Forløbet kort", "");
   L.push("Eleverne arbejder i Arkivskabet med ét kildekritisk mål: at bruge en kildes afsender, tidspunkt, modtager og formål til at afgøre, hvad kilden kan og ikke kan bruges som belæg for. Forløbet har introduktion, en øvelse med hjælp, evt. revision, en selvstændig opgave, en opgave fra en anden periode (1864) og et genbesøg.", "");
@@ -111,7 +111,7 @@ export function teacherGuide() {
   L.push("## 5. Facit", "", "Elevarkene (`elevark.md`) indeholder ikke facit.", "");
   L.push(keyForm(FORMS.A), keyForm(FORMS.B), keyForm(FORMS.C));
   L.push(`### T · transfertest · ${TRANSFER.title} (${TRANSFER.minutes} min)`, "");
-  L.push(`**Materialestatus:** reklamen, firmaet Nordvask og statistikken er *${TRANSFER.source.status}*.`, "", `**Historisk ramme, som du skal kontrollere:** ${TRANSFER.frameToCheck}`, "");
+  L.push(`**Materialestatus:** reklamen, firmaet Lyngvask og statistikken er *${TRANSFER.source.status}*.`, "", `**Historisk ramme, som du skal kontrollere:** ${TRANSFER.frameToCheck}`, "");
   L.push(`**Hvad er nyt:** ${TRANSFER.whatChanges}`, "", `**Hvad er det samme:** ${TRANSFER.whatStays}`, "");
   L.push("| Spørgsmål | Facit |", "|---|---|", `| 1. ${TRANSFER.open[0]} | **Nej.** En reklame viser, hvad firmaet ville sælge og til hvem, ikke hvor mange der havde en maskine (T1, T2) |`, `| 2. ${TRANSFER.open[1]} | Hvordan firmaet ville have kunderne til at se maskinen, og hvilket billede af »den moderne husmor« reklamen gav (T3) |`);
   for (const c of TRANSFER.choice.claims) L.push(`| 3${c.id}. ${c.text} | **${c.answer}**: ${c.why} |`);
@@ -121,11 +121,20 @@ export function teacherGuide() {
   L.push(rubricTable(CRITERIA), "", "**Transfertest:**", "", rubricTable(TRANSFER_CRITERIA), "");
   L.push("**Markeringer, du skal se nærmere på** (ikke domme):", "");
   L.push("- mange rigtige valg uden begrundelse → gæt eller tavs viden? Spørg eleven.");
-  L.push("- god begrundelse, forkerte valg → er opgaveteksten forstået?");
+  L.push("- relevant begrundelse, forkerte valg (begrundelse 2 eller mere, valg 0–3) → er opgaveteksten forstået?");
   L.push("- kun én af del 3's påstande rigtig → fast vane (»vælg altid den personlige kilde«)?");
-  L.push("- ingen modtager og intet formål trods rigtige valg → byttede felter eller en læsebarriere?", "");
+  L.push("- ingen modtager og intet formål trods rigtige valg → byttede felter (S7) eller en læsebarriere?", "- følgefejl eller mundtlig opfølgning brugt → står i markeringen, så en anden lærer kan se det.", "");
   L.push("Markeringerne bruger Valg på 0–6: »mange rigtige valg« betyder 5–6, »forkerte valg« 0–3.", "");
-  L.push("**Følgefejl:** Hvis eleven har forvekslet afsender og modtager, så bedøm R3 og R4 i forhold til elevens egen afsender, og notér det. (Rubrikforsøget viste, at den samme fejl ellers straffes tre gange.)", "");
+  L.push(`### Bedømmelsesregler (besluttet 05-11-2026, rubrik ${RUBRIC_VERSION})`, "");
+  L.push("Reglerne er skrevet, så en anden lærer kan bruge dem på samme måde. Oprindelsen står ved hver regel: S6, S7 og T1 er fra lærerens fil; S2, S3 og S4 er besluttet skriftligt bagefter og registreret som et særskilt supplement.", "");
+  for (const r of SCORING_RULES) {
+    L.push(`**${r.id} (${r.criterion}; ${r.origin}).** ${r.rule}`, "");
+    for (const [k, v] of Object.entries(r.examples)) L.push(`- ${k}: ${v}`);
+    L.push("");
+  }
+  const m = MUNDTLIG_OPFOELGNING;
+  L.push("### S7: fast procedure for mundtlig opfølgning", "", `**Hvornår:** ${m.naar}`, "", `**Ordlyd:** ${m.ordlyd}`, "", "**Læreren må ikke:**", "", ...m.maaIkke.map((t) => `- ${t}`), "", `**Forsøg:** ${m.forsoeg}`, "", `**Registrering:** ${m.registrering}`, "", `**Fortolkning:** ${m.fortolkning}`, "");
+  L.push("**T1 rapporteres særskilt:** Elevens svar på spørgsmål 1 (ja, nej eller intet) står i `T_T1_svar` og giver ingen point. T1 er point for begrundelsen. Et rigtigt »nej« alene må ikke rapporteres som kildekritisk forståelse.", "");
   L.push("## 7. Observationsskema (under Arkivskabet)", "", "| Elevkode | Tid | Hvad så du? | Tegn på (forståelse / gæt / sidder fast / teknik / spillet forstyrrer) |", "|---|---|---|---|", "| | | | |", "| | | | |", "");
   L.push("## 8. Elevfeedback (3 min, mundtligt eller på papir)", "");
   L.push("1. Hvad var det sværeste? 2. Var der noget, du ikke forstod i spillet? 3. Hvad gør du nu, når du møder en kilde? (Skriv eller sig det med dine egne ord.) 4. Fik du hjælp til at læse? Hjalp det?", "");
@@ -133,11 +142,12 @@ export function teacherGuide() {
   L.push("Brug `registreringsskema.csv` (én række pr. elev). Den indeholder kun elevkoder. Intet sendes til Lærlig.", "");
   L.push("**Sådan sammenligner du (fastlagt før du ser data):**", "");
   L.push("1. For hver delscore: posttest (B) minus prætest (A) pr. elev. Rapportér median og spredning. Med én klasse: ingen p-værdier, kun beskrivende tal.");
-  L.push("2. Transfer: fordeling af T1–T3 og TV.");
+  L.push("2. Transfer: fordeling af T1–T3 og TV. `T_T1_svar` (ja/nej) rapporteres for sig og aldrig som forståelse.");
   L.push("3. Fastholdelse: forsinket test (C) minus posttest (B), kun for elever med begge. Rapportér frafald.");
   L.push("4. **Gentagelse vs. forbedring:** A, B og C er parallelle, ikke identiske. Brug design C (halvdelen tager B som prætest og A som posttest) for at se, om formerne er lige svære.");
   L.push("5. **Loftseffekt:** Elever med 6/5/4 i prætesten kan ikke vise fremgang. Rapportér dem for sig.");
-  L.push("6. **Bedømmerenighed:** En kollega bedømmer 10 tilfældige ark igen uden at se din bedømmelse. Notér, hvor mange delscorer der er ens. Er enigheden lav, er rubrikken ikke klar nok til at tolke ændringer.", "");
+  L.push("6. **Bedømmerenighed:** En kollega bedømmer 10 tilfældige ark igen uden at se din bedømmelse. Notér, hvor mange delscorer der er ens. Er enigheden lav, er rubrikken ikke klar nok til at tolke ændringer.");
+  L.push("7. **Følgefejl og mundtlig opfølgning:** Rapportér, hvor mange elever der fik følgefejl eller S7-opfølgning i A, B og C. Får en elev det i den ene prøve og ikke den anden, så vis det ved B − A.", "");
   L.push("## 10. Målingernes begrænsninger", "");
   L.push("- Formerne er **ikke målt lige svære**. En forskel mellem A og B kan skyldes formen, ikke læring.");
   L.push("- Del 2 har ja/nej: 50 % ved gæt pr. påstand. Del 3 har 25 % pr. påstand. Derfor vægter begrundelsen tungt, og delscorerne rapporteres hver for sig.");
@@ -152,10 +162,10 @@ export function teacherGuide() {
 
 export const SHEET_COLUMNS = Object.freeze([
   "elev_kode", "gruppe", "klassetrin",
-  "pre_form", "pre_R1", "pre_R2", "pre_R3", "pre_R4", "pre_V", "pre_B1", "pre_B2", "pre_del3_begge", "pre_stoette", "pre_fravaer",
-  "post_form", "post_R1", "post_R2", "post_R3", "post_R4", "post_V", "post_B1", "post_B2", "post_del3_begge", "post_stoette", "post_fravaer",
-  "T_T1", "T_T2", "T_T3", "T_TV", "T_stoette", "T_fravaer",
-  "C_dage_efter_post", "C_R1", "C_R2", "C_R3", "C_R4", "C_V", "C_B1", "C_B2", "C_del3_begge", "C_stoette", "C_fravaer",
+  "pre_form", "pre_R1", "pre_R2", "pre_R3", "pre_R4", "pre_V", "pre_B1", "pre_B2", "pre_del3_begge", "pre_foelgefejl", "pre_mundtlig_opfoelgning", "pre_stoette", "pre_fravaer",
+  "post_form", "post_R1", "post_R2", "post_R3", "post_R4", "post_V", "post_B1", "post_B2", "post_del3_begge", "post_foelgefejl", "post_mundtlig_opfoelgning", "post_stoette", "post_fravaer",
+  "T_T1_svar", "T_T1", "T_T2", "T_T3", "T_TV", "T_stoette", "T_fravaer",
+  "C_dage_efter_post", "C_R1", "C_R2", "C_R3", "C_R4", "C_V", "C_B1", "C_B2", "C_del3_begge", "C_foelgefejl", "C_mundtlig_opfoelgning", "C_stoette", "C_fravaer",
   "bedoemt_af", "genbedoemt", "noter",
 ]);
 

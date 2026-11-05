@@ -158,6 +158,20 @@ v1.2 (F9): del 2 har fire påstande, så Valg går til 6. De syntetiske svar har
 som før; den nye påstand 4 er besvaret, som hvert svar ville gøre det. Markeringsgrænserne for »mange rigtige valg«
 er skaleret fra 4 af 5 til 5 af 6. Markeringerne er de samme som i v1.
 
+**v1.3 (05-11-2026): lærerens beslutninger indbygget** (D-346 §12–13). Med rubrikken `kildekritik-rubrik-v1.3`:
+
+| Svar | Identifikation | Valg | Begrundelse | Ændret af |
+|---|---|---|---|---|
+| S1 | 6 | 6 | 4 | — |
+| S2 | 5 | 6 | 0 | S2: »penge« er et upræcist formål (1) |
+| S3 | 4 | 4 | 2 | S3 bekræfter emne-match = 1 |
+| S4 | 6 | 3 | 2 | S4: relevant begrundelse, forkert konklusion = 1 hver |
+| S5 | 2 | 6 | 0 | — |
+| S6 | 4 | 5 | 3 | S6: følgefejl (R3 2, R4 1, B1 1) |
+| S7 | 2 (5 efter mundtlig opfølgning) | 6 | 3 | S7: fast procedure; »at få penge« giver R4 1 efter S2 |
+
+Tabellen ovenfor er den godkendte v1.2. Begge versioner er testet.
+
 **Resultat:**
 
 - **Delscorerne skelner godt.**
@@ -168,7 +182,7 @@ er skaleret fra 4 af 5 til 5 af 6. Markeringerne er de samme som i v1.
   - S4 blev ikke markeret, fordi grænsen var valg ≤ 2. Den er nu ≤ 3.
   - S7 fik 0 + 0 uden markering. Rubrikniveauerne mister oplysningen om, at felterne er byttet om, så der er tilføjet en markering ved »ingen modtager og intet formål trods rigtige valg«.
 
-**Tvetydigheder, som læreren skal afgøre:**
+**Tvetydigheder (besluttet 05-11-2026; se D-346 §12):**
 
 1. **S2:** Er »penge« et fuldt svar på formål? Rubrikken giver 2. Et krav om en hel sætning vil ramme ordblinde elever.
 2. **S3:** »Det handler om skolen« beskriver kildens emne. Det er uklart, om det skal give 1 eller 0 for begrundelse.

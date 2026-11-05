@@ -125,14 +125,15 @@ test("the approval page shows the shortcut check, the exact before/after text, a
   for (const id of ["A", "B", "T", "C", "rubrik"]) assert.match(h, new RegExp(`name="st-${id}" value="ikke_gennemgaaet" checked`));
 });
 
-test("T1 is a separate teacher decision: shown undecided, recommended, validated — and the rubric itself is NOT changed", () => {
+test("T1 is a separate teacher decision: shown undecided on the page, validated — and, once decided (»saerskilt«), built into the rubric", () => {
   const h = readFileSync(PAGE, "utf8");
   assert.deepEqual(RUBRIC_DECISIONS.map((d) => d.id), ["T1"]);
   assert.match(h, /name="rb-T1" value="ikke_besluttet" checked/);
   for (const o of RUBRIC_DECISIONS[0].options) assert.match(h, new RegExp(`name="rb-T1" value="${o.id}"`));
   assert.ok(RUBRIC_DECISIONS[0].options.some((o) => o.id === RUBRIC_DECISIONS[0].recommendation));
-  // The rubric still gives 1 point for a bare "nej" until the teacher decides.
-  assert.equal(TRANSFER_CRITERIA.T1.levels[1], "svarer nej uden at sige hvorfor");
+  // Decided 05-11-2026 (file: »saerskilt«): a bare "nej" gives T1 = 0; the answer itself is recorded apart.
+  assert.match(TRANSFER_CRITERIA.T1.levels[0], /bart »ja« eller »nej« uden begrundelse.*T_T1_svar/);
+  assert.equal(/svarer nej uden at sige hvorfor/.test(JSON.stringify(TRANSFER_CRITERIA.T1)), false);
   const base = { format: FORMAT, laerer: "", dato: "", indhold: contentFingerprints(), proever: Object.fromEntries(["A", "B", "T", "C", "rubrik"].map((id) => [id, { status: "ikke_gennemgaaet" }])),
     tvetydigheder: Object.fromEntries(AMBIGUITIES.map((a) => [a.id, { valg: "ikke_besluttet" }])), lp13: Object.fromEntries(LP13.map((x) => [x.id, { valg: "ikke_besluttet" }])) };
   assert.deepEqual(validateReviewExport(JSON.stringify(base)).problems, []);
