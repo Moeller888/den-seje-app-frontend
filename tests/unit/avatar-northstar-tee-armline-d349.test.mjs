@@ -1,8 +1,9 @@
 // D-349 — U-343-1, the tee's warm dotted line (no private file needed): the repair is the sweater's split (threshold 1) of the published
 // layers' union — it moves exactly the top-body pixels under C's soft arm edge (arm alpha 1..127) to the sleeve layer, keeps the union
 // byte for byte, and refuses layers that are not the threshold-128 split; the plan names an item's layer files by its layerRev (default
-// 1) and no runtime item sets it yet, so every plan is unchanged; the candidate list names 36 new files, each replacing a published v1
-// file with its manifest sha256; no v2 file is published. Passing approves nothing.
+// 1). Since the owner's publication (2026-11-05) exactly the 18 tees set layerRev 2 and draw their published -v2 layers (shadows v1);
+// the v1 revision (the same items without layerRev) still draws exactly the v1 files, which stay published unchanged; the candidate
+// list is the historical record and the approval file binds it by sha256. Passing approves nothing.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
@@ -11,6 +12,7 @@ import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as L from "../../js/avatar-layers.js";
 import { resplitTee, teeItems, NEW_REV, FROM_ARM_ALPHA } from "../../tools/avatar/northstar-tee-armline-d349.mjs";
+import { v1Table, APPROVAL_REL } from "../../tools/avatar/verify-northstar-tee-armline-runtime-d349.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", ".."), W = 1024, N = W * 1536, sha = (b) => createHash("sha256").update(b).digest("hex");
 const CAND = JSON.parse(readFileSync(join(REPO, "tools", "avatar", "fixtures", "northstar-wardrobe", "tee", "tee-armline-v2-candidates.json"), "utf8"));
@@ -27,23 +29,37 @@ test("D-349 the repair: the soft-edge pixels move to the sleeve layer, the union
   assert.throws(() => resplitTee(moved, sl2, arms), /threshold-128/);
 });
 
-test("D-349 layerRev: no runtime item sets it, so every plan draws -v1 files; a table with layerRev 2 names only that item's layers -v2", () => {
-  assert.ok(Object.values(L.NORTHSTAR_ITEMS).every((it) => it.layerRev === undefined));
-  for (const k of Object.keys(L.NORTHSTAR_OUTFITS)) assert.ok(L.northstarCanvasPlan(k).every((s) => s.src.endsWith("-v1.webp")));
-  const o = L.northstarOutfitFor("K07", "TP-FOX-NAV"), table = { ...L.NORTHSTAR_ITEMS, [o.top]: { ...L.NORTHSTAR_ITEMS[o.top], layerRev: NEW_REV } };
-  const a = L.northstarPlanFor(o).map((s) => s.src.split("/").pop()), b = L.northstarPlanFor(o, table).map((s) => s.src.split("/").pop());
+test("D-349 layerRev: exactly the 18 tees set 2 and draw their -v2 layers with v1 shadows; the v1 revision still draws the v1 files", () => {
+  const tees = teeItems(L);
+  assert.equal(tees.length, 18);
+  for (const [k, it] of Object.entries(L.NORTHSTAR_ITEMS)) assert.equal(it.layerRev, tees.includes(k) ? NEW_REV : undefined, k);
+  const T1 = v1Table(L.NORTHSTAR_ITEMS);
+  for (const k of Object.keys(L.NORTHSTAR_OUTFITS)) { const now = L.northstarCanvasPlan(k).map((s) => s.src.split("/").pop()), then = L.northstarPlanFor(L.NORTHSTAR_OUTFITS[k], T1).map((s) => s.src.split("/").pop());
+    assert.ok(then.every((f) => f.endsWith("-v1.webp")), k + ": the v1 revision");
+    assert.deepEqual(now.filter((f, i) => f !== then[i]), [L.NORTHSTAR_OUTFITS[k].top + "-top-body-v2.webp", L.NORTHSTAR_OUTFITS[k].top + "-sleeves-v2.webp"], k); }
+  const o = L.northstarOutfitFor("K07", "TP-FOX-NAV"), a = L.northstarPlanFor(o, T1).map((s) => s.src.split("/").pop()), b = L.northstarPlanFor(o).map((s) => s.src.split("/").pop());
   assert.deepEqual(b.filter((f, i) => f !== a[i]), [o.top + "-top-body-v2.webp", o.top + "-sleeves-v2.webp"]);
-  const shades = L.northstarPlanFor(o, table).filter((s) => s.op === "shade").map((s) => s.src.split("/").pop());
+  const shades = L.northstarPlanFor(o).filter((s) => s.op === "shade").map((s) => s.src.split("/").pop());
   assert.ok(shades.length > 0 && shades.every((f) => f.endsWith("-v1.webp")), "shadows keep their files");
+  for (const c of [...L.NORTHSTAR_LS2_COMBOS, ...L.NORTHSTAR_TANK_COMBOS]) { const [top, bottom, shoes] = c.split("+");
+    assert.deepEqual(L.northstarPlanFor({ top, bottom, shoes }), L.northstarPlanFor({ top, bottom, shoes }, T1), c); }
   assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
 });
 
-test("D-349 the candidate list: 36 new files for the 18 tees, each replacing a published v1 file by its manifest sha256; none published", () => {
+test("D-349 the candidate list (historical) and the publication: the 36 approved -v2 files are published with their sha256, the v1 files kept", () => {
   const man = JSON.parse(readFileSync(join(REPO, "assets", "avatar-northstar", "manifest.json"), "utf8")), want = teeItems(L).flatMap((t) => ["top-body", "sleeves"].map((l) => t + "-" + l + "-v2.webp")).sort();
   assert.ok(/NOT approved, NOT published/.test(CAND.kind)); assert.equal(CAND.newRev, 2); assert.deepEqual(CAND.files.map((f) => f.file).sort(), want);
   for (const f of CAND.files) { assert.equal(f.replaces, f.file.replace("-v2.webp", "-v1.webp")); const p = man.files.find((x) => x.file === f.replaces);
     assert.equal(p.sha256, f.oldSha256, f.replaces); assert.equal(sha(readFileSync(join(REPO, "assets", "avatar-northstar", f.replaces))), f.oldSha256); assert.match(f.sha256, /^[0-9a-f]{64}$/); assert.notEqual(f.sha256, f.oldSha256);
     assert.equal(f.movedPx, f.file.startsWith("top-tee-hip-blue-") ? 233 : 248); }
   assert.deepEqual([CAND.check.outfits, CAND.check.tees, CAND.check.changedOutsideMoved, CAND.check.alphaLower], [776, 18, 0, 0]);
-  assert.ok(!readdirSync(join(REPO, "assets", "avatar-northstar")).some((f) => f.endsWith("-v2.webp")), "no v2 file is published");
+  const A = JSON.parse(readFileSync(join(REPO, ...APPROVAL_REL.split("/")), "utf8"));
+  assert.equal(A.candidatesSha256, sha(readFileSync(join(REPO, "tools", "avatar", "fixtures", "northstar-wardrobe", "tee", "tee-armline-v2-candidates.json"))));
+  assert.deepEqual(A.files, CAND.files.map((f) => ({ file: f.file, replaces: f.replaces, sha256: f.sha256, bytes: f.bytes }))); assert.deepEqual(A.items, [...teeItems(L)].sort());
+  const published = readdirSync(join(REPO, "assets", "avatar-northstar")).filter((f) => f.endsWith("-v2.webp")).sort();
+  assert.deepEqual(published, want, "exactly the 36 approved -v2 files are published");
+  for (const f of CAND.files) { const b = readFileSync(join(REPO, "assets", "avatar-northstar", f.file)); assert.equal(sha(b), f.sha256, f.file); assert.equal(b.length, f.bytes);
+    const e = man.files.find((x) => x.file === f.file); assert.equal(e.sha256, f.sha256); assert.equal(e.origin.decision, "D-349"); }
+  const ext = man.extensions.find((e) => e.decision === "D-349"); assert.deepEqual(ext.files, CAND.files.map((f) => f.file)); assert.equal(ext.approval, APPROVAL_REL);
+  assert.equal(man.counts.d349Files, 36); assert.equal(man.counts.files, man.files.length);
 });
