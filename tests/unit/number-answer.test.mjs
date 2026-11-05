@@ -82,6 +82,32 @@ test("plus sign, letters and other characters are refused", () => {
   bad("١٨٤٩", NUMBER_ERRORS.NOT_A_NUMBER); // non-ASCII digits: the server reads [0-9] only
 });
 
+test("a leading år / i / i år and one trailing full stop or ! never change the number (F-01 QA)", () => {
+  ok("år 1849", "1849");
+  ok("År 1849", "1849");
+  ok("i 1849", "1849");
+  ok("I år 1849", "1849");
+  ok("i år 1 849", "1849");
+  ok("1849.", "1849");
+  ok("1849!", "1849");
+  ok("  år 1849.  ", "1849");
+  ok("1.849.", "1849");
+  ok("95.", "95");
+  ok("år -50", "-50");
+  // Only those forms: everything else around the number is still refused with a message.
+  bad("ca. 1849", NUMBER_ERRORS.NOT_A_NUMBER);
+  bad("1849 teser", NUMBER_ERRORS.NOT_A_NUMBER);
+  bad("år", NUMBER_ERRORS.NOT_A_NUMBER);
+  bad("år1849", NUMBER_ERRORS.NOT_A_NUMBER);
+  bad("1849,", NUMBER_ERRORS.NOT_A_NUMBER);
+  bad("1849..", NUMBER_ERRORS.NOT_A_NUMBER);
+  bad("1849.!", NUMBER_ERRORS.NOT_A_NUMBER);
+  bad("i i 1849", NUMBER_ERRORS.NOT_A_NUMBER);
+  bad(".", NUMBER_ERRORS.NOT_A_NUMBER);
+  bad("1849,5.", NUMBER_ERRORS.DECIMAL);
+  bad("år +5", NUMBER_ERRORS.PLUS);
+});
+
 test("very long input is refused", () => {
   ok("9".repeat(NUMBER_MAX_LENGTH), "9".repeat(NUMBER_MAX_LENGTH));
   bad("9".repeat(NUMBER_MAX_LENGTH + 1), NUMBER_ERRORS.TOO_LONG);
@@ -101,6 +127,13 @@ test("agreement with the server: every accepted value is a fixed point of the se
     assert.equal(r.ok, true, raw);
     assert.match(r.value, /^(0|-?[1-9][0-9]*)$/, raw);
     assert.equal(normalizeNumber(r.value), r.value, `server normalises ${r.value} to itself`);
+  }
+  // The forms with words or a full stop around the number are sent as a canonical integer as well.
+  for (const raw of ["år 1849", "i år 1849", "1849.", "1849!", "1.849."]) {
+    const r = parseNumberAnswer(raw);
+    assert.equal(r.ok, true, raw);
+    assert.equal(r.value, "1849", raw);
+    assert.equal(normalizeNumber(r.value), r.value, raw);
   }
   // Where the browser accepts the raw text the server could also read, both agree on the number.
   for (const raw of ["1849", "-50", "007", "1 849", "−50", "-0"]) {

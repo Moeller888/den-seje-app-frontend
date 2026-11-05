@@ -13,6 +13,12 @@
 //                                    separator is used. "1 84", "1.8490", "1 849.000" are refused.
 //   "12.34", "1849,0", "1849,5"    → invalid: a decimal. The contract is integers, so the field asks
 //                                    for a whole number instead of guessing ("1849,0" too).
+//   "år 1849", "i 1849", "i år 1849", "1849.", "1849!"
+//                                  → valid, "1849": a leading "år" / "i" / "i år" and ONE trailing
+//                                    full stop or exclamation mark never change the number, so a pupil
+//                                    who writes a little sentence is not stopped (F-01 QA). Nothing else
+//                                    around the number is dropped: "ca. 1849", "1849 teser", "1849,"
+//                                    are still refused with a message.
 //   "+5"                           → invalid: the server's grading has no plus sign ("+5" never
 //                                    matches), so the field asks for the number without it.
 //   "abc", "18a9", "5 kr", "1/2"   → invalid: only digits.
@@ -66,6 +72,11 @@ export const NUMBER_INPUT_ATTRIBUTES = Object.freeze({
 const MINUS = /[−–—]/g;
 const GROUP_SPACE = /[   ]/g;
 
+// Words and punctuation around the number that never change it (see the table above). Applied once
+// each, after trimming; the rest of the text must still be a number on its own.
+const LEADING_WORDS = /^(?:i\s+år|år|i)\s+(?=[-+0-9])/i;
+const TRAILING_STOP = /(?<=[0-9])[.!]$/;
+
 const INTEGER = /^-?[0-9]+$/;
 const SPACE_GROUPED = /^-?[0-9]{1,3}( [0-9]{3})+$/;
 const DOT_GROUPED = /^-?[0-9]{1,3}(\.[0-9]{3})+$/;
@@ -87,9 +98,10 @@ function canonicalInteger(s) {
 // { ok: false, error, message } with error one of NUMBER_ERRORS and a Danish message for the pupil.
 export function parseNumberAnswer(raw) {
   if (typeof raw !== "string") return invalid(NUMBER_ERRORS.EMPTY);
-  const s = raw.normalize("NFC").replace(MINUS, "-").replace(GROUP_SPACE, " ").trim();
-  if (s.length === 0) return invalid(NUMBER_ERRORS.EMPTY);
-  if (s.length > NUMBER_MAX_LENGTH) return invalid(NUMBER_ERRORS.TOO_LONG);
+  const trimmed = raw.normalize("NFC").replace(MINUS, "-").replace(GROUP_SPACE, " ").trim();
+  if (trimmed.length === 0) return invalid(NUMBER_ERRORS.EMPTY);
+  if (trimmed.length > NUMBER_MAX_LENGTH) return invalid(NUMBER_ERRORS.TOO_LONG);
+  const s = trimmed.replace(LEADING_WORDS, "").replace(TRAILING_STOP, "");
   if (s.startsWith("+")) return invalid(NUMBER_ERRORS.PLUS);
 
   if (INTEGER.test(s)) return { ok: true, value: canonicalInteger(s) };
