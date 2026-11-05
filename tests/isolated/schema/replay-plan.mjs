@@ -118,6 +118,68 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
   "20261105160000_f01_number_questions_history.sql":
     "F-01, not applied in production: data-only question-bank content (30 history number questions, inserted INACTIVE); applying it needs its own owner GO and activating the rows a separate decision",
+  "20261020125000_english_grade6_9.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020130001_english_level_pilot_1.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020130002_english_level_pilot_2.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020130003_english_level_pilot_3.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020140001_english_level_batch2_1.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020140002_english_level_batch2_2.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020140003_english_level_batch2_3.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020150001_english_level_batch3_1.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020150002_english_level_batch3_2.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020150003_english_level_batch3_3.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020160001_english_level_batch4_1.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020160002_english_level_batch4_2.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020160003_english_level_batch4_3.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020170001_english_level_batch5_1.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020170002_english_level_batch5_2.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020170003_english_level_batch5_3.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020180001_english_level_batch6_1.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020180002_english_level_batch6_2.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020180003_english_level_batch6_3.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020190001_english_level_batch7_1.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020190002_english_level_batch7_2.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020190003_english_level_batch7_3.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020200001_english_level_batch8_1.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020200002_english_level_batch8_2.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020200003_english_level_batch8_3.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020210001_english_level_batch9_1.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020210002_english_level_batch9_2.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020210003_english_level_batch9_3.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020220001_english_level_batch10_1.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020220002_english_level_batch10_2.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261020220003_english_level_batch10_3.sql":
+    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
@@ -168,6 +230,7 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261101210000_question_history_restrict.sql": "20261102182750",
   "20261102100000_release_open_rounds_on_inactive_questions.sql": "20261102123618",
   "20261103100000_question_attempts_history_no_action.sql": "20261104163310",
+  "20261105090000_minigame_breaks.sql": "20261105060103",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),

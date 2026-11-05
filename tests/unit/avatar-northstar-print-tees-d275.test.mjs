@@ -2,12 +2,15 @@
 // (TP-FOX-COR and TP-FOX-MUS stay out), only on the outfits whose top is the cream tee (K01–K09, the partners the cut was checked
 // with), the plan draws the print tee's own layers in the D-242 order and reuses the cream tee's published skin shadows, the
 // figure cache key names the tee, nothing changes without the opt-in, ?northstar=0 forgets the tee, and the panel offers the tees.
+// D-349: the tees' layer files are now revision 2 (U-343-1); the D-275 stack is checked on the v1 revision (the items without layerRev)
+// and the runtime plan is that stack with exactly the tee's two layers as -v2.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as L from "../../js/avatar-layers.js";
+import { v1Table } from "../../tools/avatar/verify-northstar-tee-armline-runtime-d349.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (f) => readFileSync(join(REPO, f), "utf8");
@@ -23,7 +26,8 @@ test("D-275 only the 16 approved print tees can be chosen; TP-FOX-COR, TP-FOX-MU
   for (const v of ["TP-FOX-COR", "TP-FOX-MUS", "tp-tea-crm", "TP-TEA-XXX", "top-tee-hip-print-teapot-cream", "", "__proto__", "toString"]) assert.equal(withStorage({ avatar_northstar_tee: v }, () => L.northstarSelectedTee()), null, v);
   const prev = globalThis.localStorage; globalThis.localStorage = { getItem() { throw new Error("blocked"); } };
   try { assert.equal(L.northstarSelectedTee(), null); } finally { if (prev === undefined) delete globalThis.localStorage; else globalThis.localStorage = prev; }
-  for (const t of Object.values(L.NORTHSTAR_PRINT_TEES)) assert.deepEqual({ ...L.NORTHSTAR_ITEMS[t.item] }, { category: "top", layers: ["top-body", "sleeves"], shadows: ["body", "arms"], shadowsOf: "top-tee-hip-cream" });
+  for (const t of Object.values(L.NORTHSTAR_PRINT_TEES)) { const { layerRev, ...shape } = L.NORTHSTAR_ITEMS[t.item];
+    assert.deepEqual(shape, { category: "top", layers: ["top-body", "sleeves"], shadows: ["body", "arms"], shadowsOf: "top-tee-hip-cream" }); assert.equal(layerRev, 2, t.item + ": D-349's layer files"); }
 });
 
 test("D-275 a print tee replaces the top only on K01–K09 (the cream tee's checked partners); elsewhere the outfit stays as it is", () => {
@@ -34,9 +38,11 @@ test("D-275 a print tee replaces the top only on K01–K09 (the cream tee's chec
 });
 
 test("D-275 the plan: the D-242 stack with the print tee's own layers; the cream tee's published shadows; the figure key names the tee", () => {
+  const T1 = v1Table(L.NORTHSTAR_ITEMS);
   for (const t of Object.keys(L.NORTHSTAR_PRINT_TEES)) for (const k of ALLOWED) {
-    const o = L.northstarOutfitFor(k, t), p = L.northstarPlanFor(o), item = L.NORTHSTAR_PRINT_TEES[t].item;
-    assert.deepEqual(p.filter((s) => s.op === "draw").map((s) => s.src.split("/").pop()), ["figure-body-v1.webp", o.shoes + "-shoes-v1.webp", o.bottom + "-pants-v1.webp", item + "-top-body-v1.webp", "figure-arms-v1.webp", item + "-sleeves-v1.webp", "figure-head-v1.webp"], k + "+" + t);
+    const o = L.northstarOutfitFor(k, t), p = L.northstarPlanFor(o), p1 = L.northstarPlanFor(o, T1), item = L.NORTHSTAR_PRINT_TEES[t].item;
+    assert.deepEqual(p1.filter((s) => s.op === "draw").map((s) => s.src.split("/").pop()), ["figure-body-v1.webp", o.shoes + "-shoes-v1.webp", o.bottom + "-pants-v1.webp", item + "-top-body-v1.webp", "figure-arms-v1.webp", item + "-sleeves-v1.webp", "figure-head-v1.webp"], k + "+" + t);
+    assert.deepEqual(p.filter((s) => s.op === "draw").map((s) => s.src.split("/").pop()), ["figure-body-v1.webp", o.shoes + "-shoes-v1.webp", o.bottom + "-pants-v1.webp", item + "-top-body-v2.webp", "figure-arms-v1.webp", item + "-sleeves-v2.webp", "figure-head-v1.webp"], k + "+" + t + " (D-349)");
     assert.deepEqual(p.filter((s) => s.op === "shade").map((s) => s.src.split("/").pop()).slice(0, 2), ["top-tee-hip-cream-shadow-body-v1.webp", "top-tee-hip-cream-shadow-arms-v1.webp"]); }
   const on = { avatar_northstar: "1", avatar_northstar_outfit: "K05", avatar_northstar_tee: "TP-TEA-COR" };
   const r = withStorage(on, () => L.northstarRenderFor("avatar", [])); assert.deepEqual([r.key, r.outfit, r.tee], ["K05+TP-TEA-COR", "K05", "TP-TEA-COR"]);

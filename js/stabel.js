@@ -1,10 +1,12 @@
 // Stabel page. Click or tap drops the moving plate onto the tower.
-// A finished round pays 1 coin per plate via the claim_stabel_reward RPC. The server caps it at
-// 50 coins per day, because the plate count is reported by this page and can be forged. No XP.
+// Stabel pays nothing: no coins, no XP, no mastery (D-347 — it was 1 coin per plate until then; the
+// claim_stabel_reward RPC is closed to every API role by 20261105090000). Only the best result is kept,
+// in this browser.
 // The tower is drawn isometrically on a canvas (PRISMA look): plates slide along
 // alternating axes, the overhang falls off, perfect drops chain into a combo.
 
 import { supabase } from "../supabaseClient.js";
+import { enterBreakGame } from "./minigame-pass.js";
 import { loadTheme } from "./themeManager.js";
 import { attachReadAloudControl, stopReadAloud } from "./read-aloud/adapters/quiz.js";
 import { placePlate, grownSize, sweepSpeed, PERFECT_UNIT } from "./stabel-logic.js";
@@ -460,7 +462,6 @@ function fail() {
   paintScore();
   writeBest(state.plates);
   paintBest();
-  claimCoins(state.plates, state.round);
   clearTimeout(state.fallTimer);
   state.fallTimer = setTimeout(showOver, state.reduced ? 0 : FALL_MS);
 }
@@ -485,6 +486,7 @@ function showOver() {
   }
   setScreen("over");
   $("stabel-again")?.focus();
+  pass?.endRound();
 }
 
 function step(dt) {
@@ -541,38 +543,11 @@ function frame(now) {
   state.raf = requestAnimationFrame(frame);
 }
 
-// Pays the finished round once. The round number guards against a slow reply
-// landing on a newer round's end screen.
-async function claimCoins(plates, round) {
-  const el = $("stabel-coins");
-  const paint = (text) => { if (el && state.round === round) el.textContent = text; };
-  if (!Number.isFinite(plates) || plates <= 0) {
-    paint("Ingen plader — ingen mønter denne gang.");
-    return;
-  }
-  paint("Gemmer dine mønter …");
-  try {
-    const { data, error } = await supabase.rpc("claim_stabel_reward", { p_plates: Math.floor(plates) });
-    if (error) throw error;
-    const result = data && typeof data === "object" ? data : null;
-    const coins = Number(result?.coins);
-    const today = Number(result?.today);
-    const cap = Number(result?.cap);
-    if (result?.status !== "ok" || ![coins, today, cap].every(Number.isFinite)) {
-      throw new Error("Uventet svar fra claim_stabel_reward");
-    }
-    if (coins > 0) {
-      paint("+" + coins + (coins === 1 ? " mønt" : " mønter") + ". I dag fra Stabel: " + today + " af " + cap + ".");
-    } else {
-      paint("Dagens " + cap + " mønter fra Stabel er brugt. Kom igen i morgen.");
-    }
-  } catch (err) {
-    console.error("[stabel] claim_stabel_reward failed", err);
-    paint("Mønterne kunne ikke gemmes. Prøv igen senere.");
-  }
-}
+// D-347: the game is a spillepause — one round per accepted offer, redeemed on the server.
+let pass = null;
 
 function startRound() {
+  if (!pass || !pass.beginRound()) return;
   stopReadAloud();
   state.round += 1;
   unlockAudio();
@@ -622,6 +597,9 @@ async function main() {
     const { data } = await supabase.auth.getSession();
     if (!data.session) window.location.replace("login.html");
   });
+
+  pass = await enterBreakGame({ client: supabase, gameKey: "stabel" });
+  if (!pass) return;
 
   const canvas = $("stabel-canvas");
   const ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;

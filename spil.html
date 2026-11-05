@@ -54,7 +54,6 @@
     }
     .spil-back:hover { background: var(--btn-bg-hover); color: var(--text-main); }
     .spil-back:focus-visible,
-    .spil-tab:focus-visible,
     .spil-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     .spil-title {
@@ -70,41 +69,11 @@
       margin-bottom: 14px;
     }
 
-    .spil-tabs {
-      display: flex;
-      gap: 6px;
-      padding: 4px;
-      margin-bottom: 14px;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-    }
-
-    .spil-tab {
-      flex: 1;
-      min-height: 44px;
-      padding: 8px 12px;
-      font-family: inherit;
-      font-size: 15px;
-      font-weight: bold;
-      color: var(--text-dim);
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-    .spil-tab:hover { color: var(--text-main); background: var(--btn-bg-hover); }
-    .spil-tab[aria-selected="true"] {
-      color: #fff;
-      background: var(--accent);
-    }
-
     .spil-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
-    .spil-list[hidden] { display: none; }
 
     .spil-card {
       display: grid;
@@ -165,14 +134,10 @@
     <span aria-hidden="true"></span>
   </div>
 
-  <p class="spil-lead">Vælg det fag, du vil blive dygtigere til – eller spil et minigame.</p>
+  <p class="spil-lead">Vælg det fag, du vil blive dygtigere til.</p>
+  <p class="spil-lead" id="spil-break-note">Når du har arbejdet med dine opgaver i 20 minutter, får du tilbudt en lille spillepause med et minispil.</p>
 
-  <div class="spil-tabs" role="tablist" aria-label="Spil">
-    <button type="button" class="spil-tab" role="tab" id="spil-tab-fag" aria-controls="spil-panel-fag" aria-selected="true">Fag</button>
-    <button type="button" class="spil-tab" role="tab" id="spil-tab-minigames" aria-controls="spil-panel-minigames" aria-selected="false" tabindex="-1">Minigames</button>
-  </div>
-
-  <nav class="spil-list" id="spil-panel-fag" role="tabpanel" aria-labelledby="spil-tab-fag">
+  <nav class="spil-list" id="spil-panel-fag" aria-label="Fag">
     <a class="spil-card" href="index.html">
       <span class="spil-kicker">Quiz</span>
       <span class="spil-name">Historie</span>
@@ -193,50 +158,6 @@
     </a>
   </nav>
 
-  <nav class="spil-list" id="spil-panel-minigames" role="tabpanel" aria-labelledby="spil-tab-minigames" hidden>
-    <a class="spil-card" href="stabel.html">
-      <span class="spil-kicker">Klik</span>
-      <span class="spil-name">Stabel</span>
-      <span class="spil-line">Slip pladen, når den ligger over den forrige. Det, der stikker ud, skæres fra.</span>
-      <span class="spil-go">Stab →</span>
-    </a>
-    <a class="spil-card" href="husk.html">
-      <span class="spil-kicker">Hukommelse</span>
-      <span class="spil-name">Husk</span>
-      <span class="spil-line">Vend to ens. Husk, hvor de lå. Hvert klaret bræt bliver større.</span>
-      <span class="spil-go">Vend →</span>
-    </a>
-    <a class="spil-card" href="naal.html">
-      <span class="spil-kicker">Timing</span>
-      <span class="spil-name">Nål</span>
-      <span class="spil-line">Nålen drejer rundt. Klik, mens den er inde i den lyse bue.</span>
-      <span class="spil-go">Stik →</span>
-    </a>
-    <a class="spil-card" href="kloeft.html">
-      <span class="spil-kicker">Timing</span>
-      <span class="spil-name">Kløft</span>
-      <span class="spil-line">Skåret falder. Klik, når det er ud for kløften i væggen.</span>
-      <span class="spil-go">Skub →</span>
-    </a>
-    <a class="spil-card" href="hop.html">
-      <span class="spil-kicker">Platform</span>
-      <span class="spil-name">Hop</span>
-      <span class="spil-line">Figuren løber selv. Klik for at hoppe over huller og klodser.</span>
-      <span class="spil-go">Hop →</span>
-    </a>
-    <a class="spil-card" href="brud.html">
-      <span class="spil-kicker">Arkade</span>
-      <span class="spil-name">Brud</span>
-      <span class="spil-line">Hold bolden oppe med pladen, og knus klodserne.</span>
-      <span class="spil-go">Knus →</span>
-    </a>
-    <a class="spil-card" href="slope.html">
-      <span class="spil-kicker">Styring</span>
-      <span class="spil-name">Slope</span>
-      <span class="spil-line">Kuglen triller selv ned ad banen. Styr den gennem hullerne, og hold dig på banen.</span>
-      <span class="spil-go">Rul →</span>
-    </a>
-  </nav>
 </div>
 <script type="module" src="js/spil.js"></script>
 </body>
