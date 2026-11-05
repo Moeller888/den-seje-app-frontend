@@ -120,7 +120,8 @@ input and returns to a valid state. Never bypass this machine.
 
 `COOLDOWN` (anti-gætte-pause, D-350, [quiz-anti-guess-cooldown.md](./quiz-anti-guess-cooldown.md)):
 entered from `SUBMITTING_ANSWER` (the server refused the answer), `TRANSITIONING` (the wrong answer
-just shown started a pause — asked once, after D-347's break offer), `IDLE` (a reload / new tab during a
+just shown started a pause — asked once, BEFORE D-347's break offer, which is then held until the
+pause is over; owner decision 2026-11-05), `IDLE` (a reload / new tab during a
 pause) or `AWAITING_ANSWER` (another tab reported a pause); left only to `LOADING_QUESTION` via
 "Fortsæt quizzen", which unlocks at 00:00. The server enforces the pause; the state only shows it.
 

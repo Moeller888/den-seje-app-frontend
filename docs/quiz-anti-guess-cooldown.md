@@ -151,8 +151,8 @@ måler derefter tiden med `performance.now()`, som er monoton og uafhængig af s
 
 **Efter det tiende svar.** Svaret vises normalt (rigtigt svar, forklaring). Ved overgangen til næste
 spørgsmål spørger `loadAndRenderQuestion()` én gang serveren, når det seneste svar var forkert. Er en pause
-startet, vises den med det samme (`TRANSITIONING → COOLDOWN`), og intet nyt spørgsmål hentes. D-347's
-spilletilbud kommer først og er uændret, fordi pausen blokerer quizsvar, ikke en lovlig spillepause.
+startet, vises den med det samme (`TRANSITIONING → COOLDOWN`), og intet nyt spørgsmål hentes. Pausen
+kommer før D-347's spilletilbud (ejerbeslutning 2026-11-05, se afsnit 7).
 Findes funktionen ikke endnu (før migrationen, PGRST202/404), holder siden op med at spørge. Når serveren derefter afviser et svar med pause, er det et bevis på, at migrationen nu er anvendt. Så spørger siden igen og viser serverens resttid. Det dækker en fane, der stod åben, mens migrationen blev anvendt.
 
 **Genindlæsning, ny fane og anden enhed.** `loadAndRenderQuestion()` kalder `get_my_quiz_cooldown()`
@@ -183,8 +183,9 @@ enheden sover.
   i sine egne tre tabeller.
 - **Streak:** `update_streak` kører inde i svarfunktionen. Afviste forsøg rulles tilbage, og selve pausen
   rører ikke streak. En pause på 2 minutter kan ikke bryde en daglig streak.
-- **Minigames (D-347, live):** urørt. De 20 minutters aktiv quiztid og tilbuddet ved næste registrerede
-  svar fungerer uændret og kommer før pausetjekket. Under pausen registreres intet svar. D-347's
+- **Minigames (D-347, live):** serverens regler er urørte (20 minutters aktiv quiztid, tilbuddet ved
+  næste registrerede svar, udløb). Kun rækkefølgen i browseren er ændret: pausen kommer først (se
+  nedenfor). Under pausen registreres intet svar. D-347's
   strukturtest (`minigame-break.test.mjs`) låste `TRANSITIONING: ["LOADING_QUESTION"]`. Den låser nu
   `["LOADING_QUESTION", "COOLDOWN"]`, og den eneste nye overgang er D-350's (stadig ingen BREAK- eller
   MINIGAME-tilstand).
@@ -192,13 +193,29 @@ enheden sover.
   bekræftet afvisning. Indsendelsen bliver afsluttet, og spørgsmålet besvares igen efter pausen som en ny
   indsendelse.
 
-### D-347-rækkefølgen (vurdering, ikke ændret)
+### D-347-rækkefølgen: pausen først, tilbuddet bevares (ejerbeslutning 2026-11-05)
 
-I dag kommer et skyldigt spilletilbud **før** pausen ved samme overgang. Accepterer eleven, går eleven til spillet, mens pausen løber. Ved tilbagekomsten viser quizzen den eventuelle resttid. Takker eleven nej, vises pausen.
+Når det samme svar både starter en anti-gætte-pause og optjener et spilletilbud:
 
-Alternativet, "pause først, og tilbuddet bevares til efter pausen", kan bygges rent i frontenden uden risiko for at miste tilbuddet. `minigame_break_after_answer` viser et åbent tilbud igen ved næste registrerede svar, også efter en genindlæsning. Mens tilbuddet venter, optjenes ingen tid. Det kræver ejerens beslutning og er **ikke** implementeret.
+1. **Pausen har førsteprioritet.** `loadAndRenderQuestion()` spørger først, om pausen er startet. Er den
+   det, vises pausen, og tilbuddet vises ikke.
+2. **Eleven gennemfører hele pausen.** Knappen "Fortsæt quizzen" er låst til 00:00, som ellers.
+3. **Tilbuddet går ikke tabt.** Serverens svar (`minigame_break_after_answer`, som allerede har oprettet
+   tilbuddet med status `offered`) holdes i sidens hukommelse (`heldBreakOffer`). Når pausen er slut,
+   viser `offerBreakIfDue()` præcis det tilbud, før næste spørgsmål hentes, med samme dialog og samme
+   valg som altid.
+4. **Genindlæsning midt i pausen** sletter sidens hukommelse, men ikke tilbuddet. Serveren viser et åbent
+   tilbud igen ved næste registrerede svar (eksisterende regel). Et åbent tilbud udløber først efter 2
+   timer.
+5. **Pausetiden tæller ikke som aktiv quiztid.** Mens tilbuddet venter, optjenes ingen tid (serverens
+   regel). Det næste spørgsmål oprettes først efter pausen, og browserens synlighedstimer genstartes, når
+   det vises.
+6. **20-minuttersreglen er uændret.** Ingen SQL er ændret.
 
-Pausen bliver ikke krediteret som aktiv quiztid. D-347's synlighedstimer genstartes, når det næste spørgsmål vises (`questionVisibleTimer.restart()`), og serveren begrænser krediteringen til den synlige tid. Afviste forsøg registrerer intet og kalder ikke `minigame_break_after_answer`.
+Et forkert svar, der ikke starter en pause, viser tilbuddet med det samme, som før.
+
+Afviste forsøg registrerer intet og kalder ikke `minigame_break_after_answer`. Samspillet er testet i
+`tests/quiz-cooldown.spec.ts` (tre D-347-tests) og låst i `tests/unit/minigame-break.test.mjs`.
 
 ## 8. Tests
 

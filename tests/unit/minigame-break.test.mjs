@@ -203,6 +203,12 @@ test("app.js: a break is considered only after a registered answer, and offered 
   const load = app.slice(app.indexOf("async function loadAndRenderQuestion("));
   const offer = load.indexOf("if (await offerBreakIfDue()) return;");
   assert.ok(offer > 0 && offer < load.indexOf("await getNextQuestion()"), "offered before the next question is fetched");
+  // D-350 × D-347 (owner 2026-11-05): an anti-gætte-pause comes FIRST; an offer earned by the same answer
+  // is held (heldBreakOffer) and offered when the pause is over — never during it, never dropped.
+  const pause = load.indexOf("syncCooldownFromServer({ afterWrongAnswer: true })");
+  assert.ok(pause > 0 && pause < offer, "the pause check precedes the offer");
+  assert.match(load, /if \(await syncCooldownFromServer\(\{ afterWrongAnswer: true \}\)\) \{\s+const earned = await takeBreakOffer\(\);\s+if \(earned\) heldBreakOffer = earned;\s+return;\s+\}/);
+  assert.match(app, /const offer = heldBreakOffer \?\? await takeBreakOffer\(\);\s+heldBreakOffer = null;/);
   // D-347 adds no states and no transitions to the quiz state machine. The one later transition out of
   // TRANSITIONING is the anti-gætte-pause's COOLDOWN (D-350, docs/quiz-anti-guess-cooldown.md) — nothing
   // of the break's.

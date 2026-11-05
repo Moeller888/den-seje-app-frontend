@@ -878,12 +878,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     breakCheck = Promise.race([check, timeout]);
   }
 
-  // Returns true when the pupil left for the game (the quiz must load nothing more).
-  async function offerBreakIfDue() {
-    if (!breakCheck) return false;
+  // An offer earned by the answer that also started an anti-gætte-pause (D-350) is held here until the
+  // pause is over, then shown by offerBreakIfDue() exactly as it would have been (owner 2026-11-05:
+  // the pause comes first, the offer is kept). Only this page's memory: after a reload the server
+  // shows the same open offer again at the next registered answer (minigame_break_after_answer).
+  let heldBreakOffer = null;
+
+  // The server's answer for the last registered answer (null: no offer, or none asked for).
+  async function takeBreakOffer() {
+    if (!breakCheck) return null;
     const pending = breakCheck;
     breakCheck = null;
-    const offer = await pending;
+    return await pending;
+  }
+
+  // Returns true when the pupil left for the game (the quiz must load nothing more).
+  async function offerBreakIfDue() {
+    const offer = heldBreakOffer ?? await takeBreakOffer();
+    heldBreakOffer = null;
     if (!offer) return false;
     const m = await loadMinigameBreak();
     if (!m) return false;
@@ -1829,15 +1841,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     reviewFeedback.classList.remove("visible");
     reflectionContinue.style.display = "none";
 
-    // D-347: a spillepause due after the answer just registered is offered here, at the transition.
-    if (await offerBreakIfDue()) return;
-
-    // Anti-gætte-pause: after a wrong answer, ask once whether it started a pause (D-347's offer above is
-    // unchanged and comes first — the pause blocks quiz answers, not the pupil's legitimate break).
+    // Anti-gætte-pause FIRST (owner 2026-11-05): after a wrong answer, ask once whether it started a
+    // pause. If it did, the pupil takes the whole pause, and a spillepause earned by the same answer is
+    // held (heldBreakOffer) and offered when the pause is over — never lost, never shown during it.
     if (lastAnswerWasWrong) {
       lastAnswerWasWrong = false;
-      if (await syncCooldownFromServer({ afterWrongAnswer: true })) return;
+      if (await syncCooldownFromServer({ afterWrongAnswer: true })) {
+        const earned = await takeBreakOffer();
+        if (earned) heldBreakOffer = earned;
+        return;
+      }
     }
+
+    // D-347: a spillepause due after the answer just registered (or held through a pause) is offered
+    // here, at the transition, before the next question is fetched.
+    if (await offerBreakIfDue()) return;
 
     const question = await getNextQuestion();
 

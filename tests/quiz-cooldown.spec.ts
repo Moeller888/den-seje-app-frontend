@@ -53,8 +53,13 @@ const QUESTION = (n: number) => ({ step: "question", question_instance_id: `q${n
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS" };
 
 // Den simulerede server: kun det, browseren kan se. `until` er pausens slut (serverens tid).
-type Sim = { until: number | null; reply: "new" | "v34" | "ok" | "starts"; served: number; answers: number; statusCalls: number };
-const sim = (): Sim => ({ until: null, reply: "new", served: 0, answers: 0, statusCalls: 0 });
+// D-347-spillepausen (kun det, browseren ser): earnOffer = det næste registrerede svar optjener et tilbud;
+// et åbent tilbud vises igen ved hvert registreret svar, indtil eleven svarer (serverens regel).
+type Offer = { id: string; game: string; status: "offered" | "accepted" | "declined" };
+type Sim = { until: number | null; reply: "new" | "v34" | "ok" | "starts"; served: number; answers: number; statusCalls: number;
+  earnOffer: boolean; offer: Offer | null; visible: (number | null)[]; responds: boolean[] };
+const sim = (): Sim => ({ until: null, reply: "new", served: 0, answers: 0, statusCalls: 0, earnOffer: false, offer: null, visible: [], responds: [] });
+const OFFER_ID = "22222222-2222-4222-8222-222222222222";
 // Serverens "nu" følger browserens styrede Date (begge starter i T0 og flyttes af page.clock).
 let serverNow = () => T0;
 
@@ -83,6 +88,18 @@ function routeFor(s: Sim) {
       const now = serverNow();
       const active = s.until !== null && s.until > now;
       return j({ active, ends_at: active ? iso(s.until!) : null, server_now: iso(now) });
+    }
+    if (p.startsWith("/rest/v1/rpc/minigame_break_after_answer")) {
+      s.visible.push(JSON.parse(req.postData() || "{}").p_visible_seconds ?? null);
+      if (s.offer && s.offer.status === "offered") return j({ status: "ok", reason: "offer", offer: { id: s.offer.id, game: s.offer.game } });
+      if (s.earnOffer) { s.earnOffer = false; s.offer = { id: OFFER_ID, game: "brud", status: "offered" }; return j({ status: "ok", reason: "offer", offer: { id: OFFER_ID, game: "brud" } }); }
+      return j({ status: "ok", reason: "counted", offer: null });
+    }
+    if (p.startsWith("/rest/v1/rpc/minigame_break_respond")) {
+      const accept = JSON.parse(req.postData() || "{}").p_accept === true;
+      s.responds.push(accept);
+      if (s.offer && s.offer.status === "offered") s.offer.status = accept ? "accepted" : "declined";
+      return j({ status: "ok", offer_status: s.offer?.status ?? null, game: s.offer?.game ?? null });
     }
     if (p.startsWith("/rest/v1/rpc/evaluate_achievements")) return j([]);
     if (p.startsWith("/rest/v1/rpc/")) return j(null);
@@ -297,6 +314,107 @@ test("smal mobilskærm: hele pausen er synlig uden vandret scroll, og knappen ka
   await expect(cont(page)).toBeEnabled();
   s.reply = "ok";
   await cont(page).tap();
+  await expect(page.locator("#question")).toContainText("Spørgsmål nummer 2?");
+  await ctx.close();
+});
+
+// ── Samspil med D-347-spillepauserne (ejerbeslutning 2026-11-05: pausen først, tilbuddet bevares) ──
+const breakDialog = (page: Page) => page.locator("dialog#minigame-break-dialog");
+// Browserens ur står stille og flyttes kun af testen (page.clock.runFor / pass): en travl maskine kan så
+// ikke lade sekunder gå mellem to trin.
+async function openPausedQuiz(ctx: BrowserContext): Promise<Page> {
+  const page = await openQuiz(ctx);
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1_000));
+  return page;
+}
+
+test("D-347: samme svar starter pausen og optjener et spilletilbud — pausen først, tilbuddet bagefter", async ({ browser }) => {
+  const s = sim();
+  s.reply = "starts";
+  s.earnOffer = true;
+  const ctx = await context(browser, s);
+  const page = await openPausedQuiz(ctx);
+  await option(page, "Beta").click();
+  await expect(page.locator("#feedback")).toContainText("Svaret er Alfa");   // svaret behandles normalt
+  await page.clock.runFor(2_500);
+  // Pausen har førsteprioritet: intet tilbud, intet spørgsmål.
+  await expect(panel(page)).toBeVisible();
+  await expect(timer(page)).toHaveText("02:00");
+  await expect(breakDialog(page)).toHaveCount(0);
+  expect(s.offer?.status, "tilbuddet er optjent og stadig åbent").toBe("offered");
+
+  // Hele pausen skal gennemføres; heller ikke 1 s før slut kommer tilbuddet.
+  await pass(page, 119_000);
+  await expect(timer(page)).toHaveText("00:01");
+  await expect(breakDialog(page)).toHaveCount(0);
+  await pass(page, 1_000);
+  await expect(cont(page)).toBeEnabled();
+  s.reply = "ok";
+  await cont(page).click();
+
+  // Efter pausen: det samme tilbud, efter de eksisterende regler — før næste spørgsmål hentes.
+  await expect(breakDialog(page)).toBeVisible();
+  await expect(breakDialog(page).getByRole("heading")).toContainText("Har du lyst til et spil Brud?");
+  await expect(panel(page)).toBeHidden();
+  expect(s.served, "intet spørgsmål hentes bag dialogen").toBe(1);
+  await page.getByRole("button", { name: "Nej, ellers tak" }).click();
+  await expect(breakDialog(page)).toHaveCount(0);
+  await expect.poll(() => s.responds).toEqual([false]);
+  await expect(page.locator("#question")).toContainText("Spørgsmål nummer 2?");
+
+  // Pausetiden tæller ikke som aktiv quiztid: næste svar melder kun sin egen synlige tid.
+  await pass(page, 10_000);
+  await option(page, "Beta").click();
+  await expect.poll(() => s.visible.length).toBe(2);
+  expect(s.visible[1]).not.toBeNull();
+  expect(s.visible[1]!, "kun spørgsmålets egne sekunder, ikke de 120 s i pausen").toBeLessThanOrEqual(11);
+  await page.clock.runFor(2_500);
+  await expect(breakDialog(page), "et afslået tilbud kommer ikke igen").toHaveCount(0);
+  await ctx.close();
+});
+
+test("D-347: genindlæses siden midt i pausen, går tilbuddet ikke tabt — serveren viser det ved næste svar", async ({ browser }) => {
+  const s = sim();
+  s.reply = "starts";
+  s.earnOffer = true;
+  const ctx = await context(browser, s);
+  const page = await openPausedQuiz(ctx);
+  await option(page, "Beta").click();
+  await expect(page.locator("#feedback")).toContainText("Svaret er Alfa");
+  await page.clock.runFor(2_500);
+  await expect(panel(page)).toBeVisible();
+  await pass(page, 30_000);
+  await page.reload();
+  await expect(timer(page)).toHaveText("01:30");   // serverens resttid (dens ur stod stille under feedbacktiden)
+  await expect(breakDialog(page)).toHaveCount(0);
+  await pass(page, 90_000);
+  await expect(cont(page)).toBeEnabled();
+  s.reply = "ok";
+  await cont(page).click();
+  await expect(option(page, "Alfa")).toBeVisible();      // sidens hukommelse er væk; quizzen fortsætter
+  await option(page, "Beta").click();                     // næste registrerede svar
+  await expect(page.locator("#feedback")).toContainText("Svaret er Alfa");
+  await page.clock.runFor(2_500);
+  await expect(breakDialog(page)).toBeVisible();          // det samme, stadig åbne tilbud
+  await expect(breakDialog(page).getByRole("heading")).toContainText("Har du lyst til et spil Brud?");
+  await page.getByRole("button", { name: "Nej, ellers tak" }).click();
+  await expect.poll(() => s.responds).toEqual([false]);
+  await ctx.close();
+});
+
+test("D-347: et forkert svar uden pause viser tilbuddet med det samme, som før", async ({ browser }) => {
+  const s = sim();
+  s.reply = "ok";
+  s.earnOffer = true;
+  const ctx = await context(browser, s);
+  const page = await openPausedQuiz(ctx);
+  await option(page, "Beta").click();
+  await expect(page.locator("#feedback")).toContainText("Svaret er Alfa");
+  await page.clock.runFor(2_500);
+  await expect(breakDialog(page)).toBeVisible();
+  await expect(panel(page)).toHaveCount(0);
+  expect(s.served).toBe(1);
+  await page.getByRole("button", { name: "Nej, ellers tak" }).click();
   await expect(page.locator("#question")).toContainText("Spørgsmål nummer 2?");
   await ctx.close();
 });
