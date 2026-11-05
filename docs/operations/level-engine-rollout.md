@@ -7,7 +7,17 @@ Rettelsen af tabelkommentaren er anvendt og verificeret (`20261030182931 student
 2026-10-30, §2.4). `get-next-question` version 180 (`1aee47a`) er deployet 2026-10-31 med motoren
 **slukket** (`LEVEL_ENGINE` findes ikke). Observationen af det slukkede deploy er **afsluttet
 2026-11-02** (§3.1, "Observation af version 180"): normal skoletrafik og ingen regressionssignaler.
-Motoren er ikke aktiveret for nogen elev. Arkitektur:
+
+**Status (2026-11-04): motoren er lanceret for alle elever.**
+- `get-next-question` er deployet fra `a7450b0f` (kandidatmanifest `1f508a84…`). Koden kom ind som
+  version 181. Versionsnummeret stiger ved hver secret-ændring, uden at koden ændres.
+- R2-canary'en blev aktiveret for én ejerstyret test-elev kl. 20:30 UTC (§2.6.1). Første forsøg 20:13
+  UTC matchede ikke kontoen og blev rullet tilbage.
+- `LEVEL_ENGINE=v1` blev sat for alle elever kl. 21:59 UTC (§2.6). Ejeren fraveg §2.5 bevidst.
+- Allowlisten `LEVEL_ENGINE_CANARY_STUDENT_IDS` er beholdt til hurtig tilbagegang til canary.
+- Logfilerne er `docs/operations/production-actions/2026-11-04T2013Z-…`, `…T2030Z-…` og `…T2159Z-…`.
+
+Arkitektur:
 [`docs/ARCHITECTURE.md` §6 "Difficulty scale 1–10.000"](../ARCHITECTURE.md). Design og beslutninger:
 `docs/difficulty-scale-design.md` (B1–B8, E1–E5, vej A).
 
@@ -110,8 +120,12 @@ historik. **Grænse:** kandidatvalget skal være under 50 ms for engelsk med alt
 det over, skal årsagen findes, før flaget slås til (§4, risiko R7).
 
 ### 2.6 Aktivering af `LEVEL_ENGINE=v1`
-**Bred aktivering er blokeret** (R3, R7) og kræver ejerens særskilte beslutning. Første skridt er
-canary'en i §2.6.1, ikke `v1`.
+**Aktiveret 2026-11-04 kl. 21:59 UTC efter ejerens særskilte beslutning**, med canary'en i §2.6.1 som
+første skridt. §2.5 blev bevidst fraveget af ejeren, fordi LÆRLIG-GUARD blokerer måling af
+kandidatfunktionen via `execute_sql`. Fold-udvalget blev målt til cirka 7–8 ms for den længste historik.
+Grundlag, test i hvert fag og den første overvågning står i
+`docs/operations/production-actions/2026-11-04T2159Z-level-engine-v1-global.md`. R3 og R7 følges
+fortsat i produktion.
 
 `v1` er **globalt** (ingen styring pr. elev), så aktivering rammer alle elever på én gang:
 - Slå det til på et roligt tidspunkt. Test straks med en testelev i hvert fag: `LEVEL_ENGINE:`-linjen
@@ -119,8 +133,16 @@ canary'en i §2.6.1, ikke `v1`.
 - Overvåg 500-fejl i `get-next-question` den første time.
 
 ### 2.6.1 Canary pr. elev: `LEVEL_ENGINE=canary` (R2)
-**Status:** bygget, **ikke** deployet og **ikke** aktiveret. Deploy, oprettelse af secrets og aktivering
-kræver hver ejerens særskilte godkendelse.
+**Status:** deployet 2026-11-04 (version 181) og aktiveret for én ejerstyret test-elev kl. 20:30 UTC.
+Afløst af `v1` for alle kl. 21:59 UTC (§2.6). Allowlisten er beholdt, så tilbagegang til canary kun kræver
+`LEVEL_ENGINE=canary`.
+
+**Erfaringer fra aktiveringen:**
+- Har test-eleven et åbent, forfaldent spørgsmål, serveres det fra trin 1, og motoren bliver ikke spurgt.
+  Testen skal derfor have ét svar og ét nyt spørgsmål.
+- En allowlist, der ikke matcher, ses kun ved, at `LEVEL_ENGINE:`-linjen mangler. Kopiér User UID
+  direkte fra Authentication → Users for den konto, der logger ind.
+- Hver secret-ændring tæller alle Edge Functions én version op. `updated_at`, ezbr og filer er uændrede.
 
 **Kontrakten (fail closed).** Koden er `resolveLevelEngineForStudent` og `parseCanaryAllowlist` i
 `supabase/functions/get-next-question/level-flow.ts`.
@@ -542,7 +564,7 @@ at blive sprunget over. Lokalt springes den over, medmindre `LEVEL_ENGINE_PG_URL
 | # | Risiko | Afbødning |
 |---|---|---|
 | R1 | Kandidatvalget kaldte `question_is_servable()` for **alle** fagets aktive opgaver (51–178 ms ved 6.090 aktive engelske) | **Løst i migration B (2026-10-22):** kandidatvinduet (§4.1) giver samme svar på 7 ms median med højst 600 kald. Mål stadig i produktion (§2.5) |
-| R2 | `v1` er globalt, så der er ingen pilot på enkelte elever | **Åben.** Canary pr. elev er bygget (`LEVEL_ENGINE=canary`, højst 10 elever, fail closed, §2.6.1), men hverken deployet eller aktiveret. Indtil da: aktivér på et roligt tidspunkt, test straks med en testelev og rul tilbage ved at fjerne flaget (§2.6) |
+| R2 | `v1` er globalt, så der er ingen pilot på enkelte elever | **Lukket 2026-11-04.** Canary'en pr. elev (§2.6.1) blev deployet og afprøvet med én test-elev, før `v1` blev slået til for alle. Allowlisten er beholdt til hurtig tilbagegang |
 | R3 | Første kald folder hele elevens historik i faget. Elever med lang historik flyttes mange niveauer på én gang | Det er tilsigtet: den tidligere historik giver det bedste startestimat. Trinene bliver mindre med antal svar. Kan ses i fold-loggen |
 | R4 | Samtidighedstesten kræver en rigtig PostgreSQL | **Løst:** den kører i unit-jobbet mod en PostgreSQL 17.6-servicecontainer og fejler, hvis serveren mangler (§4.5) |
 | R5 | Placeringstesten måler kun historie, så engelsk og dansk starter på klassetrinnets startbånd | Bevidst (B9 er udskudt). De store første trin flytter eleven hurtigt |
