@@ -576,12 +576,26 @@ does not distinguish formats, so once Sandt/falsk is servable a correct true_fal
 level exactly like an MC answer although a guess is right half the time (75 % observed ≈ 50 % real
 knowledge for true_false, ≈ 67 % for 4-option MC). The band folds (`advance_student_band` of the format
 mix, and the browser's `adjustDifficultyBand`: 3 right in a row → up) are format-blind in the same way.
-**Rule: when an evidence system is activated — and
-before Sandt/falsk is made servable while the level fold is live — true_false answers must be weighted by
-`guessFloor` (or excluded from the fold); that weighting is an owner decision and part of step 3.** No
-parallel mastery mechanism is built here; the format stays non-servable.
+**Rule (owner decision 2026-11-05, D-353): Sandt/falsk is a training format.** A true_false answer gives
+the normal XP and is logged (`question_instances`, H5's `question_attempts`), but it never raises or lowers
+the pupil's level, never counts in `answered` (the step size) and never feeds the band runs. Generally:
+every format whose `guessFloor` is ≥ 0.5 is a training format — today only `true_false`; every active
+format (`mc`, `number`, `text`, `match`) is unchanged. Implemented in the existing folds, no parallel
+engine: migration `20261105173000_true_false_practice_only_level.sql` adds
+`public.answer_format_moves_level(answer_format)` (the one SQL list of training formats, kept equal to the
+registry by a parity test) and one filter line in `advance_student_level` and in `advance_student_band`.
+The format is read from `public.questions` for the server-inserted instance, never from a request; every
+answer path (legacy `process_question_attempt`, H5/K1 `process_question_attempt_v2`, repeats, replays)
+ends as a verdict in `question_instances`, so the fold filter covers them all. PGlite proof:
+`tests/unit/true-false-practice-only-level-migration-run.test.mjs`. The format stays non-servable until
+that migration is applied (step 0 below).
 
 *Step 3 — activation spec (each item its own owner GO, in this order):*
+0. **Apply `20261105173000_true_false_practice_only_level.sql`** (D-353, D-110 `apply_migration`): the
+   training-format rule in both level folds. Guarded by md5 of production's `advance_student_level` and
+   `advance_student_band`; with no true_false rows it changes no fold. Verify read-only afterwards: the
+   new prosrc md5s and `answer_format_moves_level('true_false') = false`. Must be live before any
+   true_false row is active.
 1. **Code PR:** `INTERACTION_KINDS.true_false.servable = true` (`_shared/interaction-kinds.ts`) and the
    parity test `tests/unit/question-format-mix-migration-run.test.mjs` pointed at the activation
    migration's `question_is_servable`; `get-next-question`'s v1 `mapAnswerFormat` must map `"true_false"`
@@ -590,7 +604,7 @@ parallel mastery mechanism is built here; the format stays non-servable.
    `LEVEL_ENGINE=v1` without `QUESTION_MIX_ENGINE=v2`, i.e. the `map` wire format, so without this a
    servable true_false row would be a candidate that is always skipped. The owner also decides the share:
    `maxShare` is only applied by the v2 mix; on the live level route nothing caps true_false, so the share
-   is controlled by how much content is added (or by v2). And the level-fold weighting above.
+   is controlled by how much content is added (or by v2). The level-fold rule above (D-353) is step 0.
 2. **Deploy `get-next-question`** from that commit through the release gate
    (`docs/operations/level-engine-rollout.md` §3.1, new candidate manifest). Safe on its own: no
    true_false row can be stored yet.

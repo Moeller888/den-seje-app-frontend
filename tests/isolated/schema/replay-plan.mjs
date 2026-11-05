@@ -116,6 +116,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
   "20261103110000_l1_k1_attempt_context.sql":
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
+  "20261105173000_true_false_practice_only_level.sql":
+    "D-353, not applied in production: it re-creates advance_student_level and advance_student_band with one filter that keeps training formats (true_false) out of the level folds, and adds answer_format_moves_level",
   "20261105120000_true_false_activation.sql":
     "F-02 Sandt/falsk activation, not applied in production and not to be applied before the get-next-question deploy that makes true_false servable: it admits true_false rows in questions and flips question_is_servable for them",
   "20261020125000_english_grade6_9.sql":
