@@ -30,6 +30,10 @@ export const REGISTER_FILE = join(ROOT, "docs", "laerligverse", "proeve-godkende
 export const APPROVED_FIXTURE = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "assessment-v1.2-godkendt.json");
 /** v1.4: the teacher's file of 05-11-2026 on v1.4, archived byte for byte, and its receipt (assessment-register.mjs archive). */
 export const RECEIVED_FILE = join(ROOT, "docs", "laerligverse", "proeve-godkendelse-v1.4-modtaget.json");
+/** v1.5: the register of the v1.4 file, written once the S2 conflict was settled (assessment-register.mjs register-received). */
+export const REGISTER_V14_FILE = join(ROOT, "docs", "laerligverse", "proeve-godkendelse-register-v1.4.json");
+/** v1.5: the rubric and tests as approved on v1.4, frozen, so the change to v1.5 can be shown word for word. */
+export const APPROVED_V14_FIXTURE = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "assessment-v1.4-godkendt.json");
 export const FORMAT = "laerligverse-proeve-godkendelse/1";
 export const ITEMS = Object.freeze(["A", "B", "T", "C", "rubrik"]);
 export const STATUSES = Object.freeze(["ikke_gennemgaaet", "godkendt", "skal_rettes", "afvist"]);
@@ -67,8 +71,8 @@ export const FORM_REVIEW = Object.freeze({
       "Påstand 3 (»vidste, at influenzaen snart ville stoppe«) kræver, at eleven skelner mellem et råd og viden om, hvordan det vil gå. Det er sværere end A's påstand om, hvad der skete bagefter.",
     ],
     afterApproval: "Efter godkendelsen 05-11-2026 (FC-2): kilden er nu en meddelelse i avisen (før et opslag), og linjen om skolelukning er fjernet. Påstand 3 lyder »Sundhedskommissionen vidste, at influenzaen snart ville stoppe.« (før »… at lukkede skoler ville stoppe smitten«), og påstand 4 lyder »I oktober 1918 bredte influenzaen sig i Aarhus.« (før »… blev det bestemt at lukke skolerne i Aarhus«). Typer, facit og rækkefølge er uændrede. Del 1 accepterer også »avisens læsere i Aarhus« som modtager.",
-    v14: "v1.4: facit til spørgsmål 4 (formål) er rettet. »at begrænse smitten« stod som fuldt svar, men siger kun, hvad det skulle føre til, ikke hvad kommissionen ville have borgerne til at gøre. Det svarer til »at stoppe sygdommen« i A, som giver 1. Nyt facit: »at få borgerne til at undgå forsamlinger, så influenzaen ikke spredte sig«. Lærerens forbehold siger nu, at mødetid kl. 6 (del 3, påstand a) er en påstand til undersøgelse (FC-7).",
-    meaning: "B er ikke længere lettere end A i R4: samme svar giver samme point i begge prøver. Det betyder noget for B − A (fremgangen).",
+    v14: "v1.5: efter din beslutning S2 = 2 (i alle prøver) giver afsenderens hensigt nævnt alene 2 i R4, så »at begrænse smitten« og »at advare« giver 2 (i v1.4: 1). Facittet til spørgsmål 4 fra v1.4 (»at få borgerne til at undgå forsamlinger, så influenzaen ikke spredte sig«) er beholdt som eksempel på et fuldt svar. Lærerens forbehold siger, at mødetid kl. 6 (del 3, påstand a) er en påstand til undersøgelse (FC-7).",
+    meaning: "Samme standard i A, B og C: hensigten nævnt alene giver 2 i alle tre prøver, så B hverken er lettere eller sværere end A i R4.",
     changes: "Som i A: fire påstande, afsenderen i én ja- og én nej-påstand. Påstanden om dødstallet er erstattet af en påstand om, hvad kommissionen vidste. Jubilæumstalen (1935) er erstattet af en erindring fra en tidligere arbejder (1965), så der er to personlige kilder fra forskellige tider. Påstand a deler ikke længere ordet »regel« med svaret.",
   },
   T: {
@@ -88,8 +92,8 @@ export const FORM_REVIEW = Object.freeze({
     rationale: "Forsinket test efter reel tid. Samme opbygning og samme fire påstandstyper som A og B, ny rækkefølge.",
     weaknesses: ["Indberetningen nævner ikke modtageren direkte (»staten«); accepterede svar: regeringen, staten, ministeriet."],
     afterApproval: "Efter godkendelsen 05-11-2026 (FC-3): overskriften lyder nu »Indberetning skrevet 15. november 1872. Underskrevet: amtmanden over Maribo Amt (Lolland-Falster).« (før »skrevet i Nykøbing Falster … amtmanden«). Kildeteksten, påstandene og facit er uændrede.",
-    v14: "v1.4: facit til spørgsmål 4 (formål) er rettet. »at få penge og korn« stod som fuldt svar, men rubrikkens eksempel gav samme svar 1. Nyt facit: »at få staten til at sende hjælp, så de ramte kunne klare vinteren« og »at få penge og korn fra staten til de ramte før vinteren«. Kildetabellen har ny rækkefølge (Køreplan, Brev, Annonce, Erindring), af samme grund som i A og T.",
-    meaning: "C måler formål med samme standard som A og B. Placeringen af svaret giver ingen genvej.",
+    v14: "v1.5: efter din beslutning S2 = 2 (i alle prøver) giver »penge og korn« og »at hjælpe de ramte« 2 i R4 (i v1.4: 1); »hjælp« alene er for vag og giver 1. Facittet fra v1.4 er beholdt som eksempel på et fuldt svar. Kildetabellen har ny rækkefølge (Køreplan, Brev, Annonce, Erindring), af samme grund som i A og T (v1.4).",
+    meaning: "C måler formål med samme standard som A og B: hensigten nævnt alene giver 2. Placeringen af svaret giver ingen genvej.",
     changes: "Som i A: fire påstande, afsenderen i én ja- og én nej-påstand. Del 3: lærebogen (2000) og maleriet (1900) var for lette at fravælge. De er erstattet af en køreplan fra jernbaneselskabet (1847) og en erindring fra en tidligere passager (1897), så valget kræver både tid og formål.",
   },
 });
@@ -437,7 +441,7 @@ function ambiguity(a) {
     .concat(a.options.map((o) => `<label><input type="radio" name="tv-${a.id}" value="${esc(o.id)}"> ${esc(o.label)}${o.id === a.recommendation ? " <em>(anbefalet i F8, før rubrik v1.4)</em>" : ""} <span class="eff">— ${esc(o.effect)}</span></label>`)).join("");
   const reg = registeredAmbiguity(a.id);
   const regLine = reg ? `<p class="reg"><strong>${reg.nyeste ? "Nyeste lærerbeslutning" : "Registreret beslutning"}:</strong> ${esc(a.options.find((o) => o.id === reg.valg)?.label ?? reg.valg)} <span class="eff">— kilde: ${esc(reg.kilde)}</span></p>` : "";
-  const conflict = (received()?.konflikter ?? []).find((c) => c.id === a.id);
+  const conflict = liveConflicts().find((c) => c.id === a.id);
   const conflictLine = conflict ? `<p class="conflict" data-conflict="${esc(a.id)}">Modstrid med rubrikken: ${esc(conflict.text)} Afventer din afklaring (se »Denne gennemgang«).</p>` : "";
   return `<section class="amb" id="tv-${a.id}"><h3>${esc(a.id)} · ${esc(s?.kind ?? "")} (${esc(a.criterion)})</h3>${regLine}${conflictLine}`
     + `<p><strong>Opgaven:</strong> ${esc(a.task)}</p><p><strong>Det syntetiske elevsvar</strong> (konstrueret, ikke en elev): »${esc(text)}«${extra ? `<br><span class="eff">Resten af svaret: ${extra}</span>` : ""}</p>`
@@ -460,15 +464,24 @@ function registeredAmbiguity(id) {
   return null;
 }
 
-/** Status of each item now: an approval applies only to the content whose fingerprint it was saved with. */
+/** The v1.4 register (or null), read directly. */
+export function registeredV14() {
+  return existsSync(REGISTER_V14_FILE) ? JSON.parse(readFileSync(REGISTER_V14_FILE, "utf8")) : null;
+}
+
+/**
+ * Status of each item now: an approval applies only to the content whose fingerprint it was saved with. The NEWEST
+ * register decides (v1.4, then v1.2); an older approval is history and never applies to newer content.
+ */
 export function currentStatus() {
-  const reg = registered();
+  const reg = registeredV14() ?? registered();
   const fps = contentFingerprints();
+  const ver = (r) => String(r.version ?? "").replace("kildekritik-maaling-", "");
   return Object.fromEntries(ITEMS.map((id) => {
     const a = reg?.afgoerelser?.[id];
     if (!a) return [id, { status: "ikke_gennemgaaet", text: "Ikke gennemgået" }];
-    if (a.fingeraftryk === fps[id]) return [id, { status: a.status, text: `${LABEL[a.status]} ${reg.dato} (uændret siden)` }];
-    return [id, { status: a.status === "godkendt" ? "afventer_fornyet_laerergodkendelse" : "ikke_gennemgaaet", text: a.status === "godkendt" ? `Afventer fornyet lærergodkendelse (godkendt ${reg.dato} i en tidligere version; ændret siden)` : "Ikke gennemgået (ændret siden)" }];
+    if (a.fingeraftryk === fps[id]) return [id, { status: a.status, text: `${LABEL[a.status]} ${reg.dato} (${ver(reg)}, uændret siden)` }];
+    return [id, { status: a.status === "godkendt" ? "afventer_fornyet_laerergodkendelse" : "ikke_gennemgaaet", text: a.status === "godkendt" ? `Afventer fornyet lærergodkendelse (godkendt ${reg.dato} i ${ver(reg)}; ændret siden)` : "Ikke gennemgået (ændret siden)" }];
   }));
 }
 
@@ -522,6 +535,35 @@ function rubricSinceApproval() {
   return `<table class="since"><thead><tr><th>Kriterium</th><th>Godkendt 05-11-2026 (rubrik v1.2)</th><th>Nu (${esc(RUBRIC_VERSION)})</th></tr></thead><tbody>${rows.map(([k, x, y]) => `<tr><td>${esc(k)}</td><td>${esc(x)}</td><td>${esc(y)}</td></tr>`).join("")}</tbody></table>`;
 }
 
+const APPROVED_V14 = existsSync(APPROVED_V14_FIXTURE) ? JSON.parse(readFileSync(APPROVED_V14_FIXTURE, "utf8")) : null;
+
+/** v1.5: the rubric changed since the teacher approved v1.4 — levels, rules and anchors, old beside new. */
+export function rubricSinceV14() {
+  if (!APPROVED_V14) return [];
+  const rows = [];
+  for (const [now, old] of [[CRITERIA, APPROVED_V14.criteria], [TRANSFER_CRITERIA, APPROVED_V14.transferCriteria]]) {
+    for (const [k, c] of Object.entries(now)) for (let i = 0; i < c.levels.length; i++) {
+      if (old[k]?.levels?.[i] !== c.levels[i]) rows.push([`${k} niveau ${i}`, old[k]?.levels?.[i] ?? "–", c.levels[i]]);
+    }
+  }
+  for (const r of SCORING_RULES) {
+    const o = APPROVED_V14.scoringRules.find((x) => x.id === r.id);
+    if (!o || o.rule !== r.rule) rows.push([`Regel ${r.id}`, o?.rule ?? "–", r.rule]);
+    for (const [f, t] of Object.entries(r.examples)) if (o?.examples?.[f] !== t) rows.push([`Regel ${r.id}, eksempel ${f}`, o?.examples?.[f] ?? "–", t]);
+  }
+  for (const a of CALIBRATION) {
+    const o = APPROVED_V14.calibration.find((x) => x.form === a.form && x.criterion === a.criterion && x.answer === a.answer);
+    if (!o || o.level !== a.level) rows.push([`Ankersvar ${a.criterion} · ${a.form}: »${a.answer}«`, o ? `${o.level} point` : "(nyt)", `${a.level} point`]);
+  }
+  return rows;
+}
+
+function rubricSinceV14Table() {
+  const rows = rubricSinceV14();
+  if (!rows.length) return "";
+  return `<h4 id="rubrik-siden-v14">Ændret siden din godkendelse af v1.4 (05-11-2026)</h4><p>Alt nedenfor følger af din beslutning S2 = 2 i alle prøver. Intet andet i rubrikken er ændret.</p><table class="since"><thead><tr><th></th><th>Godkendt 05-11-2026 (${esc(APPROVED_V14.rubricVersion)})</th><th>Nu (${esc(RUBRIC_VERSION)})</th></tr></thead><tbody>${rows.map(([k, x, y]) => `<tr><td>${esc(k)}</td><td>${esc(x)}</td><td>${esc(y)}</td></tr>`).join("")}</tbody></table>`;
+}
+
 /** The decided scoring rules with examples, and S7's standard procedure. */
 function rulesSection() {
   const ex = (r) => `<ul>${Object.entries(r.examples).map(([k, v]) => `<li><strong>${esc(k)}:</strong> ${esc(v)}</li>`).join("")}</ul>`;
@@ -531,7 +573,7 @@ function rulesSection() {
     + `<h4 id="s7-procedure">S7: fast procedure for mundtlig opfølgning</h4><p><strong>Hvornår:</strong> ${esc(m.naar)}</p><p><strong>Ordlyd:</strong> ${esc(m.ordlyd)}</p><p><strong>Læreren må ikke:</strong></p><ul>${m.maaIkke.map((t) => `<li>${esc(t)}</li>`).join("")}</ul><p><strong>Forsøg:</strong> ${esc(m.forsoeg)}</p><p><strong>Registrering:</strong> ${esc(m.registrering)}</p><p><strong>Fortolkning:</strong> ${esc(m.fortolkning)}</p>`;
 }
 
-const KIND = { intet: "intet svar", emne: "kun emnet", generisk: "standardsvar", modtager: "modtageren i stedet", noegleord: "facits ord, forkert betydning", upraecist: "upræcist / én del", praecist: "præcist", synonym: "andre ord, rigtig betydning", konklusion: "konklusion uden begrundelse", "forkert-relevant": "forkert konklusion, relevant ræsonnement", kildetype: "kun kildetypen", navn: "navn eller formål uden forbindelse", afskrift: "afskrift uden udvælgelse" };
+const KIND = { intet: "intet svar", emne: "kun emnet", generisk: "standardsvar", modtager: "modtageren i stedet", noegleord: "facits ord, forkert betydning", upraecist: "for vag / kun henvendelsen", hensigt: "hensigten nævnt alene (S2 = 2)", praecist: "præcist", synonym: "andre ord, rigtig betydning", konklusion: "konklusion uden begrundelse", "forkert-relevant": "forkert konklusion, relevant ræsonnement", kildetype: "kun kildetypen", navn: "navn eller formål uden forbindelse", afskrift: "afskrift uden udvælgelse" };
 
 /** v1.4: the anchor answers, per criterion and test, with the level and the rule that decides it. */
 function calibrationSection() {
@@ -549,32 +591,39 @@ function calibrationSection() {
 /** v1.4: what this round of review is about, in one table, before any detail. */
 export const ROUND = Object.freeze({
   version: VERSION,
-  ready: "Ja. Alle fejl, udvikleren kender, er rettet, og alle kontroller er grønne. Tilbage er din faglige vurdering.",
-  rubricChange: `Rubrikken er rettet: et svar, der kun siger, hvad kilden handler om, giver nu 0 i formål (R4) og i T3 (før 1). Fuldt formål kræver i alle prøver både, hvad afsenderen ville have, og hvad det skulle føre til (B og C havde lettere facit end A). Fem fælles principper (P1–P5) og ${CALIBRATION.length} bedømmelseseksempler er tilføjet.`,
-  rubricMeaning: "Rubrikken skelner nu mellem at genkende et emne (0), at kende en del af formålet (1) og at forklare det (2), ens i A, B og C, så fremgang fra A til B ikke kan komme af et lettere facit.",
+  ready: "Ja, for rubrikken, B og C. A og T har du godkendt 05-11-2026 (v1.4); de er uændrede, og godkendelsen gælder stadig.",
+  rubricChange: "v1.5 bygger din beslutning S2 = 2 ind i alle prøver: afsenderens hensigt nævnt alene, også i ét ord (»penge«, »penge og korn«, »at advare«, »at begrænse smitten«), giver 2 i R4. 1 gives kun for en hensigt, der er for vag til at høre til netop denne kilde (»hjælp«, »råd«), eller som kun beskriver henvendelsen (»at svare lægen«). 0 som i v1.4 (emne, standardsvar, modtager). S2-reglen, S7-eksemplerne og ankersvarene er rettet tilsvarende. Intet andet er ændret.",
+  rubricMeaning: "R4 måler nu, om eleven kan sige, hvad netop denne afsender ville, ikke om eleven kan formulere det i en hel sætning. Det skelner ikke længere mellem at kende hensigten og at forklare, hvad den skulle føre til. Standarden er den samme i A, B og C, så fremgang fra A til B ikke kan komme af forskellige krav.",
   open: [
-    "Godkend, ret eller afvis hver af de fem dele (A, B, T, C og rubrikken).",
-    "Vælg S2, S3 og S4 igen under rubrikken (1, 1, 1 efter din besked), så de står i den nye fil. I filen fra 05-11-2026 står de som »Ikke besluttet«.",
-    "P2, P3 og P5 er udviklerens konkretisering af din audit-opgave, ikke dine egne ord. Er du uenig, så vælg »Skal rettes« ved rubrikken og skriv hvorfor.",
-    "R4 i B: »at begrænse smitten« giver nu 1 (kun målet). Godkender du rubrikken, godkender du den standard.",
-    "Til orientering, ingen beslutning nødvendig: FC-6 og FC-7 er sandsynlige, men ikke dokumenterede påstande i del 3. Facit afhænger ikke af, om de er sande.",
+    "Indlæs din fil fra 05-11-2026 om v1.4. A og T beholder din godkendelse; rubrikken, B og C står som »Ikke gennemgået«, fordi de er ændret.",
+    "Godkend, ret eller afvis rubrikken (se »Ændret siden din godkendelse af v1.4« under rubrikken), B og C.",
+    "Dine øvrige valg (S2 = 2, S3, S4, S6, S7, T1 og LP-13) indlæses fra filen og gemmes med i den nye fil.",
   ],
 });
 
-/** The overview row for the v1.4 file: received and verified, and whether it is finally registered. */
+/** Conflicts between the v1.4 file's decisions and the rubric AS IT IS NOW (the receipt keeps those at arrival). */
+export function liveConflicts() {
+  const r = received();
+  return r ? decisionConflicts(r.tvetydigheder) : [];
+}
+
+/** The overview row for the v1.4 file: received, and whether it is registered (and what still applies). */
 function receivedRow() {
   const r = received();
   if (!r) return "";
   const what = ITEMS.map((id) => `${id} ${LABEL[r.afgoerelser[id].status] ?? r.afgoerelser[id].status}`).join(", ");
-  const state = r.status === "registreret" ? "Registreret" : "Modtaget og verificeret — ikke endeligt registreret";
-  const why = (r.konflikter ?? []).length ? ` Afventer din afklaring: ${(r.konflikter ?? []).map((c) => c.text).join(" ")}` : "";
-  return `<tr><td>Din fil om ${esc(r.version)} (${esc(r.dato)})</td><td data-received="${esc(r.status)}"><strong>${esc(state)}</strong> (SHA-256 ${esc(r.sha256.slice(0, 8))}…): ${esc(what)}.${esc(why)}</td></tr>`;
+  const reg = registeredV14();
+  const live = liveConflicts();
+  const state = reg ? "Registreret" : "Modtaget og verificeret — ikke endeligt registreret";
+  const res = reg ? ` ${Object.entries(reg.afklaringer ?? {}).map(([id, t]) => `${id}: ${t}`).join(" ")} Godkendelsen gælder, hvor indholdet er uændret; se status ovenfor.` : "";
+  const why = live.length ? ` Afventer din afklaring: ${live.map((c) => c.text).join(" ")}` : "";
+  return `<tr><td>Din fil om ${esc(r.version)} (${esc(r.dato)})</td><td data-received="${esc(reg ? "registreret" : r.status)}"><strong>${esc(state)}</strong> (SHA-256 ${esc(r.sha256.slice(0, 8))}…): ${esc(what)}.${esc(res)}${esc(why)}</td></tr>`;
 }
 
-/** v1.4: the one open question, when the teacher's decisions conflict with the rubric. */
+/** The one open question, while the teacher's decisions conflict with the rubric as it is now. */
 function openQuestion() {
   const r = received();
-  if (!r || !(r.konflikter ?? []).length || !r.spoergsmaal) return "";
+  if (!r || !liveConflicts().length || !r.spoergsmaal) return "";
   const q = r.spoergsmaal;
   return `<div class="conflict" id="aaben-afklaring"><h3>Afventer din afklaring</h3><p>${esc(q.tekst)}</p><ul>${q.svar.map((o) => `<li><strong>${esc(o.svar)}:</strong> ${esc(o.konsekvens)}</li>`).join("")}</ul></div>`;
 }
@@ -585,7 +634,7 @@ function roundSection(status) {
     return `<tr><td>${esc(titleOf[id])}</td><td>${esc(r.v14 ?? "")}</td><td>${esc(r.meaning ?? "")}</td><td data-round="${id}"><strong>${esc(status[id].text)}</strong></td></tr>`;
   }).join("");
   return `<section class="ov" id="runde"><h2>Denne gennemgang: ${esc(ROUND.version)}</h2>${openQuestion()}`
-    + `<p><strong>Du vurderer:</strong> prøverne ${esc(VERSION)} og rubrikken ${esc(RUBRIC_VERSION)}. Du godkendte version 1.2 den 05-11-2026; den godkendelse er gemt uændret som historik og gælder ikke denne version.</p>`
+    + `<p><strong>Du vurderer:</strong> prøverne ${esc(VERSION)} og rubrikken ${esc(RUBRIC_VERSION)}. Dine godkendelser af version 1.2 og 1.4 (begge 05-11-2026) er gemt uændret som historik. En godkendelse gælder kun indhold, der er uændret siden.</p>`
     + `<p><strong>Klar til godkendelse:</strong> ${esc(ROUND.ready)}</p>`
     + `<table><thead><tr><th>Del</th><th>Ændret i denne runde</th><th>Hvad det betyder fagligt</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`
     + `<p class="note">Den præcise før/efter-tekst står under »Til læreren« ved hver prøve og under »Ændret efter din godkendelse« i rubrikken.</p>`
@@ -689,7 +738,7 @@ fieldset{border:1px dashed var(--line);border-radius:6px;margin-top:10px}fieldse
 </style></head><body>
 <h1>Prøvegodkendelse: kildekritik (D-346)</h1>
 <p class="note">Genereret af tools/laerligverse/assessment-review.mjs fra de samme data som elevarkene (${esc(VERSION)}, rubrik ${esc(RUBRIC_VERSION)}). Siden virker uden internet og gemmer intet selv: tryk »Gem afgørelser som fil«. Intet er godkendt, før du har valgt det.</p>
-<p class="note"><strong>Fornyet gennemgang:</strong> Indlæs din fil fra 05-11-2026 med »Indlæs tidligere afgørelser«. Det, der er ændret siden, står derefter som »Ikke gennemgået« med en rød note; resten beholder dit valg. S2, S3 og S4 står som »Ikke besluttet« i filen. Vælg dem igen, så de kommer med i den nye fil. Skriv dit fulde navn (fornavn og efternavn) og datoen som DD-MM-ÅÅÅÅ.</p>
+<p class="note"><strong>Fornyet gennemgang:</strong> Indlæs din seneste fil (05-11-2026, om v1.4) med »Indlæs tidligere afgørelser«. Det, der er ændret siden, står derefter som »Ikke gennemgået« med en rød note; resten beholder dit valg, også S2 = 2 og dine øvrige beslutninger. Skriv dit fulde navn (fornavn og efternavn) og datoen som DD-MM-ÅÅÅÅ.</p>
 <div class="bar"><label>Lærer <input type="text" id="laerer" autocomplete="name"></label><label>Dato <input type="text" id="dato" placeholder="DD-MM-ÅÅÅÅ"></label>
 <label>Indlæs tidligere afgørelser <input type="file" id="load" accept="application/json"></label><button type="button" id="save">Gem afgørelser som fil</button><span id="count" aria-live="polite"></span><span id="msg" role="status" aria-live="polite"></span></div>
 <section class="ov" id="overblik"><h2>A. Overblik</h2>
@@ -699,7 +748,7 @@ fieldset{border:1px dashed var(--line);border-radius:6px;margin-top:10px}fieldse
 <table><thead><tr><th>Del</th><th>Status</th></tr></thead><tbody>
 <tr><td>Arkivskabets 12 elementer</td><td><strong>Godkendt</strong> af Christopher Møller 04-11-2026 (SHA-256 8cd7d969…). Ikke en del af denne side.</td></tr>
 ${ITEMS.map((id) => `<tr><td>${esc(titleOf[id])}</td><td data-reg="${id}"><strong>${esc(status[id].text)}</strong></td></tr>`).join("")}
-<tr><td>De fem tvivlstilfælde i rubrikken</td><td><strong>Besluttet</strong>: S6 og S7 i filen, S2, S3 og S4 i et særskilt supplement (afsnit E). Indbygget i rubrikken ${esc(RUBRIC_VERSION)} sammen med principperne P1–P5</td></tr>
+<tr><td>De fem tvivlstilfælde i rubrikken</td><td><strong>Besluttet</strong> i din fil om v1.4 (S2 = 2, S3 = 1, S4 = 1, S6 følgefejl, S7 spørg; afsnit E). S2 = 2 gælder i alle prøver efter din afklaring. Indbygget i rubrikken ${esc(RUBRIC_VERSION)} sammen med principperne P1–P5</td></tr>
 <tr><td>LP-13 (læringsprogression)</td><td><strong>Valg registreret</strong> fra filen (afsnit F) — ikke en del af prøvegodkendelsen, og intet er aktiveret</td></tr>
 ${receivedRow()}
 <tr><td>Elevpilot og produktion</td><td><strong>Ikke autoriseret</strong></td></tr></tbody></table>
@@ -714,7 +763,7 @@ ${comparabilitySection()}
 <h2 class="sep">E. Bedømmelsesrubrik</h2>
 <section class="el" id="rubrik" data-status="ikke_gennemgaaet"><h2>${esc(titleOf.rubrik)}</h2>
 <p>Tre delscorer, som rapporteres hver for sig. Ingen samlet score og ingen grænse for »mestret«. Version: ${esc(RUBRIC_VERSION)}.</p>${rubricTable(CRITERIA)}<h4>Transfertest</h4>${rubricTable(TRANSFER_CRITERIA)}
-<h4>Ændret efter din godkendelse 05-11-2026</h4><p><strong>Hvad det betyder fagligt:</strong> ${esc(ROUND.rubricMeaning)}</p>${rubricSinceApproval()}${rulesSection()}${calibrationSection()}
+${rubricSinceV14Table()}<h4>Ændret siden din godkendelse af v1.2 (05-11-2026)</h4><p><strong>Hvad det betyder fagligt:</strong> ${esc(ROUND.rubricMeaning)}</p>${rubricSinceApproval()}${rulesSection()}${calibrationSection()}
 <h4>De fem tvivlstilfælde (fra bedømmelsesforsøget med syntetiske svar)</h4><p class="note">Dine beslutninger er registreret og indbygget i reglerne ovenfor. Vælg dem igen her, så de står i den nye fil.</p>
 ${AMBIGUITIES.map(ambiguity).join("\n")}
 <h4>Transfertestens T1 (fundet i F9)</h4><p class="note">Ikke et af de fem tvivlstilfælde, men et spørgsmål om rubrikken, som du skal afgøre. Dit valg ændrer ikke rubrikken af sig selv.</p>

@@ -174,6 +174,8 @@ Tabellen ovenfor er den godkendte v1.2. Begge versioner er testet.
 
 **v1.4 (05-11-2026): rubrikken rettet** (D-346 §15). Et emne er ikke et formål: S3's »den handler om kolera« giver R4 0 (før 1), så S3 får identifikation 3. Fuldt formål kræver i A, B og C både, hvad afsenderen ville have, og hvad det skulle føre til. 56 ankersvar (`CALIBRATION` i `tools/laerligverse/assessment-v1.mjs`) viser hvert niveau. De øvrige rækker er uændrede.
 
+**v1.5 (05-11-2026): S2 = 2 i alle prøver** (D-346 §17). Afsenderens hensigt nævnt alene (»penge«) giver R4 2, så S2 får identifikation 6 igen, og S7 får R4 2 efter opfølgning. Kun en hensigt, der er for vag til at høre til netop denne kilde (»hjælp«, »råd«), giver 1.
+
 **Resultat:**
 
 - **Delscorerne skelner godt.**

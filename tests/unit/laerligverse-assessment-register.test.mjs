@@ -69,34 +69,37 @@ test("the LP-13 choices are registered exactly as in the file — and nothing is
   assert.match(reg._om, /IKKE et GO til elevpilot, produktion, LP-13 eller merge/);
 });
 
-test("no approval carries over to changed content: all five changed after 05-11-2026 and await a renewed approval", () => {
-  const st = approvalStatus();
+test("no approval carries over to changed content: the v1.2 approval is history for all five (D-346 §11–12)", () => {
+  // The v1.2 register, explicitly: since v1.5 the NEWEST register (v1.4) decides the status (see the v1.4 tests).
+  const st = approvalStatus({ reg: readRegister() });
   for (const id of ITEMS) {
     assert.equal(st[id].registreret, "godkendt", id);
     assert.equal(st[id].registreretFingeraftryk, APPROVED_FP[id], `${id}: the approved fingerprint is kept as history`);
     assert.notEqual(st[id].nuvaerendeFingeraftryk, APPROVED_FP[id], id);
     assert.equal(st[id].status, PENDING, id);
   }
-  // The page and the validator say the same.
-  for (const [id, s] of Object.entries(currentStatus())) assert.equal(s.status, PENDING, id);
+  // The validator says the same about the v1.2 file.
   assert.deepEqual(validateReviewExport(readFileSync(STORED)).stale, ITEMS);
   // And an approval would still apply to UNCHANGED content (the rule works both ways).
-  const same = approvalStatus({ current: { ...contentFingerprints(), A: APPROVED_FP.A } });
+  const same = approvalStatus({ reg: readRegister(), current: { ...contentFingerprints(), A: APPROVED_FP.A } });
   assert.equal(same.A.status, "godkendt");
-  const h = readFileSync(PAGE, "utf8");
-  for (const id of ITEMS) assert.match(h, new RegExp(`data-reg="${id}"><strong>Afventer fornyet lærergodkendelse`));
 });
 
-test("S2: an imprecise purpose (»penge«) gives R4 = 1, a concrete one 2 — with examples from A, B and C", () => {
-  assert.match(CRITERIA.R4.levels[1], /»penge«/);
+test("S2 = 2 (v1.5, the teacher's decision, in all tests): the sender's intention named alone (»penge«) gives R4 = 2; too vague gives 1", () => {
   assert.match(CRITERIA.R4.levels[2], /konkret og korrekt/);
+  assert.match(CRITERIA.R4.levels[2], /S2 = 2: »penge«/);
+  assert.equal(CRITERIA.R4.levels[1].includes("»penge«"), false);
+  assert.match(CRITERIA.R4.levels[1], /»hjælp«/);
   const s2 = SYNTHETIC_RESPONSES.find((r) => r.id === "S2");
   assert.equal(s2.text.R4, "penge");
-  assert.equal(s2.levels.R4, 1);
+  assert.equal(s2.levels.R4, 2);
   assert.equal(s2.levelsV12.R4, 2);
+  assert.equal(s2.levelsV14.R4, 1);
   const rule = SCORING_RULES.find((r) => r.id === "S2");
   for (const f of ["A", "B", "C"]) assert.match(rule.examples[f], /0: .* · 1: .* · 2: /, f);
-  assert.match(rule.origin, /supplement/);
+  assert.match(rule.origin, /S2 = 2/);
+  assert.match(rule.origin, /I alle prøver/);
+  assert.match(rule.rule, /i ét ord/);
 });
 
 test("S3: choosing a source because it has the same topic gives at most 1 — in every form", () => {
@@ -140,8 +143,8 @@ test("S7: one standard oral follow-up, the same in A, B and C; registered, and t
   assert.ok(m.maaIkke.length >= 4);
   assert.match(m.fortolkning, /B − A/);
   const s7 = SYNTHETIC_RESPONSES.find((r) => r.id === "S7");
-  // Placed correctly: R3 2, but »at få penge« is still an imprecise purpose under S2 → R4 1.
-  assert.deepEqual([s7.followUp.placed.R3, s7.followUp.placed.R4], [2, 1]);
+  // Placed correctly: R3 2, and »at få penge« is the sender's intention named alone → R4 2 (S2 = 2, v1.5).
+  assert.deepEqual([s7.followUp.placed.R3, s7.followUp.placed.R4], [2, 2]);
   assert.deepEqual([s7.followUp.notPlaced.R3, s7.followUp.notPlaced.R4], [0, 0]);
   assert.ok(flags(subscores("A", s7.answers, s7.levels), s7.levels).some((f) => /mundtlig opfølgning \(S7\)/.test(f)));
   for (const p of ["pre", "post", "C"]) assert.ok(SHEET_COLUMNS.includes(`${p}_mundtlig_opfoelgning`), p);
@@ -179,7 +182,7 @@ test("every rule can be applied by a second teacher: an origin, a rule text and 
     if (changed) assert.ok(SCORING_RULES.some((x) => x.id === r.decidedBy), r.id);
   }
   const trial = Object.fromEntries(rubricTrial().map((r) => [r.id, [r.identifikation, r.valg, r.begrundelse]]));
-  assert.deepEqual(trial, { S1: [6, 6, 4], S2: [5, 6, 0], S3: [3, 4, 2], S4: [6, 3, 2], S5: [2, 6, 0], S6: [4, 5, 3], S7: [2, 6, 3] });
+  assert.deepEqual(trial, { S1: [6, 6, 4], S2: [6, 6, 0], S3: [3, 4, 2], S4: [6, 3, 2], S5: [2, 6, 0], S6: [4, 5, 3], S7: [2, 6, 3] });
 });
 
 test("historical fact check: each finding names its source and location; corrected wording is in the tests", () => {

@@ -1,0 +1,117 @@
+{
+  "_om": "D-346 §17: lærerens fil om v1.4, registreret efter lærerens afklaring af S2. Genereret af tools/laerligverse/assessment-register.mjs register-received. Ret ikke i hånden. En godkendelse gælder kun indhold, hvis fingeraftryk er uændret; ændret indhold afventer fornyet godkendelse. Godkendelserne er faglige og er IKKE et GO til elevpilot, produktion, LP-13 eller merge.",
+  "godkendelsesfil": "docs/laerligverse/proeve-godkendelse-2026-11-05-v1.4.json",
+  "kvittering": "docs/laerligverse/proeve-godkendelse-v1.4-modtaget.json",
+  "original_filnavn": "proeve-godkendelse (2).json",
+  "sha256": "94b1f1631a9ac74e40220aa577bee5b4eaee90d10e1d0236bb28efc83f776c26",
+  "format": "laerligverse-proeve-godkendelse/1",
+  "version": "kildekritik-maaling-v1.4",
+  "rubrikversion": "kildekritik-rubrik-v1.4",
+  "laerer": "Christopher møller",
+  "dato": "05-11-2026",
+  "bemaerkninger": [],
+  "afgoerelser": {
+    "A": {
+      "status": "godkendt",
+      "fingeraftryk": "4d71ac22bf2d8da716ca01574933328dc327ee283f5446bb5326d89763139c5a"
+    },
+    "B": {
+      "status": "godkendt",
+      "fingeraftryk": "3abb09d8e596c48eb305f505168ed3edffb467833e408bd43ab7d49d3785347f"
+    },
+    "T": {
+      "status": "godkendt",
+      "fingeraftryk": "bfb9fbb5eed21be9c4a8a3907ecc8493c817995fa97528986d2e20f8d01c4543"
+    },
+    "C": {
+      "status": "godkendt",
+      "fingeraftryk": "e447393825fa6c2d4e55c33d52acaf85746780235dfe1e7388f54948603ab392"
+    },
+    "rubrik": {
+      "status": "godkendt",
+      "fingeraftryk": "653b9b9456a5b0c8bb3ea9b71059b20c40302f8bd3a51d505770870c3e3db660"
+    }
+  },
+  "tvetydigheder": {
+    "S2": {
+      "valg": "2",
+      "kilde": "fil"
+    },
+    "S3": {
+      "valg": "1",
+      "kilde": "fil"
+    },
+    "S4": {
+      "valg": "1",
+      "kilde": "fil"
+    },
+    "S6": {
+      "valg": "foelgefejl",
+      "kilde": "fil"
+    },
+    "S7": {
+      "valg": "spoerg",
+      "kilde": "fil"
+    }
+  },
+  "rubrikbeslutninger": {
+    "T1": {
+      "valg": "saerskilt",
+      "kilde": "fil"
+    }
+  },
+  "lp13": {
+    "LP13-1": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-2": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-3": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-4": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-5": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "genbesoeg": {
+      "valg": "B",
+      "kilde": "fil"
+    },
+    "forsinket": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-7": {
+      "valg": "B",
+      "kilde": "fil"
+    },
+    "pilot": {
+      "valg": "A",
+      "kilde": "fil"
+    }
+  },
+  "bekraeftelser": {
+    "S2": "S2 = 2 bekræftet over for udvikleren 05-11-2026: »Det var meningen.« Ikke en tastefejl; må ikke ændres til 1"
+  },
+  "erstatter": {
+    "S2": "supplement-2026-11-05 (S2 = 1)"
+  },
+  "konflikter_ved_modtagelse": [
+    {
+      "id": "S2",
+      "text": "S2 = 2 (»2 point: hensigten i ét ord er nok«) giver »penge« 2 point i R4 (prøve A). Den godkendte rubrik kildekritik-rubrik-v1.4 giver samme svar 1 point (regel S2, ankersvar og niveautekst)."
+    }
+  ],
+  "afklaringer": {
+    "S2": "Christopher Møller 05-11-2026: »I alle prøver – lav rubrik v1.5«. S2 = 2 gælder generelt: afsenderens hensigt nævnt alene giver 2 i R4 i A, B og C. Indbygget i kildekritik-rubrik-v1.5 (D-346 §17); rubrikken, B og C kræver derfor fornyet godkendelse, A og T er uændrede."
+  },
+  "registreret_paa": "d184659f45c8e979b2c2b8df1266f839ae0f2077"
+}

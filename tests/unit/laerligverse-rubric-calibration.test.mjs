@@ -38,21 +38,20 @@ test("a topic answer gives 0 in purpose (R4) and in T3 — in every test, never 
   assert.equal(flags({ valg: 4, begrundelse: 2, part3BothRight: true }, { R1: 1, R3: 2, R4: 1 }).some((f) => /emne/.test(f)), false);
 });
 
-test("purpose: an imprecise but relevant answer gives 1, a precise one 2 — with the same standard in A, B and C", () => {
+test("purpose: a vague intention gives 1, the sender's intention (named alone or explained) 2 — the same standard in A, B and C", () => {
   for (const form of ["A", "B", "C"]) {
     const kinds = new Set(anchors("R4", form).map((a) => a.kind));
-    for (const k of ["emne", "generisk", "modtager", "noegleord", "upraecist", "praecist", "synonym"]) assert.ok(kinds.has(k), `${form}: no ${k} anchor`);
+    for (const k of ["emne", "generisk", "modtager", "noegleord", "upraecist", "hensigt", "praecist", "synonym"]) assert.ok(kinds.has(k), `${form}: no ${k} anchor`);
     for (const a of anchors("R4", form)) {
-      const want = { emne: 0, generisk: 0, modtager: 0, noegleord: 0, intet: 0, upraecist: 1, praecist: 2, synonym: 2 }[a.kind];
+      const want = { emne: 0, generisk: 0, modtager: 0, noegleord: 0, intet: 0, upraecist: 1, hensigt: 2, praecist: 2, synonym: 2 }[a.kind];
       assert.equal(a.level, want, `${form}: »${a.answer}« (${a.kind})`);
     }
     // Every accepted answer in the key is a full purpose (level 2) — the key and the rubric agree.
     for (const k of keyOf(form)) assert.equal(CALIBRATION.find((a) => a.form === form && a.criterion === "R4" && a.answer === k)?.level, 2, `${form} key »${k}«`);
   }
-  // The v1.3 keys that were only half a purpose are gone, and score 1 as anchors.
-  assert.equal(FORMS.B.part1.key.R4.includes("at begrænse smitten"), false);
-  assert.equal(FORMS.C.part1.key.R4.includes("at få penge og korn"), false);
-  assert.equal(CALIBRATION.find((a) => a.form === "B" && a.answer === "at begrænse smitten").level, 1);
+  // v1.5 (S2 = 2 in all tests): the intention named alone is 2 in every test — the same answer type, the same score.
+  for (const [form, answer] of [["A", "penge"], ["B", "at advare"], ["B", "at begrænse smitten"], ["C", "penge og korn"]]) assert.equal(CALIBRATION.find((a) => a.form === form && a.answer === answer).level, 2, `${form} »${answer}«`);
+  for (const [form, answer] of [["A", "hjælp"], ["B", "råd"], ["C", "hjælp"]]) assert.equal(CALIBRATION.find((a) => a.form === form && a.answer === answer).level, 1, `${form} »${answer}«`);
 });
 
 test("not a word list: other words with the right meaning score 2, the key's words with a wrong meaning score 0 (P4)", () => {
@@ -108,36 +107,36 @@ test("every anchor is in range and names an existing rule; the S2 examples and t
   assert.ok(checked >= 20);
 });
 
-test("the earlier decisions still hold: S2 (1 for imprecise), S3 (topic match at most 1), S4, S6, S7, T1", () => {
-  assert.equal(CALIBRATION.find((a) => a.form === "A" && a.answer === "penge").level, 1);
+test("the decisions hold: S2 = 2 (intention named alone, v1.5), S3 (topic match at most 1), S4, S6, S7, T1", () => {
+  assert.equal(CALIBRATION.find((a) => a.form === "A" && a.answer === "penge").level, 2);
   assert.equal(CALIBRATION.find((a) => a.criterion === "B2" && a.kind === "emne").level, 1);
   assert.equal(CALIBRATION.find((a) => a.criterion === "B1" && a.kind === "forkert-relevant").rule, "S4");
   assert.match(SCORING_RULES.find((r) => r.id === "S6").rule, /kun tæller én gang/);
   assert.match(SCORING_RULES.find((r) => r.id === "S7").rule, /MUNDTLIG_OPFOELGNING/);
   assert.equal(CALIBRATION.find((a) => a.criterion === "T1" && a.answer === "Nej.").level, 0);
-  // S7 B: with the v1.4 standard »at begrænse smitten« in the purpose field is 1, as in every other test.
-  assert.match(SCORING_RULES.find((r) => r.id === "S7").examples.B, /R4 1/);
+  // S7: the follow-up uses the ordinary levels — with S2 = 2, »at begrænse smitten« (B) is R4 2, »hjælp« (C) is 1.
+  assert.match(SCORING_RULES.find((r) => r.id === "S7").examples.B, /R4 2/);
+  assert.match(SCORING_RULES.find((r) => r.id === "S7").examples.C, /R4 1/);
   // P1 says how it differs from S3, so the two rules are not read as a conflict.
   assert.match(SCORING_RULES.find((r) => r.id === "P1").rule, /S3/);
 });
 
 // ── Godkendelsesflow ────────────────────────────────────────────────────────────────────────────────────────
-test("v1.4: all five parts changed since the approved v1.2 and await a renewed approval; the v1.2 approval is kept unchanged", () => {
-  assert.equal(VERSION, "kildekritik-maaling-v1.4");
-  assert.equal(RUBRIC_VERSION, "kildekritik-rubrik-v1.4");
+test("all five parts changed since the approved v1.2; the v1.2 approval is kept unchanged and approves nothing now", () => {
+  assert.equal(VERSION, "kildekritik-maaling-v1.5");
+  assert.equal(RUBRIC_VERSION, "kildekritik-rubrik-v1.5");
   assert.equal(createHash("sha256").update(readFileSync(STORED)).digest("hex"), ORIGINAL_SHA);
   assert.deepEqual(integrityProblems(), []);
   const reg = readRegister(), now = contentFingerprints();
   for (const id of ITEMS) {
     assert.notEqual(reg.afgoerelser[id].fingeraftryk, now[id], id);
-    assert.equal(currentStatus()[id].status, PENDING, id);
   }
-  assert.deepEqual(Object.values(approvalStatus()).map((s) => s.status), ITEMS.map(() => PENDING));
+  assert.deepEqual(Object.values(approvalStatus({ reg })).map((s) => s.status), ITEMS.map(() => PENDING));
   // The old file cannot approve the new content: every decision in it is stale.
   const v = validateReviewExport(readFileSync(STORED));
   assert.deepEqual(v.problems, []);
   assert.deepEqual(v.stale, [...ITEMS]);
-  assert.ok(v.notes.some((n) => /kildekritik-maaling-v1\.2/.test(n) && /v1\.4/.test(n)));
+  assert.ok(v.notes.some((n) => /kildekritik-maaling-v1\.2/.test(n) && /v1\.5/.test(n)));
 });
 
 test("fingerprints are per part: changing one test changes only its own fingerprint, and the rubric covers the anchors", () => {
@@ -180,10 +179,14 @@ test("the page states the version, what changed and why, what needs approval, wh
   const page = readFileSync(PAGE, "utf8");
   assert.match(page, /id="runde"/);
   assert.ok(page.includes(`Denne gennemgang: ${VERSION}`));
-  for (const id of ITEMS) assert.match(page, new RegExp(`data-round="${id}"><strong>Afventer fornyet lærergodkendelse`));
+  // v1.5: A and T keep the v1.4 approval (unchanged); the rubric, B and C await a renewed one.
+  for (const id of ["A", "T"]) assert.match(page, new RegExp(`data-round="${id}"><strong>Godkendt 05-11-2026 \\(v1\\.4, uændret siden\\)`));
+  for (const id of ["B", "C", "rubrik"]) assert.match(page, new RegExp(`data-round="${id}"><strong>Afventer fornyet lærergodkendelse`));
   assert.match(page, /Klar til godkendelse:/);
   assert.match(page, /Hvad det betyder fagligt/);
-  assert.ok(ROUND.open.length >= 4);
+  assert.ok(ROUND.open.some((t) => /rubrikken/.test(t) && /B og C/.test(t)));
+  // The rubric's change since the v1.4 approval is shown word for word.
+  assert.match(page, /id="rubrik-siden-v14"/);
   assert.match(page, /id="ankersvar"/);
   for (const a of CALIBRATION) assert.ok(page.includes(`»${a.answer.replace(/&/g, "&amp;")}«`), a.answer);
   // No server needed: one self-contained file, no external resources.

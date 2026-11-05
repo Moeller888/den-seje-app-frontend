@@ -77,7 +77,11 @@ Det er **ikke** en del af prøvegodkendelsen. Vælg det, du er klar til at beslu
 5. **Aflevering:** Lad filen ligge i Downloads, og sig til i en ny opgave. Den registreres så byte for byte med
    SHA-256, ligesom Arkivskabets godkendelse blev det i F8.
 
-## 6. Fornyet gennemgang efter 05-11-2026 (v1.4)
+## 6. Fornyet gennemgang efter 05-11-2026 (v1.5)
+
+**v1.5:** indlæs din fil om v1.4 (`proeve-godkendelse-2026-11-05-v1.4.json`). A og T beholder din godkendelse; rubrikken, B og C står som ændrede, fordi din beslutning S2 = 2 nu gælder i alle prøver (D-346 §17). Rubrikkens ændringer siden v1.4 står ord for ord under »Ændret siden din godkendelse af v1.4«.
+
+Før v1.5:
 
 Din fil fra 05-11-2026 er registreret byte for byte (D-346 §12). Efter faktatjekket, dine bedømmelsesregler og
 rettelsen af rubrikken (D-346 §15: et emne giver ikke point for formål) er alle fem elementer ændret, så de skal

@@ -18,7 +18,8 @@ import { fileURLToPath } from "node:url";
 // v1.2 (F9): part 2 has four claims; the synthetic answers keep the same errors on the same claims as in v1.1.
 // v1.3 (F9, 05-11-2026): `levels` follow the teacher's decisions (assessment-v1.mjs SCORING_RULES): S2 R4 2 → 1,
 // S4 B1 and B2 2 → 1, S6 scored as a følgefejl, S7 with the oral follow-up. v1.4 (D-346 §15): S3's topic answer in
-// R4 (»den handler om kolera«) 1 → 0 (P1: a topic is not a purpose). `levelsV12` keeps the scores under the
+// R4 (»den handler om kolera«) 1 → 0 (P1: a topic is not a purpose). v1.5 (D-346 §17): the teacher's S2 = 2 in all tests,
+// so S2's »penge« is R4 2 again (`levelsV14` keeps the v1.4 score). `levelsV12` keeps the scores under the
 // approved v1.2 rubric, so the change is visible and tested.
 const RIGHT_P2 = ["ja", "nej", "nej", "ja"];
 const RIGHT_P3 = { a: "Dagbog", b: "Skolereglement" };
@@ -34,8 +35,9 @@ export const SYNTHETIC_RESPONSES = Object.freeze([
     id: "S2", kind: "korrekt uden begrundelse", syntetisk: true,
     text: { R3: "Magistraten", R4: "penge", B1: "", B2: "den er bedst" },
     answers: { part2: RIGHT_P2, part3: RIGHT_P3 },
-    levels: { R1: 1, R2: 1, R3: 2, R4: 1, B1: 0, B2: 0 },
+    levels: { R1: 1, R2: 1, R3: 2, R4: 2, B1: 0, B2: 0 },
     levelsV12: { R1: 1, R2: 1, R3: 2, R4: 2, B1: 0, B2: 0 },
+    levelsV14: { R1: 1, R2: 1, R3: 2, R4: 1, B1: 0, B2: 0 },
     decidedBy: "S2",
     note: "R4 »penge« er kort, men er afsenderens hensigt; giver 2. Kræver rubrikken en hel sætning? Uafklaret — ordblinde elever skriver ofte kort.",
   },
@@ -80,7 +82,7 @@ export const SYNTHETIC_RESPONSES = Object.freeze([
     levels: { R1: 1, R2: 1, R3: 0, R4: 0, B1: 1, B2: 2, mundtligOpfoelgning: "ikke placeret rigtigt (0/0)" },
     levelsV12: { R1: 1, R2: 1, R3: 0, R4: 0, B1: 1, B2: 2 },
     // S7: the two possible outcomes of the standard oral follow-up. The synthetic record cannot answer, so both are kept.
-    followUp: { placed: { R3: 2, R4: 1, mundtligOpfoelgning: "placeret rigtigt (0/0 → 2/1)" }, notPlaced: { R3: 0, R4: 0 } },
+    followUp: { placed: { R3: 2, R4: 2, mundtligOpfoelgning: "placeret rigtigt (0/0 → 2/2)" }, notPlaced: { R3: 0, R4: 0 } },
     decidedBy: "S7",
     note: "Eleven har begge oplysninger, men i de forkerte felter. Er det et læse-/layoutproblem eller manglende begreb? Rubrikken kan ikke skelne. B2 begrunder påstand b, ikke a som bedt om: givet 2 for indholdet, men opgaveteksten skal tydeliggøres.",
   },
