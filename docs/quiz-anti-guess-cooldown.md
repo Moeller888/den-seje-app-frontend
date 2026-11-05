@@ -143,6 +143,12 @@ Den godkendte tekst vises ordret:
 måler derefter tiden med `performance.now()`, som er monoton og uafhængig af systemuret. Derfor kan et
 ændret ur ikke ændre pausen. Ved 00:00 spørges serveren én gang til, før knappen åbnes.
 
+**Efter det tiende svar.** Svaret vises normalt (rigtigt svar, forklaring). Ved overgangen til næste
+spørgsmål spørger `loadAndRenderQuestion()` én gang serveren, når det seneste svar var forkert. Er en pause
+startet, vises den med det samme (`TRANSITIONING → COOLDOWN`), og intet nyt spørgsmål hentes. D-347's
+spilletilbud kommer først og er uændret, fordi pausen blokerer quizsvar, ikke en lovlig spillepause.
+Findes funktionen ikke endnu (før migrationen, PGRST202/404), holder siden op med at spørge.
+
 **Genindlæsning, ny fane og anden enhed.** `loadAndRenderQuestion()` kalder `get_my_quiz_cooldown()`
 fra `IDLE` (opstart) og `COOLDOWN` (på vej ud af pausen). Viser serveren en aktiv pause, vises resttiden.
 
@@ -171,9 +177,11 @@ enheden sover.
   i sine egne tre tabeller.
 - **Streak:** `update_streak` kører inde i svarfunktionen. Afviste forsøg rulles tilbage, og selve pausen
   rører ikke streak. En pause på 2 minutter kan ikke bryde en daglig streak.
-- **Minigames (D-347, PR #597, ikke merget):** urørt. De 20 minutters aktiv quiztid og tilbuddet ved næste
-  registrerede svar fungerer uændret, og under pausen registreres intet svar. PR #597 ændrer også
-  `app.js`, så den, der merger sidst, skal løse en tekstuel konflikt.
+- **Minigames (D-347, live):** urørt. De 20 minutters aktiv quiztid og tilbuddet ved næste registrerede
+  svar fungerer uændret og kommer før pausetjekket. Under pausen registreres intet svar. D-347's
+  strukturtest (`minigame-break.test.mjs`) låste `TRANSITIONING: ["LOADING_QUESTION"]`. Den låser nu
+  `["LOADING_QUESTION", "COOLDOWN"]`, og den eneste nye overgang er D-350's (stadig ingen BREAK- eller
+  MINIGAME-tilstand).
 - **H5 (`ENABLE_H5_SUBMISSIONS`, slået fra):** `classifyResponse` genkender 429 `quiz_cooldown` som en
   bekræftet afvisning. Indsendelsen bliver afsluttet, og spørgsmålet besvares igen efter pausen som en ny
   indsendelse.
@@ -186,7 +194,7 @@ enheden sover.
 | `tests/unit/quiz-anti-guess-cooldown-concurrency.test.mjs` | Rigtig PostgreSQL 17 (CI's unit-shards har en PG17-container). Tests: I/L/K under samtidighed. |
 | `tests/unit/process-event-quiz-cooldown.test.mjs` | Den rigtige `index.ts`: 429 på alle fire veje, ét RPC-kald, ingen efterfølgende skrivning, andre fejl uændrede, lange svar urørte. |
 | `tests/unit/quiz-cooldown.test.mjs` | Ordret tekst, MM:SS, monoton nedtælling mod et ændret ur (Q/J), 429/v34-genkendelse, fail-soft status, fanekanal, H5-klassifikation. |
-| `tests/quiz-cooldown.spec.ts` | Chromium, Firefox og WebKit, selv-serveret og med mocks. Dækker hele pausen 02:00 → 00:00 med Playwrights ur, systemur-manipulation, genindlæsning (01:15), anden fane, v34-formen, 404 uden migration, mobil (320 px) med touch og tastaturbetjening. |
+| `tests/quiz-cooldown.spec.ts` | Chromium, Firefox og WebKit, selv-serveret og med mocks. Dækker pausen lige efter det tiende svar (uden et nyt svar), hele pausen 02:00 → 00:00 med Playwrights ur, systemur-manipulation, genindlæsning (01:15), anden fane, v34-formen, 404 uden migration, mobil (320 px) med touch og tastaturbetjening. |
 
 ## 9. Udrulning
 

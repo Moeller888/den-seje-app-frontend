@@ -8,6 +8,7 @@ import { dirname, join } from "node:path";
 import {
   COOLDOWN_TEXT, FALLBACK_COOLDOWN_MS, formatRemaining, serverRemainingMs, createCountdown, cooldownFromServer,
   cooldownFromInvokeError, fetchCooldownStatus, openCooldownChannel, announceCooldown, RPC_NAME,
+  _resetRpcMissingForTests,
 } from "../../js/quiz-cooldown.js";
 import { classifyResponse } from "../../js/answer-submission.js";
 
@@ -97,9 +98,22 @@ test("fetchCooldownStatus: kun egen status; manglende funktion eller fejl → nu
     { active: true, endsAt: "a", serverNow: "b" });
   assert.deepEqual(await fetchCooldownStatus(client({ data: { active: false, ends_at: null, server_now: "b" }, error: null })),
     { active: false, endsAt: null, serverNow: null });
-  assert.equal(await fetchCooldownStatus(client({ data: null, error: { code: "PGRST202" } })), null);
   assert.equal(await fetchCooldownStatus(client({ data: [1], error: null })), null);
   assert.equal(await fetchCooldownStatus({ rpc: async () => { throw new Error("net"); } }), null);
+  assert.equal(await fetchCooldownStatus(client({ data: null, error: { code: "500" } })), null);
+  // En netværksfejl stopper ikke spørgsmålene …
+  assert.equal((await fetchCooldownStatus(client({ data: { active: false }, error: null }))).active, false);
+});
+
+test("fetchCooldownStatus: findes funktionen ikke (før migrationen), spørger siden ikke igen", async () => {
+  _resetRpcMissingForTests();
+  let calls = 0;
+  const missing = { rpc: async () => { calls++; return { data: null, error: { code: "PGRST202", message: "not found" } }; } };
+  assert.equal(await fetchCooldownStatus(missing), null);
+  assert.equal(await fetchCooldownStatus(missing), null);
+  assert.equal(await fetchCooldownStatus({ rpc: async () => { calls++; return { data: { active: true }, error: null }; } }), null);
+  assert.equal(calls, 1);
+  _resetRpcMissingForTests();
 });
 
 test("I: fanekanalen sender en tom besked og kalder modtageren; uden BroadcastChannel er den null", async () => {

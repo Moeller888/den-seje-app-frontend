@@ -119,7 +119,8 @@ Transitions are validated; invalid transitions are blocked and logged via `logEr
 input and returns to a valid state. Never bypass this machine.
 
 `COOLDOWN` (anti-gætte-pause, D-350, [quiz-anti-guess-cooldown.md](./quiz-anti-guess-cooldown.md)):
-entered from `SUBMITTING_ANSWER` (the server refused the answer), `IDLE` (a reload / new tab during a
+entered from `SUBMITTING_ANSWER` (the server refused the answer), `TRANSITIONING` (the wrong answer
+just shown started a pause — asked once, after D-347's break offer), `IDLE` (a reload / new tab during a
 pause) or `AWAITING_ANSWER` (another tab reported a pause); left only to `LOADING_QUESTION` via
 "Fortsæt quizzen", which unlocks at 00:00. The server enforces the pause; the state only shows it.
 

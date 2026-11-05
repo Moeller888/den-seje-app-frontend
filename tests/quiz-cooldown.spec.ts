@@ -53,7 +53,7 @@ const QUESTION = (n: number) => ({ step: "question", question_instance_id: `q${n
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS" };
 
 // Den simulerede server: kun det, browseren kan se. `until` er pausens slut (serverens tid).
-type Sim = { until: number | null; reply: "new" | "v34" | "ok"; served: number; answers: number; statusCalls: number };
+type Sim = { until: number | null; reply: "new" | "v34" | "ok" | "starts"; served: number; answers: number; statusCalls: number };
 const sim = (): Sim => ({ until: null, reply: "new", served: 0, answers: 0, statusCalls: 0 });
 // Serverens "nu" følger browserens styrede Date (begge starter i T0 og flyttes af page.clock).
 let serverNow = () => T0;
@@ -72,6 +72,8 @@ function routeFor(s: Sim) {
     if (p.startsWith("/functions/v1/process-event")) {
       s.answers++;
       if (s.reply === "ok") return j({ status: "incorrect", correct_answer: "Alfa", review_text: null, misconception_type: null });
+      // Det tiende forkerte svar: bedømt og vist normalt; serveren har samtidig startet pausen.
+      if (s.reply === "starts") { s.until = serverNow() + 120_000; s.reply = "new"; return j({ status: "incorrect", correct_answer: "Alfa", review_text: null, misconception_type: null }); }
       if (s.reply === "v34") return j({ error: "quiz_cooldown_active" }, 500);
       return j({ outcome: "quiz_cooldown", error: "Quiz cooldown", cooldown_until: iso(s.until!), server_now: iso(serverNow()) }, 429);
     }
@@ -154,6 +156,23 @@ test("et afvist svar viser den godkendte pause, tæller 02:00 → 00:00 og åbne
   await expect(panel(page)).toBeHidden();
   await expect(page.locator("#question")).toContainText("Spørgsmål nummer 2?");
   await expect(option(page, "Alfa")).toBeVisible();
+  await ctx.close();
+});
+
+test("svaret, der starter pausen, vises normalt — og pausen følger med det samme, uden et nyt svar", async ({ browser }) => {
+  const s = sim();
+  s.reply = "starts";
+  const ctx = await context(browser, s);
+  const page = await openQuiz(ctx);
+  const answersBefore = s.answers;
+  await option(page, "Beta").click();
+  await expect(page.locator("#feedback")).toContainText("Svaret er Alfa");   // det tiende svar behandles normalt
+  await page.clock.runFor(2_500);                                           // feedbacktiden før næste spørgsmål
+  await expect(panel(page)).toBeVisible();
+  await expect(timer(page)).toHaveText("02:00");
+  await expect(page.locator("#options")).toBeHidden();
+  expect(s.answers - answersBefore, "ét svar; pausen kom uden et nyt").toBe(1);
+  expect(s.served, "intet nyt spørgsmål hentes under pausen").toBe(1);
   await ctx.close();
 });
 

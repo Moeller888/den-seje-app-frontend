@@ -115,9 +115,16 @@ export async function cooldownFromInvokeError(error) {
  * kan afgøres (funktionen findes ikke endnu, netværksfejl, uventet form). null betyder "ingen kendt
  * pause" — serveren afviser stadig svar, hvis der er en.
  */
+// Before the migration is applied the function does not exist (PostgREST PGRST202 / HTTP 404): then this
+// page stops asking for the rest of its life instead of logging a failed request after every answer.
+let rpcMissing = false;
+export function _resetRpcMissingForTests() { rpcMissing = false; }
+
 export async function fetchCooldownStatus(client) {
+  if (rpcMissing) return null;
   try {
     const { data, error } = await client.rpc(RPC_NAME);
+    if (error && (error.code === "PGRST202" || error.status === 404)) rpcMissing = true;
     if (error || !data || typeof data !== "object" || Array.isArray(data)) return null;
     if (data.active !== true) return { active: false, endsAt: null, serverNow: null };
     return {

@@ -87,7 +87,7 @@ function setState(newState) {
     AWAITING_ANSWER: ["SUBMITTING_ANSWER", "COOLDOWN"],
     SUBMITTING_ANSWER: ["TRANSITIONING", "AWAITING_ANSWER", "REFLECTING", "COOLDOWN"],
     REFLECTING: ["TRANSITIONING"],
-    TRANSITIONING: ["LOADING_QUESTION"],
+    TRANSITIONING: ["LOADING_QUESTION", "COOLDOWN"],
     COOLDOWN: ["LOADING_QUESTION"]
   };
 
@@ -963,6 +963,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // told why in numbers. Other tabs learn of it over BroadcastChannel and ask the server themselves.
   let cooldownTimer = null;
   let cooldownCountdown = null;
+  let lastAnswerWasWrong = false;
   const monoNow = () => (typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now());
   const cooldownChannel = openCooldownChannel(() => { syncCooldownFromServer(); });
 
@@ -1084,14 +1085,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     feedback.className = "";
   }
 
-  // Another tab (or this page's start / return to the tab) asks the server whether a pause is running.
-  async function syncCooldownFromServer() {
-    if (uiState !== UI_STATES.AWAITING_ANSWER && uiState !== UI_STATES.IDLE && uiState !== UI_STATES.COOLDOWN) return false;
+  // Asks the server whether a pause is running: another tab reported one, this page starts, the pupil
+  // returns to the tab, or — afterWrongAnswer — this tab's last answer was wrong and may have been the one
+  // that started the pause (the answer itself is shown normally first; the pause follows at the transition).
+  async function syncCooldownFromServer({ afterWrongAnswer = false } = {}) {
+    const from = [UI_STATES.AWAITING_ANSWER, UI_STATES.IDLE, UI_STATES.COOLDOWN];
+    if (afterWrongAnswer) from.push(UI_STATES.TRANSITIONING);
+    if (!from.includes(uiState)) return false;
     const s = await fetchCooldownStatus(supabase);
     if (!s || !s.active) return false;
     if (uiState === UI_STATES.COOLDOWN) { startCooldownCountdown(cooldownFromServer(s.endsAt, s.serverNow)); return true; }
-    if (uiState !== UI_STATES.AWAITING_ANSWER && uiState !== UI_STATES.IDLE) return false;
-    await enterCooldown({ endsAt: s.endsAt, serverNow: s.serverNow }, { announce: false });
+    if (!from.includes(uiState)) return false;
+    await enterCooldown({ endsAt: s.endsAt, serverNow: s.serverNow }, { announce: afterWrongAnswer });
     return true;
   }
 
@@ -1522,6 +1527,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (data.status === "incorrect") {
       const reviewText = data.review_text ?? null;
+      lastAnswerWasWrong = true;   // anti-gætte-pause: checked at the next transition (loadAndRenderQuestion)
 
       playSound("error");
       exprEngine?.onGameEvent("INCORRECT");
@@ -1825,6 +1831,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // D-347: a spillepause due after the answer just registered is offered here, at the transition.
     if (await offerBreakIfDue()) return;
+
+    // Anti-gætte-pause: after a wrong answer, ask once whether it started a pause (D-347's offer above is
+    // unchanged and comes first — the pause blocks quiz answers, not the pupil's legitimate break).
+    if (lastAnswerWasWrong) {
+      lastAnswerWasWrong = false;
+      if (await syncCooldownFromServer({ afterWrongAnswer: true })) return;
+    }
 
     const question = await getNextQuestion();
 
