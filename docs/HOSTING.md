@@ -291,3 +291,12 @@ returnerede 402, men det er standardadfærden for den konfiguration.
 Allowlist-buildet lukker det uanset hvad. `tools/cloudflare-serve-check.mjs` beviser det over
 rigtig HTTP: 25 nødvendige stier svarer 200, og 24 interne stier — inkl. `/docs/ROADMAP.md`,
 `/CLAUDE.md`, `/.env`, `/package.json`, `/node_modules/...` og path-traversal-forsøg — svarer 404.
+
+### Kendt dokumentationskonflikt: AGENTS.md (registreret i D-352, 2026-11-05)
+
+`AGENTS.md` ligger i rodklonen og er ikke tracket i repoet. Den beskriver stadig Vercel som deploy-mål ("deployed to Vercel", "Vercel auto-deploys") og tests mod `https://den-seje-app-frontend.vercel.app`. Det strider mod dette dokument og mod `CLAUDE.md`:
+- Produktionen kører på Cloudflare Workers på https://lærlig.dk.
+- Vercel-adressen svarer 402.
+- Testmålet er `PROD` i `tests/helpers.ts`.
+
+Denne fil og `CLAUDE.md` gælder. Konflikten er kun registreret her. Hverken hosting, projektregler eller `AGENTS.md` er ændret, og en rettelse af `AGENTS.md` kræver ejerens beslutning.
