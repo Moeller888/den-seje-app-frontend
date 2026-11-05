@@ -574,8 +574,8 @@ due and repeat instances look as first served. *Payload:* `content.match = { lef
 lists of texts; `content.pairs` never leaves the server. *Answer:* the browser sends
 `[[left, right], …]` in display positions; `process-event` accepts only one connection per item
 (else 400, nothing recorded) and rewrites it in the key's form; **`process_question_attempt` grades
-and pays it exactly like MC** (its `[^a-z0-9]` normalisation makes `0:2,1:0,2:1` and the key compare as
-`021021`, unambiguous with ≤ 6 pairs) — full award once, the 2-XP repeat award, streak, quests,
+and pays it exactly like MC** (`normalize_choice_answer`; since D-290 G1 it keeps punctuation, so the
+canonical `0:2,1:0,2:1` must equal the key exactly — the canonical form guarantees it) — full award once, the 2-XP repeat award, streak, quests,
 `next_review_at`. No new RPC, no migration. Not `process_text_answer`: it ignores `repeat_count`, and
 the repeat RPC reopens every non-`text` auto-graded instance. *Browser:* `js/match-pairs.js` (tap an
 item, then its partner; arrows, Enter/Space, Escape; colour + number per pair; live region),

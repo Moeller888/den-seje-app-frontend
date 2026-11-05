@@ -8,7 +8,8 @@
 //     nothing more (no double registration);
 //   * a wrong order (every other permutation of 4 items) is incorrect: 0 XP, 0 coins;
 //   * a repeat round answered right earns the repeat amount (2 XP + 1 coin, D-211), as for MC;
-//   * the comparison is the MC choice comparison (lower-cased, stripped to [a-z0-9]).
+//   * the comparison is the MC choice comparison (normalize_choice_answer: since D-290 G1 lower-cased and
+//     whitespace-collapsed with punctuation kept, so the canonical answer must equal the key exactly).
 // HONEST LIMIT: production's questions constraints accept only mc/number/text today, so this test drops
 // questions_answer_format_check and content_valid_check IN ITS OWN DATABASE to store an "order" row — the
 // stand-in for the reviewed activation migration that does not exist yet. Nothing here is applied

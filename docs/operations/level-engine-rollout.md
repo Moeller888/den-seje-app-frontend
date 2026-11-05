@@ -235,7 +235,7 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (F-04 Rækkefølge, oven på F-02 og F-07) — **ikke deployet** | dette repository | 18 | `d2e987facdcd9d5ac0d304646ea39abe6ffda69aaa0e9ac3ffe8212761a5645f` |
+| Kandidat (F-04 Rækkefølge, oven på F-02 og F-07) — **ikke deployet** | dette repository | 18 | `06a6ccb9a2e5640abaa71a69581f3f42b5192c7dc91d865580099bf6004b3c4e` |
 | Forrige kandidat (F-02 Sandt/falsk #607 + F-07 stimulus, PR #618) — ikke deployet | #618 | 17 | `1df4cb344dfe97bde6f14b8e34adb9db26a44e948b6d197d01f2b9baa3104c8d` |
 | Forrige kandidat (F-02 Sandt/falsk, PR #607, merget uden stimulus) | main `3a2d2f37` | 16 | `00ddba65243d69fffeb9ea8f7b01714d5745cf7bfe0945330123919b3237f1ca` |
 | Forrige kandidat (F-07 stimulus alene) | `c1bfdcba` | 16 | `44ee77a4233f8699f1a342e2584f7b69ef1be1175415866e335854175856b29c` |

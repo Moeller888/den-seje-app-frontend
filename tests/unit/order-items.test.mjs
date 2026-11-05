@@ -104,8 +104,9 @@ test("answer: only a permutation of the shown positions, in the key's form; shap
     assert.equal(canonicalOrderAnswer(bad, key), null, String(bad));
   }
   assert.equal(canonicalOrderAnswer("[0,1,2]", "bad"), null);
-  // Graded as process_question_attempt does (lower-cased, stripped to [a-z0-9]): equal only when right.
-  const strip = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  // Graded as process_question_attempt does (normalize_choice_answer since D-290 G1: lower-cased,
+  // whitespace collapsed, punctuation kept): equal only when right.
+  const strip = (s) => s.normalize("NFC").toLowerCase().replace(/\s+/g, " ").trim();
   assert.equal(strip(canonicalOrderAnswer("[2,0,3,1]", key)), strip(key));
   assert.notEqual(strip(canonicalOrderAnswer("[0,2,3,1]", key)), strip(key));
 });

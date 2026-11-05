@@ -31,10 +31,11 @@
 // GRADING
 // The browser sends the pupil's order as JSON: the DISPLAY positions from top to bottom, e.g. [2,0,3,1].
 // canonicalOrderAnswer() checks only the SHAPE — a permutation of 0..n-1 — and writes it in the key's
-// form. process-event hands that string to process_question_attempt, which compares it with the key
-// (both stripped to [a-z0-9]: with at most 6 items every position is one digit, so "2,0,3,1" → "2031" is
-// unambiguous) and awards exactly as for MC: all or nothing, one reward path. A malformed answer is
-// refused before the RPC: nothing is recorded and nothing is awarded.
+// form. process-event hands that string to process_question_attempt, which compares it with the key through
+// normalize_choice_answer (since D-290 G1: lower-cased, whitespace collapsed, punctuation KEPT — so the
+// two strings must match exactly, "2,0,3,1" against "2,0,3,1") and awards exactly as for MC: all or
+// nothing, one reward path. A malformed answer is refused before the RPC: nothing is recorded and nothing
+// is awarded.
 //
 // GUESSING: a random order of n items is right with probability 1/n! (3 → 17 %, 4 → 4.2 %, 5 → 0.8 %,
 // 6 → 0.14 %), so an all-or-nothing answer of 4+ items is strong evidence; 3 items is a practice size.
