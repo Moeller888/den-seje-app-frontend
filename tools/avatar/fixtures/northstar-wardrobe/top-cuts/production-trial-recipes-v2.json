@@ -1,0 +1,266 @@
+{
+  "decision": "D-352",
+  "kind": "OFFLINE PRODUCTION TRIAL — D-351's 12 design recipes with a TRIM choice for the four patterns, on the cut versions with trim bands: 36 CANDIDATES, NOT approved, NOT published, no runtime change",
+  "revision": "top-cut-recipes-v2",
+  "cuts": [
+    "tee-hip",
+    "sweater-long-v2",
+    "tank-v4"
+  ],
+  "recipes": [
+    {
+      "id": "R01",
+      "group": "fabric",
+      "name": "Skovgrøn melange",
+      "slug": "forest-melange",
+      "fabric": {
+        "type": "melange",
+        "base": [
+          62,
+          104,
+          78
+        ],
+        "spread": 0.07,
+        "seed": 11
+      }
+    },
+    {
+      "id": "R02",
+      "group": "fabric",
+      "name": "Bordeaux piqué",
+      "slug": "burgundy-pique",
+      "fabric": {
+        "type": "pique",
+        "base": [
+          132,
+          40,
+          56
+        ],
+        "cell": 4,
+        "spread": 0.07
+      }
+    },
+    {
+      "id": "R03",
+      "group": "fabric",
+      "name": "Sennep slub",
+      "slug": "mustard-slub",
+      "fabric": {
+        "type": "slub",
+        "base": [
+          204,
+          158,
+          58
+        ],
+        "spread": 0.08,
+        "seed": 13
+      }
+    },
+    {
+      "id": "R04",
+      "group": "fabric",
+      "name": "Denimblå twill",
+      "slug": "denim-twill",
+      "fabric": {
+        "type": "twill",
+        "base": [
+          72,
+          100,
+          142
+        ],
+        "cell": 5,
+        "spread": 0.08
+      }
+    },
+    {
+      "id": "R05",
+      "group": "pattern",
+      "name": "Bretonsk stribe (navy på creme)",
+      "slug": "breton-stripe",
+      "fabric": {
+        "type": "stripes",
+        "base": [
+          236,
+          228,
+          210
+        ],
+        "second": [
+          36,
+          46,
+          86
+        ],
+        "period": 22,
+        "share": 0.36
+      },
+      "trim": {
+        "type": "solid",
+        "base": [
+          36,
+          46,
+          86
+        ]
+      },
+      "trimWhy": "navy, the stripe colour: the ribs close the stripes in their dark colour"
+    },
+    {
+      "id": "R06",
+      "group": "pattern",
+      "name": "Blokstriber (terracotta og sand)",
+      "slug": "block-stripes",
+      "fabric": {
+        "type": "stripes",
+        "base": [
+          222,
+          204,
+          170
+        ],
+        "second": [
+          190,
+          96,
+          70
+        ],
+        "period": 96,
+        "share": 0.5
+      },
+      "trim": {
+        "type": "solid",
+        "base": [
+          190,
+          96,
+          70
+        ]
+      },
+      "trimWhy": "terracotta, the strong stripe colour"
+    },
+    {
+      "id": "R07",
+      "group": "pattern",
+      "name": "Grøn tern",
+      "slug": "green-check",
+      "fabric": {
+        "type": "check",
+        "base": [
+          238,
+          236,
+          228
+        ],
+        "second": [
+          64,
+          124,
+          86
+        ],
+        "cell": 14
+      },
+      "trim": {
+        "type": "solid",
+        "base": [
+          64,
+          124,
+          86
+        ]
+      },
+      "trimWhy": "green, the check colour"
+    },
+    {
+      "id": "R08",
+      "group": "pattern",
+      "name": "Sennepsprikker på navy",
+      "slug": "mustard-dots",
+      "fabric": {
+        "type": "dots",
+        "base": [
+          34,
+          44,
+          80
+        ],
+        "second": [
+          232,
+          184,
+          72
+        ],
+        "cell": 30,
+        "radius": 4.5
+      },
+      "trim": {
+        "type": "solid",
+        "base": [
+          34,
+          44,
+          80
+        ]
+      },
+      "trimWhy": "navy, the ground: the ribs are plain, without dots"
+    },
+    {
+      "id": "R09",
+      "group": "motif",
+      "name": "Tekande på mintmelange",
+      "slug": "mint-teapot",
+      "fabric": {
+        "type": "melange",
+        "base": [
+          150,
+          198,
+          178
+        ],
+        "spread": 0.05,
+        "seed": 17
+      },
+      "motif": "teapot"
+    },
+    {
+      "id": "R10",
+      "group": "motif",
+      "name": "Skjold på lys denim-twill",
+      "slug": "lightdenim-shield",
+      "fabric": {
+        "type": "twill",
+        "base": [
+          124,
+          152,
+          190
+        ],
+        "cell": 5,
+        "spread": 0.06
+      },
+      "motif": "shield"
+    },
+    {
+      "id": "R11",
+      "group": "motif",
+      "name": "Ræv på sand piqué",
+      "slug": "sand-fox",
+      "fabric": {
+        "type": "pique",
+        "base": [
+          214,
+          196,
+          160
+        ],
+        "cell": 4,
+        "spread": 0.06
+      },
+      "motif": "fox"
+    },
+    {
+      "id": "R12",
+      "group": "motif",
+      "name": "Planet på koksgrå melange (motivet er ikke godkendt som tryk)",
+      "slug": "charcoal-planet",
+      "fabric": {
+        "type": "melange",
+        "base": [
+          66,
+          68,
+          74
+        ],
+        "spread": 0.08,
+        "seed": 19
+      },
+      "motif": "planet"
+    }
+  ],
+  "derivedFrom": "production-trial-recipes-v1.json (D-351; unchanged): the same 12 recipes; only the four pattern recipes gain a trim, and the cuts are the trim-band versions",
+  "printFit": "safe",
+  "printFitWhy": "the kit's print safe-area rule (K.placePrintSafe, kit-print-safe-v1): the motif keeps PF.MARGIN from the cut's edges and trim bands; moved (or scaled) only as far as needed (D-352)"
+}
