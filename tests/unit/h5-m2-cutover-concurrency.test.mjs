@@ -65,6 +65,8 @@ async function connect(url, role = null) {
   opened.push(c);
   await c.connect();
   c.on("error", () => {});
+  // A wait on a lock is a test bug here, never an expectation: fail loudly instead of hanging the shard.
+  await c.query("SET lock_timeout = '10s'");
   if (role) await c.query(`SET ROLE ${role}`);
   return c;
 }
@@ -104,29 +106,33 @@ async function k1InUse() {
   await su.query(`DO $a$ BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN CREATE ROLE authenticator NOINHERIT LOGIN; END IF;
     END $a$; GRANT anon, authenticated, service_role TO authenticator;`);
-  const p = uid(7000);
-  await su.query(`INSERT INTO auth.users VALUES ('${p}');
-    INSERT INTO public.profiles (id, role, selected_grade) VALUES ('${p}', 'student', 5);
-    INSERT INTO public.student_progress (student_id, xp, coins, correct_answers, total_correct_answers,
-      current_streak, longest_streak, last_activity_date) VALUES ('${p}', 0, 0, 0, 0, 0, 0, current_date - 1);`);
-  const db = { url, su, p };
+  const db = { url, su, pupilOf: new Map(), next: 7000 };
   const qi = await serve(db, 0);
   assert.equal((await h5(db, su, qi, 0)).outcome, "recorded");
   return db;
 }
+// Each round gets its OWN synthetic pupil: idx_one_open_question allows one open round per pupil, so a second
+// round for a pupil whose answer is still in an open transaction would wait for that transaction.
 async function serve(db, q) {
-  return (await db.su.query(`INSERT INTO public.question_instances (student_id, question_id, correct_answer, repeat_count, answered, next_review_at)
-    VALUES ($1, $2, $3, 0, false, now()) RETURNING id`, [db.p, TOP10_ID[q], TOP10_BEFORE[q].content.correct])).rows[0].id;
+  const p = uid(db.next++);
+  await db.su.query(`INSERT INTO auth.users VALUES ('${p}');
+    INSERT INTO public.profiles (id, role, selected_grade) VALUES ('${p}', 'student', 5);
+    INSERT INTO public.student_progress (student_id, xp, coins, correct_answers, total_correct_answers,
+      current_streak, longest_streak, last_activity_date) VALUES ('${p}', 0, 0, 0, 0, 0, 0, current_date - 1);`);
+  const qi = (await db.su.query(`INSERT INTO public.question_instances (student_id, question_id, correct_answer, repeat_count, answered, next_review_at)
+    VALUES ($1, $2, $3, 0, false, now()) RETURNING id`, [p, TOP10_ID[q], TOP10_BEFORE[q].content.correct])).rows[0].id;
+  db.pupilOf.set(qi, p);
+  return qi;
 }
 async function h5(db, client, qi, q) {
   await client.query("SET ROLE service_role");
   try {
     return (await client.query("SELECT public.process_question_attempt_v2($1,$2,$3,1,$4,NULL,NULL,'quiz_v1',0) AS r",
-      [db.p, qi, TOP10_BEFORE[q].content.correct, randomUUID()])).rows[0].r;
+      [db.pupilOf.get(qi), qi, TOP10_BEFORE[q].content.correct, randomUUID()])).rows[0].r;
   } finally { await client.query("RESET ROLE"); }
 }
 const LEGACY = "SELECT public.process_question_attempt($1,$2,$3,0) AS r";
-const legacyArgs = (db, qi, q) => [db.p, qi, TOP10_BEFORE[q].content.correct];
+const legacyArgs = (db, qi, q) => [db.pupilOf.get(qi), qi, TOP10_BEFORE[q].content.correct];
 const instance = async (db, qi) => (await db.su.query("SELECT answered, answered_at, user_answer FROM public.question_instances WHERE id = $1", [qi])).rows[0];
 const cutover = async (db) => (await db.su.query("SELECT to_regclass('public.answer_path_cutovers') IS NOT NULL AS t")).rows[0].t
   ? (await db.su.query("SELECT * FROM public.answer_path_cutovers")).rows : null;
@@ -153,7 +159,7 @@ async function assertLegacyRefused(db, q) {
   return qi;
 }
 
-test("1. an answer in flight at the close: transaction 2 waits for it, registers after it; a new legacy call is refused", { skip: SKIP }, async (t) => {
+test("1. an answer in flight at the close: transaction 2 waits for it, registers after it; a new legacy call is refused", { skip: SKIP, timeout: 120_000 }, async (t) => {
   t.after(teardown);
   const db = await k1InUse();
   const qiA = await serve(db, 1);
@@ -187,7 +193,7 @@ test("1. an answer in flight at the close: transaction 2 waits for it, registers
   await done(a);
 });
 
-test("2. several open transactions: registered only after the last; another database is not waited for", { skip: SKIP }, async (t) => {
+test("2. several open transactions: registered only after the last; another database is not waited for", { skip: SKIP, timeout: 120_000 }, async (t) => {
   t.after(teardown);
   const db = await k1InUse();
   const other = await k1InUse();
@@ -224,7 +230,7 @@ test("2. several open transactions: registered only after the last; another data
   await done(a1, a2, a3, elsewhere);
 });
 
-test("3. no open transaction: transaction 2 registers at once", { skip: SKIP }, async (t) => {
+test("3. no open transaction: transaction 2 registers at once", { skip: SKIP, timeout: 120_000 }, async (t) => {
   t.after(teardown);
   const db = await k1InUse();
   await db.su.query(migrationSql(CLOSE));
@@ -234,7 +240,7 @@ test("3. no open transaction: transaction 2 registers at once", { skip: SKIP }, 
   assert.equal((await cutover(db)).length, 1);
 });
 
-test("4. timeout: nothing registered, legacy stays closed, H5 works; the same file then resumes — or R1 reopens for service_role only", { skip: SKIP }, async (t) => {
+test("4. timeout: nothing registered, legacy stays closed, H5 works; the same file then resumes — or R1 reopens for service_role only", { skip: SKIP, timeout: 120_000 }, async (t) => {
   t.after(teardown);
   const db = await k1InUse();
   const stuck = await connect(db.url, "service_role");
