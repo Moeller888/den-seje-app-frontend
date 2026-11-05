@@ -215,7 +215,8 @@ test("MC / number call process_question_attempt via the admin client with server
   // shape-checked canonical form of the same answer (_shared/match-pairs.ts, _shared/order-items.ts) —
   // never a server-chosen value.
   assert.match(INDEX_CODE, /let gradedAnswer = answer\r?\n/);
-  assert.equal((INDEX_CODE.match(/gradedAnswer = /g) ?? []).length, 3, "declared once, reassigned once per keyed format");
+  assert.equal((INDEX_CODE.match(/gradedAnswer = /g) ?? []).length, 4, "declared once, reassigned once per keyed format");
+  assert.match(INDEX_CODE, /if \(format === "categorize"\) \{\s*const canonical = canonicalCategorizeAnswer\(answer, correct_answer\)\s*if \(canonical === null\) \{[\s\S]*?status: 400[\s\S]*?\}\s*gradedAnswer = canonical\s*\}/);
   assert.match(INDEX_CODE, /if \(format === "order"\) \{\s*const canonical = canonicalOrderAnswer\(answer, correct_answer\)\s*if \(canonical === null\) \{[\s\S]*?status: 400[\s\S]*?\}\s*gradedAnswer = canonical\s*\}/);
   assert.match(INDEX_CODE, /if \(format === "match"\) \{\s*const canonical = canonicalMatchAnswer\(answer, correct_answer\)\s*if \(canonical === null\) \{[\s\S]*?status: 400[\s\S]*?\}\s*gradedAnswer = canonical\s*\}/);
 });

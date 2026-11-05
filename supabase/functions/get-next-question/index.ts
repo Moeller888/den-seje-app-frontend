@@ -11,11 +11,13 @@ import { servableWireFormat } from "../_shared/interaction-kinds.ts";
 import { pupilLogHash } from "./log-pseudonym.ts";
 import { createMatchKey, parseMatchPairs } from "../_shared/match-pairs.ts";
 import { createOrderKey, parseOrderContent } from "../_shared/order-items.ts";
+import { createCategorizeKey, parseCategorizeContent } from "../_shared/categorize.ts";
 
 // Formats whose instance key (question_instances.correct_answer) lays out what the browser sees: Match
-// par (the shuffled right column) and Rækkefølge (the shuffled presentation; the facit is the authored
-// order). Only these make the extra backend key read below; every other format reads exactly as before.
-const KEYED_FORMATS: ReadonlySet<string> = new Set(["match", "order"]);
+// par (the shuffled right column), Rækkefølge (the shuffled presentation; the facit is the authored
+// order) and Kategorisering (the shuffled items; each item's category is authored). Only these make the
+// extra backend key read below; every other format reads exactly as before.
+const KEYED_FORMATS: ReadonlySet<string> = new Set(["match", "order", "categorize"]);
 import {
   CANARY_ALLOWLIST_ENV, LEVEL_ENGINE_CANARY, chooseSelectionRoute, loadLevelPlan, resolveLevelEngineForStudent,
   type LevelReadClient,
@@ -92,6 +94,12 @@ function normalizeContent(raw: any, answer_format: string) {
     // Rækkefølge: the key is this instance's shuffle of the PRESENTATION, drawn here, once, and stored as
     // correct_answer (../_shared/order-items.ts). The facit stays the authored order of content.items.
     return { question, correct: createOrderKey(parseOrderContent(raw).items.length) };
+  }
+
+  if (answer_format === "categorize") {
+    // Kategorisering: the key is this instance's shuffle of the items with each item's AUTHORED category,
+    // drawn here, once, and stored as correct_answer (../_shared/categorize.ts).
+    return { question, correct: createCategorizeKey(parseCategorizeContent(raw)) };
   }
 
   return { question, correct };
