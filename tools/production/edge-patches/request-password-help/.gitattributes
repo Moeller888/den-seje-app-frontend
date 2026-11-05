@@ -1,0 +1,5 @@
+# Byte-exact copies of a DEPLOYED Edge Function bundle and its patched deploy payload.
+# The deployed functions/_shared/monitoring.ts has CRLF line endings. Normalising it to LF would
+# make deployed-v10/ stop being the byte-exact rollback source, so every file here is stored and
+# checked out exactly as written.
+* -text
