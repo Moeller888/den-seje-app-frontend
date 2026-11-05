@@ -35,6 +35,8 @@ const LOCAL_FRONTEND: Record<string, string> = {
   '/js/answer-submission.js': path.join(REPO, 'js', 'answer-submission.js'),
   '/css/match-pairs.css': path.join(REPO, 'css', 'match-pairs.css'),
   '/css/stimulus.css': path.join(REPO, 'css', 'stimulus.css'),
+  '/js/true-false.js': path.join(REPO, 'js', 'true-false.js'),
+  '/css/true-false.css': path.join(REPO, 'css', 'true-false.css'),
   '/css/order-items.css': path.join(REPO, 'css', 'order-items.css'),
 };
 

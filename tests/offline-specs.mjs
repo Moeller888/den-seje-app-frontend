@@ -33,6 +33,9 @@ export const OFFLINE_SPECS = Object.freeze([
   "minigame-break.spec.ts",
   "teacher-first-run.spec.ts",
   "stimulus-quiz.spec.ts",
+  "true-false-ui.spec.ts",
+  "true-false-quiz.spec.ts",
+  "number-answer-ui.spec.ts",
   "learning-sequence-quiz.spec.ts",
 ]);
 

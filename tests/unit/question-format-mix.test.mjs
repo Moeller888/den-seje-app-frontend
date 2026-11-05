@@ -38,16 +38,19 @@ const mapAnswerFormat = (() => {
 })();
 
 // ── 1. Interaction kinds ─────────────────────────────────────────────────────────────────────────
-test("registry: exactly one base kind (choice); Match par and Rækkefølge have renderers but are NOT servable", () => {
+test("registry: exactly one base kind (choice); Match par, Sandt/falsk and Rækkefølge have renderers but are NOT servable", () => {
   assert.equal(BASE_KIND, "choice");
-  assert.deepEqual(KIND_ORDER, ["choice", "short_text", "long_text", "number", "force_text", "match_pairs", "order_items"]);
+  assert.deepEqual(KIND_ORDER, ["choice", "short_text", "long_text", "number", "force_text", "match_pairs", "true_false", "order_items"]);
   assert.equal(INTERACTION_KINDS.match_pairs.servable, false);
   assert.equal(INTERACTION_KINDS.match_pairs.renderer, "match_pairs");
+  assert.equal(INTERACTION_KINDS.true_false.servable, false);
+  assert.equal(INTERACTION_KINDS.true_false.renderer, "true_false");
   assert.equal(INTERACTION_KINDS.order_items.servable, false);
   assert.equal(INTERACTION_KINDS.order_items.renderer, "order_items");
-  const built = ["match_pairs", "order_items"];
-  for (const k of KIND_ORDER.filter((k) => !built.includes(k))) assert.equal(INTERACTION_KINDS[k].servable, true, k);
+  const builtNotServable = ["match_pairs", "true_false", "order_items"];
+  for (const k of KIND_ORDER.filter((k) => !builtNotServable.includes(k))) assert.equal(INTERACTION_KINDS[k].servable, true, k);
   assert.equal(isServableKind("match_pairs"), false);
+  assert.equal(isServableKind("true_false"), false);
   assert.equal(isServableKind("order_items"), false);
   assert.equal(isServableKind(null), false);
 });
@@ -69,6 +72,7 @@ test("classifyQuestion: the live formats", () => {
   assert.equal(classifyQuestion({ answer_format: "mc", content: { force_text: true } }), "force_text");
   assert.equal(classifyQuestion({ answer_format: "mc", force_text: true }), "force_text");
   assert.equal(classifyQuestion({ answer_format: "match" }), "match_pairs");
+  assert.equal(classifyQuestion({ answer_format: "true_false" }), "true_false");
 });
 
 test("classifyQuestion: anything the layers would disagree on is null — never served by the mix", () => {
@@ -90,7 +94,7 @@ test("classifyQuestion: anything the layers would disagree on is null — never 
 });
 
 test("classifyQuestion agrees with the browser renderer AND the server's mapAnswerFormat for every kind it names", () => {
-  const formats = ["mc", "mc_single", "number", "text", "match", "match_pairs", "MC", "Text", "longtext", "mc_number", "foo", "", null];
+  const formats = ["mc", "mc_single", "number", "text", "match", "match_pairs", "true_false", "MC", "Text", "longtext", "mc_number", "foo", "", null];
   const types = ["short", "long", "Long", "", null, "medium"];
   let named = 0;
   for (const answer_format of formats) for (const answer_type of types) for (const force_text of [false, true]) {
@@ -101,13 +105,15 @@ test("classifyQuestion agrees with the browser renderer AND the server's mapAnsw
     const spec = INTERACTION_KINDS[kind];
     if (spec.renderer !== null) assert.equal(resolveAnswerRenderer(row), spec.renderer, JSON.stringify(row));
     else assert.equal(resolveAnswerRenderer(row), "unsupported", JSON.stringify(row));
-    if (kind !== "match_pairs") assert.equal(mapAnswerFormat(answer_format), spec.wireFormat, JSON.stringify(row));
+    // Match par and Sandt/falsk: v1's mapAnswerFormat says "mc" (the row has no options and is skipped);
+    // only the registry's own wire format is ever sent for them.
+    if (kind !== "match_pairs" && kind !== "true_false") assert.equal(mapAnswerFormat(answer_format), spec.wireFormat, JSON.stringify(row));
   }
-  assert.ok(named >= 6, "the matrix must exercise every named kind");
+  assert.ok(named >= 7, "the matrix must exercise every named kind");
 });
 
 test("the mix engine holds no kind names of its own: a new kind is added in the registry only", () => {
-  for (const name of ['"short_text"', '"long_text"', '"number"', '"force_text"', '"match_pairs"', '"choice"', '"mc"', '"text"']) {
+  for (const name of ['"short_text"', '"long_text"', '"number"', '"force_text"', '"match_pairs"', '"true_false"', '"choice"', '"mc"', '"text"']) {
     assert.equal(MIX_CODE.includes(name), false, `format-mix.ts must not name ${name}`);
   }
 });

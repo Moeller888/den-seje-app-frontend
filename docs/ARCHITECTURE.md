@@ -307,8 +307,8 @@ causal wording), `process` (step by step) or `logical` (a subject relationship).
 permutation of the shown positions (`canonicalOrderAnswer`) and `process_question_attempt` grades it like
 MC — **all or nothing, one reward path** (tested on the replayed production function:
 `tests/unit/order-items-grading.test.mjs`). Why all or nothing for now: partial credit is undecided
-(D-277 LP-7) and binary scoring is rule 4 above; a random order of 4 items is right 1 time in 24, so a
-correct answer is strong evidence, whereas partial credit would reward near-random orders. The feedback
+(D-277 LP-7) and binary scoring is rule 4 above; a random order of 4 items is right 1 time in 24 (1 in 23
+for a pupil who knows the shown order is never the facit), so a correct answer is strong evidence, whereas partial credit would reward near-random orders. The feedback
 still shows the whole correct order after a wrong answer. 3 items (1 in 6) is a practice size. **Before
 pupils can get it:** a reviewed activation migration (production's `questions_answer_format_check` and
 `content_valid_check` refuse `order` rows today; `question_is_servable` must flip in the same PR as the
@@ -516,11 +516,12 @@ from the registry (`servableWireFormat`): an unknown format is skipped and logge
 
 **One servable rule in two languages.** `public.question_is_servable(answer_format, answer_type,
 content)` is the SQL twin of the registry (`classifyQuestion` + `servable`); a PGlite parity test runs
-both over a 210-case matrix, so they can only change together.
+both over a 224-case matrix, so they can only change together.
 
 **Interaction kinds** — one registry, `supabase/functions/_shared/interaction-kinds.ts`:
 `choice` (base kind) · `short_text` (Stav til) · `long_text` (teacher-graded) · `number` ·
-`force_text` · `match_pairs` (renderer and grading built 2026-10-22, **not servable**). `classifyQuestion` names a kind only
+`force_text` · `match_pairs` (renderer and grading built 2026-10-22, **not servable**) · `true_false`
+(Sandt/falsk, F-02, built 2026-11-05, **not servable**). `classifyQuestion` names a kind only
 where `mapAnswerFormat` (server), `process-event` (grading) and `resolveAnswerRenderer` (browser) agree
 (a parity test runs all three); anything else is `null` and never served by `v2`. Long answers have
 `maxShare 0`: `process-event` keeps a long answer open until the teacher grades it, so a long question
@@ -584,6 +585,66 @@ also* teach v1's `mapAnswerFormat` `"match"` (today it maps it to `"mc"`, and th
 for lack of options) or retire v1; show a Match par `user_answer` to teachers as pairs in words
 (`js/student-detail.js` prints it raw, as it does for MC); and add the content through a reviewed
 migration.
+
+**Sandt/falsk (`true_false`, F-02) — steps 1 and 2 done (2026-11-05), step 3 NOT done: not servable.**
+Contract in `supabase/functions/_shared/true-false.ts`. Stored row: `answer_format = 'true_false'`,
+`answer_type = 'short'`, `content = { question: <udsagnet>, correct: "Sandt" | "Falsk" }`, no `options`,
+an explanation of *why* in `review_text` recommended. *Key:* `content.correct` itself — the option text,
+as for MC (`get-next-question` already stores `content.correct` for any format that is not `mc`/`match`;
+the DTO validates the contract before the instance is inserted). *Payload:* `content.question` only; the
+two answers are fixed and never carry a marker. *Grading:* `process-event` sends the answer text to
+`process_question_attempt` (neither long, `text` nor `match`), which compares it with
+`normalize_choice_answer` — **graded and paid exactly like MC, no change in `process-event` or SQL**
+(PGlite proof: `tests/unit/true-false-grading.test.mjs`). *Own wire format* `true_false`, not `mc`: the
+browser pads `answer_format = "mc"` to four options with legacy years (`js/answer-options.js`).
+*Browser:* `js/true-false.js` (two large buttons, Enter/Space, arrows, `aria-pressed`, the statement read
+aloud by the quiz's player, the quiz's normal choice feedback), `css/true-false.css`, demo
+`tools/true-false/demo.html` (local only). *Registry:* `maxShare 0`, `guessFloor 0.5` — a guess is right
+half the time, so a correct answer is route information, never mastery evidence
+(`docs/learning-progression-design.md`); `guessFloor` is `null` for every other kind and nothing on the
+serving path reads it.
+
+*Evidence (checked 2026-11-05).* No mastery or evidence system reads `guessFloor` or any other per-kind
+weight: mastery/spaced repetition is inactive in production, `question_attempts` (H5) and K1's attempt
+context record answers but nothing derives mastery from them, and the teacher overview only counts
+correct/attempted. The ONE live consumer of verdicts is the level engine's fold
+(`advance_student_level`, migration B, `LEVEL_ENGINE=v1` for all pupils since 2026-11-04): it folds every
+auto-graded first answer of any format (+step correct, −3·step wrong, equilibrium at 75 % correct). It
+does not distinguish formats, so once Sandt/falsk is servable a correct true_false answer would move the
+level exactly like an MC answer although a guess is right half the time (75 % observed ≈ 50 % real
+knowledge for true_false, ≈ 67 % for 4-option MC). The band folds (`advance_student_band` of the format
+mix, and the browser's `adjustDifficultyBand`: 3 right in a row → up) are format-blind in the same way.
+**Rule: when an evidence system is activated — and
+before Sandt/falsk is made servable while the level fold is live — true_false answers must be weighted by
+`guessFloor` (or excluded from the fold); that weighting is an owner decision and part of step 3.** No
+parallel mastery mechanism is built here; the format stays non-servable.
+
+*Step 3 — activation spec (each item its own owner GO, in this order):*
+1. **Code PR:** `INTERACTION_KINDS.true_false.servable = true` (`_shared/interaction-kinds.ts`) and the
+   parity test `tests/unit/question-format-mix-migration-run.test.mjs` pointed at the activation
+   migration's `question_is_servable`; `get-next-question`'s v1 `mapAnswerFormat` must map `"true_false"`
+   to `"true_false"` (today it falls back to `"mc"`; the row is then skipped because the contract forbids
+   `options`, so it can never be *shown* as MC, but it would never be served either). Production runs
+   `LEVEL_ENGINE=v1` without `QUESTION_MIX_ENGINE=v2`, i.e. the `map` wire format, so without this a
+   servable true_false row would be a candidate that is always skipped. The owner also decides the share:
+   `maxShare` is only applied by the v2 mix; on the live level route nothing caps true_false, so the share
+   is controlled by how much content is added (or by v2). And the level-fold weighting above.
+2. **Deploy `get-next-question`** from that commit through the release gate
+   (`docs/operations/level-engine-rollout.md` §3.1, new candidate manifest). Safe on its own: no
+   true_false row can be stored yet.
+3. **Apply `20261105120000_true_false_activation.sql`** (D-110, `apply_migration`, never `db push`). It
+   extends `questions_answer_format_check` (true_false: no `options`, string `question`, `correct` exactly
+   `"Sandt"`/`"Falsk"`) and `content_valid_check` (a true_false row needs no `content.type`), and
+   re-creates the SQL twin `question_is_servable` with one added line (true_false servable unless
+   `force_text`). Guarded by md5 of production's function body and of both constraint definitions (the
+   constraint hashes must be confirmed read-only against production first); a re-run is a no-op. It is in
+   `NOT_IN_PRODUCTION` and runtime-tested on PGlite (`tests/unit/true-false-activation-migration-run.test.mjs`).
+   Applying it BEFORE step 2 is harmful: the live level window filters with `question_is_servable`, so a
+   stored row would count as servable but always be skipped, and a pupil with only such rows left would
+   get "no questions" instead of a repeat.
+4. **Content** through its own reviewed migration (`answer_format 'true_false'`, `answer_type 'short'`,
+   `content { question, correct }`, `review_text` recommended), then move the activation file from
+   `NOT_IN_PRODUCTION` to `APPLIED_IN_PRODUCTION` with the version production's ledger gave it.
 
 **Activation order** (each step its own owner authorisation): security review → apply the migration
 (D-110, `apply_migration`) → deploy `get-next-question` (diff live vs repo first) → set

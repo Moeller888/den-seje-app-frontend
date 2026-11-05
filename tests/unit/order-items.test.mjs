@@ -126,7 +126,9 @@ test("payload: content.order holds the shown texts and the sequence kind — nev
 test("registry: order is classified, has its own wire format and renderer, and is NOT servable", () => {
   const row = { answer_format: "order", answer_type: "short", content: CONTENT };
   assert.equal(classifyQuestion(row), "order_items");
-  assert.deepEqual({ ...INTERACTION_KINDS.order_items }, { wireFormat: "order", renderer: "order_items", servable: false, base: false, maxShare: 0.15, teacherGraded: false });
+  assert.deepEqual({ ...INTERACTION_KINDS.order_items }, { wireFormat: "order", renderer: "order_items", servable: false, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null });
+  // guessFloor null: the chance of a random order depends on the item count (1/(n! − 1) with the identity
+  // excluded from the shown order), so it is not a fixed property of the kind (interaction-kinds.ts).
   assert.equal(isServableKind("order_items"), false);
   assert.equal(servableWireFormat(row), null, "the v2 mix never serves it");
   assert.equal(classifyQuestion({ ...row, content: { ...CONTENT, force_text: true } }), null);
