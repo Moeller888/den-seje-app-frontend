@@ -1,0 +1,255 @@
+{
+  "decision": "D-349",
+  "kind": "OWNER APPROVAL — the 36 tee layer versions of D-349 (U-343-1) and their publication and activation with layerRev 2 on the 18 tees",
+  "hashApproval": {
+    "date": "2026-11-05",
+    "owner": "godkendt. Merge. Du har tilladelse",
+    "covers": "the 36 files of tee-armline-v2-candidates.json with their new sha256, and the merge of PR #603 on head 69fd90fdd61506c40fd5a010be15cc5b6a7d2422 (merged as 7491341fd02f8d09fa7cae29e7930caafa2da1d6)"
+  },
+  "publishAndActivate": {
+    "date": "2026-11-05",
+    "owner": "Jeg tillader offentliggørelse af præcis de 36 v2-filer med de nye SHA256-hashes i den mergede liste tools/avatar/fixtures/northstar-wardrobe/tee/tee-armline-v2-candidates.json samt aktivering med layerRev: 2 på præcis de 18 omfattede T-shirts.",
+    "notCovered": "merge of the integration PR; the production check follows a later approved merge; U-343-1 closes only after deployment and a passed production check"
+  },
+  "candidates": "tools/avatar/fixtures/northstar-wardrobe/tee/tee-armline-v2-candidates.json",
+  "candidatesSha256": "f14316f8cb65bbaa8b8bf75bd03c0536ac17d8aa7328793cd2bc4176d6e05ae2",
+  "newRev": 2,
+  "items": [
+    "top-tee-hip-blue",
+    "top-tee-hip-cream",
+    "top-tee-hip-print-fox-cream",
+    "top-tee-hip-print-fox-forest",
+    "top-tee-hip-print-fox-heather",
+    "top-tee-hip-print-fox-navy",
+    "top-tee-hip-print-shield-coral",
+    "top-tee-hip-print-shield-cream",
+    "top-tee-hip-print-shield-forest",
+    "top-tee-hip-print-shield-heather",
+    "top-tee-hip-print-shield-mustard",
+    "top-tee-hip-print-shield-navy",
+    "top-tee-hip-print-teapot-coral",
+    "top-tee-hip-print-teapot-cream",
+    "top-tee-hip-print-teapot-forest",
+    "top-tee-hip-print-teapot-heather",
+    "top-tee-hip-print-teapot-mustard",
+    "top-tee-hip-print-teapot-navy"
+  ],
+  "files": [
+    {
+      "file": "top-tee-hip-blue-sleeves-v2.webp",
+      "replaces": "top-tee-hip-blue-sleeves-v1.webp",
+      "sha256": "8ba67643fd23db865c9d47f223237a996ab88484c71baea988a35920c197f292",
+      "bytes": 11088
+    },
+    {
+      "file": "top-tee-hip-blue-top-body-v2.webp",
+      "replaces": "top-tee-hip-blue-top-body-v1.webp",
+      "sha256": "07729e64240a7f5ec6fa1d5eb0653e4e7a117d7ec8c87f116a2a3e15f88b4870",
+      "bytes": 55064
+    },
+    {
+      "file": "top-tee-hip-cream-sleeves-v2.webp",
+      "replaces": "top-tee-hip-cream-sleeves-v1.webp",
+      "sha256": "1b9dcc529cd325eeeb34a15668e6eb6b4a9b8693df839b79e8ccedb861f9eddc",
+      "bytes": 11868
+    },
+    {
+      "file": "top-tee-hip-cream-top-body-v2.webp",
+      "replaces": "top-tee-hip-cream-top-body-v1.webp",
+      "sha256": "a3f0892605ce919b11321cc5c57cd18199f4a09e880eca382dc72c8a1185ebbf",
+      "bytes": 61640
+    },
+    {
+      "file": "top-tee-hip-print-fox-cream-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-fox-cream-sleeves-v1.webp",
+      "sha256": "b1cd0d8801926710a8da4168df96b7e611a15691f05cb35289fb1e2515f9ff56",
+      "bytes": 7582
+    },
+    {
+      "file": "top-tee-hip-print-fox-cream-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-fox-cream-top-body-v1.webp",
+      "sha256": "3239f91f291b8c06a4f9f0639aee8f68a51d1f5c685360f6f6fa4ea7acaf1445",
+      "bytes": 52158
+    },
+    {
+      "file": "top-tee-hip-print-fox-forest-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-fox-forest-sleeves-v1.webp",
+      "sha256": "48d994c53b1eae8c06f8d6da9484521c9b901f43a961a6be24c0aedba20371ee",
+      "bytes": 5316
+    },
+    {
+      "file": "top-tee-hip-print-fox-forest-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-fox-forest-top-body-v1.webp",
+      "sha256": "b364dd31e05f299e5510e28fae7866aad2cd0d58dfa27ba3ba84398006977978",
+      "bytes": 36916
+    },
+    {
+      "file": "top-tee-hip-print-fox-heather-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-fox-heather-sleeves-v1.webp",
+      "sha256": "062ac100a935215ba8b3a33a0b885b750ca9d4b6c4733b84a43be8290c7260b2",
+      "bytes": 5818
+    },
+    {
+      "file": "top-tee-hip-print-fox-heather-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-fox-heather-top-body-v1.webp",
+      "sha256": "d7b060c12a0194a4e27db21b98ac6ebc7a8b8f19081f87ae1fb577cb3b999b8b",
+      "bytes": 43258
+    },
+    {
+      "file": "top-tee-hip-print-fox-navy-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-fox-navy-sleeves-v1.webp",
+      "sha256": "d6a3507efc0ccf6f60876753b431fc8bad85e72e766959e10d7c230c8d4cafb6",
+      "bytes": 4914
+    },
+    {
+      "file": "top-tee-hip-print-fox-navy-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-fox-navy-top-body-v1.webp",
+      "sha256": "d1af4956c15da1e7d088ba51daeacbb06d38b18c59c466c94f493bb62dcea4d3",
+      "bytes": 35546
+    },
+    {
+      "file": "top-tee-hip-print-shield-coral-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-shield-coral-sleeves-v1.webp",
+      "sha256": "c37c725c4b6334e981a9dfbff4c7752be7002dea74ad640abd2217b1848a60eb",
+      "bytes": 7420
+    },
+    {
+      "file": "top-tee-hip-print-shield-coral-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-shield-coral-top-body-v1.webp",
+      "sha256": "1240ff1e3f8bbc4ba84f837bba23b90d8c117e57a701c6b531d1489555eea047",
+      "bytes": 52348
+    },
+    {
+      "file": "top-tee-hip-print-shield-cream-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-shield-cream-sleeves-v1.webp",
+      "sha256": "b1cd0d8801926710a8da4168df96b7e611a15691f05cb35289fb1e2515f9ff56",
+      "bytes": 7582
+    },
+    {
+      "file": "top-tee-hip-print-shield-cream-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-shield-cream-top-body-v1.webp",
+      "sha256": "c7fa0c0e992614a85f78e325a4b442ae7d7d8214460a33b61b32983eaa0d684f",
+      "bytes": 54316
+    },
+    {
+      "file": "top-tee-hip-print-shield-forest-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-shield-forest-sleeves-v1.webp",
+      "sha256": "48d994c53b1eae8c06f8d6da9484521c9b901f43a961a6be24c0aedba20371ee",
+      "bytes": 5316
+    },
+    {
+      "file": "top-tee-hip-print-shield-forest-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-shield-forest-top-body-v1.webp",
+      "sha256": "6e391456dfb2fdb6e1caacb57f2f1a9cce91cbd12a6329115b1c75bbe83f652c",
+      "bytes": 39062
+    },
+    {
+      "file": "top-tee-hip-print-shield-heather-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-shield-heather-sleeves-v1.webp",
+      "sha256": "062ac100a935215ba8b3a33a0b885b750ca9d4b6c4733b84a43be8290c7260b2",
+      "bytes": 5818
+    },
+    {
+      "file": "top-tee-hip-print-shield-heather-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-shield-heather-top-body-v1.webp",
+      "sha256": "3ed2bb95c03af25f95a20a556e36036a8e6a4c5b00578797fe350edfd1205f12",
+      "bytes": 45542
+    },
+    {
+      "file": "top-tee-hip-print-shield-mustard-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-shield-mustard-sleeves-v1.webp",
+      "sha256": "49ee6d8f8b40c5453d926de177632e31df6fb141fa5fad5e42821c3358248652",
+      "bytes": 7662
+    },
+    {
+      "file": "top-tee-hip-print-shield-mustard-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-shield-mustard-top-body-v1.webp",
+      "sha256": "cdcc07660d65d69a080c2d5d7a0dea7e2dc1abf8a34f2984c4dbfcedec043a51",
+      "bytes": 52932
+    },
+    {
+      "file": "top-tee-hip-print-shield-navy-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-shield-navy-sleeves-v1.webp",
+      "sha256": "d6a3507efc0ccf6f60876753b431fc8bad85e72e766959e10d7c230c8d4cafb6",
+      "bytes": 4914
+    },
+    {
+      "file": "top-tee-hip-print-shield-navy-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-shield-navy-top-body-v1.webp",
+      "sha256": "075c2e2417b5bebb937664bffe6cc18eb3b327e09e39a43bf2a54431492d4109",
+      "bytes": 37990
+    },
+    {
+      "file": "top-tee-hip-print-teapot-coral-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-coral-sleeves-v1.webp",
+      "sha256": "c37c725c4b6334e981a9dfbff4c7752be7002dea74ad640abd2217b1848a60eb",
+      "bytes": 7420
+    },
+    {
+      "file": "top-tee-hip-print-teapot-coral-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-coral-top-body-v1.webp",
+      "sha256": "943ae2d42ebdd87eb29cf9357dec447ce84ce7971b82e273aa2afb39d687f1db",
+      "bytes": 52974
+    },
+    {
+      "file": "top-tee-hip-print-teapot-cream-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-cream-sleeves-v1.webp",
+      "sha256": "b1cd0d8801926710a8da4168df96b7e611a15691f05cb35289fb1e2515f9ff56",
+      "bytes": 7582
+    },
+    {
+      "file": "top-tee-hip-print-teapot-cream-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-cream-top-body-v1.webp",
+      "sha256": "938c90904c19daccc061643f3ac06e6946a3c3f1f981e8b6ad3d60d8c5e8fd95",
+      "bytes": 54806
+    },
+    {
+      "file": "top-tee-hip-print-teapot-forest-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-forest-sleeves-v1.webp",
+      "sha256": "48d994c53b1eae8c06f8d6da9484521c9b901f43a961a6be24c0aedba20371ee",
+      "bytes": 5316
+    },
+    {
+      "file": "top-tee-hip-print-teapot-forest-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-forest-top-body-v1.webp",
+      "sha256": "9340b428c10bab7885e164e7132f64d4c6cf1141a3a5bd4f57b4e1aa70f9c124",
+      "bytes": 39910
+    },
+    {
+      "file": "top-tee-hip-print-teapot-heather-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-heather-sleeves-v1.webp",
+      "sha256": "062ac100a935215ba8b3a33a0b885b750ca9d4b6c4733b84a43be8290c7260b2",
+      "bytes": 5818
+    },
+    {
+      "file": "top-tee-hip-print-teapot-heather-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-heather-top-body-v1.webp",
+      "sha256": "9dcd3cdc2ecfdc41847f26ff208b29362c95c383eaf89614f65822ad6ba3e8cf",
+      "bytes": 45694
+    },
+    {
+      "file": "top-tee-hip-print-teapot-mustard-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-mustard-sleeves-v1.webp",
+      "sha256": "49ee6d8f8b40c5453d926de177632e31df6fb141fa5fad5e42821c3358248652",
+      "bytes": 7662
+    },
+    {
+      "file": "top-tee-hip-print-teapot-mustard-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-mustard-top-body-v1.webp",
+      "sha256": "c1c362cd97b70d0c4f4b98255856b505fc56139b577fcc76a330af360b35482a",
+      "bytes": 54672
+    },
+    {
+      "file": "top-tee-hip-print-teapot-navy-sleeves-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-navy-sleeves-v1.webp",
+      "sha256": "d6a3507efc0ccf6f60876753b431fc8bad85e72e766959e10d7c230c8d4cafb6",
+      "bytes": 4914
+    },
+    {
+      "file": "top-tee-hip-print-teapot-navy-top-body-v2.webp",
+      "replaces": "top-tee-hip-print-teapot-navy-top-body-v1.webp",
+      "sha256": "c71cf4335d8faef6cfcbb4957fa1aa9ee685c6a960e42fd871e021a8cfce9ac7",
+      "bytes": 38072
+    }
+  ]
+}

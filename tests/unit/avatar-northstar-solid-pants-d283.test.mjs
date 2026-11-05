@@ -2,6 +2,8 @@
 // files (their registered sha256), the olive trousers' published shadow reused, the trousers offered only where the top and shoes are a
 // pair D-281 checked (every reachable pair is one), the plan draws them in the D-242 order, the figure key names them, removing the choice
 // returns to the outfit's own bottom, nothing changes without the opt-in, ?northstar=0 forgets them, and the panel offers them.
+// D-349: the tees' layer files are now revision 2 (U-343-1); the D-242 stack is checked on the v1 revision (the items without layerRev)
+// and the runtime plan is that stack with exactly the tee's two layers as -v2.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -10,6 +12,7 @@ import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as L from "../../js/avatar-layers.js";
 import { reachablePantsOutfits } from "../../tools/avatar/verify-northstar-solid-pants-runtime-d283.mjs";
+import { v1Table } from "../../tools/avatar/verify-northstar-tee-armline-runtime-d349.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (f) => readFileSync(join(REPO, f), "utf8"), sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -56,8 +59,9 @@ test("D-283 the choice: only the 2 IDs; it replaces the bottom only; removing it
 
 test("D-283 the plan: the D-242 stack with the trousers' own layer; the olive trousers' published shadow; the figure key names the trousers", () => {
   for (const p of Object.keys(L.NORTHSTAR_SOLID_PANTS)) for (const k of ["K01", "K05", "K12", "K17", "K18"]) {
-    const o = L.northstarOutfitFor(k, null, p), plan = L.northstarPlanFor(o), item = L.NORTHSTAR_SOLID_PANTS[p].item;
-    assert.deepEqual(plan.filter((s) => s.op === "draw").map((s) => s.src.split("/").pop()), ["figure-body-v1.webp", o.shoes + "-shoes-v1.webp", item + "-pants-v1.webp", o.top + "-top-body-v1.webp", "figure-arms-v1.webp", o.top + "-sleeves-v1.webp", "figure-head-v1.webp"], k + "+" + p);
+    const o = L.northstarOutfitFor(k, null, p), plan = L.northstarPlanFor(o), plan1 = L.northstarPlanFor(o, v1Table(L.NORTHSTAR_ITEMS)), item = L.NORTHSTAR_SOLID_PANTS[p].item;
+    assert.deepEqual(plan1.filter((s) => s.op === "draw").map((s) => s.src.split("/").pop()), ["figure-body-v1.webp", o.shoes + "-shoes-v1.webp", item + "-pants-v1.webp", o.top + "-top-body-v1.webp", "figure-arms-v1.webp", o.top + "-sleeves-v1.webp", "figure-head-v1.webp"], k + "+" + p);
+    assert.ok(o.top.startsWith("top-tee-"), k); assert.deepEqual(plan.filter((s) => s.op === "draw").map((s) => s.src.split("/").pop()), ["figure-body-v1.webp", o.shoes + "-shoes-v1.webp", item + "-pants-v1.webp", o.top + "-top-body-v2.webp", "figure-arms-v1.webp", o.top + "-sleeves-v2.webp", "figure-head-v1.webp"], k + "+" + p + " (D-349)");
     assert.ok(plan.some((s) => s.op === "shade" && s.src.endsWith("/bottom-trousers-square-olive-shadow-body-v1.webp")), k + "+" + p); }
   const on = { avatar_northstar: "1", avatar_northstar_outfit: "K05", avatar_northstar_tee: "TP-TEA-COR", avatar_northstar_pants: "TS-SND" };
   const r = withStorage(on, () => L.northstarRenderFor("avatar", [])); assert.deepEqual([r.key, r.tee, r.pants], ["K05+TP-TEA-COR+TS-SND", "TP-TEA-COR", "TS-SND"]);
