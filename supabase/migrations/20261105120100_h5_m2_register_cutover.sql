@@ -26,7 +26,8 @@
 --
 -- GUARD
 --   * Transaction 1 must be committed: the end state of readiness CUT-01 holds (same assertion as
---     there). Otherwise refused, nothing changed.
+--     there, including: no other function in public bears a legacy name). Otherwise refused, nothing
+--     changed.
 --   * Visibility, fail-closed: the running role must be a superuser or a member of pg_read_all_stats
 --     (production: postgres is, catalog 2026-11-05), and no client session of this database may show
 --     a NULL state (= hidden from us). Otherwise refused: an invisible session would read as "none".
@@ -86,9 +87,12 @@ BEGIN
                  WHERE p.oid = ANY (v_legacy) AND a.grantee = 0 AND a.privilege_type = 'EXECUTE')
      OR EXISTS (SELECT 1 FROM pg_catalog.pg_roles r CROSS JOIN unnest(v_legacy) AS f(oid)
                   JOIN pg_catalog.pg_proc p ON p.oid = f.oid
-                 WHERE NOT r.rolsuper AND r.oid <> p.proowner AND has_function_privilege(r.oid, f.oid, 'EXECUTE')) THEN
+                 WHERE NOT r.rolsuper AND r.oid <> p.proowner AND has_function_privilege(r.oid, f.oid, 'EXECUTE'))
+     OR EXISTS (SELECT 1 FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+                 WHERE n.nspname = 'public' AND p.proname IN ('process_question_attempt', 'process_text_answer')
+                   AND p.oid <> ALL (v_legacy)) THEN
     RAISE EXCEPTION 'M2 (registrér): legacy-vejen er ikke lukket (%) — anvend og commit transaktion 1 (20261105120000) først; intet ændret',
-      coalesce(v_found, 'PUBLIC eller anden rolle');
+      coalesce(v_found, 'PUBLIC, anden rolle eller en anden funktion med legacy-navnet');
   END IF;
 
   -- ── Visibility (fail-closed) ───────────────────────────────────────────────────────────────────

@@ -102,7 +102,8 @@ Readiness-filen returnerer **33 rækker**: 27 kontroller, `CUT-02` og 5 gate-ræ
 - ingen af runtime-rollerne `anon`, `authenticated`, `service_role` og `authenticator` har `EXECUTE`. Det gælder både rollen selv og enhver rolle, den er medlem af, så arv og `SET ROLE` er dækket;
 - `PUBLIC` har ingen tildeling i ACL'en;
 - ingen anden ikke-superbruger end ejeren har `EXECUTE`;
-- ingen anden funktion kalder legacy-funktionerne, og intet objekt afhænger af dem.
+- ingen anden funktion kalder legacy-funktionerne, og intet objekt afhænger af dem;
+- ingen anden funktion i `public` hedder `process_question_attempt` eller `process_text_answer`. En ny overload, fx via `CREATE OR REPLACE` med en anden signatur, er en ny funktion: den får `EXECUTE` gennem standardrettighederne og kan kaldes via `/rpc`. Den tæller som et brud, uanset dens rettigheder (`andre signaturer=` i `actual`).
 
 `actual` viser hver fundet adgangsvej, fx `runtime=authenticator→service_role`.
 
@@ -112,7 +113,8 @@ Bevis på PGlite: `tests/unit/h5-k1-readiness-checks.test.mjs`:
 - test 4a: manglende D-327/K1;
 - test 4b: kun bootstrap;
 - test 8: ledger og gates;
-- test 9a–9f: `CUT-01`'s adgangsveje.
+- test 9a–9f: `CUT-01`'s adgangsveje;
+- test 9g: en ny overload af et legacy-navn, med og uden `EXECUTE` til `PUBLIC`.
 
 ## 5. GO/NO-GO
 
@@ -320,7 +322,14 @@ Desuden kan en anden funktion (især `SECURITY DEFINER`), et view eller et pg_cr
    - ingen anden ikke-superbruger end ejeren har `EXECUTE`;
    - ingen anden funktion kalder legacy-funktionerne;
    - intet objekt i `pg_depend` afhænger af dem.
-3. **Ingen `DROP`/`CREATE`.** M2 og alle senere migrationer må ikke droppe og genoprette legacy-funktionerne. Skal en krop ændres, bruges `CREATE OR REPLACE`, som bevarer ACL'en, efterfulgt af en eksplicit REVOKE og den samme påstand. Readiness `CUT-01` opdager fejlen bagefter (test 9f).
+3. **Ingen `DROP`/`CREATE`.** M2 og alle senere migrationer må ikke droppe og genoprette legacy-funktionerne. Skal en krop ændres, bruges `CREATE OR REPLACE`, som bevarer ACL'en, efterfulgt af en eksplicit REVOKE og den samme påstand. Readiness `CUT-01` opdager fejlen bagefter (test 9f), og også en ny overload med et af de to navne (test 9g). Begge M2-transaktioner afviser på forhånd, hvis en sådan overload findes.
+   - **Statisk kontrol af alle migrationer** (`tests/unit/h5-m2-cutover-migration-run.test.mjs`): hver migrationsfil læses, **uanset tidsstempel**, så en fil, der merges senere med et ældre tidsstempel, også fanges. Den fanger:
+     - `CREATE` og `CREATE OR REPLACE` med en vilkårlig signatur;
+     - `DROP`, `ALTER` (fx `OWNER TO`) og `GRANT … ON FUNCTION` for de to navne;
+     - `GRANT … ON ALL FUNCTIONS IN SCHEMA` og `ALTER DEFAULT PRIVILEGES … ON FUNCTIONS`;
+     - rollemedlemskab til en runtime-rolle, `ALTER ROLE` af en runtime-rolle, `CREATE ROLE … IN ROLE` og `REASSIGN OWNED`.
+   - Fundene sammenholdes med en eksplicit baseline: 12 historiske filer fra før M2, hver med begrundelse og fastlåst med sha256 af indholdet. En ny fil, en ændret baselinefil eller en ny slags fund får testen til at fejle.
+   - Det kan den ikke se: SQL, der sammensættes ved kørsel (`EXECUTE 'GRANT … ' || navn`, `format('%I', …)`). Det dækkes kun af `CUT-01` og M2's vagter, som læser den faktiske tilstand i databasen.
 4. **Kaldestier uden for SQL-kataloget** kontrolleres manuelt før M2 og noteres i produktionsloggen:
    - **pg_cron:** blokken nedenfor. Den kræver `cron.job` og køres kun dér, hvor udvidelsen findes. Forventet resultat: `legacy_jobs` = 0.
    - **Edge Functions:** i repoet kalder kun `process-event` legacy-RPC'erne (`supabase/functions/process-event/text-answer-rpc.ts:62` og `:89`). Den deployede kilde skal diffes (§2.4), fordi v34 ikke er arkiveret.
@@ -463,8 +472,10 @@ SELECT count(*) AS jobs,
 Testene viser det med skemaets fingeraftryk og ved at køre samme H5-forløb med og uden M2. Den kendte dobbelt-XP ved lærerbedømmelse (`review-answer`, §11) går ikke gennem legacy-funktionerne og berøres ikke; den er et separat spor.
 
 **Tests (§9.4):**
-- `tests/unit/h5-m2-cutover-migration-run.test.mjs` (PGlite, 9 tests): filerne; vagterne; sluttilstanden for alle adgangsveje; 42501 → 426; H5 uændret; registrering, append-only og rettigheder; R1.
-- `tests/unit/h5-m2-cutover-concurrency.test.mjs` (PostgreSQL 17, kræves i unit-CI): igangværende kald, flere samtidige kald, ingen kald, tidsgrænse, genoptagelse og R1.
+- `tests/unit/h5-m2-cutover-migration-run.test.mjs` (PGlite, 11 tests): filerne; den statiske kontrol af alle migrationer med baseline og syntetiske regressionstilfælde; vagterne, også mod en ny overload; sluttilstanden for alle adgangsveje; 42501 → 426; H5 uændret; registrering, append-only og rettigheder; R1.
+- `tests/unit/h5-m2-cutover-concurrency.test.mjs` (PostgreSQL 17, kræves i unit-CI): igangværende kald, flere samtidige kald, ingen kald, tidsgrænse, genoptagelse og R1. Plus en negativ kontrol: en kopi af transaktion 2 uden `pg_stat_clear_snapshot()`, bygget i hukommelsen, rammer tidsgrænsen.
+  - Testen synkroniserer med transaktion 2's faktiske tilstand i stedet for med ventetider. Forbindelsen har sit eget `application_name`, og testen afslutter først en åben transaktion, når den backend sover i venteløkken (`PgSleep`). Det sker kun efter en aflæsning, der har talt den åbne transaktion. Ventetiden er begrænset til 15 s.
+  - En commit efter det tidspunkt kan kun ses ved en senere, frisk aflæsning. Det beviser scenarie 1, 2 og den negative kontrol tilsammen.
 
 ## 10. Tilbagerulning pr. fase
 

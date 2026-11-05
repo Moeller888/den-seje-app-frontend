@@ -30,7 +30,9 @@
 --     * both legacy functions exist, and no runtime role (anon, authenticated, service_role,
 --       authenticator) is a member of their owner;
 --     * no other function calls them, nothing in pg_depend depends on them, and no pg_cron job names
---       them (when cron.job exists; unreadable → refused).
+--       them (when cron.job exists; unreadable → refused);
+--     * no other function in public bears either legacy name (a new overload, e.g. via CREATE OR
+--       REPLACE with another signature, would be a new open legacy path; same rule as readiness CUT-01).
 --   After the REVOKE the same block asserts the end state of readiness CUT-01 (§9.2 krav 2): no runtime
 --   role — directly, through PUBLIC, through inheritance or via SET ROLE (pg_has_role MEMBER) — may
 --   execute either function; the ACL holds no PUBLIC entry; no non-superuser other than the owner holds
@@ -101,6 +103,14 @@ BEGIN
    WHERE d.refclassid = 'pg_catalog.pg_proc'::regclass AND d.refobjid = ANY (v_legacy) AND d.deptype IN ('n', 'a');
   IF v_found IS NOT NULL THEN
     RAISE EXCEPTION 'M2 (luk): objekter afhænger af legacy-funktionerne (%); intet ændret', v_found;
+  END IF;
+
+  SELECT string_agg(p.oid::regprocedure::text, ', ') INTO v_found
+    FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+   WHERE n.nspname = 'public' AND p.proname IN ('process_question_attempt', 'process_text_answer')
+     AND p.oid <> ALL (v_legacy);
+  IF v_found IS NOT NULL THEN
+    RAISE EXCEPTION 'M2 (luk): andre funktioner i public bærer legacy-navnene (%); en ny overload ville være en åben legacy-vej; intet ændret', v_found;
   END IF;
 
   IF to_regclass('cron.job') IS NOT NULL THEN

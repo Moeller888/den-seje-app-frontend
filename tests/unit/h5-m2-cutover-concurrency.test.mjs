@@ -13,6 +13,13 @@
 //      names pid, role, state and age but never query text. After the session ends, the SAME file runs
 //      again and registers. Alternatively R1 (docs/operations/h5-m2-rollback.md) reopens for
 //      service_role only.
+//   5. NEGATIVE CONTROL: a copy of transaction 2 without pg_stat_clear_snapshot() (built in memory; the real
+//      file is unchanged) never sees a commit that happens after its first observation and times out.
+//
+// SYNCHRONISATION, not timing: transaction 2 runs with its own application_name, and before the test ends an
+// open transaction it waits (bounded, waitInDrainLoop) until that backend sleeps in the drain loop — which
+// it only does after a read that counted the open transaction. A commit after that point can only be seen by
+// a LATER, fresh read; scenario 1, 2 and 5 together prove the reads are fresh.
 //
 // Runs only when LEVEL_ENGINE_PG_URL points at a disposable PostgreSQL server; otherwise SKIPPED with the
 // reason — unless LEVEL_ENGINE_PG_REQUIRED=1 (CI's PostgreSQL 17.6 service), where it FAILS. Same technique
@@ -139,13 +146,41 @@ const cutover = async (db) => (await db.su.query("SELECT to_regclass('public.ans
 const integrity2 = async (db) => Object.fromEntries((await db.su.query(INTEGRITY_2())).rows.map((r) => [r.check_id, r]));
 const settled = (p) => Promise.race([p.then(() => true, () => true), new Promise((r) => setTimeout(() => r(false), 0))]);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-async function register(db, timeoutS = null) {
+// Transaction 2 runs on its own connection, named by application_name so the test can follow its REAL state
+// in pg_stat_activity. `sql` replaces the file only for the negative control below.
+async function register(db, timeoutS = null, { app = null, sql = null } = {}) {
   const c = await connect(db.url);
+  if (app) await c.query(`SET application_name = '${app}'`);
   if (timeoutS !== null) await c.query(`SET app.h5_m2_drain_timeout_s = '${timeoutS}'`);
   const started = Date.now();
-  try { await c.query(migrationSql(REGISTER)); return { ok: true, ms: Date.now() - started }; }
+  try { await c.query(sql ?? migrationSql(REGISTER)); return { ok: true, ms: Date.now() - started }; }
   catch (e) { return { ok: false, ms: Date.now() - started, error: e }; }
   finally { await done(c); }
+}
+const drainApp = () => `h5_m2_drain_${randomUUID().slice(0, 8)}`;
+// Bounded wait until transaction 2 sits in its drain loop: the backend named `app` is active and waits on
+// PgSleep. The loop sleeps only AFTER a read that counted at least one open transaction from before the
+// close (`EXIT WHEN v_waiting = 0` comes first, migration line "PERFORM pg_sleep(0.1)") — so from here on, every
+// transaction the test still holds open has been OBSERVED open at least once. Each poll is its own statement
+// on the superuser connection (autocommit), so it reads a fresh view. Fails with what it last saw, never hangs.
+async function waitInDrainLoop(db, app, limitMs = 15_000) {
+  const deadline = Date.now() + limitMs;
+  let last = "no backend yet";
+  while (Date.now() < deadline) {
+    const { rows } = await db.su.query(
+      "SELECT pid, state, wait_event_type, wait_event FROM pg_catalog.pg_stat_activity WHERE application_name = $1", [app]);
+    if (rows.length === 1 && rows[0].state === "active" && rows[0].wait_event === "PgSleep") return rows[0].pid;
+    if (rows.length) last = JSON.stringify(rows);
+    await sleep(20);
+  }
+  throw new Error(`transaction 2 (${app}) did not reach its drain loop within ${limitMs} ms; last seen: ${last}`);
+}
+// The session `client` is (still) open in a transaction, read fresh: the drain has something to wait for.
+async function openInTransaction(db, client) {
+  const pid = (await client.query("SELECT pg_backend_pid() AS p")).rows[0].p;
+  const s = (await db.su.query("SELECT state, xact_start IS NOT NULL AS x FROM pg_catalog.pg_stat_activity WHERE pid = $1", [pid])).rows[0];
+  assert.ok(s && s.x && s.state === "idle in transaction", `pid ${pid} open in a transaction: ${JSON.stringify(s)}`);
+  return pid;
 }
 async function assertLegacyRefused(db, q) {
   const qi = await serve(db, q);
@@ -171,13 +206,17 @@ test("1. an answer in flight at the close: transaction 2 waits for it, registers
   await db.su.query(migrationSql(CLOSE));                     // transaction 1 commits without waiting for A
   const refusedQi = await assertLegacyRefused(db, 2);
 
-  const reg = register(db);
+  await openInTransaction(db, a);
+  const app = drainApp();
+  const reg = register(db, null, { app });
+  await waitInDrainLoop(db, app);                            // it has OBSERVED A open and is in the loop
+  await openInTransaction(db, a);                            // A is still open after that observation
   await sleep(1500);
   assert.equal(await settled(reg), false, "transaction 2 waits while A is open");
   assert.equal(await cutover(db), null, "nothing registered yet");
-  await a.query("COMMIT");
+  await a.query("COMMIT");                                   // A ends AFTER the first observation
   const r = await reg;
-  assert.ok(r.ok, r.error?.message);
+  assert.ok(r.ok, r.error?.message);                         // a LATER observation saw the commit: fresh reads
   assert.ok(r.ms >= 1400, `waited ${r.ms} ms`);
 
   const [row] = await cutover(db);
@@ -210,7 +249,10 @@ test("2. several open transactions: registered only after the last; another data
   await a3.query("BEGIN; SELECT 1");                          // open, no legacy call
 
   await db.su.query(migrationSql(CLOSE));
-  const reg = register(db);
+  const app = drainApp();
+  const reg = register(db, null, { app });
+  await waitInDrainLoop(db, app);                            // observed all three open, in the loop
+  for (const c of [a1, a2, a3]) await openInTransaction(db, c);
   await sleep(500);  await a1.query("COMMIT");
   await sleep(500);  await a2.query("ROLLBACK");
   await sleep(500);
@@ -278,4 +320,49 @@ test("4. timeout: nothing registered, legacy stays closed, H5 works; the same fi
     assert.equal(x, expected, role);
   }
   await done(stuck2);
+});
+
+// NEGATIVE CONTROL. A copy of transaction 2 WITHOUT pg_stat_clear_snapshot(), built in memory from the real
+// file (which is not changed), run with the SAME synchronisation as scenario 1. PostgreSQL keeps the
+// activity snapshot it took at the first read for the rest of the transaction, so the copy keeps counting A
+// after A has committed and runs into its limit. This proves that the synchronised scenarios above would
+// catch the regression: they pass only because the real file reads a fresh view in every iteration.
+test("5. negative control: a copy without pg_stat_clear_snapshot never sees A's commit and times out — the real file then registers", { skip: SKIP, timeout: 120_000 }, async (t) => {
+  t.after(teardown);
+  const real = migrationSql(REGISTER);
+  const CLEAR = "PERFORM pg_stat_clear_snapshot();";
+  assert.equal(real.split(CLEAR).length, 2, "the real file clears the snapshot exactly once, inside the drain loop");
+  const stale = real.replace(CLEAR, "NULL; -- negative control: snapshot NOT cleared");
+  assert.ok(!stale.includes("pg_stat_clear_snapshot"), "the copy has no clear left");
+
+  const db = await k1InUse();
+  const qiA = await serve(db, 1);
+  const a = await connect(db.url, "authenticator");
+  await a.query("SET ROLE service_role");
+  await a.query("BEGIN");
+  await a.query(LEGACY, legacyArgs(db, qiA, 1));
+  const aPid = await openInTransaction(db, a);
+  await db.su.query(migrationSql(CLOSE));
+
+  const app = drainApp();
+  const reg = register(db, 3, { app, sql: stale });
+  await waitInDrainLoop(db, app);                            // first observation done: A seen open
+  await openInTransaction(db, a);
+  await a.query("COMMIT");                                   // A ends after the first observation
+  const fresh = (await db.su.query("SELECT xact_start FROM pg_catalog.pg_stat_activity WHERE pid = $1", [aPid])).rows[0];
+  assert.equal(fresh?.xact_start ?? null, null, "a fresh view shows A without a transaction");
+
+  const r = await reg;
+  assert.equal(r.ok, false, "the copy without the clear never registers");
+  assert.match(r.error.message, /tidsgrænsen på 3 s er overskredet/);
+  assert.match(r.error.message, new RegExp(`pid ${aPid} \\(authenticator, idle in transaction, \\d+ s\\)`),
+    "it still reports A as open: its view is the stale first snapshot");
+  assert.equal(await cutover(db), null, "nothing registered");
+
+  // The real file, same database, same moment: A is gone, so it registers at once.
+  const ok = await register(db, 3, { app: drainApp() });
+  assert.ok(ok.ok, ok.error?.message);
+  assert.equal((await cutover(db)).length, 1);
+  assert.equal((await integrity2(db))["INT-B"].ok, true);
+  await done(a);
 });

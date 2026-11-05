@@ -11,7 +11,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
@@ -154,6 +154,124 @@ test("no later migration drops, re-creates or re-grants a legacy answer function
   }
 });
 
+// ── Every migration, whatever its timestamp: statements that could re-open the legacy path ─────────────
+// The filename filter above (f > CLOSE) misses a migration merged LATER in Git with an OLDER timestamp (as
+// #612's 20261020… files were, after this PR was opened). This scan reads EVERY migration file and compares
+// the hits with an explicit baseline: the known, historical definitions from before M2, each pinned by the
+// sha256 of its content (CRLF → LF). A new file, a changed baseline file or a new kind of hit fails.
+// What it cannot see: SQL assembled at run time (e.g. EXECUTE 'GRANT … ' || name, format('%I', …)).
+// Readiness CUT-01 and the guards of transaction 1 and 2 check the effective state in the database for that.
+const RUNTIME_ROLE = String.raw`(anon|authenticated|service_role|authenticator|public)`;
+const LEGACY_DDL_RULES = Object.freeze({
+  // any signature: CREATE and CREATE OR REPLACE, so a new overload is caught as well
+  create: /\bCREATE\s+(OR\s+REPLACE\s+)?(FUNCTION|PROCEDURE)\s+("?public"?\s*\.\s*)?"?process_(question_attempt|text_answer)"?\s*\(/i,
+  drop: /\bDROP\s+(FUNCTION|PROCEDURE|ROUTINE)\b[^;]*\bprocess_(question_attempt|text_answer)\b/i,
+  // ALTER FUNCTION … OWNER TO / RENAME / SET … on a legacy name
+  alter: /\bALTER\s+(FUNCTION|PROCEDURE|ROUTINE)\s+[^;]*\bprocess_(question_attempt|text_answer)\b/i,
+  grant_fn: /\bGRANT\b[^;]*\bON\s+(FUNCTION|PROCEDURE|ROUTINE)\b[^;]*\bprocess_(question_attempt|text_answer)\b/i,
+  grant_all: /\bGRANT\b[^;]*\bON\s+ALL\s+(FUNCTIONS|PROCEDURES|ROUTINES)\s+IN\s+SCHEMA\b/i,
+  default_privileges: /\bALTER\s+DEFAULT\s+PRIVILEGES\b[^;]*\bGRANT\b[^;]*\bON\s+(FUNCTIONS|ROUTINES)\b/i,
+  // GRANT <role> TO <runtime role> (no ON: a membership, not a privilege) — e.g. GRANT postgres TO authenticated
+  role_membership: new RegExp(String.raw`\bGRANT\s+(?![^;]*\bON\b)[^;]*\bTO\s+[^;]*\b${RUNTIME_ROLE}\b`, "i"),
+  runtime_role_alter: new RegExp(String.raw`\bALTER\s+(ROLE|USER|GROUP)\s+"?${RUNTIME_ROLE}"?\b`, "i"),
+  create_role_membership: /\bCREATE\s+(ROLE|USER|GROUP)\s+\S+[^;]*\b(IN\s+ROLE|IN\s+GROUP|ROLE|ADMIN|USER|SUPERUSER)\b/i,
+  reassign_owned: /\bREASSIGN\s+OWNED\b/i,
+});
+function legacyDdlHits(sql) {
+  const body = sql.split("\r\n").join("\n").replace(/\/\*[\s\S]*?\*\//g, " ")
+    .split("\n").map((l) => l.replace(/--.*$/, "")).join("\n");
+  const statements = body.split(";");
+  return Object.entries(LEGACY_DDL_RULES).filter(([, re]) => statements.some((s) => re.test(s))).map(([k]) => k);
+}
+const sha256 = (s) => createHash("sha256").update(s.split("\r\n").join("\n")).digest("hex");
+// Known, reviewed definitions from before M2. Each is history: production holds the result (G1's body, the
+// D-235/D-236 lockdown ACLs); M2's guards check the live state, not these files. Never extend this list
+// without a review of the new statement and an owner GO for re-opening.
+const LEGACY_DDL_BASELINE = Object.freeze({
+  "20260511000400_idempotent_text_answer.sql": { rules: ["create"], sha256: "b886a1c8af25ac93c6f91065268a5df995e61146d321b82c8afc74808da473ba", why: "original bodies of both legacy functions (May 2026)" },
+  "20260518000000_streak_system.sql": { rules: ["create"], sha256: "9e80a678343576d138f1e535f3194316e33360b98f68c57a4878a499e97a7f9c", why: "streaks added to both bodies" },
+  "20260518000100_retention_loops.sql": { rules: ["create"], sha256: "6f7b7e232a8b6c50b62b89d73c53db742aaab541273dc17153771f5802071afc", why: "daily quests added to both bodies" },
+  "20260518000200_fix_correct_answers_counter.sql": { rules: ["create"], sha256: "9e5d44fe13cb85cf402eea0c8b1e0750ac51d542a72aa9c63401223a1aa52220", why: "counter fix in both bodies" },
+  "20260524000000_weekly_quests.sql": { rules: ["create"], sha256: "9e4776cd2fa894176e182b0715ae932dd79d08663de207c5e02eb5356f84d80d", why: "weekly quests added to both bodies" },
+  "20261002000000_quiz_repeat_when_pool_exhausted.sql": { rules: ["create"], sha256: "ea9c196134c77ed941a7ec16e058ccc382c4b3cd366429ddbc49aa99b6386e0f", why: "repeat rounds in process_question_attempt" },
+  "20261003153220_process_text_answer_execute_lockdown.sql": { rules: ["alter", "grant_fn"], sha256: "1c051dc281d06ab5ad270d74fdaf26f6597b82aba39edd0d65a1fdf4270e5268", why: "security lockdown: EXECUTE to service_role only, search_path set" },
+  "20261007182046_process_question_attempt_execute_lockdown.sql": { rules: ["grant_fn"], sha256: "3b5cde2e57011755125123e203f469ed9402758ce737dd66aa21249e8263c501", why: "security lockdown: EXECUTE to service_role only" },
+  "20261018143726_fix_danish_question_bank_text.sql": { rules: ["create"], sha256: "efe71e74e53373c77779928ac0bba9044a68c0807e723d76120d422fa276b793", why: "Danish letters in grading (same signature)" },
+  "20261027120000_repeat_answer_coin_reward.sql": { rules: ["create"], sha256: "04c53db5e423594a44f04ea956b3cb05d7ddaa88d8a5e2e85b87498040a37300", why: "D-211 repeat coin reward (same signature)" },
+  "20261031194600_mc_length_cue_answer_paths.sql": { rules: ["create"], sha256: "f334ae136d9603661b8af6028dbbc43dd715a67ecf54b2a092f74c88551a9a05", why: "D-280 answer paths (same signature)" },
+  "20261101150000_grading_meaningful_characters.sql": { rules: ["create"], sha256: "406933134b95fb2f72591eb5a0f99e4a3a9c57a5decceabdca9edaa507e6299f", why: "D-290 G1, the body production runs (same signature)" },
+});
+
+// Problems for a set of migration files ({ name, sql }), against the baseline. Order plays no part.
+function unreviewedLegacyDdl(files) {
+  const problems = [];
+  const hitNames = [];
+  for (const { name, sql } of files) {
+    const rules = legacyDdlHits(sql);
+    if (!rules.length) continue;
+    hitNames.push(name);
+    const base = LEGACY_DDL_BASELINE[name];
+    if (!base) problems.push(`${name}: ${rules.join(", ")} — not in the reviewed baseline (a new or re-dated migration that can re-open the legacy path)`);
+    else if (rules.join(",") !== base.rules.join(",")) problems.push(`${name}: ${rules.join(", ")} — other statement kinds than reviewed (${base.rules.join(", ")})`);
+    else if (sha256(sql) !== base.sha256) problems.push(`${name}: changed since it was reviewed`);
+  }
+  for (const name of Object.keys(LEGACY_DDL_BASELINE)) {
+    if (!hitNames.includes(name)) problems.push(`${name}: baseline file missing or no longer matching — review the baseline`);
+  }
+  return problems;
+}
+const repoMigrations = () => readdirSync(MIG_DIR).filter((x) => /^\d{14}_.+\.sql$/.test(x))
+  .map((name) => ({ name, sql: readFileSync(join(MIG_DIR, name), "utf8") }));
+
+test("every migration, whatever its timestamp: nothing outside the reviewed baseline can re-open the legacy path (runbook §9.2 krav 3)", () => {
+  assert.deepEqual(unreviewedLegacyDdl(repoMigrations()), []);
+});
+
+test("the scan fails on each kind of re-opening — also in a file with an OLDER timestamp — and ignores comments and _v2", () => {
+  const bad = {
+    "CREATE OR REPLACE overload": ["create", `CREATE OR REPLACE FUNCTION public.process_question_attempt(uuid, uuid, text, integer) RETURNS json LANGUAGE sql AS $$ SELECT NULL::json $$;`],
+    "CREATE, no schema": ["create", `CREATE FUNCTION process_text_answer(text) RETURNS void LANGUAGE sql AS $$ SELECT $$;`],
+    "quoted names": ["create", `CREATE OR REPLACE FUNCTION "public"."process_text_answer"(uuid) RETURNS void LANGUAGE sql AS $$ SELECT $$;`],
+    "DROP": ["drop", `DROP FUNCTION IF EXISTS public.process_question_attempt(uuid,uuid,text,bigint);`],
+    "ALTER … OWNER TO": ["alter", `ALTER FUNCTION public.process_text_answer(uuid,uuid,text,boolean) OWNER TO authenticated;`],
+    "direct GRANT": ["grant_fn", `GRANT EXECUTE ON FUNCTION public.process_question_attempt(uuid,uuid,text,bigint) TO anon;`],
+    "GRANT to PUBLIC across lines": ["grant_fn", `GRANT EXECUTE\n  ON FUNCTION public.process_text_answer(uuid, uuid, text, boolean)\n  TO PUBLIC;`],
+    "broad GRANT": ["grant_all", `GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;`],
+    "default privileges": ["default_privileges", `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon;`],
+    "membership in the owner": ["role_membership", `GRANT postgres TO authenticated;`],
+    "membership for SET ROLE": ["role_membership", `GRANT legacy_caller TO authenticator;`],
+    "runtime role altered": ["runtime_role_alter", `ALTER ROLE service_role INHERIT;`],
+    "new role inside a runtime role": ["create_role_membership", `CREATE ROLE legacy_caller NOLOGIN IN ROLE authenticated;`],
+    "ownership moved": ["reassign_owned", `REASSIGN OWNED BY postgres TO legacy_owner;`],
+  };
+  for (const [name, [rule, sql]] of Object.entries(bad)) {
+    assert.ok(legacyDdlHits(sql).includes(rule), `${name}: ${rule} not detected`);
+  }
+  // A file merged later in Git with an OLDER timestamp is reported like any other: the scan reads every
+  // file and the baseline is keyed by name and content, never by order.
+  const repo = repoMigrations();
+  for (const [name, [, sql]] of Object.entries(bad)) {
+    const older = `20260101000000_late_merged_${name.replace(/[^a-z]+/gi, "_").toLowerCase()}.sql`;
+    assert.ok(older < CLOSE, older);
+    const problems = unreviewedLegacyDdl([...repo, { name: older, sql }]);
+    assert.equal(problems.length, 1, `${name}: ${problems.join(" | ")}`);
+    assert.match(problems[0], /not in the reviewed baseline/);
+  }
+  // A reviewed baseline file that is edited afterwards (here: a GRANT to PUBLIC appended) is reported too.
+  const edited = repo.map((f) => f.name === "20261007182046_process_question_attempt_execute_lockdown.sql"
+    ? { ...f, sql: `${f.sql}\nGRANT EXECUTE ON FUNCTION public.process_question_attempt(uuid,uuid,text,bigint) TO PUBLIC;\n` } : f);
+  assert.deepEqual(unreviewedLegacyDdl(edited), ["20261007182046_process_question_attempt_execute_lockdown.sql: changed since it was reviewed"]);
+  // Not hits: comments, the _v2 functions, and privileges on other objects.
+  for (const ok of [
+    `-- GRANT EXECUTE ON FUNCTION public.process_question_attempt(uuid,uuid,text,bigint) TO anon;`,
+    `/* DROP FUNCTION public.process_text_answer(uuid,uuid,text,boolean); */ SELECT 1;`,
+    `CREATE OR REPLACE FUNCTION public.process_question_attempt_v2(uuid) RETURNS void LANGUAGE sql AS $$ SELECT $$;`,
+    `GRANT EXECUTE ON FUNCTION public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer) TO service_role;`,
+    `GRANT USAGE ON SCHEMA public TO anon;`,
+    `GRANT SELECT ON TABLE public.question_attempts TO service_role;`,
+  ]) assert.deepEqual(legacyDdlHits(ok), [], ok);
+});
+
 // ── Transaction 1: guards ────────────────────────────────────────────────────────────────────────
 test("transaction 1 is refused — nothing changed — without K1, without an attempt, with a caller, a dependent view or a runtime role in the owner", async () => {
   const cases = [
@@ -176,6 +294,13 @@ test("transaction 1 is refused — nothing changed — without K1, without an at
       await d.exec(`CREATE ROLE legacy_owner NOLOGIN; ALTER FUNCTION ${PQA} OWNER TO legacy_owner; GRANT legacy_owner TO authenticated;`);
       return d;
     }, /runtime-rolle\(r\) er medlem af legacy-funktionernes ejer \(authenticated\)/],
+    ["a new overload of a legacy name exists (CREATE OR REPLACE, other signature, no grant)", async () => {
+      const { d } = await inUse();
+      await d.exec(`CREATE OR REPLACE FUNCTION public.process_text_answer(uuid, uuid, text, integer) RETURNS json
+          LANGUAGE plpgsql SECURITY DEFINER AS $o$ BEGIN RETURN NULL; END $o$;
+        REVOKE ALL ON FUNCTION public.process_text_answer(uuid, uuid, text, integer) FROM PUBLIC;`);
+      return d;
+    }, /andre funktioner i public bærer legacy-navnene \((public\.)?process_text_answer\(uuid,uuid,text,integer\)\)/],
   ];
   for (const [name, build, msg] of cases) {
     const d = await build();
@@ -211,7 +336,7 @@ test("transaction 1 closes EVERY path — direct, PUBLIC, inherited, SET ROLE �
   await apply(d, CLOSE);
   const after = await checks(d);
   assert.equal(after["CUT-01"].ok, true, after["CUT-01"].actual);
-  assert.match(after["CUT-01"].actual, /^runtime=ingen; PUBLIC=false; øvrige roller=ingen; kaldere=0; afhængige=0; authenticator=findes$/);
+  assert.match(after["CUT-01"].actual, /^runtime=ingen; PUBLIC=false; øvrige roller=ingen; kaldere=0; afhængige=0; andre signaturer=0; authenticator=findes$/);
   assert.equal(after["CUT-02"].ok, false, "closed, T missing: NO-GO");
   assert.match(after["CUT-02"].actual, /registreringen af T findes ikke/);
   assert.deepEqual(await history(d), hBefore, "no answer history touched");
@@ -306,6 +431,17 @@ test("transaction 2 is refused before transaction 1, and without visibility of o
   assert.match(e?.message ?? "", /kan ikke se andre sessioners transaktioner \(pg_read_all_stats mangler\); intet registreret/);
   assert.deepEqual(await fingerprint(d), fp);
   assert.equal((await checks(d))["CUT-02"].ok, false);
+
+  // A legacy overload created AFTER transaction 1 reopens a legacy path: transaction 2 refuses to register T.
+  await d.exec(`CREATE OR REPLACE FUNCTION public.process_question_attempt(uuid, uuid, text, integer) RETURNS json
+      LANGUAGE plpgsql SECURITY DEFINER AS $o$ BEGIN RETURN NULL; END $o$;
+    REVOKE ALL ON FUNCTION public.process_question_attempt(uuid, uuid, text, integer) FROM PUBLIC;`);
+  assert.equal((await checks(d))["CUT-01"].ok, false, "CUT-01 sees the overload");
+  const fp2 = await fingerprint(d);
+  e = await errOf(d.exec(REGISTER_SQL()));
+  assert.match(e?.message ?? "", /legacy-vejen er ikke lukket \(PUBLIC, anden rolle eller en anden funktion med legacy-navnet\)/);
+  assert.deepEqual(await fingerprint(d), fp2);
+  assert.equal((await d.query("SELECT to_regclass('public.answer_path_cutovers') AS t")).rows[0].t, null, "nothing registered");
   await d.close();
 });
 
