@@ -134,13 +134,6 @@ BEGIN
   EXECUTE $ddl$REVOKE ALL ON TABLE public.quiz_cooldown_config, public.quiz_cooldown_state, public.quiz_cooldown_events FROM PUBLIC, anon, authenticated$ddl$;
   -- The identity sequence gets the project's default sequence grants (anon, authenticated) — revoke them.
   EXECUTE $ddl$REVOKE ALL ON SEQUENCE public.quiz_cooldown_events_id_seq FROM PUBLIC, anon, authenticated$ddl$;
-  -- The one thing a pupil may read: WHEN their own pause ends (never the wrong-answer times or count).
-  -- Column privilege + own-row policy, so get_my_quiz_cooldown() can be SECURITY INVOKER.
-  EXECUTE $ddl$GRANT SELECT (student_id, cooldown_until) ON public.quiz_cooldown_state TO authenticated$ddl$;
-  EXECUTE $ddl$
-    CREATE POLICY quiz_cooldown_state_read_own_end ON public.quiz_cooldown_state
-    FOR SELECT TO authenticated
-    USING (student_id = (SELECT auth.uid()))$ddl$;
 
   -- ── 5. Afvisning under pause (BEFORE) ─────────────────────────────────────
   EXECUTE $ddl$
@@ -256,6 +249,13 @@ $fn$$ddl$;
     EXECUTE FUNCTION public.quiz_cooldown_register()$ddl$;
 
   -- ── 7. Elevens egen status (til genindlæsning og andre faner/enheder) ─────
+  -- The one thing a pupil may read: WHEN their own pause ends (never the wrong-answer times or count).
+  -- Column privilege + own-row policy, so get_my_quiz_cooldown() can be SECURITY INVOKER.
+  EXECUTE $ddl$GRANT SELECT (student_id, cooldown_until) ON public.quiz_cooldown_state TO authenticated$ddl$;
+  EXECUTE $ddl$
+    CREATE POLICY quiz_cooldown_state_read_own_end ON public.quiz_cooldown_state
+    FOR SELECT TO authenticated
+    USING (student_id = (SELECT auth.uid()))$ddl$;
   EXECUTE $ddl$
 CREATE FUNCTION public.get_my_quiz_cooldown()
 RETURNS jsonb
