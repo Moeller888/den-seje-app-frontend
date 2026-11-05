@@ -116,6 +116,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
   "20261103110000_l1_k1_attempt_context.sql":
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
+  "20261105160000_f01_number_questions_history.sql":
+    "F-01, not applied in production: data-only question-bank content (30 history number questions, inserted INACTIVE); applying it needs its own owner GO and activating the rows a separate decision",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
