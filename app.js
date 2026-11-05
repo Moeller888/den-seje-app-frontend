@@ -15,7 +15,7 @@ import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { prepareChoiceOptions } from "./js/answer-options.js";
 import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer, shortTextCorrection } from "./js/answer-input.js";
 import { buildMatchPairsAnswer, matchCorrectionText, readMatchLayout } from "./js/match-pairs.js";
-import { buildTrueFalseAnswer, readTrueFalseContent } from "./js/true-false.js";
+import { buildTrueFalseAnswer, readTrueFalseContent, trueFalseCorrection } from "./js/true-false.js";
 import { buildNumberAnswer } from "./js/number-answer.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
@@ -1304,11 +1304,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         feedback.className = "feedback-error";
         // "Stav til": the explanation alone does not state the spelling, so keep it on screen.
         // Match par: the panel hides the columns, so the correct pairs are stated in words.
+        // Sandt/falsk: the explanation says why, the lead says which judgement was right.
         const correction = currentRenderer === ANSWER_RENDERERS.SHORT_TEXT
           ? shortTextCorrection(data.correct_answer, userAnswer)
           : currentRenderer === ANSWER_RENDERERS.MATCH_PAIRS && currentMatchControl
             ? matchCorrectionText(currentMatchControl.layout, data.correct_answer)
-            : null;
+            : currentRenderer === ANSWER_RENDERERS.TRUE_FALSE
+              ? trueFalseCorrection(data.correct_answer)
+              : null;
         setTimeout(() => enterReflectionState(reviewText, correction), 400);
         return;
       }

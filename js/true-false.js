@@ -33,6 +33,16 @@ export function readTrueFalseContent(content) {
   return { statement };
 }
 
+// The line shown above the explanation when a true/false answer was wrong and the quiz opens its
+// reflection panel ("Ikke helt —" + review_text). Without it the pupil reads WHY but is never told
+// which judgement was right. `correctAnswer` is the server's data.correct_answer (the key text); any
+// other value gives null, and the quiz then shows its plain lead, exactly as before.
+export function trueFalseCorrection(correctAnswer) {
+  if (correctAnswer === TRUE_FALSE_OPTIONS[0]) return "Udsagnet er sandt.";
+  if (correctAnswer === TRUE_FALSE_OPTIONS[1]) return "Udsagnet er falsk.";
+  return null;
+}
+
 export function buildTrueFalseAnswer(doc, { onSubmit, describedBy = null } = {}) {
   if (!doc || typeof doc.createElement !== "function") {
     throw new Error("buildTrueFalseAnswer: a document is required");

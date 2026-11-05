@@ -304,9 +304,19 @@ test("control: accepted answers stay locked; an answer handed back (buttons re-e
 
 // ── app.js wiring (source level) ─────────────────────────────────────────────────────────────────
 
+test("correction: a wrong answer's reflection names the right judgement; anything else gives null", () => {
+  assert.equal(client.trueFalseCorrection("Sandt"), "Udsagnet er sandt.");
+  assert.equal(client.trueFalseCorrection("Falsk"), "Udsagnet er falsk.");
+  for (const other of [null, undefined, "", "sandt", "FALSK", " Sandt", "Ja", 1, true, {}, []]) {
+    assert.equal(client.trueFalseCorrection(other), null, `no correction for ${JSON.stringify(other)}`);
+  }
+});
+
 test("app.js: the true_false renderer is built from js/true-false.js; malformed content reaches the visible error", () => {
   const app = code(read("app.js"));
-  assert.match(app, /import \{ buildTrueFalseAnswer, readTrueFalseContent \} from "\.\/js\/true-false\.js";/);
+  assert.match(app, /import \{ buildTrueFalseAnswer, readTrueFalseContent, trueFalseCorrection \} from "\.\/js\/true-false\.js";/);
+  // A wrong answer with an explanation: the reflection lead names the right judgement.
+  assert.match(app, /currentRenderer === ANSWER_RENDERERS\.TRUE_FALSE\s*\?\s*trueFalseCorrection\(data\.correct_answer\)/);
   const block = app.slice(app.indexOf("if (renderer === ANSWER_RENDERERS.TRUE_FALSE) {"),
     app.indexOf("if (renderer === ANSWER_RENDERERS.LONG_TEXT) {"));
   assert.match(block, /if \(readTrueFalseContent\(content\)\) \{/);

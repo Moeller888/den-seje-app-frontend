@@ -32,6 +32,7 @@ export const OFFLINE_SPECS = Object.freeze([
   "login-page.spec.ts",
   "teacher-first-run.spec.ts",
   "true-false-ui.spec.ts",
+  "true-false-quiz.spec.ts",
   "number-answer-ui.spec.ts",
 ]);
 
