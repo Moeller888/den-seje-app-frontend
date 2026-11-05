@@ -118,6 +118,11 @@ Transitions are validated; invalid transitions are blocked and logged via `logEr
 (`app.js:26`). The machine guarantees there is **no dead UI state**: every error path re-enables
 input and returns to a valid state. Never bypass this machine.
 
+`COOLDOWN` (anti-gætte-pause, D-350, [quiz-anti-guess-cooldown.md](./quiz-anti-guess-cooldown.md)):
+entered from `SUBMITTING_ANSWER` (the server refused the answer), `IDLE` (a reload / new tab during a
+pause) or `AWAITING_ANSWER` (another tab reported a pause); left only to `LOADING_QUESTION` via
+"Fortsæt quizzen", which unlocks at 00:00. The server enforces the pause; the state only shows it.
+
 ## 4. Database (Postgres + RLS)
 
 Schema and most content are managed as **versioned SQL migrations** in `supabase/migrations/`
@@ -254,6 +259,14 @@ submitAnswer() [app.js]
              └─ else (MC / number)         → PATH 3: process_question_attempt RPC
         → response: { status, correct_answer, review_text?, misconception_type? }
 ```
+**Anti-gætte-pause (D-350, NOT applied in production):** triggers on `question_instances`
+(`quiz_cooldown_guard` BEFORE / `quiz_cooldown_register` AFTER the `answered` false → true update that
+every grading RPC makes) refuse a graded answer during a pause with SQLSTATE `LQ429` and start a pause
+after 10 auto-graded wrong answers within 60 s (values in `public.quiz_cooldown_config`). `process-event`
+maps the refusal to `429 { outcome: "quiz_cooldown", cooldown_until, server_now }`
+(`process-event/quiz-cooldown.ts`); the grading RPCs themselves are unchanged. Full design:
+[quiz-anti-guess-cooldown.md](./quiz-anti-guess-cooldown.md).
+
 This is the single most important integration boundary in the system: **AI grading, OCR, and
 speech-to-text all attach here** (PATH 1 / pre-submit), and must preserve this response shape
 (see §13 and [AI_GUIDELINES.md](./AI_GUIDELINES.md)).
