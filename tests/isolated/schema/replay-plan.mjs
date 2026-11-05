@@ -114,8 +114,6 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
   "20261101120000_night_owl_stop_new_awards.sql":
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
-  "20261105090000_minigame_breaks.sql":
-    "D-347, not applied in production: spillepauser (minigame_break_* tables and RPCs) do not exist there; the frontend fails soft without them (no offers, game pages locked)",
   "20261103110000_l1_k1_attempt_context.sql":
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
 });
@@ -168,6 +166,7 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261101210000_question_history_restrict.sql": "20261102182750",
   "20261102100000_release_open_rounds_on_inactive_questions.sql": "20261102123618",
   "20261103100000_question_attempts_history_no_action.sql": "20261104163310",
+  "20261105090000_minigame_breaks.sql": "20261105060103",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),
