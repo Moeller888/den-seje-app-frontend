@@ -235,7 +235,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat | dette repository | 15 | `1f508a8459f5141f1e629dec94ec979ce34bafdcecdbc650b8d6db2a2f7c3bbe` |
+| Kandidat (F-02 Sandt/falsk, PR #607) — **ikke deployet** | dette repository | 16 | `00ddba65243d69fffeb9ea8f7b01714d5745cf7bfe0945330123919b3237f1ca` |
+| Deployet i produktion 2026-11-04 (`a7450b0f`, version 181 og senere secret-versioner) | `a7450b0f` | 15 | `1f508a8459f5141f1e629dec94ec979ce34bafdcecdbc650b8d6db2a2f7c3bbe` |
 | Forrige kandidat (før R2-canary'en, §2.6.1) | main før canary'en | 15 | `4a89e9e6e33b363c9e8360bb81b19077dcb26c4791c3a086a66c73386b718f8d` |
 | Forrige kandidat (før L1 K1's `served-snapshot.ts`) | main før K1 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
 | Forrige kandidat (Match par #377, før log-pseudonym #379) | main før #379 | 13 | `2ce45c7eaa113a9bda93d342e77e51e53efbe3b53ea64aeabaec0bb9dda3560e` |
@@ -243,6 +244,15 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 | Version 180, som deployet 2026-10-31 — **rollback-mål før H5-aktivering** | `1aee47a` (main, merge af #487), uændret | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
 | Historisk rollback til version 179 (det, `materialize-rollback` skriver) | `21ec9ff` med låsningen (kun linje 2 i `index.ts` er ændret) | 11 | `ca21b993839e48ff4e5baf3189306860d6b349fdcc7eea12f65ab78a73e418c6` |
 | Version 179, som deployet | `21ec9ff` uændret | 11 | `c4414671f3a5aff1e8d5bc3cb57ec4e92bb0d70ef8008a7ade39a75730c81985` |
+
+**F-02 Sandt/falsk (PR #607) ændrer grafen fra 15 til 16 filer.** `_shared/question-dto.ts` importerer
+nu `_shared/true-false.ts` og kontrollerer en `true_false`-række mod kontrakten, før instansen indsættes,
+så en række med en forkert nøgle springes over i stedet for at blive udleveret. `question-dto.ts` og
+`interaction-kinds.ts` ændres, og `true-false.ts` er ny; de øvrige 13 filer er byte-identiske med
+`a7450b0f`. Kandidaten er **ikke** deployet: produktion kører stadig `a7450b0f` (`1f508a84…`, 15
+filer), og Sandt/falsk er ikke servable, så ingen elev kan få en `true_false`-opgave, før ejeren har
+godkendt aktiveringen (`docs/ARCHITECTURE.md`, Sandt/falsk) og et særskilt deploy. Kodestien for
+andre opgaveformer er uændret (slukket-pariteten ovenfor er grøn med den nye graf).
 
 Kandidaten adskiller sig fra version 179 i `index.ts` (niveaugrenen, låsningen, H5's `round_no` og
 Match par's nøglelæsning), `instance-insert.ts` (læser `repeat_count` tilbage, H5),
@@ -359,7 +369,7 @@ reference.
 - `entrypoint_path` `functions/get-next-question/index.ts`;
 - `import_map_path` `functions/get-next-question/deno.json`;
 - `verify_jwt` `false`, ellers fejler browserens OPTIONS-preflight;
-- præcis de 14 filer i kandidatmanifestet, med stierne som i manifestet.
+- præcis filerne i kandidatmanifestet (16 for kandidaten ovenfor), med stierne som i manifestet.
 
 Ingen secret ændres.
 

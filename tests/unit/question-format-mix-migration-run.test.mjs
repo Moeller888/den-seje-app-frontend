@@ -145,8 +145,8 @@ const advance = async (student, grade = 7) => (await q1("SELECT * FROM public.ad
 
 // ── 1. One servable rule in SQL and TS ───────────────────────────────────────────────────────────
 test("question_is_servable agrees with the TS registry (classifyQuestion + servable) on the whole matrix", async () => {
-  const formats = ["mc", "mc_single", "number", "numbers", "text", "match", "match_pairs", "MC", "Text", " mc", "longtext",
-    "mc_number", "drag_drop", "", null];
+  const formats = ["mc", "mc_single", "number", "numbers", "text", "match", "match_pairs", "true_false", "MC", "Text", " mc",
+    "longtext", "mc_number", "drag_drop", "", null];
   const types = ["short", "long", "Long", "", null, "medium", " short"];
   let checked = 0;
   for (const f of formats) for (const t of types) for (const force of [false, true]) {
@@ -156,7 +156,7 @@ test("question_is_servable agrees with the TS registry (classifyQuestion + serva
     assert.equal(ok, ts, JSON.stringify({ f, t, force }));
     checked++;
   }
-  assert.equal(checked, 15 * 7 * 2);
+  assert.equal(checked, 16 * 7 * 2);
 });
 
 // ── 2. Candidates ────────────────────────────────────────────────────────────────────────────────
