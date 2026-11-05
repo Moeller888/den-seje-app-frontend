@@ -58,3 +58,16 @@ test("D-352 the v2 recipes are D-351's with a trim on exactly the four patterns,
   assert.deepEqual(v2.recipes.filter((r) => r.trim).map((r) => r.id), ["R05", "R06", "R07", "R08"]);
   assert.deepEqual(v2.recipes.map(({ trim, trimWhy, ...r }) => r), v1.recipes); assert.match(v2.kind, /NOT approved, NOT published/);
 });
+
+test("D-352 the print's safe area: a print too close to a band moves by the smallest shift (full size); the margin is never lowered", async () => {
+  const PF = await import("../../tools/avatar/northstar-tee-print-family.mjs");
+  const t = { core: new Uint8Array(N), alpha: new Uint8Array(N), contour: new Uint8ClampedArray(N * 4) }, panel = new Int8Array(N).fill(-1), ratio = new Float32Array(N).fill(1), disp = new Float32Array(N * 2), bands = new Uint8Array(N);
+  for (let y = 500; y < 760; y++) for (let x = 400; x < 620; x++) { const i = y * W + x; t.core[i] = 1; t.alpha[i] = 255; panel[i] = 0; if (y < 520) bands[i] = 1; }
+  const motif = { w: 40, h: 40, px: new Uint8ClampedArray(40 * 40 * 4).fill(255) }, E = { base: { arms: new Uint8ClampedArray(N * 4) } }, master = { panel, ratio, disp, axes: [] };
+  const ctx = { c: { id: "synthetic", print: { boxOnC: [490, 516, 40, 40] } }, t, master, E, bands }, plain = K.renderFabric(master, t, RC.swatchOf({ type: "solid", base: [90, 90, 90] })).layer;
+  const p = K.placePrintSafe(ctx, plain, motif); assert.equal(p.fit.rule, "kit-print-safe-v1"); assert.equal(p.fit.scale, 1); assert.ok(p.fit.minClearancePx >= PF.MARGIN);
+  assert.equal(p.fit.shiftPx, PF.MARGIN - p.fit.clearanceBefore, "the smallest shift that clears the margin"); assert.ok(p.fit.shiftPx > 0, "moved away from the band");
+  const ok = K.placePrintSafe({ ...ctx, c: { id: "synthetic", print: { boxOnC: [490, 600, 40, 40] } }, _clear: undefined }, plain, motif); assert.deepEqual([ok.fit.shiftPx, ok.fit.scale], [0, 1], "a print already clear stays where it is");
+  const tight = new Uint8Array(N); for (let i = 0; i < N; i++) tight[i] = t.core[i] && !(((i / W) | 0) >= 560 && ((i / W) | 0) < 575) ? 1 : 0;
+  assert.throws(() => K.placePrintSafe({ ...ctx, bands: tight, _clear: undefined, c: { id: "synthetic", print: { boxOnC: [490, 548, 40, 40] } } }, plain, motif), /no shift .* keeps the print 10 px clear/);
+});

@@ -19,7 +19,7 @@
 //              review), the timings and the capacity assessment (capacity.json).
 // D-352 adds: bands (the trim bands of a cut with them, overlays), decision (the private decision page with before/after against --prev),
 // and --recipes <file> (another recipe file with its own "cuts", e.g. the trim-band contract versions; default D-351's).
-// Usage: node --expose-gc tools/avatar/northstar-top-cut-production-trial.mjs --phase control|bands|render|outfits|views|page|decision --out <dir> --dwebp <exe> [--cut <id>] [--recipes <file>] [--prev <dir>]
+// Usage: node --expose-gc tools/avatar/northstar-top-cut-production-trial.mjs --phase control|bands|approvedprints|render|outfits|views|page|decision --out <dir> --dwebp <exe> [--cut <id>] [--recipes <file>] [--prev <dir>]
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -78,7 +78,12 @@ function decoder(DW) { const tmp = join(tmpdir(), "d351-" + process.pid); mkdirS
 const recipes = () => RC.checkRecipes(json(join(ROOT, ...RECIPES_REL.split("/")))).recipes;
 // a recipe's trim is laid only on a cut whose bands follow its drawn seams (seam-rule, D-352); the tee's construction band (D-257) ends
 // inside its drawn neck seam, so the tee keeps its body fabric there (and D-351's tee candidates are unchanged)
-const designOf = (r, c) => ({ swatch: RC.swatchOf(r.fabric), trim: r.trim && c.trim.bands === "seam-rule" ? RC.swatchOf(r.trim) : null, print: r.motif ? motifFor(r.motif, c.print.boxOnC) : null });
+// D-352: a recipe file may ask for the kit's print safe-area rule ("printFit": "safe"); then the motif itself goes to K.placePrintSafe,
+// which sizes it for the cut's box and moves (or, failing that, scales) it only as far as the margin requires
+const rawMotif = {}, motifRaw = (n) => rawMotif[n] || (rawMotif[n] = TMM.decodeRgba(RC.motifBytes(n)));
+let PRINT_SAFE = false;
+const designOf = (r, c) => ({ swatch: RC.swatchOf(r.fabric), trim: r.trim && c.trim.bands === "seam-rule" ? RC.swatchOf(r.trim) : null,
+  print: r.motif && !PRINT_SAFE ? motifFor(r.motif, c.print.boxOnC) : null, printSafe: r.motif && PRINT_SAFE ? motifRaw(r.motif) : null });
 const unitId = (cut, r) => cut + "--" + r.id + "-" + r.slug;
 const diffBytes = (a, b) => { let d = 0; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) d++; return d; };
 
@@ -130,13 +135,13 @@ function phaseRender(OUT, onlyCut) {
     if (seam) writeFileSync(join(OUT, "layers", cut + "--behind-bottom.png"), encodePng(W, H, seam.layer));
     let contourPx = 0; for (let i = 0; i < N; i++) if (ctx.t.contour[i * 4 + 3] === 255) contourPx++;
     writeFileSync(join(OUT, "units", cut + "--prepare.json"), JSON.stringify({ cut, seconds: prepS, behindBottom: seam ? { addedPx: seam.addedPx } : null, contourPx, printBox: c.print.boxOnC }, null, 2) + "\n");
-    for (const r of R) { const id = unitId(cut, r), uf = join(OUT, "units", id + ".json"), key = sha(JSON.stringify([RC.REVISION, K.FABRIC_SAMPLER, cut, c.trim, r]));
+    for (const r of R) { const id = unitId(cut, r), uf = join(OUT, "units", id + ".json"), key = sha(JSON.stringify([RC.REVISION, K.FABRIC_SAMPLER, cut, c.trim, r, PRINT_SAFE ? K.PRINT_FIT : null]));
       if (existsSync(uf) && existsSync(join(OUT, "layers", id + ".png")) && json(uf).key === key) continue;
       const t1 = Date.now(), swatch = RC.swatchOf(r.fabric), design = { ...designOf(r, c), swatch }, x = K.renderDesign(ctx, design);
       let alphaDiff = 0, contourDiff = 0, sleevePx = 0; for (let i = 0; i < N; i++) { if (x.layer[i * 4 + 3] !== ctx.t.alpha[i]) alphaDiff++; if (ctx.t.contour[i * 4 + 3] === 255 && [0, 1, 2].some((k) => x.layer[i * 4 + k] !== ctx.t.contour[i * 4 + k])) contourDiff++; if (x.layers.sleeves[i * 4 + 3]) sleevePx++; }
       const fit = R1.checkItem(w, base, T, ctx.t, x.layers); let minClear = null; if (x.print) { minClear = 99; for (const i of x.print.footprint) minClear = Math.min(minClear, clear[i]); }
       const sw = RC.seamless(swatch), checks = { alphaPxDifferingFromCut: alphaDiff, contourInkPxChanged: contourDiff, fit: { ok: fit.ok, failed: fit.failed }, sleeveLayerPx: sleevePx, tankHasNoSleeves: cut !== "tank-v3" || sleevePx === 0,
-        print: x.print ? { at: x.print.at, footprintPx: x.print.footprintPx, onContour: x.print.onContour, minClearancePx: minClear, safe: minClear >= PF.MARGIN && x.print.onContour === 0 } : null, swatch: { w: swatch.w, h: swatch.h, seamless: sw } };
+        print: x.print ? { at: x.print.at, footprintPx: x.print.footprintPx, onContour: x.print.onContour, minClearancePx: minClear, safe: minClear >= PF.MARGIN && x.print.onContour === 0, fit: x.print.fit ? { rule: x.print.fit.rule, shiftPx: x.print.fit.shiftPx, scale: x.print.fit.scale, box: x.print.fit.box, clearanceBefore: x.print.fit.clearanceBefore ?? null } : null } : null, swatch: { w: swatch.w, h: swatch.h, seamless: sw } };
       const ok = alphaDiff === 0 && contourDiff === 0 && fit.ok && checks.tankHasNoSleeves && (!x.print || checks.print.safe) && sw.ok;
       writeFileSync(join(OUT, "layers", id + ".png"), encodePng(W, H, x.layer));
       writeFileSync(uf, JSON.stringify({ key, id, cut, recipe: r.id, group: r.group, name: r.name, motif: r.motif || null, motifStanding: r.motif ? RC.MOTIFS[r.motif].standing : null, technical: ok ? "PASS" : "FAIL", checks, layerPixelSha256: pxSha(x.layer), seconds: (Date.now() - t1) / 1000 }, null, 2) + "\n");
@@ -206,6 +211,27 @@ ${existsSync(join(OUT, "pass1-nearest", "views")) ? `<h2>4b. Før og efter kitte
   writeFileSync(join(OUT, "index.html"), html); console.log("page written");
 }
 
+/** D-352 — a FINDING on the APPROVED prints (read-only: nothing approved or published is changed): each approved design with a motif on
+ *  a cut version with trim bands is rendered as published (the kit's rgb path equals the published file, controlCut), and its print's
+ *  clearance is measured on the version (to the trim bands) and on the cut without bands (to the contour); a close-up x3 of the neck
+ *  per design (the published layer decoded) is written to findings/. */
+function phaseApprovedPrints(OUT, DW) {
+  const E = K.envC(), D = decoder(DW), F = join(OUT, "findings"), rec = {}; mkdirSync(F, { recursive: true });
+  const J = (...p) => json(join(ROOT, "tools", "avatar", "fixtures", "northstar-wardrobe", ...p));
+  try { for (const cut of RUN_CUTS.filter((c) => K.loadCut(c).trim.bands === "seam-rule")) {
+      const c = K.loadCut(cut), ctx = K.prepare(c, E), clear = K.printClearance(ctx), base = K.loadCut(listOf(cut) === "tank-v3" ? "tank-v3" : "sweater-long"), bctx = K.prepare(base, E), bclear = K.printClearance(bctx);
+      const designs = listOf(cut) === "tank-v3" ? Object.entries(J("tank", "tank-owner-approval-v1.json").designs).map(([id, d]) => ({ id, item: d.proposedRuntimeItem, rgb: id.startsWith("TK-HEATHER") ? PF.COLOURS.heather : PF.COLOURS.navy, motif: id.endsWith("TEAPOT") ? "teapot" : id.endsWith("FOX") ? "fox" : null }))
+        : Object.values(J("sweater", "ls2-owner-approval-v1.json").designs).map((d) => ({ id: d.id, item: d.proposedRuntimeItem, rgb: d.colour.rgb, motif: d.print ? d.print.motif : null }));
+      const tiles = [];
+      for (const d of designs.filter((x) => x.motif)) { const r = K.renderDesign(ctx, { rgb: d.rgb, print: motifFor(d.motif, c.print.boxOnC) }); let m = 99, mb = 99; for (const i of r.print.footprint) { m = Math.min(m, clear[i]); mb = Math.min(mb, bclear[i]); }
+        const pub = D.dec(d.item + "-top-body-v1.webp"); rec[cut + " | " + d.id] = { item: d.item, motif: d.motif, publishedEqualsKit: diffBytes(r.layers.topBody, pub) === 0, clearanceToTrimBandsPx: m, clearanceToCutWithoutBandsPx: mb, margin: PF.MARGIN, withinMargin: m >= PF.MARGIN };
+        tiles.push(crop(flat(pub, LIGHT), [430, 440, 594, 600], 3)); gc(); }
+      if (tiles.length) { const g = grid(tiles, 2, 8); writeFileSync(join(F, "approved-prints--" + cut + "--neck--x3.png"), encodePng(g.w, g.h, g.px)); } } }
+  finally { D.done(); }
+  writeFileSync(join(OUT, "finding-approved-prints.json"), JSON.stringify({ decision: "D-352", what: "the approved designs' print clearance measured on the cut versions with trim bands (to the binding/rib stitch line) and on the cut without bands (to the contour); READ-ONLY, nothing approved or published changed", margin: PF.MARGIN, designs: rec }, null, 2) + "\n");
+  console.log(JSON.stringify(rec));
+}
+
 /** D-352 — the private DECISION page: every candidate with its verdict (verdicts.json, written after the visual review), the comparison
  *  sheets, app sizes and close-ups of this run, before/after of the changed edges against the previous run (--prev: D-351's out dir;
  *  the same recipe on the cut the version derives from), the plan (plan.json) and the capacity (capacity.json). Reads only written files. */
@@ -218,6 +244,12 @@ function phaseDecision(OUT, PREV) {
     const a = flat(loadPx(join(PREV, "full", unitId(prevCut(cut), r) + "--light.png")), LIGHT), b = flat(loadPx(join(OUT, "full", unitId(cut, r) + "--light.png")), LIGHT), t = [];
     for (const [k, box] of Object.entries(EDGES)) { if (listOf(cut) === "tank-v3" && k !== "neck") continue; if (listOf(cut) === "tee-hip" && k.startsWith("cuff")) continue; t.push(crop(a, box, 3)); t.push(crop(b, box, 3)); }
     const n = "before-after--" + unitId(cut, r) + "--x3.png"; save(n, grid(t, 2, 8)); before.push([n, r, cut]); gc(); }
+  // the print's safe area (kit-print-safe-v1): the candidates it moved, before (the box as given) and after, the neck and chest x3
+  const fitted = [], P1 = join(OUT, "pass1-before-printfit");
+  for (const r of R.filter((x) => x.motif)) for (const cut of RUN_CUTS) { const u = json(join(OUT, "units", unitId(cut, r) + ".json")), f = u.checks.print && u.checks.print.fit; if (!f || (!f.shiftPx && f.scale === 1) || !existsSync(join(P1, "full", unitId(cut, r) + "--light.png"))) continue;
+    const a = flat(loadPx(join(P1, "full", unitId(cut, r) + "--light.png")), LIGHT), b = flat(loadPx(join(OUT, "full", unitId(cut, r) + "--light.png")), LIGHT), n = "print-fit--" + unitId(cut, r) + "--x3.png";
+    save(n, grid([crop(a, [430, 440, 594, 700], 3), crop(b, [430, 440, 594, 700], 3)], 2, 8)); fitted.push([n, r, cut, f, u.checks.print.minClearancePx]); gc(); }
+  const FA = existsSync(join(OUT, "finding-approved-prints.json")) ? json(join(OUT, "finding-approved-prints.json")) : null;
   const rows = []; for (const r of R) for (const cut of RUN_CUTS) { const id = unitId(cut, r), v = V.candidates[id] || {}, u = (f) => (existsSync(join(OUT, "units", f + ".json")) ? json(join(OUT, "units", f + ".json")) : null), x = u(id), l = u(id + "--light"), d = u(id + "--dark");
     rows.push(`<tr><td>${r.id}</td><td>${esc(r.name)}${r.motif === "planet" ? " <b>(motivet er endnu ikke godkendt)</b>" : ""}</td><td>${cut}</td><td>${x ? x.technical : "–"}</td><td>${l ? l.technical : "–"} / ${d ? d.technical : "–"}</td><td><b>${esc(v.verdict || "–")}</b></td><td>${esc(v.note || "")}</td></tr>`); }
   const img = (f, alt) => `<figure><img src="${f}" alt="${esc(alt)}" loading="lazy"><figcaption>${esc(alt)}</figcaption></figure>`;
@@ -227,6 +259,8 @@ function phaseDecision(OUT, PREV) {
 <p class="warn">PRIVAT — siden viser C og må ikke offentliggøres. Alle 36 er kandidater, ikke godkendte produkter. Intet er offentliggjort eller integreret. Planetmotivet (R12) er endnu ikke godkendt som tryk.</p>
 <h2>1. Kandidater og anbefaling</h2><table><tr><th>Opskrift</th><th>Navn</th><th>Snit</th><th>Lag-kontrol</th><th>Outfit lys / mørk</th><th>Anbefaling</th><th>Note</th></tr>${rows.join("")}</table>
 <h2>2. Før og efter: kantbehandlingen (venstre D-351, højre D-352; ×3, lys)</h2>${before.map(([f, r, cut]) => img("views/" + f, r.id + " " + r.name + " · " + cut + " · kolonner: før, efter")).join("")}
+<h2>2b. Trykkets sikre område (kit-print-safe-v1): før og efter (venstre: boksen som givet; højre: flyttet; ×3, lys)</h2>${fitted.length ? fitted.map(([f, r, cut, fit, m]) => img("views/" + f, r.id + " " + r.name + " · " + cut + " · flyttet " + fit.shiftPx + " px, skala " + fit.scale + " · afstand før " + fit.clearanceBefore + " px, nu " + m + " px (krav " + 10 + ")")).join("") : "<p>Ingen kandidat blev flyttet.</p>"}
+<h2>2c. Særskilt fund: de godkendte tryk målt mod trim-båndene (kun læst; intet godkendt eller publiceret er ændret)</h2>${FA ? `<table><tr><th>Snit · design</th><th>Motiv</th><th>Afstand til trim-bånd</th><th>Afstand uden bånd (kontur)</th><th>Inden for 10 px-kravet</th></tr>${Object.entries(FA.designs).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v.motif}</td><td>${v.clearanceToTrimBandsPx} px</td><td>${v.clearanceToCutWithoutBandsPx} px</td><td>${v.withinMargin ? "ja" : "<b>nej</b>"}</td></tr>`).join("")}</table>` + RUN_CUTS.filter((c) => existsSync(join(OUT, "findings", "approved-prints--" + c + "--neck--x3.png"))).map((c) => img("findings/approved-prints--" + c + "--neck--x3.png", "de godkendte designs med motiv på " + c + " (publicerede lag), halsen ×3")).join("") : "<p>–</p>"}
 <h2>3. Sammenligning (helfigur)</h2>${["fabric", "pattern", "motif"].flatMap((g) => ["light", "dark"].map((t) => img("views/compare--" + g + "--figure--" + t + ".png", g + " · " + t + " · rækker = opskrifter, kolonner = " + RUN_CUTS.join(", ")))).join("")}
 <h2>4. Appstørrelse</h2>${img("views/app--110x165.png", "110×165: rækker = opskrifter; kolonner = snit × lys/mørk")}${img("views/app--300x450.png", "300×450")}
 <h2>5. Nærbilleder ×3</h2>${R.map((r) => img("views/close--" + r.id + "-" + r.slug + "--x3.png", r.id + " " + r.name + " · kolonner: " + Object.keys(CLOSE).join(", ") + " · rækker: " + RUN_CUTS.join(", "))).join("")}
@@ -240,7 +274,7 @@ function phaseDecision(OUT, PREV) {
 async function main() {
   const args = process.argv.slice(2), at = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null), phase = at("--phase"), OUT = at("--out"), DW = at("--dwebp"), r = relative(ROOT, resolve(OUT || "."));
   if (!OUT || !(r.startsWith("..") || isAbsolute(r))) throw new Error("--out must be outside the repository (the views show C)"); mkdirSync(OUT, { recursive: true });
-  if (at("--recipes")) { RECIPES_REL = at("--recipes"); const f = json(join(ROOT, ...RECIPES_REL.split("/"))); if (!Array.isArray(f.cuts) || !f.cuts.every((c) => listOf(c))) throw new Error("the recipe file names its cuts"); RUN_CUTS = Object.freeze([...f.cuts]); }
+  if (at("--recipes")) { RECIPES_REL = at("--recipes"); const f = json(join(ROOT, ...RECIPES_REL.split("/"))); if (!Array.isArray(f.cuts) || !f.cuts.every((c) => listOf(c))) throw new Error("the recipe file names its cuts"); RUN_CUTS = Object.freeze([...f.cuts]); PRINT_SAFE = f.printFit === "safe"; }
   if (phase === "views") return phaseViews(OUT);
   if (phase === "bands") return phaseBands(OUT);
   if (phase === "decision") return phaseDecision(OUT, at("--prev"));
@@ -248,7 +282,8 @@ async function main() {
   if (phase === "render") return phaseRender(OUT, at("--cut"));
   if (!DW || !existsSync(DW)) throw new Error("--dwebp <the vendored dwebp>");
   if (phase === "control") return phaseControl(OUT, DW);
+  if (phase === "approvedprints") return phaseApprovedPrints(OUT, DW);
   if (phase === "outfits") return phaseOutfits(OUT, DW, at("--cut"));
-  throw new Error("--phase control|bands|render|outfits|views|page|decision");
+  throw new Error("--phase control|bands|approvedprints|render|outfits|views|page|decision");
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((e) => { console.error("REFUSED: " + e.message); process.exit(1); });

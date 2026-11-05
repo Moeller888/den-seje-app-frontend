@@ -179,14 +179,33 @@ export function renderFabric(master, t, swatch, bands = null, trim = null) {
   return { layer: out };
 }
 
+/** D-352 — THE PRINT'S SAFE AREA AS A RULE (PRINT_FIT): a print must keep PF.MARGIN px (chessboard) from everything PF.clearance names —
+ *  the cut's edge and contour, sleeve panels, C's arms and the cut's trim bands (a binding is a separate band: the print keeps its margin
+ *  from the binding's stitch line, not from the neckline). The motif is first sized for the cut's print box as before (PF.prepareFor);
+ *  if its footprint comes closer than the margin, the box is MOVED by the smallest vertical shift (1 px steps, up to maxShift, down
+ *  before up at equal size) that clears it; only if no shift does, the box is SCALED down about its centre (2 % steps, to minScale),
+ *  each scale tried with the smallest clearing shift — the motif keeps its proportions. The margin is never lowered. Returns the
+ *  placement with { fit: { rule, shiftPx, scale, minClearancePx } }, or throws when nothing within the limits clears it. */
+export const PRINT_FIT = Object.freeze({ rule: "kit-print-safe-v1", maxShift: 24, minScale: 0.8 });
+export function placePrintSafe(ctx, plain, motif) {
+  const clear = ctx._clear || (ctx._clear = printClearance(ctx)), [bx, by, bw, bh] = ctx.c.print.boxOnC, margin = PF.MARGIN;
+  const tryAt = (scale, dy) => { const w = Math.round(bw * scale), h = Math.round(bh * scale), box = [Math.round(bx + (bw - w) / 2), Math.round(by + (bh - h) / 2) + dy, w, h], img = PF.prepareFor(motif, [w, h]).img;
+    const p = PF.placePrint(ctx.master, ctx.t, ctx.E.base, plain, img, box); let m = 99; for (const i of p.footprint) m = Math.min(m, clear[i]); return { p, m, box }; };
+  const base = tryAt(1, 0); if (base.m >= margin && base.p.onContour === 0) return { ...base.p, fit: { rule: PRINT_FIT.rule, shiftPx: 0, scale: 1, minClearancePx: base.m, box: base.box } };
+  for (let sc = 1; sc >= PRINT_FIT.minScale - 1e-9; sc = Math.round((sc - 0.02) * 100) / 100) for (let k = 1; k <= PRINT_FIT.maxShift; k++) for (const dy of [k, -k]) { const r = tryAt(sc, dy);
+    if (r.m >= margin && r.p.onContour === 0) return { ...r.p, fit: { rule: PRINT_FIT.rule, shiftPx: dy, scale: sc, minClearancePx: r.m, box: r.box, clearanceBefore: base.m } }; }
+  throw new Error(ctx.c.id + ": no shift up to " + PRINT_FIT.maxShift + " px or scale down to " + PRINT_FIT.minScale + " keeps the print " + margin + " px clear");
+}
+
 /** A design on the cut: { rgb: [r,g,b] | swatch: seamless { w, h, px }, trim?: swatch (D-352: laid on the cut's trim bands), print?:
- *  prepared image (PF.prepareFor's img) }. Returns the full
+ *  prepared image (PF.prepareFor's img) | printSafe?: the motif itself (decoded), placed by placePrintSafe (D-352) }. Returns the full
  *  layer, its split by the cut's rule and the print's placement. D-351: a swatch (a fabric or pattern recipe, northstar-top-cut-recipes.mjs)
  *  is laid by renderFabric (the same mapping, sampled bilinearly); an rgb design is rendered by TM.render exactly as before. */
 export function renderDesign(ctx, design) {
   const { c, t, master, E, bands } = ctx, plain = design.swatch ? renderFabric(master, t, design.swatch, bands, design.trim || null) : TM.render(master, t, E.base, bands, { body: design.rgb });
   let layer = plain.layer, print = null;
   if (design.print) { const p = PF.placePrint(master, t, E.base, plain.layer, design.print, c.print.boxOnC); layer = p.layer; print = { at: p.at, footprintPx: p.footprint.length, onContour: p.onContour, footprint: p.footprint }; }
+  else if (design.printSafe) { const p = placePrintSafe(ctx, plain.layer, design.printSafe); layer = p.layer; print = { at: p.at, footprintPx: p.footprint.length, onContour: p.onContour, footprint: p.footprint, fit: p.fit }; }
   const sp = LS2.splitLayers(layer, E.base, c.sleeves.layerSplitFromArmAlpha);
   return { layer, layers: sp.layers, movedToSleevesPx: c.sleeves.layerSplitFromArmAlpha < 128 ? sp.moved : 0, print };
 }

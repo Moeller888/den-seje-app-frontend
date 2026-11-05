@@ -260,5 +260,7 @@
       "motif": "planet"
     }
   ],
-  "derivedFrom": "production-trial-recipes-v1.json (D-351; unchanged): the same 12 recipes; only the four pattern recipes gain a trim, and the cuts are the trim-band versions"
+  "derivedFrom": "production-trial-recipes-v1.json (D-351; unchanged): the same 12 recipes; only the four pattern recipes gain a trim, and the cuts are the trim-band versions",
+  "printFit": "safe",
+  "printFitWhy": "the kit's print safe-area rule (K.placePrintSafe, kit-print-safe-v1): the motif keeps PF.MARGIN from the cut's edges and trim bands; moved (or scaled) only as far as needed (D-352)"
 }
