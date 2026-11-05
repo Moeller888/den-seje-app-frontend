@@ -180,6 +180,10 @@
   "teacher-spotlights-read-scope.test.mjs": 0.3,
   "teacher-student-overview-rpc.test.mjs": 0.4,
   "weekly-quest-progress-read-scope.test.mjs": 0.2,
-  "zero-cost-services.test.mjs": 0.2
+  "zero-cost-services.test.mjs": 0.2,
+  "quiz-anti-guess-cooldown-migration-run.test.mjs": 40.0,
+  "quiz-anti-guess-cooldown-concurrency.test.mjs": 8.0,
+  "quiz-cooldown.test.mjs": 0.5,
+  "process-event-quiz-cooldown.test.mjs": 2.0
  }
 }
