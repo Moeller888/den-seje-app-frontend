@@ -576,10 +576,23 @@ does not distinguish formats, so once Sandt/falsk is servable a correct true_fal
 level exactly like an MC answer although a guess is right half the time (75 % observed ≈ 50 % real
 knowledge for true_false, ≈ 67 % for 4-option MC). The band folds (`advance_student_band` of the format
 mix, and the browser's `adjustDifficultyBand`: 3 right in a row → up) are format-blind in the same way.
-**Rule: when an evidence system is activated — and
-before Sandt/falsk is made servable while the level fold is live — true_false answers must be weighted by
-`guessFloor` (or excluded from the fold); that weighting is an owner decision and part of step 3.** No
-parallel mastery mechanism is built here; the format stays non-servable.
+**Owner principle (2026-11-05): Sandt/falsk is a comprehension check, never mastery evidence.** One
+true_false answer must not move the pupil's level, mastery or placement; XP and coins follow the normal
+reward path (no separate mechanism); repeat rules are unchanged; the teacher view tells comprehension
+checks apart from the more reliable progress measures. No fixed share (the 15 % cap) is decided yet, and
+a later multi-statement true/false form is a separate kind, not built now.
+
+*Implemented (not applied, PR stacked on #607):* migration `20261105115000_true_false_mastery_exclusion`
+adds one predicate — `answer_format` `true_false` does not count — to every function that turns verdicts
+into level, band or teacher progress: `advance_student_level`, `advance_student_band`,
+`get_teacher_visibility`, `get_student_overview`, `get_concept_states` (each body is production's plus that
+line; md5-guarded). Placement already draws MC only (`start_placement`); repeats are already outside the
+folds; `update_mastery` has no caller. In the browser, `app.js` lets a true_false answer steer neither the
+session wave nor the persisted difficulty band (`answerSteersDifficulty`), and `student-detail.js` shows
+true_false as "Forståelsestjek" apart from the domain precision (`js/progress-evidence.js`). The rule is
+the registry's: a kind with `guessFloor` ≥ 0.5 is excluded (pinned by
+`tests/unit/true-false-mastery-exclusion-run.test.mjs`). **The migration must be applied BEFORE the
+activation migration below**, or a true_false answer could be folded (the fold log is append-only).
 
 *Step 3 — activation spec (each item its own owner GO, in this order):*
 1. **Code PR:** `INTERACTION_KINDS.true_false.servable = true` (`_shared/interaction-kinds.ts`) and the
@@ -590,7 +603,9 @@ parallel mastery mechanism is built here; the format stays non-servable.
    `LEVEL_ENGINE=v1` without `QUESTION_MIX_ENGINE=v2`, i.e. the `map` wire format, so without this a
    servable true_false row would be a candidate that is always skipped. The owner also decides the share:
    `maxShare` is only applied by the v2 mix; on the live level route nothing caps true_false, so the share
-   is controlled by how much content is added (or by v2). And the level-fold weighting above.
+   is controlled by how much content is added (or by v2).
+   **No later than before step 3:** apply `20261105115000_true_false_mastery_exclusion.sql` (owner
+   principle above; own GO), so no true_false answer can ever be folded into a level or band.
 2. **Deploy `get-next-question`** from that commit through the release gate
    (`docs/operations/level-engine-rollout.md` §3.1, new candidate manifest). Safe on its own: no
    true_false row can be stored yet.

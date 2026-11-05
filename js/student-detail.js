@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { summariseDomainProgress } from "./progress-evidence.js";
 
 // ========================
 // AUTH CHECK
@@ -305,7 +306,7 @@ async function fetchStudent() {
 async function fetchDomainProgress() {
   const { data, error } = await supabase
     .from("question_instances")
-    .select("is_correct, was_correct, questions(learning_objective)")
+    .select("is_correct, was_correct, questions(learning_objective, answer_format)")
     .eq("student_id", studentId)
     .eq("answered", true)
     .limit(1000);
@@ -316,23 +317,9 @@ async function fetchDomainProgress() {
     return;
   }
 
-  const instances = data ?? [];
-  const stats = {};
-
-  for (const inst of instances) {
-    const lo = inst.questions?.learning_objective ?? null;
-    const domain = objectiveToDomain(lo);
-    if (!domain) continue;
-    if (!stats[domain]) stats[domain] = { total: 0, correct: 0 };
-    stats[domain].total++;
-    if (inst.is_correct === true || inst.was_correct === true) {
-      stats[domain].correct++;
-    }
-  }
-
-  const rows = Object.entries(stats)
-    .map(([domain, s]) => ({ domain, total: s.total, correct: s.correct }))
-    .sort((a, b) => b.total - a.total);
+  // Sandt/falsk is a comprehension check: counted in its own column, never in the precision
+  // (js/progress-evidence.js, owner principle 2026-11-05).
+  const rows = summariseDomainProgress(data ?? [], objectiveToDomain);
 
   renderDomainProgress(rows);
 }
@@ -357,6 +344,7 @@ function renderDomainProgress(rows) {
     <th>Besvaret</th>
     <th>Korrekte</th>
     <th>Pr&#230;cision</th>
+    <th title="Sandt/falsk-sp&#248;rgsm&#229;l. Et g&#230;t rammer rigtigt halvdelen af gangene, s&#229; de t&#230;ller ikke med i pr&#230;cisionen.">Forst&#229;elsestjek</th>
   </tr>`;
   table.appendChild(thead);
 
@@ -364,6 +352,7 @@ function renderDomainProgress(rows) {
 
   for (const row of rows) {
     const pct = row.total > 0 ? Math.round((row.correct / row.total) * 100) : 0;
+    const checks = row.checkTotal > 0 ? `${row.checkCorrect}/${row.checkTotal}` : "–";
     const label = DOMAIN_LABELS[row.domain] ?? row.domain;
     const color = pct >= 80 ? "#4caf50" : pct >= 50 ? "#ff9800" : "#f44336";
 
@@ -380,6 +369,7 @@ function renderDomainProgress(rows) {
           <span style="min-width:36px;font-size:12px;color:${color};font-weight:bold;">${pct}%</span>
         </div>
       </td>
+      <td>${checks}</td>
     `;
     tbody.appendChild(tr);
   }

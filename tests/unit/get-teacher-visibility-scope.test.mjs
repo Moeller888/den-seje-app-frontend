@@ -277,8 +277,11 @@ test("the migration sorts after the newest live migration and its version is uni
   // this file's gate and grants; its own suite (teacher-stats-from-answers-migration-run) pins both.
   const later = files.filter((f) => f > FILE).filter((f) =>
     /get_teacher_visibility/i.test(readFileSync(join(MIGRATIONS, f), "utf8").replace(/--.*$/gm, "")));
-  assert.deepEqual(later, ["20261029150000_teacher_stats_from_answers.sql"],
-    "the only later migration touching get_teacher_visibility is the documented successor");
+  // The second documented successor, 20261105115000_true_false_mastery_exclusion (not applied), adds one
+  // predicate (true_false is not counted) and nothing else; its suite (true-false-mastery-exclusion-run)
+  // proves the body is the live body plus that line, with grants, owner and attributes unchanged.
+  assert.deepEqual(later, ["20261029150000_teacher_stats_from_answers.sql", "20261105115000_true_false_mastery_exclusion.sql"],
+    "the only later migrations touching get_teacher_visibility are the documented successors");
 });
 
 test("exactly one CREATE OR REPLACE, then the four privilege statements, for the one signature", () => {
