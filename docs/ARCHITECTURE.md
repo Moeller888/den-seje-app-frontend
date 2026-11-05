@@ -575,10 +575,32 @@ before Sandt/falsk is made servable while the level fold is live — true_false 
 `guessFloor` (or excluded from the fold); that weighting is an owner decision and part of step 3.** No
 parallel mastery mechanism is built here; the format stays non-servable.
 
-*Step 3 needs:* a reviewed migration (production's `questions_answer_format_check`
-and `content_valid_check` reject the row today, and `question_is_servable` must flip in the same PR),
-then a `get-next-question` deploy and owner GO; v1's `mapAnswerFormat` maps it to `"mc"` and skips it,
-so it reaches pupils only under `QUESTION_MIX_ENGINE=v2`.
+*Step 3 — activation spec (each item its own owner GO, in this order):*
+1. **Code PR:** `INTERACTION_KINDS.true_false.servable = true` (`_shared/interaction-kinds.ts`) and the
+   parity test `tests/unit/question-format-mix-migration-run.test.mjs` pointed at the activation
+   migration's `question_is_servable`; `get-next-question`'s v1 `mapAnswerFormat` must map `"true_false"`
+   to `"true_false"` (today it falls back to `"mc"`; the row is then skipped because the contract forbids
+   `options`, so it can never be *shown* as MC, but it would never be served either). Production runs
+   `LEVEL_ENGINE=v1` without `QUESTION_MIX_ENGINE=v2`, i.e. the `map` wire format, so without this a
+   servable true_false row would be a candidate that is always skipped. The owner also decides the share:
+   `maxShare` is only applied by the v2 mix; on the live level route nothing caps true_false, so the share
+   is controlled by how much content is added (or by v2). And the level-fold weighting above.
+2. **Deploy `get-next-question`** from that commit through the release gate
+   (`docs/operations/level-engine-rollout.md` §3.1, new candidate manifest). Safe on its own: no
+   true_false row can be stored yet.
+3. **Apply `20261105120000_true_false_activation.sql`** (D-110, `apply_migration`, never `db push`). It
+   extends `questions_answer_format_check` (true_false: no `options`, string `question`, `correct` exactly
+   `"Sandt"`/`"Falsk"`) and `content_valid_check` (a true_false row needs no `content.type`), and
+   re-creates the SQL twin `question_is_servable` with one added line (true_false servable unless
+   `force_text`). Guarded by md5 of production's function body and of both constraint definitions (the
+   constraint hashes must be confirmed read-only against production first); a re-run is a no-op. It is in
+   `NOT_IN_PRODUCTION` and runtime-tested on PGlite (`tests/unit/true-false-activation-migration-run.test.mjs`).
+   Applying it BEFORE step 2 is harmful: the live level window filters with `question_is_servable`, so a
+   stored row would count as servable but always be skipped, and a pupil with only such rows left would
+   get "no questions" instead of a repeat.
+4. **Content** through its own reviewed migration (`answer_format 'true_false'`, `answer_type 'short'`,
+   `content { question, correct }`, `review_text` recommended), then move the activation file from
+   `NOT_IN_PRODUCTION` to `APPLIED_IN_PRODUCTION` with the version production's ledger gave it.
 
 **Activation order** (each step its own owner authorisation): security review → apply the migration
 (D-110, `apply_migration`) → deploy `get-next-question` (diff live vs repo first) → set
