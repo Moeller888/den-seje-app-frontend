@@ -44,6 +44,8 @@ const LOCAL_FRONTEND: Record<string, string> = {
   '/js/flags.js': path.join(REPO, 'js', 'flags.js'),
   '/css/match-pairs.css': path.join(REPO, 'css', 'match-pairs.css'),
   '/css/stimulus.css': path.join(REPO, 'css', 'stimulus.css'),
+  '/js/true-false.js': path.join(REPO, 'js', 'true-false.js'),
+  '/css/true-false.css': path.join(REPO, 'css', 'true-false.css'),
 };
 
 const CORS = {

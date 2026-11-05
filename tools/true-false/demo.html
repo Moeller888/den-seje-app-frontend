@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sandt/falsk – demo</title>
+  <!-- LOCAL DEMO ONLY. Not in the deployed bundle (tools/ is outside tools/cloudflare-build-static.mjs's
+       allowlist) and never talks to Supabase. Serve the repository root over HTTP and open
+       /tools/true-false/demo.html. The real control is js/true-false.js with the quiz's own CSS, and the
+       statement gets the quiz's real read-aloud player (js/read-aloud/adapters/quiz.js). The "server"
+       below is a stand-in that only compares the answer with the example's key, to show the quiz's
+       feedback states (the same texts app.js submitAnswer shows). Real grading is
+       process_question_attempt (supabase/functions/_shared/true-false.ts). ?fail=1 makes the first
+       answer fail like a network error, so the hand-back can be seen. -->
+  <link rel="stylesheet" href="../../css/theme.css">
+  <link rel="stylesheet" href="../../css/read-aloud.css">
+  <link rel="stylesheet" href="../../css/true-false.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--bg-main); color: var(--text-main); min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; }
+    .game-shell { width: 100%; max-width: 480px; padding: 16px 16px 64px; display: flex; flex-direction: column; gap: 14px; }
+    .demo-bar { display: flex; flex-wrap: wrap; gap: 6px; }
+    .demo-bar button { padding: 6px 12px; min-height: 36px; border-radius: 18px; border: 1px solid var(--border-btn);
+      background: var(--btn-bg); color: var(--text-dim); font: inherit; font-size: 13px; cursor: pointer; }
+    .demo-bar button[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: transparent; }
+    .demo-note { font-size: 12px; color: var(--text-label); }
+    #question { font-size: 19px; font-weight: bold; line-height: 1.35; color: var(--text-bright); }
+    #feedback { min-height: 22px; font-size: 16px; }
+    .feedback-correct { color: var(--success-text); }
+    .feedback-error { color: var(--error-bright); }
+    /* The quiz page's #options button rules and answer flashes (index.html), copied so the demo looks
+       like the app. */
+    .answer-area { display: flex; flex-direction: column; gap: 8px; }
+    #options button { display: flex; align-items: center; width: 100%; min-height: 52px; padding: 14px 18px; margin: 0;
+      background: var(--btn-bg); color: var(--text-dim); border: 1.5px solid var(--border-btn); border-radius: 12px;
+      cursor: pointer; font-family: inherit; font-size: 16px; text-align: left; line-height: 1.3; }
+    #options button:hover:not(:disabled) { background: var(--btn-bg-hover); color: var(--text-main); border-color: var(--border); }
+    #options button:disabled { opacity: 0.45; cursor: not-allowed; }
+    #options button.submit-btn { justify-content: center; background: var(--accent); color: #fff; border-color: transparent; font-weight: bold; }
+    .correct-flash { background: var(--correct-bg) !important; border-color: var(--success) !important; color: var(--success-text) !important; }
+    .incorrect-flash { background: var(--error-bg) !important; border-color: var(--error) !important; color: var(--error-bright) !important; }
+  </style>
+</head>
+<body>
+  <main class="game-shell">
+    <p class="demo-note">Demo af opgaveformen Sandt/falsk — lokale eksempler, ingen server.</p>
+    <div class="demo-bar" id="demo-examples" role="group" aria-label="Eksempler"></div>
+    <div id="question">Indlæser…</div>
+    <div id="feedback" role="status" aria-live="polite"></div>
+    <div id="options" class="answer-area"></div>
+  </main>
+  <script type="module">
+    import { buildTrueFalseAnswer, readTrueFalseContent } from "../../js/true-false.js";
+    import { attachReadAloudControl, stopReadAloud } from "../../js/read-aloud/adapters/quiz.js";
+
+    // `content` is exactly what get-next-question would send (the public DTO: the statement only).
+    // `key` is what the server would hold in question_instances.correct_answer — the browser never sees it.
+    // The last two break the contract on purpose: the control must not be built, and a visible error is shown.
+    const EXAMPLES = [
+      { label: "Udsagn 1", content: { question: "Danmark erklærede Tyskland krig den 9. april 1940." }, key: "Falsk" },
+      { label: "Udsagn 2", content: { question: "Jorden bevæger sig rundt om Solen." }, key: "Sandt" },
+      { label: "Fejl: svarmuligheder", content: { question: "Himlen er blå.", options: ["Ja", "Nej"] }, key: "Sandt" },
+      { label: "Fejl: intet udsagn", content: { question: "   " }, key: "Sandt" },
+    ];
+
+    const question = document.getElementById("question");
+    const feedback = document.getElementById("feedback");
+    const options = document.getElementById("options");
+    const bar = document.getElementById("demo-examples");
+    let failNext = new URLSearchParams(location.search).get("fail") === "1";
+
+    // The same visible error app.js renderOptions shows for a payload it cannot render.
+    function showUnsupported() {
+      const msg = document.createElement("p");
+      msg.id = "unsupported-format";
+      msg.className = "feedback-error";
+      msg.setAttribute("role", "alert");
+      msg.textContent = "⚠️ Denne opgavetype kan ikke vises endnu.";
+      options.appendChild(msg);
+      const hubBtn = document.createElement("button");
+      hubBtn.id = "go-hub-btn";
+      hubBtn.textContent = "Gå til hub";
+      hubBtn.className = "submit-btn";
+      options.appendChild(hubBtn);
+    }
+
+    function show(index) {
+      const ex = EXAMPLES[index];
+      [...bar.children].forEach((b, i) => b.setAttribute("aria-pressed", String(i === index)));
+      stopReadAloud();
+      const statement = typeof ex.content.question === "string" ? ex.content.question : "";
+      question.textContent = statement;
+      attachReadAloudControl(question, statement, { subject: "historie" });
+      feedback.textContent = "";
+      feedback.className = "";
+      options.innerHTML = "";
+      delete document.body.dataset.result;
+      window.__tfDemo = { sent: [], control: null, example: ex };
+
+      if (!readTrueFalseContent(ex.content)) {
+        showUnsupported();
+        return;
+      }
+
+      const control = buildTrueFalseAnswer(document, {
+        describedBy: "question",
+        // Stand-in for app.js submitAnswer → process-event → process_question_attempt.
+        onSubmit: (answer, btn) => {
+          window.__tfDemo.sent.push(answer);
+          const buttons = options.querySelectorAll("button");
+          buttons.forEach((b) => { b.disabled = true; });
+          return new Promise((resolve) => setTimeout(() => {
+            if (failNext) {
+              failNext = false;
+              feedback.textContent = "⚠️ Fejl ved svar – prøv igen";
+              feedback.className = "feedback-error";
+              buttons.forEach((b) => { b.disabled = false; });
+              resolve();
+              return;
+            }
+            const correct = answer === ex.key;
+            btn.classList.add(correct ? "correct-flash" : "incorrect-flash");
+            feedback.textContent = correct ? "Ja! 🎯" : "Svaret er " + ex.key + " — husk det nu.";
+            feedback.className = correct ? "feedback-correct" : "feedback-error";
+            document.body.dataset.result = correct ? "correct" : "incorrect";
+            resolve();
+          }, 150));
+        },
+      });
+      options.appendChild(control.root);
+      window.__tfDemo.control = control;
+    }
+
+    EXAMPLES.forEach((ex, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = ex.label;
+      b.onclick = () => show(i);
+      bar.appendChild(b);
+    });
+    const start = Number(new URLSearchParams(location.search).get("example") ?? 0);
+    show(Number.isInteger(start) && start >= 0 && start < EXAMPLES.length ? start : 0);
+  </script>
+</body>
+</html>
