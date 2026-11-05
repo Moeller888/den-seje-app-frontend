@@ -353,6 +353,76 @@
       outline-offset: 2px;
     }
 
+    /* ── Anti-gætte-pause — shown during COOLDOWN state ──────── */
+    /* Reuses the reflection panel's tokens; nothing here is needed to understand the message. */
+    #quiz-cooldown {
+      text-align: center;
+      padding: 8px 4px 4px;
+    }
+    #quiz-cooldown[hidden] { display: none; }
+    #quiz-cooldown-title {
+      margin: 0 0 10px;
+      font-size: clamp(20px, 5vw, 24px);
+      line-height: 1.3;
+      color: var(--text-main);
+      outline: none;
+    }
+    #quiz-cooldown-body,
+    #quiz-cooldown-note {
+      margin: 0 auto;
+      max-width: 34em;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+    #quiz-cooldown-note {
+      margin-top: 14px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    #quiz-cooldown-timer {
+      margin: 18px 0;
+      font-size: clamp(36px, 12vw, 48px);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+    }
+    /* Same look as the answer area's .submit-btn (scoped to #options there). */
+    #quiz-cooldown-continue {
+      width: 100%;
+      max-width: 22em;
+      min-height: 48px;
+      padding: 14px 18px;
+      background: var(--accent);
+      color: #fff;
+      border: 1.5px solid transparent;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #quiz-cooldown-continue:hover:not(:disabled) { opacity: 0.88; }
+    #quiz-cooldown-continue:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    #quiz-cooldown-continue:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    /* The live region repeats the heading for screen readers only (the panel shows it visually). */
+    #feedback.sr-only-cooldown {
+      position: absolute;
+      width: 1px; height: 1px;
+      margin: -1px; padding: 0;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     /* ── Answer area ─────────────────────────────────────────── */
     .answer-area {
       display: flex;
