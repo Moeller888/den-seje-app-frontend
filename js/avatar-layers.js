@@ -1146,7 +1146,9 @@ export function northstarPlanFor(o, itemTable = NORTHSTAR_ITEMS, basePath = NORT
   if (NORTHSTAR_KNOWN_FAULTY.indexOf(ids.join("+")) !== -1) return null;
   const cut = items[2].closed ? _nsSrc("hide-" + o.shoes + "-v1.webp") : null;
   const figure = (file) => ({ op: "draw", src: _nsSrc(file), figure: true, cut });
-  const layer = (id, l) => ({ op: "draw", src: _nsSrc(id + "-" + l + "-v1.webp") });
+  // D-349: an item's layer files carry its layerRev (default 1), so a repaired layer set is a new file version, never new bytes under an
+  // old name; no item in NORTHSTAR_ITEMS sets it yet
+  const layer = (id, l) => ({ op: "draw", src: _nsSrc(id + "-" + l + "-v" + (itemTable[id].layerRev || 1) + ".webp") });
   return [
     figure(NORTHSTAR_FIGURE.body),
     ...items[2].layers.map((l) => layer(o.shoes, l)),
