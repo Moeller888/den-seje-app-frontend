@@ -18,6 +18,10 @@
 //   content.match       Match par only: { left, right } — two lists of item texts, the right list in
 //                       the instance's shuffled order (_shared/match-pairs.ts). Never content.pairs,
 //                       which names the right partner of every item.
+//   (Sandt/falsk)       answer_format "true_false" sends content.question (the statement) and nothing
+//                       else of its own: the two answers are fixed ("Sandt", "Falsk", _shared/true-false.ts)
+//                       and never carry a marker. The stored content is checked against the contract
+//                       here, before the instance is inserted, so a row with a bad key is skipped.
 //   metadata            only the pedagogical tags listed in PUBLIC_METADATA_KEYS
 // Grading data stays server-side: process-event grades against question_instances.correct_answer
 // and questions.content read through the backend client, and only reveals the correct answer and
@@ -30,6 +34,7 @@
 // Edge Functions run.
 
 import { matchLayout, type MatchLayout } from "./match-pairs.ts";
+import { parseTrueFalseContent, TRUE_FALSE_FORMAT } from "./true-false.ts";
 
 export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "type", "force_text", "match"] as const);
 
@@ -71,7 +76,7 @@ function publicMetadata(raw: unknown): Record<string, unknown> | null {
 }
 
 // Builds the public payload for one question. `format` is the mapped answer format ("mc", "number",
-// "text", "match"). `instanceKey` is the instance's question_instances.correct_answer; only "match"
+// "text", "match", "true_false"). `instanceKey` is the instance's question_instances.correct_answer; only "match"
 // reads it, to lay out the shuffled right column — it is never copied into the payload. Throws on
 // content the client could not render, exactly like the server-side normalisation it sits next to, so a
 // bad row is skipped rather than served half-built.
@@ -101,6 +106,11 @@ export function toPublicQuestion(rawContent: unknown, format: string, rawMetadat
 
   if (format === "match") {
     content.match = matchLayout(rawContent, instanceKey);
+  }
+
+  if (format === TRUE_FALSE_FORMAT) {
+    // Validation only: the statement is content.question above; the key never leaves.
+    parseTrueFalseContent(rawContent);
   }
 
   if (typeof rawContent.type === "string") content.type = rawContent.type;

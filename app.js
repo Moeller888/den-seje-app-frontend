@@ -15,6 +15,8 @@ import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { prepareChoiceOptions } from "./js/answer-options.js";
 import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer, shortTextCorrection } from "./js/answer-input.js";
 import { buildMatchPairsAnswer, matchCorrectionText, readMatchLayout } from "./js/match-pairs.js";
+import { buildTrueFalseAnswer, readTrueFalseContent, trueFalseCorrection } from "./js/true-false.js";
+import { buildNumberAnswer } from "./js/number-answer.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 import { attachReadAloudControl, attachOptionReadAloudControl, stopReadAloud } from "./js/read-aloud/adapters/quiz.js";
@@ -1377,11 +1379,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         feedback.className = "feedback-error";
         // "Stav til": the explanation alone does not state the spelling, so keep it on screen.
         // Match par: the panel hides the columns, so the correct pairs are stated in words.
+        // Sandt/falsk: the explanation says why, the lead says which judgement was right.
         const correction = currentRenderer === ANSWER_RENDERERS.SHORT_TEXT
           ? shortTextCorrection(data.correct_answer, userAnswer)
           : currentRenderer === ANSWER_RENDERERS.MATCH_PAIRS && currentMatchControl
             ? matchCorrectionText(currentMatchControl.layout, data.correct_answer)
-            : null;
+            : currentRenderer === ANSWER_RENDERERS.TRUE_FALSE
+              ? trueFalseCorrection(data.correct_answer)
+              : null;
         setTimeout(() => enterReflectionState(reviewText, correction), 400);
         return;
       }
@@ -1519,26 +1524,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (renderer === ANSWER_RENDERERS.NUMBER) {
-      const input = document.createElement("input");
-      input.type = "text";
-
-      const btn = document.createElement("button");
-      btn.className = "submit-btn";
-      btn.textContent = "Svar";
-
-      btn.onclick = () => {
-        const val = Number(input.value);
-        if (!Number.isNaN(val)) {
-          submitAnswer(String(val), btn);
-        }
-      };
-
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") btn.onclick();
+      // F-01b (js/number-answer.js): a whole number only. Empty, decimals, a plus sign and letters are
+      // refused with a visible Danish message and nothing is sent; a valid answer is sent as the
+      // canonical integer ("1 849" / "1.849" → "1849"). Enter and the button share one submit path,
+      // and submitAnswer's state machine refuses a second send.
+      const { input, button, hint } = buildNumberAnswer(document, {
+        onSubmit: submitAnswer,
+        describedBy: questionElement.id,
       });
-
       optionsContainer.appendChild(input);
-      optionsContainer.appendChild(btn);
+      optionsContainer.appendChild(hint);
+      optionsContainer.appendChild(button);
+      input.focus();
       return true;
     }
 
@@ -1572,6 +1569,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       logError("INVALID_MATCH_LAYOUT", { format });
     }
 
+    if (renderer === ANSWER_RENDERERS.TRUE_FALSE) {
+      // Sandt/falsk (js/true-false.js): the server sent only the statement, already shown above with its
+      // read-aloud player; the two answers are fixed. Feedback is the normal choice feedback below.
+      // A payload that breaks the contract falls through to the visible "unsupported" error below.
+      if (readTrueFalseContent(content)) {
+        const control = buildTrueFalseAnswer(document, {
+          onSubmit: submitAnswer,
+          describedBy: questionElement.id,
+        });
+        optionsContainer.appendChild(control.root);
+        return true;
+      }
+      logError("INVALID_TRUE_FALSE_CONTENT", { format });
+    }
+
     if (renderer === ANSWER_RENDERERS.LONG_TEXT) {
       const textarea = document.createElement("textarea");
 
@@ -1597,7 +1609,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       return true;
     }
 
-    if (renderer === ANSWER_RENDERERS.UNSUPPORTED || renderer === ANSWER_RENDERERS.MATCH_PAIRS) {
+    if (renderer === ANSWER_RENDERERS.UNSUPPORTED || renderer === ANSWER_RENDERERS.MATCH_PAIRS
+      || renderer === ANSWER_RENDERERS.TRUE_FALSE) {
       // An interaction type this client has no renderer for must fail loud — never fall through
       // to option buttons (ARCHITECTURE.md → Question Interaction model, rule 2).
       logError("UNSUPPORTED_ANSWER_FORMAT", { format, answer_type: question.answer_type ?? null });
