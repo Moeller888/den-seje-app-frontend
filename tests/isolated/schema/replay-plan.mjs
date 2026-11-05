@@ -166,6 +166,7 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261101210000_question_history_restrict.sql": "20261102182750",
   "20261102100000_release_open_rounds_on_inactive_questions.sql": "20261102123618",
   "20261103100000_question_attempts_history_no_action.sql": "20261104163310",
+  "20261105090000_minigame_breaks.sql": "20261105060103",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),

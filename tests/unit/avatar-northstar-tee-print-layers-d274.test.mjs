@@ -38,20 +38,23 @@ test("D-274 every approved ID maps to one runtime item of the cream tee's shape"
   const items = APPROVAL.approved.map((id) => TL.itemOf(CAND, id));
   assert.equal(new Set(items.map((x) => x.item)).size, 16); for (const x of items) assert.match(x.item, /^top-tee-hip-print-(teapot|shield|fox)-(cream|heather|navy|coral|forest|mustard)$/);
   assert.deepEqual(TL.itemOf(CAND, "TP-TEA-CRM"), { id: "TP-TEA-CRM", callId: "TPV-2-tee-print-object-teapot", colour: "cream", item: "top-tee-hip-print-teapot-cream" });
-  assert.deepEqual({ ...TL.ITEM_SHAPE }, { ...AL.NORTHSTAR_ITEMS["top-tee-hip-cream"] }, "the same layers and shadow parts as the cream tee (the same cut)");
+  const { layerRev, ...cream } = AL.NORTHSTAR_ITEMS["top-tee-hip-cream"];   // D-349: the tees' layer files are revision 2 (U-343-1)
+  assert.deepEqual({ ...TL.ITEM_SHAPE }, cream, "the same layers and shadow parts as the cream tee (the same cut)"); assert.equal(layerRev, 2);
   assert.ok(TL.PARTNERS.bottom in AL.NORTHSTAR_ITEMS && TL.PARTNERS.shoes in AL.NORTHSTAR_ITEMS);
 });
 
 test("D-274/D-275 published under the owner's permission: exactly D-274's 32 listed tee layers with their registered sha256; only the 16 approved in the runtime table; the flag off", () => {
   const doc = file("docs/decisions/D-274.md").toString("utf8"), rows = [...doc.matchAll(/^\| `(top-tee-hip-print-[^`]+\.webp)` \| ([\d.]+) \| `([0-9a-f]{64})` \|$/gm)].map((m) => [m[1], +m[2].replace(/\./g, ""), m[3]]);
   assert.equal(rows.length, 32);
-  const onDisk = readdirSync(join(REPO, "assets", "avatar-northstar")).filter((f) => /print/.test(f)).sort(); assert.deepEqual(onDisk, rows.map((r) => r[0]).sort());
+  // D-349 later published each print tee's two layers again as revision 2 (-v2, U-343-1) under its own permission; D-274's 32 stay published unchanged
+  const prints = readdirSync(join(REPO, "assets", "avatar-northstar")).filter((f) => /print/.test(f)), onDisk = prints.filter((f) => !/-v2\.webp$/.test(f)).sort(); assert.deepEqual(onDisk, rows.map((r) => r[0]).sort());
+  assert.deepEqual(prints.filter((f) => /-v2\.webp$/.test(f)).sort(), rows.map((r) => r[0].replace(/-v1\.webp$/, "-v2.webp")).sort());
   for (const [f, bytes, h] of rows) { const b = file("assets/avatar-northstar/" + f); assert.deepEqual([b.length, sha(b)], [bytes, h], f); }
   const printItems = Object.keys(AL.NORTHSTAR_ITEMS).filter((id) => /print/.test(id)).sort();
   assert.deepEqual(printItems, APPROVAL.approved.map((id) => TL.itemOf(CAND, id).item).sort()); assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
   assert.deepEqual(Object.keys(AL.NORTHSTAR_PRINT_TEES).sort(), [...APPROVAL.approved].sort()); for (const id of Object.keys(APPROVAL.notApproved)) assert.ok(!(id in AL.NORTHSTAR_PRINT_TEES), id);
   const m = JSON.parse(file("assets/avatar-northstar/manifest.json").toString("utf8")), ext = m.extensions.find((e) => e.decision === "D-274");
-  assert.match(ext.authorisation, /D-274 OFFENTLIGGØRELSE GODKENDT/); assert.equal(m.files.filter((f) => f.origin && f.origin.decision === "D-274").length, 32); assert.equal(m.files.length, 31 + 32 + 2 + 8 + 4 + 15 + 8, "D-242's 31, D-274's 32, D-281's 2, D-305's 8, D-326's 4, D-336's 15 and D-345's 8 (D-348)");
+  assert.match(ext.authorisation, /D-274 OFFENTLIGGØRELSE GODKENDT/); assert.equal(m.files.filter((f) => f.origin && f.origin.decision === "D-274").length, 32); assert.equal(m.files.length, 31 + 32 + 2 + 8 + 4 + 15 + 8 + 36, "D-242's 31, D-274's 32, D-281's 2, D-305's 8, D-326's 4, D-336's 15, D-345's 8 (D-348) and D-349's 36");
 });
 
 test("D-274 the layer build refuses an --out inside the repository", () => {
