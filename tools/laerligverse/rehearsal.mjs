@@ -17,7 +17,8 @@ import { fileURLToPath } from "node:url";
 // descriptor was ambiguous. The point is to see whether the rubric separates the seven kinds of answer.
 // v1.2 (F9): part 2 has four claims; the synthetic answers keep the same errors on the same claims as in v1.1.
 // v1.3 (F9, 05-11-2026): `levels` follow the teacher's decisions (assessment-v1.mjs SCORING_RULES): S2 R4 2 → 1,
-// S4 B1 and B2 2 → 1, S6 scored as a følgefejl, S7 with the oral follow-up. `levelsV12` keeps the scores under the
+// S4 B1 and B2 2 → 1, S6 scored as a følgefejl, S7 with the oral follow-up. v1.4 (D-346 §15): S3's topic answer in
+// R4 (»den handler om kolera«) 1 → 0 (P1: a topic is not a purpose). `levelsV12` keeps the scores under the
 // approved v1.2 rubric, so the change is visible and tested.
 const RIGHT_P2 = ["ja", "nej", "nej", "ja"];
 const RIGHT_P3 = { a: "Dagbog", b: "Skolereglement" };
@@ -42,9 +43,9 @@ export const SYNTHETIC_RESPONSES = Object.freeze([
     id: "S3", kind: "delvist korrekt", syntetisk: true,
     text: { R3: "folk i byen", R4: "den handler om kolera", B1: "Påstand 2: nej, fordi det står der ikke.", B2: "Skolereglementet, for det handler om skolen." },
     answers: { part2: ["ja", "nej", "ja", "ja"], part3: { a: "Skolereglement", b: "Skolereglement" } },
-    levels: { R1: 1, R2: 1, R3: 1, R4: 1, B1: 1, B2: 1 },
+    levels: { R1: 1, R2: 1, R3: 1, R4: 0, B1: 1, B2: 1 },
     levelsV12: { R1: 1, R2: 1, R3: 1, R4: 1, B1: 1, B2: 1 },
-    decidedBy: "S3",
+    decidedBy: "P1",
     note: "B2 »det handler om skolen« henviser til kildens emne, ikke en oplysning om kilden; 1 eller 0? Givet 1 efter ordlyden »henviser til kilden generelt«.",
   },
   {

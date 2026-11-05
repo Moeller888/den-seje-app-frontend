@@ -57,6 +57,10 @@ export const CHOICE_STRATEGIES = Object.freeze([
   { id: "samtidig-personlig", name: "Altid den personlige kilde fra påstandens år", run: ({ sources, claims }) => claims.map((c) => (sources.find((s) => PERSONAL_LABELS.includes(s.label) && year(c.text) && s.meta.includes(year(c.text))) ?? sources.find((s) => PERSONAL_LABELS.includes(s.label)) ?? sources[0]).label) },
   { id: "laengste-beskrivelse", name: "Den kilde med den længste beskrivelse", run: ({ sources, claims }) => claims.map(() => sources.reduce((a, b) => (b.meta.length > a.meta.length ? b : a)).label) },
   { id: "foerste-kilde", name: "Altid den første kilde i tabellen", run: ({ sources, claims }) => claims.map(() => sources[0].label) },
+  // v1.4 (G11): a fixed row is a shortcut if the right answer favours one place in the table.
+  { id: "anden-kilde", name: "Altid den anden kilde i tabellen", run: ({ sources, claims }) => claims.map(() => (sources[1] ?? sources[0]).label) },
+  { id: "tredje-kilde", name: "Altid den tredje kilde i tabellen", run: ({ sources, claims }) => claims.map(() => (sources[2] ?? sources[0]).label) },
+  { id: "sidste-kilde", name: "Altid den sidste kilde i tabellen", run: ({ sources, claims }) => claims.map(() => sources[sources.length - 1].label) },
   { id: "praetest-undgaa", name: "Undgå prætestens plads: den første kilde på en anden plads end prætestens facit (ikke A)", skip: (id) => id === "A", run: ({ sources, claims, pretest }) => claims.map((_, i) => { const want = pretest.part3.claims[i]?.answer; const pos = pretest.part3.sources.findIndex((s) => s.label === want); return (sources.find((_, k) => k !== pos) ?? sources[0]).label; }) },
   { id: "praetest-position", name: "Samme plads i tabellen som prætestens facit (ikke A)", skip: (id) => id === "A", run: ({ sources, claims, pretest }) => claims.map((_, i) => { const want = pretest.part3.claims[i]?.answer; const pos = pretest.part3.sources.findIndex((s) => s.label === want); return (sources[pos] ?? sources[0]).label; }) },
 ]);
@@ -127,6 +131,35 @@ export function cueWords(forms) {
     for (const [s, fs] of side[ans]) if (fs.size >= 2 && !side[other].has(s)) out.push({ stem: s, only: ans, forms: [...fs].sort() });
   }
   return out;
+}
+
+/** v1.4 (G11): how often each row of the source table holds the right answer, over part 3 and T. */
+export function answerPositions(forms, transfer) {
+  const counts = [0, 0, 0, 0];
+  const sets = [...[forms.A, forms.B, forms.C].map((f) => f.part3), transfer.choice];
+  for (const set of sets) for (const c of set.claims) {
+    const i = set.sources.findIndex((s) => s.label === c.answer);
+    if (i < 0) throw new Error(`answer ${c.answer} is not in the table`);
+    counts[i]++;
+  }
+  return counts;
+}
+
+/**
+ * v1.4: phrases of `n` words that the game (what the pupil is taught) and a test share. A shared phrase would let a
+ * pupil recognise an explanation from the teaching instead of applying the method. Returns the shared phrases.
+ */
+export function sharedPhrases(gameTexts, testTexts, n = 4) {
+  const grams = (t) => { const x = words(t); const g = []; for (let i = 0; i + n <= x.length; i++) g.push(x.slice(i, i + n).join(" ")); return g; };
+  const game = new Set(gameTexts.flatMap(grams));
+  return [...new Set(testTexts.flatMap(grams).filter((g) => game.has(g)))];
+}
+
+/** Everything the pupil reads in a test, as a list of strings (no answer key). */
+export function pupilTexts(f) {
+  return f.part1
+    ? [f.source.header, f.source.text, ...f.part2.claims.map((c) => c.text), ...f.part3.sources.map((s) => s.meta), ...f.part3.claims.map((c) => c.text)]
+    : [f.source.header, f.source.text, ...f.open, ...f.choice.sources.map((s) => s.meta), ...f.choice.claims.map((c) => c.text)];
 }
 
 export function loadBefore() {

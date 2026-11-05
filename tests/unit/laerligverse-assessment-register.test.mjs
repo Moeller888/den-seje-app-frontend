@@ -167,10 +167,10 @@ test("guessing: perfect choices by luck never show as a high competence — reas
 });
 
 test("every rule can be applied by a second teacher: an origin, a rule text and examples for each test it covers", () => {
-  assert.deepEqual(SCORING_RULES.map((r) => r.id), ["S2", "S3", "S4", "S6", "S7", "T1"]);
+  assert.deepEqual(SCORING_RULES.map((r) => r.id), ["S2", "S3", "S4", "S6", "S7", "T1", "P1", "P2", "P3", "P4", "P5"]);
   for (const r of SCORING_RULES) {
     assert.ok(r.rule.length > 60, r.id);
-    assert.match(r.origin, /fil|supplement/, r.id);
+    assert.match(r.origin, /fil|supplement|opgaven|udviklerens konkretisering/, r.id);
     assert.ok(Object.keys(r.examples).length >= 1, r.id);
   }
   // The synthetic regression set: every changed score names the decision behind it.
@@ -179,14 +179,14 @@ test("every rule can be applied by a second teacher: an origin, a rule text and 
     if (changed) assert.ok(SCORING_RULES.some((x) => x.id === r.decidedBy), r.id);
   }
   const trial = Object.fromEntries(rubricTrial().map((r) => [r.id, [r.identifikation, r.valg, r.begrundelse]]));
-  assert.deepEqual(trial, { S1: [6, 6, 4], S2: [5, 6, 0], S3: [4, 4, 2], S4: [6, 3, 2], S5: [2, 6, 0], S6: [4, 5, 3], S7: [2, 6, 3] });
+  assert.deepEqual(trial, { S1: [6, 6, 4], S2: [5, 6, 0], S3: [3, 4, 2], S4: [6, 3, 2], S5: [2, 6, 0], S6: [4, 5, 3], S7: [2, 6, 3] });
 });
 
 test("historical fact check: each finding names its source and location; corrected wording is in the tests", () => {
-  assert.deepEqual(FACT_CHECK.map((c) => c.id), ["FC-1", "FC-2", "FC-3", "FC-4"]);
+  assert.deepEqual(FACT_CHECK.map((c) => c.id), ["FC-1", "FC-2", "FC-3", "FC-4", "FC-5", "FC-6", "FC-7"]);
   for (const c of FACT_CHECK) {
     assert.ok(c.sources.length >= 1, c.id);
-    assert.match(c.verdict, /bekræftet|afkræftet|ikke dokumenterbar/, c.id);
+    assert.match(c.verdict, /bekræftet|afkræftet|ikke dokumenterbar|sandsynligt|delvist/, c.id);
   }
   // FC-1: »de fleste« is not documented.
   assert.equal(/de fleste/i.test(FORMS.A.source.text + FORMS.A.part2.claims.map((c) => c.text).join(" ")), false);

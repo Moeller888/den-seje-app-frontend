@@ -2,7 +2,7 @@
 
 > **GENERERET** af `tools/laerligverse/assessment-pack.mjs` fra `tools/laerligverse/assessment-v1.mjs`. Ret ikke her.
 
-> **Status: Afventer fornyet lærergodkendelse. Version 1.2 blev godkendt 05-11-2026; version 1.3 har historiske rettelser og de besluttede bedømmelsesregler og er endnu ikke godkendt. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.**
+> **Status: Afventer fornyet lærergodkendelse. Version 1.2 blev godkendt 05-11-2026; version 1.4 har historiske rettelser, de besluttede bedømmelsesregler og en rettet rubrik og er endnu ikke godkendt. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.**
 
 Til læreren: Hver opgave printes for sig, side 1 og side 2 på hvert sit ark. Eleven får kun den opgave, der skal bruges den dag. Saml side 1 ind, før eleven får side 2: side 2 nævner modtager og formål og ville ellers give svarene i del 1. Facit står i `laerervejledning.md`, aldrig her.
 
@@ -76,10 +76,10 @@ Her er fire kilder. Vælg den kilde, der er bedst til at undersøge hver påstan
 
 | Kilde | Hvem · hvornår · til hvem · hvorfor |
 |---|---|
-| Erindringsbog | en tidligere elev · 2005 · bogens læsere · at fortælle om sin barndom |
-| Årsberetning | skolens lærer · 1955 · kommunen · at gøre rede for skolens arbejde |
-| Dagbog | en elev · 1955 · hende selv · at skrive sine oplevelser ned |
 | Skolereglement | skolekommissionen · 1955 · lærere og forældre · at fastsætte skolens regler |
+| Erindringsbog | en tidligere elev · 2005 · bogens læsere · at fortælle om sin barndom |
+| Dagbog | en elev · 1955 · hende selv · at skrive sine oplevelser ned |
+| Årsberetning | skolens lærer · 1955 · kommunen · at gøre rede for skolens arbejde |
 
 **Påstand a:** Børnene på en landsbyskole syntes i 1955, at læreren var meget streng.
 
@@ -225,10 +225,10 @@ Navn eller elevkode: ______________________
 
 | Kilde | Hvem · hvornår · til hvem · hvorfor |
 |---|---|
-| Brev | en husmor · 1962 · hendes søster · at fortælle om sin nye vaskemaskine |
-| Reklame | firmaet Lyngvask · 1962 · ugebladets kvindelige læsere · at sælge vaskemaskiner til hjemmet |
-| Statistik | et statistikkontor · 1965 · politikere og forskere · at opgøre, hvad husstandene ejede |
 | Erindring | en kvinde · 2010 · bogens læsere · at fortælle om sit liv |
+| Statistik | et statistikkontor · 1965 · politikere og forskere · at opgøre, hvad husstandene ejede |
+| Reklame | firmaet Lyngvask · 1962 · ugebladets kvindelige læsere · at sælge vaskemaskiner til hjemmet |
+| Brev | en husmor · 1962 · hendes søster · at fortælle om sin nye vaskemaskine |
 
 **Påstand a:** Hvad det betød for en kvinde i 1962 at få en vaskemaskine i hjemmet.
 
@@ -312,9 +312,9 @@ Her er fire kilder. Vælg den kilde, der er bedst til at undersøge hver påstan
 | Kilde | Hvem · hvornår · til hvem · hvorfor |
 |---|---|
 | Køreplan | jernbaneselskabet · 1847 · de rejsende · at oplyse, hvornår togene kørte |
-| Erindring | en tidligere passager · 1897 · avisens læsere · at mindes jernbanens første år |
-| Annonce | jernbaneselskabet · 1847 · avislæsere · at sælge billetter |
 | Brev | en passager · 1847 · en ven · at fortælle om sin første togtur |
+| Annonce | jernbaneselskabet · 1847 · avislæsere · at sælge billetter |
+| Erindring | en tidligere passager · 1897 · avisens læsere · at mindes jernbanens første år |
 
 **Påstand a:** De rejsende syntes i 1847, at toget mellem København og Roskilde kørte hurtigt.
 

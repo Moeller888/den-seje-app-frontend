@@ -16,7 +16,7 @@ const FIELDS = ["faglig", "historisk", "sprog", "svaerhed", "elevforstaaelse", "
 
 type Item = Record<string, string>;
 type Saved = {
-  format: string; laerer: string; dato: string; indhold: Record<string, string>;
+  format: string; version?: string; rubrikversion?: string; laerer: string; dato: string; indhold: Record<string, string>;
   proever: Record<string, Item>; tvetydigheder: Record<string, { valg: string; kommentar: string }>; rubrikbeslutninger: Record<string, { valg: string; kommentar: string }>; lp13: Record<string, { valg: string; kommentar: string }>;
 };
 
@@ -177,9 +177,26 @@ test("prøvegodkendelse: lærerens registrerede fil (05-11-2026) — ændret ind
   // The registered decision and its origin are visible at each ambiguity.
   await expect(page.locator("#tv-S2 .reg")).toContainText("supplement-2026-11-05");
   await expect(page.locator("#tv-S6 .reg")).toContainText("proeve-godkendelse-2026-11-05.json");
-  // A new file needs a full date in DD-MM-ÅÅÅÅ.
+  // v1.4: the page states what is being reviewed and that all five await a renewed approval.
+  await expect(page.locator("#runde h2")).toHaveText("Denne gennemgang: kildekritik-maaling-v1.4");
+  for (const id of ITEMS) await expect(page.locator(`td[data-round="${id}"]`)).toContainText("Afventer fornyet lærergodkendelse");
+  // A new file needs a full name (»chri« is not) and a full date in DD-MM-ÅÅÅÅ.
+  await page.locator("#save").click();
+  await expect(page.locator("#msg")).toHaveText("Skriv dit fulde navn (fornavn og efternavn), så afgørelsen kan føres tilbage til dig.");
+  await page.locator("#laerer").fill("Christopher Møller");
   await page.locator("#save").click();
   await expect(page.locator("#msg")).toHaveText("Skriv datoen som DD-MM-ÅÅÅÅ, fx 05-11-2026.");
+  await page.locator("#dato").fill("05-11-2026");
+  // The new file is bound to v1.4: its version, its rubric version and the current fingerprints — and the
+  // decisions on changed content were reset, so nothing from the v1.2 approval is carried into it.
+  const { data } = await saveTo(page, "fornyet.json");
+  expect(data.version).toBe("kildekritik-maaling-v1.4");
+  expect(data.rubrikversion).toBe("kildekritik-rubrik-v1.4");
+  for (const id of ITEMS) {
+    expect(data.proever[id]?.status).toBe("ikke_gennemgaaet");
+    expect(data.indhold[id]).not.toBe(original.indhold[id]);
+  }
+  expect(data.laerer).toBe("Christopher Møller");
   expect(requests).toEqual([]);
 });
 

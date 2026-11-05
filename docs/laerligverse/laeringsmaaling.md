@@ -172,6 +172,8 @@ er skaleret fra 4 af 5 til 5 af 6. Markeringerne er de samme som i v1.
 
 Tabellen ovenfor er den godkendte v1.2. Begge versioner er testet.
 
+**v1.4 (05-11-2026): rubrikken rettet** (D-346 §15). Et emne er ikke et formål: S3's »den handler om kolera« giver R4 0 (før 1), så S3 får identifikation 3. Fuldt formål kræver i A, B og C både, hvad afsenderen ville have, og hvad det skulle føre til. 56 ankersvar (`CALIBRATION` i `tools/laerligverse/assessment-v1.mjs`) viser hvert niveau. De øvrige rækker er uændrede.
+
 **Resultat:**
 
 - **Delscorerne skelner godt.**

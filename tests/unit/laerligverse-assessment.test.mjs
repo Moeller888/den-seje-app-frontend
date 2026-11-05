@@ -89,7 +89,9 @@ test("rubric trial on synthetic answers: the rubric separates the seven kinds �
   assert.ok(guess.flags.some((f) => /uden begrundelse/.test(f)));
   assert.deepEqual(good.flags, []);
   assert.ok(rows["forkert, men med relevant ræsonnement"].flags.some((f) => /begrunder fagligt, men vælger forkert/.test(f)));
-  assert.ok(rows["delvist korrekt"].flags.some((f) => /besvaret med kildens emne/.test(f)));
+  // v1.4 (P1): the topic answer »den handler om kolera« is 0 in R4, not an imprecise purpose, so it is not flagged as one.
+  assert.equal(SYNTHETIC_RESPONSES.find((r) => r.id === "S3").levels.R4, 0);
+  assert.equal(rows["delvist korrekt"].flags.some((f) => /upræcist/.test(f)), false);
   assert.ok(rows["forveksling af modtager og formål"].flags.some((f) => /byttet om/.test(f)));
   // S6 (følgefejl, decided 05-11-2026): one confusion counts once — R1 0, but R3/R4 scored from the pupil's own sender.
   assert.equal(rows["misforstået afsender"].identifikation, 4);

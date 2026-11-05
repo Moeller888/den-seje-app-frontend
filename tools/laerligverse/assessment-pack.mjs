@@ -9,7 +9,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { APPROVAL, CRITERIA, FORMS, HANDOVER, MINUTES, MUNDTLIG_OPFOELGNING, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, RUBRIC_VERSION, SCORING_RULES, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
+import { APPROVAL, CALIBRATION, CRITERIA, FORMS, HANDOVER, MINUTES, MUNDTLIG_OPFOELGNING, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, RUBRIC_VERSION, SCORING_RULES, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const DIR = join(ROOT, "docs", "laerligverse", "laererpakke");
@@ -92,7 +92,7 @@ export function teacherGuide() {
   L.push("# Lærerpakke: kildekritik i Arkivskabet (D-344, F8)", "", GEN, "", STATUS, "");
   L.push("## Godkendelsesstatus", "", "| Del | Status |", "|---|---|");
   L.push("| Arkivskabets 12 læringselementer | **Godkendt** af Christopher Møller 04-11-2026 (`docs/laerligverse/kildekritik-godkendelse-register.json`, SHA-256 `8cd7d969…`) |");
-  L.push(`| Prøverne og rubrikken i denne pakke (${VERSION}, ${RUBRIC_VERSION}) | **Afventer fornyet lærergodkendelse.** Version 1.2 blev godkendt 05-11-2026 (\`docs/laerligverse/proeve-godkendelse-register.json\`); 1.3 har historiske rettelser og de besluttede bedømmelsesregler |`);
+  L.push(`| Prøverne og rubrikken i denne pakke (${VERSION}, ${RUBRIC_VERSION}) | **Afventer fornyet lærergodkendelse.** Version 1.2 blev godkendt 05-11-2026 (\`docs/laerligverse/proeve-godkendelse-register.json\`); 1.4 har historiske rettelser, de besluttede bedømmelsesregler og en rettet rubrik (emne er ikke formål, samme standard i A, B og C) |`);
   L.push("| LP-13-regler (sekvenspolitikken) | **Valg registreret 05-11-2026, ikke aktiveret** (`docs/laerligverse/proeve-godkendelse-register.json`; betydning i `docs/laerligverse/lp13-beslutningskatalog.md`) |");
   L.push("| Elevpilot | **Ikke autoriseret** |", "| Produktionsintegration | **Ikke autoriseret** |", "");
   L.push("## 1. Forløbet kort", "");
@@ -126,12 +126,15 @@ export function teacherGuide() {
   L.push("- ingen modtager og intet formål trods rigtige valg → byttede felter (S7) eller en læsebarriere?", "- følgefejl eller mundtlig opfølgning brugt → står i markeringen, så en anden lærer kan se det.", "");
   L.push("Markeringerne bruger Valg på 0–6: »mange rigtige valg« betyder 5–6, »forkerte valg« 0–3.", "");
   L.push(`### Bedømmelsesregler (besluttet 05-11-2026, rubrik ${RUBRIC_VERSION})`, "");
-  L.push("Reglerne er skrevet, så en anden lærer kan bruge dem på samme måde. Oprindelsen står ved hver regel: S6, S7 og T1 er fra lærerens fil; S2, S3 og S4 er besluttet skriftligt bagefter og registreret som et særskilt supplement.", "");
+  L.push("Reglerne er skrevet, så en anden lærer kan bruge dem på samme måde. Oprindelsen står ved hver regel: S6, S7 og T1 er fra lærerens fil; S2, S3 og S4 er besluttet skriftligt bagefter og registreret som et særskilt supplement; P1–P5 (v1.4) er fælles principper på tværs af kriterierne.", "");
   for (const r of SCORING_RULES) {
     L.push(`**${r.id} (${r.criterion}; ${r.origin}).** ${r.rule}`, "");
     for (const [k, v] of Object.entries(r.examples)) L.push(`- ${k}: ${v}`);
     L.push("");
   }
+  L.push(`### Bedømmelseseksempler (ankersvar, ${RUBRIC_VERSION})`, "", "Konstruerede svar, ikke elevsvar. Brug dem til at læse niveauerne ens. Point følger betydningen, ikke ordene (P4): et svar med andre ord, der rammer betydningen, får samme point.", "", "| Prøve | Kriterium | Svar | Point | Regel |", "|---|---|---|---|---|");
+  for (const a of CALIBRATION) L.push(`| ${a.form} | ${a.criterion} | »${a.answer}« | ${a.level} | ${a.rule} |`);
+  L.push("");
   const m = MUNDTLIG_OPFOELGNING;
   L.push("### S7: fast procedure for mundtlig opfølgning", "", `**Hvornår:** ${m.naar}`, "", `**Ordlyd:** ${m.ordlyd}`, "", "**Læreren må ikke:**", "", ...m.maaIkke.map((t) => `- ${t}`), "", `**Forsøg:** ${m.forsoeg}`, "", `**Registrering:** ${m.registrering}`, "", `**Fortolkning:** ${m.fortolkning}`, "");
   L.push("**T1 rapporteres særskilt:** Elevens svar på spørgsmål 1 (ja, nej eller intet) står i `T_T1_svar` og giver ingen point. T1 er point for begrundelsen. Et rigtigt »nej« alene må ikke rapporteres som kildekritisk forståelse.", "");
@@ -151,7 +154,7 @@ export function teacherGuide() {
   L.push("## 10. Målingernes begrænsninger", "");
   L.push("- Formerne er **ikke målt lige svære**. En forskel mellem A og B kan skyldes formen, ikke læring.");
   L.push("- Del 2 har ja/nej: 50 % ved gæt pr. påstand. Del 3 har 25 % pr. påstand. Derfor vægter begrundelsen tungt, og delscorerne rapporteres hver for sig.");
-  L.push("- Svargenveje er kontrolleret med simple regler (fx »ja, når afsenderen er nævnt«, »vælg kilden med de samme ord«). Ingen af dem klarer sig bedre end gæt i v1.2, men en elev kan finde andre (`tools/laerligverse/shortcut-audit.mjs`).");
+  L.push("- Svargenveje er kontrolleret med simple regler (fx »ja, når afsenderen er nævnt«, »vælg kilden med de samme ord«). Ingen af dem klarer sig bedre end gæt i v1.4 (heller ikke »vælg altid række N« i kildetabellen), men en elev kan finde andre (`tools/laerligverse/shortcut-audit.mjs`).");
   L.push("- Skriftlige svar blander kildekritik og skrivefærdighed. Oplæsning og korte svar mindsker det, men fjerner det ikke.");
   L.push("- Rubrikken er afprøvet på **syntetiske** svar, ikke på elever. Bedømmerenighed er ikke målt.");
   L.push("- Én klasse uden sammenligningsgruppe kan ikke vise, at Arkivskabet er årsagen til en ændring.");

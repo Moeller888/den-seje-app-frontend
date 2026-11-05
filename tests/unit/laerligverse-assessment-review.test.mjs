@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { AMBIGUITIES, FORMAT, ITEMS, LP13, PAGE, UNDECIDED, check, contentFingerprints, validateReviewExport } from "../../tools/laerligverse/assessment-review.mjs";
-import { FORMS, TRANSFER } from "../../tools/laerligverse/assessment-v1.mjs";
+import { FORMS, TRANSFER, VERSION } from "../../tools/laerligverse/assessment-v1.mjs";
 import { SYNTHETIC_RESPONSES } from "../../tools/laerligverse/rehearsal.mjs";
 
 const page = () => readFileSync(PAGE, "utf8");
@@ -97,7 +97,7 @@ test("the server binds to 127.0.0.1 and serves only the page, only with GET", as
 });
 
 const valid = (over = {}) => ({
-  format: FORMAT, laerer: "Testlærer", dato: "01-01-2026", indhold: contentFingerprints(),
+  format: FORMAT, version: VERSION, laerer: "Test Lærer", dato: "01-01-2026", indhold: contentFingerprints(),
   proever: Object.fromEntries(ITEMS.map((id) => [id, { status: "godkendt", faglig: "", historisk: "", sprog: "", svaerhed: "", elevforstaaelse: "", aendringer: "" }])),
   tvetydigheder: Object.fromEntries(AMBIGUITIES.map((a) => [a.id, { valg: a.recommendation, kommentar: "" }])),
   lp13: Object.fromEntries(LP13.map((d) => [d.id, { valg: UNDECIDED, kommentar: "" }])),
@@ -105,7 +105,7 @@ const valid = (over = {}) => ({
 });
 
 test("validateReviewExport: accepts a complete file, refuses bad ones, and reports decisions on changed content", () => {
-  assert.deepEqual(validateReviewExport(JSON.stringify(valid())), { problems: [], stale: [] });
+  assert.deepEqual(validateReviewExport(JSON.stringify(valid())), { problems: [], stale: [], notes: [] });
   assert.match(validateReviewExport("{nope").problems[0], /not valid JSON/);
   assert.ok(validateReviewExport(JSON.stringify(valid({ format: "x" }))).problems.some((p) => /format/.test(p)));
   assert.ok(validateReviewExport(JSON.stringify(valid({ laerer: "" }))).problems.some((p) => /teacher name/.test(p)));

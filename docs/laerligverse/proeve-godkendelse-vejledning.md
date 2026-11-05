@@ -77,10 +77,12 @@ Det er **ikke** en del af prøvegodkendelsen. Vælg det, du er klar til at beslu
 5. **Aflevering:** Lad filen ligge i Downloads, og sig til i en ny opgave. Den registreres så byte for byte med
    SHA-256, ligesom Arkivskabets godkendelse blev det i F8.
 
-## 6. Fornyet gennemgang efter 05-11-2026 (v1.3)
+## 6. Fornyet gennemgang efter 05-11-2026 (v1.4)
 
-Din fil fra 05-11-2026 er registreret byte for byte (D-346 §12). Efter faktatjekket og dine bedømmelsesregler er
-alle fem elementer ændret, så de skal gennemgås igen:
+Din fil fra 05-11-2026 er registreret byte for byte (D-346 §12). Efter faktatjekket, dine bedømmelsesregler og
+rettelsen af rubrikken (D-346 §15: et emne giver ikke point for formål) er alle fem elementer ændret, så de skal
+gennemgås igen. Start med afsnittet »Denne gennemgang« øverst på siden: det viser, hvad der er ændret, hvad det
+betyder fagligt, og hvad du skal beslutte.
 
 1. Åbn `docs/laerligverse/proeve-godkendelse.html` som fil.
 2. Vælg »Indlæs tidligere afgørelser«, og vælg din fil fra 05-11-2026. Siden markerer A, B, T, C og rubrikken som
@@ -89,7 +91,9 @@ alle fem elementer ændret, så de skal gennemgås igen:
 3. Under »Til læreren« ved hver prøve viser tabellen »Ændret efter din godkendelse« præcis den tekst, der er ændret.
    Rubrikkens ændringer og dine regler med eksempler står i afsnit E.
 4. Læs »Historisk faktatjek« øverst.
-5. Skriv dit fulde navn og datoen som DD-MM-ÅÅÅÅ, og gem.
+5. Rubrikkens bedømmelseseksempler (ankersvar) står under rubrikken. Principperne P2, P3 og P5 er udviklerens
+   konkretisering; er du uenig, så vælg »Skal rettes« ved rubrikken og skriv hvorfor.
+6. Skriv dit fulde navn (fornavn og efternavn) og datoen som DD-MM-ÅÅÅÅ, og gem. Siden gemmer ikke uden.
 
 ## 7. Hvad sker der bagefter?
 

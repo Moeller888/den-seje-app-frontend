@@ -2,14 +2,14 @@
 
 > **GENERERET** af `tools/laerligverse/assessment-pack.mjs` fra `tools/laerligverse/assessment-v1.mjs`. Ret ikke her.
 
-> **Status: Afventer fornyet lærergodkendelse. Version 1.2 blev godkendt 05-11-2026; version 1.3 har historiske rettelser og de besluttede bedømmelsesregler og er endnu ikke godkendt. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.**
+> **Status: Afventer fornyet lærergodkendelse. Version 1.2 blev godkendt 05-11-2026; version 1.4 har historiske rettelser, de besluttede bedømmelsesregler og en rettet rubrik og er endnu ikke godkendt. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.**
 
 ## Godkendelsesstatus
 
 | Del | Status |
 |---|---|
 | Arkivskabets 12 læringselementer | **Godkendt** af Christopher Møller 04-11-2026 (`docs/laerligverse/kildekritik-godkendelse-register.json`, SHA-256 `8cd7d969…`) |
-| Prøverne og rubrikken i denne pakke (kildekritik-maaling-v1.3, kildekritik-rubrik-v1.3) | **Afventer fornyet lærergodkendelse.** Version 1.2 blev godkendt 05-11-2026 (`docs/laerligverse/proeve-godkendelse-register.json`); 1.3 har historiske rettelser og de besluttede bedømmelsesregler |
+| Prøverne og rubrikken i denne pakke (kildekritik-maaling-v1.4, kildekritik-rubrik-v1.4) | **Afventer fornyet lærergodkendelse.** Version 1.2 blev godkendt 05-11-2026 (`docs/laerligverse/proeve-godkendelse-register.json`); 1.4 har historiske rettelser, de besluttede bedømmelsesregler og en rettet rubrik (emne er ikke formål, samme standard i A, B og C) |
 | LP-13-regler (sekvenspolitikken) | **Valg registreret 05-11-2026, ikke aktiveret** (`docs/laerligverse/proeve-godkendelse-register.json`; betydning i `docs/laerligverse/lp13-beslutningskatalog.md`) |
 | Elevpilot | **Ikke autoriseret** |
 | Produktionsintegration | **Ikke autoriseret** |
@@ -56,7 +56,7 @@ Elevarkene (`elevark.md`) indeholder ikke facit.
 
 **Materialestatus:** kilden er *didaktisk konstrueret*: et opfundet brev af en ægte kildetype. Det er ikke en original, en forkortelse eller en parafrase.
 
-**Historisk ramme, som du skal kontrollere:** Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 nævner, at tusindvis døde (sandt for hele epidemien; kontrollér tallet), men spørger om, hvad lægen mente i juli. Påstand 4 forudsætter, at mange fattige familier boede i fugtige kælderboliger (belagt som »mange«, ikke »de fleste«; se D-346 §11).
+**Historisk ramme, som du skal kontrollere:** Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 nævner, at tusindvis døde (sandt for hele epidemien; kontrollér tallet), men spørger om, hvad lægen mente i juli. Påstand 4 forudsætter, at mange fattige familier boede i fugtige kælderboliger (belagt som »mange«, ikke »de fleste«; se D-346 §11). Magistraten var Københavns styre i 1853 (belagt, FC-5). Del 3, påstand b (at eleverne rejste sig for læreren i 1955) er en påstand, eleven skal finde en kilde til at undersøge, ikke et faktum i prøven; skikken er beskrevet i en erindring fra 1950'erne, men ikke belagt som almindelig regel (FC-6).
 
 | Del 1 | Kriterium | Accepterede svar (eksempler) |
 |---|---|---|
@@ -87,14 +87,14 @@ Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personl
 
 **Materialestatus:** kilden er *didaktisk konstrueret*: et opfundet avismeddelelse af en ægte kildetype. Det er ikke en original, en forkortelse eller en parafrase.
 
-**Historisk ramme, som du skal kontrollere:** Influenzaepidemien (»den spanske syge«) ramte Danmark i efteråret 1918. I slutningen af oktober 1918 rykkede Sundhedskommissionen i Aarhus advarsler mod større møder og sammenkomster ind i avisen, og kun syge børn eller børn med syge i hjemmet skulle blive hjemme. Aarhus lukkede IKKE skolerne (rettet i D-346 §11). Meddelelsens ordlyd er konstrueret.
+**Historisk ramme, som du skal kontrollere:** Influenzaepidemien (»den spanske syge«) ramte Danmark i efteråret 1918. I slutningen af oktober 1918 rykkede Sundhedskommissionen i Aarhus advarsler mod større møder og sammenkomster ind i avisen, og kun syge børn eller børn med syge i hjemmet skulle blive hjemme. Aarhus lukkede IKKE skolerne (rettet i D-346 §11). Meddelelsens ordlyd er konstrueret. Del 3, påstand a (mødetid kl. 6 i 1910) er en påstand, eleven skal finde en kilde til at undersøge, ikke et faktum i prøven; en arbejdsdag på knap 10 timer er belagt, en fast mødetid kl. 6 er ikke (FC-7).
 
 | Del 1 | Kriterium | Accepterede svar (eksempler) |
 |---|---|---|
 | 1 | R1 Afsender (0–1) | Sundhedskommissionen · byens udvalg for sundhed |
 | 2 | R2 Tidspunkt (0–1) | oktober 1918 · 1918 |
 | 3 | R3 Modtager (0–2) | byens borgere · folk i Aarhus · avisens læsere i Aarhus |
-| 4 | R4 Formål (0–2) | at få folk til at følge rådene, så smitten blev mindre · at begrænse smitten |
+| 4 | R4 Formål (0–2) | at få folk til at følge rådene, så smitten blev mindre · at få borgerne til at undgå forsamlinger, så influenzaen ikke spredte sig |
 
 | Del 2 | Type | Facit | Hvorfor |
 |---|---|---|---|
@@ -125,7 +125,7 @@ Begrundelsen ved påstand b bedømmes med B2. Påstand b besvares af den personl
 | 1 | R1 Afsender (0–1) | amtmanden |
 | 2 | R2 Tidspunkt (0–1) | 15. november 1872 · 1872 |
 | 3 | R3 Modtager (0–2) | regeringen · staten · ministeriet |
-| 4 | R4 Formål (0–2) | at få staten til at sende hjælp til de ramte · at få penge og korn |
+| 4 | R4 Formål (0–2) | at få staten til at sende hjælp, så de ramte kunne klare vinteren · at få penge og korn fra staten til de ramte før vinteren |
 
 | Del 2 | Type | Facit | Hvorfor |
 |---|---|---|---|
@@ -171,18 +171,18 @@ Rapportér **tre delscorer hver for sig**: identifikation (R1–R4, 0–6), valg
 | R1 Afsender | 0–1 | **0:** ikke angivet eller forkert<br>**1:** rigtig afsender |
 | R2 Tidspunkt | 0–1 | **0:** ikke angivet eller forkert<br>**1:** rigtigt tidspunkt (år eller dato) |
 | R3 Modtager | 0–2 | **0:** ikke angivet, forkert, eller formålet skrevet i stedet<br>**1:** vag modtager (»nogen«, »folk«) eller rigtig uden at kunne ses i teksten<br>**2:** rigtig modtager, som kan udledes af teksten |
-| R4 Formål | 0–2 | **0:** intet relevant formål: ikke angivet, forkert, eller modtageren skrevet i stedet<br>**1:** formålet er upræcist (S2): hensigten nævnes uden at sige, hvad afsenderen ville opnå med den (»penge«, »hjælp«, »at få penge«), eller kildens EMNE står i stedet for formålet (»den handler om kolera«)<br>**2:** konkret og korrekt, hvad afsenderen ville opnå (»at få penge til at rydde gårdene og til et lazaret«, »at få borgerne til at holde sig fra forsamlinger, så smitten blev mindre«, »at få staten til at sende penge og korn til de ramte«) |
+| R4 Formål | 0–2 | **0:** intet formål: ikke angivet, forkert, kun kildens EMNE (»den handler om kolera«, P1), et standardsvar, der passer til enhver kilde (»for at informere«, P3), eller modtageren skrevet i stedet<br>**1:** en relevant DEL af formålet, upræcist (S2): enten hvad afsenderen ville have (»penge«, »at få penge«, »penge og korn«, »at advare«) eller hvad det skulle føre til (»at stoppe sygdommen«, »at begrænse smitten«), men ikke begge<br>**2:** konkret og korrekt, hele formålet med elevens egne ord: hvad afsenderen ville have modtageren til at gøre eller give, OG hvad det skulle føre til (»at få penge til at rydde gårdene og til et lazaret«, »at få borgerne til at holde sig fra forsamlinger, så smitten blev mindre«, »at få staten til at sende penge og korn, så de ramte kunne klare vinteren«) |
 | V Valg | 0–6 | 0–6 rigtige af fire ja/nej-vurderinger og to kildevalg (rettes med facit) |
-| B1 Begrundelse, del 2 | 0–2 | **0:** ingen eller uden sammenhæng med kilden<br>**1:** henviser til kilden generelt (»det står der«), ELLER bruger afsender, modtager, formål eller tid, men når til et forkert ja/nej om påstanden (S4: højst 1)<br>**2:** bruger afsender, modtager, formål eller tid til at forklare, hvad kilden kan og ikke kan vise, og når til det rigtige ja/nej |
-| B2 Begrundelse, del 3 | 0–2 | **0:** ingen eller uden sammenhæng med kilden<br>**1:** henviser til kilden generelt, ELLER vælger kilden, fordi den handler om samme emne som påstanden (S3: højst 1), ELLER giver en relevant oplysning om ophavet, men har valgt en forkert kilde (S4: højst 1)<br>**2:** forklarer et rigtigt valg med en konkret oplysning om den valgte kilde (afsender, tid, modtager eller formål), som er relevant for netop påstanden |
+| B1 Begrundelse, del 2 | 0–2 | **0:** ingen begrundelse (kun ja/nej, P5), uden sammenhæng med kilden, eller kun en vurdering uden oplysning (»den er bedst«)<br>**1:** henviser til kildens indhold eller emne (»det står der«), ELLER nævner afsender, kildetype eller tid uden at forklare, hvad det betyder for netop påstanden (P2), ELLER et standardsvar, der passer til enhver kilde (»afsenderen er partisk«, P3), ELLER bruger ophavet relevant, men når til et forkert ja/nej (S4: højst 1)<br>**2:** bruger afsender, modtager, formål eller tid til at forklare, hvad kilden kan og ikke kan vise om netop denne påstand, og når til det rigtige ja/nej |
+| B2 Begrundelse, del 3 | 0–2 | **0:** ingen begrundelse, uden sammenhæng med kilden, eller kun en vurdering uden oplysning om kilden (»den er bedst«, »den er mest troværdig«)<br>**1:** henviser til kilden generelt, ELLER vælger kilden, fordi den handler om samme emne som påstanden (S3: højst 1), ELLER begrunder med kildetypen alene (»det er officielt«, »en dagbog er ærlig«, P2), ELLER skriver hele kildebeskrivelsen af uden at udvælge, ELLER giver en relevant oplysning om ophavet, men har valgt en forkert kilde (S4: højst 1)<br>**2:** forklarer et rigtigt valg med en konkret oplysning om den valgte kilde (afsender, tid, modtager eller formål), som er relevant for netop påstanden og afgør valget (ikke hele kildebeskrivelsen skrevet af) |
 
 **Transfertest:**
 
 | Kriterium | Point | Niveauer |
 |---|---|---|
-| T1 Begrundet vurdering | 0–2 | **0:** intet svar, eller et bart »ja« eller »nej« uden begrundelse (selve svaret noteres særskilt i T_T1_svar og giver ingen point her)<br>**1:** en begrundelse, der ikke bruger kildens ophav (»reklamer lyver«, »det står der ikke«), ELLER en begrundelse med afsender eller formål, der ender i »ja« (S4: højst 1)<br>**2:** nej, fordi en reklame viser, hvad firmaet ville sælge, ikke hvor mange der havde en maskine |
-| T2 Begrundelse med afsender og formål | 0–2 | **0:** ingen<br>**1:** nævner afsender ELLER formål<br>**2:** forbinder afsender og formål (et firma, der vil sælge) |
-| T3 Hvad kilden KAN bruges til | 0–2 | **0:** intet eller forkert<br>**1:** vagt (»om vaskemaskiner«)<br>**2:** konkret: hvordan firmaet ville have kunderne til at se maskinen, eller hvilket billede af husmoren reklamen gav |
+| T1 Begrundet vurdering | 0–2 | **0:** intet svar, eller et bart »ja« eller »nej« uden begrundelse (selve svaret noteres særskilt i T_T1_svar og giver ingen point her)<br>**1:** en begrundelse, der ikke bruger kildens ophav (»det står der ikke«), et standardsvar om kildetypen (»reklamer lyver«, P2/P3), formålet nævnt uden at forbinde det med påstanden (»den vil sælge«), ELLER en begrundelse med afsender eller formål, der ender i »ja« (S4: højst 1)<br>**2:** nej, med afsender eller formål brugt til at forklare, hvorfor reklamen ikke viser, hvor mange der havde en maskine (»firmaet ville sælge maskiner, så reklamen viser, hvad de ville have folk til at tro, ikke hvor mange der havde én«) |
+| T2 Begrundelse med afsender og formål | 0–2 | **0:** ingen, eller firmanavnet uden nogen rolle i begrundelsen<br>**1:** bruger afsenderen (»det er fra firmaet selv«) ELLER formålet (»den skal sælge«) i begrundelsen<br>**2:** forbinder afsender og formål (et firma, der vil sælge sine egne maskiner) |
+| T3 Hvad kilden KAN bruges til | 0–2 | **0:** intet, forkert, eller kun emnet (»om vaskemaskiner«, P1)<br>**1:** en rigtig, men upræcis brug uden ophavet (»at der fandtes vaskemaskiner i 1962«, »hvordan man reklamerede«)<br>**2:** konkret og med ophavet: hvordan firmaet ville have kunderne til at se maskinen, eller hvilket billede af husmoren reklamen gav |
 | TV Valg | 0–2 | 0–2 rigtige kildevalg (rettes med facit) |
 
 **Markeringer, du skal se nærmere på** (ikke domme):
@@ -195,15 +195,15 @@ Rapportér **tre delscorer hver for sig**: identifikation (R1–R4, 0–6), valg
 
 Markeringerne bruger Valg på 0–6: »mange rigtige valg« betyder 5–6, »forkerte valg« 0–3.
 
-### Bedømmelsesregler (besluttet 05-11-2026, rubrik kildekritik-rubrik-v1.3)
+### Bedømmelsesregler (besluttet 05-11-2026, rubrik kildekritik-rubrik-v1.4)
 
-Reglerne er skrevet, så en anden lærer kan bruge dem på samme måde. Oprindelsen står ved hver regel: S6, S7 og T1 er fra lærerens fil; S2, S3 og S4 er besluttet skriftligt bagefter og registreret som et særskilt supplement.
+Reglerne er skrevet, så en anden lærer kan bruge dem på samme måde. Oprindelsen står ved hver regel: S6, S7 og T1 er fra lærerens fil; S2, S3 og S4 er besluttet skriftligt bagefter og registreret som et særskilt supplement; P1–P5 (v1.4) er fælles principper på tværs af kriterierne.
 
-**S2 (R4; supplement 05-11-2026 (ikke i filen)).** Formålet skal være konkret for at give 2. Hensigten i ét ord (»penge«, »hjælp«) eller uden, hvad afsenderen ville opnå med den, giver 1. Intet relevant formål giver 0. Det gælder også et kort mundtligt svar: læreren skriver det ordret ned og bedømmer det med samme regel.
+**S2 (R4; supplement 05-11-2026 (ikke i filen)).** Et upræcist formål giver 1, ikke 2. Formålet har to dele: hvad afsenderen ville have modtageren til at gøre eller give, og hvad det skulle føre til. 2 kræver begge dele med elevens egne ord. Én af delene (»penge«, »at advare«, »at begrænse smitten«) giver 1. Kun emnet, et standardsvar eller intet relevant giver 0 (P1, P3). Det gælder også et kort mundtligt svar: læreren skriver det ordret ned og bedømmer det med samme regel. v1.4: samme standard i A, B og C (i v1.3 stod »at begrænse smitten« og »at få penge og korn« som fuldt formål i B og C, mens tilsvarende svar gav 1 i A).
 
-- A: 0: »ved ikke«, »Magistraten« · 1: »penge«, »at få penge«, »den handler om kolera« · 2: »at få penge til at rydde gårdene og til et lazaret«, »at få byens styre til at gøre noget mod sygdommen«
-- B: 0: »borgerne« · 1: »råd«, »at advare«, »den handler om influenza« · 2: »at få folk til at holde sig fra forsamlinger, så smitten blev mindre«
-- C: 0: »staten« · 1: »hjælp«, »penge og korn« · 2: »at få staten til at sende penge og korn til de ramte«, »at få hjælp til de ramte før vinteren«
+- A: 0: »ved ikke«, »Magistraten«, »den handler om kolera«, »for at informere« · 1: »penge«, »at få penge«, »at stoppe sygdommen« · 2: »at få penge til at rydde gårdene og til et lazaret«, »at få byens styre til at gøre noget mod sygdommen«
+- B: 0: »borgerne«, »den handler om influenza«, »for at fortælle om det« · 1: »råd«, »at advare«, »at begrænse smitten« · 2: »at få folk til at holde sig fra forsamlinger, så smitten blev mindre«
+- C: 0: »staten«, »den handler om stormfloden«, »for at informere« · 1: »hjælp«, »penge og korn«, »at hjælpe de ramte« · 2: »at få staten til at sende penge og korn, så de ramte kunne klare vinteren«, »at få hjælp fra staten til de ramte før vinteren«
 
 **S3 (B2; supplement 05-11-2026 (ikke i filen)).** En begrundelse, der kun siger, at kilden handler om samme emne som påstanden, giver højst 1. 2 kræver en oplysning om kildens ophav (afsender, tid, modtager eller formål), som er relevant for netop påstanden.
 
@@ -227,12 +227,102 @@ Reglerne er skrevet, så en anden lærer kan bruge dem på samme måde. Oprindel
 **S7 (R3 og R4 (mundtlig opfølgning); fil 05-11-2026).** Kun når svarene til spørgsmål 3 og 4 begge er der, men står i hinandens felter. Læreren følger MUNDTLIG_OPFOELGNING ordret. Placerer eleven selv begge svar rigtigt, bedømmes de som om de stod i de rigtige felter, med de almindelige niveauer (så »at få penge« stadig giver R4 1 efter S2). Ellers 0 + 0. Notér det i *_mundtlig_opfoelgning.
 
 - A: R3 »at få penge«, R4 »Magistraten«. Eleven placerer begge rigtigt: R3 2, R4 1 (S2). Ellers: R3 0, R4 0.
-- B: R3 »at begrænse smitten«, R4 »borgerne i Aarhus«. Placeret rigtigt: R3 2, R4 2.
+- B: R3 »at begrænse smitten«, R4 »borgerne i Aarhus«. Placeret rigtigt: R3 2, R4 1 (S2: målet uden det, kommissionen ville have borgerne til at gøre).
 - C: R3 »at få hjælp«, R4 »staten«. Placeret rigtigt: R3 2, R4 1 (S2).
 
 **T1 (T1 og T_T1_svar; fil 05-11-2026 (»saerskilt«)).** T1 giver point for begrundelsen, ikke for svaret. Elevens svar (ja, nej eller intet) noteres særskilt i T_T1_svar og giver ingen point. Et rigtigt »nej« alene dokumenterer ikke kildekritisk forståelse og må ikke rapporteres sådan.
 
 - T: »Nej.« → T_T1_svar nej, T1 0 · »Nej, reklamer lyver.« → nej, T1 1 · »Nej, firmaet vil bare sælge maskiner; reklamen siger ikke, hvor mange der havde én.« → nej, T1 2 · »Ja.« → ja, T1 0
+
+**P1 (R4 og T3; din regel i opgaven 05-11-2026 (»emne kontra formål«); v1.4).** Kildens emne er ikke dens formål og ikke det, den kan bruges til. Et svar, der kun siger, hvad kilden handler om, giver 0 i R4 og T3, også selv om emnet er rigtigt. (I B2 er et emne-match en svag begrundelse for et valg og giver højst 1 efter S3; dér er spørgsmålet et andet.)
+
+- A: R4 0: »den handler om kolera«, »om syge i København«
+- B: R4 0: »den handler om influenza«
+- C: R4 0: »den handler om stormfloden«
+- T: T3 0: »om vaskemaskiner«
+
+**P2 (B1, B2, T1 og T2; udviklerens konkretisering (v1.4); kræver din godkendelse).** At nævne afsenderens navn, kildetypen eller tidspunktet er ikke en vurdering. Det giver højst 1, indtil eleven forklarer, hvad det betyder for netop denne påstand: hvad afsenderen ville, hvad han kunne vide, eller hvor tæt på han var. »Det er officielt, så det er sandt«, »reklamer lyver« og »skrevet dengang, så det er rigtigt« giver højst 1.
+
+- A: B1 1: »Ja, det er lægen, der skriver det.« · B1 2: »Ja. Lægen skriver selv, at de dårlige boliger gør folk syge, så brevet viser, hvad han mente.«
+- B: B2 1: »Arbejdsreglementet, for det er officielt.« · B2 2: »Arbejdsreglementet, for fabriksejeren skrev det i 1910 for at fastsætte, hvornår de skulle møde.«
+- T: T2 0: »Lyngvask 60 er en vaskemaskine.« · T2 1: »Det er fra firmaet selv.« · T2 2: »Firmaet vil sælge sine egne maskiner.«
+
+**P3 (R4, B1, B2 og T1; udviklerens konkretisering (v1.4); kræver din godkendelse).** Et standardsvar, der ville passe til næsten enhver kilde, viser ikke, at eleven har arbejdet med netop denne kilde. I R4 giver det 0 (»for at informere«, »for at fortælle om det«). I B1, B2 og T1 giver det højst 1 (»afsenderen er partisk«, »man kan ikke stole på kilder«, »reklamer lyver«).
+
+- A: R4 0: »for at informere« · B1 1: »Nej, afsenderen er partisk.«
+- T: T1 1: »Nej, reklamer lyver.«
+
+**P4 (alle åbne svar; din regel i opgaven 05-11-2026 (»faglig vurderingsregel, ikke en ordliste«); v1.4).** Pointene følger betydningen, ikke ordene. Facit og eksemplerne viser betydninger, ikke ord, der skal stå. Et svar med elevens egne ord, der rammer betydningen, får fuld score (fx »kommunen« for Magistraten, »et sygehus« for lazaret). Et svar, der bruger facits ord med en forkert betydning, bedømmes efter betydningen.
+
+- A: R4 2: »Han ville have kommunen til at betale for oprydning og et sygehus, så færre blev syge.« · R4 0: »Magistraten ville give lægen penge til et lazaret.« (facits ord, men Magistraten er ikke afsender; har eleven også byttet om i R1, gælder S6)
+
+**P5 (B1, B2 og T1; udviklerens konkretisering (v1.4) af din T1-beslutning; kræver din godkendelse).** Et rigtigt ja/nej eller kildevalg uden begrundelse tæller kun i Valg (V, TV) eller i T_T1_svar, aldrig i begrundelsen. Det er samme princip som din T1-beslutning, nu skrevet ens for alle tre begrundelser.
+
+- A: B1 0: »Påstand 3: nej.« (Valg tæller det rigtige nej)
+- T: T1 0: »Nej.« (T_T1_svar nej)
+
+### Bedømmelseseksempler (ankersvar, kildekritik-rubrik-v1.4)
+
+Konstruerede svar, ikke elevsvar. Brug dem til at læse niveauerne ens. Point følger betydningen, ikke ordene (P4): et svar med andre ord, der rammer betydningen, får samme point.
+
+| Prøve | Kriterium | Svar | Point | Regel |
+|---|---|---|---|---|
+| A | R4 | »ved ikke« | 0 | R4 |
+| B | R4 | »råd« | 1 | S2 |
+| B | R4 | »at få folk til at holde sig fra forsamlinger, så smitten blev mindre« | 2 | S2 |
+| C | R4 | »hjælp« | 1 | S2 |
+| C | R4 | »at få staten til at sende penge og korn, så de ramte kunne klare vinteren« | 2 | S2 |
+| C | R4 | »at få hjælp fra staten til de ramte før vinteren« | 2 | S2 |
+| A | R4 | »den handler om kolera« | 0 | P1 |
+| A | R4 | »for at informere« | 0 | P3 |
+| A | R4 | »Magistraten« | 0 | R4 |
+| A | R4 | »Magistraten ville give lægen penge til et lazaret« | 0 | P4 |
+| A | R4 | »penge« | 1 | S2 |
+| A | R4 | »at få penge« | 1 | S2 |
+| A | R4 | »at stoppe sygdommen« | 1 | S2 |
+| A | R4 | »at få penge til at rydde gårdene og til et lazaret« | 2 | S2 |
+| A | R4 | »at få byens styre til at gøre noget mod sygdommen« | 2 | S2 |
+| A | R4 | »Han ville have kommunen til at betale for oprydning og et sygehus, så færre blev smittet.« | 2 | P4 |
+| B | R4 | »den handler om influenza« | 0 | P1 |
+| B | R4 | »for at fortælle om det« | 0 | P3 |
+| B | R4 | »borgerne« | 0 | R4 |
+| B | R4 | »borgerne ville have Sundhedskommissionen til at begrænse smitten« | 0 | P4 |
+| B | R4 | »at advare« | 1 | S2 |
+| B | R4 | »at begrænse smitten« | 1 | S2 |
+| B | R4 | »at få folk til at følge rådene, så smitten blev mindre« | 2 | S2 |
+| B | R4 | »at få borgerne til at undgå forsamlinger, så influenzaen ikke spredte sig« | 2 | S2 |
+| B | R4 | »De ville have Aarhus' indbyggere til at blive væk fra store møder, så færre blev syge.« | 2 | P4 |
+| C | R4 | »den handler om stormfloden« | 0 | P1 |
+| C | R4 | »for at informere« | 0 | P3 |
+| C | R4 | »staten« | 0 | R4 |
+| C | R4 | »staten ville sende penge og korn til amtmanden« | 0 | P4 |
+| C | R4 | »penge og korn« | 1 | S2 |
+| C | R4 | »at hjælpe de ramte« | 1 | S2 |
+| C | R4 | »at få staten til at sende hjælp, så de ramte kunne klare vinteren« | 2 | S2 |
+| C | R4 | »at få penge og korn fra staten til de ramte før vinteren« | 2 | S2 |
+| C | R4 | »Han bad regeringen om mad og midler, så folk der havde mistet alt, overlevede frosten.« | 2 | P4 |
+| A | B1 | »Påstand 3: nej.« | 0 | P5 |
+| A | B1 | »Påstand 2: nej, fordi det står der ikke.« | 1 | B1 |
+| A | B1 | »Påstand 1: ja, det er lægen, der skriver det.« | 1 | P2 |
+| A | B1 | »Påstand 4: nej, afsenderen er partisk.« | 1 | P3 |
+| A | B1 | »Påstand 1: nej. Lægen vil have penge, så han gør det måske værre, end det er.« | 1 | S4 |
+| A | B1 | »Påstand 3: nej. Det er lægen, der beder om penge. Brevet er skrevet, før de har svaret, så det kan ikke vise, om han fik dem.« | 2 | B1 |
+| A | B1 | »Påstand 3: nej, for han spørger kun om pengene og ved ikke endnu, hvad byen gør.« | 2 | P4 |
+| A | B2 | »den er bedst« | 0 | P5 |
+| A | B2 | »Skolereglementet, for det handler om skolen.« | 1 | S3 |
+| A | B2 | »Dagbogen, for en dagbog er ærlig.« | 1 | P2 |
+| A | B2 | »Dagbog: en elev, 1955, hende selv, at skrive sine oplevelser ned.« | 1 | B2 |
+| A | B2 | »Årsberetningen, fordi læreren skrev den samme år og kendte eleverne.« | 1 | S4 |
+| A | B2 | »Dagbogen, fordi en elev skrev den i 1955 til sig selv.« | 2 | B2 |
+| A | B2 | »Dagbogen, for hun gik selv i klassen og skrev det samme år.« | 2 | P4 |
+| T | T1 | »Nej.« | 0 | T1 |
+| T | T1 | »Nej, reklamer lyver.« | 1 | P3 |
+| T | T1 | »Nej, den vil sælge.« | 1 | P2 |
+| T | T1 | »Ja, firmaet ved jo, hvor mange de har solgt.« | 1 | S4 |
+| T | T1 | »Nej, firmaet vil bare sælge maskiner; reklamen siger ikke, hvor mange der havde én.« | 2 | T1 |
+| T | T3 | »om vaskemaskiner« | 0 | P1 |
+| T | T3 | »at der fandtes vaskemaskiner i 1962« | 1 | T3 |
+| T | T3 | »hvordan firmaet ville have husmødrene til at se maskinen: som en, der gav fri fra vaskedagen« | 2 | T3 |
 
 ### S7: fast procedure for mundtlig opfølgning
 
@@ -285,7 +375,7 @@ Brug `registreringsskema.csv` (én række pr. elev). Den indeholder kun elevkode
 
 - Formerne er **ikke målt lige svære**. En forskel mellem A og B kan skyldes formen, ikke læring.
 - Del 2 har ja/nej: 50 % ved gæt pr. påstand. Del 3 har 25 % pr. påstand. Derfor vægter begrundelsen tungt, og delscorerne rapporteres hver for sig.
-- Svargenveje er kontrolleret med simple regler (fx »ja, når afsenderen er nævnt«, »vælg kilden med de samme ord«). Ingen af dem klarer sig bedre end gæt i v1.2, men en elev kan finde andre (`tools/laerligverse/shortcut-audit.mjs`).
+- Svargenveje er kontrolleret med simple regler (fx »ja, når afsenderen er nævnt«, »vælg kilden med de samme ord«). Ingen af dem klarer sig bedre end gæt i v1.4 (heller ikke »vælg altid række N« i kildetabellen), men en elev kan finde andre (`tools/laerligverse/shortcut-audit.mjs`).
 - Skriftlige svar blander kildekritik og skrivefærdighed. Oplæsning og korte svar mindsker det, men fjerner det ikke.
 - Rubrikken er afprøvet på **syntetiske** svar, ikke på elever. Bedømmerenighed er ikke målt.
 - Én klasse uden sammenligningsgruppe kan ikke vise, at Arkivskabet er årsagen til en ændring.

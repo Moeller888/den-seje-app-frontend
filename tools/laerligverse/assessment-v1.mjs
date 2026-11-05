@@ -1,8 +1,11 @@
 // D-344 (F8): pretest, posttest, transfer test and delayed test for `kildekritik.ophav`, with the scoring rubric.
 //
 // STATUS: the teacher approved v1.2 of the four tests and the rubric on 05-11-2026 (proeve-godkendelse-register.json).
-// v1.3 changes all five after that approval (historical corrections, D-346 §11; the teacher's scoring decisions,
-// §12), so v1.3 AWAITS A RENEWED teacher approval. The approval of the 12 Arkivskab elements (D-344) is separate.
+// v1.3 changed all five after that approval (historical corrections, D-346 §11; the teacher's scoring decisions,
+// §12) and was never approved. v1.4 (D-346 §15) corrects the rubric (a topic is not a purpose; one standard for a
+// full purpose in A, B and C; shared principles P1–P5 and anchor answers), the R4 keys of B and C, and the order of
+// the source tables in C and T. v1.4 AWAITS A RENEWED teacher approval of all five. The approval of the 12
+// Arkivskab elements (D-344) is separate.
 //
 // ONE SOURCE OF TRUTH. The student sheets and the teacher's key are both generated from this file
 // (tools/laerligverse/assessment-pack.mjs), so they cannot drift apart, and the student sheet is checked to
@@ -23,35 +26,37 @@
 // a real historical frame that the teacher must check (`frameToCheck`). None of them is a historical original,
 // an abridgement or a paraphrase of one.
 
-export const VERSION = "kildekritik-maaling-v1.3";
+export const VERSION = "kildekritik-maaling-v1.4";
 export const APPROVAL = Object.freeze({
   status: "afventer_fornyet_laerergodkendelse",
-  text: "Afventer fornyet lærergodkendelse. Version 1.2 blev godkendt 05-11-2026; version 1.3 har historiske rettelser og de besluttede bedømmelsesregler og er endnu ikke godkendt. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.",
+  text: "Afventer fornyet lærergodkendelse. Version 1.2 blev godkendt 05-11-2026; version 1.4 har historiske rettelser, de besluttede bedømmelsesregler og en rettet rubrik og er endnu ikke godkendt. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.",
 });
 
 /**
- * The rubric's version. v1.3 (F9, 05-11-2026) builds in the teacher's decisions on S2, S3, S4, S6, S7 and T1
- * (SCORING_RULES). The rubric the teacher approved on 05-11-2026 was v1.2; its approval is kept as history in
- * docs/laerligverse/proeve-godkendelse-register.json, and v1.3 awaits a renewed teacher approval.
+ * The rubric's version. v1.3 (F9, 05-11-2026) built in the teacher's decisions on S2, S3, S4, S6, S7 and T1
+ * (SCORING_RULES). v1.4 (D-346 §15): a topic is never a purpose (P1, R4 and T3), a full purpose needs BOTH what the
+ * sender wanted from the receiver AND what it should lead to, the same in A, B and C, the shared principles P1–P5,
+ * and the anchor answers (CALIBRATION). The approved rubric was v1.2; its approval is kept as history in
+ * docs/laerligverse/proeve-godkendelse-register.json, and v1.4 awaits a renewed teacher approval.
  */
-export const RUBRIC_VERSION = "kildekritik-rubrik-v1.3";
+export const RUBRIC_VERSION = "kildekritik-rubrik-v1.4";
 
 /** The competence model's criteria. Subscores are reported SEPARATELY; there is no total and no mastery cut-off. */
 export const CRITERIA = Object.freeze({
   R1: { name: "Afsender", max: 1, part: "identifikation", levels: ["ikke angivet eller forkert", "rigtig afsender"] },
   R2: { name: "Tidspunkt", max: 1, part: "identifikation", levels: ["ikke angivet eller forkert", "rigtigt tidspunkt (år eller dato)"] },
   R3: { name: "Modtager", max: 2, part: "identifikation", levels: ["ikke angivet, forkert, eller formålet skrevet i stedet", "vag modtager (»nogen«, »folk«) eller rigtig uden at kunne ses i teksten", "rigtig modtager, som kan udledes af teksten"] },
-  R4: { name: "Formål", max: 2, part: "identifikation", levels: ["intet relevant formål: ikke angivet, forkert, eller modtageren skrevet i stedet", "formålet er upræcist (S2): hensigten nævnes uden at sige, hvad afsenderen ville opnå med den (»penge«, »hjælp«, »at få penge«), eller kildens EMNE står i stedet for formålet (»den handler om kolera«)", "konkret og korrekt, hvad afsenderen ville opnå (»at få penge til at rydde gårdene og til et lazaret«, »at få borgerne til at holde sig fra forsamlinger, så smitten blev mindre«, »at få staten til at sende penge og korn til de ramte«)"] },
+  R4: { name: "Formål", max: 2, part: "identifikation", levels: ["intet formål: ikke angivet, forkert, kun kildens EMNE (»den handler om kolera«, P1), et standardsvar, der passer til enhver kilde (»for at informere«, P3), eller modtageren skrevet i stedet", "en relevant DEL af formålet, upræcist (S2): enten hvad afsenderen ville have (»penge«, »at få penge«, »penge og korn«, »at advare«) eller hvad det skulle føre til (»at stoppe sygdommen«, »at begrænse smitten«), men ikke begge", "konkret og korrekt, hele formålet med elevens egne ord: hvad afsenderen ville have modtageren til at gøre eller give, OG hvad det skulle føre til (»at få penge til at rydde gårdene og til et lazaret«, »at få borgerne til at holde sig fra forsamlinger, så smitten blev mindre«, »at få staten til at sende penge og korn, så de ramte kunne klare vinteren«)"] },
   V: { name: "Valg", max: 6, part: "valg", levels: ["0–6 rigtige af fire ja/nej-vurderinger og to kildevalg (rettes med facit)"] },
-  B1: { name: "Begrundelse, del 2", max: 2, part: "begrundelse", levels: ["ingen eller uden sammenhæng med kilden", "henviser til kilden generelt (»det står der«), ELLER bruger afsender, modtager, formål eller tid, men når til et forkert ja/nej om påstanden (S4: højst 1)", "bruger afsender, modtager, formål eller tid til at forklare, hvad kilden kan og ikke kan vise, og når til det rigtige ja/nej"] },
-  B2: { name: "Begrundelse, del 3", max: 2, part: "begrundelse", levels: ["ingen eller uden sammenhæng med kilden", "henviser til kilden generelt, ELLER vælger kilden, fordi den handler om samme emne som påstanden (S3: højst 1), ELLER giver en relevant oplysning om ophavet, men har valgt en forkert kilde (S4: højst 1)", "forklarer et rigtigt valg med en konkret oplysning om den valgte kilde (afsender, tid, modtager eller formål), som er relevant for netop påstanden"] },
+  B1: { name: "Begrundelse, del 2", max: 2, part: "begrundelse", levels: ["ingen begrundelse (kun ja/nej, P5), uden sammenhæng med kilden, eller kun en vurdering uden oplysning (»den er bedst«)", "henviser til kildens indhold eller emne (»det står der«), ELLER nævner afsender, kildetype eller tid uden at forklare, hvad det betyder for netop påstanden (P2), ELLER et standardsvar, der passer til enhver kilde (»afsenderen er partisk«, P3), ELLER bruger ophavet relevant, men når til et forkert ja/nej (S4: højst 1)", "bruger afsender, modtager, formål eller tid til at forklare, hvad kilden kan og ikke kan vise om netop denne påstand, og når til det rigtige ja/nej"] },
+  B2: { name: "Begrundelse, del 3", max: 2, part: "begrundelse", levels: ["ingen begrundelse, uden sammenhæng med kilden, eller kun en vurdering uden oplysning om kilden (»den er bedst«, »den er mest troværdig«)", "henviser til kilden generelt, ELLER vælger kilden, fordi den handler om samme emne som påstanden (S3: højst 1), ELLER begrunder med kildetypen alene (»det er officielt«, »en dagbog er ærlig«, P2), ELLER skriver hele kildebeskrivelsen af uden at udvælge, ELLER giver en relevant oplysning om ophavet, men har valgt en forkert kilde (S4: højst 1)", "forklarer et rigtigt valg med en konkret oplysning om den valgte kilde (afsender, tid, modtager eller formål), som er relevant for netop påstanden og afgør valget (ikke hele kildebeskrivelsen skrevet af)"] },
 });
 
 /** Transfer criteria: the same competence, without the step-by-step questions. */
 export const TRANSFER_CRITERIA = Object.freeze({
-  T1: { name: "Begrundet vurdering", max: 2, levels: ["intet svar, eller et bart »ja« eller »nej« uden begrundelse (selve svaret noteres særskilt i T_T1_svar og giver ingen point her)", "en begrundelse, der ikke bruger kildens ophav (»reklamer lyver«, »det står der ikke«), ELLER en begrundelse med afsender eller formål, der ender i »ja« (S4: højst 1)", "nej, fordi en reklame viser, hvad firmaet ville sælge, ikke hvor mange der havde en maskine"] },
-  T2: { name: "Begrundelse med afsender og formål", max: 2, levels: ["ingen", "nævner afsender ELLER formål", "forbinder afsender og formål (et firma, der vil sælge)"] },
-  T3: { name: "Hvad kilden KAN bruges til", max: 2, levels: ["intet eller forkert", "vagt (»om vaskemaskiner«)", "konkret: hvordan firmaet ville have kunderne til at se maskinen, eller hvilket billede af husmoren reklamen gav"] },
+  T1: { name: "Begrundet vurdering", max: 2, levels: ["intet svar, eller et bart »ja« eller »nej« uden begrundelse (selve svaret noteres særskilt i T_T1_svar og giver ingen point her)", "en begrundelse, der ikke bruger kildens ophav (»det står der ikke«), et standardsvar om kildetypen (»reklamer lyver«, P2/P3), formålet nævnt uden at forbinde det med påstanden (»den vil sælge«), ELLER en begrundelse med afsender eller formål, der ender i »ja« (S4: højst 1)", "nej, med afsender eller formål brugt til at forklare, hvorfor reklamen ikke viser, hvor mange der havde en maskine (»firmaet ville sælge maskiner, så reklamen viser, hvad de ville have folk til at tro, ikke hvor mange der havde én«)"] },
+  T2: { name: "Begrundelse med afsender og formål", max: 2, levels: ["ingen, eller firmanavnet uden nogen rolle i begrundelsen", "bruger afsenderen (»det er fra firmaet selv«) ELLER formålet (»den skal sælge«) i begrundelsen", "forbinder afsender og formål (et firma, der vil sælge sine egne maskiner)"] },
+  T3: { name: "Hvad kilden KAN bruges til", max: 2, levels: ["intet, forkert, eller kun emnet (»om vaskemaskiner«, P1)", "en rigtig, men upræcis brug uden ophavet (»at der fandtes vaskemaskiner i 1962«, »hvordan man reklamerede«)", "konkret og med ophavet: hvordan firmaet ville have kunderne til at se maskinen, eller hvilket billede af husmoren reklamen gav"] },
   TV: { name: "Valg", max: 2, levels: ["0–2 rigtige kildevalg (rettes med facit)"] },
 });
 
@@ -63,11 +68,11 @@ export const TRANSFER_CRITERIA = Object.freeze({
 export const SCORING_RULES = Object.freeze([
   {
     id: "S2", criterion: "R4", origin: "supplement 05-11-2026 (ikke i filen)",
-    rule: "Formålet skal være konkret for at give 2. Hensigten i ét ord (»penge«, »hjælp«) eller uden, hvad afsenderen ville opnå med den, giver 1. Intet relevant formål giver 0. Det gælder også et kort mundtligt svar: læreren skriver det ordret ned og bedømmer det med samme regel.",
+    rule: "Et upræcist formål giver 1, ikke 2. Formålet har to dele: hvad afsenderen ville have modtageren til at gøre eller give, og hvad det skulle føre til. 2 kræver begge dele med elevens egne ord. Én af delene (»penge«, »at advare«, »at begrænse smitten«) giver 1. Kun emnet, et standardsvar eller intet relevant giver 0 (P1, P3). Det gælder også et kort mundtligt svar: læreren skriver det ordret ned og bedømmer det med samme regel. v1.4: samme standard i A, B og C (i v1.3 stod »at begrænse smitten« og »at få penge og korn« som fuldt formål i B og C, mens tilsvarende svar gav 1 i A).",
     examples: {
-      A: "0: »ved ikke«, »Magistraten« · 1: »penge«, »at få penge«, »den handler om kolera« · 2: »at få penge til at rydde gårdene og til et lazaret«, »at få byens styre til at gøre noget mod sygdommen«",
-      B: "0: »borgerne« · 1: »råd«, »at advare«, »den handler om influenza« · 2: »at få folk til at holde sig fra forsamlinger, så smitten blev mindre«",
-      C: "0: »staten« · 1: »hjælp«, »penge og korn« · 2: »at få staten til at sende penge og korn til de ramte«, »at få hjælp til de ramte før vinteren«",
+      A: "0: »ved ikke«, »Magistraten«, »den handler om kolera«, »for at informere« · 1: »penge«, »at få penge«, »at stoppe sygdommen« · 2: »at få penge til at rydde gårdene og til et lazaret«, »at få byens styre til at gøre noget mod sygdommen«",
+      B: "0: »borgerne«, »den handler om influenza«, »for at fortælle om det« · 1: »råd«, »at advare«, »at begrænse smitten« · 2: »at få folk til at holde sig fra forsamlinger, så smitten blev mindre«",
+      C: "0: »staten«, »den handler om stormfloden«, »for at informere« · 1: »hjælp«, »penge og korn«, »at hjælpe de ramte« · 2: »at få staten til at sende penge og korn, så de ramte kunne klare vinteren«, »at få hjælp fra staten til de ramte før vinteren«",
     },
   },
   {
@@ -103,7 +108,7 @@ export const SCORING_RULES = Object.freeze([
     rule: "Kun når svarene til spørgsmål 3 og 4 begge er der, men står i hinandens felter. Læreren følger MUNDTLIG_OPFOELGNING ordret. Placerer eleven selv begge svar rigtigt, bedømmes de som om de stod i de rigtige felter, med de almindelige niveauer (så »at få penge« stadig giver R4 1 efter S2). Ellers 0 + 0. Notér det i *_mundtlig_opfoelgning.",
     examples: {
       A: "R3 »at få penge«, R4 »Magistraten«. Eleven placerer begge rigtigt: R3 2, R4 1 (S2). Ellers: R3 0, R4 0.",
-      B: "R3 »at begrænse smitten«, R4 »borgerne i Aarhus«. Placeret rigtigt: R3 2, R4 2.",
+      B: "R3 »at begrænse smitten«, R4 »borgerne i Aarhus«. Placeret rigtigt: R3 2, R4 1 (S2: målet uden det, kommissionen ville have borgerne til at gøre).",
       C: "R3 »at få hjælp«, R4 »staten«. Placeret rigtigt: R3 2, R4 1 (S2).",
     },
   },
@@ -114,6 +119,121 @@ export const SCORING_RULES = Object.freeze([
       T: "»Nej.« → T_T1_svar nej, T1 0 · »Nej, reklamer lyver.« → nej, T1 1 · »Nej, firmaet vil bare sælge maskiner; reklamen siger ikke, hvor mange der havde én.« → nej, T1 2 · »Ja.« → ja, T1 0",
     },
   },
+  // v1.4 (D-346 §15): principles that hold across the criteria. P1 is the teacher's own rule (the task of 05-11-2026);
+  // P2–P5 are the developer's concretisation of the confusions the teacher asked to be audited, and need his approval.
+  {
+    id: "P1", criterion: "R4 og T3", origin: "din regel i opgaven 05-11-2026 (»emne kontra formål«); v1.4",
+    rule: "Kildens emne er ikke dens formål og ikke det, den kan bruges til. Et svar, der kun siger, hvad kilden handler om, giver 0 i R4 og T3, også selv om emnet er rigtigt. (I B2 er et emne-match en svag begrundelse for et valg og giver højst 1 efter S3; dér er spørgsmålet et andet.)",
+    examples: {
+      A: "R4 0: »den handler om kolera«, »om syge i København«",
+      B: "R4 0: »den handler om influenza«",
+      C: "R4 0: »den handler om stormfloden«",
+      T: "T3 0: »om vaskemaskiner«",
+    },
+  },
+  {
+    id: "P2", criterion: "B1, B2, T1 og T2", origin: "udviklerens konkretisering (v1.4); kræver din godkendelse",
+    rule: "At nævne afsenderens navn, kildetypen eller tidspunktet er ikke en vurdering. Det giver højst 1, indtil eleven forklarer, hvad det betyder for netop denne påstand: hvad afsenderen ville, hvad han kunne vide, eller hvor tæt på han var. »Det er officielt, så det er sandt«, »reklamer lyver« og »skrevet dengang, så det er rigtigt« giver højst 1.",
+    examples: {
+      A: "B1 1: »Ja, det er lægen, der skriver det.« · B1 2: »Ja. Lægen skriver selv, at de dårlige boliger gør folk syge, så brevet viser, hvad han mente.«",
+      B: "B2 1: »Arbejdsreglementet, for det er officielt.« · B2 2: »Arbejdsreglementet, for fabriksejeren skrev det i 1910 for at fastsætte, hvornår de skulle møde.«",
+      T: "T2 0: »Lyngvask 60 er en vaskemaskine.« · T2 1: »Det er fra firmaet selv.« · T2 2: »Firmaet vil sælge sine egne maskiner.«",
+    },
+  },
+  {
+    id: "P3", criterion: "R4, B1, B2 og T1", origin: "udviklerens konkretisering (v1.4); kræver din godkendelse",
+    rule: "Et standardsvar, der ville passe til næsten enhver kilde, viser ikke, at eleven har arbejdet med netop denne kilde. I R4 giver det 0 (»for at informere«, »for at fortælle om det«). I B1, B2 og T1 giver det højst 1 (»afsenderen er partisk«, »man kan ikke stole på kilder«, »reklamer lyver«).",
+    examples: {
+      A: "R4 0: »for at informere« · B1 1: »Nej, afsenderen er partisk.«",
+      T: "T1 1: »Nej, reklamer lyver.«",
+    },
+  },
+  {
+    id: "P4", criterion: "alle åbne svar", origin: "din regel i opgaven 05-11-2026 (»faglig vurderingsregel, ikke en ordliste«); v1.4",
+    rule: "Pointene følger betydningen, ikke ordene. Facit og eksemplerne viser betydninger, ikke ord, der skal stå. Et svar med elevens egne ord, der rammer betydningen, får fuld score (fx »kommunen« for Magistraten, »et sygehus« for lazaret). Et svar, der bruger facits ord med en forkert betydning, bedømmes efter betydningen.",
+    examples: {
+      A: "R4 2: »Han ville have kommunen til at betale for oprydning og et sygehus, så færre blev syge.« · R4 0: »Magistraten ville give lægen penge til et lazaret.« (facits ord, men Magistraten er ikke afsender; har eleven også byttet om i R1, gælder S6)",
+    },
+  },
+  {
+    id: "P5", criterion: "B1, B2 og T1", origin: "udviklerens konkretisering (v1.4) af din T1-beslutning; kræver din godkendelse",
+    rule: "Et rigtigt ja/nej eller kildevalg uden begrundelse tæller kun i Valg (V, TV) eller i T_T1_svar, aldrig i begrundelsen. Det er samme princip som din T1-beslutning, nu skrevet ens for alle tre begrundelser.",
+    examples: {
+      A: "B1 0: »Påstand 3: nej.« (Valg tæller det rigtige nej)",
+      T: "T1 0: »Nej.« (T_T1_svar nej)",
+    },
+  },
+]);
+
+/**
+ * v1.4: anchor answers (bedømmelseseksempler) for the open criteria. CONSTRUCTED by the developer, not pupil answers.
+ * Each has the level the rubric gives and the rule that decides it, so two teachers can score the same answer the
+ * same way, and the tests can check that the rubric, the keys and the rule examples agree. `kind` names what the
+ * anchor tests: emne, generisk, modtager, upraecist, praecist, synonym, noegleord (the key's words with a wrong
+ * meaning), konklusion (a right answer without reasoning), forkert-relevant (a wrong answer with relevant reasoning),
+ * kildetype, navn, afskrift. This is NOT an automatic scorer: the teacher scores; the anchors calibrate.
+ */
+export const CALIBRATION = Object.freeze([
+  // R4 in A, B and C: the same standard in every form.
+  { form: "A", criterion: "R4", answer: "ved ikke", level: 0, kind: "intet", rule: "R4" },
+  { form: "B", criterion: "R4", answer: "råd", level: 1, kind: "upraecist", rule: "S2" },
+  { form: "B", criterion: "R4", answer: "at få folk til at holde sig fra forsamlinger, så smitten blev mindre", level: 2, kind: "praecist", rule: "S2" },
+  { form: "C", criterion: "R4", answer: "hjælp", level: 1, kind: "upraecist", rule: "S2" },
+  { form: "C", criterion: "R4", answer: "at få staten til at sende penge og korn, så de ramte kunne klare vinteren", level: 2, kind: "praecist", rule: "S2" },
+  { form: "C", criterion: "R4", answer: "at få hjælp fra staten til de ramte før vinteren", level: 2, kind: "praecist", rule: "S2" },
+  { form: "A", criterion: "R4", answer: "den handler om kolera", level: 0, kind: "emne", rule: "P1" },
+  { form: "A", criterion: "R4", answer: "for at informere", level: 0, kind: "generisk", rule: "P3" },
+  { form: "A", criterion: "R4", answer: "Magistraten", level: 0, kind: "modtager", rule: "R4" },
+  { form: "A", criterion: "R4", answer: "Magistraten ville give lægen penge til et lazaret", level: 0, kind: "noegleord", rule: "P4" },
+  { form: "A", criterion: "R4", answer: "penge", level: 1, kind: "upraecist", rule: "S2" },
+  { form: "A", criterion: "R4", answer: "at få penge", level: 1, kind: "upraecist", rule: "S2" },
+  { form: "A", criterion: "R4", answer: "at stoppe sygdommen", level: 1, kind: "upraecist", rule: "S2" },
+  { form: "A", criterion: "R4", answer: "at få penge til at rydde gårdene og til et lazaret", level: 2, kind: "praecist", rule: "S2" },
+  { form: "A", criterion: "R4", answer: "at få byens styre til at gøre noget mod sygdommen", level: 2, kind: "praecist", rule: "S2" },
+  { form: "A", criterion: "R4", answer: "Han ville have kommunen til at betale for oprydning og et sygehus, så færre blev smittet.", level: 2, kind: "synonym", rule: "P4" },
+  { form: "B", criterion: "R4", answer: "den handler om influenza", level: 0, kind: "emne", rule: "P1" },
+  { form: "B", criterion: "R4", answer: "for at fortælle om det", level: 0, kind: "generisk", rule: "P3" },
+  { form: "B", criterion: "R4", answer: "borgerne", level: 0, kind: "modtager", rule: "R4" },
+  { form: "B", criterion: "R4", answer: "borgerne ville have Sundhedskommissionen til at begrænse smitten", level: 0, kind: "noegleord", rule: "P4" },
+  { form: "B", criterion: "R4", answer: "at advare", level: 1, kind: "upraecist", rule: "S2" },
+  { form: "B", criterion: "R4", answer: "at begrænse smitten", level: 1, kind: "upraecist", rule: "S2" },
+  { form: "B", criterion: "R4", answer: "at få folk til at følge rådene, så smitten blev mindre", level: 2, kind: "praecist", rule: "S2" },
+  { form: "B", criterion: "R4", answer: "at få borgerne til at undgå forsamlinger, så influenzaen ikke spredte sig", level: 2, kind: "praecist", rule: "S2" },
+  { form: "B", criterion: "R4", answer: "De ville have Aarhus' indbyggere til at blive væk fra store møder, så færre blev syge.", level: 2, kind: "synonym", rule: "P4" },
+  { form: "C", criterion: "R4", answer: "den handler om stormfloden", level: 0, kind: "emne", rule: "P1" },
+  { form: "C", criterion: "R4", answer: "for at informere", level: 0, kind: "generisk", rule: "P3" },
+  { form: "C", criterion: "R4", answer: "staten", level: 0, kind: "modtager", rule: "R4" },
+  { form: "C", criterion: "R4", answer: "staten ville sende penge og korn til amtmanden", level: 0, kind: "noegleord", rule: "P4" },
+  { form: "C", criterion: "R4", answer: "penge og korn", level: 1, kind: "upraecist", rule: "S2" },
+  { form: "C", criterion: "R4", answer: "at hjælpe de ramte", level: 1, kind: "upraecist", rule: "S2" },
+  { form: "C", criterion: "R4", answer: "at få staten til at sende hjælp, så de ramte kunne klare vinteren", level: 2, kind: "praecist", rule: "S2" },
+  { form: "C", criterion: "R4", answer: "at få penge og korn fra staten til de ramte før vinteren", level: 2, kind: "praecist", rule: "S2" },
+  { form: "C", criterion: "R4", answer: "Han bad regeringen om mad og midler, så folk der havde mistet alt, overlevede frosten.", level: 2, kind: "synonym", rule: "P4" },
+  // B1 (form A, part 2): conclusion and reasoning are scored apart.
+  { form: "A", criterion: "B1", answer: "Påstand 3: nej.", level: 0, kind: "konklusion", rule: "P5" },
+  { form: "A", criterion: "B1", answer: "Påstand 2: nej, fordi det står der ikke.", level: 1, kind: "emne", rule: "B1" },
+  { form: "A", criterion: "B1", answer: "Påstand 1: ja, det er lægen, der skriver det.", level: 1, kind: "navn", rule: "P2" },
+  { form: "A", criterion: "B1", answer: "Påstand 4: nej, afsenderen er partisk.", level: 1, kind: "generisk", rule: "P3" },
+  { form: "A", criterion: "B1", answer: "Påstand 1: nej. Lægen vil have penge, så han gør det måske værre, end det er.", level: 1, kind: "forkert-relevant", rule: "S4" },
+  { form: "A", criterion: "B1", answer: "Påstand 3: nej. Det er lægen, der beder om penge. Brevet er skrevet, før de har svaret, så det kan ikke vise, om han fik dem.", level: 2, kind: "praecist", rule: "B1" },
+  { form: "A", criterion: "B1", answer: "Påstand 3: nej, for han spørger kun om pengene og ved ikke endnu, hvad byen gør.", level: 2, kind: "synonym", rule: "P4" },
+  // B2 (form A, part 3, claim a).
+  { form: "A", criterion: "B2", answer: "den er bedst", level: 0, kind: "konklusion", rule: "P5" },
+  { form: "A", criterion: "B2", answer: "Skolereglementet, for det handler om skolen.", level: 1, kind: "emne", rule: "S3" },
+  { form: "A", criterion: "B2", answer: "Dagbogen, for en dagbog er ærlig.", level: 1, kind: "kildetype", rule: "P2" },
+  { form: "A", criterion: "B2", answer: "Dagbog: en elev, 1955, hende selv, at skrive sine oplevelser ned.", level: 1, kind: "afskrift", rule: "B2" },
+  { form: "A", criterion: "B2", answer: "Årsberetningen, fordi læreren skrev den samme år og kendte eleverne.", level: 1, kind: "forkert-relevant", rule: "S4" },
+  { form: "A", criterion: "B2", answer: "Dagbogen, fordi en elev skrev den i 1955 til sig selv.", level: 2, kind: "praecist", rule: "B2" },
+  { form: "A", criterion: "B2", answer: "Dagbogen, for hun gik selv i klassen og skrev det samme år.", level: 2, kind: "synonym", rule: "P4" },
+  // Transfer test T.
+  { form: "T", criterion: "T1", answer: "Nej.", level: 0, kind: "konklusion", rule: "T1" },
+  { form: "T", criterion: "T1", answer: "Nej, reklamer lyver.", level: 1, kind: "generisk", rule: "P3" },
+  { form: "T", criterion: "T1", answer: "Nej, den vil sælge.", level: 1, kind: "navn", rule: "P2" },
+  { form: "T", criterion: "T1", answer: "Ja, firmaet ved jo, hvor mange de har solgt.", level: 1, kind: "forkert-relevant", rule: "S4" },
+  { form: "T", criterion: "T1", answer: "Nej, firmaet vil bare sælge maskiner; reklamen siger ikke, hvor mange der havde én.", level: 2, kind: "praecist", rule: "T1" },
+  { form: "T", criterion: "T3", answer: "om vaskemaskiner", level: 0, kind: "emne", rule: "P1" },
+  { form: "T", criterion: "T3", answer: "at der fandtes vaskemaskiner i 1962", level: 1, kind: "upraecist", rule: "T3" },
+  { form: "T", criterion: "T3", answer: "hvordan firmaet ville have husmødrene til at se maskinen: som en, der gav fri fra vaskedagen", level: 2, kind: "praecist", rule: "T3" },
 ]);
 
 /**
@@ -150,7 +270,7 @@ export const FORMS = Object.freeze({
   A: form({
     id: "A", role: "prætest", minutes: 13,
     title: "Kolera i København 1853",
-    frameToCheck: "Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 nævner, at tusindvis døde (sandt for hele epidemien; kontrollér tallet), men spørger om, hvad lægen mente i juli. Påstand 4 forudsætter, at mange fattige familier boede i fugtige kælderboliger (belagt som »mange«, ikke »de fleste«; se D-346 §11).",
+    frameToCheck: "Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 nævner, at tusindvis døde (sandt for hele epidemien; kontrollér tallet), men spørger om, hvad lægen mente i juli. Påstand 4 forudsætter, at mange fattige familier boede i fugtige kælderboliger (belagt som »mange«, ikke »de fleste«; se D-346 §11). Magistraten var Københavns styre i 1853 (belagt, FC-5). Del 3, påstand b (at eleverne rejste sig for læreren i 1955) er en påstand, eleven skal finde en kilde til at undersøge, ikke et faktum i prøven; skikken er beskrevet i en erindring fra 1950'erne, men ikke belagt som almindelig regel (FC-6).",
     source: {
       kind: "Brev", status: "didaktisk konstrueret",
       header: "Brev skrevet i København, juli 1853. Underskrevet: J. Holm, læge.",
@@ -172,10 +292,10 @@ export const FORMS = Object.freeze({
     part3: {
       reasonFor: "a",
       sources: [
-        { label: "Erindringsbog", meta: "en tidligere elev · 2005 · bogens læsere · at fortælle om sin barndom" },
-        { label: "Årsberetning", meta: "skolens lærer · 1955 · kommunen · at gøre rede for skolens arbejde" },
-        { label: "Dagbog", meta: "en elev · 1955 · hende selv · at skrive sine oplevelser ned" },
         { label: "Skolereglement", meta: "skolekommissionen · 1955 · lærere og forældre · at fastsætte skolens regler" },
+        { label: "Erindringsbog", meta: "en tidligere elev · 2005 · bogens læsere · at fortælle om sin barndom" },
+        { label: "Dagbog", meta: "en elev · 1955 · hende selv · at skrive sine oplevelser ned" },
+        { label: "Årsberetning", meta: "skolens lærer · 1955 · kommunen · at gøre rede for skolens arbejde" },
       ],
       claims: [
         { sourceKind: "personlig", id: "a", text: "Børnene på en landsbyskole syntes i 1955, at læreren var meget streng.", answer: "Dagbog", why: "Skrevet af en elev samme år, til hende selv: tæt på oplevelsen. Erindringsbogen er skrevet 50 år senere, og årsberetningen er lærerens egen." },
@@ -186,7 +306,7 @@ export const FORMS = Object.freeze({
   B: form({
     id: "B", role: "posttest", minutes: 13,
     title: "Den spanske syge 1918",
-    frameToCheck: "Influenzaepidemien (»den spanske syge«) ramte Danmark i efteråret 1918. I slutningen af oktober 1918 rykkede Sundhedskommissionen i Aarhus advarsler mod større møder og sammenkomster ind i avisen, og kun syge børn eller børn med syge i hjemmet skulle blive hjemme. Aarhus lukkede IKKE skolerne (rettet i D-346 §11). Meddelelsens ordlyd er konstrueret.",
+    frameToCheck: "Influenzaepidemien (»den spanske syge«) ramte Danmark i efteråret 1918. I slutningen af oktober 1918 rykkede Sundhedskommissionen i Aarhus advarsler mod større møder og sammenkomster ind i avisen, og kun syge børn eller børn med syge i hjemmet skulle blive hjemme. Aarhus lukkede IKKE skolerne (rettet i D-346 §11). Meddelelsens ordlyd er konstrueret. Del 3, påstand a (mødetid kl. 6 i 1910) er en påstand, eleven skal finde en kilde til at undersøge, ikke et faktum i prøven; en arbejdsdag på knap 10 timer er belagt, en fast mødetid kl. 6 er ikke (FC-7).",
     source: {
       kind: "Avismeddelelse", status: "didaktisk konstrueret",
       header: "Meddelelse i en avis i Aarhus, slutningen af oktober 1918. Underskrevet: Sundhedskommissionen.",
@@ -195,7 +315,7 @@ export const FORMS = Object.freeze({
     },
     part1: {
       questions: ["Hvem har lavet kilden?", "Hvornår er kilden lavet?", "Hvem er kilden skrevet til?", "Hvorfor tror du, kilden er skrevet? Skriv, hvad afsenderen ville opnå."],
-      key: { R1: ["Sundhedskommissionen", "byens udvalg for sundhed"], R2: ["oktober 1918", "1918"], R3: ["byens borgere", "folk i Aarhus", "avisens læsere i Aarhus"], R4: ["at få folk til at følge rådene, så smitten blev mindre", "at begrænse smitten"] },
+      key: { R1: ["Sundhedskommissionen", "byens udvalg for sundhed"], R2: ["oktober 1918", "1918"], R3: ["byens borgere", "folk i Aarhus", "avisens læsere i Aarhus"], R4: ["at få folk til at følge rådene, så smitten blev mindre", "at få borgerne til at undgå forsamlinger, så influenzaen ikke spredte sig"] },
     },
     part2: {
       claims: [
@@ -231,7 +351,7 @@ export const FORMS = Object.freeze({
     },
     part1: {
       questions: ["Hvem har lavet kilden?", "Hvornår er kilden lavet?", "Hvem er kilden skrevet til?", "Hvorfor tror du, kilden er skrevet? Skriv, hvad afsenderen ville opnå."],
-      key: { R1: ["amtmanden"], R2: ["15. november 1872", "1872"], R3: ["regeringen", "staten", "ministeriet"], R4: ["at få staten til at sende hjælp til de ramte", "at få penge og korn"] },
+      key: { R1: ["amtmanden"], R2: ["15. november 1872", "1872"], R3: ["regeringen", "staten", "ministeriet"], R4: ["at få staten til at sende hjælp, så de ramte kunne klare vinteren", "at få penge og korn fra staten til de ramte før vinteren"] },
     },
     part2: {
       claims: [
@@ -245,9 +365,9 @@ export const FORMS = Object.freeze({
       reasonFor: "a",
       sources: [
         { label: "Køreplan", meta: "jernbaneselskabet · 1847 · de rejsende · at oplyse, hvornår togene kørte" },
-        { label: "Erindring", meta: "en tidligere passager · 1897 · avisens læsere · at mindes jernbanens første år" },
-        { label: "Annonce", meta: "jernbaneselskabet · 1847 · avislæsere · at sælge billetter" },
         { label: "Brev", meta: "en passager · 1847 · en ven · at fortælle om sin første togtur" },
+        { label: "Annonce", meta: "jernbaneselskabet · 1847 · avislæsere · at sælge billetter" },
+        { label: "Erindring", meta: "en tidligere passager · 1897 · avisens læsere · at mindes jernbanens første år" },
       ],
       claims: [
         { sourceKind: "personlig", id: "a", text: "De rejsende syntes i 1847, at toget mellem København og Roskilde kørte hurtigt.", answer: "Brev", why: "Skrevet af en passager samme år, til en ven: tæt på oplevelsen. Erindringen er skrevet 50 år senere, og køreplanen siger, hvornår togene kørte, ikke hvad de rejsende syntes." },
@@ -274,10 +394,10 @@ export const TRANSFER = Object.freeze({
   ],
   choice: {
     sources: [
-      { label: "Brev", meta: "en husmor · 1962 · hendes søster · at fortælle om sin nye vaskemaskine" },
-      { label: "Reklame", meta: "firmaet Lyngvask · 1962 · ugebladets kvindelige læsere · at sælge vaskemaskiner til hjemmet" },
-      { label: "Statistik", meta: "et statistikkontor · 1965 · politikere og forskere · at opgøre, hvad husstandene ejede" },
       { label: "Erindring", meta: "en kvinde · 2010 · bogens læsere · at fortælle om sit liv" },
+      { label: "Statistik", meta: "et statistikkontor · 1965 · politikere og forskere · at opgøre, hvad husstandene ejede" },
+      { label: "Reklame", meta: "firmaet Lyngvask · 1962 · ugebladets kvindelige læsere · at sælge vaskemaskiner til hjemmet" },
+      { label: "Brev", meta: "en husmor · 1962 · hendes søster · at fortælle om sin nye vaskemaskine" },
     ],
     claims: [
       { id: "a", text: "Hvad det betød for en kvinde i 1962 at få en vaskemaskine i hjemmet.", answer: "Brev", why: "Skrevet af en husmor samme år om sin egen nye maskine. Reklamen siger det samme, men den er skrevet for at sælge, og erindringen er skrevet næsten 50 år senere." },
@@ -335,8 +455,8 @@ export function flags(s, rated) {
   if (rated.R3 === 0 && rated.R4 >= 1) out.push("modtager mangler eller er forvekslet med formålet");
   // F8 rubric trial: S7 (receiver and purpose swapped) scored 0 + 0 with no flag; the levels lose the swap.
   if (rated.R3 === 0 && rated.R4 === 0 && s.valg >= 5) out.push("ingen modtager og intet formål trods rigtige valg: er felterne byttet om, er afsender og modtager forvekslet, eller er der en læsebarriere? Se elevens svar");
-  // v1.3 (S2): level 1 is now an imprecise purpose OR the topic instead of the purpose.
-  if (rated.R4 === 1) out.push("formål upræcist eller besvaret med kildens emne, ikke afsenderens konkrete hensigt");
+  // v1.4 (S2, P1): level 1 is one part of the purpose; the topic alone is 0, never 1.
+  if (rated.R4 === 1) out.push("formål upræcist: kun hvad afsenderen ville have, eller kun hvad det skulle føre til");
   // v1.3 (S6): sender wrong, but receiver/purpose scored from the pupil's own sender.
   if (rated.R1 === 0 && rated.foelgefejl === true) out.push("følgefejl: afsender og modtager forvekslet; R3, R4 og begrundelser er bedømt ud fra elevens egen afsender");
   // v1.3 (S7): oral follow-up used; the score depends on it, so it must be visible.

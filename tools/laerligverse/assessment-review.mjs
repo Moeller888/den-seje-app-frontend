@@ -17,7 +17,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CRITERIA, FORMS, HANDOVER, MUNDTLIG_OPFOELGNING, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, RUBRIC_VERSION, SCORING_RULES, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
+import { CALIBRATION, CRITERIA, FORMS, HANDOVER, MUNDTLIG_OPFOELGNING, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, RUBRIC_VERSION, SCORING_RULES, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
 import { CHOICE_STRATEGIES, PART2_STRATEGIES, audit, loadBefore } from "./shortcut-audit.mjs";
 import { comparability } from "./comparability.mjs";
 import { SYNTHETIC_RESPONSES } from "./rehearsal.mjs";
@@ -46,13 +46,15 @@ export const FIELDS = Object.freeze([
  *  the test changed in v1.2 (F9). The exact before/after text is generated from fixtures/assessment-v1.1.json. */
 export const FORM_REVIEW = Object.freeze({
   A: {
-    verified: "Faktatjek 05-11-2026 (FC-1): første tilfælde 11. juni 1853 i Nyboder tæt på havnen, højdepunkt i begyndelsen af august, ca. 4.700–4.800 døde, over 2.000 syge flyttet til teltlejre (lex.dk »Koleraen i Danmark i 1800-tallet«, afsnittet om København 1853). Kælderlejligheder blev brugt som boliger og undersøgt af datidens læger (Ugeskrift for Læger, »Fra fugt og stank til lys og luft i Brumleby«). »De fleste« syge i kældre kan ikke belægges; rettet til »mange«/»flere«. »Magistraten« som modtager er plausibelt, men ikke kontrolleret.",
+    verified: "Faktatjek 05-11-2026 (FC-1): første tilfælde 11. juni 1853 i Nyboder tæt på havnen, højdepunkt i begyndelsen af august, ca. 4.700–4.800 døde, over 2.000 syge flyttet til teltlejre (lex.dk »Koleraen i Danmark i 1800-tallet«, afsnittet om København 1853). Kælderlejligheder blev brugt som boliger og undersøgt af datidens læger (Ugeskrift for Læger, »Fra fugt og stank til lys og luft i Brumleby«). »De fleste« syge i kældre kan ikke belægges; rettet til »mange«/»flere«. Faktatjek 05-11-2026 (FC-5): Magistraten var Københavns styre i 1853 (lex.dk »Københavns Kommune (Forvaltningshistorie)«). Del 3, påstand b (FC-6) er en påstand, eleven skal finde en kilde til, ikke et faktum.",
     rationale: "Prætest før introduktionen. Afsender og tid står i overskriften (let), modtager og formål skal udledes af teksten (sværere). Del 2 og 3 måler, om eleven kan afgøre, hvad kilden kan bruges til.",
     weaknesses: [
       "Kilden er den længste (58 ord) og har tre svære ord (Magistraten, lazaret, rendestene, med ordforklaring). A kan derfor være en anelse sværere end B og C.",
       "Påstand 4 (ja) kræver, at eleven ser, at lægen selv har set de syge. En elev, der tænker »han vil have penge, så han overdriver«, svarer nej (som det syntetiske svar S4). Det er tilsigtet.",
     ],
     afterApproval: "Efter godkendelsen 05-11-2026 (FC-1): brevet siger nu »Mange af dem bor i trange, fugtige kældre« (før »De fleste bor …«), og påstand 4 lyder »I 1853 boede flere af de syge ved havnen i fugtige kældre.« (før »de fleste syge«). Facit (ja), type og rækkefølge er uændrede. Kontrollen af svargenveje giver stadig 2 af 4 for alle regler i A.",
+    v14: "v1.4: kildetabellen i del 3 har ny rækkefølge (Skolereglement, Erindringsbog, Dagbog, Årsberetning), så det rigtige svar ikke favoriserer en bestemt række (G11). Ingen tekst, eleven ser, er ændret. Lærerens tekst er ændret: »Historiske forbehold« siger nu, at Magistraten er belagt (FC-5), og at påstand b i del 3 er en påstand til undersøgelse (FC-6). R4 i A bedømmes efter den rettede rubrik: »den handler om kolera« giver 0, ikke 1.",
+    meaning: "Ingen ændring af det, eleven skal kunne. En elev kan ikke hente point på, hvor i tabellen svaret plejer at stå. Lærerens historiske forbehold er afklaret.",
     changes: "Del 2 havde én ja-påstand, og den var den eneste, der begyndte med afsenderen og havde et holdningsord. Nu har del 2 fire påstande: afsenderen nævnes i én ja- og én nej-påstand, og ja-påstandene er ikke længere de længste. I anden runde (G10) er påstand 2, 3 og 4 omskrevet, så A er bygget som B og C: holdningsordet står også i en nej-påstand, og mængdeord står i både en ja- og en nej-påstand. Del 3's påstande deler ikke længere ord med det rigtige svars beskrivelse. Del 1 afleveres, før eleven får del 2 og 3.",
   },
   B: {
@@ -63,6 +65,8 @@ export const FORM_REVIEW = Object.freeze({
       "Påstand 3 (»vidste, at influenzaen snart ville stoppe«) kræver, at eleven skelner mellem et råd og viden om, hvordan det vil gå. Det er sværere end A's påstand om, hvad der skete bagefter.",
     ],
     afterApproval: "Efter godkendelsen 05-11-2026 (FC-2): kilden er nu en meddelelse i avisen (før et opslag), og linjen om skolelukning er fjernet. Påstand 3 lyder »Sundhedskommissionen vidste, at influenzaen snart ville stoppe.« (før »… at lukkede skoler ville stoppe smitten«), og påstand 4 lyder »I oktober 1918 bredte influenzaen sig i Aarhus.« (før »… blev det bestemt at lukke skolerne i Aarhus«). Typer, facit og rækkefølge er uændrede. Del 1 accepterer også »avisens læsere i Aarhus« som modtager.",
+    v14: "v1.4: facit til spørgsmål 4 (formål) er rettet. »at begrænse smitten« stod som fuldt svar, men siger kun, hvad det skulle føre til, ikke hvad kommissionen ville have borgerne til at gøre. Det svarer til »at stoppe sygdommen« i A, som giver 1. Nyt facit: »at få borgerne til at undgå forsamlinger, så influenzaen ikke spredte sig«. Lærerens forbehold siger nu, at mødetid kl. 6 (del 3, påstand a) er en påstand til undersøgelse (FC-7).",
+    meaning: "B er ikke længere lettere end A i R4: samme svar giver samme point i begge prøver. Det betyder noget for B − A (fremgangen).",
     changes: "Som i A: fire påstande, afsenderen i én ja- og én nej-påstand. Påstanden om dødstallet er erstattet af en påstand om, hvad kommissionen vidste. Jubilæumstalen (1935) er erstattet af en erindring fra en tidligere arbejder (1965), så der er to personlige kilder fra forskellige tider. Påstand a deler ikke længere ordet »regel« med svaret.",
   },
   T: {
@@ -73,6 +77,8 @@ export const FORM_REVIEW = Object.freeze({
       "Spørgsmål 1 har altid svaret »nej«. Rettet i rubrikken 1.3 efter din beslutning (T1 særskilt): et bart »nej« giver 0 i T1, og svaret noteres for sig i T_T1_svar.",
     ],
     afterApproval: "Efter godkendelsen 05-11-2026 (FC-4): firmanavnet »Nordvask« er ændret til »Lyngvask« i reklamen og i kildetabellen. Intet andet er ændret i T. Bedømmelsen af spørgsmål 1 er ændret i rubrikken (T1 særskilt), ikke i prøven.",
+    v14: "v1.4: kildetabellen har ny rækkefølge (Erindring, Statistik, Reklame, Brev). Før stod det rigtige svar aldrig i tabellens anden række (på tværs af A, B, C og T), og »vælg altid den sidste kilde« gav 3 af 8 i stedet for 2 af 8. Nu er hver række rigtig præcis to gange. T3 bedømmes efter den rettede rubrik: »om vaskemaskiner« giver 0.",
+    meaning: "En elev kan ikke længere hente point på, hvor i tabellen svaret plejer at stå.",
     changes: "Spørgsmål 1–2 er uændrede. Valgdelen: påstandene delte ord med det rigtige svars beskrivelse (»husmor … vaskemaskine«, »husstande«). Nu deler reklamen flest ord med begge påstande, og kildernes rækkefølge er ny. Spørgsmål 1–2 afleveres, før eleven får kildetabellen, som nævner reklamens formål.",
   },
   C: {
@@ -80,6 +86,8 @@ export const FORM_REVIEW = Object.freeze({
     rationale: "Forsinket test efter reel tid. Samme opbygning og samme fire påstandstyper som A og B, ny rækkefølge.",
     weaknesses: ["Indberetningen nævner ikke modtageren direkte (»staten«); accepterede svar: regeringen, staten, ministeriet."],
     afterApproval: "Efter godkendelsen 05-11-2026 (FC-3): overskriften lyder nu »Indberetning skrevet 15. november 1872. Underskrevet: amtmanden over Maribo Amt (Lolland-Falster).« (før »skrevet i Nykøbing Falster … amtmanden«). Kildeteksten, påstandene og facit er uændrede.",
+    v14: "v1.4: facit til spørgsmål 4 (formål) er rettet. »at få penge og korn« stod som fuldt svar, men rubrikkens eksempel gav samme svar 1. Nyt facit: »at få staten til at sende hjælp, så de ramte kunne klare vinteren« og »at få penge og korn fra staten til de ramte før vinteren«. Kildetabellen har ny rækkefølge (Køreplan, Brev, Annonce, Erindring), af samme grund som i A og T.",
+    meaning: "C måler formål med samme standard som A og B. Placeringen af svaret giver ingen genvej.",
     changes: "Som i A: fire påstande, afsenderen i én ja- og én nej-påstand. Del 3: lærebogen (2000) og maleriet (1900) var for lette at fravælge. De er erstattet af en køreplan fra jernbaneselskabet (1847) og en erindring fra en tidligere passager (1897), så valget kræver både tid og formål.",
   },
 });
@@ -94,13 +102,14 @@ export const SHORTCUT_FINDINGS = Object.freeze([
   { id: "G6", pattern: "Nøgleord i del 3. Påstanden delte ord med det rigtige svars beskrivelse (»regel« og »fastsætte skolens regler«, »købe billetter« og »sælge billetter«, »husstande« og »husstandene«).", fix: "Påstandene er omskrevet, og en anden kilde deler nu emneordene med påstanden. Hverken »vælg kilden med de samme ord« eller det modsatte virker.", strategies: ["noegleord", "faerrest-noegleord"] },
   { id: "G7", pattern: "For lette distraktorer. C havde en lærebog fra 2000 og et maleri fra 1900, B en jubilæumstale fra 1935: lette at fravælge uden at tænke på formål.", fix: "Hver prøve har nu to personlige kilder (en fra tiden og en skrevet årtier senere) og to officielle kilder fra tiden med forskellige formål.", strategies: ["samme-aar", "altid-personlig", "samtidig-personlig", "laengste-beskrivelse"] },
   { id: "G8", pattern: "Spørgsmålene giver svarene. Del 2 nævnte modtageren og formålet (»Magistraten gav lægen de penge, han bad om«, »hjælp fra staten«), som eleven skal finde i del 1. I T stod reklamens formål i kildetabellen ved siden af spørgsmål 1–2.", fix: "Side 1 (del 1, i T spørgsmål 1–2) afleveres, før eleven får side 2. Kilden står igen øverst på side 2.", strategies: [] },
-  { id: "G9", pattern: "Prætestens facit. Den, der huskede prætestens rækkefølge, kunne bruge det omvendte (2 af 3), og i C stod del 3's svar på de samme pladser i tabellen som i A.", fix: "To prøver har samme facit på præcis 2 af 4 pladser i del 2, og del 3's svar står på andre pladser end i A.", strategies: ["praetest-raekkefoelge", "praetest-omvendt", "praetest-position", "praetest-undgaa", "foerste-kilde"] },
+  { id: "G9", pattern: "Prætestens facit. Den, der huskede prætestens rækkefølge, kunne bruge det omvendte (2 af 3), og i C stod del 3's svar på de samme pladser i tabellen som i A.", fix: "To prøver har samme facit på præcis 2 af 4 pladser i del 2. I del 3 og T giver »samme plads som prætestens svar« 1 af 6 og »undgå prætestens plads« 1 af 6, begge under gæt (v1.4, efter G11).", strategies: ["praetest-raekkefoelge", "praetest-omvendt", "praetest-position", "praetest-undgaa", "foerste-kilde"] },
   { id: "G10", pattern: "Testvane i prætesten (fundet i e64942b2). I A stod holdningsordet »mente« kun i ja-påstanden, og det store tal »tusindvis« kun i en nej-påstand. To almindelige tommelfingerregler hos testvante elever (»det, afsenderen mener, kan kilden vise« og »store tal og absolutte ord er forkerte«) gav derfor 3 af 4 i A, men ikke i B og C. Det kan løfte prætesten og skjule fremgang.", fix: "A's nej-påstand 2 er nu en holdningspåstand, som brevet ikke kan belægge (»Lægen mente, at koleraen havde kostet tusindvis …«), som N2 i B og C. Påstand 4 bruger et mængdeord, som brevet kan belægge (»flere«; i v1.2 »de fleste«, rettet efter faktatjekket FC-1). Påstand 3 nævner ikke længere afsenderen. Alle regler giver nu 2 af 4 i A (testet).", strategies: ["holdningsord", "maengdeord-nej", "laengst-ja"] },
+  { id: "G11", pattern: "Svarets plads i kildetabellen (fundet i v1.4-kontrollen). I del 3 og T's kildevalg stod det rigtige svar aldrig i tabellens anden række, og tre gange i den sidste. »Vælg altid den sidste kilde« gav 3 af 8 (38 %) mod 2 af 8 ved gæt.", fix: "Ny rækkefølge i kildetabellen i A, C og T (kun rækkefølgen; ingen tekst er ændret). Alle 960 rækkefølger, der giver balance, er afprøvet; den valgte er den, hvor ingen simpel regel får mere end gæt. Nu er hver af de fire rækker det rigtige svar præcis to gange, og »vælg altid række N« giver 2 af 8 for alle N. »Altid den første personlige kilde« og »den første kilde fra påstandens år« giver også 2 af 8 (testet).", strategies: ["foerste-kilde", "anden-kilde", "tredje-kilde", "sidste-kilde", "altid-personlig", "samme-aar"] },
 ]);
 
 /** What is NOT fixed: for the teacher to know or decide. */
 export const SHORTCUT_RESIDUALS = Object.freeze([
-  "T, spørgsmål 1: svaret er altid »nej«, og rubrikken giver 1 point for et »nej« uden begrundelse (se T, kendte svagheder). Det kræver en rubrikændring og er dit valg.",
+  "T, spørgsmål 1: svaret er altid »nej«. Efter din T1-beslutning giver et bart »nej« 0 point; svaret noteres for sig i T_T1_svar. En elev, der gætter, kan altså ikke få point for forståelse her, men T_T1_svar alene siger intet om forståelse.",
   "Der er stadig to ja og to nej i hver prøve. En elev, der ved det, vinder kun lidt, fordi det kun hjælper sammen med rigtige svar. Det er beholdt, så prøverne er lige svære.",
   "»Vælg den personlige kilde fra påstandens år« giver halvdelen i del 3. Det er forventet, fordi tiden er en del af kompetencen, men den slags valg kan ikke besvare den officielle påstand.",
   "Reglerne er dem, vi kunne formulere. En elev kan finde andre genveje, og kontrollen er ikke afprøvet på elever.",
@@ -209,7 +218,7 @@ export const FACT_CHECK = Object.freeze([
       "Ugeskrift for Læger, »HISTORISK: Fra fugt og stank til lys og luft i Brumleby«, afsnittet »Fugt og stank«: kælderlejligheder i baggårdene blev brugt som boliger; afsnittet »Læger for bedre boliger«: lægerne undersøgte, hvor mange der boede i kælderlejligheder (en undersøgelse fra 1855).",
     ],
     verdict: "delvist bekræftet",
-    detail: "Kælderboliger og fattigkvarterer nær havnen er belagt. Ingen kilde viser, at »de fleste« syge boede i kældre, og ingen giver en andel. »Magistraten« som modtager er plausibelt, men ikke belagt for netop 1853.",
+    detail: "Kælderboliger og fattigkvarterer nær havnen er belagt. Ingen kilde viser, at »de fleste« syge boede i kældre, og ingen giver en andel. Magistraten: se FC-5.",
     correction: "Brevet: »Mange af dem bor …«; påstand 4: »… flere af de syge …«. Facit uændret (ja).",
     changed: true,
   },
@@ -243,10 +252,47 @@ export const FACT_CHECK = Object.freeze([
       "C: Danmarks Jernbanemuseum, »13 glimt af dansk jernbanehistorie«: Det Sjællandske Jernbaneselskab stod for banen; dsb.dk, »Historien om DSB«: »indviet den 26. juni 1847«.",
       "T: lex.dk, »vaskemaskine«: fra ca. 1950 anskaffede flere og flere danske husholdninger en vaskemaskine. CVR: NORDVASK ApS (CVR 43222570) er et registreret vaskeri; »Lyngvask« gav intet firma ved søgning 05-11-2026.",
     ],
-    verdict: "bekræftet (rammerne er ikke anakronistiske) · ikke dokumenterbar (at elever rejste sig for læreren i 1955, mødetid kl. 6 i 1910)",
+    verdict: "bekræftet (rammerne er ikke anakronistiske) · se FC-6 og FC-7 (at elever rejste sig for læreren i 1955, mødetid kl. 6 i 1910)",
     detail: "Del 3's påstande er påstande, eleven skal finde den bedste kilde til at UNDERSØGE. De fremstilles ikke som fakta, og facit afhænger ikke af, om de er sande. Derfor er de ikke ændret. »Nordvask« kunne forveksles med et rigtigt firma og er ændret.",
     correction: "T: »Nordvask« → »Lyngvask«. Del 3 i A, B og C: ingen ændring.",
     changed: true,
+  },
+  // D-346 §15 (05-11-2026): the three points the first check left open. `status` follows the teacher's order:
+  // A documented (keep), B plausible but undocumented (make clear it is constructed), C misleading (correct),
+  // D needs the teacher's judgement.
+  {
+    id: "FC-5", test: "A", ours: "Brevet er skrevet »Til Magistraten« (juli 1853); ordlisten: »Magistraten = byens styre«.",
+    sources: [
+      "lex.dk, »Københavns Kommune (Forvaltningshistorie)«: »I 1840 udstedte Christian 8. en anordning om kommunalbestyrelsen i København.« Magistraten bestod derefter af en overpræsident, tre borgmestre og seks rådmænd; i 1857 af fire borgmestre og fire rådmænd, og ordningen holdt til 1938.",
+    ],
+    verdict: "bekræftet",
+    status: "A",
+    detail: "Magistraten var Københavns styre i 1853, og »byens styre« er en rimelig forklaring for en elev. At netop denne læge skrev til Magistraten, er konstrueret, som hele brevet. Usikkerheden påvirker ikke elevens svar: modtageren står i brevet.",
+    correction: "Ingen ændring af elevteksten. Lærerens forbehold siger nu, at Magistraten er belagt.",
+    changed: false,
+  },
+  {
+    id: "FC-6", test: "A (del 3, påstand b)", ours: "»Eleverne skulle i 1955 rejse sig, når læreren kom ind i klassen.« (en påstand, eleven skal finde den bedste kilde til at undersøge; facit: Skolereglement)",
+    sources: [
+      "Erindring om Skælskør Skole 1952–1961 (mansfeldt.eu, »I skole i 50'erne eller bare barn«): »Når læreren kom ind i klassen, rejste eleverne sig op og stod ved siden af deres pulte«. En personlig erindring, ikke forskning.",
+    ],
+    verdict: "sandsynligt, ikke dokumenteret som almindelig regel",
+    status: "B",
+    detail: "Skikken er beskrevet for mindst én dansk skole i 1950'erne. Der er ikke fundet forskning, der viser, at den var almindelig. Prøven påstår det ikke: eleven skal vælge den kilde, der bedst kan UNDERSØGE påstanden, og svaret (et skolereglement fra samme år, skrevet for at fastsætte reglerne) er det samme, uanset om påstanden er sand. Usikkerheden påvirker derfor ikke målingen.",
+    correction: "Ingen ændring af elevteksten. Lærerens forbehold siger nu tydeligt, at det er en påstand til undersøgelse, ikke et faktum.",
+    changed: false,
+  },
+  {
+    id: "FC-7", test: "B (del 3, påstand a)", ours: "»Arbejderne skulle i 1910 møde på fabrikken klokken seks om morgenen.« (en påstand til undersøgelse; facit: Arbejdsreglement)",
+    sources: [
+      "Gustav Bang, »Arbejdstiden i den danske industri«, Social-Demokraten 27-12-1908 (marxisme.dk/arkiv): »Lidt under 10 timer kan altså betragtes som det omtrentlige udtryk for den normale arbejdstid i den danske industri.«",
+      "danmarkshistorien.lex.dk, »Lov om Arbejde i Fabrikker m. v. … 29. april 1913«, § 21: unge under 18 må ikke arbejde »i Tiden før Kl. 6 Morgen eller efter Kl. 8 Aften«. Gælder unge, ikke voksne, og er fra efter 1910.",
+    ],
+    verdict: "delvist: arbejdsdagens længde er belagt; en fast mødetid kl. 6 for voksne i 1910 er ikke dokumenteret",
+    status: "B",
+    detail: "En arbejdsdag på knap 10 timer gør en tidlig mødetid plausibel, og kl. 6 var lovens tidligste tid for unge i 1913. Men det er ikke vist, at voksne fabriksarbejdere i 1910 almindeligvis mødte kl. 6. Som i FC-6 er det en påstand, eleven skal finde en kilde til; facit (fabrikkens arbejdsreglement fra samme år) afhænger ikke af, om den er sand.",
+    correction: "Ingen ændring af elevteksten. Lærerens forbehold siger nu tydeligt, at det er en påstand til undersøgelse.",
+    changed: false,
   },
 ]);
 
@@ -279,7 +325,8 @@ export function contentFingerprints({ forms = FORMS, transfer = TRANSFER } = {})
     T: sha(stableJson({ form: transfer, shared, review: FORM_REVIEW.T })),
     C: sha(stableJson({ form: forms.C, shared, review: FORM_REVIEW.C })),
     // v1.3: the decided scoring rules and the S7 procedure are part of the rubric the teacher approves.
-    rubrik: sha(stableJson({ CRITERIA, TRANSFER_CRITERIA, AMBIGUITIES, RUBRIC_DECISIONS, SCORING_RULES, MUNDTLIG_OPFOELGNING })),
+    // v1.4: so are the anchor answers, because they decide how a teacher reads the levels.
+    rubrik: sha(stableJson({ CRITERIA, TRANSFER_CRITERIA, AMBIGUITIES, RUBRIC_DECISIONS, SCORING_RULES, MUNDTLIG_OPFOELGNING, CALIBRATION })),
   };
 }
 
@@ -326,7 +373,7 @@ function teacherView(f) {
   P.push(`<h4>Kildeoplysninger</h4><p>${esc(f.source.kind)}, <strong>${esc(f.source.status)}</strong>: et opfundet eksempel på en ægte kildetype. Ikke en original, forkortelse eller parafrase.</p>`);
   P.push(`<h4>Historiske forbehold</h4><p><strong>Skal kontrolleres af dig:</strong> ${esc(f.frameToCheck)}</p><p><strong>Udviklerens kontrol (ikke en godkendelse):</strong> ${esc(r.verified)}</p>`);
   P.push(`<h4>Didaktisk begrundelse</h4><p>${esc(r.rationale)}</p><h4>Kendte svagheder</h4><ul>${r.weaknesses.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>`);
-  if (r.afterApproval) P.push(`<h4>Ændret efter din godkendelse 05-11-2026 (${esc(VERSION)})</h4><p>${esc(r.afterApproval)}</p>${sinceApproval(f.id)}`);
+  if (r.afterApproval) P.push(`<h4>Ændret efter din godkendelse 05-11-2026 (${esc(VERSION)})</h4><p>${esc(r.afterApproval)}</p>${r.v14 ? `<p>${esc(r.v14)}</p>` : ""}<p><strong>Hvad det betyder fagligt:</strong> ${esc(r.meaning ?? "")}</p><p class="note">Tabellen viser al tekst, eleven ser, som er ændret siden din godkendelse (version 1.2 → nu).</p>${sinceApproval(f.id)}`);
   P.push(`<h4>Ændret i kildekritik-maaling-v1.2 (F9: svargenveje fjernet)</h4><p>${esc(r.changes)}</p>${beforeAfter(f.id)}`);
   P.push(`<p class="tid">Tid: ${f.minutes} min.</p></details>`);
   return P.join("");
@@ -408,7 +455,9 @@ function sinceApproval(id) {
   if (n.part1) add("Del 1, accepterede svar", Object.entries(a.part1.key).map(([k, v]) => `${k}: ${v.join(" · ")}`).join(" | "), Object.entries(n.part1.key).map(([k, v]) => `${k}: ${v.join(" · ")}`).join(" | "));
   if (n.part2) n.part2.claims.forEach((c, i) => add(`Del 2, påstand ${i + 1} (${c.type})`, `${a.part2.claims[i].text} [${a.part2.claims[i].answer}]`, `${c.text} [${c.answer}]`));
   const srcA = (n.part3 ? a.part3 : a.choice).sources, srcN = (n.part3 ? n.part3 : n.choice).sources;
-  srcN.forEach((x, i) => add(`Kildetabel: ${x.label}`, srcA[i].meta, x.meta));
+  // By label, not by row: a reordered table must not show one source's text beside another's (v1.4, G11).
+  add("Kildetabellens rækkefølge", srcA.map((x) => x.label).join(" · "), srcN.map((x) => x.label).join(" · "));
+  for (const x of srcN) { const o = srcA.find((y) => y.label === x.label); add(`Kildetabel: ${x.label}`, o ? o.meta : "–", x.meta); }
   if (!rows.length) return `<p class="note">Ingen tekst, som eleven ser, er ændret.</p>`;
   return `<table class="since"><thead><tr><th></th><th>Godkendt 05-11-2026 (${esc(APPROVED.version)})</th><th>Nu (${esc(VERSION)})</th></tr></thead><tbody>${rows.map(([k, x, y]) => `<tr><td>${esc(k)}</td><td>${esc(x)}</td><td>${esc(y)}</td></tr>`).join("")}</tbody></table>`;
 }
@@ -435,11 +484,55 @@ function rulesSection() {
     + `<h4 id="s7-procedure">S7: fast procedure for mundtlig opfølgning</h4><p><strong>Hvornår:</strong> ${esc(m.naar)}</p><p><strong>Ordlyd:</strong> ${esc(m.ordlyd)}</p><p><strong>Læreren må ikke:</strong></p><ul>${m.maaIkke.map((t) => `<li>${esc(t)}</li>`).join("")}</ul><p><strong>Forsøg:</strong> ${esc(m.forsoeg)}</p><p><strong>Registrering:</strong> ${esc(m.registrering)}</p><p><strong>Fortolkning:</strong> ${esc(m.fortolkning)}</p>`;
 }
 
+const KIND = { intet: "intet svar", emne: "kun emnet", generisk: "standardsvar", modtager: "modtageren i stedet", noegleord: "facits ord, forkert betydning", upraecist: "upræcist / én del", praecist: "præcist", synonym: "andre ord, rigtig betydning", konklusion: "konklusion uden begrundelse", "forkert-relevant": "forkert konklusion, relevant ræsonnement", kildetype: "kun kildetypen", navn: "navn eller formål uden forbindelse", afskrift: "afskrift uden udvælgelse" };
+
+/** v1.4: the anchor answers, per criterion and test, with the level and the rule that decides it. */
+function calibrationSection() {
+  const groups = [];
+  for (const a of CALIBRATION) {
+    const key = `${a.criterion} · ${a.form}`;
+    let g = groups.find((x) => x.key === key);
+    if (!g) { g = { key, rows: [] }; groups.push(g); }
+    g.rows.push(a);
+  }
+  return `<h4 id="ankersvar">Bedømmelseseksempler (ankersvar, ${esc(RUBRIC_VERSION)})</h4><p class="note">Konstruerede svar, ikke elevsvar. De viser, hvordan niveauerne læses, så to lærere giver samme svar samme point. Point følger betydningen, ikke ordene (P4). Testene kontrollerer, at facit, reglerne og eksemplerne er enige.</p>`
+    + groups.map((g) => `<details><summary>${esc(g.key)} (${g.rows.length} svar)</summary><table><thead><tr><th>Svar</th><th>Point</th><th>Hvad svaret viser</th><th>Regel</th></tr></thead><tbody>${g.rows.map((a) => `<tr><td>»${esc(a.answer)}«</td><td><strong>${a.level}</strong></td><td>${esc(KIND[a.kind] ?? a.kind)}</td><td>${esc(a.rule)}</td></tr>`).join("")}</tbody></table></details>`).join("");
+}
+
+/** v1.4: what this round of review is about, in one table, before any detail. */
+export const ROUND = Object.freeze({
+  version: VERSION,
+  ready: "Ja. Alle fejl, udvikleren kender, er rettet, og alle kontroller er grønne. Tilbage er din faglige vurdering.",
+  rubricChange: `Rubrikken er rettet: et svar, der kun siger, hvad kilden handler om, giver nu 0 i formål (R4) og i T3 (før 1). Fuldt formål kræver i alle prøver både, hvad afsenderen ville have, og hvad det skulle føre til (B og C havde lettere facit end A). Fem fælles principper (P1–P5) og ${CALIBRATION.length} bedømmelseseksempler er tilføjet.`,
+  rubricMeaning: "Rubrikken skelner nu mellem at genkende et emne (0), at kende en del af formålet (1) og at forklare det (2), ens i A, B og C, så fremgang fra A til B ikke kan komme af et lettere facit.",
+  open: [
+    "Godkend, ret eller afvis hver af de fem dele (A, B, T, C og rubrikken).",
+    "Vælg S2, S3 og S4 igen under rubrikken (1, 1, 1 efter din besked), så de står i den nye fil. I filen fra 05-11-2026 står de som »Ikke besluttet«.",
+    "P2, P3 og P5 er udviklerens konkretisering af din audit-opgave, ikke dine egne ord. Er du uenig, så vælg »Skal rettes« ved rubrikken og skriv hvorfor.",
+    "R4 i B: »at begrænse smitten« giver nu 1 (kun målet). Godkender du rubrikken, godkender du den standard.",
+    "Til orientering, ingen beslutning nødvendig: FC-6 og FC-7 er sandsynlige, men ikke dokumenterede påstande i del 3. Facit afhænger ikke af, om de er sande.",
+  ],
+});
+
+function roundSection(status) {
+  const rows = ITEMS.map((id) => {
+    const r = id === "rubrik" ? { v14: ROUND.rubricChange, meaning: ROUND.rubricMeaning } : FORM_REVIEW[id];
+    return `<tr><td>${esc(titleOf[id])}</td><td>${esc(r.v14 ?? "")}</td><td>${esc(r.meaning ?? "")}</td><td data-round="${id}"><strong>${esc(status[id].text)}</strong></td></tr>`;
+  }).join("");
+  return `<section class="ov" id="runde"><h2>Denne gennemgang: ${esc(ROUND.version)}</h2>`
+    + `<p><strong>Du vurderer:</strong> prøverne ${esc(VERSION)} og rubrikken ${esc(RUBRIC_VERSION)}. Du godkendte version 1.2 den 05-11-2026; den godkendelse er gemt uændret som historik og gælder ikke denne version.</p>`
+    + `<p><strong>Klar til godkendelse:</strong> ${esc(ROUND.ready)}</p>`
+    + `<table><thead><tr><th>Del</th><th>Ændret i denne runde</th><th>Hvad det betyder fagligt</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`
+    + `<p class="note">Den præcise før/efter-tekst står under »Til læreren« ved hver prøve og under »Ændret efter din godkendelse« i rubrikken.</p>`
+    + `<h3>Det skal du beslutte</h3><ol>${ROUND.open.map((t) => `<li>${esc(t)}</li>`).join("")}</ol></section>`;
+}
+
 /** The historical fact check, per finding, with sources and what was changed. */
 function factCheckSection() {
   return `<section class="ov" id="faktatjek"><h2>Historisk faktatjek (05-11-2026)</h2>`
     + `<p>Prøvernes kilder er <strong>didaktisk konstruerede</strong>: opfundne tekster af ægte kildetyper. Kontrollen gælder den historiske ramme, de bygger på. Ingen citater, arkivsignaturer eller kildehenvisninger er opfundet. Kilderne er læst på nettet 05-11-2026.</p>`
-    + FACT_CHECK.map((c) => `<h3>${esc(c.id)} · ${esc(c.test)}</h3><p><strong>Vores tekst (godkendt version):</strong> ${esc(c.ours)}</p><p><strong>Kilder:</strong></p><ul>${c.sources.map((t) => `<li>${esc(t)}</li>`).join("")}</ul><p><strong>Vurdering:</strong> ${esc(c.verdict)}. ${esc(c.detail)}</p><p><strong>Rettelse:</strong> ${esc(c.correction)}</p>`).join("")
+    + `<p class="note">Beslutningsregel (05-11-2026): A dokumenteret → bevar · B sandsynligt, men udokumenteret → gør det tydeligt, at det er konstrueret · C misvisende → mindst mulige rettelse · D kræver din vurdering.</p>`
+    + FACT_CHECK.map((c) => `<h3>${esc(c.id)} · ${esc(c.test)}${c.status ? ` · kategori ${esc(c.status)}` : ""}</h3><p><strong>Vores tekst (godkendt version):</strong> ${esc(c.ours)}</p><p><strong>Kilder:</strong></p><ul>${c.sources.map((t) => `<li>${esc(t)}</li>`).join("")}</ul><p><strong>Vurdering:</strong> ${esc(c.verdict)}. ${esc(c.detail)}</p><p><strong>Rettelse:</strong> ${esc(c.correction)}</p>`).join("")
     + `</section>`;
 }
 const BEFORE_OF = { A: BEFORE.forms.A, B: BEFORE.forms.B, C: BEFORE.forms.C, T: BEFORE.transfer };
@@ -531,7 +624,7 @@ fieldset{border:1px dashed var(--line);border-radius:6px;margin-top:10px}fieldse
 </style></head><body>
 <h1>Prøvegodkendelse: kildekritik (D-346)</h1>
 <p class="note">Genereret af tools/laerligverse/assessment-review.mjs fra de samme data som elevarkene (${esc(VERSION)}, rubrik ${esc(RUBRIC_VERSION)}). Siden virker uden internet og gemmer intet selv: tryk »Gem afgørelser som fil«. Intet er godkendt, før du har valgt det.</p>
-<p class="note"><strong>Fornyet gennemgang:</strong> Indlæs din fil fra 05-11-2026 med »Indlæs tidligere afgørelser«. Det, der er ændret siden, står derefter som »Ikke gennemgået« med en rød note; resten beholder dit valg. S2, S3 og S4 står som »Ikke besluttet« i filen. Vælg dem igen, så de kommer med i den nye fil. Skriv dit fulde navn og datoen som DD-MM-ÅÅÅÅ.</p>
+<p class="note"><strong>Fornyet gennemgang:</strong> Indlæs din fil fra 05-11-2026 med »Indlæs tidligere afgørelser«. Det, der er ændret siden, står derefter som »Ikke gennemgået« med en rød note; resten beholder dit valg. S2, S3 og S4 står som »Ikke besluttet« i filen. Vælg dem igen, så de kommer med i den nye fil. Skriv dit fulde navn (fornavn og efternavn) og datoen som DD-MM-ÅÅÅÅ.</p>
 <div class="bar"><label>Lærer <input type="text" id="laerer" autocomplete="name"></label><label>Dato <input type="text" id="dato" placeholder="DD-MM-ÅÅÅÅ"></label>
 <label>Indlæs tidligere afgørelser <input type="file" id="load" accept="application/json"></label><button type="button" id="save">Gem afgørelser som fil</button><span id="count" aria-live="polite"></span><span id="msg" role="status" aria-live="polite"></span></div>
 <section class="ov" id="overblik"><h2>A. Overblik</h2>
@@ -541,10 +634,11 @@ fieldset{border:1px dashed var(--line);border-radius:6px;margin-top:10px}fieldse
 <table><thead><tr><th>Del</th><th>Status</th></tr></thead><tbody>
 <tr><td>Arkivskabets 12 elementer</td><td><strong>Godkendt</strong> af Christopher Møller 04-11-2026 (SHA-256 8cd7d969…). Ikke en del af denne side.</td></tr>
 ${ITEMS.map((id) => `<tr><td>${esc(titleOf[id])}</td><td data-reg="${id}"><strong>${esc(status[id].text)}</strong></td></tr>`).join("")}
-<tr><td>De fem tvivlstilfælde i rubrikken</td><td><strong>Besluttet</strong>: S6 og S7 i filen, S2, S3 og S4 i et særskilt supplement (afsnit E). Indbygget i rubrikken ${esc(RUBRIC_VERSION)}</td></tr>
+<tr><td>De fem tvivlstilfælde i rubrikken</td><td><strong>Besluttet</strong>: S6 og S7 i filen, S2, S3 og S4 i et særskilt supplement (afsnit E). Indbygget i rubrikken ${esc(RUBRIC_VERSION)} sammen med principperne P1–P5</td></tr>
 <tr><td>LP-13 (læringsprogression)</td><td><strong>Valg registreret</strong> fra filen (afsnit F) — ikke en del af prøvegodkendelsen, og intet er aktiveret</td></tr>
 <tr><td>Elevpilot og produktion</td><td><strong>Ikke autoriseret</strong></td></tr></tbody></table>
 <p><label><input type="checkbox" id="ra-on"> Prøv oplæsning af elevteksten (prototype, slået fra som standard). Bruger kun stemmer, som browseren angiver som lokale på denne computer; ingen tekst sendes af siden.</label> <span id="ra-voice" class="note"></span></p></section>
+${roundSection(status)}
 ${factCheckSection()}
 ${shortcutSection()}
 ${comparabilitySection()}
@@ -554,7 +648,7 @@ ${comparabilitySection()}
 <h2 class="sep">E. Bedømmelsesrubrik</h2>
 <section class="el" id="rubrik" data-status="ikke_gennemgaaet"><h2>${esc(titleOf.rubrik)}</h2>
 <p>Tre delscorer, som rapporteres hver for sig. Ingen samlet score og ingen grænse for »mestret«. Version: ${esc(RUBRIC_VERSION)}.</p>${rubricTable(CRITERIA)}<h4>Transfertest</h4>${rubricTable(TRANSFER_CRITERIA)}
-<h4>Ændret efter din godkendelse 05-11-2026</h4>${rubricSinceApproval()}${rulesSection()}
+<h4>Ændret efter din godkendelse 05-11-2026</h4><p><strong>Hvad det betyder fagligt:</strong> ${esc(ROUND.rubricMeaning)}</p>${rubricSinceApproval()}${rulesSection()}${calibrationSection()}
 <h4>De fem tvivlstilfælde (fra bedømmelsesforsøget med syntetiske svar)</h4><p class="note">Dine beslutninger er registreret og indbygget i reglerne ovenfor. Vælg dem igen her, så de står i den nye fil.</p>
 ${AMBIGUITIES.map(ambiguity).join("\n")}
 <h4>Transfertestens T1 (fundet i F9)</h4><p class="note">Ikke et af de fem tvivlstilfælde, men et spørgsmål om rubrikken, som du skal afgøre. Dit valg ændrer ikke rubrikken af sig selv.</p>
@@ -572,6 +666,7 @@ const RBS = ${JSON.stringify(RUBRIC_DECISIONS.map((d) => ({ id: d.id, values: d.
 const FP = ${JSON.stringify(fps)};
 const FORMAT = ${JSON.stringify(FORMAT)};
 const VERSION = ${JSON.stringify(VERSION)};
+const RUBRIC_VERSION = ${JSON.stringify(RUBRIC_VERSION)};
 const LABEL = ${JSON.stringify(LABEL)};
 const UNDECIDED = ${JSON.stringify(UNDECIDED)};
 const $ = (s) => document.querySelector(s);
@@ -583,7 +678,7 @@ function collect() {
   const tvetydigheder = {}; for (const a of AMB) tvetydigheder[a.id] = { valg: radio("tv-" + a.id) || UNDECIDED, kommentar: $('textarea[name="tvk-' + a.id + '"]').value };
   const rubrikbeslutninger = {}; for (const d of RBS) rubrikbeslutninger[d.id] = { valg: radio("rb-" + d.id) || UNDECIDED, kommentar: $('textarea[name="rbk-' + d.id + '"]').value };
   const lp13 = {}; for (const d of LPS) lp13[d.id] = { valg: radio("lp-" + d.id) || UNDECIDED, kommentar: $('textarea[name="lpk-' + d.id + '"]').value };
-  return { _om: "Lærerens afgørelser om prøverne (D-346). Gemmes kun som fil; intet sendes eller aktiveres.", format: FORMAT, version: VERSION, laerer: $("#laerer").value, dato: $("#dato").value, indhold: FP, proever, tvetydigheder, rubrikbeslutninger, lp13 };
+  return { _om: "Lærerens afgørelser om prøverne (D-346). Gemmes kun som fil; intet sendes eller aktiveres.", format: FORMAT, version: VERSION, rubrikversion: RUBRIC_VERSION, laerer: $("#laerer").value, dato: $("#dato").value, indhold: FP, proever, tvetydigheder, rubrikbeslutninger, lp13 };
 }
 function count() {
   const d = collect();
@@ -599,6 +694,7 @@ $("#save").addEventListener("click", () => {
   const d = collect();
   const decided = ITEMS.some((id) => d.proever[id].status !== "ikke_gennemgaaet") || AMB.some((a) => d.tvetydigheder[a.id].valg !== UNDECIDED) || RBS.some((x) => d.rubrikbeslutninger[x.id].valg !== UNDECIDED) || LPS.some((x) => d.lp13[x.id].valg !== UNDECIDED);
   if (decided && (!d.laerer.trim() || !d.dato.trim())) { msg("Skriv dit navn og datoen, før du gemmer afgørelser."); return; }
+  if (decided && d.laerer.trim().split(/\s+/).length < 2) { msg("Skriv dit fulde navn (fornavn og efternavn), så afgørelsen kan føres tilbage til dig."); return; }
   if (decided && !/^[0-9]{2}-[0-9]{2}-[0-9]{4}$/.test(d.dato.trim())) { msg("Skriv datoen som DD-MM-ÅÅÅÅ, fx 05-11-2026."); return; }
   const missing = ITEMS.filter((id) => d.proever[id].status === "skal_rettes" && !d.proever[id].aendringer.trim());
   if (missing.length) { msg("Skriv, hvad der skal rettes, for: " + missing.join(", ")); return; }
@@ -693,11 +789,11 @@ export function validateReviewExport(raw) {
   const problems = [];
   const text = Buffer.isBuffer(raw) ? raw.toString("utf8") : String(raw ?? "");
   let d;
-  try { d = JSON.parse(text); } catch (e) { return { problems: [`not valid JSON: ${e.message}`], stale: [] }; }
-  if (d === null || typeof d !== "object" || Array.isArray(d)) return { problems: ["the top level is not an object"], stale: [] };
+  try { d = JSON.parse(text); } catch (e) { return { problems: [`not valid JSON: ${e.message}`], stale: [], notes: [] }; }
+  if (d === null || typeof d !== "object" || Array.isArray(d)) return { problems: ["the top level is not an object"], stale: [], notes: [] };
   for (const k of duplicateKeys(text)) problems.push(`appears more than once in the same object: ${k}`);
   if (d.format !== FORMAT) problems.push(`format is ${d.format}, expected ${FORMAT}`);
-  const ok = new Set(["_om", "format", "version", "laerer", "dato", "indhold", "proever", "tvetydigheder", "rubrikbeslutninger", "lp13"]);
+  const ok = new Set(["_om", "format", "version", "rubrikversion", "laerer", "dato", "indhold", "proever", "tvetydigheder", "rubrikbeslutninger", "lp13"]);
   for (const k of Object.keys(d)) if (!ok.has(k)) problems.push(`unknown top-level field: ${k}`);
   const p = d.proever ?? {};
   for (const id of ITEMS) if (!(id in p)) problems.push(`missing test: ${id}`);
@@ -724,9 +820,14 @@ export function validateReviewExport(raw) {
     || RUBRIC_DECISIONS.some((x) => (d.rubrikbeslutninger?.[x.id]?.valg ?? UNDECIDED) !== UNDECIDED)
     || LP13.some((x) => (d.lp13?.[x.id]?.valg ?? UNDECIDED) !== UNDECIDED);
   if (decided && (!String(d.laerer ?? "").trim() || !String(d.dato ?? "").trim())) problems.push("decisions without a teacher name or date");
+  // v1.4: reported, not rejected — the file of 05-11-2026 is kept byte for byte and must stay readable.
+  const notes = [];
+  if (decided && String(d.laerer ?? "").trim() && String(d.laerer).trim().split(/\s+/).length < 2) notes.push(`teacher name "${d.laerer}" is not a full name (first and last name)`);
+  if (decided && String(d.dato ?? "").trim() && !/^[0-9]{2}-[0-9]{2}-[0-9]{4}$/.test(String(d.dato).trim())) notes.push(`date "${d.dato}" is not DD-MM-ÅÅÅÅ`);
+  if (d.version !== VERSION) notes.push(`made on ${d.version ?? "an unknown version"}, the material is now ${VERSION}: an approval applies only where the fingerprint still matches (see stale)`);
   const fps = contentFingerprints();
   const stale = ITEMS.filter((id) => p[id]?.status && p[id].status !== "ikke_gennemgaaet" && d.indhold?.[id] !== fps[id]);
-  return { problems, stale };
+  return { problems, stale, notes };
 }
 
 export function check() {

@@ -107,7 +107,7 @@ test("G8: part 1 (in T: questions 1–2) is handed in before the page that names
 test("every finding names its strategies, and every strategy is run", () => {
   const ids = new Set([...PART2_STRATEGIES, ...CHOICE_STRATEGIES].map((s) => s.id));
   for (const g of SHORTCUT_FINDINGS) for (const s of g.strategies) assert.ok(ids.has(s), `${g.id}: ${s}`);
-  assert.deepEqual(SHORTCUT_FINDINGS.map((g) => g.id), ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10"]);
+  assert.deepEqual(SHORTCUT_FINDINGS.map((g) => g.id), ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "G11"]);
 });
 
 test("the approval page shows the shortcut check, the exact before/after text, and the page break in every test", () => {
