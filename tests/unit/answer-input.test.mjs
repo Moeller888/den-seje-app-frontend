@@ -104,9 +104,11 @@ test("mc and number keep their renderers", () => {
 });
 
 test("an unknown or missing format is unsupported — never silently option buttons", () => {
-  for (const f of ["true_false", "cloze", "order", "", null, undefined, 42]) {
+  for (const f of ["multi_select", "truefalse", "cloze", "order", "", null, undefined, 42]) {
     assert.equal(resolveAnswerRenderer(q(f, "short")), ANSWER_RENDERERS.UNSUPPORTED, String(f));
   }
+  // "true_false" used to be listed here; it is now a built kind with its own renderer (js/true-false.js).
+  assert.equal(resolveAnswerRenderer(q("true_false", "short")), ANSWER_RENDERERS.TRUE_FALSE);
 });
 
 test("malformed questions never throw", () => {
@@ -254,13 +256,18 @@ test("long text keeps the textarea, Shift+Enter newline and the OCR control", ()
   assert.match(block, /submitAnswer\(textarea\.value, btn\);/);
 });
 
-test("number rendering is unchanged", () => {
+// F-01b changed the number renderer on purpose: Number("") was 0 (an empty field sent "0") and
+// "1 849" was NaN (silently not sent). The parsing and the control now live in js/number-answer.js
+// (pinned in tests/unit/number-answer.test.mjs); here the wiring is pinned: the same submitAnswer, so
+// the quiz state machine still refuses a second send, and no Number() of the raw field remains.
+test("number rendering goes through js/number-answer.js and the existing submitAnswer", () => {
   const start = renderOptionsSrc.indexOf("renderer === ANSWER_RENDERERS.NUMBER");
   const block = renderOptionsSrc.slice(start, renderOptionsSrc.indexOf("ANSWER_RENDERERS.SHORT_TEXT"));
   assert.ok(start > 0);
-  assert.match(block, /const val = Number\(input\.value\);/);
-  assert.match(block, /submitAnswer\(String\(val\), btn\);/);
-  assert.match(block, /if \(e\.key === "Enter"\) btn\.onclick\(\);/);
+  assert.match(APP, /import \{ buildNumberAnswer \} from "\.\/js\/number-answer\.js";/);
+  assert.match(block, /buildNumberAnswer\(document, \{\s*onSubmit: submitAnswer,/);
+  assert.match(block, /optionsContainer\.appendChild\(hint\);/);
+  assert.equal(/Number\(input\.value\)/.test(block), false, "the raw field is never Number()-converted");
 });
 
 test("MC rendering is unchanged: padding, option buttons and the per-option read-aloud row", () => {
@@ -420,9 +427,9 @@ test("the correction without a typed answer names only the spelling", () => {
   }
 });
 
-test("app.js keeps the correction only for \"stav til\" and Match par — other reflections are unchanged", () => {
+test("app.js keeps the correction only for \"stav til\", Match par and Sandt/falsk — other reflections are unchanged", () => {
   const app = read("../../app.js");
-  assert.match(app, /currentRenderer === ANSWER_RENDERERS\.SHORT_TEXT\s*\?\s*shortTextCorrection\(data\.correct_answer, userAnswer\)\s*:\s*currentRenderer === ANSWER_RENDERERS\.MATCH_PAIRS && currentMatchControl\s*\?\s*matchCorrectionText\(currentMatchControl\.layout, data\.correct_answer\)\s*:\s*null/);
+  assert.match(app, /currentRenderer === ANSWER_RENDERERS\.SHORT_TEXT\s*\?\s*shortTextCorrection\(data\.correct_answer, userAnswer\)\s*:\s*currentRenderer === ANSWER_RENDERERS\.MATCH_PAIRS && currentMatchControl\s*\?\s*matchCorrectionText\(currentMatchControl\.layout, data\.correct_answer\)\s*:\s*currentRenderer === ANSWER_RENDERERS\.TRUE_FALSE\s*\?\s*trueFalseCorrection\(data\.correct_answer\)\s*:\s*null/);
   assert.match(app, /enterReflectionState\(reviewText, correction\)/);
   assert.match(app, /feedback\.textContent = leadText \?\? "";/);
 });
