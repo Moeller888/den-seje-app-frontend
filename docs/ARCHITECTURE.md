@@ -558,7 +558,24 @@ aloud by the quiz's player, the quiz's normal choice feedback), `css/true-false.
 `tools/true-false/demo.html` (local only). *Registry:* `maxShare 0`, `guessFloor 0.5` — a guess is right
 half the time, so a correct answer is route information, never mastery evidence
 (`docs/learning-progression-design.md`); `guessFloor` is `null` for every other kind and nothing on the
-serving path reads it. *Step 3 needs:* a reviewed migration (production's `questions_answer_format_check`
+serving path reads it.
+
+*Evidence (checked 2026-11-05).* No mastery or evidence system reads `guessFloor` or any other per-kind
+weight: mastery/spaced repetition is inactive in production, `question_attempts` (H5) and K1's attempt
+context record answers but nothing derives mastery from them, and the teacher overview only counts
+correct/attempted. The ONE live consumer of verdicts is the level engine's fold
+(`advance_student_level`, migration B, `LEVEL_ENGINE=v1` for all pupils since 2026-11-04): it folds every
+auto-graded first answer of any format (+step correct, −3·step wrong, equilibrium at 75 % correct). It
+does not distinguish formats, so once Sandt/falsk is servable a correct true_false answer would move the
+level exactly like an MC answer although a guess is right half the time (75 % observed ≈ 50 % real
+knowledge for true_false, ≈ 67 % for 4-option MC). The band folds (`advance_student_band` of the format
+mix, and the browser's `adjustDifficultyBand`: 3 right in a row → up) are format-blind in the same way.
+**Rule: when an evidence system is activated — and
+before Sandt/falsk is made servable while the level fold is live — true_false answers must be weighted by
+`guessFloor` (or excluded from the fold); that weighting is an owner decision and part of step 3.** No
+parallel mastery mechanism is built here; the format stays non-servable.
+
+*Step 3 needs:* a reviewed migration (production's `questions_answer_format_check`
 and `content_valid_check` reject the row today, and `question_is_servable` must flip in the same PR),
 then a `get-next-question` deploy and owner GO; v1's `mapAnswerFormat` maps it to `"mc"` and skips it,
 so it reaches pupils only under `QUESTION_MIX_ENGINE=v2`.
