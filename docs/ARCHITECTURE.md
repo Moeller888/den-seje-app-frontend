@@ -155,6 +155,12 @@ Schema and most content are managed as **versioned SQL migrations** in `supabase
 - **Learning engine metadata / concept state:** `learning_engine_metadata`, concept-state RPC,
   grade/difficulty schema, plus topic "content sprint" migrations (Vikings, Cold War, etc.).
 - **Economy / shop:** `shop_items`, shop inventory/purchases, atomic purchase + RLS hardening.
+- **Spillepauser (D-347):** `minigame_break_games`, `minigame_break_progress`, `minigame_break_offers`
+  (RLS on, no policies, no API-role privileges) behind four SECURITY DEFINER RPCs
+  (`minigame_break_after_answer` / `_respond` / `_start` / `_finish`). Active quiz time is derived on the
+  server from `question_instances.created_at/answered_at`; the minigame pages only run with a pass the
+  server redeems once. The quiz calls it after each registered answer, fail-soft. Source of truth:
+  [`decisions/D-347.md`](decisions/D-347.md).
 - **Progression & retention:** themes system, streak system, retention loops, weekly quests,
   achievements (+ hidden/wave2/progress/rewards), titles, leaderboard, social.
 - **Avatar:** avatar slot system (`equipped_slots`), slot/wings/aura items, and the avatar asset

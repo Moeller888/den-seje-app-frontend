@@ -30,6 +30,7 @@ export const OFFLINE_SPECS = Object.freeze([
   "avatar-r2-torso-golden.spec.ts",
   "landing.spec.ts",
   "login-page.spec.ts",
+  "minigame-break.spec.ts",
   "teacher-first-run.spec.ts",
   "true-false-ui.spec.ts",
   "true-false-quiz.spec.ts",
