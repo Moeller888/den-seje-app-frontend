@@ -719,6 +719,34 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   capability**, not part of MVP (does not change D-012).
 
 ## Current Risks
+
+### Sikkerhedsregister (SEC-xx) — kanonisk fra 2026-11-05
+
+Dette er det ene sted, hvor åbne sikkerheds- og dataintegritetsrisici registreres. Backlog, ejer og
+produktionskø står i [ROADMAP.md → Samlet styring](./ROADMAP.md). En risiko lukkes først, når
+produktionen er verificeret, ikke når koden er merget. Lukkede punkter fjernes ikke; de får status
+LUKKET med henvisning til produktionsloggen.
+
+| ID | Pri | Risiko | Evidens (pr. 2026-11-05) | Status | Lukkes når |
+|---|---|---|---|---|---|
+| **SEC-KEY-01** | **P0** | **Lækket legacy Supabase-`service_role`-nøgle.** Nøglen lå i `fetch_legacy.mjs` (commit `c3eebff4`, 2026-05-29) i et **offentligt** repo og giver fuld databaseadgang uden om RLS, også til elevdata. De samme credentials-fund omfatter testkontoernes adgangskoder, der var synlige i uploadede Playwright-rapporter (D-146). | GitHub secret-scanning-alarm #1 **åben** siden 2026-05-29 (`publicly_leaked: true`, validitet ukendt). D-146 = `CONTAINED_IN_CODE — NOT_ROTATED`; ingen senere post. Legacy-"anon" er **enabled** (`get_publishable_keys`). Legacy-`service_role` og JWT-signeringstilstand kan ikke læses med Claudes værktøjer (**UNKNOWN**, ejeren aflæser dashboardet). 8 deployede Edge Functions læser stadig legacy-nøglerne direkte (create-teacher, reset-student, reset-student-password, request-password-help, buy-item, equip-avatar, get-reviewed-answers, avatar-generation); question-context **UNKNOWN**. Main er på nøgleresolveren for dem alle. `edge_logs` 2026-11-04/05 (24 t): 0 kald med legacy-JWT som apikey. Ældre logs findes ikke, så misbrug maj–november kan **hverken bekræftes eller afkræftes**. Den oprindelige P0-1-rapport findes ikke i repoet (manglende dokumentation). | **ÅBEN — P0** | Produktionskøen Q-00 → Q-14 er gennemført og logget, og alarm #1 er lukket som *revoked*. GDPR-vurderingen er et særskilt ejerpunkt. |
+| SEC-02 | P2 | `claim_daily_reward` kan udbetale to gange ved samtidige kald (D-284) | Merget, ikke anvendt (`NOT_IN_PRODUCTION`) | ÅBEN | D-284 anvendt og verificeret |
+| SEC-03 | P2 | Natteuglen tildeles stadig (D-286) | Merget, ikke anvendt | ÅBEN | D-286 anvendt |
+| SEC-04 | P2 | Standard-ACL'er giver anon/authenticated rettigheder på nye objekter; 20 SECURITY DEFINER-funktioner kan køres af anon, 34 af authenticated | `pg_default_acl`; Supabase-linter 0028/0029 (2026-11-05). Udnyttelighed ikke vurderet pr. funktion (mange tjekker `auth.uid()` selv) | ÅBEN | Vurdering + migration anvendt |
+| SEC-05 | P2 | 2 views med SECURITY DEFINER (`attempt_stats`, `question_performance`) | Linter 0010 (ERROR). Sandsynligvis dækket af analytics-views-lockdown (`20261018154314`), ikke verificeret | ÅBEN | Grants verificeret eller views skiftet til invoker |
+| SEC-06 | P2 | Elever kan indsætte vilkårlige rækker for sig selv i `student_events` | Live policy `WITH CHECK (auth.uid() = student_id)` | ÅBEN | Policy strammet og testet |
+| SEC-07 | P2 | Ingen central invarianttest for RLS/grants/SECURITY DEFINER; egenskaberne testes pr. migration | 37 unit-filer med per-migration-tjek | ÅBEN | Én central test i CI |
+| SEC-08 | P3 | Beskyttelse mod lækkede adgangskoder er slået fra; Dependabot er slået fra | Linter; GitHub API | ÅBEN | Ejerens valg registreret |
+| SEC-09 | P3 | avatar-asset-onboarding/-ingestion har ingen kalder-autentificering (midlertidigt 503-stubs) | #557; deployede stubs | INDDÆMMET | Rigtig auth eller fjernelse |
+| DATA-01…03 | P1/P2 | H5-svarloggen er dormant: K1 ikke anvendt, `process-event` H5-veje ikke deployet, klientflaget slukket, M2 ikke skrevet | Migrationsregnskab; `ENABLE_H5_SUBMISSIONS = false`; `question_attempts` = 0 rækker (2026-11-04) | ÅBEN (aktiveringsspor) | Runbookens A4–A10 gennemført |
+
+**Hvorfor SEC-KEY-01 blev overset i den tværgående audit 2026-11-04:** auditten tog udgangspunkt i
+D-registret fra D-224 og frem og i memory; D-146 står i den frosne tabel ovenfor blandt
+avatarbeslutninger; GitHubs sikkerhedsalarmer blev ikke slået op; og nøglemigrationen var i memory
+beskrevet som drift, ikke som en hændelse. Derfor står den nu som P0 her.
+
+### Øvrige risici (avatar/platform, uændret)
+
 - R-1 (Medium): Art-direction drift — flat SVG base ≠ North Star (eyes/finish). Being
   resolved by the Hybrid Raster re-asset.
 - R-2 (Medium): Onboarding mismatch — users cannot pick C2 vocabulary.

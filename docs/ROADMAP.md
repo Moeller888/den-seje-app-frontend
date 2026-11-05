@@ -2,7 +2,7 @@
 
 _Schedule, status and section ordering. Single source of truth for "where are we / what's next."_
 _Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md). Avatar specifics: [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md)._
-_Last reviewed: 2026-07-01._
+_Last reviewed: 2026-11-05 (afsnittet "Samlet styring" tilføjet; resten af filen er uændret historik)._
 
 > **Two parallel tracks.** The project runs an **Avatar / art track** (numeric sections 155–167+,
 > decisions D-001…D-041) and a newer **Platform / services track** (Section 157A audit → 157B+).
@@ -12,6 +12,104 @@ _Last reviewed: 2026-07-01._
 > **A third track opened 2026-08-08: the public website / landing page ("Lærlig").** It is
 > deliberately independent of the avatar and platform tracks and touches no app code. Canonical:
 > [LANDING.md](./LANDING.md).
+
+---
+
+## Samlet styring: hovedsession, tre spor, én backlog og én produktionskø (fra 2026-11-05)
+
+> **Dette afsnit er den kanoniske plan.** Det afløser ikke de øvrige afsnit i filen som historik, men
+> når de modsiger dette afsnit om *hvad vi arbejder på nu*, gælder dette afsnit. Arbejdsformen
+> (hovedsession, underagenter, worktrees, filejerskab, produktionskø) står i
+> [CLAUDE_WORKFLOW.md §11](./CLAUDE_WORKFLOW.md). Sikkerhedsregistret (SEC-xx) står i
+> [project-state.md → Current Risks](./project-state.md). Grundlaget er den tværgående audit
+> (2026-11-04) og den korrigerende konsolidering (2026-11-05).
+
+### Hvor står status? (én kilde pr. spørgsmål — kopiér ikke status mellem dokumenter)
+
+| Spørgsmål | Autoritativ kilde | Ikke autoritativ |
+|---|---|---|
+| Er en migration anvendt i produktionen? | Produktionens migrationsregnskab (`list_migrations`) og `tests/isolated/schema/replay-plan.mjs` (`APPLIED_IN_PRODUCTION` / `NOT_IN_PRODUCTION`, maskinkontrolleret) | Statuslinjer i D-filer, PR-titler, memory |
+| Er en Edge Function deployet med en bestemt kode? | `list_edge_functions`: `ezbr_sha256` + `updated_at` (versionsnummeret stiger også ved secret-ændringer uden ny kode) + loggen i `docs/operations/production-actions/` | Versionsnummer alene |
+| Hvilke produktionshandlinger er udført? | `docs/operations/production-actions/` (én fil pr. handling, D-313) | Chat, memory |
+| Hvad arbejder vi på, og hvad er næste skridt? | Dette afsnit (backlog + kø) | Gamle "Current section"-afsnit |
+| Hvilke sikkerhedsrisici er åbne? | `docs/project-state.md` → Current Risks → Sikkerhedsregister | D-filers statuslinjer |
+| Hvorfor blev noget besluttet? | `docs/decisions/D-NNN.md` (beslutninger, ikke løbende status) | — |
+
+Statusord, der bruges i backloggen: **PLANLAGT · UNDER UDVIKLING · IMPLEMENTERET · TESTET · PR ÅBEN ·
+MERGET · DEPLOYET/ANVENDT · PRODUKTIONSVERIFICERET**. "Merget" betyder aldrig "anvendt".
+
+### Tre spor under én hovedsession
+
+| Spor | Ejer af | Kører parallelt? |
+|---|---|---|
+| **A — Fundament, sikkerhed og drift** | SEC-KEY-01, H5/K1, CI/E2E, databaseintegritet, Edge Functions, produktionsverifikation, sikkerhedsregression | Kodearbejde ja; produktionstrin kun gennem køen |
+| **B — Læring og opgaveformer** | Nye opgaveformer, læringsprogression (D-277), læringsforløb, niveaumotoren, Lærligverset, indhold | Ja |
+| **C — Avatar og Northstar** | R3/Northstar, garderobe, avatarintegration | Ja (ingen fælles filer med A/B ud over `app.js`/`hub.html`, se CLAUDE_WORKFLOW §11.3) |
+
+### Backlog (prioritet = risiko; område = produktværdi)
+
+| ID | Pri | Område | Spor | Status | Afhængighed | Acceptkriterium | Næste handling | Ref. |
+|---|---|---|---|---|---|---|---|---|
+| SEC-KEY-01 | **P0** | SECURITY | A | Åben hændelse. Legacy-`service_role` offentlig siden 2026-05-29, ikke dokumenteret tilbagekaldt | — | Legacy-API-nøgler deaktiveret, legacy-JWT-hemmelighed tilbagekaldt (eller dokumenteret uskadeliggjort), testadgangskoder roteret, alarm #1 lukket som *revoked*, ny D-post afløser D-146 | Kø Q-01 → Q-14 | project-state SEC-KEY-01; D-146 |
+| SEC-KEY-01.2 | P0 | SECURITY | A | PR ÅBEN (se PR-listen nedenfor) | — | Patch af den deployede v10 på nøgleresolveren; test viser, at kun nøglelinjerne er ændret | Review + merge-GO | `tools/production/edge-patches/request-password-help/` |
+| CI-01 | P1 | CI | A | PR ÅBEN | — | 5 grønne `isolated-e2e` på main i træk på runner-image 20261101.x | Review + merge-GO | memory: CI-cache-image-miss |
+| OPS-01 | P1 | OPERATIONS | A | PLANLAGT | — | Én minimal funktionel prod-smoke (login → spørgsmål → svar) med fast D-313-GO-skabelon og testkonto | Udkast til skabelon | D-313 |
+| OPS-02 | P1 | OPERATIONS | B | DEPLOYET (`LEVEL_ENGINE=v1` globalt siden 2026-11-04 21:59 UTC) | — | Ingen 5xx/latensregression; kandidatforespørgslen målt (§2.5 blev fraveget) | Læsende logopfølgning | `docs/operations/level-engine-rollout.md` |
+| DATA-01 | P1 | DATA | A | MERGET, ikke anvendt (K1) | CI-01; ejerbeslutninger B1–B4 som D-numre | Readiness-tjek K1-* grønne | Kø Q-20 | `docs/operations/h5-k1-activation-runbook.md` |
+| DATA-02 | P1 | DATA | A | MERGET, ikke deployet (`process-event` H5-veje) | DATA-01 | Diff deployet↔main forklaret; readiness-tjek grønne; 0 5xx | Kø Q-21 | runbook A6 |
+| DATA-03 | P2 | DATA | A | Flag slukket; M2 ikke skrevet | DATA-02 | Runbook A7–A10 | Skriv M2-migration + tests | runbook §9 |
+| F-01 | P1 | LEARNING | B | PR ÅBEN | Apply-GO | Inaktivt talindhold (historie, årstal) med `difficulty_level`; bedømmes af G1; kan serveres af niveaumotoren, når det aktiveres | Faglig review + merge-GO | — |
+| F-02 | P1 | LEARNING | B | PR ÅBEN | — | Kind `true_false` via choice-vejen, `servable:false`, gættesandsynlighed registreret, tastatur/touch/oplæsning, unit + offline e2e | Review + merge-GO | — |
+| F-03 | P2 | LEARNING | B | MERGET, ikke synlig (`servable:false`) | DATA-02 (gnq-deploy i køen) | SQL-tvilling + v1-mapping + `servable:true` i én PR; e2e mod isoleret stak | PR efter F-02 (samme registry-fil) | `_shared/match-pairs.ts` |
+| F-04/F-05 | P2 | LEARNING | B | PLANLAGT | F-02 merget (registry) | Rækkefølge og kategorisering efter Match par-mønstret, `servable:false` | Start efter F-02 | — |
+| F-06 | P2 | LEARNING | B | PLANLAGT | — | Udfyld hul via kanonisk nøgle → `process_question_attempt` (aldrig `process_text_answer`) | — | — |
+| F-07 | P2 | LEARNING | B | PLANLAGT | — | Stimulus-felt (kilde/billede) i `content` + DTO-allowlist + test | — | `question-dto.ts` |
+| LEARN-01 | P2 | LEARNING | B | Konflikt mellem tre modeller (D-277, LÆR-INTRO-01, Lærligverse F5/F6) | — | Én valgt implementering | **Ejerbeslutning** | #502, #574, #579 |
+| LEARN-02 | P2 | LEARNING | B | 18 åbne Lærligverse-PR'er; 8 er indeholdt i #570/#572 | CI-01, LEARN-01 | #570 merget, indeholdte PR'er lukket | Ejerbeslutning | #570 |
+| SEC-02 | P2 | SECURITY | A | MERGET, ikke anvendt (D-284 dagsbelønning) | — | Ledger + md5 | Kø Q-30 | D-284 |
+| SEC-03 | P2 | SECURITY | A | MERGET, ikke anvendt (D-286 Natteuglen) | — | Ledger | Kø Q-31 | D-286 |
+| SEC-04 | P2 | SECURITY | A | Åben | — | Standard-ACL'er lukket; de 20 anon-kørbare SECURITY DEFINER-funktioner vurderet og låst, hvor relevant | Vurdering → migration | Supabase-linter 0028/0029 |
+| SEC-05 | P2 | SECURITY | A | Åben | — | De 2 SECURITY DEFINER-views (`attempt_stats`, `question_performance`) har ingen grants til anon/authenticated, eller er skiftet til invoker | Læsende grant-kontrol | linter 0010 |
+| SEC-06 | P2 | SECURITY | A | Åben | — | `student_events`-INSERT strammet + test | Migration | — |
+| SEC-07 | P2 | SECURITY | A | PLANLAGT | — | Én central invarianttest over alle tabeller/funktioner (RLS, grants, SECURITY DEFINER) | PR | — |
+| SEC-08 | P3 | SECURITY | A | Åben | — | Beskyttelse mod lækkede adgangskoder slået til; Dependabot overvejet | Ejerhandling | linter |
+| SEC-09 | P3 | SECURITY | C | 503-stubs live | — | Rigtig autentificering i avatar-pipelinen eller fjernelse | — | #557 |
+| OPS-03 | P3 | OPERATIONS | — | PLANLAGT | — | Kun aktive sessioner/worktrees/branches tilbage, intet arbejde tabt | Read-only finklassificering → GO pr. trin | CLAUDE_WORKFLOW §11.6 |
+| CI-02 | P3 | CI | A | Åben | — | #553, #40, unit-tidsbudget < 70 % | — | — |
+| AV-* | — | AVATAR | C | Fortsætter uændret | — | Se [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md) | — | D-345 … D-348 |
+
+### Produktionskø (én handling ad gangen; hver række kræver sit eget GO)
+
+Køen ejes af hovedsessionen. En række udføres først, når forgængeren er verificeret og logget i
+`docs/operations/production-actions/`. Observationsvinduer (Q-10, Q-24) må ikke krydses af
+secret-ændringer eller deploys til samme funktion uden ejerens accept.
+
+| # | Handling | Spor | Afhængighed | Risiko | Godkendelse | Verifikation |
+|---|---|---|---|---|---|---|
+| Q-00 | Ejeren aflæser dashboardets "API Keys" (er legacy-`service_role` aktiv?) og "JWT Keys" (er asymmetriske signeringsnøgler aktive?) | A | — | Ingen (læsning) | — | Svar noteres i SEC-KEY-01 |
+| Q-01 | Deploy patchet `request-password-help` (fra `tools/production/edge-patches/request-password-help/patched/`) | A | SEC-KEY-01.2 merget | Middel (elevernes adgangskodehjælp) | GO | ezbr ændret; log viser resolverens nøglekilde; 0 5xx |
+| Q-02…Q-08 | Deploy fra main, én ad gangen, efter diff deployet↔main: create-teacher, reset-student, reset-student-password, buy-item, equip-avatar, get-reviewed-answers, avatar-generation | A | Q-01 | Middel (main kan indeholde mere end nøgleskiftet; diff forklares pr. funktion) | GO pr. funktion | Som Q-01 |
+| Q-09 | Ejeren skifter GitHub-secret `SUPABASE_SERVICE_ROLE_KEY` og lokale `.env`-værdier til den nye secret-nøgle (navnene ændres ikke) | A | — | Lav | Ejeren | `production-e2e`/goldens-dispatch virker ved næste kørsel |
+| Q-10 | Observation 24–48 t: 0 kald med legacy-JWT som apikey (`edge_logs`, kun aggregeret) | A | Q-01…Q-09 | Ingen | — | Daglig logforespørgsel |
+| Q-11 | Deaktivér legacy-API-nøglerne (anon + service_role) | A | Q-10 | Middel | GO | Kerneflow virker; legacy-kald afvises |
+| Q-12 | Rotér de lækkede testkonto-adgangskoder og tilbagekald deres sessioner; tjek kontoernes roller og mailadresser | A | — (kan ske når som helst) | Lav | GO | Login med ny adgangskode; CI-secrets opdateret |
+| Q-13 | Tilbagekald legacy-JWT-hemmeligheden (**irreversibel**) | A | Q-11; Q-00 viser asymmetriske nøgler — ellers accepteret, at alle logges ud | Høj | GO | Gamle JWT'er afvises; nye sessioner virker |
+| Q-14 | Luk secret-scanning-alarm #1 som *revoked* + D-post, der afløser D-146 | A | Q-11, Q-12, Q-13 | Ingen | GO | Alarm lukket |
+| Q-20 | Anvend K1 (`20261103110000_l1_k1_attempt_context`) | A | CI-01 grøn; B1–B4 besluttet | Middel | GO | Readiness-tjek K1-* |
+| Q-21 | Deploy `process-event` fra main | A | Q-20 | Middel | GO | Readiness-tjek + 0 5xx |
+| Q-22 | Secret `K1_SERVED_SNAPSHOT=on` | A | Q-21 | Lav | GO | Log |
+| Q-23 | PR med `ENABLE_H5_SUBMISSIONS = true` (merge = frontend-deploy) | A | Q-22 | Middel | GO (commit/PR/merge hver for sig) | `question_attempts` får rækker; ingen dobbeltbelønning |
+| Q-24 | Observation 48–72 t med rigtig skoletrafik | A | Q-23 | — | — | Integritetstjek i readiness-SQL'en |
+| Q-25 | M2-cutover (migration skrives først) | A | Q-24 | Middel | GO | Legacy-vejen lukket |
+| Q-30 | Anvend D-284 | A | — | Lav | GO | Ledger + md5 |
+| Q-31 | Anvend D-286 | A | — | Lav | GO | Ledger |
+| Q-32 | Anvend F-01-indhold (inaktivt) og senere aktivering | B | F-01 merget | Lav | GO (apply og aktivering hver for sig) | Rækker inaktive → aktive; elev får talopgaver |
+| Q-33 | Gør Match par synlig: `question_is_servable`-migration + gnq-deploy | B | Q-21 (én gnq/process-event-ejer ad gangen) | Middel | GO | e2e mod isoleret stak + log |
+| Q-34 | #597: anvend `20261105090000` **før** merge | B | — | Middel (spilsiderne låses ellers) | GO | Ledger |
+
+**Tidsramme for SEC-KEY-01 (forslag):** Q-00 og SEC-KEY-01.2 dag 0; Q-01…Q-09 dag 1; Q-10 dag 1–3;
+Q-11 og Q-12 dag 3; Q-13 og Q-14 dag 4. Mål: hændelsen lukket senest **2026-11-12**. GDPR-vurderingen
+er et særskilt ejerpunkt og afventer ikke køen.
 
 ---
 
