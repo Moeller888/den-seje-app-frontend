@@ -1015,7 +1015,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     clearInterval(cooldownTimer);
     cooldownTimer = null;
     // At 00:00 ask the server once (it is the authority; this tab's clock may have drifted or slept).
-    fetchCooldownStatus(supabase).then((s) => {
+    fetchCooldownStatus(supabase, { force: true }).then((s) => {
       if (uiState !== UI_STATES.COOLDOWN) return;
       if (s && s.active) { startCooldownCountdown(cooldownFromServer(s.endsAt, s.serverNow)); return; }
       btn.disabled = false;
@@ -1036,7 +1036,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function enterCooldown(info, { announce = true } = {}) {
     let timing = cooldownFromServer(info?.endsAt ?? null, info?.serverNow ?? null);
     if (!timing.verified) {
-      const s = await fetchCooldownStatus(supabase);
+      const s = await fetchCooldownStatus(supabase, { force: true });
       if (s && s.active) timing = cooldownFromServer(s.endsAt, s.serverNow);
       else if (s && !s.active) timing = { remainingMs: 0, verified: true };
     }

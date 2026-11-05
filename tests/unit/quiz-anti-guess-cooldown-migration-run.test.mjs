@@ -171,7 +171,23 @@ test("migrationen anvendes på produktionens kæde, stopper uden ændringer ved 
   const rls = (await db.query(`SELECT relname, relrowsecurity FROM pg_class WHERE relname LIKE 'quiz_cooldown_%' AND relkind = 'r' ORDER BY 1`)).rows;
   assert.deepEqual(rls.map((r) => r.relrowsecurity), [true, true, true]);
   const fns = (await db.query(`SELECT proname, prosecdef, proconfig FROM pg_proc WHERE proname IN ('quiz_cooldown_guard','quiz_cooldown_register','get_my_quiz_cooldown') ORDER BY 1`)).rows;
-  for (const f of fns) { assert.equal(f.prosecdef, true, f.proname); assert.deepEqual(f.proconfig, ['search_path=""'], f.proname); }
+  // Only the triggers are SECURITY DEFINER (they write tables no API role may touch); the pupil's status
+  // function is SECURITY INVOKER and reads through a column grant + own-row policy.
+  assert.deepEqual(fns.map((f) => [f.proname, f.prosecdef]),
+    [["get_my_quiz_cooldown", false], ["quiz_cooldown_guard", true], ["quiz_cooldown_register", true]]);
+  for (const f of fns) assert.deepEqual(f.proconfig, ['search_path=""'], f.proname);
+  // The identity sequence and every column except the two readable ones are closed to the API roles.
+  for (const role of ["anon", "authenticated"]) {
+    assert.equal(await priv(`has_sequence_privilege('${role}', 'public.quiz_cooldown_events_id_seq', 'USAGE,SELECT,UPDATE')`), false, `${role} på sekvensen`);
+    for (const col of ["recent_wrong_at", "counted_from", "cooldown_started_at", "updated_at"]) {
+      assert.equal(await priv(`has_column_privilege('${role}', 'public.quiz_cooldown_state', '${col}', 'SELECT,INSERT,UPDATE')`), false, `${role} på ${col}`);
+    }
+    for (const col of ["student_id", "cooldown_until"]) {
+      assert.equal(await priv(`has_column_privilege('${role}', 'public.quiz_cooldown_state', '${col}', 'INSERT,UPDATE,REFERENCES')`), false, `${role} skriver ${col}`);
+    }
+  }
+  assert.equal(await priv("has_column_privilege('anon', 'public.quiz_cooldown_state', 'cooldown_until', 'SELECT')"), false);
+  assert.equal(await priv("has_column_privilege('authenticated', 'public.quiz_cooldown_state', 'cooldown_until', 'SELECT')"), true);
 });
 
 test("en fejlet forudsætning ændrer intet", async () => {
@@ -473,6 +489,18 @@ test("P/R: elever kan ikke læse, skrive eller nulstille pausetilstand; get_my_q
     await assert.rejects(as(db, role, "SELECT public.quiz_cooldown_register()"), /permission denied|trigger functions can only be called as triggers/);
   }
   await assert.rejects(as(db, "anon", "SELECT public.get_my_quiz_cooldown()"), /permission denied/);
+  await assert.rejects(as(db, "anon", "SELECT cooldown_until FROM public.quiz_cooldown_state"), /permission denied/);
+  // Den eneste læsning: pausens slut i ens EGEN række (kolonne-grant + politik). Fejltidspunkterne aldrig.
+  await db.exec(`SELECT set_config('test.uid', '${b}', false)`);
+  assert.deepEqual(await as(db, "authenticated", "SELECT student_id, cooldown_until FROM public.quiz_cooldown_state"), [], "B ser ikke A's række");
+  await assert.rejects(as(db, "authenticated", "SELECT recent_wrong_at FROM public.quiz_cooldown_state"), /permission denied/);
+  await assert.rejects(as(db, "authenticated", "SELECT counted_from FROM public.quiz_cooldown_state"), /permission denied/);
+  await assert.rejects(as(db, "authenticated", "SELECT nextval('public.quiz_cooldown_events_id_seq')"), /permission denied/);
+  await db.exec(`SELECT set_config('test.uid', '${a}', false)`);
+  const own = await as(db, "authenticated", "SELECT student_id, cooldown_until FROM public.quiz_cooldown_state");
+  assert.equal(own.length, 1);
+  assert.equal(own[0].student_id, a);
+  await assert.rejects(as(db, "authenticated", "UPDATE public.quiz_cooldown_state SET cooldown_until = now()"), /permission denied/);
   // Svarfunktionerne er backend-only (eksisterende lockdown): en elev kan ikke svare for en anden.
   await db.exec(`SELECT set_config('test.uid', '${b}', false)`);
   const qa = await serve(db, a, QM, "A");

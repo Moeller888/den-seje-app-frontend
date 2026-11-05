@@ -120,8 +120,11 @@ export async function cooldownFromInvokeError(error) {
 let rpcMissing = false;
 export function _resetRpcMissingForTests() { rpcMissing = false; }
 
-export async function fetchCooldownStatus(client) {
-  if (rpcMissing) return null;
+// force: ask even if the function was missing earlier — used once the server has just refused an answer
+// with a pause, which proves the migration is there now (a tab left open across its application).
+export async function fetchCooldownStatus(client, { force = false } = {}) {
+  if (rpcMissing && !force) return null;
+  if (force) rpcMissing = false;
   try {
     const { data, error } = await client.rpc(RPC_NAME);
     if (error && (error.code === "PGRST202" || error.status === 404)) rpcMissing = true;

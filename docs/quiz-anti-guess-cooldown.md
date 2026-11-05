@@ -33,6 +33,12 @@ multiple choice, tal, Match par (alle via `process_question_attempt` / `_v2`) og
 - lange svar (`questions.answer_type = 'long'`);
 - alt, hvad en lærer bedømmer (`reviewed_by` / `teacher_score` er sat), heller ikke en senere vurdering
   "forkert", så en pause kan aldrig opstå med tilbagevirkende kraft;
+  (Lærerbedømmelsen går via Edge-funktionen `review-answer` til RPC'en `review_answer`, som ifølge den
+  read-only katalogmåling i D-263 kun skriver `teacher_score`, `teacher_feedback` og `reviewed_at`, aldrig
+  `answered` eller `was_correct`. Triggerne er `UPDATE OF answered` med `WHEN … was_correct …`, så de
+  kan slet ikke fyre på en lærerbedømmelse. Udelukkelsen af lange og lærerbedømte svar er et ekstra lag.
+  Alle genåbninger siden 2026-10-02 sætter `was_correct = NULL`, så frigivelse af runder hverken tælles
+  eller spærres.)
 - svar uden endelig bedømmelse (`was_correct IS NULL`);
 - lukning eller frigivelse af runder;
 - gentagne kald for et allerede besvaret spørgsmål og H5-replays;
@@ -75,10 +81,10 @@ Migration: `supabase/migrations/20261105130000_quiz_anti_guess_cooldown.sql`.
 | Objekt | Formål | Adgang |
 |---|---|---|
 | `quiz_cooldown_config` | Én række: `wrong_answer_threshold` 10, `window_seconds` 60, `cooldown_seconds` 120. **Den eneste kilde** til værdierne. | RLS, ingen API-rettigheder |
-| `quiz_cooldown_state` | Én række pr. elev: `recent_wrong_at` (højst tærsklen mange tidspunkter), `counted_from`, `cooldown_started_at`, `cooldown_until`. | RLS, ingen API-rettigheder |
-| `quiz_cooldown_events` | Logbog, der kun tilføjes til: én række pr. udløst pause (`student_id`, `started_at`, `ends_at`, `reason_code` = `wrong_answer_burst`, `question_instance_id` som korrelations-id). Intet svar- eller spørgsmålsindhold. | RLS, ingen API-rettigheder |
+| `quiz_cooldown_state` | Én række pr. elev: `recent_wrong_at` (højst tærsklen mange tidspunkter), `counted_from`, `cooldown_started_at`, `cooldown_until`. | RLS. Ingen API-rolle kan skrive. `authenticated` kan kun læse `student_id` og `cooldown_until` i sin **egen** række (kolonne-grant + politik `quiz_cooldown_state_read_own_end`), aldrig fejltidspunkter eller antal |
+| `quiz_cooldown_events` | Logbog, der kun tilføjes til: én række pr. udløst pause (`student_id`, `started_at`, `ends_at`, `reason_code` = `wrong_answer_burst`, `question_instance_id` som korrelations-id). Intet svar- eller spørgsmålsindhold. | RLS, ingen API-rettigheder, heller ikke til identity-sekvensen (projektets standardrettigheder giver ellers anon og authenticated adgang til nye sekvenser) |
 | `quiz_cooldown_guard()` / `quiz_cooldown_register()` | Triggerfunktioner. SECURITY DEFINER, fordi de skriver i tabeller, som ingen API-rolle må røre. `search_path = ''`, og ingen rolle har EXECUTE. | — |
-| `get_my_quiz_cooldown()` | Den indloggede elevs **egen** status: `{active, ends_at, server_now}`. Hverken tærskel, vindue eller antal fejl. SECURITY DEFINER (læser den lukkede tilstandstabel), `auth.uid()`, EXECUTE kun for `authenticated` og `service_role`. | — |
+| `get_my_quiz_cooldown()` | Den indloggede elevs **egen** status: `{active, ends_at, server_now}`. Hverken tærskel, vindue eller antal fejl. **SECURITY INVOKER**: læser gennem kolonne-granten og politikken ovenfor, så der ikke er en ekstra privilegeret flade. EXECUTE kun for `authenticated` og `service_role`. | — |
 
 Der er ingen dobbeltlagring af svarhistorik. `question_instances` overskrives ved gentagelser, og
 `question_attempts` er ikke aktiv endnu, så ingen af dem kan bruges til at tælle fejl pålideligt.
@@ -147,7 +153,7 @@ måler derefter tiden med `performance.now()`, som er monoton og uafhængig af s
 spørgsmål spørger `loadAndRenderQuestion()` én gang serveren, når det seneste svar var forkert. Er en pause
 startet, vises den med det samme (`TRANSITIONING → COOLDOWN`), og intet nyt spørgsmål hentes. D-347's
 spilletilbud kommer først og er uændret, fordi pausen blokerer quizsvar, ikke en lovlig spillepause.
-Findes funktionen ikke endnu (før migrationen, PGRST202/404), holder siden op med at spørge.
+Findes funktionen ikke endnu (før migrationen, PGRST202/404), holder siden op med at spørge. Når serveren derefter afviser et svar med pause, er det et bevis på, at migrationen nu er anvendt. Så spørger siden igen og viser serverens resttid. Det dækker en fane, der stod åben, mens migrationen blev anvendt.
 
 **Genindlæsning, ny fane og anden enhed.** `loadAndRenderQuestion()` kalder `get_my_quiz_cooldown()`
 fra `IDLE` (opstart) og `COOLDOWN` (på vej ud af pausen). Viser serveren en aktiv pause, vises resttiden.
@@ -185,6 +191,14 @@ enheden sover.
 - **H5 (`ENABLE_H5_SUBMISSIONS`, slået fra):** `classifyResponse` genkender 429 `quiz_cooldown` som en
   bekræftet afvisning. Indsendelsen bliver afsluttet, og spørgsmålet besvares igen efter pausen som en ny
   indsendelse.
+
+### D-347-rækkefølgen (vurdering, ikke ændret)
+
+I dag kommer et skyldigt spilletilbud **før** pausen ved samme overgang. Accepterer eleven, går eleven til spillet, mens pausen løber. Ved tilbagekomsten viser quizzen den eventuelle resttid. Takker eleven nej, vises pausen.
+
+Alternativet, "pause først, og tilbuddet bevares til efter pausen", kan bygges rent i frontenden uden risiko for at miste tilbuddet. `minigame_break_after_answer` viser et åbent tilbud igen ved næste registrerede svar, også efter en genindlæsning. Mens tilbuddet venter, optjenes ingen tid. Det kræver ejerens beslutning og er **ikke** implementeret.
+
+Pausen bliver ikke krediteret som aktiv quiztid. D-347's synlighedstimer genstartes, når det næste spørgsmål vises (`questionVisibleTimer.restart()`), og serveren begrænser krediteringen til den synlige tid. Afviste forsøg registrerer intet og kalder ikke `minigame_break_after_answer`.
 
 ## 8. Tests
 

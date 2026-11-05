@@ -258,6 +258,24 @@ test("uden pause (eller uden serverfunktionen) kører quizzen som før", async (
   await ctx.close();
 });
 
+test("en fane, der var åben, da migrationen blev anvendt, viser serverens resttid (ikke en reserve-nedtælling)", async ({ browser }) => {
+  const s = sim();
+  s.reply = "v34";                          // process-event version 34: 500 uden tidspunkter
+  const ctx = await context(browser, s);
+  let migrated = false;                     // før: funktionen findes ikke (404); efter: den svarer
+  await ctx.route("**/rest/v1/rpc/get_my_quiz_cooldown", async (r: Route) => {
+    if (!migrated) return r.fulfill({ status: 404, headers: { ...CORS, "content-type": "application/json" }, body: JSON.stringify({ code: "PGRST202", message: "not found" }) });
+    return r.fallback();
+  });
+  const page = await openQuiz(ctx);         // siden har spurgt én gang og fået 404
+  migrated = true;
+  s.until = T0 + 50_000;
+  await option(page, "Beta").click();       // serveren afviser: pausen findes nu
+  await expect(panel(page)).toBeVisible();
+  await expect(timer(page)).toHaveText("00:50");
+  await ctx.close();
+});
+
 test("smal mobilskærm: hele pausen er synlig uden vandret scroll, og knappen kan trykkes", async ({ browser }) => {
   const s = sim();
   const ctx = await context(browser, s, { width: 320, height: 640 });

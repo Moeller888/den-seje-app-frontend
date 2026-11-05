@@ -113,6 +113,12 @@ test("fetchCooldownStatus: findes funktionen ikke (før migrationen), spørger s
   assert.equal(await fetchCooldownStatus(missing), null);
   assert.equal(await fetchCooldownStatus({ rpc: async () => { calls++; return { data: { active: true }, error: null }; } }), null);
   assert.equal(calls, 1);
+  // … men når serveren netop har afvist et svar med pause, findes funktionen: force spørger igen.
+  const now = await fetchCooldownStatus({ rpc: async () => { calls++; return { data: { active: true, ends_at: "e", server_now: "n" }, error: null }; } }, { force: true });
+  assert.deepEqual(now, { active: true, endsAt: "e", serverNow: "n" });
+  assert.equal(calls, 2);
+  // og derefter spørger siden normalt igen.
+  assert.equal((await fetchCooldownStatus({ rpc: async () => { calls++; return { data: { active: false }, error: null }; } })).active, false);
   _resetRpcMissingForTests();
 });
 

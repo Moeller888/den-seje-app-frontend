@@ -44,13 +44,17 @@
 -- DATA OG ADGANG:
 --   quiz_cooldown_config  én række; den ENESTE kilde til 10 / 60 / 120.
 --   quiz_cooldown_state   én række pr. elev: de seneste forkerte tidspunkter (højst tærsklen), pausens
---                         start/slut og counted_from. Intern; ingen API-rolle kan læse eller skrive den.
+--                         start/slut og counted_from. Ingen API-rolle kan skrive den; authenticated kan
+--                         kun læse student_id og cooldown_until i SIN EGEN række (kolonne-grant + politik
+--                         quiz_cooldown_state_read_own_end) — aldrig fejltidspunkter eller antal.
 --   quiz_cooldown_events  log, der kun tilføjes til: én række pr. udløst pause (elev, start, slut,
 --                         årsagskode, spørgsmålsinstans som korrelations-id). Intet svarindhold.
 --   get_my_quiz_cooldown() den indloggede elevs EGEN pause: {active, ends_at, server_now}. Afslører
---                         hverken tærskel, vindue eller antal fejl.
---   RLS er slået til på alle tre tabeller uden politikker, og anon/authenticated har ingen rettigheder.
---   SECURITY DEFINER på triggerne, fordi de skal skrive i tabeller, ingen API-rolle må røre; tom
+--                         hverken tærskel, vindue eller antal fejl. SECURITY INVOKER (læser via den
+--                         ovenstående kolonne-grant og politik).
+--   RLS er slået til på alle tre tabeller; config og events har ingen politikker, og anon/authenticated
+--   har ingen rettigheder til dem eller til identity-sekvensen.
+--   SECURITY DEFINER kun på triggerne, fordi de skal skrive i tabeller, ingen API-rolle må røre; tom
 --   search_path og fuldt kvalificerede navne; ingen API-rolle har EXECUTE.
 --
 -- KØRSEL: ét DO-blok-forløb, atomisk også uden en omsluttende transaktion. Findes et af objekterne i
@@ -128,6 +132,15 @@ BEGIN
   EXECUTE $ddl$ALTER TABLE public.quiz_cooldown_state  ENABLE ROW LEVEL SECURITY$ddl$;
   EXECUTE $ddl$ALTER TABLE public.quiz_cooldown_events ENABLE ROW LEVEL SECURITY$ddl$;
   EXECUTE $ddl$REVOKE ALL ON TABLE public.quiz_cooldown_config, public.quiz_cooldown_state, public.quiz_cooldown_events FROM PUBLIC, anon, authenticated$ddl$;
+  -- The identity sequence gets the project's default sequence grants (anon, authenticated) — revoke them.
+  EXECUTE $ddl$REVOKE ALL ON SEQUENCE public.quiz_cooldown_events_id_seq FROM PUBLIC, anon, authenticated$ddl$;
+  -- The one thing a pupil may read: WHEN their own pause ends (never the wrong-answer times or count).
+  -- Column privilege + own-row policy, so get_my_quiz_cooldown() can be SECURITY INVOKER.
+  EXECUTE $ddl$GRANT SELECT (student_id, cooldown_until) ON public.quiz_cooldown_state TO authenticated$ddl$;
+  EXECUTE $ddl$
+    CREATE POLICY quiz_cooldown_state_read_own_end ON public.quiz_cooldown_state
+    FOR SELECT TO authenticated
+    USING (student_id = (SELECT auth.uid()))$ddl$;
 
   -- ── 5. Afvisning under pause (BEFORE) ─────────────────────────────────────
   EXECUTE $ddl$
@@ -248,7 +261,7 @@ CREATE FUNCTION public.get_my_quiz_cooldown()
 RETURNS jsonb
 LANGUAGE sql
 STABLE
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = ''
 AS $fn$
   SELECT jsonb_build_object(
@@ -257,7 +270,8 @@ AS $fn$
     'server_now', now()
   )
   FROM (SELECT 1) one
-  LEFT JOIN public.quiz_cooldown_state s ON s.student_id = (SELECT auth.uid());
+  LEFT JOIN (SELECT st.student_id, st.cooldown_until FROM public.quiz_cooldown_state st) s
+    ON s.student_id = (SELECT auth.uid());
 $fn$$ddl$;
 
   EXECUTE $ddl$REVOKE ALL ON FUNCTION public.quiz_cooldown_guard()    FROM PUBLIC, anon, authenticated, service_role$ddl$;
@@ -271,6 +285,8 @@ $fn$$ddl$;
         AND tgname IN ('quiz_cooldown_guard', 'quiz_cooldown_register') AND tgenabled = 'O') <> 2
      OR has_function_privilege('authenticated', 'public.quiz_cooldown_register()', 'EXECUTE')
      OR has_function_privilege('anon', 'public.get_my_quiz_cooldown()', 'EXECUTE')
+     OR has_sequence_privilege('authenticated', 'public.quiz_cooldown_events_id_seq', 'USAGE,SELECT,UPDATE')
+     OR has_column_privilege('authenticated', 'public.quiz_cooldown_state', 'recent_wrong_at', 'SELECT')
      OR has_table_privilege('authenticated', 'public.quiz_cooldown_state', 'SELECT,INSERT,UPDATE,DELETE')
      OR has_table_privilege('anon', 'public.quiz_cooldown_events', 'SELECT,INSERT,UPDATE,DELETE') THEN
     RAISE EXCEPTION 'quiz-cooldown: slutkontrol fejlede; intet ændret';
