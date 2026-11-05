@@ -14,7 +14,9 @@
 // against its own list of 180 combinations; the same rule, store and fallback.
 // D-337: a fifth row offers the 6 owner-approved sweaters (D-336) only where the whole effective outfit with the sweater is one of the
 // approved combinations (D-336's 30 with the beige sneakers, D-340's 240 with the other shoes); stored the same way (avatar_northstar_sweater); "Outfittets egen top" returns.
-import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor } from "./avatar-layers.js";
+// D-348: the row (now "Overdel") also offers the 6 owner-approved tank tops (D-345/D-348), each against its own list of 264 combinations;
+// the same store, so at most one sweater or tank top is chosen; the same rule and fallback.
+import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_TOP_CHOICES, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor } from "./avatar-layers.js";
 
 function store(key, value) {
   try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch (_e) { return false; }
@@ -79,14 +81,16 @@ export function mountNorthstarPanel(panel, preview) {
   shoeNote.textContent = blocked.length ? blocked.join(", ") + ": ikke mulig her. " + shoeReason(current, shown, shownPants) : "";
   const sweaterTitle = document.createElement("div");
   sweaterTitle.className = "northstar-subtitle";
-  sweaterTitle.textContent = "Trøje";
+  sweaterTitle.textContent = "Overdel";
   const sweaterList = row("northstar-sweater-list"), sweaterNote = document.createElement("p");
   sweaterNote.className = "northstar-note";
-  let sweaterBlocked = 0;
-  for (const [id, sw] of Object.entries(NORTHSTAR_LS2_SWEATERS)) { const ok = northstarSweaterAllowed(current, shown, shownPants, shownShoe, id); button(sweaterList, sw.label, NORTHSTAR_SWEATER_KEY, id, id === shownSweater, !ok); if (!ok) sweaterBlocked++; }
+  const topBlocked = [];
+  for (const [group, choices] of [["Trøjerne", NORTHSTAR_LS2_SWEATERS], ["Tanktoppene", NORTHSTAR_TANKS]]) { let blockedHere = 0;
+    for (const [id, sw] of Object.entries(choices)) { const ok = northstarSweaterAllowed(current, shown, shownPants, shownShoe, id); button(sweaterList, sw.label, NORTHSTAR_SWEATER_KEY, id, id === shownSweater, !ok); if (!ok) blockedHere++; }
+    if (blockedHere) topBlocked.push(group); }
   button(sweaterList, "Outfittets egen top", NORTHSTAR_SWEATER_KEY, null, !!current && !shownSweater, !current);
-  sweaterNote.textContent = sweaterBlocked ? "Trøjerne: ikke mulig her. " + sweaterReason(current, shown, shownPants, shownShoe) : "";
-  const what = () => { const parts = [shown ? NORTHSTAR_PRINT_TEES[shown].label : null, shownPants ? NORTHSTAR_SOLID_PANTS[shownPants].label : null, shownShoe ? NORTHSTAR_SHOE_CHOICES[shownShoe].label : null, shownSweater ? NORTHSTAR_LS2_SWEATERS[shownSweater].label : null].filter(Boolean);
+  sweaterNote.textContent = topBlocked.length ? topBlocked.join(" og ") + ": ikke mulig her. " + sweaterReason(current, shown, shownPants, shownShoe) : "";
+  const what = () => { const parts = [shown ? NORTHSTAR_PRINT_TEES[shown].label : null, shownPants ? NORTHSTAR_SOLID_PANTS[shownPants].label : null, shownShoe ? NORTHSTAR_SHOE_CHOICES[shownShoe].label : null, shownSweater ? NORTHSTAR_TOP_CHOICES[shownSweater].label : null].filter(Boolean);
     return current ? current + (parts.length ? " med " + parts.join(" og ") : "") : ""; };
   const describe = () => {
     const path = preview && preview.dataset ? preview.dataset.avatarRenderPath : null;
@@ -124,9 +128,10 @@ function shoeReason(key, tee, pants) {
 
 // Why a sweater cannot be chosen for this outfit (the owner approved each sweater over the skirt, capri and the olive, navy and sand
 // trousers with the shoes each was checked with — never with the shorts, and the charcoal sneakers only with the skirt and capri).
+// D-348: the same holds for the tank tops (and the olive trousers not with the beige sneakers).
 function sweaterReason(key, tee, pants, shoe) {
   const o = northstarOutfitFor(key, tee, pants, shoe);
   if (!o) return "Vælg først et outfit.";
-  if (/shorts/.test(o.bottom)) return "Trøjerne er ikke godkendt med shorts.";
+  if (/shorts/.test(o.bottom)) return "Trøjer og tanktoppe er ikke godkendt med shorts.";
   return "Kombinationen er ikke godkendt.";
 }

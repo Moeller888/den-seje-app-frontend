@@ -1,0 +1,3338 @@
+{
+  "decision": "D-348",
+  "kind": "OWNER VISUAL APPROVAL of the 264 tank top combinations on tank-v3 (D-345's candidates)",
+  "approvedOn": "2026-11-04",
+  "owner": "Jeg godkender de 264 tanktopkombinationer på tank-v3",
+  "publishAndIntegrate": "owner 2026-11-04: Registrering af godkendelsen i repoet med et ledigt D-nummer, godkendelsesfil og dokumentation. At præcis de otte runtime-filer fra D-345's stagingliste med de allerede afleverede fulde SHA256-hashes medtages som offentlige aktiver i integrations-PR'en. Integration af de seks tanktopdesigns for præcis de 264 godkendte kombinationer bag det eksisterende Northstar-opt-in.",
+  "notCovered": [
+    "the navy shorts (never offered)",
+    "the olive trousers with the beige sneakers (no tee approval)",
+    "the tee's warm dotted line (U-343-1, a separate open item)",
+    "any other cut, design, bottom or shoe"
+  ],
+  "cut": {
+    "contract": "tools/avatar/fixtures/northstar-wardrobe/top-cuts/tank-v3.json",
+    "sha256": "fb0833cb96ccd00e3bb2ed6effb775ca532cc9744639706903282ed0ac48e33b"
+  },
+  "candidates": {
+    "file": "tools/avatar/fixtures/northstar-wardrobe/tank/tank-family-candidates-v1.json",
+    "sha256": "7f0e4e6b671547bc8201ff1910313272645429f2b5c34a594e9a18abc879e03f"
+  },
+  "overview": "<Documents>/DenSejeApp-artefacts/d345-tank-family/index.html (private)",
+  "designs": {
+    "TK-HEATHER": {
+      "id": "TK-HEATHER",
+      "proposedRuntimeItem": "top-tank-heather",
+      "label": "Tanktop · lyng"
+    },
+    "TK-HEATHER-TEAPOT": {
+      "id": "TK-HEATHER-TEAPOT",
+      "proposedRuntimeItem": "top-tank-heather-teapot",
+      "label": "Tanktop · lyng · tekande"
+    },
+    "TK-HEATHER-FOX": {
+      "id": "TK-HEATHER-FOX",
+      "proposedRuntimeItem": "top-tank-heather-fox",
+      "label": "Tanktop · lyng · ræv"
+    },
+    "TK-NAVY": {
+      "id": "TK-NAVY",
+      "proposedRuntimeItem": "top-tank-navy",
+      "label": "Tanktop · navy"
+    },
+    "TK-NAVY-TEAPOT": {
+      "id": "TK-NAVY-TEAPOT",
+      "proposedRuntimeItem": "top-tank-navy-teapot",
+      "label": "Tanktop · navy · tekande"
+    },
+    "TK-NAVY-FOX": {
+      "id": "TK-NAVY-FOX",
+      "proposedRuntimeItem": "top-tank-navy-fox",
+      "label": "Tanktop · navy · ræv"
+    }
+  },
+  "staging": {
+    "files": [
+      {
+        "file": "top-tank-heather-fox-top-body-v1.webp",
+        "sha256": "22e1de32a62005a18fd1f9b0cebdbd2e5e213097944968d24b6e1bea0e81a386",
+        "bytes": 40604
+      },
+      {
+        "file": "top-tank-heather-teapot-top-body-v1.webp",
+        "sha256": "87aba6bd6bbed6664e947a9c5f3b450d1ad038c01a20b929b45431aa8e841ec3",
+        "bytes": 42950
+      },
+      {
+        "file": "top-tank-heather-top-body-v1.webp",
+        "sha256": "715776619e8ae4102fbf8c07bcb53f8a000f30ff1f047ca251900e5366f7b84b",
+        "bytes": 30198
+      },
+      {
+        "file": "top-tank-hem-junction-v1.webp",
+        "sha256": "54701f913e209f83fd86dd141536829211ed078e95eb618978e06e0ee3e0b382",
+        "bytes": 890
+      },
+      {
+        "file": "top-tank-navy-fox-top-body-v1.webp",
+        "sha256": "1e74abd68ce48eeb45802f7e7c13052847265133a9c0e75cfc9e3cfb05c53c36",
+        "bytes": 38036
+      },
+      {
+        "file": "top-tank-navy-teapot-top-body-v1.webp",
+        "sha256": "b98cfad7ddc5a3d0d8c137ff41df76c7c02c73e8b2ff031c895e358476abd055",
+        "bytes": 39722
+      },
+      {
+        "file": "top-tank-navy-top-body-v1.webp",
+        "sha256": "78276b9f91d75b829be2d75541b27f020fe4ec747823d0a21687f7f42a9a91b0",
+        "bytes": 27686
+      },
+      {
+        "file": "top-tank-shadow-body-v1.webp",
+        "sha256": "ac2672fb2d80bb57d0a84fd7bcf669523cb7e1ea15217fb2b71767ec375807f8",
+        "bytes": 126
+      }
+    ],
+    "itemTable": {
+      "top-tank-heather": {
+        "category": "top",
+        "layers": [
+          "top-body"
+        ],
+        "shadows": [
+          "body"
+        ],
+        "shadowsOf": "top-tank",
+        "hipSeam": "top-tank-hem-junction-v1.webp"
+      },
+      "top-tank-heather-teapot": {
+        "category": "top",
+        "layers": [
+          "top-body"
+        ],
+        "shadows": [
+          "body"
+        ],
+        "shadowsOf": "top-tank",
+        "hipSeam": "top-tank-hem-junction-v1.webp"
+      },
+      "top-tank-heather-fox": {
+        "category": "top",
+        "layers": [
+          "top-body"
+        ],
+        "shadows": [
+          "body"
+        ],
+        "shadowsOf": "top-tank",
+        "hipSeam": "top-tank-hem-junction-v1.webp"
+      },
+      "top-tank-navy": {
+        "category": "top",
+        "layers": [
+          "top-body"
+        ],
+        "shadows": [
+          "body"
+        ],
+        "shadowsOf": "top-tank",
+        "hipSeam": "top-tank-hem-junction-v1.webp"
+      },
+      "top-tank-navy-teapot": {
+        "category": "top",
+        "layers": [
+          "top-body"
+        ],
+        "shadows": [
+          "body"
+        ],
+        "shadowsOf": "top-tank",
+        "hipSeam": "top-tank-hem-junction-v1.webp"
+      },
+      "top-tank-navy-fox": {
+        "category": "top",
+        "layers": [
+          "top-body"
+        ],
+        "shadows": [
+          "body"
+        ],
+        "shadowsOf": "top-tank",
+        "hipSeam": "top-tank-hem-junction-v1.webp"
+      }
+    },
+    "drawOrder": "body · shoes · hem junction · bottom · top body · arms · head · shadows (no sleeves)"
+  },
+  "count": 264,
+  "combinations": [
+    {
+      "id": "TK-HEATHER--skirt-sand--ab1-lightsand",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--skirt-sand--ab1-lightsand.png",
+        "pixelSha256": "c79e741b0e2c22505e6d142a82dfc4c7c102de9c8f668d256153675c2f9afb77"
+      }
+    },
+    {
+      "id": "TK-HEATHER--skirt-sand--ab1-original",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--skirt-sand--ab1-original.png",
+        "pixelSha256": "7ab19aa3bb4b5af85f530db878e7d0509bbc35d41ee3c0bcaf6152e0f07d67db"
+      }
+    },
+    {
+      "id": "TK-HEATHER--skirt-sand--boots-laceup-black",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--skirt-sand--boots-laceup-black.png",
+        "pixelSha256": "b113b9f062393255ef9e8cb03d42d611230769a85231afefcad51b7a40079b8d"
+      }
+    },
+    {
+      "id": "TK-HEATHER--skirt-sand--sneakers-beige",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--skirt-sand--sneakers-beige.png",
+        "pixelSha256": "d05d72b2bc2cfdeeadc9533f80c94cafa93c1ffbeeebe44401810bbbd77d568d"
+      }
+    },
+    {
+      "id": "TK-HEATHER--skirt-sand--sv1-burgundygum",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--skirt-sand--sv1-burgundygum.png",
+        "pixelSha256": "e591387ab62d69a4369b5e721dca8680b4b905ac30b3908e444a7bdd5c5dcd9c"
+      }
+    },
+    {
+      "id": "TK-HEATHER--skirt-sand--sv1-chalk",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--skirt-sand--sv1-chalk.png",
+        "pixelSha256": "1fea498f6155fd67896368a1e344a3fb0d338750851e6abe25f3969db1c214a0"
+      }
+    },
+    {
+      "id": "TK-HEATHER--skirt-sand--sv1-charcoal",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--skirt-sand--sv1-charcoal.png",
+        "pixelSha256": "56656790e3f96cf400e3f9efad509a526b1d839a69263236484ac95b120bfe8f"
+      }
+    },
+    {
+      "id": "TK-HEATHER--skirt-sand--sv1-navywhite",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--skirt-sand--sv1-navywhite.png",
+        "pixelSha256": "759ea9846626ec1c34389a79b4e075ed5131d9b31a7feadda98988bafeb2e302"
+      }
+    },
+    {
+      "id": "TK-HEATHER--skirt-sand--sneakers-white",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--skirt-sand--sneakers-white.png",
+        "pixelSha256": "259d6cf11898d5bdae2e87d7c5b1e0967be5659cdbe7493024b90ac86dcce42a"
+      }
+    },
+    {
+      "id": "TK-HEATHER--capri-lightblue--ab1-lightsand",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--capri-lightblue--ab1-lightsand.png",
+        "pixelSha256": "0b599674899a3e49651aef6e46aac13f935eef49857882733f776f9cf6cb71b9"
+      }
+    },
+    {
+      "id": "TK-HEATHER--capri-lightblue--ab1-original",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--capri-lightblue--ab1-original.png",
+        "pixelSha256": "0f4cab6a75e4a35dc1f5f04942dae149678bf1b2fe2de8dddc591ea4837e42c2"
+      }
+    },
+    {
+      "id": "TK-HEATHER--capri-lightblue--ankleboots-brown",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--capri-lightblue--ankleboots-brown.png",
+        "pixelSha256": "791e85f448d6f7f720ed388b1bf7fd66d22e9d3b816b469683dba28878334be8"
+      }
+    },
+    {
+      "id": "TK-HEATHER--capri-lightblue--boots-laceup-black",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--capri-lightblue--boots-laceup-black.png",
+        "pixelSha256": "21d5f5b22da3b3bcc8cf5825a7e44e5188db6f58c1f319a25e783d665be8e51e"
+      }
+    },
+    {
+      "id": "TK-HEATHER--capri-lightblue--sneakers-beige",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--capri-lightblue--sneakers-beige.png",
+        "pixelSha256": "5b80b736df14c438612be4e39fe2f7eb01288efb8e2dd2631ca05ba6d9c83f51"
+      }
+    },
+    {
+      "id": "TK-HEATHER--capri-lightblue--sv1-burgundygum",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--capri-lightblue--sv1-burgundygum.png",
+        "pixelSha256": "b468b6b256645ed64b7fd76aeb8af95b7fdec28f2bf94a0d6e2b5dfb4ed57cdc"
+      }
+    },
+    {
+      "id": "TK-HEATHER--capri-lightblue--sv1-chalk",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--capri-lightblue--sv1-chalk.png",
+        "pixelSha256": "c0aaad7c4a9c95509abf13f246d62197cec6727e5504cdeb410d853e1a10e5af"
+      }
+    },
+    {
+      "id": "TK-HEATHER--capri-lightblue--sv1-charcoal",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--capri-lightblue--sv1-charcoal.png",
+        "pixelSha256": "3aade17b8f30ba78eb1ba96ef7e30bbea0a8c0d254cbe3f43abb7d27ea57f82d"
+      }
+    },
+    {
+      "id": "TK-HEATHER--capri-lightblue--sv1-navywhite",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--capri-lightblue--sv1-navywhite.png",
+        "pixelSha256": "e0a816eada1a09aeb13177038f257e313318a425fa1fe5012bdb661164c3d9cc"
+      }
+    },
+    {
+      "id": "TK-HEATHER--capri-lightblue--sneakers-white",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--capri-lightblue--sneakers-white.png",
+        "pixelSha256": "342f605c4dba17865300e257fdb76241070b41e169dc4a67ba75f99580ec9c66"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-olive--ab1-lightsand",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-olive--ab1-lightsand.png",
+        "pixelSha256": "cdf3da4323e66374c44d8f6e17a4ce7f259d064c59727c0429251a8b048ed765"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-olive--ab1-original",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-olive--ab1-original.png",
+        "pixelSha256": "ec549a405a9fb75e085b45abed14e8c2068ca40671dde8825ee658606ceb9876"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-olive--ankleboots-brown",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-olive--ankleboots-brown.png",
+        "pixelSha256": "b8842e6e329c069082c10296d5c50ea84f8b364ad5e7fe56ed1963b35f6aebbf"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-olive--sv1-burgundygum",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-olive--sv1-burgundygum.png",
+        "pixelSha256": "5e6a817ea23ff68b4c80a0ef6a52f7935ed132da099332335480d1004b197331"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-olive--sv1-chalk",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-olive--sv1-chalk.png",
+        "pixelSha256": "55f530142e42bf6756036f0b13302489e79def6afb451f283685fcd2ae11c46b"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-olive--sv1-navywhite",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-olive--sv1-navywhite.png",
+        "pixelSha256": "8f45f3bf9c38be01f3327d9100f3c08f6f9c57f537716de54cea1b88633c9fec"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-olive--sneakers-white",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-olive--sneakers-white.png",
+        "pixelSha256": "bec6a1556eb38b42a12330f58d05350b122dc73505814e035ce19edf274a8299"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-navy--ab1-lightsand",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-navy--ab1-lightsand.png",
+        "pixelSha256": "1b8377321ea82bd7b27e78fdabc7cb896a12abd1ffc7bb61a36b6f44cd6c4989"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-navy--ab1-original",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-navy--ab1-original.png",
+        "pixelSha256": "2c3b5dd44298cbb80d82c98cf7e495e4ed8d8338c42d4baa541610f58c7515c8"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-navy--ankleboots-brown",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-navy--ankleboots-brown.png",
+        "pixelSha256": "5bfee943385c23683cac8c27622353a359c7f896f3545d87718ed2f9417ada7c"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-navy--boots-laceup-black",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-navy--boots-laceup-black.png",
+        "pixelSha256": "15ca89d017f05a722ce7f2e487639b87ada3d06c2587d7b4d0d406021efade2b"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-navy--sneakers-beige",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-navy--sneakers-beige.png",
+        "pixelSha256": "060903d82849f32cb65cfc1975bb5f5a7195b2b5a40f075f9c1a59adb9d757cb"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-navy--sv1-burgundygum",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-navy--sv1-burgundygum.png",
+        "pixelSha256": "d99166e7c3dcda790e0f9b9e4a839145392e33c610f33b20e6e5e213db80794c"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-navy--sv1-chalk",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-navy--sv1-chalk.png",
+        "pixelSha256": "3ce4916c21ebb8b007b47284a80db25e6cb507f5fccf851e2d450d06c2f0b2a5"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-navy--sv1-navywhite",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-navy--sv1-navywhite.png",
+        "pixelSha256": "e18d17eee1336c40b7c6aeab7baa215378a0b913a5fe417cf5bb1ab257d2998c"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-navy--sneakers-white",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-navy--sneakers-white.png",
+        "pixelSha256": "d3f2f1cbecc0817918107819f05c9c391ddd69c680ddcb3d30e29e5d3b1e7c3a"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-sand--ab1-lightsand",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-sand--ab1-lightsand.png",
+        "pixelSha256": "6791ed9e7b82826a67791a2f3edd4c62436526c10ae28ffb3c11c90a850049f7"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-sand--ab1-original",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-sand--ab1-original.png",
+        "pixelSha256": "0950de2302ad0dbe8d9abfc0e3fe93352bd1630b1d6b2403d18d7004262f362f"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-sand--ankleboots-brown",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-sand--ankleboots-brown.png",
+        "pixelSha256": "94296fdb9edb5a599a06eb48c16c5b630ed76359c86fd65ce9cae963cac81fb3"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-sand--boots-laceup-black",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-sand--boots-laceup-black.png",
+        "pixelSha256": "00eb683defa4e8f787bc482923860a4510528aecf21ded76cedeb79ea911004f"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-sand--sneakers-beige",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-sand--sneakers-beige.png",
+        "pixelSha256": "81c7fb92eafcbb240c4475dce9cb6a5d4d90c4aedaea96f8d19e1de656cee311"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-sand--sv1-burgundygum",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-sand--sv1-burgundygum.png",
+        "pixelSha256": "3c251e22bedfb69f23cd9b01a80c594783031b186cdd12482bfaa9b8285cef1c"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-sand--sv1-chalk",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-sand--sv1-chalk.png",
+        "pixelSha256": "e93d49350b8d36ccab82c0fa7bd8aebb555a7c550ad6dc1e4e3ced1e951c59d9"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-sand--sv1-navywhite",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-sand--sv1-navywhite.png",
+        "pixelSha256": "8575075df9e27967d525773876396048bdd9362aa76943f1a01dd4967a74688f"
+      }
+    },
+    {
+      "id": "TK-HEATHER--trousers-square-sand--sneakers-white",
+      "design": "TK-HEATHER",
+      "top": "top-tank-heather",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER--trousers-square-sand--sneakers-white.png",
+        "pixelSha256": "40f2c0f8c4a5973aa81fb016eccd296aa18e6efbde493056d63cd2004deced95"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--skirt-sand--ab1-lightsand",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--skirt-sand--ab1-lightsand.png",
+        "pixelSha256": "053922906391dd811c1cfa4370f9eb3398d9e03397eee3c5ab967339be70b0fc"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--skirt-sand--ab1-original",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--skirt-sand--ab1-original.png",
+        "pixelSha256": "aad217523b3bcd2253e077882218e911810f19e1fea4e87c62a74de2cb5df88d"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--skirt-sand--boots-laceup-black",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--skirt-sand--boots-laceup-black.png",
+        "pixelSha256": "5ee0e16720e1fff23160a19da16a91ded9c05592c861e76092ffe9bbb4ea386c"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--skirt-sand--sneakers-beige",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--skirt-sand--sneakers-beige.png",
+        "pixelSha256": "5f7b23f7469b5e280a40f27151b674d6009fd8b4e7a1ff704fd5120db06816ac"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--skirt-sand--sv1-burgundygum",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--skirt-sand--sv1-burgundygum.png",
+        "pixelSha256": "1b9807afe5fb429a015fb8f1669c11095529c70d4a060c7fe7c0da7f5b2cc3ab"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--skirt-sand--sv1-chalk",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--skirt-sand--sv1-chalk.png",
+        "pixelSha256": "d2510c923999742e746d50cabd05d1fd2b625b6a93d182a8af0c16f9cd3a116d"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--skirt-sand--sv1-charcoal",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--skirt-sand--sv1-charcoal.png",
+        "pixelSha256": "faccda22a60958595822f465a4544558fafa01d9140bedc81af4bd9ec1815c12"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--skirt-sand--sv1-navywhite",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--skirt-sand--sv1-navywhite.png",
+        "pixelSha256": "2fe8dc14289368a14b5cb5003997f0482a515f7b07322c130b4e9cc97adbc6a7"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--skirt-sand--sneakers-white",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--skirt-sand--sneakers-white.png",
+        "pixelSha256": "8b3a909a6e97b523111e30e06db690a04afce06a76c7028eb6e6f4df01fe8959"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--capri-lightblue--ab1-lightsand",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--capri-lightblue--ab1-lightsand.png",
+        "pixelSha256": "270eacd124c8fb0b025d2e24686edf413b09825a5c0b300b5f7ca3d8aa60ebc8"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--capri-lightblue--ab1-original",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--capri-lightblue--ab1-original.png",
+        "pixelSha256": "d1949e105bebfa9d1c7cc485668434caa7af2addb138949b9edb728d6623c206"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--capri-lightblue--ankleboots-brown",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--capri-lightblue--ankleboots-brown.png",
+        "pixelSha256": "dbff8142e64aaf7bb0e4f5d8f8f323c88622c04f57b96f6fc981554ccbf4ad17"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--capri-lightblue--boots-laceup-black",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--capri-lightblue--boots-laceup-black.png",
+        "pixelSha256": "cd70abe38e7a512757547b682922e342e26150eea852513fe45fd854b748badb"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--capri-lightblue--sneakers-beige",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--capri-lightblue--sneakers-beige.png",
+        "pixelSha256": "fae602000d915200b066924f546421b522894d48c1977c10819f88b42cf4324d"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--capri-lightblue--sv1-burgundygum",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--capri-lightblue--sv1-burgundygum.png",
+        "pixelSha256": "68572c4a093f3447986d6dde30f46881907bd93c20c0b3cdaaeaff51b2deb098"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--capri-lightblue--sv1-chalk",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--capri-lightblue--sv1-chalk.png",
+        "pixelSha256": "c69b0249dc058e9d9511b107b1d36eaf7c8484003422abd28d156ade14760aa3"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--capri-lightblue--sv1-charcoal",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--capri-lightblue--sv1-charcoal.png",
+        "pixelSha256": "2b320aeea19da99728fd4194d49446f65c197a6351e91edd89799017e4d79db9"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--capri-lightblue--sv1-navywhite",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--capri-lightblue--sv1-navywhite.png",
+        "pixelSha256": "a407607e7b86bebfdea09bf9301118dfbedb469f8bc52b8b5b1b7b95d73a0f31"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--capri-lightblue--sneakers-white",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--capri-lightblue--sneakers-white.png",
+        "pixelSha256": "d29514e4ef074359f7c7d9e0621d52e03cd00f1e2c1dc1157af95ad3c9ee39df"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-olive--ab1-lightsand",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-olive--ab1-lightsand.png",
+        "pixelSha256": "9458d979c7e34e2ba6027e4d64aa62f9f9b21f514c8983095011568cec34461f"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-olive--ab1-original",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-olive--ab1-original.png",
+        "pixelSha256": "08edc40a6177d80fbfb391fb97897a70c7473c52f3a699f5df84a2100bed857b"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-olive--ankleboots-brown",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-olive--ankleboots-brown.png",
+        "pixelSha256": "89cc0acd13d675886aefc4af416ea66d882e0b95352312dc0b576967a34c377d"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-olive--sv1-burgundygum",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-olive--sv1-burgundygum.png",
+        "pixelSha256": "35f9a6e3485b9959f42f974658b9c5d35541af7f43cd9f9cc5ea5f30cb7387f5"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-olive--sv1-chalk",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-olive--sv1-chalk.png",
+        "pixelSha256": "a1b982af0f358194da9c1b245c4364ae3888d1f7c2b52a75fb7d9d5def6d1d35"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-olive--sv1-navywhite",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-olive--sv1-navywhite.png",
+        "pixelSha256": "38029046e0e1e7d2946b47e8ab2faf9d4511bba16312307ad74fe5c8a55ca9a2"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-olive--sneakers-white",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-olive--sneakers-white.png",
+        "pixelSha256": "dba7df3132b855acf4d0332429979635a2373da8d409b788970f1a08abe63ec5"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-navy--ab1-lightsand",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-navy--ab1-lightsand.png",
+        "pixelSha256": "b525bd1123f42fbeba3469fd4cb593ed4287016005674d0c9dcf80c4e3c1b8ef"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-navy--ab1-original",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-navy--ab1-original.png",
+        "pixelSha256": "b33ab68ca9860900fd7780b4ebd9227ce8c252fca6f7713f220f5066713d931e"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-navy--ankleboots-brown",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-navy--ankleboots-brown.png",
+        "pixelSha256": "dabfd5b20640e6bb421dab03f065c525b970bbafdf30db97c76fba9580e619f8"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-navy--boots-laceup-black",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-navy--boots-laceup-black.png",
+        "pixelSha256": "6ead26fe12a3a275bb645c5a6e58c5d469c4574114e36dea5839c7e52c1443c5"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-navy--sneakers-beige",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-navy--sneakers-beige.png",
+        "pixelSha256": "cbbaa5ad3662aa1eaa2c8251eeeb9a70f92791c7037f872a3160fb9928d8d1b7"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-navy--sv1-burgundygum",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-navy--sv1-burgundygum.png",
+        "pixelSha256": "2bb779fd3b219549edf3562cb2010d01ad7ec06f03a8bf4f6f975f7355df5060"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-navy--sv1-chalk",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-navy--sv1-chalk.png",
+        "pixelSha256": "48f1948807cef92ba8cf6f0f6bab207d42e496b61fb4f36e603d46e86f5a0dc9"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-navy--sv1-navywhite",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-navy--sv1-navywhite.png",
+        "pixelSha256": "33c72a6cff0595428b801b10fa9a8662889862813cb7c487c027d26c50fb0a51"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-navy--sneakers-white",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-navy--sneakers-white.png",
+        "pixelSha256": "6327ef9e5b28223e2de62f74ff415cbab77cf187a2ae17a2a33aa1fe37aeb943"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-sand--ab1-lightsand",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-sand--ab1-lightsand.png",
+        "pixelSha256": "3122b00ba59d5ed92b64671972a568334e09b653c8e97917e0aade90a4a783b9"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-sand--ab1-original",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-sand--ab1-original.png",
+        "pixelSha256": "756a8d65804c02107976fb1fcff0d054069c0d49a5189b4b209d2f280fbe2c42"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-sand--ankleboots-brown",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-sand--ankleboots-brown.png",
+        "pixelSha256": "826c9f3e89f6ccb1b4c91a74f146c3984193fd508f1c2f144f1d33b5e5d30b09"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-sand--boots-laceup-black",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-sand--boots-laceup-black.png",
+        "pixelSha256": "fccc2807bb55272aef01b54df339d65d46f0583ed3af92b590814a2aaaf8c7d5"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-sand--sneakers-beige",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-sand--sneakers-beige.png",
+        "pixelSha256": "7187ef4ab927aebb560deb7fb9584118b4f3c37cce2414c9f64aa4606210023f"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-sand--sv1-burgundygum",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-sand--sv1-burgundygum.png",
+        "pixelSha256": "97c0b7e49340dfeb5674439c5b4ea639e016177ca3edc03857f12388413d5613"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-sand--sv1-chalk",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-sand--sv1-chalk.png",
+        "pixelSha256": "0b883e9759c4d6a97cdb855636868d1f20844d6df6adbf43af86d6064f4f5db0"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-sand--sv1-navywhite",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-sand--sv1-navywhite.png",
+        "pixelSha256": "2cd05c43f69aa90c2de4ad9da5fe39a14505aa4a6fcae84c038a4fbd8a64a54c"
+      }
+    },
+    {
+      "id": "TK-HEATHER-TEAPOT--trousers-square-sand--sneakers-white",
+      "design": "TK-HEATHER-TEAPOT",
+      "top": "top-tank-heather-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-TEAPOT--trousers-square-sand--sneakers-white.png",
+        "pixelSha256": "7a1e471eebe43d5f5dba1d6b906d8c7b572259230eb5dcb9dd66efdd862a2753"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--skirt-sand--ab1-lightsand",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--skirt-sand--ab1-lightsand.png",
+        "pixelSha256": "83c8765915587f5970b5d03f3706a404de748051c98addb01e277446c01cbc87"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--skirt-sand--ab1-original",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--skirt-sand--ab1-original.png",
+        "pixelSha256": "f36c0bfb3232215470830caefad1b4d24aef4e97b7f420894fceeec124d6a720"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--skirt-sand--boots-laceup-black",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--skirt-sand--boots-laceup-black.png",
+        "pixelSha256": "5ff7317cd987570357382bc80a4c603299fa929f2306c0f43a4765a9501445dd"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--skirt-sand--sneakers-beige",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--skirt-sand--sneakers-beige.png",
+        "pixelSha256": "cbb650dfa322ebb84e6fbc4869fb5b5ffee7083a34bbc6bc0ecef1f5506b877a"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--skirt-sand--sv1-burgundygum",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--skirt-sand--sv1-burgundygum.png",
+        "pixelSha256": "6d85360eab6cd25e7d67872d3d2ad6858f429b693dab18cdfe7b82e7976fa3fd"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--skirt-sand--sv1-chalk",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--skirt-sand--sv1-chalk.png",
+        "pixelSha256": "48c1eee6034452a4d2857aa3233c231d6ef643ebacc43dfb5a6640d4c96baccf"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--skirt-sand--sv1-charcoal",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--skirt-sand--sv1-charcoal.png",
+        "pixelSha256": "0811c54f874bdb4379aa3ac7c733baff816cf49962a70c6bc3f2b60279aaf251"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--skirt-sand--sv1-navywhite",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--skirt-sand--sv1-navywhite.png",
+        "pixelSha256": "3f34e8f85cd0a785cf62cd4e9ada69f52893a10d6c600276ecad369849a0d9df"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--skirt-sand--sneakers-white",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--skirt-sand--sneakers-white.png",
+        "pixelSha256": "01b47e5635b0c372b4c08d8c6fb32413b7efbf78ccc425069031fc60b61337d5"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--capri-lightblue--ab1-lightsand",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--capri-lightblue--ab1-lightsand.png",
+        "pixelSha256": "86fe4fae742e87fe547ff2aa3b629f4431c53043eaab5e41874c74dccd654f85"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--capri-lightblue--ab1-original",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--capri-lightblue--ab1-original.png",
+        "pixelSha256": "eff8e6fdd7a708a573372eb7b4aad7e7730f34efb9f93af024318aa0fd82fb36"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--capri-lightblue--ankleboots-brown",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--capri-lightblue--ankleboots-brown.png",
+        "pixelSha256": "cd106f6ea3c0cb3fd253e3fb14e9fe123d6aadfde1b4841035524cc94d0f8134"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--capri-lightblue--boots-laceup-black",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--capri-lightblue--boots-laceup-black.png",
+        "pixelSha256": "86bd720e0562eae1e17efe47f92bfbec4d953da9ff8fa1fe0bfc52e31b0e7c5f"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--capri-lightblue--sneakers-beige",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--capri-lightblue--sneakers-beige.png",
+        "pixelSha256": "d3411fca8064d4cbdd47f83e21c5d8ef391db74ecf0a431b266f5a9af02cb663"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--capri-lightblue--sv1-burgundygum",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--capri-lightblue--sv1-burgundygum.png",
+        "pixelSha256": "c3b15cae0dcf0b393066b8b0b8568d309b604fd175e064f611430cf6a6bf2515"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--capri-lightblue--sv1-chalk",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--capri-lightblue--sv1-chalk.png",
+        "pixelSha256": "da80c027b50cef029194ba2be074b945020fdd9aa7fb53bb927f933485dcd8c8"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--capri-lightblue--sv1-charcoal",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--capri-lightblue--sv1-charcoal.png",
+        "pixelSha256": "5b7d9675afd96a7d23a54f16d190d46e6d6b415a573930d2d241813225304eba"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--capri-lightblue--sv1-navywhite",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--capri-lightblue--sv1-navywhite.png",
+        "pixelSha256": "59d94f96de7ef35b790edeb9c73bde7b1e53377973e60f37e3d2b2d6475f4ee2"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--capri-lightblue--sneakers-white",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--capri-lightblue--sneakers-white.png",
+        "pixelSha256": "514ca9a55542f9a87a806b2147aa7d11b3f324fb19d86a0806ead7e49ffae68a"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-olive--ab1-lightsand",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-olive--ab1-lightsand.png",
+        "pixelSha256": "a626db3e2c1deca8ba5a6680846e72bb5a43ca908046a3d9ff37c11add2acc52"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-olive--ab1-original",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-olive--ab1-original.png",
+        "pixelSha256": "757997972831cc3ae6c7b66d863ecc685695dad75c69df2db32391f7d2975023"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-olive--ankleboots-brown",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-olive--ankleboots-brown.png",
+        "pixelSha256": "b790b5207d3f2fc587b7a0ceb5fc2c30bbb257f37aa1970bcdb490149f40b8b5"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-olive--sv1-burgundygum",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-olive--sv1-burgundygum.png",
+        "pixelSha256": "6e2073cb72bfccec396374c09d97a87557857d3589e5068863aa88d167371c5a"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-olive--sv1-chalk",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-olive--sv1-chalk.png",
+        "pixelSha256": "1aa8f7f237ef76e5a88dc37884d06e9c0df209bd1b7e6ff290e4a295bbbf5da1"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-olive--sv1-navywhite",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-olive--sv1-navywhite.png",
+        "pixelSha256": "21c3082e3b7fb23d6e9dbd4206807fd5e729f26a75412815af6dfe4bd0d5a5d3"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-olive--sneakers-white",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-olive--sneakers-white.png",
+        "pixelSha256": "170a675e41d38d6f222828b51d48f3678ee982dcd637066bbfaa8f74edfacbd0"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-navy--ab1-lightsand",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-navy--ab1-lightsand.png",
+        "pixelSha256": "6eef414d5541770129ff16c22d2fac33ea836112728aa9a5fc1b63d20bebaa32"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-navy--ab1-original",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-navy--ab1-original.png",
+        "pixelSha256": "54fa6316ecbf80a220422633388fdd2a73259c8f60cc33fbf7db2b2fcf387d1d"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-navy--ankleboots-brown",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-navy--ankleboots-brown.png",
+        "pixelSha256": "3df3a9fdf2d0553873937a67470ad14bf2bbead1c3b05c9f403ff814d98eaf6f"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-navy--boots-laceup-black",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-navy--boots-laceup-black.png",
+        "pixelSha256": "c6bba357b2283b0975da165f43823a9fe26459c17438d62a28e8df2d0abb5d1d"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-navy--sneakers-beige",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-navy--sneakers-beige.png",
+        "pixelSha256": "e373b19a4ccca9ff0aaa4b2c3e48c8246c0014ce7e17922229ebb7205b372f7c"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-navy--sv1-burgundygum",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-navy--sv1-burgundygum.png",
+        "pixelSha256": "12e31b61f713db7fc07fd455744507d09262357f6cb6b97bc774732e8ff82138"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-navy--sv1-chalk",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-navy--sv1-chalk.png",
+        "pixelSha256": "280100890b7d6dd912d8a25af3edede0cd0d8b9d947cc2c8dced3dcba37ce555"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-navy--sv1-navywhite",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-navy--sv1-navywhite.png",
+        "pixelSha256": "da6f0b984f007dcb2a4d1e7642effe7b893953db9cd1eb10303563db1fab8819"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-navy--sneakers-white",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-navy--sneakers-white.png",
+        "pixelSha256": "d67e53558b3c5b190535919f07a779ebdb393a3d7a85835a78150073b35016f7"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-sand--ab1-lightsand",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-sand--ab1-lightsand.png",
+        "pixelSha256": "fbb357e7499857e5bb0f66f7849e1fe0189da6f61d8f48989d388a53097f9290"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-sand--ab1-original",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-sand--ab1-original.png",
+        "pixelSha256": "07ff4990beb7e52aef114fffaa4030eb5983aea3a7e91abbc354ba2211b975b2"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-sand--ankleboots-brown",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-sand--ankleboots-brown.png",
+        "pixelSha256": "79649b1fdc392422595477825e93312857b8d0589ff291bacd0022633aca41f1"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-sand--boots-laceup-black",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-sand--boots-laceup-black.png",
+        "pixelSha256": "c9ad46039655245cf0f857c22f6a11859d31aa0628c11ae6a8ed3eac522c4c68"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-sand--sneakers-beige",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-sand--sneakers-beige.png",
+        "pixelSha256": "161c9f8d3d2342967376c95ef73cf6cc47a2747b8b4b6fc869cbd892d90fb5fd"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-sand--sv1-burgundygum",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-sand--sv1-burgundygum.png",
+        "pixelSha256": "085267e0702148b070e0286fe8af2440215a05ef60c456f06ea2f64594b8f9e9"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-sand--sv1-chalk",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-sand--sv1-chalk.png",
+        "pixelSha256": "8aaffb28f93314b669e4e89cc2f7250710d691cc3793befe26c010a4c8e3a773"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-sand--sv1-navywhite",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-sand--sv1-navywhite.png",
+        "pixelSha256": "8dd8fda52f8d89618539e40d736ce52923edd41666f5f3e567d1aaa8bea8a3f0"
+      }
+    },
+    {
+      "id": "TK-HEATHER-FOX--trousers-square-sand--sneakers-white",
+      "design": "TK-HEATHER-FOX",
+      "top": "top-tank-heather-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-HEATHER-FOX--trousers-square-sand--sneakers-white.png",
+        "pixelSha256": "ea329d3f617eb00b44f322868fc6b78ddb37535254abdbe0d9b1f510bec77075"
+      }
+    },
+    {
+      "id": "TK-NAVY--skirt-sand--ab1-lightsand",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--skirt-sand--ab1-lightsand.png",
+        "pixelSha256": "245fb9e9c0836a190b37358c9eab1173cc6c24af2ee67438051cfa908c793ed4"
+      }
+    },
+    {
+      "id": "TK-NAVY--skirt-sand--ab1-original",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--skirt-sand--ab1-original.png",
+        "pixelSha256": "c9f52d2f5cb6f6cd919cdefcd166523f5364b85304822702ba25501288548ba2"
+      }
+    },
+    {
+      "id": "TK-NAVY--skirt-sand--boots-laceup-black",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--skirt-sand--boots-laceup-black.png",
+        "pixelSha256": "e8dddf9506dceb7a479d1a953da99301a4ea2b74746dbb7d7620a5054348e85b"
+      }
+    },
+    {
+      "id": "TK-NAVY--skirt-sand--sneakers-beige",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--skirt-sand--sneakers-beige.png",
+        "pixelSha256": "33d179f30828e234b72c06d79abf314d79e27ed7daeb4528bbf532615be9de61"
+      }
+    },
+    {
+      "id": "TK-NAVY--skirt-sand--sv1-burgundygum",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--skirt-sand--sv1-burgundygum.png",
+        "pixelSha256": "1196c938f9c81e11e0eb3e677ca034ec706c4b2fdb9c39996acfdeaeb631ee92"
+      }
+    },
+    {
+      "id": "TK-NAVY--skirt-sand--sv1-chalk",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--skirt-sand--sv1-chalk.png",
+        "pixelSha256": "1c4e6301a7d8377c22b6ce1ea22445d2019a795b47f1525a74e1add9ef7231c5"
+      }
+    },
+    {
+      "id": "TK-NAVY--skirt-sand--sv1-charcoal",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--skirt-sand--sv1-charcoal.png",
+        "pixelSha256": "b5923e1f2d6694cd05a89b0f15e1792bdb455888f3d437a00ad448317b5adfa3"
+      }
+    },
+    {
+      "id": "TK-NAVY--skirt-sand--sv1-navywhite",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--skirt-sand--sv1-navywhite.png",
+        "pixelSha256": "7b00f08019919503d44ffdc03ac5675a929bf5d64250656df2f34f4977664c0d"
+      }
+    },
+    {
+      "id": "TK-NAVY--skirt-sand--sneakers-white",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--skirt-sand--sneakers-white.png",
+        "pixelSha256": "0512f1384a7c92cb4931b77f4911647778172f255dfaf90069cb7dfd6801943f"
+      }
+    },
+    {
+      "id": "TK-NAVY--capri-lightblue--ab1-lightsand",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--capri-lightblue--ab1-lightsand.png",
+        "pixelSha256": "bed37f9e82334ef051b0e72b59d6532de52062f5eff2c7ab53a29223f79bdeed"
+      }
+    },
+    {
+      "id": "TK-NAVY--capri-lightblue--ab1-original",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--capri-lightblue--ab1-original.png",
+        "pixelSha256": "6044f6c417a87686e2f6269b35ed4fa1b6f0dcc0241c5cc3c43f5ba5ba6c9156"
+      }
+    },
+    {
+      "id": "TK-NAVY--capri-lightblue--ankleboots-brown",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--capri-lightblue--ankleboots-brown.png",
+        "pixelSha256": "75864c2b1e9a1356a7e5e3fcf69333586f1d03bf14f1483bcb125081ab9f7e71"
+      }
+    },
+    {
+      "id": "TK-NAVY--capri-lightblue--boots-laceup-black",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--capri-lightblue--boots-laceup-black.png",
+        "pixelSha256": "83f89195c26c5196a4a48bd7aabea6e2090f43cd394d6511c48d020208760951"
+      }
+    },
+    {
+      "id": "TK-NAVY--capri-lightblue--sneakers-beige",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--capri-lightblue--sneakers-beige.png",
+        "pixelSha256": "bc84bcec95bf3dd13140b3388fd237db21215a53cf811d8e7ead53b7f4e4b59b"
+      }
+    },
+    {
+      "id": "TK-NAVY--capri-lightblue--sv1-burgundygum",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--capri-lightblue--sv1-burgundygum.png",
+        "pixelSha256": "80e9cd2c377b90fe6d8929b74072682b37154a0c7362f5752ef5a9f74cdb5623"
+      }
+    },
+    {
+      "id": "TK-NAVY--capri-lightblue--sv1-chalk",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--capri-lightblue--sv1-chalk.png",
+        "pixelSha256": "1542838ca4cbcd7aded0b8c53972b166e3f123f77e8a2b90dd2b2ad227d4b57f"
+      }
+    },
+    {
+      "id": "TK-NAVY--capri-lightblue--sv1-charcoal",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--capri-lightblue--sv1-charcoal.png",
+        "pixelSha256": "7cffa6cdc2bd6a9f32e57d0bccad2294947873fcbeda6f15ff8669a76b2fb626"
+      }
+    },
+    {
+      "id": "TK-NAVY--capri-lightblue--sv1-navywhite",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--capri-lightblue--sv1-navywhite.png",
+        "pixelSha256": "a8c20ef17579ccc068bb9197a797f7de33771152d75b1adf414adcd7673a65bb"
+      }
+    },
+    {
+      "id": "TK-NAVY--capri-lightblue--sneakers-white",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--capri-lightblue--sneakers-white.png",
+        "pixelSha256": "8f84352577ee4b731c720ebc84c3d8a4575cb1ec85e4b8307d13b96ba5d7e5c2"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-olive--ab1-lightsand",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-olive--ab1-lightsand.png",
+        "pixelSha256": "b8c5ed24c9217c0804fcfd3c1854ad3faf4b5118e4342d189a1f2df1a6126712"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-olive--ab1-original",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-olive--ab1-original.png",
+        "pixelSha256": "6600ed9ee7192404577eddd7cc05629e191a1797dfdf46481b2a68e82acf067d"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-olive--ankleboots-brown",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-olive--ankleboots-brown.png",
+        "pixelSha256": "3bd4610729f858811e58e563a7d1d0d2cf13175cdd5b09bcb0c64491def797a1"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-olive--sv1-burgundygum",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-olive--sv1-burgundygum.png",
+        "pixelSha256": "20a38fbb9467b206fcad94502bf058c8cd14c814faca491f120678f9cb46000c"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-olive--sv1-chalk",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-olive--sv1-chalk.png",
+        "pixelSha256": "a39bf7dfab47e704f9d532107d0012f8503401a78a6cac46ca96855d6438fdef"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-olive--sv1-navywhite",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-olive--sv1-navywhite.png",
+        "pixelSha256": "b3dc01e176ad00e50119a1496b49ee09efaf1938d75281bf2c5584d88bb7cb28"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-olive--sneakers-white",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-olive--sneakers-white.png",
+        "pixelSha256": "e6dafc44edddfdff4d5defa9679752f0b61f775187dad172684f71e5d23c4086"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-navy--ab1-lightsand",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-navy--ab1-lightsand.png",
+        "pixelSha256": "2cec1dc581a50cb84614a4be5a86427a1a455a54599c179fb02f0af00f7f9774"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-navy--ab1-original",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-navy--ab1-original.png",
+        "pixelSha256": "e63e14392cd8f5e7e4367e90b7df683a58010619e9eb9ea457de5b548cb51c81"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-navy--ankleboots-brown",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-navy--ankleboots-brown.png",
+        "pixelSha256": "874b8d84f8e882e28582c5560030261a1f486536e3a86442318725a8945175e4"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-navy--boots-laceup-black",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-navy--boots-laceup-black.png",
+        "pixelSha256": "ab51d4ad7e529c6617a75f52bc09d40bd05d8bcb0d5be2bceed380e10530741e"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-navy--sneakers-beige",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-navy--sneakers-beige.png",
+        "pixelSha256": "f78699de9dfe35db685ba09b04c89e2321164fe7745c543f9d314ec52bcdc322"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-navy--sv1-burgundygum",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-navy--sv1-burgundygum.png",
+        "pixelSha256": "d640479fa5b57c2e5b9f9382967f8144961bc278cb0a8705fdcef3f7e855a1f6"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-navy--sv1-chalk",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-navy--sv1-chalk.png",
+        "pixelSha256": "e6937ed29286d5fa40c3187639e0ac18309dc1fd90bf2916b3158ee7fad41278"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-navy--sv1-navywhite",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-navy--sv1-navywhite.png",
+        "pixelSha256": "e798c6dcaa29404c29fb78b107a8d15aaf44f535dbd6c82ab2f25ddeb0427b5b"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-navy--sneakers-white",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-navy--sneakers-white.png",
+        "pixelSha256": "e8ddeb40cfcaa413b36bb49c0bf602f44ca981aa61b9141929c055553c1b49df"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-sand--ab1-lightsand",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-sand--ab1-lightsand.png",
+        "pixelSha256": "b39232948a32958945544938230a8f77e64c8ca7b9b385f25922e8d561324f61"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-sand--ab1-original",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-sand--ab1-original.png",
+        "pixelSha256": "de87984f38a13f619bc51c9a673959eb759ab7c4b0fb676fc9a0adf487b6d2e3"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-sand--ankleboots-brown",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-sand--ankleboots-brown.png",
+        "pixelSha256": "df1a2ee3fbd4e5c12554baec57fb4a717fdbad8a17825c725daa06c21b55565f"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-sand--boots-laceup-black",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-sand--boots-laceup-black.png",
+        "pixelSha256": "86e799410c92a852d5e0079772fb74a7c293893036107f8fbb019bafd4969673"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-sand--sneakers-beige",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-sand--sneakers-beige.png",
+        "pixelSha256": "51584ed3b1d33798591085ccaf24ced3702e3f0c427284d7ae870f437cd3f653"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-sand--sv1-burgundygum",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-sand--sv1-burgundygum.png",
+        "pixelSha256": "1d66828dff0915ce72147bc669981ee28533ae26d585dafb246ef0af5cd1e2d7"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-sand--sv1-chalk",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-sand--sv1-chalk.png",
+        "pixelSha256": "7224dbdcd3ca5a0f421adf28c089bf88aa1fe3db115e2f27807aa9b5fbf4a732"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-sand--sv1-navywhite",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-sand--sv1-navywhite.png",
+        "pixelSha256": "583578d101c1cb72ca01491e73d739b505339433e537028ee38a73535b2f1bd8"
+      }
+    },
+    {
+      "id": "TK-NAVY--trousers-square-sand--sneakers-white",
+      "design": "TK-NAVY",
+      "top": "top-tank-navy",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY--trousers-square-sand--sneakers-white.png",
+        "pixelSha256": "db5dc9cb255a8b1c3c512eaa191ba940b45dbac398d7b544ebc733385ccd933e"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--skirt-sand--ab1-lightsand",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--skirt-sand--ab1-lightsand.png",
+        "pixelSha256": "1d6002ab3111627f24d51767a9a0c957910bea4b753d5e685ef3d4437f936e0c"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--skirt-sand--ab1-original",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--skirt-sand--ab1-original.png",
+        "pixelSha256": "8468645e80518a511733ae523a3def629deeb864294808e3d61c71709109a7e2"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--skirt-sand--boots-laceup-black",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--skirt-sand--boots-laceup-black.png",
+        "pixelSha256": "b3fce0d31ddd2e4f78ad883c4303c09cfaeb710fe708ed81e27512a8eaf621a0"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--skirt-sand--sneakers-beige",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--skirt-sand--sneakers-beige.png",
+        "pixelSha256": "69e78011227d3c0e319cedd94c4a7614e4fcd3b3ef2f5af093e5f019a7fbfef5"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--skirt-sand--sv1-burgundygum",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--skirt-sand--sv1-burgundygum.png",
+        "pixelSha256": "bdb0c66dc08f39263399e47f9c4ce2fde5fd82f968ad2d223091995915d6d797"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--skirt-sand--sv1-chalk",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--skirt-sand--sv1-chalk.png",
+        "pixelSha256": "47546a24934c7c75716d7cfe7e43ae8c2399c565835923a9847aa79e5ec5f2cc"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--skirt-sand--sv1-charcoal",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--skirt-sand--sv1-charcoal.png",
+        "pixelSha256": "323de46c75f9515227be228f05c20b836565717466364ccffa12961bc515c5fa"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--skirt-sand--sv1-navywhite",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--skirt-sand--sv1-navywhite.png",
+        "pixelSha256": "3fec169b9d302c32f000ab5ebeee366d1950a1bdbf67c33861fe1b4f39ee3721"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--skirt-sand--sneakers-white",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--skirt-sand--sneakers-white.png",
+        "pixelSha256": "79aedf80f891b5d5b51a8cbc5bbb884b99e38a1cf9a69d6a973633426f0aa0d7"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--capri-lightblue--ab1-lightsand",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--capri-lightblue--ab1-lightsand.png",
+        "pixelSha256": "035eebeeab69480af046f38dc857bd47a823c14570568acefa7e1bc12be15b2e"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--capri-lightblue--ab1-original",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--capri-lightblue--ab1-original.png",
+        "pixelSha256": "01d86c6fdedbdf340e460fc8d28064f501074867c07437e7fbd4b046bd630312"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--capri-lightblue--ankleboots-brown",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--capri-lightblue--ankleboots-brown.png",
+        "pixelSha256": "0dd544d989b01274a5190f733cce2a7da6c69546b2e594455817de8df2bf62fd"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--capri-lightblue--boots-laceup-black",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--capri-lightblue--boots-laceup-black.png",
+        "pixelSha256": "5066b609151bed9719db16b076ede64959c5343aea108162f942129cc9675ddd"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--capri-lightblue--sneakers-beige",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--capri-lightblue--sneakers-beige.png",
+        "pixelSha256": "aff4ffc44dea8b986a1822b59c50ff0f47def20ddcef3e5d3d461ac90712ca49"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--capri-lightblue--sv1-burgundygum",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--capri-lightblue--sv1-burgundygum.png",
+        "pixelSha256": "908884d6d5e694976b2f2aed713a7d3684501efacbe21ce03c2b9e7bfc9ef8fa"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--capri-lightblue--sv1-chalk",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--capri-lightblue--sv1-chalk.png",
+        "pixelSha256": "4caac455d26c423157a5007b3a0970930abb59360852d59dfae6a9126884edfe"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--capri-lightblue--sv1-charcoal",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--capri-lightblue--sv1-charcoal.png",
+        "pixelSha256": "edd8fd03bc981b20c96cde1459a191e9c5821ed34f56f6714cf53f4ab6fe5be7"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--capri-lightblue--sv1-navywhite",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--capri-lightblue--sv1-navywhite.png",
+        "pixelSha256": "da55efb55d7917d60e6cb70fa920d53200500f133667817ba35b356f26cb2736"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--capri-lightblue--sneakers-white",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--capri-lightblue--sneakers-white.png",
+        "pixelSha256": "7f14faf750e0bff625e51b7fbf5138b4b0776c8101e9528ff3b4e920d987e3ce"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-olive--ab1-lightsand",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-olive--ab1-lightsand.png",
+        "pixelSha256": "685cf9cfc03d642d8b1b3cd3c84fdc27a8e3450d7c01ea1758bd6ed8b8027f7a"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-olive--ab1-original",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-olive--ab1-original.png",
+        "pixelSha256": "db0311e6798da042795f6340857807916226fac0ec5fb7815460b25a78018a68"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-olive--ankleboots-brown",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-olive--ankleboots-brown.png",
+        "pixelSha256": "dcce73f9dc95cd99c3ab3e66133f29b560b4f19d7c527efd60b8a4cb8ebf888c"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-olive--sv1-burgundygum",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-olive--sv1-burgundygum.png",
+        "pixelSha256": "00273eceb644c80e12a30d15520c47ab76a6b862c5371e21120d637fda24a0e5"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-olive--sv1-chalk",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-olive--sv1-chalk.png",
+        "pixelSha256": "d09c8ec4a9cc00454f7b0d3dc74d4e02d0d8e980a003269d2ceb66960cda2365"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-olive--sv1-navywhite",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-olive--sv1-navywhite.png",
+        "pixelSha256": "8a9aaeff103e0fee5bcdd6e99bb112bcba89886e5c93393d75d1f2b7bb40ad91"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-olive--sneakers-white",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-olive--sneakers-white.png",
+        "pixelSha256": "02d5dd0ee950848e665dc760e9e5446d0336bd976968f165f6d91a28ded52567"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-navy--ab1-lightsand",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-navy--ab1-lightsand.png",
+        "pixelSha256": "0acddd8bd6a9b63cbcf7340bfcbfd55888df3852f0fa6ee8e25f60912b1ec128"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-navy--ab1-original",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-navy--ab1-original.png",
+        "pixelSha256": "31d5b4a5a173ffcd6f81678b2a59c78c6f2cdd3f0e54c0e83ee5a0bd238c20a4"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-navy--ankleboots-brown",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-navy--ankleboots-brown.png",
+        "pixelSha256": "70951c5cc4813baf3a063da0b29010e76fe4db5047bda19b8545b0c011e5b6b9"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-navy--boots-laceup-black",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-navy--boots-laceup-black.png",
+        "pixelSha256": "b4fb165ba1d55f06363d081a8892ee5d994ab9eeae41b9d5516308fbddf5bb76"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-navy--sneakers-beige",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-navy--sneakers-beige.png",
+        "pixelSha256": "8b7ab726d52cbda2c115442f6777edf08e946927a744e715c79bcdcc89472312"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-navy--sv1-burgundygum",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-navy--sv1-burgundygum.png",
+        "pixelSha256": "6244eb1fd306cea87794ef0b9c48b2104e23157a6c46267fac15addf00d6f932"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-navy--sv1-chalk",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-navy--sv1-chalk.png",
+        "pixelSha256": "9c52f07781f895f61fd5aaf68a8b46727bce71e8ee98c9c5195dce1cbe355de2"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-navy--sv1-navywhite",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-navy--sv1-navywhite.png",
+        "pixelSha256": "4d7f53afbb2d0dda75c5b0cc858937ff1d0f0c21b57ce39b8770e7a9c812c15b"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-navy--sneakers-white",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-navy--sneakers-white.png",
+        "pixelSha256": "4c9760b3071cc1eaaf3063fb8d0aa9512b9a3c4f166cb259b6640a4324a2c84d"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-sand--ab1-lightsand",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-sand--ab1-lightsand.png",
+        "pixelSha256": "b977932cac315cb066ae608360632d5c81f96320fb67a1c2169e96735eb19752"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-sand--ab1-original",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-sand--ab1-original.png",
+        "pixelSha256": "181599a4f49536129859f06a2e5ecb8ad5df6ec79a6de510f1d5b4f618d87748"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-sand--ankleboots-brown",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-sand--ankleboots-brown.png",
+        "pixelSha256": "c6201f7688f31ddcf17690e593347a39c6726d8825855221a681c5facdc69db3"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-sand--boots-laceup-black",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-sand--boots-laceup-black.png",
+        "pixelSha256": "b30e91dc39a54991eacbe9bef17a19ee8bbc583f92b45ac6861ef2cf8075c7dc"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-sand--sneakers-beige",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-sand--sneakers-beige.png",
+        "pixelSha256": "83f848acc899a808163017216431670a00c05f62cae8a3625fe8ab27a49a2e48"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-sand--sv1-burgundygum",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-sand--sv1-burgundygum.png",
+        "pixelSha256": "d29820d16e7e147d8ca3470ea1f2d39d777ca23dd4cd04ca4ca1ecc04d4c111f"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-sand--sv1-chalk",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-sand--sv1-chalk.png",
+        "pixelSha256": "25cd1ceb91cadfaaad00445f1fcb0d86411ccd66782f5ac1cd4f0104d61784f5"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-sand--sv1-navywhite",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-sand--sv1-navywhite.png",
+        "pixelSha256": "f3d27c07947c6bc6e4a055c7c7a727226315bb54fa2ff0aee64777b5095c1e8c"
+      }
+    },
+    {
+      "id": "TK-NAVY-TEAPOT--trousers-square-sand--sneakers-white",
+      "design": "TK-NAVY-TEAPOT",
+      "top": "top-tank-navy-teapot",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-TEAPOT--trousers-square-sand--sneakers-white.png",
+        "pixelSha256": "cd4d06073f945fb28cd51567ebc87fa6ef52e3ce24681602013dead8077501a9"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--skirt-sand--ab1-lightsand",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--skirt-sand--ab1-lightsand.png",
+        "pixelSha256": "e3e11b470281221a138f5ad6dfbb2d0cfa35770b39af95de1a0ed0cb5f1a2009"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--skirt-sand--ab1-original",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--skirt-sand--ab1-original.png",
+        "pixelSha256": "546c52a663c06463d572b534ccd4573ff982c84b904a02a52c0229eff73a1432"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--skirt-sand--boots-laceup-black",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--skirt-sand--boots-laceup-black.png",
+        "pixelSha256": "c4bd0bffeb82cdeb4b8a34a18b82a9a6b50b5c5b56cf58c3bd54c88116a7b4dc"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--skirt-sand--sneakers-beige",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--skirt-sand--sneakers-beige.png",
+        "pixelSha256": "aa28f8af74e259a0b47a1605a40f2898a39ba8b2c015b02a7fad02afcc062d8a"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--skirt-sand--sv1-burgundygum",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--skirt-sand--sv1-burgundygum.png",
+        "pixelSha256": "bc7ebc4acb6135e400ef974cf129b522088676aae4de4ac7f3eb78572f224315"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--skirt-sand--sv1-chalk",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--skirt-sand--sv1-chalk.png",
+        "pixelSha256": "54807a8c95ae51abf79bda9045ca4db65fd888c81cc80d92a63c63b4d1b9afe3"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--skirt-sand--sv1-charcoal",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--skirt-sand--sv1-charcoal.png",
+        "pixelSha256": "720cf0348bc19dba18934c9648dcc42c34d7b358122f8ae7e0d49925b9ea5240"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--skirt-sand--sv1-navywhite",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--skirt-sand--sv1-navywhite.png",
+        "pixelSha256": "47ed16b85de126548365844c5357ea0d01d176d012292e19899fe490e80cf1c0"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--skirt-sand--sneakers-white",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--skirt-sand--sneakers-white.png",
+        "pixelSha256": "c9153672a01fa514d0dddabe31549a349c75a83bb719260827e538537a15a1ef"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--capri-lightblue--ab1-lightsand",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--capri-lightblue--ab1-lightsand.png",
+        "pixelSha256": "67b6445a29681f2d746318634697999e40c8ea4510af97af6e70f972c710b76c"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--capri-lightblue--ab1-original",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--capri-lightblue--ab1-original.png",
+        "pixelSha256": "cd89a52795f9971cd283597665a2162ef6e236644dbb2a81e6b6bd3b98cc6a80"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--capri-lightblue--ankleboots-brown",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--capri-lightblue--ankleboots-brown.png",
+        "pixelSha256": "e60c6e660f8e50bf2e75b2bab0eeba686132e44089c8fbe909463407b18bf9bd"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--capri-lightblue--boots-laceup-black",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--capri-lightblue--boots-laceup-black.png",
+        "pixelSha256": "433d06f3a24cd85926f0ece04ece9f017d42c5c26a43b84909ce2f72bf6ba24e"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--capri-lightblue--sneakers-beige",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--capri-lightblue--sneakers-beige.png",
+        "pixelSha256": "3b47964e696b149cea5d765fdb648ce3281bab437006fb87569a1c656e501c58"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--capri-lightblue--sv1-burgundygum",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--capri-lightblue--sv1-burgundygum.png",
+        "pixelSha256": "069dfe575f7c856ce021f46165d22c0b30661c04572c421c9edb3d44ebf79029"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--capri-lightblue--sv1-chalk",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--capri-lightblue--sv1-chalk.png",
+        "pixelSha256": "9cc9c291bf1afbb54b4614c949e9569bb9e1ef0999ca55451bcd7e163160b56b"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--capri-lightblue--sv1-charcoal",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-charcoal",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--capri-lightblue--sv1-charcoal.png",
+        "pixelSha256": "80d058550d3bab2457bfcb198733f351e5b697328f3433b09b23599a6069bc6e"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--capri-lightblue--sv1-navywhite",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--capri-lightblue--sv1-navywhite.png",
+        "pixelSha256": "5caae7ab68e54db50f1ca60919b2a9b96d477a67e424dcdd062f02f3c392372a"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--capri-lightblue--sneakers-white",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--capri-lightblue--sneakers-white.png",
+        "pixelSha256": "3138dd67818f876a8c50e6bd9eb51520953531c5e2ca8f2dce0f1cf568df929c"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-olive--ab1-lightsand",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-olive--ab1-lightsand.png",
+        "pixelSha256": "a58bcd46cd28f5529b155b69b526079e761886a6fbccb3ac4ff992980c49dd2a"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-olive--ab1-original",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-olive--ab1-original.png",
+        "pixelSha256": "589479274a72ff1a5e192a64560f8a49e1c1779e78583fb5b97e6bb4466c1ff9"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-olive--ankleboots-brown",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-olive--ankleboots-brown.png",
+        "pixelSha256": "c6d8cf62685e2d95684af7a45931065759bfe1998e0d3a8da54ded2ab9205b86"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-olive--sv1-burgundygum",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-olive--sv1-burgundygum.png",
+        "pixelSha256": "69a0b43b20702cad52b437253d3f97a0d081d4a2866efa80d4ba8d8dbbc91575"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-olive--sv1-chalk",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-olive--sv1-chalk.png",
+        "pixelSha256": "5abffbfafaeeeb1bd06355f23942f7a39d15dfb48a61fcb4976492946818c2b5"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-olive--sv1-navywhite",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-olive--sv1-navywhite.png",
+        "pixelSha256": "ac94ba7008d5fd7ae6c88a439c582bfcbcb71b07661d05f3b367bf584388ab31"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-olive--sneakers-white",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-242 K outfits",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-olive--sneakers-white.png",
+        "pixelSha256": "3658de0a720b809bce210a3d53ab9da61d3254fbadfffe5cba57b0f7e3aba81f"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-navy--ab1-lightsand",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-navy--ab1-lightsand.png",
+        "pixelSha256": "4b7ca9d2061bf61fff5a32e8c1b47fa886a538ac6899cefdad546d6706aeccf7"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-navy--ab1-original",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-navy--ab1-original.png",
+        "pixelSha256": "5b26e053c8576d070732a0e0e521677f29cda9a009da66141bd03b8a71900a7f"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-navy--ankleboots-brown",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-navy--ankleboots-brown.png",
+        "pixelSha256": "735b09a8ecd8b0a5d38050f2efa474eaf05055d1b744af7ec19e4a925bfd513e"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-navy--boots-laceup-black",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-navy--boots-laceup-black.png",
+        "pixelSha256": "fae517bd5d0665deec272219852d64bc9c419597e201f4a62326a158fcdfa767"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-navy--sneakers-beige",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-navy--sneakers-beige.png",
+        "pixelSha256": "26c3b8e9bab65b88631267c38d81a42b4d2a54242cb23768fcfb35ab9c97bf0a"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-navy--sv1-burgundygum",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-navy--sv1-burgundygum.png",
+        "pixelSha256": "06d51e273fa8ecae84ccc094fbe4e1c84f1014297445ee684560bc9a6457fc8c"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-navy--sv1-chalk",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-navy--sv1-chalk.png",
+        "pixelSha256": "9ddd01cb354916cf5d8e8e88604e97552ad4bfdf8ce70ad0d78653740d42bbd4"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-navy--sv1-navywhite",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-navy--sv1-navywhite.png",
+        "pixelSha256": "194a5b5c27f2b8c8913fafb8f4a0f51e18a80ab6e0047a282a42bbdd4996ee9a"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-navy--sneakers-white",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-navy",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-navy--sneakers-white.png",
+        "pixelSha256": "45a29287964bf9d5d6e8281371a7a46fdb3c20657b2b445bea596ada3205103d"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-sand--ab1-lightsand",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-lightsand",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-sand--ab1-lightsand.png",
+        "pixelSha256": "db257e433c96579c7d8de06a7a4655e2624bcbc3165b06a81c9b486b03d2328b"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-sand--ab1-original",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-ab1-original",
+      "priorTeeApproval": "D-326/D-331 (AB-1 boots)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-sand--ab1-original.png",
+        "pixelSha256": "c8bb2d304d3b62d710e1a3eb4c82424c1187d2942d96c4eb8cab7815ac8a91bc"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-sand--ankleboots-brown",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-ankleboots-brown",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-sand--ankleboots-brown.png",
+        "pixelSha256": "a379f992fb2cb51ff55712039a654a67fee22c88da4fc26986cb8c7ac73816af"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-sand--boots-laceup-black",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-sand--boots-laceup-black.png",
+        "pixelSha256": "85cb7d9764461d2f79bf63ab5bdbd2d04b25340bb76ba60de33e7ba87b1317e5"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-sand--sneakers-beige",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-beige",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-sand--sneakers-beige.png",
+        "pixelSha256": "565edd7e8c6d85f3b567264cebba7cdb943e688beb76bf15a42a8bab07b14070"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-sand--sv1-burgundygum",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-burgundygum",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-sand--sv1-burgundygum.png",
+        "pixelSha256": "22804078df0e7352fe2dc1f7d3ef87393209a028145223711ceea2f55b54c318"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-sand--sv1-chalk",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-chalk",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-sand--sv1-chalk.png",
+        "pixelSha256": "3d4cecba12bf3fb5192363e600d24146225e40308649d86f6eb40f50fefba47d"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-sand--sv1-navywhite",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-low-sv1-navywhite",
+      "priorTeeApproval": "D-305/D-314 (SV1 shoes)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-sand--sv1-navywhite.png",
+        "pixelSha256": "9713fc08a3e14730849a4562fc92a7024b9edc6b586e0f16bc7eed1cb1a3ebbf"
+      }
+    },
+    {
+      "id": "TK-NAVY-FOX--trousers-square-sand--sneakers-white",
+      "design": "TK-NAVY-FOX",
+      "top": "top-tank-navy-fox",
+      "bottom": "bottom-trousers-square-sand",
+      "shoes": "shoes-sneakers-white",
+      "priorTeeApproval": "D-281/D-283 (trousers)",
+      "rendering": {
+        "file": "<Documents>/DenSejeApp-artefacts/d345-tank-family/family/full/TK-NAVY-FOX--trousers-square-sand--sneakers-white.png",
+        "pixelSha256": "1498141754afe03d003daccdecc7955a9f9b6dc5ac7913ac685f7a92fd6b54b6"
+      }
+    }
+  ]
+}

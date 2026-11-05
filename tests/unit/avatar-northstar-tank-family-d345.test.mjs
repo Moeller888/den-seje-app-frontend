@@ -1,8 +1,8 @@
 // D-345 — the tank top family (no private file needed): the pairs come from the TEE approvals only (264 = 44 pairs x 6 designs; the olive
 // trousers with the beige sneakers excluded — no tee approval; the navy shorts never; charcoal SV1 only with skirt and capri); the runtime
 // item a tank design would have draws its hem junction before the bottom and no sleeves (the browser's northstarPlanFor with a table);
-// tank-v3 is tank-v2 with a fade only, and the fade goes from opaque down to C's alpha; D-343's tank-v2 is unchanged. The runtime is NOT
-// changed: no tank item is in NORTHSTAR_ITEMS. Passing approves nothing.
+// tank-v3 is tank-v2 with a fade only, and the fade goes from opaque down to C's alpha; D-343's tank-v2 is unchanged. D-345 did not change
+// the runtime; D-348 (owner approval) added exactly the six tank items, checked here against the family's IDs.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -24,7 +24,8 @@ test("D-345 the family: 44 tee-approved pairs x 6 designs = 264; olive with beig
   assert.deepEqual(p.excluded.map((e) => e.bottom + "+" + e.shoes), ["bottom-trousers-square-olive+shoes-sneakers-beige", "bottom-shorts-navy+*"]);
   assert.deepEqual([...new Set(C.filter((c) => c.shoes === "shoes-sneakers-low-sv1-charcoal").map((c) => c.bottom))].sort(), ["bottom-capri-lightblue", "bottom-skirt-sand"]);
   assert.equal(C.filter((c) => c.reviewedInD343).length, 24);
-  assert.ok(!Object.keys(AL.NORTHSTAR_ITEMS).some((k) => k.startsWith(TF.CUT_ITEM)), "no tank item in the runtime");
+  // D-348 integrated the six after the owner's approval: the runtime's tank items are exactly the staged item table, nothing else
+  assert.deepEqual(Object.keys(AL.NORTHSTAR_ITEMS).filter((k) => k.startsWith(TF.CUT_ITEM)), Object.keys(TF.DESIGNS).map(TF.itemOf), "the runtime's tank items are the six");
   assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
 });
 
