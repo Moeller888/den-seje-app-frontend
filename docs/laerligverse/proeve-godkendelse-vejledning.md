@@ -32,8 +32,14 @@ Prøverne står i sidens afsnit B–D: prætest A, posttest B, transfertest T og
    historisk korrekthed, sproglig formulering, sværhedsgrad og forventet elevforståelse.
 4. Ved **Skal rettes** skal du skrive i »Konkrete rettelser«. Ellers kan du ikke gemme.
 
-**Vær især opmærksom på** den kendte svaghed i del 2: ja-påstanden nævner altid afsenderen. Under »Kendte
-svagheder« står der et forslag til en ekstra påstand. Skriv i »Konkrete rettelser«, om du vil have den.
+**Prøverne er ændret (v1.2) for at fjerne svargenveje.** Læs først afsnittet »Kontrol af svargenveje« øverst på
+siden: det viser de mønstre, der blev fundet, hvad der er gjort, og hvordan simple regler uden kildekritik klarer
+sig før og nu. Under »Til læreren« ved hver prøve står ændringerne ord for ord (før og nu). Vær især opmærksom på:
+
+- de nye påstande i del 2 (fire i stedet for tre) og om facit er fagligt rigtigt;
+- de nye kilder i del 3 (B: en erindring; C: en køreplan og en erindring);
+- at side 1 skal samles ind, før eleven får side 2;
+- T, spørgsmål 1: et »nej« uden begrundelse giver stadig 1 point. Det kræver en rubrikændring (dit valg).
 
 Du kan prøve oplæsning af elevteksten med afkrydsningsfeltet »Prøv oplæsning« øverst. Det bruger kun en lokal
 dansk stemme på din computer, hvis der er en.

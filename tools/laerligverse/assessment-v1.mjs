@@ -8,17 +8,21 @@
 // contain no answer key. Nothing here is published: docs/ and tools/ are never in the Cloudflare bundle.
 //
 // THE FORMS. A (pretest), B (posttest) and C (delayed) are PARALLEL: the same three parts, the same task types,
-// the same kind of source (an official or expert text that asks for something), the same three claim types in
-// part 2 (the author's own view → ja; a TRUE claim the source cannot support → nej; an outcome → nej), and in part 3 two claims about the same
-// four sources, one answered by the personal source and one by the official one, so "always choose the diary"
-// scores only half (the F5 drafts were all answered by the personal source). T (transfer) changes period,
-// domain and source types (advertisement, statistics) and drops the step-by-step questions.
+// the same kind of source (an official or expert text that asks for something), the same four claim types in
+// part 2 (see FORMS), and in part 3 two claims about the same four sources, one answered by the personal source
+// and one by the official one, so "always choose the diary" scores only half (the F5 drafts were all answered by
+// the personal source). T (transfer) changes period, domain and source types (advertisement, statistics) and drops
+// the step-by-step questions.
+//
+// F9 v1.2: the answer shortcuts found in v1.1 (the "ja" claim always named the sender, opinion words and length
+// gave it away, part 3 could be solved by matching words) are removed; see shortcut-audit.mjs and D-346 §9. Part 1
+// is handed in before the pupil gets part 2 and 3 (HANDOVER), because part 2 names the receiver and the purpose.
 //
 // MATERIAL STATUS (every source): "didaktisk konstrueret" — an invented text of a real source TYPE, set against
 // a real historical frame that the teacher must check (`frameToCheck`). None of them is a historical original,
 // an abridgement or a paraphrase of one.
 
-export const VERSION = "kildekritik-maaling-v1.1";
+export const VERSION = "kildekritik-maaling-v1.2";
 export const APPROVAL = Object.freeze({
   status: "afventer_laerergodkendelse",
   text: "Forslag. Ikke godkendt af en lærer. Godkendelsen af Arkivskabets 12 elementer (4. november 2026) omfatter IKKE dette materiale.",
@@ -30,7 +34,7 @@ export const CRITERIA = Object.freeze({
   R2: { name: "Tidspunkt", max: 1, part: "identifikation", levels: ["ikke angivet eller forkert", "rigtigt tidspunkt (år eller dato)"] },
   R3: { name: "Modtager", max: 2, part: "identifikation", levels: ["ikke angivet, forkert, eller formålet skrevet i stedet", "vag modtager (»nogen«, »folk«) eller rigtig uden at kunne ses i teksten", "rigtig modtager, som kan udledes af teksten"] },
   R4: { name: "Formål", max: 2, part: "identifikation", levels: ["ikke angivet, forkert, eller modtageren skrevet i stedet", "kildens EMNE i stedet for formålet (»den handler om kolera«)", "afsenderens hensigt (»at få penge til …«, »at få folk til at …«)"] },
-  V: { name: "Valg", max: 5, part: "valg", levels: ["0–5 rigtige af tre ja/nej-vurderinger og to kildevalg (rettes med facit)"] },
+  V: { name: "Valg", max: 6, part: "valg", levels: ["0–6 rigtige af fire ja/nej-vurderinger og to kildevalg (rettes med facit)"] },
   B1: { name: "Begrundelse, del 2", max: 2, part: "begrundelse", levels: ["ingen eller uden sammenhæng med kilden", "henviser til kilden generelt (»det står der«)", "bruger afsender, modtager, formål eller tid til at forklare, hvad kilden kan og ikke kan vise"] },
   B2: { name: "Begrundelse, del 3", max: 2, part: "begrundelse", levels: ["ingen eller uden sammenhæng med kilden", "henviser til kilden generelt", "forklarer valget med en konkret oplysning om den valgte kilde (afsender, tid, modtager eller formål)"] },
 });
@@ -47,14 +51,24 @@ export const PART2_INSTRUCTION = "Kan kilden bruges som belæg for påstanden? S
 export const PART2_REASON = "Vælg én af påstandene ovenfor. Forklar dit svar ud fra, hvem der har lavet kilden, til hvem og hvorfor (1–3 sætninger).";
 export const PART3_INSTRUCTION = "Her er fire kilder. Vælg den kilde, der er bedst til at undersøge hver påstand.";
 export const PART3_REASON = "Forklar dit valg ved påstand {id} med en oplysning om kilden (1–2 sætninger).";
+/** F9: part 1 (in T: questions 1–2) is handed in before the next page, which names the receiver and the purpose. */
+export const HANDOVER = "Aflever denne side til din lærer. Så får du næste side.";
 
 const form = (f) => Object.freeze(f);
 
+// Part 2 in every form (v1.2, F9): four claims, two "ja" and two "nej". The sender is named in one "ja" AND one
+// "nej" claim (a "nej" claim that says something TRUE about the sender, but claims more than the source can show),
+// so "ja when the sender is named" scores at chance. Claim types, the same in A, B and C:
+//   J1 the sender's own view or act → ja        J2 a fact the source can support, without the sender → ja
+//   N1 what happened afterwards → nej            N2 more than the sender could know or wrote about → nej
+// Part 3: two personal sources (one from the time, one written much later) and two official sources from the
+// time with different purposes, so the right choice needs the time AND the purpose, not the source type or words
+// shared with the claim. tools/laerligverse/shortcut-audit.mjs checks this against rule-based shortcuts.
 export const FORMS = Object.freeze({
   A: form({
-    id: "A", role: "prætest", minutes: 12,
+    id: "A", role: "prætest", minutes: 13,
     title: "Kolera i København 1853",
-    frameToCheck: "Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 forudsætter, at tusindvis døde (kontrollér tallet).",
+    frameToCheck: "Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 forudsætter, at tusindvis døde (kontrollér tallet). Påstand 4 forudsætter, at fattige familier boede i fugtige kælderboliger.",
     source: {
       kind: "Brev", status: "didaktisk konstrueret",
       header: "Brev skrevet i København, juli 1853. Underskrevet: J. Holm, læge.",
@@ -67,29 +81,30 @@ export const FORMS = Object.freeze({
     },
     part2: {
       claims: [
-        { text: "Lægen mente, at de dårlige boliger var med til at gøre folk syge.", answer: "ja", why: "Afsenderens egen opfattelse: lægen skriver det selv." },
-        { text: "Koleraen kostede tusindvis af københavnere livet i 1853.", answer: "nej", why: "Påstanden er sand, men brevet kan ikke belægge den: det nævner hundrede syge, lægen har besøgt, ikke dødstallet for byen." },
-        { text: "Magistraten gav lægen de penge, han bad om.", answer: "nej", why: "Brevet er en anmodning. Det viser ikke, hvad der skete bagefter." },
+        { type: "J1", text: "Lægen mente, at de dårlige boliger var med til at gøre folk syge.", answer: "ja", why: "Afsenderens egen opfattelse: lægen skriver det selv. Det gælder, også selv om han vil have penge." },
+        { type: "N2", text: "Koleraen kostede tusindvis af københavnere livet i 1853.", answer: "nej", why: "Påstanden er sand, men brevet kan ikke belægge den: det nævner hundrede syge, lægen har besøgt, ikke dødstallet for byen." },
+        { type: "N1", text: "Lægen fik de penge til lazarettet, som han bad Magistraten om.", answer: "nej", why: "Det passer, at lægen bad om penge. Men brevet er skrevet, før Magistraten svarede, så det viser ikke, hvad der skete bagefter." },
+        { type: "J2", text: "I 1853 boede nogle af de syge i København i fugtige kældre.", answer: "ja", why: "Lægen har selv besøgt de syge samme år. Han vil have penge og kan overdrive, men påstanden er forsigtig (»nogle«), så brevet kan bruges som belæg." },
       ],
     },
     part3: {
       reasonFor: "a",
       sources: [
+        { label: "Erindringsbog", meta: "en tidligere elev · 2005 · bogens læsere · at fortælle om sin barndom" },
+        { label: "Årsberetning", meta: "skolens lærer · 1955 · kommunen · at gøre rede for skolens arbejde" },
         { label: "Dagbog", meta: "en elev · 1955 · hende selv · at skrive sine oplevelser ned" },
         { label: "Skolereglement", meta: "skolekommissionen · 1955 · lærere og forældre · at fastsætte skolens regler" },
-        { label: "Årsberetning", meta: "skolens lærer · 1955 · kommunen · at gøre rede for skolens arbejde" },
-        { label: "Erindringsbog", meta: "en tidligere elev · 2005 · bogens læsere · at fortælle om sin barndom" },
       ],
       claims: [
-        { sourceKind: "personlig", id: "a", text: "Eleverne på en landsbyskole syntes i 1955, at skolen var streng.", answer: "Dagbog", why: "Skrevet af en elev samme år, til hende selv: tæt på oplevelsen." },
-        { sourceKind: "officiel", id: "b", text: "Skolen havde i 1955 en regel om, at eleverne skulle rejse sig, når læreren kom ind.", answer: "Skolereglement", why: "Skrevet af dem, der fastsatte reglerne, samme år, for at fastsætte dem." },
+        { sourceKind: "personlig", id: "a", text: "Børnene på en landsbyskole syntes i 1955, at læreren var meget streng.", answer: "Dagbog", why: "Skrevet af en elev samme år, til hende selv: tæt på oplevelsen. Erindringsbogen er skrevet 50 år senere, og årsberetningen er lærerens egen." },
+        { sourceKind: "officiel", id: "b", text: "Eleverne skulle i 1955 rejse sig, når læreren kom ind i klassen.", answer: "Skolereglement", why: "Skrevet af dem, der fastsatte reglerne, samme år, for at fastsætte dem. Årsberetningen gør rede for skolens arbejde, ikke for reglerne." },
       ],
     },
   }),
   B: form({
-    id: "B", role: "posttest", minutes: 12,
+    id: "B", role: "posttest", minutes: 13,
     title: "Den spanske syge 1918",
-    frameToCheck: "Influenzaepidemien (»den spanske syge«) ramte Danmark i efteråret 1918. Flere byer lukkede skoler og frarådede forsamlinger. Kontrollér, at et opslag fra en sundhedskommission i Aarhus er en rimelig konstrueret kildetype, og at tusindvis af danskere døde af epidemien (del 2, påstand 2).",
+    frameToCheck: "Influenzaepidemien (»den spanske syge«) ramte Danmark i efteråret 1918. Flere byer lukkede skoler og frarådede forsamlinger. Kontrollér, at et opslag fra en sundhedskommission i Aarhus er en rimelig konstrueret kildetype, og at en kommunal sundhedskommission kunne beslutte og meddele en skolelukning (del 2, påstand 4).",
     source: {
       kind: "Opslag", status: "didaktisk konstrueret",
       header: "Opslag hængt op i Aarhus, oktober 1918. Underskrevet: Sundhedskommissionen.",
@@ -102,29 +117,30 @@ export const FORMS = Object.freeze({
     },
     part2: {
       claims: [
-        { text: "Tusindvis af danskere døde af den spanske syge.", answer: "nej", why: "Påstanden er sand, men opslaget kan ikke belægge den: det nævner ingen syge eller døde." },
-        { text: "Sundhedskommissionen ønskede, at folk holdt sig fra forsamlinger.", answer: "ja", why: "Afsenderens egen hensigt: kommissionen skriver det selv." },
-        { text: "Borgerne i Aarhus fulgte rådene.", answer: "nej", why: "Opslaget er en opfordring. Det viser ikke, hvad folk gjorde." },
+        { type: "N1", text: "Borgerne i Aarhus fulgte rådene og holdt sig hjemme.", answer: "nej", why: "Opslaget er en opfordring. Det viser ikke, hvad folk gjorde bagefter." },
+        { type: "J1", text: "Sundhedskommissionen ønskede, at borgerne holdt sig fra forsamlinger.", answer: "ja", why: "Afsenderens egen hensigt: kommissionen skriver det selv." },
+        { type: "N2", text: "Sundhedskommissionen vidste, at lukkede skoler ville stoppe smitten.", answer: "nej", why: "Det passer, at kommissionen lukkede skolerne. Men opslaget er skrevet, mens influenzaen bredte sig. Det viser, hvad kommissionen rådede til, ikke at den vidste, at det ville virke." },
+        { type: "J2", text: "I oktober 1918 blev det bestemt at lukke skolerne i Aarhus.", answer: "ja", why: "Opslaget er selv meddelelsen fra dem, der bestemte det, samme måned. Det viser beslutningen, men ikke om alle overholdt den." },
       ],
     },
     part3: {
       reasonFor: "b",
       sources: [
         { label: "Brev", meta: "en arbejder · 1910 · hans bror · at fortælle om sit liv" },
-        { label: "Arbejdsreglement", meta: "fabriksejeren · 1910 · arbejderne · at fastsætte arbejdstiden" },
-        { label: "Jubilæumstale", meta: "fabriksejeren · 1935 · gæster ved fabrikkens jubilæum · at fejre fabrikken" },
         { label: "Avisannonce", meta: "fabrikken · 1910 · avislæsere · at skaffe flere arbejdere" },
+        { label: "Erindring", meta: "en tidligere arbejder · 1965 · et lokalhistorisk arkiv · at fortælle om sit arbejdsliv" },
+        { label: "Arbejdsreglement", meta: "fabriksejeren · 1910 · arbejderne · at fastsætte arbejdstiden" },
       ],
       claims: [
-        { sourceKind: "officiel", id: "a", text: "Fabrikken havde i 1910 en regel om, hvornår arbejdsdagen begyndte.", answer: "Arbejdsreglement", why: "Skrevet af fabriksejeren samme år for at fastsætte arbejdstiden." },
-        { sourceKind: "personlig", id: "b", text: "Arbejderne på en fabrik syntes i 1910, at arbejdsdagen var for lang.", answer: "Brev", why: "Skrevet af en arbejder samme år, til hans bror: tæt på oplevelsen." },
+        { sourceKind: "officiel", id: "a", text: "Arbejderne skulle i 1910 møde på fabrikken klokken seks om morgenen.", answer: "Arbejdsreglement", why: "Skrevet af fabriksejeren samme år for at fastsætte arbejdstiden. Annoncen skulle skaffe arbejdere, ikke fastsætte, hvornår de skulle møde." },
+        { sourceKind: "personlig", id: "b", text: "Arbejderne på en fabrik syntes i 1910, at arbejdsdagen var for lang.", answer: "Brev", why: "Skrevet af en arbejder samme år, til hans bror: tæt på oplevelsen. Erindringen er skrevet over 50 år senere." },
       ],
     },
   }),
   C: form({
-    id: "C", role: "forsinket test", minutes: 12,
+    id: "C", role: "forsinket test", minutes: 13,
     title: "Stormfloden 1872",
-    frameToCheck: "Stormfloden i Østersøen natten til den 13. november 1872, som især ramte Lolland og Falster. Kontrollér, at en indberetning fra amtmanden i Nykøbing Falster er en rimelig konstrueret kildetype, og at stormfloden kostede menneskeliv i Danmark (del 2, påstand 2).",
+    frameToCheck: "Stormfloden i Østersøen natten til den 13. november 1872, som især ramte Lolland og Falster. Kontrollér, at en indberetning fra amtmanden i Nykøbing Falster til staten er en rimelig konstrueret kildetype, og at mange familier ved kysten mistede deres huse (del 2, påstand 2).",
     source: {
       kind: "Indberetning", status: "didaktisk konstrueret",
       header: "Indberetning skrevet i Nykøbing Falster, 15. november 1872. Underskrevet: amtmanden.",
@@ -137,22 +153,23 @@ export const FORMS = Object.freeze({
     },
     part2: {
       claims: [
-        { text: "Stormfloden kostede mennesker livet.", answer: "nej", why: "Påstanden er sand, men indberetningen kan ikke belægge den: den nævner huse og dyr, ikke døde." },
-        { text: "Staten sendte hjælp til de ramte.", answer: "nej", why: "Indberetningen er en anmodning. Den viser ikke, hvad staten gjorde." },
-        { text: "Amtmanden mente, at de ramte familier havde brug for hjælp fra staten.", answer: "ja", why: "Afsenderens egen opfattelse: amtmanden skriver det selv." },
+        { type: "J1", text: "Amtmanden bad staten om penge og korn til de ramte.", answer: "ja", why: "Indberetningen er selv anmodningen, skrevet af amtmanden. Den viser, at han bad om hjælp." },
+        { type: "J2", text: "Mange familier ved kysten mistede deres huse ved stormfloden i november 1872.", answer: "ja", why: "Amtmanden er statens embedsmand i området og skriver to dage efter. Han vil have hjælp og kan overdrive, men at mange mistede deres huse, kan indberetningen bruges som belæg for." },
+        { type: "N2", text: "Amtmanden mente, at stormfloden havde ramt hele Danmark lige hårdt.", answer: "nej", why: "Det passer, at amtmanden skrev om stormfloden. Men han skriver kun om kysten i sit eget område og siger intet om resten af landet." },
+        { type: "N1", text: "Staten sendte hjælp til de ramte, før vinteren kom.", answer: "nej", why: "Indberetningen er en anmodning. Den viser ikke, hvad staten gjorde bagefter." },
       ],
     },
     part3: {
       reasonFor: "a",
       sources: [
-        { label: "Brev", meta: "en passager · 1847 · en ven · at fortælle om sin første togtur" },
+        { label: "Køreplan", meta: "jernbaneselskabet · 1847 · de rejsende · at oplyse, hvornår togene kørte" },
+        { label: "Erindring", meta: "en tidligere passager · 1897 · avisens læsere · at mindes jernbanens første år" },
         { label: "Annonce", meta: "jernbaneselskabet · 1847 · avislæsere · at sælge billetter" },
-        { label: "Lærebog", meta: "en historiker · 2000 · skoleelever · at forklare industrialiseringen" },
-        { label: "Maleri", meta: "en kunstner · 1900 · udstillingens publikum · at vise et tog i fart" },
+        { label: "Brev", meta: "en passager · 1847 · en ven · at fortælle om sin første togtur" },
       ],
       claims: [
-        { sourceKind: "personlig", id: "a", text: "Passagerer på den første jernbane mellem København og Roskilde syntes i 1847, at turen gik hurtigt.", answer: "Brev", why: "Skrevet af en passager samme år: tæt på oplevelsen." },
-        { sourceKind: "officiel", id: "b", text: "Jernbaneselskabet ville i 1847 have flere til at købe billetter.", answer: "Annonce", why: "Lavet af selskabet selv samme år for at sælge billetter." },
+        { sourceKind: "personlig", id: "a", text: "De rejsende syntes i 1847, at toget mellem København og Roskilde kørte hurtigt.", answer: "Brev", why: "Skrevet af en passager samme år, til en ven: tæt på oplevelsen. Erindringen er skrevet 50 år senere, og køreplanen siger, hvornår togene kørte, ikke hvad de rejsende syntes." },
+        { sourceKind: "officiel", id: "b", text: "Jernbaneselskabet ville i 1847 have flere til at rejse med toget.", answer: "Annonce", why: "Lavet af selskabet selv samme år for at sælge billetter, altså for at få flere til at rejse. Køreplanen oplyser dem, der allerede rejser." },
       ],
     },
   }),
@@ -175,14 +192,14 @@ export const TRANSFER = Object.freeze({
   ],
   choice: {
     sources: [
-      { label: "Reklame", meta: "firmaet Nordvask · 1962 · ugebladets læsere · at sælge vaskemaskiner" },
-      { label: "Erindring", meta: "en kvinde · 2010 · bogens læsere · at fortælle om sit liv" },
       { label: "Brev", meta: "en husmor · 1962 · hendes søster · at fortælle om sin nye vaskemaskine" },
+      { label: "Reklame", meta: "firmaet Nordvask · 1962 · ugebladets kvindelige læsere · at sælge vaskemaskiner til hjemmet" },
       { label: "Statistik", meta: "et statistikkontor · 1965 · politikere og forskere · at opgøre, hvad husstandene ejede" },
+      { label: "Erindring", meta: "en kvinde · 2010 · bogens læsere · at fortælle om sit liv" },
     ],
     claims: [
-      { id: "a", text: "Hvordan en husmor i 1962 oplevede at få sin første vaskemaskine.", answer: "Brev" },
-      { id: "b", text: "Hvor mange husstande der havde en vaskemaskine i midten af 1960'erne.", answer: "Statistik" },
+      { id: "a", text: "Hvad det betød for en kvinde i 1962 at få en vaskemaskine i hjemmet.", answer: "Brev", why: "Skrevet af en husmor samme år om sin egen nye maskine. Reklamen siger det samme, men den er skrevet for at sælge, og erindringen er skrevet næsten 50 år senere." },
+      { id: "b", text: "Hvor almindelige vaskemaskiner var i danske hjem i midten af 1960'erne.", answer: "Statistik", why: "Lavet for at opgøre, hvad husstandene ejede. Reklamen og brevet viser kun, at der fandtes maskiner, ikke hvor mange der havde én." },
     ],
   },
 });
@@ -227,13 +244,14 @@ export function subscores(formId, answers, rated) {
 /** Patterns a teacher should look at — descriptive flags, not judgements and not a mastery decision. */
 export function flags(s, rated) {
   const out = [];
-  if (s.valg >= 4 && s.begrundelse <= 1) out.push("mange rigtige valg uden begrundelse: kan være gæt eller tavs viden — spørg eleven");
+  // v1.2: Valg is 0–6 (was 0–5); the thresholds that depend on it are scaled (4 of 5 → 5 of 6).
+  if (s.valg >= 5 && s.begrundelse <= 1) out.push("mange rigtige valg uden begrundelse: kan være gæt eller tavs viden — spørg eleven");
   // F8 rubric trial: ≤ 2 missed S4 (valg 3, begrundelse 4) — a pupil who reasons well but answers wrong.
   if (s.valg <= 3 && s.begrundelse >= 3) out.push("begrunder fagligt, men vælger forkert: se på, om opgaveteksten blev forstået");
   if (!s.part3BothRight && s.valg >= 3) out.push("kun én af del 3's påstande rigtig: kan være en fast vane (fx altid den personlige kilde)");
   if (rated.R3 === 0 && rated.R4 >= 1) out.push("modtager mangler eller er forvekslet med formålet");
   // F8 rubric trial: S7 (receiver and purpose swapped) scored 0 + 0 with no flag; the levels lose the swap.
-  if (rated.R3 === 0 && rated.R4 === 0 && s.valg >= 4) out.push("ingen modtager og intet formål trods rigtige valg: er felterne byttet om, er afsender og modtager forvekslet, eller er der en læsebarriere? Se elevens svar");
+  if (rated.R3 === 0 && rated.R4 === 0 && s.valg >= 5) out.push("ingen modtager og intet formål trods rigtige valg: er felterne byttet om, er afsender og modtager forvekslet, eller er der en læsebarriere? Se elevens svar");
   if (rated.R4 === 1) out.push("formål besvaret med kildens emne, ikke afsenderens hensigt");
   return out;
 }

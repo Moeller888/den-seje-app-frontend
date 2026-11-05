@@ -9,7 +9,7 @@
 | Del | Status |
 |---|---|
 | Arkivskabets 12 læringselementer | **Godkendt** af Christopher Møller 04-11-2026 (`docs/laerligverse/kildekritik-godkendelse-register.json`, SHA-256 `8cd7d969…`) |
-| Prøverne i denne pakke (kildekritik-maaling-v1.1) | **Afventer særskilt faglig godkendelse** |
+| Prøverne i denne pakke (kildekritik-maaling-v1.2) | **Afventer særskilt faglig godkendelse** |
 | LP-13-regler (sekvenspolitikken) | **Afventer beslutning** (`docs/laerligverse/lp13-beslutningskatalog.md`) |
 | Elevpilot | **Ikke autoriseret** |
 | Produktionsintegration | **Ikke autoriseret** |
@@ -28,12 +28,12 @@ Foreslået klassetrin: 6.–8. (forslag, ikke afprøvet).
 
 | Del | Minutter |
 |---|---|
-| Prætest (A) | 12 |
+| Prætest (A) | 13 |
 | Introduktion og Arkivskabet | 20–25 |
-| Posttest (B), straks efter | 12 |
+| Posttest (B), straks efter | 13 |
 | Transfertest (T), samme dag | 10 |
 | Elevfeedback | 3 |
-| Forsinket test (C), efter reel tid (forslag: 7 dage, LP13-6) | 12 |
+| Forsinket test (C), efter reel tid (forslag: 7 dage, LP13-6) | 13 |
 | **I alt** | dag 1: ca. 60 min (en dobbeltlektion; én lektion på 45 min er for lidt); dag 2: 12 min |
 
 Kan dag 1 ikke rumme en dobbeltlektion, så tag prætesten i en tidligere lektion (højst 1–2 dage før), og notér det.
@@ -41,7 +41,7 @@ Kan dag 1 ikke rumme en dobbeltlektion, så tag prætesten i en tidligere lektio
 ## 4. Lærervejledning
 
 1. **Før:** Giv hver elev en kode (fx A07). Skriv koblingen kode → elev på et ark, der bliver hos dig. Lærlig får aldrig navne.
-2. **Prætest:** Del opgave A ud. Sig: »Det er ikke en prøve med karakter. Vi vil se, hvad I kan nu.« Undervis ikke før eller under prætesten.
+2. **Prætest:** Del side 1 af opgave A ud. Sig: »Det er ikke en prøve med karakter. Vi vil se, hvad I kan nu.« Undervis ikke før eller under prætesten. Saml side 1 ind, før eleven får side 2 (del 2 og 3). Det samme gælder B, C og T, fordi side 2 nævner modtager og formål.
 3. **Støtte (samme ved A, B, T og C for den samme elev):** Alle elever må få kilden og spørgsmålene læst op (af dig, en makker eller en lydfil), svare mundtligt (du skriver ordret ned), få ekstra tid og større skrift. Hjælp til kildekritik (»hvem er afsenderen?«) er ikke tilladt. Notér støtten i `*_stoette` (fx `oplaesning_laerer`, `mundtlig`, `ekstra_tid`). Ændres støtten mellem A og B, indgår eleven ikke i B − A. Se `docs/laerligverse/oplaesning-og-fair-maaling.md` §7.1.
 4. **Arkivskabet:** Lad eleverne spille. Hjælp med teknik, men forklar ikke kildekritik ud over spillet. Brug observationsskemaet (§7).
 5. **Posttest og transfertest:** Straks efter. Samme vilkår som prætesten.
@@ -52,11 +52,11 @@ Kan dag 1 ikke rumme en dobbeltlektion, så tag prætesten i en tidligere lektio
 
 Elevarkene (`elevark.md`) indeholder ikke facit.
 
-### A · prætest · Kolera i København 1853 (12 min)
+### A · prætest · Kolera i København 1853 (13 min)
 
 **Materialestatus:** kilden er *didaktisk konstrueret*: et opfundet brev af en ægte kildetype. Det er ikke en original, en forkortelse eller en parafrase.
 
-**Historisk ramme, som du skal kontrollere:** Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 forudsætter, at tusindvis døde (kontrollér tallet).
+**Historisk ramme, som du skal kontrollere:** Koleraepidemien i København sommeren 1853 med mange dødsfald, især i de tætte, fattige kvarterer. Lægerne forklarede den dengang ofte med dårlig luft og snavs; brevet må ikke tillægge lægen viden om bakterier. Del 2, påstand 2 forudsætter, at tusindvis døde (kontrollér tallet). Påstand 4 forudsætter, at fattige familier boede i fugtige kælderboliger.
 
 | Del 1 | Kriterium | Accepterede svar (eksempler) |
 |---|---|---|
@@ -65,26 +65,29 @@ Elevarkene (`elevark.md`) indeholder ikke facit.
 | 3 | R3 Modtager (0–2) | Magistraten · byens styre |
 | 4 | R4 Formål (0–2) | at få penge til at rydde gårdene og til et lazaret · at få byens styre til at gøre noget mod sygdommen |
 
-| Del 2 | Facit | Hvorfor |
-|---|---|---|
-| 1. Lægen mente, at de dårlige boliger var med til at gøre folk syge. | **ja** | Afsenderens egen opfattelse: lægen skriver det selv. |
-| 2. Koleraen kostede tusindvis af københavnere livet i 1853. | **nej** | Påstanden er sand, men brevet kan ikke belægge den: det nævner hundrede syge, lægen har besøgt, ikke dødstallet for byen. |
-| 3. Magistraten gav lægen de penge, han bad om. | **nej** | Brevet er en anmodning. Det viser ikke, hvad der skete bagefter. |
+| Del 2 | Type | Facit | Hvorfor |
+|---|---|---|---|
+| 1. Lægen mente, at de dårlige boliger var med til at gøre folk syge. | J1 | **ja** | Afsenderens egen opfattelse: lægen skriver det selv. Det gælder, også selv om han vil have penge. |
+| 2. Koleraen kostede tusindvis af københavnere livet i 1853. | N2 | **nej** | Påstanden er sand, men brevet kan ikke belægge den: det nævner hundrede syge, lægen har besøgt, ikke dødstallet for byen. |
+| 3. Lægen fik de penge til lazarettet, som han bad Magistraten om. | N1 | **nej** | Det passer, at lægen bad om penge. Men brevet er skrevet, før Magistraten svarede, så det viser ikke, hvad der skete bagefter. |
+| 4. I 1853 boede nogle af de syge i København i fugtige kældre. | J2 | **ja** | Lægen har selv besøgt de syge samme år. Han vil have penge og kan overdrive, men påstanden er forsigtig (»nogle«), så brevet kan bruges som belæg. |
+
+Typerne er de samme i A, B og C: **J1** afsenderens egen holdning eller handling (ja) · **J2** et forhold, kilden kan belægge, uden at afsenderen nævnes (ja) · **N1** hvad der skete bagefter (nej) · **N2** mere, end afsenderen kunne vide eller skrev om (nej). Afsenderen nævnes i én ja- og én nej-påstand, så »ja, når afsenderen er nævnt« ikke virker.
 
 Begrundelsen bedømmes med B1.
 
 | Del 3 | Facit | Hvorfor |
 |---|---|---|
-| a. Eleverne på en landsbyskole syntes i 1955, at skolen var streng. | **Dagbog** | Skrevet af en elev samme år, til hende selv: tæt på oplevelsen. |
-| b. Skolen havde i 1955 en regel om, at eleverne skulle rejse sig, når læreren kom ind. | **Skolereglement** | Skrevet af dem, der fastsatte reglerne, samme år, for at fastsætte dem. |
+| a. Børnene på en landsbyskole syntes i 1955, at læreren var meget streng. | **Dagbog** | Skrevet af en elev samme år, til hende selv: tæt på oplevelsen. Erindringsbogen er skrevet 50 år senere, og årsberetningen er lærerens egen. |
+| b. Eleverne skulle i 1955 rejse sig, når læreren kom ind i klassen. | **Skolereglement** | Skrevet af dem, der fastsatte reglerne, samme år, for at fastsætte dem. Årsberetningen gør rede for skolens arbejde, ikke for reglerne. |
 
 Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personlige kilde og påstand b af den officielle, så en elev, der altid vælger den personlige kilde, får kun det ene rigtigt. Rækkefølgen skifter mellem formerne.
 
-### B · posttest · Den spanske syge 1918 (12 min)
+### B · posttest · Den spanske syge 1918 (13 min)
 
 **Materialestatus:** kilden er *didaktisk konstrueret*: et opfundet opslag af en ægte kildetype. Det er ikke en original, en forkortelse eller en parafrase.
 
-**Historisk ramme, som du skal kontrollere:** Influenzaepidemien (»den spanske syge«) ramte Danmark i efteråret 1918. Flere byer lukkede skoler og frarådede forsamlinger. Kontrollér, at et opslag fra en sundhedskommission i Aarhus er en rimelig konstrueret kildetype, og at tusindvis af danskere døde af epidemien (del 2, påstand 2).
+**Historisk ramme, som du skal kontrollere:** Influenzaepidemien (»den spanske syge«) ramte Danmark i efteråret 1918. Flere byer lukkede skoler og frarådede forsamlinger. Kontrollér, at et opslag fra en sundhedskommission i Aarhus er en rimelig konstrueret kildetype, og at en kommunal sundhedskommission kunne beslutte og meddele en skolelukning (del 2, påstand 4).
 
 | Del 1 | Kriterium | Accepterede svar (eksempler) |
 |---|---|---|
@@ -93,26 +96,29 @@ Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personl
 | 3 | R3 Modtager (0–2) | byens borgere · folk i Aarhus |
 | 4 | R4 Formål (0–2) | at få folk til at følge rådene, så smitten blev mindre · at begrænse smitten |
 
-| Del 2 | Facit | Hvorfor |
-|---|---|---|
-| 1. Tusindvis af danskere døde af den spanske syge. | **nej** | Påstanden er sand, men opslaget kan ikke belægge den: det nævner ingen syge eller døde. |
-| 2. Sundhedskommissionen ønskede, at folk holdt sig fra forsamlinger. | **ja** | Afsenderens egen hensigt: kommissionen skriver det selv. |
-| 3. Borgerne i Aarhus fulgte rådene. | **nej** | Opslaget er en opfordring. Det viser ikke, hvad folk gjorde. |
+| Del 2 | Type | Facit | Hvorfor |
+|---|---|---|---|
+| 1. Borgerne i Aarhus fulgte rådene og holdt sig hjemme. | N1 | **nej** | Opslaget er en opfordring. Det viser ikke, hvad folk gjorde bagefter. |
+| 2. Sundhedskommissionen ønskede, at borgerne holdt sig fra forsamlinger. | J1 | **ja** | Afsenderens egen hensigt: kommissionen skriver det selv. |
+| 3. Sundhedskommissionen vidste, at lukkede skoler ville stoppe smitten. | N2 | **nej** | Det passer, at kommissionen lukkede skolerne. Men opslaget er skrevet, mens influenzaen bredte sig. Det viser, hvad kommissionen rådede til, ikke at den vidste, at det ville virke. |
+| 4. I oktober 1918 blev det bestemt at lukke skolerne i Aarhus. | J2 | **ja** | Opslaget er selv meddelelsen fra dem, der bestemte det, samme måned. Det viser beslutningen, men ikke om alle overholdt den. |
+
+Typerne er de samme i A, B og C: **J1** afsenderens egen holdning eller handling (ja) · **J2** et forhold, kilden kan belægge, uden at afsenderen nævnes (ja) · **N1** hvad der skete bagefter (nej) · **N2** mere, end afsenderen kunne vide eller skrev om (nej). Afsenderen nævnes i én ja- og én nej-påstand, så »ja, når afsenderen er nævnt« ikke virker.
 
 Begrundelsen bedømmes med B1.
 
 | Del 3 | Facit | Hvorfor |
 |---|---|---|
-| a. Fabrikken havde i 1910 en regel om, hvornår arbejdsdagen begyndte. | **Arbejdsreglement** | Skrevet af fabriksejeren samme år for at fastsætte arbejdstiden. |
-| b. Arbejderne på en fabrik syntes i 1910, at arbejdsdagen var for lang. | **Brev** | Skrevet af en arbejder samme år, til hans bror: tæt på oplevelsen. |
+| a. Arbejderne skulle i 1910 møde på fabrikken klokken seks om morgenen. | **Arbejdsreglement** | Skrevet af fabriksejeren samme år for at fastsætte arbejdstiden. Annoncen skulle skaffe arbejdere, ikke fastsætte, hvornår de skulle møde. |
+| b. Arbejderne på en fabrik syntes i 1910, at arbejdsdagen var for lang. | **Brev** | Skrevet af en arbejder samme år, til hans bror: tæt på oplevelsen. Erindringen er skrevet over 50 år senere. |
 
 Begrundelsen ved påstand b bedømmes med B2. Påstand b besvares af den personlige kilde og påstand a af den officielle, så en elev, der altid vælger den personlige kilde, får kun det ene rigtigt. Rækkefølgen skifter mellem formerne.
 
-### C · forsinket test · Stormfloden 1872 (12 min)
+### C · forsinket test · Stormfloden 1872 (13 min)
 
 **Materialestatus:** kilden er *didaktisk konstrueret*: et opfundet indberetning af en ægte kildetype. Det er ikke en original, en forkortelse eller en parafrase.
 
-**Historisk ramme, som du skal kontrollere:** Stormfloden i Østersøen natten til den 13. november 1872, som især ramte Lolland og Falster. Kontrollér, at en indberetning fra amtmanden i Nykøbing Falster er en rimelig konstrueret kildetype, og at stormfloden kostede menneskeliv i Danmark (del 2, påstand 2).
+**Historisk ramme, som du skal kontrollere:** Stormfloden i Østersøen natten til den 13. november 1872, som især ramte Lolland og Falster. Kontrollér, at en indberetning fra amtmanden i Nykøbing Falster til staten er en rimelig konstrueret kildetype, og at mange familier ved kysten mistede deres huse (del 2, påstand 2).
 
 | Del 1 | Kriterium | Accepterede svar (eksempler) |
 |---|---|---|
@@ -121,18 +127,21 @@ Begrundelsen ved påstand b bedømmes med B2. Påstand b besvares af den personl
 | 3 | R3 Modtager (0–2) | regeringen · staten · ministeriet |
 | 4 | R4 Formål (0–2) | at få staten til at sende hjælp til de ramte · at få penge og korn |
 
-| Del 2 | Facit | Hvorfor |
-|---|---|---|
-| 1. Stormfloden kostede mennesker livet. | **nej** | Påstanden er sand, men indberetningen kan ikke belægge den: den nævner huse og dyr, ikke døde. |
-| 2. Staten sendte hjælp til de ramte. | **nej** | Indberetningen er en anmodning. Den viser ikke, hvad staten gjorde. |
-| 3. Amtmanden mente, at de ramte familier havde brug for hjælp fra staten. | **ja** | Afsenderens egen opfattelse: amtmanden skriver det selv. |
+| Del 2 | Type | Facit | Hvorfor |
+|---|---|---|---|
+| 1. Amtmanden bad staten om penge og korn til de ramte. | J1 | **ja** | Indberetningen er selv anmodningen, skrevet af amtmanden. Den viser, at han bad om hjælp. |
+| 2. Mange familier ved kysten mistede deres huse ved stormfloden i november 1872. | J2 | **ja** | Amtmanden er statens embedsmand i området og skriver to dage efter. Han vil have hjælp og kan overdrive, men at mange mistede deres huse, kan indberetningen bruges som belæg for. |
+| 3. Amtmanden mente, at stormfloden havde ramt hele Danmark lige hårdt. | N2 | **nej** | Det passer, at amtmanden skrev om stormfloden. Men han skriver kun om kysten i sit eget område og siger intet om resten af landet. |
+| 4. Staten sendte hjælp til de ramte, før vinteren kom. | N1 | **nej** | Indberetningen er en anmodning. Den viser ikke, hvad staten gjorde bagefter. |
+
+Typerne er de samme i A, B og C: **J1** afsenderens egen holdning eller handling (ja) · **J2** et forhold, kilden kan belægge, uden at afsenderen nævnes (ja) · **N1** hvad der skete bagefter (nej) · **N2** mere, end afsenderen kunne vide eller skrev om (nej). Afsenderen nævnes i én ja- og én nej-påstand, så »ja, når afsenderen er nævnt« ikke virker.
 
 Begrundelsen bedømmes med B1.
 
 | Del 3 | Facit | Hvorfor |
 |---|---|---|
-| a. Passagerer på den første jernbane mellem København og Roskilde syntes i 1847, at turen gik hurtigt. | **Brev** | Skrevet af en passager samme år: tæt på oplevelsen. |
-| b. Jernbaneselskabet ville i 1847 have flere til at købe billetter. | **Annonce** | Lavet af selskabet selv samme år for at sælge billetter. |
+| a. De rejsende syntes i 1847, at toget mellem København og Roskilde kørte hurtigt. | **Brev** | Skrevet af en passager samme år, til en ven: tæt på oplevelsen. Erindringen er skrevet 50 år senere, og køreplanen siger, hvornår togene kørte, ikke hvad de rejsende syntes. |
+| b. Jernbaneselskabet ville i 1847 have flere til at rejse med toget. | **Annonce** | Lavet af selskabet selv samme år for at sælge billetter, altså for at få flere til at rejse. Køreplanen oplyser dem, der allerede rejser. |
 
 Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personlige kilde og påstand b af den officielle, så en elev, der altid vælger den personlige kilde, får kun det ene rigtigt. Rækkefølgen skifter mellem formerne.
 
@@ -150,12 +159,12 @@ Begrundelsen ved påstand a bedømmes med B2. Påstand a besvares af den personl
 |---|---|
 | 1. Kan reklamen bruges som belæg for, at de fleste danske familier havde en vaskemaskine i 1962? Forklar dit svar. | **Nej.** En reklame viser, hvad firmaet ville sælge og til hvem, ikke hvor mange der havde en maskine (T1, T2) |
 | 2. Hvad kan reklamen bruges som belæg for? | Hvordan firmaet ville have kunderne til at se maskinen, og hvilket billede af »den moderne husmor« reklamen gav (T3) |
-| 3a. Hvordan en husmor i 1962 oplevede at få sin første vaskemaskine. | **Brev** |
-| 3b. Hvor mange husstande der havde en vaskemaskine i midten af 1960'erne. | **Statistik** |
+| 3a. Hvad det betød for en kvinde i 1962 at få en vaskemaskine i hjemmet. | **Brev**: Skrevet af en husmor samme år om sin egen nye maskine. Reklamen siger det samme, men den er skrevet for at sælge, og erindringen er skrevet næsten 50 år senere. |
+| 3b. Hvor almindelige vaskemaskiner var i danske hjem i midten af 1960'erne. | **Statistik**: Lavet for at opgøre, hvad husstandene ejede. Reklamen og brevet viser kun, at der fandtes maskiner, ikke hvor mange der havde én. |
 
 ## 6. Vurderingsrubrik (forslag, ikke valideret)
 
-Rapportér **tre delscorer hver for sig**: identifikation (R1–R4, 0–6), valg (V, 0–5) og begrundelse (B1+B2, 0–4). Læg dem ikke sammen til én score, og brug ingen grænse for »mestret«. Der findes ikke et godkendt og valideret grundlag for en sådan grænse (LP-13).
+Rapportér **tre delscorer hver for sig**: identifikation (R1–R4, 0–6), valg (V, 0–6) og begrundelse (B1+B2, 0–4). Læg dem ikke sammen til én score, og brug ingen grænse for »mestret«. Der findes ikke et godkendt og valideret grundlag for en sådan grænse (LP-13).
 
 | Kriterium | Point | Niveauer |
 |---|---|---|
@@ -163,7 +172,7 @@ Rapportér **tre delscorer hver for sig**: identifikation (R1–R4, 0–6), valg
 | R2 Tidspunkt | 0–1 | **0:** ikke angivet eller forkert<br>**1:** rigtigt tidspunkt (år eller dato) |
 | R3 Modtager | 0–2 | **0:** ikke angivet, forkert, eller formålet skrevet i stedet<br>**1:** vag modtager (»nogen«, »folk«) eller rigtig uden at kunne ses i teksten<br>**2:** rigtig modtager, som kan udledes af teksten |
 | R4 Formål | 0–2 | **0:** ikke angivet, forkert, eller modtageren skrevet i stedet<br>**1:** kildens EMNE i stedet for formålet (»den handler om kolera«)<br>**2:** afsenderens hensigt (»at få penge til …«, »at få folk til at …«) |
-| V Valg | 0–5 | 0–5 rigtige af tre ja/nej-vurderinger og to kildevalg (rettes med facit) |
+| V Valg | 0–6 | 0–6 rigtige af fire ja/nej-vurderinger og to kildevalg (rettes med facit) |
 | B1 Begrundelse, del 2 | 0–2 | **0:** ingen eller uden sammenhæng med kilden<br>**1:** henviser til kilden generelt (»det står der«)<br>**2:** bruger afsender, modtager, formål eller tid til at forklare, hvad kilden kan og ikke kan vise |
 | B2 Begrundelse, del 3 | 0–2 | **0:** ingen eller uden sammenhæng med kilden<br>**1:** henviser til kilden generelt<br>**2:** forklarer valget med en konkret oplysning om den valgte kilde (afsender, tid, modtager eller formål) |
 
@@ -182,6 +191,8 @@ Rapportér **tre delscorer hver for sig**: identifikation (R1–R4, 0–6), valg
 - god begrundelse, forkerte valg → er opgaveteksten forstået?
 - kun én af del 3's påstande rigtig → fast vane (»vælg altid den personlige kilde«)?
 - ingen modtager og intet formål trods rigtige valg → byttede felter eller en læsebarriere?
+
+Markeringerne bruger Valg på 0–6: »mange rigtige valg« betyder 5–6, »forkerte valg« 0–3.
 
 **Følgefejl:** Hvis eleven har forvekslet afsender og modtager, så bedøm R3 og R4 i forhold til elevens egen afsender, og notér det. (Rubrikforsøget viste, at den samme fejl ellers straffes tre gange.)
 
@@ -213,6 +224,7 @@ Brug `registreringsskema.csv` (én række pr. elev). Den indeholder kun elevkode
 
 - Formerne er **ikke målt lige svære**. En forskel mellem A og B kan skyldes formen, ikke læring.
 - Del 2 har ja/nej: 50 % ved gæt pr. påstand. Del 3 har 25 % pr. påstand. Derfor vægter begrundelsen tungt, og delscorerne rapporteres hver for sig.
+- Svargenveje er kontrolleret med simple regler (fx »ja, når afsenderen er nævnt«, »vælg kilden med de samme ord«). Ingen af dem klarer sig bedre end gæt i v1.2, men en elev kan finde andre (`tools/laerligverse/shortcut-audit.mjs`).
 - Skriftlige svar blander kildekritik og skrivefærdighed. Oplæsning og korte svar mindsker det, men fjerner det ikke.
 - Rubrikken er afprøvet på **syntetiske** svar, ikke på elever. Bedømmerenighed er ikke målt.
 - Én klasse uden sammenligningsgruppe kan ikke vise, at Arkivskabet er årsagen til en ændring.

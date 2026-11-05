@@ -22,8 +22,9 @@ test("forms A, B and C are parallel: same parts, same claim pattern, comparable 
   const lens = [];
   for (const f of Object.values(FORMS)) {
     assert.equal(f.part1.questions.length, 4, f.id);
-    // Same claim pattern (one "ja", two "nej")…
-    assert.deepEqual(f.part2.claims.map((c) => c.answer).sort(), ["ja", "nej", "nej"], f.id);
+    // Same claim pattern (v1.2: two "ja", two "nej", one claim of each type)…
+    assert.deepEqual(f.part2.claims.map((c) => c.answer).sort(), ["ja", "ja", "nej", "nej"], f.id);
+    assert.deepEqual(f.part2.claims.map((c) => c.type).sort(), ["J1", "J2", "N1", "N2"], f.id);
     assert.equal(f.part3.sources.length, 4, f.id);
     assert.equal(f.part3.claims.length, 2, f.id);
     // One personal and one official answer: "always the diary" gets only one right.
@@ -35,7 +36,7 @@ test("forms A, B and C are parallel: same parts, same claim pattern, comparable 
     lens.push(words(f.source.text));
     assert.ok(f.frameToCheck.length > 40, f.id);
   }
-  // F9: …but NOT in the same positions. A pupil who memorises the pretest's answer order ("ja, nej, nej"; "a is the
+  // F9: …but NOT in the same positions. A pupil who memorises the pretest's answer order ("ja, nej, nej, ja"; "a is the
   // diary") must gain nothing on the posttest or the delayed test.
   const p2 = Object.values(FORMS).map((f) => f.part2.claims.map((c) => c.answer).join(","));
   assert.equal(new Set(p2).size, p2.length, `part 2 answer orders repeat: ${p2}`);
@@ -63,14 +64,15 @@ test("the student sheets contain no answer key; the teacher guide has every key;
 });
 
 test("subscores never become one total or a mastery verdict, and a bad level fails loud", () => {
-  const s = subscores("A", { part2: ["ja", "nej", "nej"], part3: { a: "Dagbog", b: "Skolereglement" } }, { R1: 1, R2: 1, R3: 2, R4: 2, B1: 2, B2: 2 });
+  const s = subscores("A", { part2: ["ja", "nej", "nej", "ja"], part3: { a: "Dagbog", b: "Skolereglement" } }, { R1: 1, R2: 1, R3: 2, R4: 2, B1: 2, B2: 2 });
+  assert.equal(s.valg, 6);
   assert.deepEqual(Object.keys(s).sort(), ["begrundelse", "identifikation", "part3BothRight", "valg"]);
   assert.equal(JSON.stringify(s).includes("mestr"), false);
   assert.throws(() => subscores("A", {}, { R1: 1, R2: 1, R3: 3, R4: 0, B1: 0, B2: 0 }), /R3: level 3/);
   assert.throws(() => scoreChoices("Z", {}), /unknown form/);
   assert.equal(scoreChoices("A", null).V, 0);
   const max = Object.values(CRITERIA).reduce((n, c) => n + c.max, 0);
-  assert.equal(max, 15);
+  assert.equal(max, 16);
 });
 
 test("rubric trial on synthetic answers: the rubric separates the seven kinds — and flags what it cannot decide", () => {
@@ -91,7 +93,7 @@ test("rubric trial on synthetic answers: the rubric separates the seven kinds �
   assert.ok(rows["misforstået afsender"].identifikation <= 1);
   // Every ambiguity found while scoring is written down.
   assert.ok(SYNTHETIC_RESPONSES.filter((r) => r.note).length >= 5);
-  assert.equal(flags({ valg: 5, begrundelse: 4, part3BothRight: true, identifikation: 6 }, { R3: 2, R4: 2 }).length, 0);
+  assert.equal(flags({ valg: 6, begrundelse: 4, part3BothRight: true, identifikation: 6 }, { R3: 2, R4: 2 }).length, 0);
 });
 
 test("rehearsal: three synthetic pupils through the REAL sequence function (test policy v0, LP-13 undecided)", () => {

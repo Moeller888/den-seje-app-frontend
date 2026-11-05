@@ -9,7 +9,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { APPROVAL, CRITERIA, FORMS, MINUTES, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
+import { APPROVAL, CRITERIA, FORMS, HANDOVER, MINUTES, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const DIR = join(ROOT, "docs", "laerligverse", "laererpakke");
@@ -19,15 +19,18 @@ export const SHEET = join(DIR, "registreringsskema.csv");
 
 const GEN = "> **GENERERET** af `tools/laerligverse/assessment-pack.mjs` fra `tools/laerligverse/assessment-v1.mjs`. Ret ikke her.";
 const STATUS = `> **Status: ${APPROVAL.text}**`;
+/** F9: the page break. Part 1 (in T: questions 1–2) is handed in before the pupil gets the next page. */
+const PAGE_BREAK = ["", `*${HANDOVER}*`, "", "<!-- NY SIDE: læreren samler siden ind, før eleven får næste side -->", "", "---", ""];
+const sourceBlock = (src) => [`**${src.header}**`, "", `> ${src.text}`, "", ...(src.glossary ? [`*Ord:* ${Object.entries(src.glossary).map(([k, v]) => `${k} = ${v}`).join(" · ")}`, ""] : [])];
 
 function studentForm(f) {
   const L = [];
   L.push(`## Opgave ${f.id}: ${f.title}`, "", `Navn eller elevkode: ______________________    Dato: __________`, "");
   L.push("Læs kilden. Du må gerne få den læst op. Du må svare med få ord.", "");
-  L.push(`**${f.source.header}**`, "", `> ${f.source.text}`, "");
-  if (f.source.glossary) L.push(`*Ord:* ${Object.entries(f.source.glossary).map(([k, v]) => `${k} = ${v}`).join(" · ")}`, "");
+  L.push(...sourceBlock(f.source));
   L.push("### Del 1", "");
   f.part1.questions.forEach((q, i) => L.push(`${i + 1}. ${q}`, "", "   ____________________________________________", ""));
+  L.push(...PAGE_BREAK, `### Opgave ${f.id}, side 2`, "", "Navn eller elevkode: ______________________", "", ...sourceBlock(f.source));
   L.push("### Del 2", "", PART2_INSTRUCTION, "", "| Påstand | Ja | Nej |", "|---|---|---|");
   f.part2.claims.forEach((c, i) => L.push(`| ${i + 1}. ${c.text} | ☐ | ☐ |`));
   L.push("", PART2_REASON, "", "____________________________________________", "", "____________________________________________", "");
@@ -43,8 +46,9 @@ function studentTransfer(t) {
   const L = [];
   L.push(`## Opgave ${t.id}: ${t.title}`, "", `Navn eller elevkode: ______________________    Dato: __________`, "");
   L.push("Læs kilden. Du må gerne få den læst op. Du må svare med få ord.", "");
-  L.push(`**${t.source.header}**`, "", `> ${t.source.text}`, "");
+  L.push(...sourceBlock(t.source));
   t.open.forEach((q, i) => L.push(`${i + 1}. ${q}`, "", "   ____________________________________________", "", "   ____________________________________________", ""));
+  L.push(...PAGE_BREAK, `### Opgave ${t.id}, side 2`, "", "Navn eller elevkode: ______________________", "", ...sourceBlock(t.source));
   L.push(`${t.open.length + 1}. ${PART3_INSTRUCTION}`, "", "| Kilde | Hvem · hvornår · til hvem · hvorfor |", "|---|---|");
   for (const s of t.choice.sources) L.push(`| ${s.label} | ${s.meta} |`);
   L.push("");
@@ -54,7 +58,7 @@ function studentTransfer(t) {
 
 export function studentSheets() {
   const L = ["# Elevark: kildekritik (prætest, posttest, transfertest, forsinket test)", "", GEN, "", STATUS, ""];
-  L.push("Til læreren: Hver opgave printes for sig. Eleven får kun den opgave, der skal bruges den dag. Facit står i `laerervejledning.md`, aldrig her.", "");
+  L.push("Til læreren: Hver opgave printes for sig, side 1 og side 2 på hvert sit ark. Eleven får kun den opgave, der skal bruges den dag. Saml side 1 ind, før eleven får side 2: side 2 nævner modtager og formål og ville ellers give svarene i del 1. Facit står i `laerervejledning.md`, aldrig her.", "");
   L.push(studentForm(FORMS.A), studentForm(FORMS.B), studentTransfer(TRANSFER), "", "---", "", studentForm(FORMS.C));
   return L.join("\n");
 }
@@ -66,8 +70,9 @@ function keyForm(f) {
   L.push(`**Historisk ramme, som du skal kontrollere:** ${f.frameToCheck}`, "");
   L.push("| Del 1 | Kriterium | Accepterede svar (eksempler) |", "|---|---|---|");
   ["R1", "R2", "R3", "R4"].forEach((k, i) => L.push(`| ${i + 1} | ${k} ${CRITERIA[k].name} (0–${CRITERIA[k].max}) | ${f.part1.key[k].join(" · ")} |`));
-  L.push("", "| Del 2 | Facit | Hvorfor |", "|---|---|---|");
-  f.part2.claims.forEach((c, i) => L.push(`| ${i + 1}. ${c.text} | **${c.answer}** | ${c.why} |`));
+  L.push("", "| Del 2 | Type | Facit | Hvorfor |", "|---|---|---|---|");
+  f.part2.claims.forEach((c, i) => L.push(`| ${i + 1}. ${c.text} | ${c.type} | **${c.answer}** | ${c.why} |`));
+  L.push("", "Typerne er de samme i A, B og C: **J1** afsenderens egen holdning eller handling (ja) · **J2** et forhold, kilden kan belægge, uden at afsenderen nævnes (ja) · **N1** hvad der skete bagefter (nej) · **N2** mere, end afsenderen kunne vide eller skrev om (nej). Afsenderen nævnes i én ja- og én nej-påstand, så »ja, når afsenderen er nævnt« ikke virker.");
   L.push("", "Begrundelsen bedømmes med B1.", "", "| Del 3 | Facit | Hvorfor |", "|---|---|---|");
   for (const c of f.part3.claims) L.push(`| ${c.id}. ${c.text} | **${c.answer}** | ${c.why} |`);
   const pers = f.part3.claims.find((c) => c.sourceKind === "personlig");
@@ -97,7 +102,7 @@ export function teacherGuide() {
   L.push(`| Prætest (A) | ${MINUTES.A} |`, "| Introduktion og Arkivskabet | 20–25 |", `| Posttest (B), straks efter | ${MINUTES.B} |`, `| Transfertest (T), samme dag | ${MINUTES.T} |`, "| Elevfeedback | 3 |", `| Forsinket test (C), efter reel tid (forslag: 7 dage, LP13-6) | ${MINUTES.C} |`, "| **I alt** | dag 1: ca. 60 min (en dobbeltlektion; én lektion på 45 min er for lidt); dag 2: 12 min |", "", "Kan dag 1 ikke rumme en dobbeltlektion, så tag prætesten i en tidligere lektion (højst 1–2 dage før), og notér det.", "");
   L.push("## 4. Lærervejledning", "");
   L.push("1. **Før:** Giv hver elev en kode (fx A07). Skriv koblingen kode → elev på et ark, der bliver hos dig. Lærlig får aldrig navne.");
-  L.push("2. **Prætest:** Del opgave A ud. Sig: »Det er ikke en prøve med karakter. Vi vil se, hvad I kan nu.« Undervis ikke før eller under prætesten.");
+  L.push("2. **Prætest:** Del side 1 af opgave A ud. Sig: »Det er ikke en prøve med karakter. Vi vil se, hvad I kan nu.« Undervis ikke før eller under prætesten. Saml side 1 ind, før eleven får side 2 (del 2 og 3). Det samme gælder B, C og T, fordi side 2 nævner modtager og formål.");
   L.push("3. **Støtte (samme ved A, B, T og C for den samme elev):** Alle elever må få kilden og spørgsmålene læst op (af dig, en makker eller en lydfil), svare mundtligt (du skriver ordret ned), få ekstra tid og større skrift. Hjælp til kildekritik (»hvem er afsenderen?«) er ikke tilladt. Notér støtten i `*_stoette` (fx `oplaesning_laerer`, `mundtlig`, `ekstra_tid`). Ændres støtten mellem A og B, indgår eleven ikke i B − A. Se `docs/laerligverse/oplaesning-og-fair-maaling.md` §7.1.");
   L.push("4. **Arkivskabet:** Lad eleverne spille. Hjælp med teknik, men forklar ikke kildekritik ud over spillet. Brug observationsskemaet (§7).");
   L.push("5. **Posttest og transfertest:** Straks efter. Samme vilkår som prætesten.");
@@ -109,16 +114,17 @@ export function teacherGuide() {
   L.push(`**Materialestatus:** reklamen, firmaet Nordvask og statistikken er *${TRANSFER.source.status}*.`, "", `**Historisk ramme, som du skal kontrollere:** ${TRANSFER.frameToCheck}`, "");
   L.push(`**Hvad er nyt:** ${TRANSFER.whatChanges}`, "", `**Hvad er det samme:** ${TRANSFER.whatStays}`, "");
   L.push("| Spørgsmål | Facit |", "|---|---|", `| 1. ${TRANSFER.open[0]} | **Nej.** En reklame viser, hvad firmaet ville sælge og til hvem, ikke hvor mange der havde en maskine (T1, T2) |`, `| 2. ${TRANSFER.open[1]} | Hvordan firmaet ville have kunderne til at se maskinen, og hvilket billede af »den moderne husmor« reklamen gav (T3) |`);
-  for (const c of TRANSFER.choice.claims) L.push(`| 3${c.id}. ${c.text} | **${c.answer}** |`);
+  for (const c of TRANSFER.choice.claims) L.push(`| 3${c.id}. ${c.text} | **${c.answer}**: ${c.why} |`);
   L.push("");
   L.push("## 6. Vurderingsrubrik (forslag, ikke valideret)", "");
-  L.push("Rapportér **tre delscorer hver for sig**: identifikation (R1–R4, 0–6), valg (V, 0–5) og begrundelse (B1+B2, 0–4). Læg dem ikke sammen til én score, og brug ingen grænse for »mestret«. Der findes ikke et godkendt og valideret grundlag for en sådan grænse (LP-13).", "");
+  L.push("Rapportér **tre delscorer hver for sig**: identifikation (R1–R4, 0–6), valg (V, 0–6) og begrundelse (B1+B2, 0–4). Læg dem ikke sammen til én score, og brug ingen grænse for »mestret«. Der findes ikke et godkendt og valideret grundlag for en sådan grænse (LP-13).", "");
   L.push(rubricTable(CRITERIA), "", "**Transfertest:**", "", rubricTable(TRANSFER_CRITERIA), "");
   L.push("**Markeringer, du skal se nærmere på** (ikke domme):", "");
   L.push("- mange rigtige valg uden begrundelse → gæt eller tavs viden? Spørg eleven.");
   L.push("- god begrundelse, forkerte valg → er opgaveteksten forstået?");
   L.push("- kun én af del 3's påstande rigtig → fast vane (»vælg altid den personlige kilde«)?");
   L.push("- ingen modtager og intet formål trods rigtige valg → byttede felter eller en læsebarriere?", "");
+  L.push("Markeringerne bruger Valg på 0–6: »mange rigtige valg« betyder 5–6, »forkerte valg« 0–3.", "");
   L.push("**Følgefejl:** Hvis eleven har forvekslet afsender og modtager, så bedøm R3 og R4 i forhold til elevens egen afsender, og notér det. (Rubrikforsøget viste, at den samme fejl ellers straffes tre gange.)", "");
   L.push("## 7. Observationsskema (under Arkivskabet)", "", "| Elevkode | Tid | Hvad så du? | Tegn på (forståelse / gæt / sidder fast / teknik / spillet forstyrrer) |", "|---|---|---|---|", "| | | | |", "| | | | |", "");
   L.push("## 8. Elevfeedback (3 min, mundtligt eller på papir)", "");
@@ -135,6 +141,7 @@ export function teacherGuide() {
   L.push("## 10. Målingernes begrænsninger", "");
   L.push("- Formerne er **ikke målt lige svære**. En forskel mellem A og B kan skyldes formen, ikke læring.");
   L.push("- Del 2 har ja/nej: 50 % ved gæt pr. påstand. Del 3 har 25 % pr. påstand. Derfor vægter begrundelsen tungt, og delscorerne rapporteres hver for sig.");
+  L.push("- Svargenveje er kontrolleret med simple regler (fx »ja, når afsenderen er nævnt«, »vælg kilden med de samme ord«). Ingen af dem klarer sig bedre end gæt i v1.2, men en elev kan finde andre (`tools/laerligverse/shortcut-audit.mjs`).");
   L.push("- Skriftlige svar blander kildekritik og skrivefærdighed. Oplæsning og korte svar mindsker det, men fjerner det ikke.");
   L.push("- Rubrikken er afprøvet på **syntetiske** svar, ikke på elever. Bedømmerenighed er ikke målt.");
   L.push("- Én klasse uden sammenligningsgruppe kan ikke vise, at Arkivskabet er årsagen til en ændring.");

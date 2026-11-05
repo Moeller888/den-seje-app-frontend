@@ -15,7 +15,8 @@ import { fileURLToPath } from "node:url";
 // ── Phase 5: the rubric trial on form A ─────────────────────────────────────────────────────────────────────
 // `levels` are the scores a rater gives by applying CRITERIA's descriptors to `text`; `note` records where the
 // descriptor was ambiguous. The point is to see whether the rubric separates the seven kinds of answer.
-const RIGHT_P2 = ["ja", "nej", "nej"];
+// v1.2 (F9): part 2 has four claims; the synthetic answers keep the same errors on the same claims as in v1.1.
+const RIGHT_P2 = ["ja", "nej", "nej", "ja"];
 const RIGHT_P3 = { a: "Dagbog", b: "Skolereglement" };
 
 export const SYNTHETIC_RESPONSES = Object.freeze([
@@ -35,14 +36,14 @@ export const SYNTHETIC_RESPONSES = Object.freeze([
   {
     id: "S3", kind: "delvist korrekt", syntetisk: true,
     text: { R3: "folk i byen", R4: "den handler om kolera", B1: "Påstand 2: nej, fordi det står der ikke.", B2: "Skolereglementet, for det handler om skolen." },
-    answers: { part2: ["ja", "nej", "ja"], part3: { a: "Skolereglement", b: "Skolereglement" } },
+    answers: { part2: ["ja", "nej", "ja", "ja"], part3: { a: "Skolereglement", b: "Skolereglement" } },
     levels: { R1: 1, R2: 1, R3: 1, R4: 1, B1: 1, B2: 1 },
     note: "B2 »det handler om skolen« henviser til kildens emne, ikke en oplysning om kilden; 1 eller 0? Givet 1 efter ordlyden »henviser til kilden generelt«.",
   },
   {
     id: "S4", kind: "forkert, men med relevant ræsonnement", syntetisk: true,
     text: { R3: "Magistraten", R4: "at få hjælp til de syge", B1: "Påstand 1: nej. Lægen vil have penge, så han gør det måske værre, end det er. Man kan ikke stole på det.", B2: "Årsberetningen, fordi læreren skrev den samme år og kendte eleverne." },
-    answers: { part2: ["nej", "nej", "nej"], part3: { a: "Årsberetning", b: "Skolereglement" } },
+    answers: { part2: ["nej", "nej", "nej", "nej"], part3: { a: "Årsberetning", b: "Skolereglement" } },
     levels: { R1: 1, R2: 1, R3: 2, R4: 2, B1: 2, B2: 2 },
     note: "Ræsonnementet bruger formålet (en mulig overdrivelse) — fagligt relevant. Men påstand 1 handler om, hvad LÆGEN MENTE, og det viser brevet uanset overdrivelse. Rubrikken giver 2 for begrundelse og trækker kun i Valg. Er det rigtigt? Uafklaret: læreren skal beslutte, om en begrundelse, der fører til et forkert svar, kan få 2.",
   },
@@ -56,7 +57,7 @@ export const SYNTHETIC_RESPONSES = Object.freeze([
   {
     id: "S6", kind: "misforstået afsender", syntetisk: true,
     text: { R1: "Magistraten", R3: "lægen", R4: "at svare lægen", B1: "Påstand 3: ja, for de skriver jo til ham.", B2: "Dagbogen, for hun var der." },
-    answers: { part2: ["ja", "nej", "ja"], part3: RIGHT_P3 },
+    answers: { part2: ["ja", "nej", "ja", "ja"], part3: RIGHT_P3 },
     levels: { R1: 0, R2: 1, R3: 0, R4: 0, B1: 0, B2: 2 },
     note: "Én misforståelse (afsender/modtager byttet om) giver følgefejl i R3, R4 og B1. Rubrikken straffer samme fejl tre gange. Overvej at bedømme R3/R4 i forhold til elevens egen afsender (»følgefejl«).",
   },
@@ -94,23 +95,23 @@ const wrongOption = (item) => {
 export const PROFILES = Object.freeze({
   A: {
     name: "Elev A — har svært ved stoffet", syntetisk: true,
-    pre: { levels: { R1: 1, R2: 1, R3: 0, R4: 1, B1: 0, B2: 0 }, answers: { part2: ["ja", "ja", "ja"], part3: { a: "Dagbog", b: "Dagbog" } } },
+    pre: { levels: { R1: 1, R2: 1, R3: 0, R4: 1, B1: 0, B2: 0 }, answers: { part2: ["ja", "ja", "ja", "ja"], part3: { a: "Dagbog", b: "Dagbog" } } },
     game: { guided_practice: { right: false, hints: 2 }, revision: { right: true, hints: 2 }, independent_application: { right: false, hints: 0 }, transfer: { right: true, hints: 0 }, revisit: { right: true, hints: 0 } },
-    post: { levels: { R1: 1, R2: 1, R3: 1, R4: 1, B1: 1, B2: 1 }, answers: { part2: ["nej", "ja", "ja"], part3: { a: "Brev", b: "Brev" } } },
+    post: { levels: { R1: 1, R2: 1, R3: 1, R4: 1, B1: 1, B2: 1 }, answers: { part2: ["nej", "ja", "ja", "ja"], part3: { a: "Brev", b: "Brev" } } },
     transfer: { levels: { T1: 1, T2: 0, T3: 1 }, choices: { a: "Brev", b: "Reklame" } },
   },
   B: {
     name: "Elev B — gennemsnitlig progression", syntetisk: true,
-    pre: { levels: { R1: 1, R2: 1, R3: 1, R4: 1, B1: 1, B2: 1 }, answers: { part2: ["ja", "nej", "ja"], part3: { a: "Dagbog", b: "Årsberetning" } } },
+    pre: { levels: { R1: 1, R2: 1, R3: 1, R4: 1, B1: 1, B2: 1 }, answers: { part2: ["ja", "nej", "ja", "ja"], part3: { a: "Dagbog", b: "Årsberetning" } } },
     game: { guided_practice: { right: true, hints: 1 }, independent_application: { right: true, hints: 0 }, transfer: { right: false, hints: 0 }, revisit: { right: true, hints: 0 } },
-    post: { levels: { R1: 1, R2: 1, R3: 2, R4: 2, B1: 1, B2: 2 }, answers: { part2: ["nej", "ja", "nej"], part3: { a: "Arbejdsreglement", b: "Brev" } } },
+    post: { levels: { R1: 1, R2: 1, R3: 2, R4: 2, B1: 1, B2: 2 }, answers: { part2: ["nej", "ja", "nej", "nej"], part3: { a: "Arbejdsreglement", b: "Brev" } } },
     transfer: { levels: { T1: 2, T2: 1, T3: 1 }, choices: { a: "Brev", b: "Statistik" } },
   },
   C: {
     name: "Elev C — allerede fagligt stærk", syntetisk: true,
-    pre: { levels: { R1: 1, R2: 1, R3: 2, R4: 2, B1: 2, B2: 2 }, answers: { part2: ["ja", "nej", "nej"], part3: { a: "Dagbog", b: "Skolereglement" } } },
+    pre: { levels: { R1: 1, R2: 1, R3: 2, R4: 2, B1: 2, B2: 2 }, answers: { part2: ["ja", "nej", "nej", "ja"], part3: { a: "Dagbog", b: "Skolereglement" } } },
     game: { guided_practice: { right: true, hints: 0 }, independent_application: { right: true, hints: 0 }, transfer: { right: true, hints: 0 }, revisit: { right: true, hints: 0 } },
-    post: { levels: { R1: 1, R2: 1, R3: 2, R4: 2, B1: 2, B2: 2 }, answers: { part2: ["nej", "ja", "nej"], part3: { a: "Arbejdsreglement", b: "Brev" } } },
+    post: { levels: { R1: 1, R2: 1, R3: 2, R4: 2, B1: 2, B2: 2 }, answers: { part2: ["nej", "ja", "nej", "ja"], part3: { a: "Arbejdsreglement", b: "Brev" } } },
     transfer: { levels: { T1: 2, T2: 2, T3: 2 }, choices: { a: "Brev", b: "Statistik" } },
   },
 });

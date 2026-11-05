@@ -17,7 +17,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CRITERIA, FORMS, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
+import { CRITERIA, FORMS, HANDOVER, PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, TRANSFER, TRANSFER_CRITERIA, VERSION } from "./assessment-v1.mjs";
+import { CHOICE_STRATEGIES, PART2_STRATEGIES, audit, loadBefore } from "./shortcut-audit.mjs";
 import { SYNTHETIC_RESPONSES } from "./rehearsal.mjs";
 import { stableJson } from "./review-pack.mjs";
 import { duplicateKeys } from "./approval-register.mjs";
@@ -38,35 +39,65 @@ export const FIELDS = Object.freeze([
   ["aendringer", "Konkrete rettelser (skal udfyldes ved »Skal rettes«)"],
 ]);
 
-/** What the developer checked (NOT an approval), what is invented, the didactic reason, and known weaknesses. */
+/** What the developer checked (NOT an approval), what is invented, the didactic reason, known weaknesses, and why
+ *  the test changed in v1.2 (F9). The exact before/after text is generated from fixtures/assessment-v1.1.json. */
 export const FORM_REVIEW = Object.freeze({
   A: {
-    verified: "Koleraepidemien i København 1853: ca. 4.742 døde af 7.210 smittede, 11. juni–1. oktober 1853 (KU, plancher om Kommunehospitalet; lex.dk »Koleraen i Danmark i 1800-tallet«).",
+    verified: "Koleraepidemien i København 1853: ca. 4.742 døde af 7.210 smittede, 11. juni–1. oktober 1853 (KU, plancher om Kommunehospitalet; lex.dk »Koleraen i Danmark i 1800-tallet«). At fattige familier boede i fugtige kælderboliger (del 2, påstand 4), er IKKE kontrolleret i en kilde.",
     rationale: "Prætest før introduktionen. Afsender og tid står i overskriften (let), modtager og formål skal udledes af teksten (sværere). Del 2 og 3 måler, om eleven kan afgøre, hvad kilden kan bruges til.",
-    weaknesses: ["Kilden er den længste (58 ord) og har tre svære ord (Magistraten, lazaret, rendestene, nu med ordforklaring). A kan derfor være en anelse sværere end B og C."],
+    weaknesses: [
+      "Kilden er den længste (58 ord) og har tre svære ord (Magistraten, lazaret, rendestene, med ordforklaring). A kan derfor være en anelse sværere end B og C.",
+      "I A alene giver reglerne »ja ved holdningsord« og »nej ved mængdeord« stadig 3 af 4 i del 2. På tværs af A, B og C er de på gætteniveau.",
+      "Påstand 4 (ja) kræver, at eleven ser, at lægen selv har set de syge, og at påstanden er forsigtig (»nogle«). En elev, der tænker »han vil have penge, så han overdriver«, svarer nej (som det syntetiske svar S4). Det er tilsigtet, men gør påstanden svær.",
+    ],
+    changes: "Del 2 havde én ja-påstand, og den var den eneste, der begyndte med afsenderen og havde et holdningsord. Nu har del 2 fire påstande: afsenderen nævnes i én ja- og én nej-påstand, og ja-påstandene er ikke længere de længste. Del 3's påstande deler ikke længere ord med det rigtige svars beskrivelse. Del 1 afleveres, før eleven får del 2 og 3.",
   },
   B: {
     verified: "Den spanske syge 1918: ca. 0,4 % af befolkningen døde (lex.dk »den spanske syge«); skoler blev lukket lokalt, fx i Thisted i oktober 1918 (Arkiv Thy). En lukning i Aarhus er IKKE kontrolleret — opslaget er konstrueret.",
-    rationale: "Posttest straks efter forløbet. Samme opbygning som A, men et andet emne og en anden rækkefølge i del 2 og del 3, så eleven ikke kan genbruge prætestens facit.",
-    weaknesses: ["Modtageren er lettere at se (»jeres egen og naboernes skyld«) end i A. B kan derfor være en anelse lettere."],
+    rationale: "Posttest straks efter forløbet. Samme opbygning og samme fire påstandstyper som A, men et andet emne og en anden rækkefølge, så eleven ikke kan genbruge prætestens facit.",
+    weaknesses: [
+      "Modtageren er lettere at se (»jeres egen og naboernes skyld«) end i A. B kan derfor være en anelse lettere.",
+      "Påstand 3 (»vidste, at lukkede skoler ville stoppe smitten«) kræver, at eleven skelner mellem et råd og viden om virkningen. Det er sværere end A's påstand om, hvad der skete bagefter.",
+    ],
+    changes: "Som i A: fire påstande, afsenderen i én ja- og én nej-påstand. Påstanden om dødstallet er erstattet af en påstand om, hvad kommissionen vidste. Jubilæumstalen (1935) er erstattet af en erindring fra en tidligere arbejder (1965), så der er to personlige kilder fra forskellige tider. Påstand a deler ikke længere ordet »regel« med svaret.",
   },
   T: {
     verified: "Vaskemaskiner bredte sig i danske hjem i 1950'erne og 1960'erne. Firmaet Nordvask og statistikken er opfundne.",
     rationale: "Transfer: ny periode, nyt emne, nye kildetyper (reklame og statistik) og ingen trin-for-trin-spørgsmål. Eleven skal selv tage afsender og formål i brug.",
-    weaknesses: ["Nær transfer: samme fag og samme metode. Den viser ikke, at eleven bruger metoden i andre fag."],
+    weaknesses: [
+      "Nær transfer: samme fag og samme metode. Den viser ikke, at eleven bruger metoden i andre fag.",
+      "Spørgsmål 1 har altid svaret »nej«, og rubrikken giver T1 = 1 for »nej uden at sige hvorfor«. En elev, der altid svarer nej, får altså 1 point uden kildekritik. Ikke rettet, fordi det kræver en ændring af rubrikken: dit valg (forslag: T1 = 1 kræver en begrundelse, der ikke kun er »nej«).",
+    ],
+    changes: "Spørgsmål 1–2 er uændrede. Valgdelen: påstandene delte ord med det rigtige svars beskrivelse (»husmor … vaskemaskine«, »husstande«). Nu deler reklamen flest ord med begge påstande, og kildernes rækkefølge er ny. Spørgsmål 1–2 afleveres, før eleven får kildetabellen, som nævner reklamens formål.",
   },
   C: {
-    verified: "Stormfloden 13. november 1872 på Lolland-Falster: 80–92 omkom på land (lex.dk »stormfloden den 13. november 1872«; videnskab.dk).",
-    rationale: "Forsinket test efter reel tid. Samme opbygning som A og B, ny rækkefølge.",
+    verified: "Stormfloden 13. november 1872 på Lolland-Falster: 80–92 omkom på land (lex.dk »stormfloden den 13. november 1872«; videnskab.dk). Antallet af familier, der mistede deres hus, er IKKE kontrolleret.",
+    rationale: "Forsinket test efter reel tid. Samme opbygning og samme fire påstandstyper som A og B, ny rækkefølge.",
     weaknesses: ["Indberetningen nævner ikke modtageren direkte (»staten«); accepterede svar: regeringen, staten, ministeriet."],
+    changes: "Som i A: fire påstande, afsenderen i én ja- og én nej-påstand. Del 3: lærebogen (2000) og maleriet (1900) var for lette at fravælge. De er erstattet af en køreplan fra jernbaneselskabet (1847) og en erindring fra en tidligere passager (1897), så valget kræver både tid og formål.",
   },
 });
 
-/** A pattern that still gives the answer away in all three parallel forms — for the teacher to decide (F9). */
-export const SENDER_CUE = Object.freeze({
-  finding: "I del 2 nævner ja-påstanden altid afsenderen (»Lægen mente …«, »Sundhedskommissionen ønskede …«, »Amtmanden mente …«), og ingen nej-påstand gør. Reglen »svar ja, når afsenderen er nævnt« giver derfor altid fuldt hus i del 2 uden at læse kilden.",
-  proposal: "Forslag (ikke indført): tilføj i hver form en fjerde påstand, der nævner afsenderen, men som kilden IKKE kan belægge, fx »Lægen mente, at koleraen skyldtes bakterier i vandet« (nej). Det koster ca. 1 minut og ændrer Valg fra 0–5 til 0–6.",
-});
+/** F9 adversarial review: the answer shortcuts found in v1.1, what was done, and the rule-based strategies that test it. */
+export const SHORTCUT_FINDINGS = Object.freeze([
+  { id: "G1", pattern: "Afsenderen i ja-påstanden. I del 2 var ja-påstanden den eneste, der begyndte med afsenderen (»Lægen mente …«, »Sundhedskommissionen ønskede …«, »Amtmanden mente …«).", fix: "Afsenderen nævnes i én ja- og én nej-påstand pr. prøve. Nej-påstanden siger noget sandt om afsenderen, men påstår mere, end kilden viser: lægen bad om penge, men fik han dem? Kommissionen lukkede skolerne, men vidste den, at det virkede? Amtmanden skrev om stormfloden, men om hele Danmark?", strategies: ["afsender-naevnt", "afsender-foerst"] },
+  { id: "G2", pattern: "Holdningsord. »mente« og »ønskede« stod kun i ja-påstande.", fix: "Holdningsord står nu også i nej-påstande (»vidste«, »mente«).", strategies: ["holdningsord"] },
+  { id: "G3", pattern: "Svarlængde. Ja-påstanden var den længste i B og C.", fix: "Længderne er afbalanceret, så de længste påstande ikke er ja-påstandene.", strategies: ["laengst-ja"] },
+  { id: "G4", pattern: "Fast antal. Altid én ja og to nej: »svar altid nej« gav 2 af 3.", fix: "To ja og to nej pr. prøve: »altid nej« giver det samme som gæt.", strategies: ["altid-nej", "altid-ja", "maengdeord-nej", "ordoverlap"] },
+  { id: "G5", pattern: "Ord kun i én slags svar. På tværs af prøverne stod »mente« og »folk« kun i ja-påstande, og »kostede«, »tusindvis« og »livet« kun i nej-påstande.", fix: "Intet ord står nu kun i ja- eller kun i nej-påstande i mere end én prøve (testet).", strategies: [] },
+  { id: "G6", pattern: "Nøgleord i del 3. Påstanden delte ord med det rigtige svars beskrivelse (»regel« og »fastsætte skolens regler«, »købe billetter« og »sælge billetter«, »husstande« og »husstandene«).", fix: "Påstandene er omskrevet, og en anden kilde deler nu emneordene med påstanden. Hverken »vælg kilden med de samme ord« eller det modsatte virker.", strategies: ["noegleord", "faerrest-noegleord"] },
+  { id: "G7", pattern: "For lette distraktorer. C havde en lærebog fra 2000 og et maleri fra 1900, B en jubilæumstale fra 1935: lette at fravælge uden at tænke på formål.", fix: "Hver prøve har nu to personlige kilder (en fra tiden og en skrevet årtier senere) og to officielle kilder fra tiden med forskellige formål.", strategies: ["samme-aar", "altid-personlig", "samtidig-personlig", "laengste-beskrivelse"] },
+  { id: "G8", pattern: "Spørgsmålene giver svarene. Del 2 nævnte modtageren og formålet (»Magistraten gav lægen de penge, han bad om«, »hjælp fra staten«), som eleven skal finde i del 1. I T stod reklamens formål i kildetabellen ved siden af spørgsmål 1–2.", fix: "Side 1 (del 1, i T spørgsmål 1–2) afleveres, før eleven får side 2. Kilden står igen øverst på side 2.", strategies: [] },
+  { id: "G9", pattern: "Prætestens facit. Den, der huskede prætestens rækkefølge, kunne bruge det omvendte (2 af 3), og i C stod del 3's svar på de samme pladser i tabellen som i A.", fix: "To prøver har samme facit på præcis 2 af 4 pladser i del 2, og del 3's svar står på andre pladser end i A.", strategies: ["praetest-raekkefoelge", "praetest-omvendt", "praetest-position", "praetest-undgaa", "foerste-kilde"] },
+]);
+
+/** What is NOT fixed: for the teacher to know or decide. */
+export const SHORTCUT_RESIDUALS = Object.freeze([
+  "T, spørgsmål 1: svaret er altid »nej«, og rubrikken giver 1 point for et »nej« uden begrundelse (se T, kendte svagheder). Det kræver en rubrikændring og er dit valg.",
+  "Der er stadig to ja og to nej i hver prøve. En elev, der ved det, vinder kun lidt, fordi det kun hjælper sammen med rigtige svar. Det er beholdt, så prøverne er lige svære.",
+  "»Vælg den personlige kilde fra påstandens år« giver halvdelen i del 3. Det er forventet, fordi tiden er en del af kompetencen, men den slags valg kan ikke besvare den officielle påstand.",
+  "Reglerne er dem, vi kunne formulere. En elev kan finde andre genveje, og kontrollen er ikke afprøvet på elever.",
+]);
 
 /** The five ambiguities F8 found (laeringsmaaling.md §5, rehearsal.mjs SYNTHETIC_RESPONSES notes). */
 export const AMBIGUITIES = Object.freeze([
@@ -146,7 +177,7 @@ const sha = (s) => createHash("sha256").update(s).digest("hex");
 
 /** id → SHA-256 of the content a decision is about: the test with its key and instructions, or the rubric. */
 export function contentFingerprints({ forms = FORMS, transfer = TRANSFER } = {}) {
-  const shared = { PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON };
+  const shared = { PART2_INSTRUCTION, PART2_REASON, PART3_INSTRUCTION, PART3_REASON, HANDOVER };
   return {
     A: sha(stableJson({ form: forms.A, shared, review: FORM_REVIEW.A })),
     B: sha(stableJson({ form: forms.B, shared, review: FORM_REVIEW.B })),
@@ -160,6 +191,8 @@ const esc = (t) => String(t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").
 const LABEL = { ikke_gennemgaaet: "Ikke gennemgået", godkendt: "Godkendt", skal_rettes: "Skal rettes", afvist: "Afvist" };
 const titleOf = { A: `Prætest A: ${FORMS.A.title}`, B: `Posttest B: ${FORMS.B.title}`, T: `Transfertest T: ${TRANSFER.title}`, C: `Forsinket test C: ${FORMS.C.title}`, rubrik: "Bedømmelsesrubrikken" };
 
+const pageBreak = () => `<p class="brk"><em>${esc(HANDOVER)}</em><br><span class="note">Ny side. Læreren samler side 1 ind, før eleven får side 2. Kilden står igen øverst på side 2.</span></p>`;
+
 function studentView(f) {
   const P = [];
   P.push(`<div class="student" data-read="${f.id}"><p class="who">Det ser eleven:</p>`);
@@ -167,11 +200,14 @@ function studentView(f) {
   if (f.source.glossary) P.push(`<p class="gl"><em>Ord:</em> ${Object.entries(f.source.glossary).map(([k, v]) => `${esc(k)} = ${esc(v)}`).join(" · ")}</p>`);
   if (f.part1) {
     P.push(`<h4>Del 1</h4><ol>${f.part1.questions.map((q) => `<li>${esc(q)}</li>`).join("")}</ol>`);
+    P.push(pageBreak());
     P.push(`<h4>Del 2</h4><p>${esc(PART2_INSTRUCTION)}</p><ol>${f.part2.claims.map((c) => `<li>${esc(c.text)} &nbsp;☐ ja ☐ nej</li>`).join("")}</ol><p>${esc(PART2_REASON)}</p>`);
     P.push(`<h4>Del 3</h4><p>${esc(PART3_INSTRUCTION)}</p><table><thead><tr><th>Kilde</th><th>Hvem · hvornår · til hvem · hvorfor</th></tr></thead><tbody>${f.part3.sources.map((s) => `<tr><td>${esc(s.label)}</td><td>${esc(s.meta)}</td></tr>`).join("")}</tbody></table>`);
     P.push(`<ul>${f.part3.claims.map((c) => `<li><strong>Påstand ${esc(c.id)}:</strong> ${esc(c.text)}</li>`).join("")}</ul><p>${esc(PART3_REASON.replace("{id}", f.part3.reasonFor))}</p>`);
   } else {
-    P.push(`<ol>${f.open.map((q) => `<li>${esc(q)}</li>`).join("")}<li>${esc(PART3_INSTRUCTION)}</li></ol>`);
+    P.push(`<ol>${f.open.map((q) => `<li>${esc(q)}</li>`).join("")}</ol>`);
+    P.push(pageBreak());
+    P.push(`<ol start="${f.open.length + 1}"><li>${esc(PART3_INSTRUCTION)}</li></ol>`);
     P.push(`<table><thead><tr><th>Kilde</th><th>Hvem · hvornår · til hvem · hvorfor</th></tr></thead><tbody>${f.choice.sources.map((s) => `<tr><td>${esc(s.label)}</td><td>${esc(s.meta)}</td></tr>`).join("")}</tbody></table>`);
     P.push(`<ul>${f.choice.claims.map((c) => `<li><strong>Påstand ${esc(c.id)}:</strong> ${esc(c.text)}</li>`).join("")}</ul>`);
   }
@@ -187,13 +223,14 @@ function teacherView(f) {
     ["R1", "R2", "R3", "R4"].forEach((k, i) => P.push(`<tr><td>1.${i + 1} (${k} ${esc(CRITERIA[k].name)})</td><td>${f.part1.key[k].map(esc).join(" · ")}</td><td>accepterede svar</td></tr>`));
     f.part2.claims.forEach((c, i) => P.push(`<tr><td>2.${i + 1}</td><td><strong>${esc(c.answer)}</strong></td><td>${esc(c.why)}</td></tr>`));
     for (const c of f.part3.claims) P.push(`<tr><td>3${esc(c.id)} (${esc(c.sourceKind)})</td><td><strong>${esc(c.answer)}</strong></td><td>${esc(c.why)}</td></tr>`);
-    P.push(`</tbody></table><h4>Bedømmelse</h4><p>Identifikation R1–R4 (0–6), Valg V (0–5), Begrundelse B1 + B2 (0–4). Se rubrikken nederst. Delscorerne lægges ikke sammen.</p>`);
+    P.push(`</tbody></table><h4>Bedømmelse</h4><p>Identifikation R1–R4 (0–6), Valg V (0–6), Begrundelse B1 + B2 (0–4). Se rubrikken nederst. Delscorerne lægges ikke sammen.</p>`);
   } else {
     P.push(`<h4>Facit</h4><table><tbody><tr><td>1</td><td><strong>Nej.</strong> En reklame viser, hvad firmaet ville sælge og til hvem, ikke hvor mange der havde en maskine (T1, T2).</td></tr><tr><td>2</td><td>Hvordan firmaet ville have kunderne til at se maskinen, og hvilket billede af »den moderne husmor« reklamen gav (T3).</td></tr>${f.choice.claims.map((c) => `<tr><td>3${esc(c.id)}</td><td><strong>${esc(c.answer)}</strong></td></tr>`).join("")}</tbody></table><h4>Bedømmelse</h4><p>T1–T3 (0–2 hver) og TV (0–2). Se rubrikken nederst.</p><p><strong>Hvad er nyt:</strong> ${esc(f.whatChanges)}</p><p><strong>Hvad er det samme:</strong> ${esc(f.whatStays)}</p>`);
   }
   P.push(`<h4>Kildeoplysninger</h4><p>${esc(f.source.kind)}, <strong>${esc(f.source.status)}</strong>: et opfundet eksempel på en ægte kildetype. Ikke en original, forkortelse eller parafrase.</p>`);
   P.push(`<h4>Historiske forbehold</h4><p><strong>Skal kontrolleres af dig:</strong> ${esc(f.frameToCheck)}</p><p><strong>Udviklerens kontrol (ikke en godkendelse):</strong> ${esc(r.verified)}</p>`);
-  P.push(`<h4>Didaktisk begrundelse</h4><p>${esc(r.rationale)}</p><h4>Kendte svagheder</h4><ul>${r.weaknesses.map((w) => `<li>${esc(w)}</li>`).join("")}${f.part1 ? `<li>${esc(SENDER_CUE.finding)} <em>${esc(SENDER_CUE.proposal)}</em></li>` : ""}</ul>`);
+  P.push(`<h4>Didaktisk begrundelse</h4><p>${esc(r.rationale)}</p><h4>Kendte svagheder</h4><ul>${r.weaknesses.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>`);
+  P.push(`<h4>Ændret i ${esc(VERSION)} (F9: svargenveje fjernet)</h4><p>${esc(r.changes)}</p>${beforeAfter(f.id)}`);
   P.push(`<p class="tid">Tid: ${f.minutes} min.</p></details>`);
   return P.join("");
 }
@@ -226,6 +263,47 @@ function lp13(d) {
   return `<fieldset class="dec lp" id="lp-${d.id}"><legend>${esc(d.id)}: ${esc(d.title)}</legend>${opts}<label class="c">Kommentar <textarea name="lpk-${d.id}" rows="1"></textarea></label></fieldset>`;
 }
 
+
+const BEFORE = loadBefore();
+const BEFORE_OF = { A: BEFORE.forms.A, B: BEFORE.forms.B, C: BEFORE.forms.C, T: BEFORE.transfer };
+const listClaims = (cs, withAnswer) => `<ol>${cs.map((c) => `<li>${esc(c.text)}${withAnswer ? ` <strong>${esc(c.answer)}</strong>` : ""}</li>`).join("")}</ol>`;
+const listSources = (ss) => `<ul>${ss.map((x) => `<li>${esc(x.label)}: ${esc(x.meta)}</li>`).join("")}</ul>`;
+
+/** Before (v1.1, frozen fixture) and now, side by side: the exact text that changed. Inside the teacher's fold. */
+function beforeAfter(id) {
+  const b = BEFORE_OF[id], n = id === "T" ? TRANSFER : FORMS[id];
+  const rows = [];
+  if (n.part2) {
+    rows.push(["Del 2: påstande og facit", listClaims(b.part2.claims, true), listClaims(n.part2.claims, true)]);
+    rows.push(["Del 3: kilder (i tabellens rækkefølge)", listSources(b.part3.sources), listSources(n.part3.sources)]);
+    rows.push(["Del 3: påstande og facit", listClaims(b.part3.claims, true), listClaims(n.part3.claims, true)]);
+  } else {
+    rows.push(["Spørgsmål 1–2", listClaims(b.open.map((t) => ({ text: t })), false), listClaims(n.open.map((t) => ({ text: t })), false)]);
+    rows.push(["Kilder (i tabellens rækkefølge)", listSources(b.choice.sources), listSources(n.choice.sources)]);
+    rows.push(["Påstande og facit", listClaims(b.choice.claims, true), listClaims(n.choice.claims, true)]);
+  }
+  rows.push(["Tid", `${b.minutes} min`, `${n.minutes} min`]);
+  rows.push(["Side 1 afleveres før side 2", "nej", "ja"]);
+  return `<table class="diff"><thead><tr><th></th><th>Før (${esc(BEFORE.version)})</th><th>Nu (${esc(VERSION)})</th></tr></thead><tbody>${rows.map(([k, x, y]) => `<tr><td>${esc(k)}</td><td>${x}</td><td>${y}</td></tr>`).join("")}</tbody></table>`;
+}
+
+/** The adversarial check: every rule-based strategy, before and after, per test. Generated, so it cannot drift. */
+function shortcutSection() {
+  const before = audit(BEFORE.forms, BEFORE.transfer), after = audit(FORMS, TRANSFER);
+  const cell = (row, id) => (row.per[id] ? `${row.per[id].right}/${row.per[id].of}` : "–");
+  const table = (title, strategies, b, a, ids, chance) => `<h3>${esc(title)} (gæt: ${chance})</h3><table><thead><tr><th>Strategi</th><th>Før i alt</th><th>Nu i alt</th>${ids.map((i) => `<th>Nu ${i}</th>`).join("")}</tr></thead><tbody>${strategies.map((st) => {
+    const rb = b.find((r) => r.id === st.id), ra = a.find((r) => r.id === st.id);
+    return `<tr><td>${esc(st.name)}</td><td>${rb.right}/${rb.of} (${rb.pct} %)</td><td><strong>${ra.right}/${ra.of} (${ra.pct} %)</strong></td>${ids.map((i) => `<td>${cell(ra, i)}</td>`).join("")}</tr>`;
+  }).join("")}</tbody></table>`;
+  return `<section class="ov" id="svargenveje"><h2>Kontrol af svargenveje (F9)</h2>`
+    + `<p>Kan en elev få det rigtige svar uden at forstå det faglige indhold? Nedenfor er de mønstre, der blev fundet i ${esc(BEFORE.version)}, og hvad der er gjort. Tabellerne viser, hvor mange rigtige simple regler (uden kildekritik) får før og nu. Regler, der får mere end gæt, er en genvej.</p>`
+    + `<table><thead><tr><th>Fund</th><th>Mønster</th><th>Rettelse</th></tr></thead><tbody>${SHORTCUT_FINDINGS.map((g) => `<tr><td>${esc(g.id)}</td><td>${esc(g.pattern)}</td><td>${esc(g.fix)}</td></tr>`).join("")}</tbody></table>`
+    + table("Del 2 (ja/nej) i A, B og C", PART2_STRATEGIES, before.part2, after.part2, ["A", "B", "C"], "50 %")
+    + table("Del 3 og transfertestens kildevalg", CHOICE_STRATEGIES, before.part3, after.part3, ["A", "B", "C", "T"], "25 %")
+    + `<h3>Ikke rettet (til din vurdering)</h3><ul>${SHORTCUT_RESIDUALS.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>`
+    + `<p class="note">Ændringerne i hver prøve står under »Til læreren« ved prøven (før og nu, ord for ord). Fordi indholdet er ændret, står alle prøver som »Ikke gennemgået«.</p></section>`;
+}
+
 export function html() {
   const fps = contentFingerprints();
   const forms = { A: FORMS.A, B: FORMS.B, T: TRANSFER, C: FORMS.C };
@@ -248,6 +326,7 @@ fieldset{border:1px dashed var(--line);border-radius:6px;margin-top:10px}fieldse
 .bar{position:sticky;top:0;z-index:1;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .bar input[type=text]{font:inherit;padding:4px}button{font:inherit;padding:6px 12px}.note,.eff{font-size:14px;color:var(--muted)}
 .el[data-status="godkendt"]{border-left:6px solid var(--ok)}.el[data-status="skal_rettes"]{border-left:6px solid var(--warn)}.el[data-status="afvist"]{border-left:6px solid var(--bad)}
+.brk{border-top:2px dashed var(--line);margin:12px 0 8px;padding-top:6px}table.diff td{font-size:14px}
 .stale{color:var(--bad);font-weight:600}#count{font-weight:600}.sep{border-top:3px double var(--line);margin-top:28px;padding-top:6px}
 </style></head><body>
 <h1>Prøvegodkendelse: kildekritik (D-346)</h1>
@@ -265,6 +344,7 @@ fieldset{border:1px dashed var(--line);border-radius:6px;margin-top:10px}fieldse
 <tr><td>LP-13 (læringsprogression)</td><td><strong>Kræver din beslutning</strong> (afsnit F) — ikke en del af prøvegodkendelsen</td></tr>
 <tr><td>Elevpilot og produktion</td><td><strong>Ikke autoriseret</strong></td></tr></tbody></table>
 <p><label><input type="checkbox" id="ra-on"> Prøv oplæsning af elevteksten (prototype, slået fra som standard). Bruger kun stemmer, som browseren angiver som lokale på denne computer; ingen tekst sendes af siden.</label> <span id="ra-voice" class="note"></span></p></section>
+${shortcutSection()}
 <h2 class="sep">B. Prætest</h2>${testSection("A")}
 <h2 class="sep">C. Posttest</h2>${testSection("B")}
 <h2 class="sep">D. Transfer og forsinket test</h2>${testSection("T")}${testSection("C")}
