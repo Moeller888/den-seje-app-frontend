@@ -322,6 +322,11 @@ test("teacher domain view: true_false is counted apart as 'Forståelsestjek', ne
   assert.match(page, /questions\(learning_objective, answer_format\)/);
   assert.match(page, /const rows = summariseDomainProgress\(data \?\? \[\], objectiveToDomain\);/);
   assert.match(page, /Forst&#229;elsestjek/);
+  // The overview card names what each figure covers: the ratio and attempts come from
+  // get_student_overview (true_false excluded), the total from the reward counter (all formats).
+  assert.match(page, /Korrekt svarprocent, førstesvar \(uden forståelsestjek\):/);
+  assert.match(page, /Førstesvar i alt \(uden forståelsestjek\):/);
+  assert.match(page, /Rigtige førstesvar i alt, alle opgavetyper inkl\. forståelsestjek \(tæller til achievements\):/);
 });
 
 // ── 5. Inactive and ordered ────────────────────────────────────────────────────────────────────

@@ -487,9 +487,9 @@ function renderStudent(student, profileData) {
 
     <hr>
 
-    <p><strong>Korrekt svarprocent (seneste):</strong> ${student.correct_ratio ?? 0}%</p>
-    <p><strong>Total korrekte:</strong> ${student.total_correct_answers ?? 0}</p>
-    <p><strong>Forsøg i alt:</strong> ${student.total_attempts ?? 0}</p>
+    <p><strong>Korrekt svarprocent, førstesvar (uden forståelsestjek):</strong> ${student.correct_ratio ?? 0}%</p>
+    <p><strong>Førstesvar i alt (uden forståelsestjek):</strong> ${student.total_attempts ?? 0}</p>
+    <p><strong>Rigtige førstesvar i alt, alle opgavetyper inkl. forståelsestjek (tæller til achievements):</strong> ${student.total_correct_answers ?? 0}</p>
   `;
 
   // The pupil's e-mail is text, never parsed as HTML.
