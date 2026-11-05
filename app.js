@@ -122,6 +122,22 @@ function setUIState(newState) {
   }
 }
 
+// D-347 spillepauser: the module is loaded on demand and FAIL-SOFT. If it cannot load (an older
+// deployment, a network error), every break check answers "no break" and the quiz runs exactly as before.
+let minigameBreakModule = null;
+function loadMinigameBreak() {
+  if (!minigameBreakModule) {
+    minigameBreakModule = import("./js/minigame-break.js").catch((e) => {
+      logError("MINIGAME_BREAK_MODULE_UNAVAILABLE", e);
+      return null;
+    });
+  }
+  return minigameBreakModule;
+}
+// How long the quiz waits for the server's break answer before loading the next question anyway. A late
+// offer is not lost: the server shows the same waiting offer after the next answer.
+const MINIGAME_BREAK_WAIT_MS = 4000;
+
 let exprEngine    = null;
 let presenceEngine = null;
 let blinkEngine   = null;
@@ -838,6 +854,59 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadAndRenderQuestion();
   };
 
+  // ── D-347 spillepauser ────────────────────────────────────────────────────────────────────────────
+  // breakCheck: the server's answer about a break, for the LAST REGISTERED answer only. It is started the
+  // moment the graded reply arrives and awaited in loadAndRenderQuestion(), i.e. after that answer's
+  // feedback (and reflection) and BEFORE the next question is fetched — so no question loads behind the
+  // dialog and the quiz never continues while the pupil plays. It never touches the answer itself.
+  let breakCheck = null;
+  let leftForBreak = false;
+  let questionVisibleTimer = null;
+  loadMinigameBreak().then((m) => {
+    try { if (m) questionVisibleTimer = m.createVisibleTimer(); } catch (e) { logError("MINIGAME_BREAK_TIMER", e); }
+  });
+
+  function requestBreakCheck(instanceId) {
+    const visible = questionVisibleTimer ? questionVisibleTimer.seconds() : null;
+    const check = loadMinigameBreak()
+      .then((m) => (m ? m.checkBreakAfterAnswer(supabase, instanceId, visible) : null))
+      .then((r) => {
+        if (r?.error) logEvent("MINIGAME_BREAK_CHECK_FAILED", { error: r.error });
+        return r?.offer ?? null;
+      }, () => null);
+    const timeout = new Promise((resolve) => setTimeout(() => resolve(null), MINIGAME_BREAK_WAIT_MS));
+    breakCheck = Promise.race([check, timeout]);
+  }
+
+  // Returns true when the pupil left for the game (the quiz must load nothing more).
+  async function offerBreakIfDue() {
+    if (!breakCheck) return false;
+    const pending = breakCheck;
+    breakCheck = null;
+    const offer = await pending;
+    if (!offer) return false;
+    const m = await loadMinigameBreak();
+    if (!m) return false;
+    const outcome = await m.runBreakOffer({
+      client: supabase,
+      offer,
+      subject: currentSubject,
+      doc: document,
+      track,
+      attachReadAloud: attachReadAloudControl,
+      navigate: (url) => { leftForBreak = true; window.location.href = url; },
+      showNotice: (text) => { import("./js/toast.js").then((t) => t.showToast(text, "info", 4000), () => {}); },
+    });
+    stopReadAloud();   // the dialog's heading may still be speaking
+    return outcome === "navigated";
+  }
+
+  // Back from a game via the browser's back button: a page restored from the back/forward cache would
+  // still be in the middle of the transition. Load it fresh instead — the quiz state lives on the server.
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted && leftForBreak) window.location.reload();
+  });
+
   // ── H5 (D-266, D-273): locked submissions — used only when isH5SubmissionsEnabled() ──────────────
   // pendingSubmission is the one submission of the question on screen whose result is not settled. It
   // is locked: a retry sends exactly it (same submission_id, round, instance and answer), and no new
@@ -1370,6 +1439,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // D-347: the answer is registered (the server graded it, or queued it for the teacher). Only now may
+    // a break be considered — right or wrong alike; an unknown status is not a registration.
+    if (data.status === "correct" || data.status === "incorrect" || data.status === "pending") {
+      requestBreakCheck(currentInstanceId);
+    }
+
     const prevXp = lastKnownXp;
     const prevCoins = lastKnownCoins;
     sessionQuestionCount++;
@@ -1748,6 +1823,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     reviewFeedback.classList.remove("visible");
     reflectionContinue.style.display = "none";
 
+    // D-347: a spillepause due after the answer just registered is offered here, at the transition.
+    if (await offerBreakIfDue()) return;
+
     const question = await getNextQuestion();
 
     if (!question) {
@@ -1819,6 +1897,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     feedback.textContent = "";
     feedback.className = "";
     questionShownAt = Date.now();
+    questionVisibleTimer?.restart();
 
     if (!renderOptions(question)) {
       // Unsupported interaction type: same exit as the load-error path above — the state machine

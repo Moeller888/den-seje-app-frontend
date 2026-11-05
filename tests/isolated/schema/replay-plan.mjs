@@ -114,6 +114,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
   "20261101120000_night_owl_stop_new_awards.sql":
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
+  "20261105090000_minigame_breaks.sql":
+    "D-347, not applied in production: spillepauser (minigame_break_* tables and RPCs) do not exist there; the frontend fails soft without them (no offers, game pages locked)",
   "20261103110000_l1_k1_attempt_context.sql":
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
   "20261105130000_quiz_anti_guess_cooldown.sql":

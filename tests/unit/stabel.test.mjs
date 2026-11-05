@@ -69,12 +69,17 @@ test("the sweep speeds up with the tower and levels off at 50 plates", () => {
   assert.equal(sweepSpeed(NaN), 1.85);
 });
 
-test("the page pays through claim_stabel_reward once per round, never through the quiz path", async () => {
+test("Stabel pays nothing (D-347): no RPC, no coin text, never the quiz path", async () => {
   const { readFileSync } = await import("node:fs");
   const src = readFileSync(new URL("../../js/stabel.js", import.meta.url), "utf8");
-  assert.equal(src.match(/supabase\.rpc\(/g)?.length, 1);
-  assert.match(src, /supabase\.rpc\("claim_stabel_reward", \{ p_plates: Math\.floor\(plates\) \}\)/);
-  assert.equal(src.match(/claimCoins\(state\.plates, state\.round\)/g)?.length, 1);
-  assert.equal(src.includes("process-event"), false);
-  assert.match(src, /Mønterne kunne ikke gemmes/);
+  const code = src.replace(/\/\/.*$/gm, "");
+  assert.equal(/\.rpc\(/.test(code), false, "Stabel pays no coins");
+  assert.equal(code.includes("claim_stabel_reward"), false);
+  assert.equal(code.includes("claimCoins"), false);
+  assert.equal(code.includes("process-event"), false);
+  assert.equal(/mønt/i.test(code), false);
+  const page = readFileSync(new URL("../../stabel.html", import.meta.url), "utf8");
+  assert.equal(page.includes("stabel-coins"), false);
+  assert.match(page, /Stabel giver ingen mønter\./);
+  assert.equal(page.includes("1 mønt"), false);
 });
