@@ -142,7 +142,7 @@ DECLARE
     {"id":"9550e603-06b5-4033-bf48-1db20deda12d","domain":"world_war_2","grade":7,"band":3,"concept":"besættelsen",
      "question":"I hvilket år brød samarbejdspolitikken sammen den 29. august efter Augustoprøret? Skriv årstallet med fire cifre.",
      "correct":"1943",
-     "review_text":"Efter strejker og uroligheder i august 1943 gik regeringen af den 29. august 1943, og samarbejdspolitikken brød sammen."},
+     "review_text":"Efter strejker og uroligheder i august 1943 indførte tyskerne undtagelsestilstand den 29. august 1943. Regeringen indstillede sit arbejde, og samarbejdspolitikken brød sammen."},
     {"id":"e182b27d-f49e-427a-9b0c-356794b92128","domain":"world_war_2","grade":7,"band":1,"concept":"befrielsen",
      "question":"I hvilket år blev Danmark befriet den 5. maj? Skriv årstallet med fire cifre.",
      "correct":"1945",
