@@ -235,7 +235,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (F-07 stimulus) — **ikke deployet** | dette repository | 16 | `44ee77a4233f8699f1a342e2584f7b69ef1be1175415866e335854175856b29c` |
+| Kandidat (F-04 Rækkefølge, oven på F-07) — **ikke deployet** | dette repository | 17 | `c078432fe94dc46b1b6e9ca41fe51a814bae99efd51435587cea1e52f1bd6bfb` |
+| Forrige kandidat (F-07 stimulus, PR #618) — ikke deployet | #618 | 16 | `44ee77a4233f8699f1a342e2584f7b69ef1be1175415866e335854175856b29c` |
 | Deployet i produktion 2026-11-04 (`a7450b0f`, version 181 og senere secret-versioner) | `a7450b0f` | 15 | `1f508a8459f5141f1e629dec94ec979ce34bafdcecdbc650b8d6db2a2f7c3bbe` |
 | Forrige kandidat (før R2-canary'en, §2.6.1) | main før canary'en | 15 | `4a89e9e6e33b363c9e8360bb81b19077dcb26c4791c3a086a66c73386b718f8d` |
 | Forrige kandidat (før L1 K1's `served-snapshot.ts`) | main før K1 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
@@ -244,6 +245,13 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 | Version 180, som deployet 2026-10-31 — **rollback-mål før H5-aktivering** | `1aee47a` (main, merge af #487), uændret | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
 | Historisk rollback til version 179 (det, `materialize-rollback` skriver) | `21ec9ff` med låsningen (kun linje 2 i `index.ts` er ændret) | 11 | `ca21b993839e48ff4e5baf3189306860d6b349fdcc7eea12f65ab78a73e418c6` |
 | Version 179, som deployet | `21ec9ff` uændret | 11 | `c4414671f3a5aff1e8d5bc3cb57ec4e92bb0d70ef8008a7ade39a75730c81985` |
+
+**F-04 Rækkefølge ændrer grafen fra 16 til 17 filer.** `_shared/order-items.ts` er ny (kontrakt,
+instansnøgle og layout; facit er den forfattede rækkefølge, kun præsentationen blandes), og
+`index.ts`, `_shared/question-dto.ts` og `_shared/interaction-kinds.ts` ændres: `index.ts` trækker
+nøglen for `order` ved oprettelse og læser den for åbne og gentagne runder præcis som for `match`
+(`KEYED_FORMATS`). Formatet er ikke servable, så ingen elev kan få det; for alle andre formater er
+læsningerne uændrede (slukket-pariteten er grøn). Kandidaten er **ikke** deployet.
 
 **F-07 stimulus ændrer grafen fra 15 til 16 filer.** `_shared/question-dto.ts` importerer nu
 `_shared/stimulus.ts` og bygger `content.stimulus` (kilde, billede eller lydklip) felt for felt efter
@@ -367,7 +375,7 @@ reference.
 - `entrypoint_path` `functions/get-next-question/index.ts`;
 - `import_map_path` `functions/get-next-question/deno.json`;
 - `verify_jwt` `false`, ellers fejler browserens OPTIONS-preflight;
-- præcis filerne i kandidatmanifestet (16 for kandidaten ovenfor), med stierne som i manifestet.
+- præcis filerne i kandidatmanifestet (17 for kandidaten ovenfor), med stierne som i manifestet.
 
 Ingen secret ændres.
 

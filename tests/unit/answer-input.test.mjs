@@ -104,9 +104,11 @@ test("mc and number keep their renderers", () => {
 });
 
 test("an unknown or missing format is unsupported — never silently option buttons", () => {
-  for (const f of ["true_false", "cloze", "order", "", null, undefined, 42]) {
+  for (const f of ["true_false", "cloze", "categorize", "", null, undefined, 42]) {
     assert.equal(resolveAnswerRenderer(q(f, "short")), ANSWER_RENDERERS.UNSUPPORTED, String(f));
   }
+  // "order" has its own renderer since F-04 (Rækkefølge, not servable): never option buttons either.
+  assert.equal(resolveAnswerRenderer(q("order", "short")), ANSWER_RENDERERS.ORDER_ITEMS);
 });
 
 test("malformed questions never throw", () => {
@@ -420,9 +422,9 @@ test("the correction without a typed answer names only the spelling", () => {
   }
 });
 
-test("app.js keeps the correction only for \"stav til\" and Match par — other reflections are unchanged", () => {
+test("app.js keeps the correction only for \"stav til\", Match par and Rækkefølge — other reflections are unchanged", () => {
   const app = read("../../app.js");
-  assert.match(app, /currentRenderer === ANSWER_RENDERERS\.SHORT_TEXT\s*\?\s*shortTextCorrection\(data\.correct_answer, userAnswer\)\s*:\s*currentRenderer === ANSWER_RENDERERS\.MATCH_PAIRS && currentMatchControl\s*\?\s*matchCorrectionText\(currentMatchControl\.layout, data\.correct_answer\)\s*:\s*null/);
+  assert.match(app, /currentRenderer === ANSWER_RENDERERS\.SHORT_TEXT\s*\?\s*shortTextCorrection\(data\.correct_answer, userAnswer\)\s*:\s*currentRenderer === ANSWER_RENDERERS\.MATCH_PAIRS && currentMatchControl\s*\?\s*matchCorrectionText\(currentMatchControl\.layout, data\.correct_answer\)\s*:\s*currentRenderer === ANSWER_RENDERERS\.ORDER_ITEMS && currentOrderControl\s*\?\s*orderCorrectionText\(currentOrderControl\.layout, data\.correct_answer\)\s*:\s*null/);
   assert.match(app, /enterReflectionState\(reviewText, correction\)/);
   assert.match(app, /feedback\.textContent = leadText \?\? "";/);
 });

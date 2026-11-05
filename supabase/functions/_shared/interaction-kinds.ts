@@ -25,6 +25,10 @@
 //   match_pairs  answer_format "match" (ROADMAP #13)      auto-graded   renderer "match_pairs" — BUILT, NOT
 //                servable: contract, key and answer shape in _shared/match-pairs.ts; graded by
 //                process_question_attempt like MC (process-event canonicalises the connections first)
+//   order_items  answer_format "order" (ROADMAP #12)      auto-graded   renderer "order_items" — BUILT, NOT
+//                servable: contract, key and answer shape in _shared/order-items.ts (the facit is the
+//                authored order; only the presentation is shuffled); graded by process_question_attempt
+//                like Match par (process-event checks the answer's shape first)
 //
 // ADDING A KIND (Match par has done steps 1 and 2) — the order matters, each step is its own reviewed
 // change:
@@ -51,11 +55,12 @@ export type InteractionKind =
   | "long_text"
   | "number"
   | "force_text"
-  | "match_pairs";
+  | "match_pairs"
+  | "order_items";
 
 export type InteractionKindSpec = {
   // The answer_format value get-next-question sends to the browser for this kind.
-  wireFormat: "mc" | "text" | "number" | "match";
+  wireFormat: "mc" | "text" | "number" | "match" | "order";
   // js/answer-input.js ANSWER_RENDERERS value, or null when no client renderer exists yet.
   renderer: string | null;
   // May the server hand this kind out as a NEW question to the current client?
@@ -76,6 +81,7 @@ export const INTERACTION_KINDS: Readonly<Record<InteractionKind, Readonly<Intera
   number:      Object.freeze({ wireFormat: "number",      renderer: "number",     servable: true,  base: false, maxShare: 0.15, teacherGraded: false }),
   force_text:  Object.freeze({ wireFormat: "mc",          renderer: "force_text", servable: true,  base: false, maxShare: 0.15, teacherGraded: false }),
   match_pairs: Object.freeze({ wireFormat: "match",       renderer: "match_pairs", servable: false, base: false, maxShare: 0.15, teacherGraded: false }),
+  order_items: Object.freeze({ wireFormat: "order",       renderer: "order_items", servable: false, base: false, maxShare: 0.15, teacherGraded: false }),
 });
 
 // Registry order is the deterministic tie-break wherever two kinds score the same.
@@ -130,6 +136,7 @@ export function classifyQuestion(row: StoredFormatFields | null | undefined): In
   if (answerType !== "short") return null;
 
   if (format === "match") return forceText ? null : "match_pairs";
+  if (format === "order") return forceText ? null : "order_items";
 
   // mapAnswerFormat (server) tests "mc" first, resolveAnswerRenderer (browser) tests "number" first:
   // a format containing both would be graded as one kind and shown as the other.

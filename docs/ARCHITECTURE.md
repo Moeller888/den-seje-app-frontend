@@ -295,6 +295,26 @@ Rules (binding):
    Scoring is binary (correct/incorrect) — no partial credit — so XP/coins, spaced repetition and
    the response shape `{ status, correct_answer, review_text?, misconception_type? }` stay unchanged.
 
+**Rækkefølge / tidslinje (`order_items`, F-04, 2026-11-05 — built, NOT servable, not deployed).**
+Contract, key and answer shape in `supabase/functions/_shared/order-items.ts`; browser control
+`js/order-items.js`. **The facit is the authored order of `content.items` and is never randomised — only
+the presentation is shuffled**, once per instance: `question_instances.correct_answer` holds the display
+positions of the items in the correct order (never the identity, so the list is never shown solved). The
+payload carries `content.order = { items (shown order), sequence }` only. `content.sequence` is required:
+`chronological` (what happened first — a time order, not a causal claim; the authoring check warns on
+causal wording), `process` (step by step) or `logical` (a subject relationship). The pupil reorders with
+▲/▼ buttons (mouse, touch, keyboard; every move announced) and sends once; `process-event` accepts only a
+permutation of the shown positions (`canonicalOrderAnswer`) and `process_question_attempt` grades it like
+MC — **all or nothing, one reward path** (tested on the replayed production function:
+`tests/unit/order-items-grading.test.mjs`). Why all or nothing for now: partial credit is undecided
+(D-277 LP-7) and binary scoring is rule 4 above; a random order of 4 items is right 1 time in 24, so a
+correct answer is strong evidence, whereas partial credit would reward near-random orders. The feedback
+still shows the whole correct order after a wrong answer. 3 items (1 in 6) is a practice size. **Before
+pupils can get it:** a reviewed activation migration (production's `questions_answer_format_check` and
+`content_valid_check` refuse `order` rows today; `question_is_servable` must flip in the same PR as the
+registry), deploys of `get-next-question` (manifest in the rollout runbook) and `process-event` (the
+shape check), and content — each its own owner GO.
+
 **Stimulus contract (F-07, 2026-11-05 — implemented in code, not deployed, no content).** A question of
 any format may carry `content.stimulus`, built field by field by `supabase/functions/_shared/stimulus.ts`
 and rendered by `js/stimulus.js` above the question:

@@ -38,13 +38,17 @@ const mapAnswerFormat = (() => {
 })();
 
 // ── 1. Interaction kinds ─────────────────────────────────────────────────────────────────────────
-test("registry: exactly one base kind (choice); Match par has its renderer but is NOT servable", () => {
+test("registry: exactly one base kind (choice); Match par and Rækkefølge have renderers but are NOT servable", () => {
   assert.equal(BASE_KIND, "choice");
-  assert.deepEqual(KIND_ORDER, ["choice", "short_text", "long_text", "number", "force_text", "match_pairs"]);
+  assert.deepEqual(KIND_ORDER, ["choice", "short_text", "long_text", "number", "force_text", "match_pairs", "order_items"]);
   assert.equal(INTERACTION_KINDS.match_pairs.servable, false);
   assert.equal(INTERACTION_KINDS.match_pairs.renderer, "match_pairs");
-  for (const k of KIND_ORDER.filter((k) => k !== "match_pairs")) assert.equal(INTERACTION_KINDS[k].servable, true, k);
+  assert.equal(INTERACTION_KINDS.order_items.servable, false);
+  assert.equal(INTERACTION_KINDS.order_items.renderer, "order_items");
+  const built = ["match_pairs", "order_items"];
+  for (const k of KIND_ORDER.filter((k) => !built.includes(k))) assert.equal(INTERACTION_KINDS[k].servable, true, k);
   assert.equal(isServableKind("match_pairs"), false);
+  assert.equal(isServableKind("order_items"), false);
   assert.equal(isServableKind(null), false);
 });
 

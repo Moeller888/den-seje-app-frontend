@@ -32,6 +32,7 @@ export const ANSWER_RENDERERS = Object.freeze({
   SHORT_TEXT: "short_text",
   CHOICE: "choice",
   MATCH_PAIRS: "match_pairs",
+  ORDER_ITEMS: "order_items",
   UNSUPPORTED: "unsupported",
 });
 
@@ -50,6 +51,8 @@ export function resolveAnswerRenderer(question) {
   if (format.includes("mc")) return ANSWER_RENDERERS.CHOICE;
 
   if (format === "match") return ANSWER_RENDERERS.MATCH_PAIRS;
+
+  if (format === "order") return ANSWER_RENDERERS.ORDER_ITEMS;
 
   return ANSWER_RENDERERS.UNSUPPORTED;
 }

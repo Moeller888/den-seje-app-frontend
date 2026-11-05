@@ -1,0 +1,86 @@
+/* Rækkefølge / tidslinje (js/order-items.js). Selectors start with #options so they outrank the quiz
+   page's `#options button` rule, like css/match-pairs.css. Each row: place number, text, ▲ ▼ (≥ 44 px
+   touch targets) and the optional read-aloud button; long texts wrap, nothing overflows a phone screen.
+   Uses the theme tokens from css/theme.css. */
+
+#options .order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+#options .order-instructions {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
+#options .order-list {
+  list-style: none;
+  counter-reset: place;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#options .order-item {
+  counter-increment: place;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--btn-bg);
+  border: 2px solid var(--border-btn);
+  border-radius: 10px;
+  min-width: 0;
+}
+
+#options .order-item::before {
+  content: counter(place) ".";
+  min-width: 1.6em;
+  font-weight: bold;
+  color: var(--text-dim);
+}
+
+#options .order-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  line-height: 1.35;
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+
+#options button.order-move {
+  flex: none;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 16px;
+  touch-action: manipulation;
+}
+
+#options button.order-move:focus-visible,
+#options button.order-submit:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#options .order-item .read-aloud-option-btn {
+  flex: none;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+}
+
+#options .order-live {
+  margin: 0;
+  min-height: 1.2em;
+  font-size: 13px;
+  color: var(--text-dim);
+}
