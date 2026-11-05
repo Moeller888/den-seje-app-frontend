@@ -1,6 +1,6 @@
 # Spillepauser (D-347) — deaktivering og tilbagerulning
 
-Gælder migration `supabase/migrations/20261105090000_minigame_breaks.sql` og frontenden i samme PR.
+Gælder migration `supabase/migrations/20261105090000_minigame_breaks.sql` (anvendt i produktionen 2026-11-05 som remote version `20261105060103`) og frontenden fra PR #597 (merge-commit `c3eb1824`).
 Ingen af trinnene nedenfor rører elevbesvarelser, XP, mønter, mastery eller spørgsmål: funktionen **læser**
 kun `question_instances` og `profiles` og **skriver** kun i sine egne tre tabeller. Migrationen fjerner
 desuden EXECUTE på `claim_stabel_reward(integer)` fra alle API-roller (Stabel giver ingen mønter, D-347);
