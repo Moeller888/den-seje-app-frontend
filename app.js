@@ -16,6 +16,7 @@ import { prepareChoiceOptions } from "./js/answer-options.js";
 import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer, shortTextCorrection } from "./js/answer-input.js";
 import { buildMatchPairsAnswer, matchCorrectionText, readMatchLayout } from "./js/match-pairs.js";
 import { buildTrueFalseAnswer, readTrueFalseContent } from "./js/true-false.js";
+import { buildNumberAnswer } from "./js/number-answer.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 import { attachReadAloudControl, attachOptionReadAloudControl, stopReadAloud } from "./js/read-aloud/adapters/quiz.js";
@@ -1445,26 +1446,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (renderer === ANSWER_RENDERERS.NUMBER) {
-      const input = document.createElement("input");
-      input.type = "text";
-
-      const btn = document.createElement("button");
-      btn.className = "submit-btn";
-      btn.textContent = "Svar";
-
-      btn.onclick = () => {
-        const val = Number(input.value);
-        if (!Number.isNaN(val)) {
-          submitAnswer(String(val), btn);
-        }
-      };
-
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") btn.onclick();
+      // F-01b (js/number-answer.js): a whole number only. Empty, decimals, a plus sign and letters are
+      // refused with a visible Danish message and nothing is sent; a valid answer is sent as the
+      // canonical integer ("1 849" / "1.849" → "1849"). Enter and the button share one submit path,
+      // and submitAnswer's state machine refuses a second send.
+      const { input, button, hint } = buildNumberAnswer(document, {
+        onSubmit: submitAnswer,
+        describedBy: questionElement.id,
       });
-
       optionsContainer.appendChild(input);
-      optionsContainer.appendChild(btn);
+      optionsContainer.appendChild(hint);
+      optionsContainer.appendChild(button);
+      input.focus();
       return true;
     }
 

@@ -256,13 +256,18 @@ test("long text keeps the textarea, Shift+Enter newline and the OCR control", ()
   assert.match(block, /submitAnswer\(textarea\.value, btn\);/);
 });
 
-test("number rendering is unchanged", () => {
+// F-01b changed the number renderer on purpose: Number("") was 0 (an empty field sent "0") and
+// "1 849" was NaN (silently not sent). The parsing and the control now live in js/number-answer.js
+// (pinned in tests/unit/number-answer.test.mjs); here the wiring is pinned: the same submitAnswer, so
+// the quiz state machine still refuses a second send, and no Number() of the raw field remains.
+test("number rendering goes through js/number-answer.js and the existing submitAnswer", () => {
   const start = renderOptionsSrc.indexOf("renderer === ANSWER_RENDERERS.NUMBER");
   const block = renderOptionsSrc.slice(start, renderOptionsSrc.indexOf("ANSWER_RENDERERS.SHORT_TEXT"));
   assert.ok(start > 0);
-  assert.match(block, /const val = Number\(input\.value\);/);
-  assert.match(block, /submitAnswer\(String\(val\), btn\);/);
-  assert.match(block, /if \(e\.key === "Enter"\) btn\.onclick\(\);/);
+  assert.match(APP, /import \{ buildNumberAnswer \} from "\.\/js\/number-answer\.js";/);
+  assert.match(block, /buildNumberAnswer\(document, \{\s*onSubmit: submitAnswer,/);
+  assert.match(block, /optionsContainer\.appendChild\(hint\);/);
+  assert.equal(/Number\(input\.value\)/.test(block), false, "the raw field is never Number()-converted");
 });
 
 test("MC rendering is unchanged: padding, option buttons and the per-option read-aloud row", () => {

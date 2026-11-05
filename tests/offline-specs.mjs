@@ -32,6 +32,7 @@ export const OFFLINE_SPECS = Object.freeze([
   "login-page.spec.ts",
   "teacher-first-run.spec.ts",
   "true-false-ui.spec.ts",
+  "number-answer-ui.spec.ts",
 ]);
 
 // Environment variables an offline run must not carry, even when the calling shell exported them.
