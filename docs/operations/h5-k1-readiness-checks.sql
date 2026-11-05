@@ -33,7 +33,9 @@
 --   k1        20261103110000_l1_k1_attempt_context.sql er anvendt
 --   cutover   M2 (IKKE implementeret endnu — design §PR 5, D-273). CUT-01: ingen runtime-rolle kan udføre de
 --             to legacy-svarfunktioner — direkte, via PUBLIC, rollearv eller SET ROLE — og intet andet
---             kalder dem (runbook §9.2); CUT-02: cutover-tidspunktet T er registreret (kontrakt, §9.1)
+--             kalder dem, og der findes ingen anden funktion i public med et af de to navne (en ny
+--             overload ville være en ny, åben legacy-vej) (runbook §9.2); CUT-02: cutover-tidspunktet T
+--             er registreret (kontrakt, §9.1)
 --   integrity estimeret antal forsøg (præcise integritetskontroller: runbook §8)
 --   ledger    supabase_migrations.schema_migrations; LED-01 sammenholder ledgeren med skemaets fase
 --   security  separat sikkerhedsspor (R6/R7) — blokerer ikke aktiveringen
@@ -151,6 +153,11 @@ lg AS (
     (SELECT count(*) FROM pg_catalog.pg_depend dp
       WHERE dp.refclassid = 'pg_catalog.pg_proc'::regclass AND dp.refobjid IN (st.pqa_oid, st.pta_oid)
         AND dp.deptype IN ('n', 'a')) AS legacy_dependents,
+    -- Andre signaturer med legacy-navnene i public (fx en ny overload via CREATE OR REPLACE): de ville få
+    -- EXECUTE gennem standardrettighederne og kunne kaldes via /rpc. Uanset rettigheder er de et brud.
+    (SELECT count(*) FROM pg_catalog.pg_proc q JOIN pg_catalog.pg_namespace n ON n.oid = q.pronamespace
+      WHERE n.nspname = 'public' AND q.proname IN ('process_question_attempt', 'process_text_answer')
+        AND q.oid IS DISTINCT FROM st.pqa_oid AND q.oid IS DISTINCT FROM st.pta_oid) AS legacy_overloads,
     EXISTS (SELECT 1 FROM pg_catalog.pg_roles r WHERE r.rolname = 'authenticator') AS has_authenticator
   FROM st
 ),
@@ -376,17 +383,18 @@ SELECT 'K1-05', 'k1', 'K1-funktionerne: EXECUTE kun service_role, SECURITY DEFIN
 
 -- ── cutover: M2 (ikke implementeret endnu) ───────────────────────────────────────────────────────
 UNION ALL
-SELECT 'CUT-01', 'cutover', 'M2 udført og legacy-vejen effektivt lukket: ingen runtime-rolle (anon, authenticated, service_role, authenticator) kan udføre process_question_attempt eller process_text_answer — hverken direkte, via PUBLIC, via rollearv eller via SET ROLE; ingen anden ikke-superbruger end ejeren har EXECUTE; ingen anden funktion og intet afhængigt objekt kalder dem (runbook §9.2)',
+SELECT 'CUT-01', 'cutover', 'M2 udført og legacy-vejen effektivt lukket: ingen runtime-rolle (anon, authenticated, service_role, authenticator) kan udføre process_question_attempt eller process_text_answer — hverken direkte, via PUBLIC, via rollearv eller via SET ROLE; ingen anden ikke-superbruger end ejeren har EXECUTE; ingen anden funktion og intet afhængigt objekt kalder dem; ingen anden funktion i public bærer et af de to navne (ingen ny overload) (runbook §9.2)',
        CASE WHEN lg.pqa_oid IS NULL OR lg.pta_oid IS NULL THEN 'mangler' ELSE
          concat_ws('; ', 'runtime=' || coalesce(lg.legacy_runtime, 'ingen'),
                    'PUBLIC=' || lg.legacy_public::text,
                    'øvrige roller=' || coalesce(lg.legacy_other_roles, 'ingen'),
                    'kaldere=' || lg.legacy_callers::text,
                    'afhængige=' || lg.legacy_dependents::text,
+                   'andre signaturer=' || lg.legacy_overloads::text,
                    'authenticator=' || CASE WHEN lg.has_authenticator THEN 'findes' ELSE 'fraværende' END) END,
        coalesce(lg.pqa_oid IS NOT NULL AND lg.pta_oid IS NOT NULL
          AND lg.legacy_runtime IS NULL AND NOT lg.legacy_public AND lg.legacy_other_roles IS NULL
-         AND lg.legacy_callers = 0 AND lg.legacy_dependents = 0, false), 50 FROM lg
+         AND lg.legacy_callers = 0 AND lg.legacy_dependents = 0 AND lg.legacy_overloads = 0, false), 50 FROM lg
 UNION ALL
 SELECT 'CUT-02', 'cutover', 'efter M2: det faktiske cutover-tidspunkt T er registreret vedvarende i public.answer_path_cutovers (kontrakt, runbook §9); før M2 ikke relevant',
        CASE WHEN NOT coalesce(NOT has_function_privilege('service_role', s.pqa_oid, 'EXECUTE')

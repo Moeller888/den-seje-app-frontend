@@ -428,3 +428,38 @@ test("9a–f. CUT-01 detects every effective access path to the legacy functions
     $f$ BEGIN RAISE EXCEPTION 'recreated'; END $f$`);
   await open("DROP/CREATE", /PUBLIC=true/, /anon→anon/, /authenticated→authenticated/, /service_role→service_role/);
 });
+
+test("9g. CUT-01 detects a NEW overload of a legacy name — even with no privilege on it — and a new PUBLIC EXECUTE on it", async () => {
+  const d = await db(FULL);
+  const cut = async () => (await checks(d))["CUT-01"];
+  await d.exec(M2_SQL);
+  assert.equal((await cut()).ok, true, (await cut()).actual);
+  assert.match((await cut()).actual, /; afhængige=0; andre signaturer=0; /);
+
+  // CREATE OR REPLACE with another signature creates a second function: the original signatures stay closed,
+  // so only the name rule can see it. REVOKE ALL first: the overload is a breach without any grant.
+  await d.exec(`CREATE OR REPLACE FUNCTION public.process_question_attempt(uuid, uuid, text, integer) RETURNS jsonb
+      LANGUAGE plpgsql SECURITY DEFINER AS $f$ BEGIN RETURN NULL; END $f$;
+    REVOKE ALL ON FUNCTION public.process_question_attempt(uuid, uuid, text, integer) FROM PUBLIC`);
+  let c = await cut();
+  assert.equal(c.ok, false, `overload without privileges: ${c.actual}`);
+  assert.match(c.actual, /^runtime=ingen; PUBLIC=false; øvrige roller=ingen; kaldere=0; afhængige=0; andre signaturer=1; /,
+    "the original signatures are still closed — only the overload rule fires");
+
+  // A new PUBLIC EXECUTE on the overload: still refused (the rule does not depend on privileges).
+  await d.exec("GRANT EXECUTE ON FUNCTION public.process_question_attempt(uuid, uuid, text, integer) TO PUBLIC");
+  c = await cut();
+  assert.equal(c.ok, false, c.actual);
+  assert.match(c.actual, /andre signaturer=1/);
+
+  // An overload of the other name, in another schema, is not a /rpc path in public and is not counted.
+  await d.exec(`DROP FUNCTION public.process_question_attempt(uuid, uuid, text, integer);
+    CREATE SCHEMA legacy_elsewhere;
+    CREATE FUNCTION legacy_elsewhere.process_text_answer(integer) RETURNS void LANGUAGE sql AS $f$ SELECT $f$`);
+  c = await cut();
+  assert.equal(c.ok, true, c.actual);
+  await d.exec(`CREATE FUNCTION public.process_text_answer(integer) RETURNS void LANGUAGE sql AS $f$ SELECT $f$`);
+  c = await cut();
+  assert.equal(c.ok, false, c.actual);
+  assert.match(c.actual, /andre signaturer=1/);
+});

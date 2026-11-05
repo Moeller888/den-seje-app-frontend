@@ -57,7 +57,8 @@ Beslutningerne blev formuleret i en audit af læringsfundamentet den 2026-11-04 
 | **A7** | Sæt Edge-secret `K1_SERVED_SNAPSHOT=on` | — | Secret | Særskilt |
 | **A8** | Frontend: `ENABLE_H5_SUBMISSIONS = true` | `js/answer-submission.js:31` (egen PR, CI grøn, merge → Cloudflare-deploy) | Commit/PR/merge | Særskilt (hver for sig) |
 | **A9** | Observation 48–72 timer | §8 | Drift | — |
-| **A10** | **M2:** luk legacy-vejen effektivt for `process_question_attempt(uuid,uuid,text,bigint)` og `process_text_answer(uuid,uuid,text,boolean)`. `REVOKE EXECUTE` fra `service_role` alene er ikke nok (§9.2). Herefter dræn igangværende kald, og registrér først derefter T (§9.3) | **Findes ikke endnu.** Kræver egen PR med migration, rollback og tests efter §9.4 (`docs/question-attempts-design.md`: "PR 5 Aktivering (M2) — ikke startet") | Migration | Særskilt |
+| **A10a** | **M2, transaktion 1 — luk:** legacy-vejen lukkes effektivt for `process_question_attempt(uuid,uuid,text,bigint)` og `process_text_answer(uuid,uuid,text,boolean)` (§9.2) | `supabase/migrations/20261105180000_h5_m2_close_legacy_answer_path.sql` | `apply_migration` (navn `h5_m2_close_legacy_answer_path`), alene | Særskilt |
+| **A10b** | **M2, transaktion 2 — dræn og registrér T** (§9.3). Først når A10a er committet | `supabase/migrations/20261105180100_h5_m2_register_cutover.sql` | `apply_migration` (navn `h5_m2_register_cutover`), alene | Særskilt |
 
 **Hvorfor denne rækkefølge:**
 
@@ -65,7 +66,7 @@ Beslutningerne blev formuleret i en audit af læringsfundamentet den 2026-11-04 
 - **A5 før A8 er obligatorisk.** Den deployede `get-next-question` v180 sender ikke `round_no`; det er verificeret 2026-11-04 ved `get_edge_function`: 0 forekomster af `round_no` og 0 af `K1_SERVED_SNAPSHOT` i de 12 filer. Frontenden fejler lukket uden gyldigt `round_no` (`js/answer-submission.js:67-74`, `invalid_round_no`). Med flaget tændt mod v180 kan elever ikke svare.
 - **A6 efter A4.** `process-event` på main kalder på H5-vejen altid K1's 9- og 10-argument-signaturer med `p_mode`/`p_hints_used` (`supabase/functions/process-event/text-answer-rpc.ts:114-149`). Legacy-vejen (uden `round_no` + `submission_id`) er uændret. H5-vejen vælges pr. anmodning; der er **intet serverflag** (`process-event/index.ts:97-104`).
 - **A7 efter A4 og A5.** Snapshot-triggeren skal findes, før `get-next-question` sender forslag.
-- **A10 sidst**, efter A9 er grøn: først da kan intet svar gå uden om loggen. Ældre klienter får så 426 `client_outdated` (`process-event/index.ts:291-296, 427-431`).
+- **A10 sidst**, efter A9 er grøn: først da kan intet svar gå uden om loggen. Ældre klienter får så 426 `client_outdated` (`process-event/index.ts:291-296, 427-431`). A10a og A10b er to særskilte `apply_migration`-kald i den rækkefølge (§9.5); de må aldrig samles i ét kald eller én transaktion.
 
 ## 4. Forventet tilstand før og efter hvert trin (readiness-kontroller)
 
@@ -101,7 +102,8 @@ Readiness-filen returnerer **33 rækker**: 27 kontroller, `CUT-02` og 5 gate-ræ
 - ingen af runtime-rollerne `anon`, `authenticated`, `service_role` og `authenticator` har `EXECUTE`. Det gælder både rollen selv og enhver rolle, den er medlem af, så arv og `SET ROLE` er dækket;
 - `PUBLIC` har ingen tildeling i ACL'en;
 - ingen anden ikke-superbruger end ejeren har `EXECUTE`;
-- ingen anden funktion kalder legacy-funktionerne, og intet objekt afhænger af dem.
+- ingen anden funktion kalder legacy-funktionerne, og intet objekt afhænger af dem;
+- ingen anden funktion i `public` hedder `process_question_attempt` eller `process_text_answer`. En ny overload, fx via `CREATE OR REPLACE` med en anden signatur, er en ny funktion: den får `EXECUTE` gennem standardrettighederne og kan kaldes via `/rpc`. Den tæller som et brud, uanset dens rettigheder (`andre signaturer=` i `actual`).
 
 `actual` viser hver fundet adgangsvej, fx `runtime=authenticator→service_role`.
 
@@ -111,7 +113,8 @@ Bevis på PGlite: `tests/unit/h5-k1-readiness-checks.test.mjs`:
 - test 4a: manglende D-327/K1;
 - test 4b: kun bootstrap;
 - test 8: ledger og gates;
-- test 9a–9f: `CUT-01`'s adgangsveje.
+- test 9a–9f: `CUT-01`'s adgangsveje;
+- test 9g: en ny overload af et legacy-navn, med og uden `EXECUTE` til `PUBLIC`.
 
 ## 5. GO/NO-GO
 
@@ -135,7 +138,7 @@ Bevis på PGlite: `tests/unit/h5-k1-readiness-checks.test.mjs`:
 | A5, A6 | Hvert Edge-deploy for sig, efter forklaret diff | Efter GO |
 | A7 | Ændring af Edge-secret | Ejeren (secrets er guard-beskyttede) |
 | A8 | Frontend-PR: commit, PR, merge (hver handling for sig) | Efter GO |
-| A10 | M2-migrationen (findes ikke endnu) + tidsvindue uden for undervisning | Efter GO |
+| A10a, A10b | Hver M2-migration for sig (§9.5) + tidsvindue uden for undervisning | Efter GO (hvert trin for sig) |
 | Rollback | Hver rollback er en særskilt produktionshandling | Efter GO |
 
 ## 7. API-kontrakter og feature flags
@@ -256,7 +259,7 @@ Alle punkter skal være opfyldt:
 1. A1–A8 er gennemført, og readiness-kolonnen "efter A4" holder.
 2. A9 har varet ≥ 48 timer og har omfattet mindst én skoledag med elevsvar. INT-C, INT-D og INT-E = 0. Ingen uforklarede 4xx/5xx.
 3. INT-B0 (kun information) viser, at stort set alle nye svar går via `_v2`, og de resterende legacy-svar kan forklares med klienter, der ikke er genindlæst.
-4. M2-migrationen findes som merget PR med rollback (GRANT tilbage) og tests efter §9.4. PR'en skal dække:
+4. M2-migrationerne (§9.5) findes som merget PR med rollback (`docs/operations/h5-m2-rollback.md`) og tests efter §9.4. PR'en skal dække:
    - effektiv lukning af legacy-vejen (§9.2);
    - rækkefølgen for igangværende kald (§9.3);
    - `process-event`'s 426-vej;
@@ -319,7 +322,14 @@ Desuden kan en anden funktion (især `SECURITY DEFINER`), et view eller et pg_cr
    - ingen anden ikke-superbruger end ejeren har `EXECUTE`;
    - ingen anden funktion kalder legacy-funktionerne;
    - intet objekt i `pg_depend` afhænger af dem.
-3. **Ingen `DROP`/`CREATE`.** M2 og alle senere migrationer må ikke droppe og genoprette legacy-funktionerne. Skal en krop ændres, bruges `CREATE OR REPLACE`, som bevarer ACL'en, efterfulgt af en eksplicit REVOKE og den samme påstand. Readiness `CUT-01` opdager fejlen bagefter (test 9f).
+3. **Ingen `DROP`/`CREATE`.** M2 og alle senere migrationer må ikke droppe og genoprette legacy-funktionerne. Skal en krop ændres, bruges `CREATE OR REPLACE`, som bevarer ACL'en, efterfulgt af en eksplicit REVOKE og den samme påstand. Readiness `CUT-01` opdager fejlen bagefter (test 9f), og også en ny overload med et af de to navne (test 9g). Begge M2-transaktioner afviser på forhånd, hvis en sådan overload findes.
+   - **Statisk kontrol af alle migrationer** (`tests/unit/h5-m2-cutover-migration-run.test.mjs`): hver migrationsfil læses, **uanset tidsstempel**, så en fil, der merges senere med et ældre tidsstempel, også fanges. Den fanger:
+     - `CREATE` og `CREATE OR REPLACE` med en vilkårlig signatur;
+     - `DROP`, `ALTER` (fx `OWNER TO`) og `GRANT … ON FUNCTION` for de to navne;
+     - `GRANT … ON ALL FUNCTIONS IN SCHEMA` og `ALTER DEFAULT PRIVILEGES … ON FUNCTIONS`;
+     - rollemedlemskab til en runtime-rolle, `ALTER ROLE` af en runtime-rolle, `CREATE ROLE … IN ROLE` og `REASSIGN OWNED`.
+   - Fundene sammenholdes med en eksplicit baseline: 12 historiske filer fra før M2, hver med begrundelse og fastlåst med sha256 af indholdet. En ny fil, en ændret baselinefil eller en ny slags fund får testen til at fejle.
+   - Det kan den ikke se: SQL, der sammensættes ved kørsel (`EXECUTE 'GRANT … ' || navn`, `format('%I', …)`). Det dækkes kun af `CUT-01` og M2's vagter, som læser den faktiske tilstand i databasen.
 4. **Kaldestier uden for SQL-kataloget** kontrolleres manuelt før M2 og noteres i produktionsloggen:
    - **pg_cron:** blokken nedenfor. Den kræver `cron.job` og køres kun dér, hvor udvidelsen findes. Forventet resultat: `legacy_jobs` = 0.
    - **Edge Functions:** i repoet kalder kun `process-event` legacy-RPC'erne (`supabase/functions/process-event/text-answer-rpc.ts:62` og `:89`). Den deployede kilde skal diffes (§2.4), fordi v34 ikke er arkiveret.
@@ -399,6 +409,74 @@ SELECT count(*) AS jobs,
    - **Registreringen:** der er præcis én række for `h5_m2`, UPDATE og DELETE afvises, og `CUT-02` = `CUT-T` = true.
 6. **Rollback.** `GRANT EXECUTE` gives kun til `service_role`, aldrig til `PUBLIC`, `anon` eller `authenticated`. Registreringen bliver stående.
 
+### 9.5 Implementering af M2 og aktiveringsprocedure
+
+**Status 2026-11-05:** Implementeret i en Draft PR, **ikke anvendt og ikke aktiveret**. Migrationerne er inaktive, indtil B1–B4 (§1.1) er truffet, A1–A9 er gennemført, og ejeren har givet GO til hvert trin. De står i `NOT_IN_PRODUCTION` i `tests/isolated/schema/replay-plan.mjs`, så den isolerede CI ikke afspiller dem.
+
+**Filer:**
+
+| Trin | Fil | Hvad den gør |
+|---|---|---|
+| A10a | `supabase/migrations/20261105180000_h5_m2_close_legacy_answer_path.sql` | Først en vagt: K1 er anvendt med de gennemgåede `_v2`-kroppe; `service_role` kan udføre `_v2`; der er mindst ét forsøg i `question_attempts`; ingen runtime-rolle er medlem af legacy-ejeren; der er ingen kaldere, afhængige eller cron-job. Derefter `REVOKE EXECUTE` fra `PUBLIC` og fra **enhver** tildeling i ACL'en undtagen ejeren, og så påstanden fra `CUT-01`. Ét DO-blok, `lock_timeout` 5 s. Ingen kroppe, ingen `DROP`/`CREATE`, ingen rækker |
+| A10b | `supabase/migrations/20261105180100_h5_m2_register_cutover.sql` | Først en vagt: legacy er lukket (A10a er committet), og rollen kan se andre sessioner. Så `closed_before := clock_timestamp()` og dræn: der ventes, til ingen klientsession **i samme database** har en transaktion med `xact_start < closed_before`, højst 30 s. Først derefter oprettes `answer_path_cutovers` med triggere og rettigheder, og rækken `h5_m2` indsættes. Ét DO-blok. En ny kørsel efter succes ændrer intet |
+| Rollback | `docs/operations/h5-m2-rollback.md` | Fejltabel for hvert delskridt og R1 (genåbn kun for `service_role`) |
+
+**Er rækkefølgen gennemførlig med projektets værktøjer?** Ja:
+- `apply_migration` kører én migration pr. kald. To filer giver derfor to transaktioner, og A10a er committet, før A10b begynder. Hver fil er ét DO-blok og dermed atomar, uanset om API'et selv åbner en transaktion.
+- En venteløkke i ét DO-blok kan aflæse andre sessioner, fordi `pg_stat_clear_snapshot()` kaldes før hver aflæsning, og `pg_sleep` venter imellem.
+- **Produktionsfakta (read-only, 2026-11-05):**
+  - `apply_migration` og `execute_sql` kører som `postgres`, der ikke er superbruger, men er medlem af `pg_read_all_stats` og derfor kan se andre sessioners `xact_start`;
+  - `statement_timeout` for `postgres` er 2 min, så 30 s ventetid er inden for grænsen;
+  - `authenticator` har `statement_timeout` 8 s, så et PostgREST-kald varer højst så længe. En ældre åben transaktion er ikke et svar, der er i gang, og skal ses på af et menneske.
+- **Forbehold 1:** dræn venter også på transaktioner, der ikke har kaldt legacy-funktionerne, fordi det ikke kan ses udefra. En lang, urelateret transaktion i samme database får A10b til at ramme tidsgrænsen. Det er den sikre retning: intet registreres, og trinnet gentages.
+- **Forbehold 2:** kun klientsessioner (`backend_type = 'client backend'`) i den aktuelle database tælles. pg_cron-job, der kører som ejeren, er dækket af vagten i A10a (`legacy_jobs` = 0). Ejeren beholder `EXECUTE` og er ikke en runtime-rolle.
+
+**Forudsætninger før A10a (alle skal holde):**
+1. §9 punkt 1–3 og 5–7 er opfyldt. B1–B4 er truffet og registreret.
+2. Den deployede `process-event` er versionen fra `main` med 426-vejen (A6), og dens kilde er diffet mod `main`. Den deployede v34 kender **ikke** 426: efter A10a ville den svare 500 på legacy-kald.
+3. Arkiv: kilden for den deployede `process-event` og `get-next-question` er hentet med `get_edge_function` og gemt uden for repoet med version og `ezbr_sha256` (§2.3). Det samme gælder `review-answer`, selv om M2 ikke rører den.
+4. Readiness umiddelbart før: kolonnen "Efter A4" i §4 holder, `GATE-M2` = true og `CUT-01` = false.
+5. Kaldestier (§9.2 punkt 4): cron-blokken giver `legacy_jobs` = 0.
+6. Åbne transaktioner, read-only, umiddelbart før A10b. Forventet: ingen, eller kun nogle få sekunder gamle.
+
+   ```
+   SELECT pid, usename, state, now() - xact_start AS age FROM pg_stat_activity
+    WHERE backend_type = 'client backend' AND datname = current_database()
+      AND xact_start IS NOT NULL AND pid <> pg_backend_pid();
+   ```
+
+**Aktiveringsrækkefølge** (hvert trin med særskilt GO, i et tidsvindue uden undervisning):
+
+| # | Handling | Forventet tilstand bagefter | NO-GO, hvis |
+|---|---|---|---|
+| 1 | Readiness, cron-blok og arkiv (punkt 3–5 ovenfor), read-only | Som forudsætningerne | Afvigelse |
+| 2 | **A10a:** `apply_migration` med `20261105180000_…` | DB: `CUT-01` = true, `CUT-02` = false. API: legacy-anmodninger → 426 `client_outdated`; H5 virker uændret | Migrationen afvises (intet ændret; læs fejlteksten) |
+| 3 | Åbne transaktioner (punkt 6), read-only | Ingen ældre end få sekunder | Lange transaktioner: undersøg før trin 4 |
+| 4 | **A10b:** `apply_migration` med `20261105180100_…`, straks efter trin 2 og 3 | DB: `CUT-01` = `CUT-02` = true; §8 blok 2: `CUT-T` = true, INT-B = 0 | Tidsgrænse eller anden afvisning. Tilstanden er "lukket, T mangler", som er sikker; se `docs/operations/h5-m2-rollback.md` §2 |
+| 5 | Readiness og §8 blok 1 og 2, read-only; post i `docs/operations/production-actions/` med `effective_at` og `closed_before` | Som ovenfor | Afvigelse |
+
+**Overvågning efter aktivering** (de første 48 timer, derefter dagligt i en uge):
+- §8 blok 2: INT-B = 0. Hver række over 0 er et svar, der er skrevet uden om loggen efter T, og skal forklares.
+- Edge-logs:
+  - antallet af 426 fra `process-event` (klienter, der ikke er genindlæst) skal falde mod 0;
+  - 0 svar med status 5xx;
+  - forholdet mellem `get-next-question`- og `process-event`-POST er som før.
+- §8 blok 1: INT-C, INT-D og INT-E = 0.
+- Readiness `CUT-01` = true. Det fanger en senere migration, der genåbner vejen.
+
+**Hvad M2 ikke ændrer:**
+- ingen funktionskrop og ingen tabel uden for `answer_path_cutovers`;
+- ingen rækker i svarhistorikken, XP, mønter, streak, quests eller lærerstatistikker;
+- hverken `get-next-question`, frontendens state-machine eller den adaptive motor.
+
+Testene viser det med skemaets fingeraftryk og ved at køre samme H5-forløb med og uden M2. Den kendte dobbelt-XP ved lærerbedømmelse (`review-answer`, §11) går ikke gennem legacy-funktionerne og berøres ikke; den er et separat spor.
+
+**Tests (§9.4):**
+- `tests/unit/h5-m2-cutover-migration-run.test.mjs` (PGlite, 11 tests): filerne; den statiske kontrol af alle migrationer med baseline og syntetiske regressionstilfælde; vagterne, også mod en ny overload; sluttilstanden for alle adgangsveje; 42501 → 426; H5 uændret; registrering, append-only og rettigheder; R1.
+- `tests/unit/h5-m2-cutover-concurrency.test.mjs` (PostgreSQL 17, kræves i unit-CI): igangværende kald, flere samtidige kald, ingen kald, tidsgrænse, genoptagelse og R1. Plus en negativ kontrol: en kopi af transaktion 2 uden `pg_stat_clear_snapshot()`, bygget i hukommelsen, rammer tidsgrænsen.
+  - Testen synkroniserer med transaktion 2's faktiske tilstand i stedet for med ventetider. Forbindelsen har sit eget `application_name`, og testen afslutter først en åben transaktion, når den backend sover i venteløkken (`PgSleep`). Det sker kun efter en aflæsning, der har talt den åbne transaktion. Ventetiden er begrænset til 15 s.
+  - En commit efter det tidspunkt kan kun ses ved en senere, frisk aflæsning. Det beviser scenarie 1, 2 og den negative kontrol tilsammen.
+
 ## 10. Tilbagerulning pr. fase
 
 **Skelnen:** *Deaktivering* (fx flag af) stopper brugen af en funktion, men databasen beholder sine nye objekter. *Genskabelse* fører databasen tilbage til den tidligere tilstand. En databaseændring kaldes kun genskabelig, hvor den konkrete tilbageførsel er dokumenteret **og afprøvet**. Alle afprøvninger nedenfor er på PGlite, ikke på en produktionskopi (§12).
@@ -413,7 +491,7 @@ SELECT count(*) AS jobs,
 | A6 process-event | Redeploy arkiveret v34-kilde | Ikke relevant | Nej | Arkivér kilden før A6. Før A8 er H5-vejen ubrugt, så v34 kan genindsættes uden datatab |
 | A7 flag | Fjern secret eller sæt ≠ `on` | Ikke relevant. Allerede oprettede snapshots bliver stående (det er ønsket) | — | — |
 | A8 frontend | `ENABLE_H5_SUBMISSIONS = false` + deploy | **Ingen.** Forsøg, der er skrevet, bevares bevidst (append-only historik). Legacy-vejen virker igen | — | Efter første forsøg er A1–A4 **ikke længere genskabelige**. Kun fremadrettet rettelse (D-273) |
-| A10 M2 | — | `GRANT EXECUTE … TO service_role` (skal ligge i M2-PR'en). Gives aldrig til `PUBLIC`, `anon` eller `authenticated`, og legacy-funktionerne droppes og genoprettes ikke (§9.2) | Nej (PR findes ikke) | Afprøves i M2-PR'en. Registreringen af T (§9.1) er append-only og bliver stående: den dokumenterer, at cutover fandt sted. En senere ny cutover kræver en ny, gennemgået kontrakt |
+| A10 M2 | — | R1 i `docs/operations/h5-m2-rollback.md`: `GRANT EXECUTE … TO service_role`. Gives aldrig til `PUBLIC`, `anon` eller `authenticated`, og legacy-funktionerne droppes og genoprettes ikke (§9.2). **Efter A10a må H5 kun slås fra i frontenden efter R1**, ellers har eleverne ingen svarvej | Ja: PGlite (`h5-m2-cutover-migration-run.test.mjs`) og PostgreSQL 17 i CI (`h5-m2-cutover-concurrency.test.mjs`) | Registreringen af T (§9.1) er append-only og bliver stående: den dokumenterer, at cutover fandt sted. En senere ny cutover kræver en ny, gennemgået kontrakt |
 
 **Efter første skrevne forsøg** er historikken produktionsdata. Ingen rollback må slette den. Fejl rettes fremad med en ny, gennemgået migration.
 
@@ -429,11 +507,13 @@ SELECT count(*) AS jobs,
 | `LED-01` / `LED-02` | true ("ingen" af kæden i ledgeren; den oprindelige H5-fil er ikke anvendt) | Ja |
 | `SEC-01` / `SEC-02` | false (policyen "Students can insert own events"; TRUNCATE for anon og authenticated på alle tre tabeller) | Separat spor |
 
-**Konklusion:** De databasemæssige forudsætninger for A1 er opfyldt. Følgende blokerer en samlet aktivering:
+**Genkontrol 2026-11-05 (read-only):** A1–A3 er anvendt (bootstrap `20261104095423`, alignment `20261104140659`, D-327 `20261104163310`); K1 er **ikke** anvendt; `question_attempts` er tom; `answer_path_cutovers` findes ikke; legacy-ACL er uændret `{postgres=X/postgres,service_role=X/postgres}`; ingen andre kaldere; 1 cron-job uden legacy-kald. Deployet: `process-event` v34 og `get-next-question` v181 (inaktiv R2-canary, stadig uden `round_no`). Seneste migration i ledgeren er `minigame_breaks` (`20261105060103`, andet spor).
+
+**Konklusion (2026-11-04):** De databasemæssige forudsætninger for A1 er opfyldt. Følgende blokerer en samlet aktivering:
 1. Beslutningerne B1–B4 (§1.1) er ikke truffet.
 2. Den deployede `get-next-question` v180 sender ikke `round_no` (§3). A8 kræver A5 først.
 3. Kilden for `process-event` v34 og `get-next-question` v180 er ikke arkiveret til rollback (§2.3, §10).
-4. M2 findes ikke som PR, og registreringen af T (§9.1) findes ikke.
+4. M2 findes som Draft PR (§9.5), ikke merget og ikke anvendt; registreringen af T (§9.1) findes ikke.
 5. Der har næsten ikke været elevtrafik, så observationen i A9 kan endnu ikke give evidens.
 
 **Elevtrafik:**
@@ -463,7 +543,7 @@ SELECT count(*) AS jobs,
 **Kan ikke bevises:**
 - PostgreSQL 17 i produktionen mod PGlite 18.3;
 - Supabase-specifikke roller, ejere, default privileges og extensions;
-- låsetid og samtidighed under reel last (`lock_timeout` 5 s i K1). Det gælder også M2's dræn af igangværende legacy-kald (§9.3). Det skal derfor testes mod PostgreSQL 17 med flere forbindelser (§9.4 punkt 5).
+- låsetid og samtidighed under reel last (`lock_timeout` 5 s i K1). M2's dræn af igangværende legacy-kald (§9.3) er derfor testet mod PostgreSQL 17 med flere forbindelser i unit-CI (`h5-m2-cutover-concurrency.test.mjs`, §9.4 punkt 5). Det beviser mekanismen, ikke produktionens last eller Supabase-poolerens adfærd.
 - Edge-runtime-adfærd, secrets og deploy;
 - Cloudflare-cache af frontendfiler;
 - gamle klienter i elevernes browsere;
