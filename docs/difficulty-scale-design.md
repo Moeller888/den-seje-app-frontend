@@ -214,7 +214,7 @@ Hvis niveauerne skal kunne skrives til, skal de have et indhold. Forslag: forank
 4. **Edge:** `get-next-question` bag `LEVEL_ENGINE` (ikke sat = uændret). Deployes og verificeres med
    flaget slået fra.
 5. **Aktivering af motoren:** `LEVEL_ENGINE=v1` for alle fag. Ejeren tester med en testelev i hvert fag.
-6. **Indhold:** de 3.000 nye engelskopgaver (#358, #360, #362, #363, #364, #365) indsættes
+6. **Indhold:** de 3.000 nye engelskopgaver (#358, #360, #362, #363, #364, #365), siden 2026-11-05 5.000 (§11), indsættes
    **inaktive** (`is_active=false`) og mærket `metadata.level_batch` (E1). Hver migration anvendes
    kun med ejerens godkendelse af netop den migration (E2).
 7. **Stikprøvekontrol (E5):** dokumenteret kontrol på tværs af alle niveauer og portioner, før noget
@@ -222,7 +222,7 @@ Hvis niveauerne skal kunne skrives til, skal de have et indhold. Forslag: forank
 8. **Aktivering af indholdet:** en separat migration pr. portion,
    `UPDATE … SET is_active = true WHERE learning_objective = 'english' AND metadata->>'level_batch' = …`,
    hver med egen ejergodkendelse.
-9. **Opskalering:** standset efter 3.000 opgaver (ejerbeslutning 2026-10-22). Historie og dansk kører
+9. **Opskalering:** standset efter 3.000 opgaver (ejerbeslutning 2026-10-22). **Erstattet 2026-11-05:** målet er nu 5.000 nye engelskopgaver, se §11. Historie og dansk kører
    på skalaen fra aktiveringen med deres eksisterende indhold. Nyt indhold er en særskilt opgave.
 
 **Tests (tilføjes i trin 2–4):** unittest af formlen §4.1 (alle 35 celler, monotoni), unittest af
@@ -258,5 +258,119 @@ når datamodellen faktisk findes. PR #351 er merget (B6 opfyldt i repoet).
 | E1 | De 3.000 nye engelskopgaver er **inaktive**, indtil niveausystemet er implementeret, testet og slået til. Portionen ligger i den eksisterende kolonne `metadata` (`level_batch`). Der må ikke oprettes en ny kolonne uden ejerens godkendelse. |
 | E2 | Ingen migration køres mod produktionsdatabasen uden ejerens udtrykkelige godkendelse af den konkrete migration. |
 | E3 | Før migration A tælles de eksisterende opgaver uden niveau i den rigtige database (read-only), og antal og fordeling rapporteres. Deres niveau vælges ikke, før ejeren har besluttet det. |
-| E4 | Først skal blokeringen omkring #351 løses, derefter bygges selve niveausystemet. Der skrives ikke flere opgaveportioner. |
+| E4 | Først skal blokeringen omkring #351 løses, derefter bygges selve niveausystemet. Der skrives ikke flere opgaveportioner. **Erstattet 2026-11-05 for engelsk:** målet er 5.000 nye opgaver (§11). |
 | E5 | Før aktivering laves en dokumenteret stikprøvekontrol på tværs af alle niveauer: uklare spørgsmål, flere mulige rigtige svar, forkert CEFR-placering og sproglige fejl. |
+
+---
+
+## 11. Ejerbeslutning 2026-11-05: 5.000 nye engelskopgaver
+
+Ejeren besluttede 2026-11-05, at målet er **præcis 5.000 nye, fagligt forsvarlige engelskopgaver**.
+Beslutningen erstatter den del af E4 (2026-10-22), der standsede opskaleringen ved 3.000 opgaver
+(§8 trin 9). E1, E2, E3 og E5 gælder uændret: alle 5.000 indsættes **inaktive**
+(`is_active=false`, mærket `metadata.level_batch`). Ingen migration anvendes i produktion uden
+ejerens godkendelse af netop den migration (D-110). Aktivering sker først efter den dokumenterede
+stikprøvekontrol, med en særskilt aktiveringsmigration pr. portion og en særskilt ejergodkendelse.
+
+### 11.1 Indhold og fordeling
+
+31 migrationer, i alt 5.000 opgaver, som alle er MC med fire forskellige svar,
+`accepted_answers=[facit]` og `learning_objective='english'`:
+
+| Portion (`level_batch`) | Migrationer | Opgaver | Niveau | Kilde |
+|---|---|---|---|---|
+| `grade6_9` | `20261020125000` | 120 | 4.429–9.571 | 6.–9. klasse, fra §4.1-cellen |
+| `pilot`, `batch2`–`batch5` | `202610201[3-7]000[1-3]` | 5 × 500 | 3.001–10.000 | #358–#364 |
+| `batch6` | `2026102018000[1-3]` | 500 | 1–3.000 | #365 |
+| `batch7`–`batch10` | `2026102019000[1-3]` … `2026102022000[1-3]` | 4 × 470 | 5–10.000 | Nyt i denne leverance (se nedenfor) |
+
+**Fordeling på CEFR:**
+
+| CEFR | Antal |
+|---|---|
+| før A1 | 440 |
+| A1 | 510 |
+| A2 | 703 |
+| B1 | 1.213 |
+| B2 | 1.100 |
+| C1 | 1.034 |
+
+Hver af `batch7`–`batch10` spænder over hele skalaen og alle seks grupper.
+
+**Facit står jævnt fordelt på de fire pladser:**
+- `pilot`–`batch6`: 125 på hver plads;
+- `batch7`–`batch10`: 117 eller 118 på hver plads.
+
+**Niveau og CEFR.** Hver opgave har et eksplicit `difficulty_level` inden for sin CEFR-gruppe (§7).
+`target_grade` og `difficulty_band` er afledt baglæns af niveauet (cellen i §4.1). Niveauet er
+forfatterens skøn, ikke en måling.
+
+### 11.2 Hvad der er nyt, og hvad der er rettet
+
+**`batch7`–`batch10` (1.880):**
+- **1.380 opgaver er skrevet fra bunden.** De ligger i `tools/questions/fixtures/english-5000/authored.json`
+  og bruger kun de kontrollerede skabeloner i `tools/questions/english-5000-quality.mjs`. Ingen af dem
+  spørger om et engelsk ord eller en opgave, som banken allerede har (i nogen retning).
+- **500 omvendte ordforrådsopgaver (dansk → engelsk)** er bygget på ordforrådsopgaverne i `pilot`–`batch6`:
+  - de bruges kun, når ordet står uændret i eksempelsætningen, eller når der ikke er nogen sætning;
+  - svarmulighederne er valgt i hånden, med samme ordklasse og niveau, men anden betydning
+    (`reverse-options.json`).
+- **De tidligere 1.142 "fuld sætning"-varianter er fjernet.** De var de samme opgaver som deres
+  kilder, med samme sætning, samme fire svar og samme niveau.
+
+**Rettet i de 3.120 overtagne opgaver (`pilot`–`batch6`, `grade6_9`):**
+- 185 opgaver stillede reelt samme opgave som en opgave på `main` eller i sættet selv (samme ord og
+  samme svar). De er erstattet af nyskrevne opgaver med samme CEFR, niveau og facitplads.
+- 306 opgaver afslørede svaret ved længden (`tools/question-quality/length-cue.mjs`). Distraktorerne er
+  gjort lige så lange og plausible, eller et ordrigt facit er strammet op.
+- 18 opgaver blev læst op med forkert stemme. 13 er rettet i teksten. Til de sidste 5 har
+  segmenteringen fået fire danske ord og tre engelske ord, og "Hvilket ord/Hvilken form passer"
+  giver nu engelske svarmuligheder. Ændringen flytter kun 9 af 6.090 engelske opgaver, ingen på `main`.
+- 4 manglende forklaringer er skrevet, 1 facit med to mulige svar er rettet, og 5 fund fra
+  stikprøven er rettet (§11.4).
+
+### 11.3 Automatiske kontroller
+
+- **`tools/questions/english-5000-quality.mjs`:** struktur, længdesignal, sprogsegmentering for
+  oplæsning (pr. ord, ud fra skabelonen), skabelonkrav til nye opgaver og en "samme opgave"-nøgle.
+- **`tools/questions/check-english-items.mjs`:** kontrollerer en JSON-fil med opgaver mod hele banken.
+- **`tools/questions/build-english-5000.mjs`:** bygger `batch7`–`batch10` deterministisk og stopper ved
+  enhver fejl.
+- **`tests/unit/english-5000-migrations-run.test.mjs`:** kører alle 31 migrationer på en tom,
+  realistisk `questions`-tabel efter migration A (PGlite) og beviser:
+  - antal og portioner;
+  - inaktiv;
+  - niveau og CEFR;
+  - fire svar og facit;
+  - facitpladser;
+  - længdesignal og oplæsning;
+  - at alle 5.000 er nye i forhold til resten af repoet og hinanden;
+  - at `batch7`–`batch10` er præcis generatorens output.
+
+### 11.4 Stikprøve
+
+`tools/questions/english-5000-sample.mjs` trækker en deterministisk, lagdelt stikprøve (CEFR × kilde).
+
+**Første runde 2026-11-05** omfattede 90 opgaver gennemgået af forfatteren af leverancen og 180 af en
+uafhængig gennemgang.
+- 6 fund blev rettet:
+  - en distraktor, der også er korrekt på amerikansk engelsk;
+  - to forkerte CEFR-placeringer (erstattet);
+  - en tvetydig distraktor;
+  - en unaturlig dansk bøjning;
+  - en uheldig distraktor ("lust").
+- Der var 0 forkerte facit og 0 fund i de nyskrevne opgaver i den uafhængige gennemgang.
+
+Det er **ikke** den fulde E5-kontrol før aktivering. Den skal stadig laves og dokumenteres pr.
+portion.
+
+### 11.5 Kendte begrænsninger
+
+- **Niveauerne er skøn.** Kalibrering kræver svardata efter aktivering.
+- **Nyheden er kontrolleret mod repoets migrationer**, ikke mod den levende database. Den levende bank
+  er bygget fra de samme migrationer.
+- **"Samme opgave" er en mekanisk nøgle** (skabelon + hovedord/sætning + svar). Opgaver om samme
+  grammatikpunkt med forskellige sætninger tæller som forskellige.
+- **De omvendte ordforrådsopgaver øver ord, som `pilot`–`batch6` også spørger om**, bare i den modsatte
+  retning.
+- **PGlite er PostgreSQL 18**, mens produktionen kører 17.6.

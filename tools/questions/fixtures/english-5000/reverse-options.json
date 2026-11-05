@@ -1,0 +1,2827 @@
+{
+ "Hvad hedder 'hoved' på engelsk i 'I have a hat on my ___'?": [
+  "hand",
+  "foot",
+  "nose"
+ ],
+ "Hvad hedder 'mor' på engelsk i 'My ___ is a teacher'?": [
+  "dad",
+  "son",
+  "aunt"
+ ],
+ "Hvad hedder 'far' på engelsk i 'My ___ has a beard'?": [
+  "mum",
+  "aunt",
+  "son"
+ ],
+ "Hvad hedder 'lineal' på engelsk i 'I need a ___ to draw a line'?": [
+  "rubber",
+  "pencil",
+  "chair"
+ ],
+ "Hvad hedder 'skrivebord / pult' på engelsk i 'My book is on my ___'?": [
+  "bed",
+  "chair",
+  "bag"
+ ],
+ "Hvad hedder 'varm / hed' på engelsk i 'The soup is ___'?": [
+  "cold",
+  "red",
+  "sad"
+ ],
+ "Hvad hedder 'kold' på engelsk i 'The ice is ___'?": [
+  "hot",
+  "soft",
+  "big"
+ ],
+ "Hvad hedder 'glad' på engelsk i 'I am ___ today'?": [
+  "sad",
+  "angry",
+  "hungry"
+ ],
+ "Hvad hedder 'langsom' på engelsk i 'A snail is ___'?": [
+  "fast",
+  "small",
+  "green"
+ ],
+ "Hvad hedder 'drikke' på engelsk i 'I ___ juice'?": [
+  "eat",
+  "make",
+  "like"
+ ],
+ "Hvad hedder 'tegn' på engelsk i '___ a house'?": [
+  "read",
+  "build",
+  "clean"
+ ],
+ "Hvad hedder 'åbn' på engelsk i '___ your book'?": [
+  "close",
+  "read",
+  "find"
+ ],
+ "Hvad hedder 'luk' på engelsk i '___ your eyes'?": [
+  "open",
+  "wash",
+  "rub"
+ ],
+ "Hvad hedder 'lyt' på engelsk i '___ to the teacher'?": [
+  "talk",
+  "write",
+  "wave"
+ ],
+ "Hvad hedder 'se / kig' på engelsk i '___ at the picture'?": [
+  "point",
+  "smile",
+  "shout"
+ ],
+ "Hvad hedder 'tak / vær så venlig' på engelsk i 'Water, ___'?": [
+  "Sorry",
+  "Hello",
+  "Again"
+ ],
+ "Hvad hedder 'høne' på engelsk i 'The ___ has six chicks'?": [
+  "cow",
+  "pig",
+  "dog"
+ ],
+ "Hvad hedder 'ansigt' på engelsk i 'Wash your ___'?": [
+  "hair",
+  "feet",
+  "car"
+ ],
+ "Hvad hedder 'knæ' på engelsk i 'I hurt my ___'?": [
+  "arm",
+  "nose",
+  "foot"
+ ],
+ "Hvad hedder 'onkel' på engelsk i 'My ___ lives in Spain'?": [
+  "aunt",
+  "sister",
+  "cousin"
+ ],
+ "Hvad hedder 'bamse' på engelsk i 'I sleep with my ___'?": [
+  "puppy",
+  "kitty",
+  "blanket"
+ ],
+ "Hvad hedder 'cirkel' på engelsk i 'Draw a ___'?": [
+  "square",
+  "star",
+  "heart"
+ ],
+ "Hvad hedder 'firkant (kvadrat)' på engelsk i 'Draw a ___'?": [
+  "circle",
+  "heart",
+  "star"
+ ],
+ "Hvad hedder 'trekant' på engelsk i 'A ___ has three sides'?": [
+  "square",
+  "circle",
+  "rectangle"
+ ],
+ "Hvad hedder 'rene' på engelsk i 'My hands are ___'?": [
+  "dirty",
+  "cold",
+  "small"
+ ],
+ "Hvad hedder 'vådt' på engelsk i 'My hair is ___'?": [
+  "dry",
+  "long",
+  "red"
+ ],
+ "Hvad hedder 'lav' på engelsk i 'My grandma is ___'?": [
+  "tall",
+  "old",
+  "sad"
+ ],
+ "Hvad hedder 'klap' på engelsk i '___ your hands!'?": [
+  "wash",
+  "shake",
+  "wave"
+ ],
+ "Hvad hedder 'tæl' på engelsk i '___ to ten'?": [
+  "run",
+  "sing",
+  "jump"
+ ],
+ "Hvad hedder 'farvelæg' på engelsk i '___ the picture'?": [
+  "draw",
+  "cut",
+  "fold"
+ ],
+ "Hvad hedder 'regnbue' på engelsk i 'Look at the ___!'?": [
+  "window",
+  "snowman",
+  "sunset"
+ ],
+ "Hvad hedder 'aldrig' på engelsk i 'I ___ eat fish'?": [
+  "always",
+  "often",
+  "usually"
+ ],
+ "Hvad hedder 'altid' på engelsk i 'I ___ say thank you'?": [
+  "never",
+  "often",
+  "sometimes"
+ ],
+ "Hvad hedder 'i går' på engelsk i 'I was ill ___'?": [
+  "today",
+  "tomorrow",
+  "tonight"
+ ],
+ "Hvad hedder 'morgen' på engelsk i 'I have breakfast in the ___'?": [
+  "evening",
+  "kitchen",
+  "garden"
+ ],
+ "Hvad hedder 'eftermiddag' på engelsk i 'I play football in the ___'?": [
+  "morning",
+  "evening",
+  "weekend"
+ ],
+ "Hvad hedder 'varm' på engelsk i 'It's ___ in the sun'?": [
+  "cold",
+  "dark",
+  "quiet"
+ ],
+ "Hvad hedder 'strømper' på engelsk i 'My ___ are wet'?": [
+  "shoes",
+  "gloves",
+  "boots"
+ ],
+ "Hvad hedder 'sweater / trøje' på engelsk i 'This ___ is warm'?": [
+  "jacket",
+  "scarf",
+  "blanket"
+ ],
+ "Hvad hedder 'yndlings-' på engelsk i 'My ___ colour is blue'?": [
+  "different",
+  "beautiful",
+  "wonderful"
+ ],
+ "Hvad hedder 'tog' på engelsk i 'We go to Odense by ___'?": [
+  "boat",
+  "bike",
+  "car"
+ ],
+ "Hvad hedder 'fly' på engelsk i 'The ___ flies to London'?": [
+  "bird",
+  "kite",
+  "ball"
+ ],
+ "Hvad hedder 'venstre' på engelsk i 'Turn ___ at the shop'?": [
+  "right",
+  "back",
+  "round"
+ ],
+ "Hvad hedder 'højre' på engelsk i 'Turn ___ at the park'?": [
+  "left",
+  "back",
+  "round"
+ ],
+ "Hvad hedder 'hjælpe' på engelsk i 'Can you ___ me?'?": [
+  "hear",
+  "see",
+  "call"
+ ],
+ "Hvad hedder 'købe' på engelsk i 'I want to ___ a new ball'?": [
+  "sell",
+  "find",
+  "kick"
+ ],
+ "Hvad hedder 'finde' på engelsk i 'I can't ___ my shoe'?": [
+  "lose",
+  "wear",
+  "tie"
+ ],
+ "Hvad hedder 'tag med' på engelsk i '___ your swimsuit'?": [
+  "wash",
+  "wear",
+  "dry"
+ ],
+ "Hvad hedder 'bære' på engelsk i 'Can you ___ this bag?'?": [
+  "open",
+  "close",
+  "find"
+ ],
+ "Hvad hedder 'vent' på engelsk i '___ for me!'?": [
+  "look",
+  "run",
+  "ask"
+ ],
+ "Hvad hedder 'kom' på engelsk i '___ here!'?": [
+  "sit",
+  "stay",
+  "look"
+ ],
+ "Hvad hedder 'gå / tage af sted' på engelsk i 'Let's ___ home'?": [
+  "run",
+  "fly",
+  "sit"
+ ],
+ "Hvad hedder 'bor' på engelsk i 'I ___ in Aarhus'?": [
+  "work",
+  "play",
+  "swim"
+ ],
+ "Hvad hedder 'elsker' på engelsk i 'I ___ my dog'?": [
+  "hate",
+  "feed",
+  "walk"
+ ],
+ "Hvad hedder 'hader' på engelsk i 'I ___ homework'?": [
+  "love",
+  "like",
+  "start"
+ ],
+ "Hvad hedder 'ved' på engelsk i 'I ___ the answer'?": [
+  "write",
+  "say",
+  "read"
+ ],
+ "Hvad hedder 'tror / tænker' på engelsk i 'I ___ it's Monday'?": [
+  "know",
+  "hope",
+  "say"
+ ],
+ "Hvad hedder 'vil have' på engelsk i 'I ___ a new bike'?": [
+  "need",
+  "ride",
+  "sell"
+ ],
+ "Hvad hedder 'har brug for' på engelsk i 'I ___ a pencil'?": [
+  "want",
+  "have",
+  "lose"
+ ],
+ "Hvad hedder 'høj (lyd)' på engelsk i 'The music is too ___'?": [
+  "quiet",
+  "slow",
+  "long"
+ ],
+ "Hvad hedder 'let' på engelsk i 'The test was ___'?": [
+  "hard",
+  "long",
+  "late"
+ ],
+ "Hvad hedder 'svær' på engelsk i 'Maths is ___ for me'?": [
+  "different",
+  "important",
+  "beautiful"
+ ],
+ "Hvad hedder 'grim' på engelsk i 'an ___ old shoe'?": [
+  "empty",
+  "odd",
+  "easy"
+ ],
+ "Hvad hedder 'farlige' på engelsk i 'Sharks can be ___'?": [
+  "delicious",
+  "beautiful",
+  "hungry"
+ ],
+ "Hvad hedder 'klar' på engelsk i 'Are you ___?'?": [
+  "hungry",
+  "happy",
+  "sorry"
+ ],
+ "Hvad hedder 'for sent' på engelsk i 'Hurry, we're ___!'?": [
+  "early",
+  "lost",
+  "free"
+ ],
+ "Hvad hedder 'tidligt' på engelsk i 'I get up ___'?": [
+  "late",
+  "often",
+  "again"
+ ],
+ "Hvad hedder 'igen' på engelsk i 'Do it ___'?": [
+  "later",
+  "today",
+  "now"
+ ],
+ "Hvad hedder 'også' på engelsk i 'I ___ have a dog'?": [
+  "only",
+  "never",
+  "still"
+ ],
+ "Hvad hedder 'meget' på engelsk i 'It is ___ cold'?": [
+  "not",
+  "too",
+  "never"
+ ],
+ "Hvad hedder 'kun' på engelsk i 'I ___ have one sister'?": [
+  "also",
+  "never",
+  "still"
+ ],
+ "Hvad hedder 'alle' på engelsk i '___ is here'?": [
+  "nobody",
+  "somebody",
+  "anybody"
+ ],
+ "Hvad hedder 'ingen' på engelsk i '___ is at home'?": [
+  "everybody",
+  "somebody",
+  "anybody"
+ ],
+ "Hvad hedder 'noget' på engelsk i 'I have ___ for you'?": [
+  "nothing",
+  "everything",
+  "someone"
+ ],
+ "Hvad hedder 'overalt' på engelsk i 'There is snow ___'?": [
+  "nowhere",
+  "somewhere",
+  "outside"
+ ],
+ "Hvad hedder 'bondegård' på engelsk i 'There are cows on the ___'?": [
+  "road",
+  "beach",
+  "roof"
+ ],
+ "Hvad hedder 'bakke' på engelsk i 'We run up the ___'?": [
+  "road",
+  "steps",
+  "tree"
+ ],
+ "Hvad hedder 'vask' på engelsk i '___ your hands'?": [
+  "dry",
+  "show",
+  "raise"
+ ],
+ "Hvad hedder 'ryd op' på engelsk i '___ your room!'?": [
+  "paint",
+  "leave",
+  "lock"
+ ],
+ "Hvad hedder 'lære' på engelsk i 'I ___ English at school'?": [
+  "teach",
+  "forget",
+  "hear"
+ ],
+ "Hvad hedder 'taler' på engelsk i 'I ___ Danish and English'?": [
+  "hear",
+  "read",
+  "write"
+ ],
+ "Hvad hedder 'spørg' på engelsk i '___ the teacher'?": [
+  "tell",
+  "help",
+  "call"
+ ],
+ "Hvad hedder 'svar på' på engelsk i '___ the question'?": [
+  "read",
+  "write",
+  "repeat"
+ ],
+ "Hvad hedder 'prøv' på engelsk i '___ again!'?": [
+  "stop",
+  "start",
+  "ask"
+ ],
+ "Hvad hedder 'stop' på engelsk i '___ the car!'?": [
+  "start",
+  "wash",
+  "drive"
+ ],
+ "Hvad hedder 'vinder' på engelsk i 'I hope we ___ the match'?": [
+  "lose",
+  "watch",
+  "play"
+ ],
+ "Hvad hedder 'mist / tab' på engelsk i 'Don't ___ your keys'?": [
+  "leave",
+  "take",
+  "hide"
+ ],
+ "Hvad hedder 'svag' på engelsk i 'I felt ___ after the flu'?": [
+  "strong",
+  "bored",
+  "proud"
+ ],
+ "Hvad hedder 'keder mig' på engelsk i 'I'm ___. There's nothing to do'?": [
+  "tired",
+  "busy",
+  "lucky"
+ ],
+ "Hvad hedder 'bred' på engelsk i 'The river is very ___ here'?": [
+  "deep",
+  "cold",
+  "calm"
+ ],
+ "Hvad hedder 'kedelig' på engelsk i 'The lesson was ___'?": [
+  "funny",
+  "short",
+  "noisy"
+ ],
+ "Hvad hedder 'smal' på engelsk i 'The street was too ___ for the bus'?": [
+  "wide",
+  "heavy",
+  "empty"
+ ],
+ "Hvad hedder 'venligt' på engelsk i 'It was ___ of you to help me'?": [
+  "wrong",
+  "silly",
+  "brave"
+ ],
+ "Hvad hedder 'pæn / køn' på engelsk i 'What a ___ dress!'?": [
+  "ugly",
+  "cheap",
+  "short"
+ ],
+ "Hvad hedder 'låne ud' på engelsk i 'Can you ___ me your bike?'?": [
+  "borrow",
+  "sell",
+  "show"
+ ],
+ "Hvad hedder 'slags' på engelsk i 'What ___ of music do you like?'?": [
+  "part",
+  "piece",
+  "side"
+ ],
+ "Hvad hedder 'vælg' på engelsk i '___ a card, any card'?": [
+  "drop",
+  "cut",
+  "turn"
+ ],
+ "Hvad hedder 'søvnig' på engelsk i 'I feel ___ after lunch'?": [
+  "hungry",
+  "angry",
+  "lucky"
+ ],
+ "Hvad hedder 'mærkelig' på engelsk i 'I heard a ___ noise'?": [
+  "loud",
+  "sudden",
+  "soft"
+ ],
+ "Hvad hedder 'pung' på engelsk?": [
+  "ticket",
+  "pocket",
+  "bucket"
+ ],
+ "Hvad hedder 'retfærdigt' på engelsk i 'That's not ___!'?": [
+  "true",
+  "safe",
+  "real"
+ ],
+ "Hvad hedder 'overskyet' på engelsk i 'It's ___ today'?": [
+  "windy",
+  "sunny",
+  "rainy"
+ ],
+ "Hvad hedder 'hovedpude' på engelsk?": [
+  "blanket",
+  "carpet",
+  "mirror"
+ ],
+ "Hvad hedder 'streng' på engelsk i 'Our teacher is very ___'?": [
+  "funny",
+  "young",
+  "lazy"
+ ],
+ "Hvad hedder 'loft (i et rum)' på engelsk?": [
+  "floor",
+  "window",
+  "chimney"
+ ],
+ "Hvad hedder 'solrig' på engelsk i 'a ___ afternoon'?": [
+  "windy",
+  "rainy",
+  "snowy"
+ ],
+ "Hvad hedder 'håndklæde' på engelsk?": [
+  "tower",
+  "blanket",
+  "bucket"
+ ],
+ "Hvad hedder 'forsigtig' på engelsk i 'Be ___ on the ice'?": [
+  "quick",
+  "brave",
+  "proud"
+ ],
+ "Hvad hedder 'tåget' på engelsk i 'It was very ___ this morning'?": [
+  "sunny",
+  "windy",
+  "stormy"
+ ],
+ "Hvad hedder 'beskidte' på engelsk i 'Your shoes are ___'?": [
+  "clean",
+  "new",
+  "wet"
+ ],
+ "Hvad hedder 'tommelfinger' på engelsk?": [
+  "elbow",
+  "ankle",
+  "wrist"
+ ],
+ "Hvad hedder 'hoste' på engelsk i 'I have a bad ___'?": [
+  "cold",
+  "laugh",
+  "dream"
+ ],
+ "Hvad hedder 'dyb' på engelsk i 'The lake is very ___'?": [
+  "wide",
+  "warm",
+  "clear"
+ ],
+ "Hvad hedder 'nyse' på engelsk i 'Dust makes me ___'?": [
+  "cough",
+  "laugh",
+  "smile"
+ ],
+ "Hvad hedder 'lyn' på engelsk?": [
+  "thunder",
+  "lighting",
+  "rainbow"
+ ],
+ "Hvad hedder 'medicin' på engelsk i 'Take this ___ twice a day'?": [
+  "soup",
+  "juice",
+  "coffee"
+ ],
+ "Hvad hedder 'ryddeligt' på engelsk i 'Keep your room ___'?": [
+  "quiet",
+  "empty",
+  "warm"
+ ],
+ "Hvad hedder 'måltid' på engelsk?": [
+  "menu",
+  "plate",
+  "cook"
+ ],
+ "Hvad hedder 'syg' på engelsk i 'He's ___ today'?": [
+  "sad",
+  "shy",
+  "mad"
+ ],
+ "Hvad hedder 'rejse' på engelsk i 'I love to ___'?": [
+  "cook",
+  "dance",
+  "swim"
+ ],
+ "Hvad hedder 'dyrlæge' på engelsk i 'We took the dog to the ___'?": [
+  "zoo",
+  "park",
+  "shop"
+ ],
+ "Hvad hedder 'råbe' på engelsk i 'Don't ___ at me!'?": [
+  "point",
+  "laugh",
+  "stare"
+ ],
+ "Hvad hedder 'faktisk' på engelsk?": [
+  "usually",
+  "exactly",
+  "finally"
+ ],
+ "Hvad hedder 'til sidst' på engelsk?": [
+  "especially",
+  "apparently",
+  "obviously"
+ ],
+ "Hvad hedder 'almindelig' på engelsk i 'It was just an ___ day'?": [
+  "unusual",
+  "awful",
+  "exciting"
+ ],
+ "Hvad hedder 'fornuftig' på engelsk?": [
+  "sensitive",
+  "terrible",
+  "visible"
+ ],
+ "Hvad hedder 'bekendt / velkendt' på engelsk i 'Your face looks ___'?": [
+  "similar",
+  "popular",
+  "unusual"
+ ],
+ "Hvad hedder 'karakter' på engelsk i 'I got a good ___ in maths'?": [
+  "place",
+  "prize",
+  "start"
+ ],
+ "Hvad hedder 'nu om dage' på engelsk i '___, most people have a smartphone'?": [
+  "afterwards",
+  "sometimes",
+  "otherwise"
+ ],
+ "Hvad hedder 'følsom' på engelsk?": [
+  "sensible",
+  "positive",
+  "expensive"
+ ],
+ "Hvad hedder 'for nylig' på engelsk i 'I've ___ moved house'?": [
+  "regularly",
+  "suddenly",
+  "rarely"
+ ],
+ "Hvad hedder 'fag' på engelsk i 'My favourite ___ is history'?": [
+  "project",
+  "teacher",
+  "season"
+ ],
+ "Hvad hedder 'blive' på engelsk?": [
+  "begin",
+  "belong",
+  "behave"
+ ],
+ "Hvad hedder 'frikvarter / pause' på engelsk i 'We have a short ___ at ten'?": [
+  "lesson",
+  "meeting",
+  "walk"
+ ],
+ "Hvad hedder 'fantasy / eventyrgenre' på engelsk i 'a ___ novel'?": [
+  "crime",
+  "history",
+  "travel"
+ ],
+ "Hvad hedder 'desværre' på engelsk i '___, the shop was closed'?": [
+  "surprisingly",
+  "immediately",
+  "apparently"
+ ],
+ "Hvad hedder 'kok' på engelsk?": [
+  "chief",
+  "waiter",
+  "guest"
+ ],
+ "Hvad hedder 'fantasi' på engelsk i 'Children have a lot of ___'?": [
+  "information",
+  "education",
+  "invitation"
+ ],
+ "Hvad hedder 'heldigvis' på engelsk i '___, nobody was hurt'?": [
+  "suddenly",
+  "finally",
+  "sadly"
+ ],
+ "Hvad hedder 'skrald' på engelsk?": [
+  "ribbon",
+  "cabbage",
+  "rabbit"
+ ],
+ "Hvad hedder 'stof (tekstil)' på engelsk?": [
+  "factory",
+  "fashion",
+  "pattern"
+ ],
+ "Hvad hedder 'gave' på engelsk i 'Thank you for the lovely ___'?": [
+  "card",
+  "visit",
+  "dinner"
+ ],
+ "Hvad hedder 'sandsynligvis' på engelsk i 'It will ___ rain'?": [
+  "properly",
+  "quickly",
+  "hardly"
+ ],
+ "Hvad hedder 'kø' på engelsk i 'There was a long ___ at the shop'?": [
+  "crowd",
+  "sale",
+  "choice"
+ ],
+ "Hvad hedder 'faktisk / reel' på engelsk i 'The ___ price was much higher'?": [
+  "annual",
+  "usual",
+  "equal"
+ ],
+ "Hvad hedder 'især' på engelsk i 'I love fruit, ___ apples'?": [
+  "eventually",
+  "actually",
+  "exactly"
+ ],
+ "Hvad hedder 'lejlighed' på engelsk i 'We live in a ___ in the city centre'?": [
+  "hotel",
+  "street",
+  "square"
+ ],
+ "Hvad hedder 'roman' på engelsk?": [
+  "poem",
+  "essay",
+  "diary"
+ ],
+ "Hvad hedder 'gift' på engelsk?": [
+  "powder",
+  "weapon",
+  "prison"
+ ],
+ "Hvad hedder 'nuværende' på engelsk i 'the ___ situation'?": [
+  "correct",
+  "curious",
+  "general"
+ ],
+ "Hvad hedder 'kort' på engelsk i 'Keep your answer ___'?": [
+  "polite",
+  "simple",
+  "honest"
+ ],
+ "Hvad hedder 'medfølende' på engelsk i 'She was very ___ when I was ill'?": [
+  "systematic",
+  "pathetic",
+  "energetic"
+ ],
+ "Hvad hedder 'kontrol / tjek' på engelsk?": [
+  "contact",
+  "comfort",
+  "contract"
+ ],
+ "Hvad hedder 'varer' på engelsk i 'The shop sells electrical ___'?": [
+  "jobs",
+  "lessons",
+  "courses"
+ ],
+ "Hvad hedder 'nervøs' på engelsk i 'I was ___ before the exam'?": [
+  "curious",
+  "serious",
+  "famous"
+ ],
+ "Hvad hedder 'opskrift' på engelsk?": [
+  "receipt",
+  "record",
+  "report"
+ ],
+ "Hvad hedder 'begivenhedsrig' på engelsk i 'It was an ___ day'?": [
+  "ordinary",
+  "awful",
+  "unlucky"
+ ],
+ "Hvad hedder 'betyde' på engelsk i 'What does this word ___?'?": [
+  "spell",
+  "cost",
+  "rhyme"
+ ],
+ "Hvad hedder 'recept fra lægen' på engelsk?": [
+  "description",
+  "subscription",
+  "inscription"
+ ],
+ "Hvad hedder 'personale' på engelsk i 'The ___ are very friendly'?": [
+  "stuff",
+  "guests",
+  "rooms"
+ ],
+ "Hvad hedder 'led / ond' på engelsk i 'Don't be ___ to your brother'?": [
+  "lazy",
+  "late",
+  "quiet"
+ ],
+ "Hvad hedder 'skændes' på engelsk?": [
+  "agree",
+  "arrive",
+  "arrange"
+ ],
+ "Hvad hedder 'leder / chef' på engelsk i 'I want to speak to the ___'?": [
+  "customer",
+  "cleaner",
+  "cashier"
+ ],
+ "Hvad hedder 'passe' på engelsk i 'These jeans don't ___ me'?": [
+  "hurt",
+  "cost",
+  "help"
+ ],
+ "Hvad hedder 'alene' på engelsk i 'She lives ___'?": [
+  "along",
+  "abroad",
+  "nearby"
+ ],
+ "Hvad hedder 'løn' på engelsk i 'She earns a good ___'?": [
+  "holiday",
+  "gallery",
+  "century"
+ ],
+ "Hvad hedder 'savne' på engelsk i 'I ___ my old friends'?": [
+  "meet",
+  "help",
+  "call"
+ ],
+ "Hvad hedder 'taknemmelig' på engelsk?": [
+  "graceful",
+  "careful",
+  "cheerful"
+ ],
+ "Hvad hedder 'jobsamtale' på engelsk i 'I have a job ___ tomorrow'?": [
+  "contract",
+  "offer",
+  "centre"
+ ],
+ "Hvad hedder 'have noget imod' på engelsk i 'Would you ___ closing the door?'?": [
+  "hate",
+  "start",
+  "keep"
+ ],
+ "Hvad hedder 'komme for sent til' på engelsk i 'Hurry, or you'll ___ the train'?": [
+  "catch",
+  "take",
+  "stop"
+ ],
+ "Hvad hedder 'forstyrre' på engelsk i 'Sorry to ___ you'?": [
+  "leave",
+  "bore",
+  "call"
+ ],
+ "Hvad hedder 'forbedre' på engelsk?": [
+  "approve",
+  "remove",
+  "involve"
+ ],
+ "Hvad hedder 'foreslår' på engelsk i 'I ___ we take a break'?": [
+  "suppose",
+  "forget",
+  "regret"
+ ],
+ "Hvad hedder 'undgå' på engelsk?": [
+  "annoy",
+  "admit",
+  "award"
+ ],
+ "Hvad hedder 'forventer' på engelsk i 'I ___ it will rain'?": [
+  "accept",
+  "respect",
+  "inspect"
+ ],
+ "Hvad hedder 'egoistisk' på engelsk?": [
+  "stylish",
+  "foolish",
+  "childish"
+ ],
+ "Hvad hedder 'løs' på engelsk i 'My tooth is ___'?": [
+  "sore",
+  "sharp",
+  "small"
+ ],
+ "Hvad hedder 'selvsikker' på engelsk?": [
+  "convenient",
+  "comfortable",
+  "consistent"
+ ],
+ "Hvad hedder 'foretrækker' på engelsk i 'I ___ tea to coffee'?": [
+  "offer",
+  "refer",
+  "order"
+ ],
+ "Hvad hedder 'lade som om' på engelsk?": [
+  "prevent",
+  "protect",
+  "depend"
+ ],
+ "Hvad hedder 'ræk op / løft' på engelsk i '___ your hand if you know the answer'?": [
+  "wave",
+  "shake",
+  "hide"
+ ],
+ "Hvad hedder 'undskylde' på engelsk?": [
+  "organise",
+  "recognise",
+  "criticise"
+ ],
+ "Hvad hedder 'tjene' på engelsk i 'How much do you ___?'?": [
+  "owe",
+  "spend",
+  "learn"
+ ],
+ "Hvad hedder 'forberede os' på engelsk i 'We need to ___ for the exam'?": [
+  "repair",
+  "compare",
+  "apply"
+ ],
+ "Hvad hedder 'have råd til' på engelsk i 'I can't ___ a new car'?": [
+  "order",
+  "offer",
+  "accept"
+ ],
+ "Hvad hedder 'tillader' på engelsk i 'My parents ___ me to stay up late'?": [
+  "advise",
+  "force",
+  "ask"
+ ],
+ "Hvad hedder 'spare' på engelsk i '___ money'?": [
+  "spend",
+  "earn",
+  "lend"
+ ],
+ "Hvad hedder 'lyve' på engelsk i 'Don't ___ to me'?": [
+  "talk",
+  "sing",
+  "write"
+ ],
+ "Hvad hedder 'forklare' på engelsk?": [
+  "complain",
+  "explore",
+  "exchange"
+ ],
+ "Hvad hedder 'skylder' på engelsk i 'You ___ me five pounds'?": [
+  "own",
+  "pay",
+  "lend"
+ ],
+ "Hvad hedder 'forurener' på engelsk i 'Factories ___ the air'?": [
+  "protect",
+  "produce",
+  "populate"
+ ],
+ "Hvad hedder 'dække (bord) / lægge' på engelsk i 'Please ___ the table'?": [
+  "clear",
+  "wipe",
+  "move"
+ ],
+ "Hvad hedder 'beskrive' på engelsk?": [
+  "subscribe",
+  "decide",
+  "destroy"
+ ],
+ "Hvad hedder 'genbruger' på engelsk i 'We ___ glass and paper'?": [
+  "replace",
+  "reverse",
+  "collect"
+ ],
+ "Hvad hedder 'minde om' på engelsk i '___ me to call Grandma'?": [
+  "remember",
+  "refuse",
+  "help"
+ ],
+ "Hvad hedder 'kontanter' på engelsk i 'Can I pay in ___?'?": [
+  "cheque",
+  "advance",
+  "person"
+ ],
+ "Hvad hedder 'sammenligne' på engelsk?": [
+  "compete",
+  "complete",
+  "prepare"
+ ],
+ "Hvad hedder 'spild' på engelsk i 'Don't ___ water'?": [
+  "drink",
+  "boil",
+  "pour"
+ ],
+ "Hvad hedder 'lægge mærke til' på engelsk i 'Did you ___ his new haircut?'?": [
+  "mention",
+  "choose",
+  "enjoy"
+ ],
+ "Hvad hedder 'byttepenge' på engelsk i 'Here's your ___'?": [
+  "ticket",
+  "receipt",
+  "coffee"
+ ],
+ "Hvad hedder 'forsvinde' på engelsk?": [
+  "disagree",
+  "discover",
+  "dislike"
+ ],
+ "Hvad hedder 'ligner' på engelsk i 'You ___ your father'?": [
+  "look after",
+  "look for",
+  "care for"
+ ],
+ "Hvad hedder 'udskyde' på engelsk i 'Don't ___ your homework until Sunday'?": [
+  "put on",
+  "give up",
+  "take up"
+ ],
+ "Hvad hedder 'godt køb' på engelsk i 'This jacket was a real ___'?": [
+  "mistake",
+  "burden",
+  "surprise"
+ ],
+ "Hvad hedder 'opfinde' på engelsk?": [
+  "invite",
+  "invest",
+  "inspect"
+ ],
+ "Hvad hedder 'indse / være klar over' på engelsk i 'I didn't ___ it was so late'?": [
+  "release",
+  "believe",
+  "decide"
+ ],
+ "Hvad hedder 'står op' på engelsk i 'I ___ at seven'?": [
+  "give up",
+  "get in",
+  "go out"
+ ],
+ "Hvad hedder 'invitere' på engelsk?": [
+  "invent",
+  "invest",
+  "insist"
+ ],
+ "Hvad hedder 'få pengene tilbage' på engelsk i 'Can I get a ___?'?": [
+  "receipt",
+  "discount",
+  "reward"
+ ],
+ "Hvad hedder 'bestå' på engelsk i 'Did you ___ the exam?'?": [
+  "fail",
+  "miss",
+  "start"
+ ],
+ "Hvad hedder 'sæt dig' på engelsk i 'Please ___'?": [
+  "stand up",
+  "lie down",
+  "come in"
+ ],
+ "Hvad hedder 'tog af sted' på engelsk i 'We ___ early in the morning'?": [
+  "set up",
+  "put off",
+  "cut off"
+ ],
+ "Hvad hedder 'prøve af' på engelsk i 'Let's ___ the new game'?": [
+  "find out",
+  "point out",
+  "carry out"
+ ],
+ "Hvad hedder 'tage mig af' på engelsk i 'I'll ___ the problem tomorrow'?": [
+  "ask for",
+  "wait for",
+  "run into"
+ ],
+ "Hvad hedder 'komme tilbage' på engelsk i 'When did you ___ from Spain?'?": [
+  "get off",
+  "get over",
+  "give in"
+ ],
+ "Hvad hedder 'fortsæt' på engelsk i '___, tell me more'?": [
+  "hold on",
+  "go out",
+  "look out"
+ ],
+ "Hvad hedder 'læg på plads' på engelsk i '___ your toys'?": [
+  "put on",
+  "give away",
+  "take out"
+ ],
+ "Hvad hedder 'udfylde' på engelsk i '___ the form, please'?": [
+  "hand in",
+  "tear up",
+  "look up"
+ ],
+ "Hvad hedder 'tag af' på engelsk i '___ your shoes'?": [
+  "put on",
+  "take out",
+  "turn off"
+ ],
+ "Hvad hedder 'smid ud' på engelsk i 'Don't ___ the box'?": [
+  "put away",
+  "bring back",
+  "give away"
+ ],
+ "Hvad hedder 'vokser' på engelsk i 'Tomatoes ___ well in the sun'?": [
+  "cook",
+  "sell",
+  "burn"
+ ],
+ "Hvad hedder 'aflevere' på engelsk i '___ your homework on Monday'?": [
+  "hand out",
+  "give up",
+  "look up"
+ ],
+ "Hvad hedder 'prøve (tøj/sko)' på engelsk i 'Can I ___ these shoes?'?": [
+  "pick up",
+  "take back",
+  "clean up"
+ ],
+ "Hvad hedder 'arbejdsløs' på engelsk?": [
+  "unprepared",
+  "unimpressed",
+  "unfamiliar"
+ ],
+ "Hvad hedder 'at fare vild' på engelsk?": [
+  "to lose your temper",
+  "to take your time",
+  "to find your feet"
+ ],
+ "Hvad hedder 'at prøve' på engelsk?": [
+  "to have a word",
+  "to have a laugh",
+  "to have a rest"
+ ],
+ "Hvad hedder 'at komme i problemer' på engelsk?": [
+  "to get into shape",
+  "to get out of hand",
+  "to get on a train"
+ ],
+ "Hvad hedder 'at have ansvaret' på engelsk?": [
+  "to be in love",
+  "to be in time",
+  "to be on board"
+ ],
+ "Hvad hedder 'at gøre sit bedste' på engelsk?": [
+  "to do your hair",
+  "to do the dishes",
+  "to do a favour"
+ ],
+ "Hvad hedder 'at skifte mening' på engelsk?": [
+  "to change your clothes",
+  "to make up your mind",
+  "to speak your mind"
+ ],
+ "Hvad hedder 'at holde kontakten' på engelsk?": [
+  "to keep in shape",
+  "to keep in line",
+  "to keep a secret"
+ ],
+ "Hvad hedder 'at føle sig hjemme' på engelsk?": [
+  "to feel left out",
+  "to stay at home",
+  "to feel the cold"
+ ],
+ "Hvad hedder 'passende / egnet' på engelsk i 'This film isn't ___ for children'?": [
+  "available",
+  "valuable",
+  "possible"
+ ],
+ "Hvad hedder 'gennemsnitlig' på engelsk i 'He's of ___ height'?": [
+  "perfect",
+  "unusual",
+  "similar"
+ ],
+ "Hvad hedder 'kæmpe' på engelsk i 'a ___ mistake'?": [
+  "tiny",
+  "silly",
+  "rare"
+ ],
+ "Hvad hedder 'genial / fantastisk' på engelsk i 'What a ___ idea!'?": [
+  "terrible",
+  "curious",
+  "stupid"
+ ],
+ "Hvad hedder 'forfærdelig' på engelsk i 'The food was ___'?": [
+  "spicy",
+  "fresh",
+  "sweet"
+ ],
+ "Hvad hedder 'fantastisk' på engelsk i 'The view was ___'?": [
+  "boring",
+  "terrible",
+  "ordinary"
+ ],
+ "Hvad hedder 'ulækker' på engelsk i 'That smell is ___'?": [
+  "delicious",
+  "familiar",
+  "surprising"
+ ],
+ "Hvad hedder 'holder med' på engelsk i 'Which team do you ___?'?": [
+  "watch",
+  "beat",
+  "coach"
+ ],
+ "Hvad hedder 'deltage i' på engelsk i '___ a meeting'?": [
+  "arrange",
+  "cancel",
+  "record"
+ ],
+ "Hvad hedder 'udmattet' på engelsk i 'I'm ___ after the race'?": [
+  "excited",
+  "delighted",
+  "surprised"
+ ],
+ "Hvad hedder 'anbefale' på engelsk i 'Can you ___ a good book?'?": [
+  "remember",
+  "recognise",
+  "request"
+ ],
+ "Hvad hedder 'burde' på engelsk i 'You ___ see a doctor'?": [
+  "used to",
+  "want to",
+  "tend to"
+ ],
+ "Hvad hedder 'ret / temmelig' på engelsk i 'It's ___ cold today'?": [
+  "still",
+  "never",
+  "hardly"
+ ],
+ "Hvad hedder 'begejstret' på engelsk i 'She was ___ with the present'?": [
+  "bored",
+  "upset",
+  "worried"
+ ],
+ "Hvad hedder 'irriteret' på engelsk i 'He was ___ with his brother'?": [
+  "amused",
+  "pleased",
+  "impressed"
+ ],
+ "Hvad hedder 'næsten' på engelsk i 'I ___ missed the bus'?": [
+  "quickly",
+  "finally",
+  "suddenly"
+ ],
+ "Hvad hedder 'temmelig' på engelsk i 'I'm ___ tired'?": [
+  "rarely",
+  "hardly",
+  "always"
+ ],
+ "Hvad hedder 'bortset fra' på engelsk i '___ Tom, everyone came'?": [
+  "thanks to",
+  "along with",
+  "because of"
+ ],
+ "Hvad hedder 'næsten ikke' på engelsk i 'I can ___ hear you'?": [
+  "easily",
+  "clearly",
+  "nearly"
+ ],
+ "Hvad hedder 'lettet' på engelsk i 'I was ___ when I passed the test'?": [
+  "surprised",
+  "worried",
+  "ashamed"
+ ],
+ "Hvad hedder 'genert' på engelsk i 'He is too ___ to speak in front of the class'?": [
+  "old",
+  "sad",
+  "ill"
+ ],
+ "Hvad hedder 'i stedet' på engelsk i 'Let's walk ___'?": [
+  "together",
+  "outside",
+  "anyway"
+ ],
+ "Hvad hedder 'alligevel' på engelsk i 'It was raining, but we went ___'?": [
+  "instead",
+  "inside",
+  "away"
+ ],
+ "Hvad hedder 'mål' på engelsk i 'My ___ is to become a vet'?": [
+  "problem",
+  "hobby",
+  "fear"
+ ],
+ "Hvad hedder 'fortjener' på engelsk i 'You ___ a break'?": [
+  "desert",
+  "design",
+  "need"
+ ],
+ "Hvad hedder 'gæt' på engelsk i '___ what happened!'?": [
+  "hear",
+  "see",
+  "ask"
+ ],
+ "Hvad hedder 'modvillig' på engelsk i 'She was ___ to lend him money again'?": [
+  "eager",
+  "delighted",
+  "likely"
+ ],
+ "Hvad hedder 'grundig' på engelsk?": [
+  "thoughtful",
+  "narrow",
+  "generous"
+ ],
+ "Hvad hedder 'effektiv' på engelsk?": [
+  "sufficient",
+  "patient",
+  "generous"
+ ],
+ "Hvad hedder 'gradvist' på engelsk?": [
+  "generally",
+  "eventually",
+  "normally"
+ ],
+ "Hvad hedder 'tilstrækkelig' på engelsk?": [
+  "efficient",
+  "frequent",
+  "convenient"
+ ],
+ "Hvad hedder 'tilsyneladende' på engelsk?": [
+  "frequently",
+  "eventually",
+  "gradually"
+ ],
+ "Hvad hedder 'indlysende' på engelsk?": [
+  "previous",
+  "curious",
+  "anxious"
+ ],
+ "Hvad hedder 'tilsyneladende / synlig' på engelsk i 'For no ___ reason'?": [
+  "particular",
+  "previous",
+  "separate"
+ ],
+ "Hvad hedder 'rimelig' på engelsk?": [
+  "remarkable",
+  "responsible",
+  "valuable"
+ ],
+ "Hvad hedder 'tilgængelig / kan fås' på engelsk i 'The tickets are ___ online'?": [
+  "valuable",
+  "invisible",
+  "expensive"
+ ],
+ "Hvad hedder 'helt sikkert' på engelsk?": [
+  "deliberately",
+  "desperately",
+  "gradually"
+ ],
+ "Hvad hedder 'passende' på engelsk?": [
+  "approximate",
+  "accurate",
+  "attractive"
+ ],
+ "Hvad hedder 'betydelig' på engelsk i 'a ___ amount of money'?": [
+  "considerate",
+  "comfortable",
+  "invisible"
+ ],
+ "Hvad hedder 'af og til' på engelsk?": [
+  "originally",
+  "constantly",
+  "accidentally"
+ ],
+ "Hvad hedder 'bevidst' på engelsk?": [
+  "cautious",
+  "anxious",
+  "precious"
+ ],
+ "Hvad hedder 'batteri' på engelsk i 'The ___ is low'?": [
+  "gallery",
+  "bakery",
+  "lottery"
+ ],
+ "Hvad hedder 'hensynsfuld' på engelsk i 'It was very ___ of you to call'?": [
+  "considerable",
+  "desperate",
+  "deliberate"
+ ],
+ "Hvad hedder 'med det samme' på engelsk?": [
+  "occasionally",
+  "eventually",
+  "separately"
+ ],
+ "Hvad hedder 'opnå / skaffe' på engelsk i 'You must ___ permission'?": [
+  "contain",
+  "retain",
+  "observe"
+ ],
+ "Hvad hedder 'samvittighed' på engelsk?": [
+  "consequence",
+  "convenience",
+  "confidence"
+ ],
+ "Hvad hedder 'økonomisk (om samfundsøkonomien)' på engelsk i '___ growth'?": [
+  "economical",
+  "scientific",
+  "artistic"
+ ],
+ "Hvad hedder 'opretholde' på engelsk i 'It's important to ___ good health'?": [
+  "obtain",
+  "contain",
+  "explain"
+ ],
+ "Hvad hedder 'søgemaskine' på engelsk?": [
+  "fire engine",
+  "search party",
+  "screen saver"
+ ],
+ "Hvad hedder 'ivrig' på engelsk?": [
+  "angry",
+  "equal",
+  "lazy"
+ ],
+ "Hvad hedder 'økonomisk i drift / sparsommelig' på engelsk i 'This car is very ___'?": [
+  "economic",
+  "powerful",
+  "popular"
+ ],
+ "Hvad hedder 'privatliv' på engelsk i 'Protect your ___ online'?": [
+  "piracy",
+  "property",
+  "password"
+ ],
+ "Hvad hedder 'betydelig / vigtig' på engelsk?": [
+  "sufficient",
+  "magnificent",
+  "efficient"
+ ],
+ "Hvad hedder 'vidne' på engelsk?": [
+  "victim",
+  "suspect",
+  "lawyer"
+ ],
+ "Hvad hedder 'efterspørgsel' på engelsk i 'There's a high ___ for electric cars'?": [
+  "supply",
+  "discount",
+  "reward"
+ ],
+ "Hvad hedder 'afgørende / nødvendig' på engelsk?": [
+  "optional",
+  "eventual",
+  "influential"
+ ],
+ "Hvad hedder 'bevis' på engelsk i 'The police found new ___ at the scene'?": [
+  "furniture",
+  "guidance",
+  "residence"
+ ],
+ "Hvad hedder 'historisk (betydningsfuld)' på engelsk i 'a ___ day'?": [
+  "hectic",
+  "tragic",
+  "heroic"
+ ],
+ "Hvad hedder 'pålidelig kilde' på engelsk?": [
+  "renewable energy",
+  "primary source",
+  "reliable witness"
+ ],
+ "Hvad hedder 'opnå' på engelsk?": [
+  "believe",
+  "relieve",
+  "approve"
+ ],
+ "Hvad hedder 'falske nyheder' på engelsk?": [
+  "junk mail",
+  "bad news",
+  "fake fur"
+ ],
+ "Hvad hedder 'udbud' på engelsk?": [
+  "demand",
+  "reply",
+  "surplus"
+ ],
+ "Hvad hedder 'kræve' på engelsk?": [
+  "acquire",
+  "inquire",
+  "retire"
+ ],
+ "Hvad hedder 'præcis / nøjagtig' på engelsk?": [
+  "adequate",
+  "ancient",
+  "available"
+ ],
+ "Hvad hedder 'virkning' på engelsk i 'The medicine had no ___'?": [
+  "effort",
+  "taste",
+  "label"
+ ],
+ "Hvad hedder 'øge' på engelsk?": [
+  "decrease",
+  "release",
+  "include"
+ ],
+ "Hvad hedder 'dagbog' på engelsk i 'She writes in her ___ every night'?": [
+  "journey",
+  "kitchen",
+  "garden"
+ ],
+ "Hvad hedder 'rektor / skoleleder' på engelsk i 'the school ___'?": [
+  "principle",
+  "canteen",
+  "library"
+ ],
+ "Hvad hedder 'vag / uklar' på engelsk?": [
+  "vain",
+  "valid",
+  "varied"
+ ],
+ "Hvad hedder 'reklame' på engelsk?": [
+  "advancement",
+  "appointment",
+  "entertainment"
+ ],
+ "Hvad hedder 'ægte' på engelsk?": [
+  "generous",
+  "general",
+  "gentle"
+ ],
+ "Hvad hedder 'princip' på engelsk i 'It's a matter of ___'?": [
+  "principal",
+  "practice",
+  "patience"
+ ],
+ "Hvad hedder 'benægte' på engelsk?": [
+  "defy",
+  "delay",
+  "deal"
+ ],
+ "Hvad hedder 'publikum' på engelsk i 'The ___ clapped'?": [
+  "audition",
+  "orchestra",
+  "director"
+ ],
+ "Hvad hedder 'falsk' på engelsk?": [
+  "fine",
+  "fast",
+  "faint"
+ ],
+ "Hvad hedder 'overtale' på engelsk?": [
+  "pursue",
+  "persist",
+  "pretend"
+ ],
+ "Hvad hedder 'kompliment' på engelsk i 'She paid me a ___'?": [
+  "complement",
+  "visit",
+  "bill"
+ ],
+ "Hvad hedder 'belejlig' på engelsk i 'Is Tuesday ___ for you?'?": [
+  "consistent",
+  "confident",
+  "competent"
+ ],
+ "Hvad hedder 'grusom' på engelsk?": [
+  "crude",
+  "crisp",
+  "cool"
+ ],
+ "Hvad hedder 'forsøg' på engelsk i 'We did an ___ in science'?": [
+  "experience",
+  "exhibition",
+  "excursion"
+ ],
+ "Hvad hedder 'forfølge / stræbe efter' på engelsk?": [
+  "persuade",
+  "purchase",
+  "pretend"
+ ],
+ "Hvad hedder 'voldsom / glubsk' på engelsk?": [
+  "fresh",
+  "scarce",
+  "faint"
+ ],
+ "Hvad hedder 'ubelejlig' på engelsk i 'It's an ___ time'?": [
+  "inconsistent",
+  "incompetent",
+  "independent"
+ ],
+ "Hvad hedder 'oprørt / urolig' på engelsk i 'The sea was ___'?": [
+  "smooth",
+  "shallow",
+  "salty"
+ ],
+ "Hvad hedder 'sikre' på engelsk?": [
+  "endure",
+  "engage",
+  "enclose"
+ ],
+ "Hvad hedder 'øde / forladte' på engelsk i 'The streets were ___'?": [
+  "crowded",
+  "flooded",
+  "decorated"
+ ],
+ "Hvad hedder 'beviser / belæg' på engelsk i 'There's no ___ that it works'?": [
+  "guidance",
+  "residence",
+  "advice"
+ ],
+ "Hvad hedder 'ydmyg' på engelsk?": [
+  "humid",
+  "hostile",
+  "noble"
+ ],
+ "Hvad hedder 'svær / hård' på engelsk i 'It was a ___ decision'?": [
+  "quick",
+  "final",
+  "fair"
+ ],
+ "Hvad hedder 'finde sig i' på engelsk?": [
+  "catch up with",
+  "come up with",
+  "keep up with"
+ ],
+ "Hvad hedder 'data / oplysninger' på engelsk i 'We collected ___ from 500 students'?": [
+  "votes",
+  "money",
+  "dates"
+ ],
+ "Hvad hedder 'dessert' på engelsk i 'What's for ___?'?": [
+  "desert",
+  "starter",
+  "supper"
+ ],
+ "Hvad hedder 'fugtig' på engelsk?": [
+  "humble",
+  "timid",
+  "rapid"
+ ],
+ "Hvad hedder 'konklusion' på engelsk i 'What's your ___?'?": [
+  "confusion",
+  "collection",
+  "condition"
+ ],
+ "Hvad hedder 'stole på' på engelsk i 'You can ___ me'?": [
+  "carry on",
+  "look on",
+  "pick on"
+ ],
+ "Hvad hedder 'ødelægge / afsløre' på engelsk i 'Don't ___ the ending!'?": [
+  "spill",
+  "skip",
+  "swap"
+ ],
+ "Hvad hedder 'holdt stille' på engelsk i 'The car was ___'?": [
+  "temporary",
+  "ordinary",
+  "voluntary"
+ ],
+ "Hvad hedder 'forkæle' på engelsk i 'They ___ their children'?": [
+  "scold",
+  "spill",
+  "feed"
+ ],
+ "Hvad hedder 'papirvarer' på engelsk?": [
+  "scenery",
+  "machinery",
+  "pottery"
+ ],
+ "Hvad hedder 'udføre' på engelsk i '___ an experiment'?": [
+  "carry on",
+  "call off",
+  "turn down"
+ ],
+ "Hvad hedder 'indhente' på engelsk i 'Go ahead, I'll ___ you'?": [
+  "come up with",
+  "put up with",
+  "get on with"
+ ],
+ "Hvad hedder 'tøve' på engelsk?": [
+  "imitate",
+  "celebrate",
+  "meditate"
+ ],
+ "Hvad hedder 'opmuntre' på engelsk?": [
+  "discourage",
+  "encounter",
+  "entertain"
+ ],
+ "Hvad hedder 'finde ud af' på engelsk i 'I can't ___ how this works'?": [
+  "point out",
+  "carry out",
+  "hand out"
+ ],
+ "Hvad hedder 'skade' på engelsk i 'a serious knee ___'?": [
+  "inquiry",
+  "surgery",
+  "support"
+ ],
+ "Hvad hedder 'se op til' på engelsk i 'I ___ my coach'?": [
+  "look down on",
+  "look out for",
+  "run away from"
+ ],
+ "Hvad hedder 'komme sig over' på engelsk i 'It took him months to ___ the flu'?": [
+  "take over",
+  "pass on",
+  "give in"
+ ],
+ "Hvad hedder 'afskrække / tage modet fra' på engelsk?": [
+  "encourage",
+  "discover",
+  "discuss"
+ ],
+ "Hvad hedder 'recept' på engelsk i 'You need a ___ for this medicine'?": [
+  "receipt",
+  "subscription",
+  "description"
+ ],
+ "Hvad hedder 'startede' på engelsk i 'They ___ a new company'?": [
+  "gave up",
+  "sold off",
+  "shut down"
+ ],
+ "Hvad hedder 'skære ned på' på engelsk i 'I'm trying to ___ sugar'?": [
+  "put up with",
+  "run out of",
+  "catch up on"
+ ],
+ "Hvad hedder 'vane' på engelsk i 'Smoking is a bad ___'?": [
+  "hobby",
+  "choice",
+  "joke"
+ ],
+ "Hvad hedder 'genkende' på engelsk i 'I didn't ___ you with glasses'?": [
+  "realise",
+  "recommend",
+  "criticise"
+ ],
+ "Hvad hedder 'overbevise' på engelsk?": [
+  "confess",
+  "consume",
+  "contain"
+ ],
+ "Hvad hedder 'skaffe os af med' på engelsk i 'We need to ___ these old boxes'?": [
+  "get hold of",
+  "take care of",
+  "run out of"
+ ],
+ "Hvad hedder 'logge ind' på engelsk i '___ to your account'?": [
+  "log off",
+  "back up",
+  "give in"
+ ],
+ "Hvad hedder 'der er dukket noget op' på engelsk i 'Something has ___, so I can't meet you'?": [
+  "gone off",
+  "run out",
+  "broken down"
+ ],
+ "Hvad hedder 'stå for (betyde)' på engelsk i 'What does BBC ___?'?": [
+  "stand by",
+  "stand out",
+  "ask for"
+ ],
+ "Hvad hedder 'gennemgå' på engelsk i 'Let's ___ the answers'?": [
+  "give out",
+  "go off",
+  "make up"
+ ],
+ "Hvad hedder 'forstå / opfatte' på engelsk i 'I couldn't ___ what he said'?": [
+  "make up",
+  "point out",
+  "turn down"
+ ],
+ "Hvad hedder 'tag backup af' på engelsk i '___ your files'?": [
+  "back off",
+  "break up",
+  "clean up"
+ ],
+ "Hvad hedder 'skille sig ud' på engelsk i 'Her red coat made her ___'?": [
+  "stand up",
+  "stand by",
+  "show off"
+ ],
+ "Hvad hedder 'kom forbi' på engelsk i '___ for dinner on Friday'?": [
+  "come down",
+  "turn round",
+  "come apart"
+ ],
+ "Hvad hedder 'koble af' på engelsk i 'I need to ___ after work'?": [
+  "switch on",
+  "show off",
+  "set off"
+ ],
+ "Hvad hedder 'ordne sig' på engelsk i 'Things will ___ fine'?": [
+  "wear out",
+  "break out",
+  "run out"
+ ],
+ "Hvad hedder 'at drille nogen' på engelsk?": [
+  "to give someone a hand",
+  "to pull your weight",
+  "to tell someone off"
+ ],
+ "Hvad hedder 'at være ellevild af glæde' på engelsk i 'She was ___ about her new job'?": [
+  "under the weather",
+  "down in the dumps",
+  "up in arms"
+ ],
+ "Hvad hedder 'at holde øje med noget' på engelsk i 'Could you ___ my bag?'?": [
+  "take a look at",
+  "turn a blind eye to",
+  "get the hang of"
+ ],
+ "Hvad hedder 'at bryde isen' på engelsk i 'He told a joke to ___'?": [
+  "break the bank",
+  "spill the beans",
+  "steal the show"
+ ],
+ "Hvad hedder 'at bestemme' på engelsk?": [
+  "to call it a day",
+  "to take the plunge",
+  "to cut corners"
+ ],
+ "Hvad hedder 'at få betænkeligheder' på engelsk?": [
+  "to have the last word",
+  "to have a lucky escape",
+  "to have a short fuse"
+ ],
+ "Hvad hedder 'at afsløre en hemmelighed' på engelsk?": [
+  "to pull the strings",
+  "to break the ice",
+  "to hit the sack"
+ ],
+ "Hvad hedder 'at være under pres' på engelsk?": [
+  "to be under the weather",
+  "to be on the ball",
+  "to be out of work"
+ ],
+ "Hvad hedder 'at forpasse en chance' på engelsk?": [
+  "to rock the boat",
+  "to miss the point",
+  "to jump the gun"
+ ],
+ "Hvad hedder 'at tage konsekvenserne' på engelsk?": [
+  "to call the tune",
+  "to play it by ear",
+  "to steal the show"
+ ],
+ "Hvad hedder 'at tage af sted' på engelsk?": [
+  "to hit the sack",
+  "to hit the roof",
+  "to hit the jackpot"
+ ],
+ "Hvad hedder 'at begynde at læse lektier' på engelsk?": [
+  "to hit the road",
+  "to hit the sack",
+  "to cook the books"
+ ],
+ "Hvad hedder 'at komme i nyhederne' på engelsk?": [
+  "to hit the jackpot",
+  "to read between the lines",
+  "to hit rock bottom"
+ ],
+ "Hvad hedder 'at holde sit ord' på engelsk?": [
+  "to keep your head",
+  "to eat your words",
+  "to lose your touch"
+ ],
+ "Hvad hedder 'at forstå budskabet' på engelsk?": [
+  "to get the sack",
+  "to break the news",
+  "to get the ball rolling"
+ ],
+ "Hvad hedder 'at være nervøs / anspændt' på engelsk?": [
+  "to be on board",
+  "to be on call",
+  "to be on top"
+ ],
+ "Hvad hedder 'at aflyse det' på engelsk?": [
+  "to call it even",
+  "to make it up",
+  "to sleep on it"
+ ],
+ "Hvad hedder 'at overvælde / imponere voldsomt' på engelsk?": [
+  "to blow your top",
+  "to speak your mind",
+  "to lose your mind"
+ ],
+ "Hvad hedder 'at blive færdig inden tiden' på engelsk?": [
+  "to beat about the bush",
+  "to turn back the clock",
+  "to set the pace"
+ ],
+ "Hvad hedder 'uvillige' på engelsk i 'The children were ___ to go home'?": [
+  "eager",
+  "allowed",
+  "excited"
+ ],
+ "Hvad hedder 'resultat' på engelsk?": [
+  "income",
+  "outline",
+  "outlook"
+ ],
+ "Hvad hedder 'overvældende' på engelsk i 'an ___ majority'?": [
+  "overlapping",
+  "increasing",
+  "outstanding"
+ ],
+ "Hvad hedder 'i sidste ende' på engelsk i '___, it's your decision'?": [
+  "previously",
+  "currently",
+  "occasionally"
+ ],
+ "Hvad hedder 'ulempe' på engelsk?": [
+  "feedback",
+  "backdrop",
+  "payback"
+ ],
+ "Hvad hedder 'hvorved' på engelsk i 'He sold the house, ___ avoiding debt'?": [
+  "thereafter",
+  "whereas",
+  "hereby"
+ ],
+ "Hvad hedder 'sårbare' på engelsk i 'Older people are more ___ to the virus'?": [
+  "valuable",
+  "visible",
+  "reliable"
+ ],
+ "Hvad hedder 'problem / spørgsmål' på engelsk i 'This is a serious ___'?": [
+  "tissue",
+  "invoice",
+  "offer"
+ ],
+ "Hvad hedder 'om end' på engelsk i 'a small, ___ important, change'?": [
+  "hence",
+  "thus",
+  "merely"
+ ],
+ "Hvad hedder 'grundigt' på engelsk i 'Read the contract ___ before signing'?": [
+  "roughly",
+  "briefly",
+  "loudly"
+ ],
+ "Hvad hedder 'at koste en formue' på engelsk?": [
+  "to break the ice",
+  "to break the rules",
+  "to hit the jackpot"
+ ],
+ "Hvad hedder 'gik modvilligt med til' på engelsk i 'She ___ to help'?": [
+  "eagerly agreed",
+  "politely refused",
+  "quickly offered"
+ ],
+ "Hvad hedder 'yderst omhyggeligt' på engelsk i 'The plan was ___ prepared'?": [
+  "miraculously",
+  "ridiculously",
+  "mysteriously"
+ ],
+ "Hvad hedder 'altafgørende' på engelsk?": [
+  "tantamount",
+  "paranoid",
+  "peripheral"
+ ],
+ "Hvad hedder 'allestedsnærværende' på engelsk?": [
+  "ambiguous",
+  "ridiculous",
+  "superfluous"
+ ],
+ "Hvad hedder 'enstemmig' på engelsk?": [
+  "anonymous",
+  "magnanimous",
+  "ubiquitous"
+ ],
+ "Hvad hedder 'anonym' på engelsk?": [
+  "unanimous",
+  "autonomous",
+  "synonymous"
+ ],
+ "Hvad hedder 'iøjnefaldende' på engelsk?": [
+  "continuous",
+  "conscientious",
+  "contagious"
+ ],
+ "Hvad hedder 'omhyggelig' på engelsk?": [
+  "ridiculous",
+  "miraculous",
+  "ambitious"
+ ],
+ "Hvad hedder 'afgørende / central' på engelsk?": [
+  "partial",
+  "pitiful",
+  "primal"
+ ],
+ "Hvad hedder 'praktisk og jordnær' på engelsk?": [
+  "dogmatic",
+  "dramatic",
+  "erratic"
+ ],
+ "Hvad hedder 'tvetydig' på engelsk i 'The instructions were ___, so nobody knew what to do'?": [
+  "ambitious",
+  "obvious",
+  "generous"
+ ],
+ "Hvad hedder 'kynisk' på engelsk?": [
+  "clinical",
+  "cyclical",
+  "typical"
+ ],
+ "Hvad hedder 'ikke iøjnefaldende / diskret' på engelsk?": [
+  "incongruous",
+  "inconsistent",
+  "inconclusive"
+ ],
+ "Hvad hedder 'splittet / tvivlrådig' på engelsk?": [
+  "equivalent",
+  "ambitious",
+  "benevolent"
+ ],
+ "Hvad hedder 'ambitiøs' på engelsk?": [
+  "ambiguous",
+  "auspicious",
+  "cautious"
+ ],
+ "Hvad hedder 'velvillig' på engelsk?": [
+  "malevolent",
+  "belligerent",
+  "ambivalent"
+ ],
+ "Hvad hedder 'naiv' på engelsk?": [
+  "native",
+  "noble",
+  "vain"
+ ],
+ "Hvad hedder 'selvtilfreds' på engelsk?": [
+  "compliant",
+  "complicit",
+  "competent"
+ ],
+ "Hvad hedder 'partiskhed / skævvridning' på engelsk i 'The article showed a clear political ___'?": [
+  "basis",
+  "shift",
+  "debate"
+ ],
+ "Hvad hedder 'omstridt' på engelsk?": [
+  "conscientious",
+  "contagious",
+  "continuous"
+ ],
+ "Hvad hedder 'ondsindet' på engelsk?": [
+  "delicious",
+  "judicious",
+  "auspicious"
+ ],
+ "Hvad hedder 'modvilje' på engelsk?": [
+  "relevance",
+  "reliance",
+  "resonance"
+ ],
+ "Hvad hedder 'medgørlig / følger reglerne' på engelsk?": [
+  "complacent",
+  "competent",
+  "compatible"
+ ],
+ "Hvad hedder 'partisk / forudindtaget' på engelsk?": [
+  "based",
+  "bored",
+  "blunt"
+ ],
+ "Hvad hedder 'kontroversiel / omstridt' på engelsk?": [
+  "conversational",
+  "conventional",
+  "confidential"
+ ],
+ "Hvad hedder 'godtroende' på engelsk?": [
+  "fallible",
+  "audible",
+  "legible"
+ ],
+ "Hvad hedder 'uundgåelig' på engelsk?": [
+  "invisible",
+  "inedible",
+  "irritable"
+ ],
+ "Hvad hedder 'forsigtig / foreløbig' på engelsk?": [
+  "attentive",
+  "tenacious",
+  "talkative"
+ ],
+ "Hvad hedder 'upartisk' på engelsk?": [
+  "impatient",
+  "imperial",
+  "immaterial"
+ ],
+ "Hvad hedder 'uvurderlig (meget værdifuld)' på engelsk?": [
+  "invariable",
+  "inevitable",
+  "invisible"
+ ],
+ "Hvad hedder 'relevant' på engelsk?": [
+  "permanent",
+  "persistent",
+  "impertinent"
+ ],
+ "Hvad hedder 'snu / skarpsindig' på engelsk?": [
+  "shrill",
+  "crude",
+  "stern"
+ ],
+ "Hvad hedder 'sejlivet / udholdende' på engelsk?": [
+  "tentative",
+  "spacious",
+  "gracious"
+ ],
+ "Hvad hedder 'sammenhængende' på engelsk?": [
+  "inherent",
+  "competent",
+  "decent"
+ ],
+ "Hvad hedder 'næsvis / fræk' på engelsk?": [
+  "pertinent",
+  "impatient",
+  "irrelevant"
+ ],
+ "Hvad hedder 'stædig' på engelsk?": [
+  "obsolete",
+  "obedient",
+  "fortunate"
+ ],
+ "Hvad hedder 'uvurderlig' på engelsk?": [
+  "pointless",
+  "harmless",
+  "careless"
+ ],
+ "Hvad hedder 'overfladisk' på engelsk?": [
+  "superfluous",
+  "artificial",
+  "beneficial"
+ ],
+ "Hvad hedder 'modstridende' på engelsk?": [
+  "conciliatory",
+  "compulsory",
+  "introductory"
+ ],
+ "Hvad hedder 'ligeglad' på engelsk?": [
+  "different",
+  "indignant",
+  "independent"
+ ],
+ "Hvad hedder 'sparsom / ringe' på engelsk?": [
+  "eager",
+  "meek",
+  "major"
+ ],
+ "Hvad hedder 'berygtet' på engelsk?": [
+  "nutritious",
+  "numerous",
+  "glorious"
+ ],
+ "Hvad hedder 'apatisk / sløv' på engelsk?": [
+  "pathetic",
+  "sympathetic",
+  "athletic"
+ ],
+ "Hvad hedder 'overdådig' på engelsk?": [
+  "lively",
+  "loyal",
+  "lucid"
+ ],
+ "Hvad hedder 'overflødig / afskediget' på engelsk?": [
+  "abundant",
+  "reluctant",
+  "recurrent"
+ ],
+ "Hvad hedder 'nøje undersøgelse' på engelsk?": [
+  "mutiny",
+  "scarcity",
+  "security"
+ ],
+ "Hvad hedder 'betydelig / væsentlig' på engelsk?": [
+  "substandard",
+  "sequential",
+  "influential"
+ ],
+ "Hvad hedder 'streng / nøgtern' på engelsk?": [
+  "astute",
+  "obscure",
+  "sincere"
+ ],
+ "Hvad hedder 'ubetydelig' på engelsk?": [
+  "negligent",
+  "eligible",
+  "legible"
+ ],
+ "Hvad hedder 'kedsommelig' på engelsk?": [
+  "tenuous",
+  "studious",
+  "hideous"
+ ],
+ "Hvad hedder 'nidkær' på engelsk?": [
+  "jealous",
+  "callous",
+  "jovial"
+ ],
+ "Hvad hedder 'forældet' på engelsk?": [
+  "absolute",
+  "obstinate",
+  "obscure"
+ ],
+ "Hvad hedder 'sparepolitik / stramninger' på engelsk?": [
+  "authority",
+  "adversity",
+  "prosperity"
+ ],
+ "Hvad hedder 'overfladisk / letsindig' på engelsk?": [
+  "fabulous",
+  "furious",
+  "ferocious"
+ ],
+ "Hvad hedder 'forsømmelig / skødesløs' på engelsk?": [
+  "negligible",
+  "intelligent",
+  "indulgent"
+ ],
+ "Hvad hedder 'modstandsdygtig' på engelsk?": [
+  "resident",
+  "relevant",
+  "reticent"
+ ],
+ "Hvad hedder 'uden fortilfælde' på engelsk?": [
+  "unpredictable",
+  "unsupervised",
+  "unprotected"
+ ],
+ "Hvad hedder 'velhavende' på engelsk?": [
+  "affable",
+  "eloquent",
+  "frequent"
+ ],
+ "Hvad hedder 'forværres' på engelsk?": [
+  "determine",
+  "decorate",
+  "deliberate"
+ ],
+ "Hvad hedder 'ildevarslende' på engelsk?": [
+  "anonymous",
+  "luminous",
+  "onerous"
+ ],
+ "Hvad hedder 'udbredt' på engelsk?": [
+  "relevant",
+  "prudent",
+  "prominent"
+ ],
+ "Hvad hedder 'skadelig' på engelsk?": [
+  "sentimental",
+  "instrumental",
+  "fundamental"
+ ],
+ "Hvad hedder 'lindre' på engelsk?": [
+  "alienate",
+  "allocate",
+  "abbreviate"
+ ],
+ "Hvad hedder 'lovende / gunstig' på engelsk?": [
+  "suspicious",
+  "ambitious",
+  "malicious"
+ ],
+ "Hvad hedder 'fattig / nødlidende' på engelsk?": [
+  "resolute",
+  "desolate",
+  "obstinate"
+ ],
+ "Hvad hedder 'indledende / foreløbig' på engelsk?": [
+  "imaginary",
+  "honorary",
+  "legendary"
+ ],
+ "Hvad hedder 'gavnlig' på engelsk?": [
+  "superficial",
+  "artificial",
+  "official"
+ ],
+ "Hvad hedder 'besværlig / slidsom' på engelsk?": [
+  "ardent",
+  "dubious",
+  "hazardous"
+ ],
+ "Hvad hedder 'forværre' på engelsk?": [
+  "exaggerate",
+  "exasperate",
+  "excavate"
+ ],
+ "Hvad hedder 'indbringende' på engelsk?": [
+  "decorative",
+  "ludicrous",
+  "creative"
+ ],
+ "Hvad hedder 'nært forestående' på engelsk?": [
+  "eminent",
+  "immense",
+  "innocent"
+ ],
+ "Hvad hedder 'uhåndterlig' på engelsk?": [
+  "quarrelsome",
+  "wholesome",
+  "handsome"
+ ],
+ "Hvad hedder 'empirisk / baseret på observation' på engelsk?": [
+  "imperial",
+  "theoretical",
+  "emotional"
+ ],
+ "Hvad hedder 'underminere / svække' på engelsk?": [
+  "underline",
+  "undertake",
+  "undergo"
+ ],
+ "Hvad hedder 'ustabil / flygtig' på engelsk?": [
+  "versatile",
+  "juvenile",
+  "futile"
+ ],
+ "Hvad hedder 'fremtrædende / anset' på engelsk?": [
+  "imminent",
+  "emergent",
+  "elegant"
+ ],
+ "Hvad hedder 'kortvarig / flygtig' på engelsk?": [
+  "empirical",
+  "peripheral",
+  "perennial"
+ ],
+ "Hvad hedder 'hypotese' på engelsk?": [
+  "hypnosis",
+  "synthesis",
+  "emphasis"
+ ],
+ "Hvad hedder 'undervurdere' på engelsk?": [
+  "overestimate",
+  "underperform",
+  "investigate"
+ ],
+ "Hvad hedder 'sårbar' på engelsk?": [
+  "venerable",
+  "variable",
+  "reliable"
+ ],
+ "Hvad hedder 'fremkalde (et svar)' på engelsk?": [
+  "illicit",
+  "exhibit",
+  "enlist"
+ ],
+ "Hvad hedder 'afvigelse' på engelsk?": [
+  "analogy",
+  "anatomy",
+  "autonomy"
+ ],
+ "Hvad hedder 'overbevisende' på engelsk?": [
+  "competing",
+  "compiling",
+  "repelling"
+ ],
+ "Hvad hedder 'evig / vedvarende' på engelsk?": [
+  "punctual",
+  "perceptual",
+  "spiritual"
+ ],
+ "Hvad hedder 'håndgribelig' på engelsk?": [
+  "tenable",
+  "tolerable",
+  "terrible"
+ ],
+ "Hvad hedder 'ulovlig' på engelsk?": [
+  "implicit",
+  "explicit",
+  "idyllic"
+ ],
+ "Hvad hedder 'tvetydighed' på engelsk?": [
+  "ambition",
+  "antiquity",
+  "ubiquity"
+ ],
+ "Hvad hedder 'sammenhæng / korrelation' på engelsk?": [
+  "corporation",
+  "coronation",
+  "correction"
+ ],
+ "Hvad hedder 'svær at fange / undvigende' på engelsk?": [
+  "exclusive",
+  "effusive",
+  "abusive"
+ ],
+ "Hvad hedder 'sandsynlig / troværdig' på engelsk?": [
+  "passable",
+  "palpable",
+  "laudable"
+ ],
+ "Hvad hedder 'underforstået' på engelsk?": [
+  "explicit",
+  "illicit",
+  "intrinsic"
+ ],
+ "Hvad hedder 'årsagssammenhæng' på engelsk?": [
+  "cessation",
+  "location",
+  "sensation"
+ ],
+ "Hvad hedder 'gennemførlig' på engelsk?": [
+  "flexible",
+  "visible",
+  "forcible"
+ ],
+ "Hvad hedder 'nytteløs' på engelsk?": [
+  "fertile",
+  "fragile",
+  "hostile"
+ ],
+ "Hvad hedder 'udtrykkelig / tydelig' på engelsk?": [
+  "implicit",
+  "illicit",
+  "exquisite"
+ ],
+ "Hvad hedder 'iboende' på engelsk?": [
+  "coherent",
+  "indolent",
+  "insolent"
+ ],
+ "Hvad hedder 'paradoks / selvmodsigelse' på engelsk?": [
+  "parody",
+  "paradigm",
+  "parable"
+ ],
+ "Hvad hedder 'knap / sjælden' på engelsk?": [
+  "scared",
+  "fierce",
+  "coarse"
+ ],
+ "Hvad hedder 'indrømme / give efter' på engelsk?": [
+  "conceive",
+  "conceal",
+  "convene"
+ ],
+ "Hvad hedder 'rigelig' på engelsk?": [
+  "redundant",
+  "abrupt",
+  "ardent"
+ ],
+ "Hvad hedder 'indre / iboende' på engelsk?": [
+  "intricate",
+  "extrinsic",
+  "intrusive"
+ ],
+ "Hvad hedder 'nuance / fin forskel' på engelsk?": [
+  "nuisance",
+  "menace",
+  "novice"
+ ],
+ "Hvad hedder 'stringent / grundig' på engelsk?": [
+  "vigorous",
+  "ridiculous",
+  "generous"
+ ],
+ "Hvad hedder 'støtte / anbefale' på engelsk?": [
+  "endure",
+  "enforce",
+  "enclose"
+ ],
+ "Hvad hedder 'enighed' på engelsk?": [
+  "census",
+  "conscience",
+  "consequence"
+ ],
+ "Hvad hedder 'flittig' på engelsk?": [
+  "delinquent",
+  "indulgent",
+  "intelligent"
+ ],
+ "Hvad hedder 'forlige / forene' på engelsk?": [
+  "recollect",
+  "recline",
+  "recount"
+ ],
+ "Hvad hedder 'robust / solid' på engelsk?": [
+  "rabid",
+  "abrupt",
+  "rustic"
+ ],
+ "Hvad hedder 'afbøde / mildne' på engelsk?": [
+  "litigate",
+  "migrate",
+  "instigate"
+ ],
+ "Hvad hedder 'oprigtig / ærlig' på engelsk?": [
+  "timid",
+  "rancid",
+  "cordial"
+ ],
+ "Hvad hedder 'fortilfælde / præcedens' på engelsk?": [
+  "president",
+  "pretext",
+  "preference"
+ ],
+ "Hvad hedder 'modbevise' på engelsk?": [
+  "refuse",
+  "repute",
+  "recruit"
+ ],
+ "Hvad hedder 'forsigtigt / foreløbigt' på engelsk?": [
+  "attentively",
+  "tenaciously",
+  "repetitively"
+ ],
+ "Hvad hedder 'granske' på engelsk?": [
+  "summarise",
+  "sanitise",
+  "stigmatise"
+ ],
+ "Hvad hedder 'veltalende' på engelsk?": [
+  "elegant",
+  "eminent",
+  "frequent"
+ ],
+ "Hvad hedder 'incitament / tilskyndelse' på engelsk?": [
+  "initiative",
+  "invective",
+  "incidence"
+ ],
+ "Hvad hedder 'påtage sig' på engelsk?": [
+  "overtake",
+  "undermine",
+  "understate"
+ ],
+ "Hvad hedder 'vilkårlig' på engelsk?": [
+  "voluntary",
+  "sanitary",
+  "solitary"
+ ],
+ "Hvad hedder 'afskrækkende middel' på engelsk?": [
+  "detergent",
+  "detriment",
+  "deposit"
+ ],
+ "Hvad hedder 'overse / have udsigt over' på engelsk?": [
+  "oversee",
+  "overtake",
+  "overdo"
+ ],
+ "Hvad hedder 'lette / gøre muligt' på engelsk?": [
+  "fabricate",
+  "fluctuate",
+  "formulate"
+ ],
+ "Hvad hedder 'kortfattet' på engelsk?": [
+  "concave",
+  "conscious",
+  "coarse"
+ ],
+ "Hvad hedder 'afsløre som falsk' på engelsk?": [
+  "debug",
+  "debate",
+  "devour"
+ ],
+ "Hvad hedder 'vaskemiddel' på engelsk?": [
+  "deterrent",
+  "deodorant",
+  "decanter"
+ ],
+ "Hvad hedder 'føre tilsyn med' på engelsk?": [
+  "overlook",
+  "overdo",
+  "oversleep"
+ ],
+ "Hvad hedder 'bringe i fare' på engelsk?": [
+  "legitimise",
+  "patronise",
+  "jettison"
+ ],
+ "Hvad hedder 'omgå' på engelsk?": [
+  "circulate",
+  "comprehend",
+  "commemorate"
+ ],
+ "Hvad hedder 'omfattende' på engelsk?": [
+  "comprehensible",
+  "apprehensive",
+  "competitive"
+ ],
+ "Hvad hedder 'afskrække' på engelsk?": [
+  "defer",
+  "detect",
+  "decay"
+ ],
+ "Hvad hedder 'bekræfte / efterprøve' på engelsk?": [
+  "vilify",
+  "notify",
+  "testify"
+ ],
+ "Hvad hedder 'forståelig' på engelsk?": [
+  "comprehensive",
+  "compatible",
+  "contemptible"
+ ],
+ "Hvad hedder 'udbrede' på engelsk?": [
+  "discriminate",
+  "disintegrate",
+  "eliminate"
+ ],
+ "Hvad hedder 'trives / blomstre' på engelsk?": [
+  "strive",
+  "shrink",
+  "drift"
+ ],
+ "Hvad hedder 'fordømme' på engelsk?": [
+  "condone",
+  "contend",
+  "condense"
+ ],
+ "Hvad hedder 'med vilje' på engelsk?": [
+  "desperately",
+  "delicately",
+  "definitely"
+ ],
+ "Hvad hedder 'svinde ind' på engelsk?": [
+  "swindle",
+  "dawdle",
+  "kindle"
+ ],
+ "Hvad hedder 'efterligne' på engelsk?": [
+  "emanate",
+  "elevate",
+  "enumerate"
+ ],
+ "Hvad hedder 'ugunstig' på engelsk i '___ weather conditions'?": [
+  "averse",
+  "diverse",
+  "inverse"
+ ],
+ "Hvad hedder 'mandat' på engelsk i 'The government has a ___ to act'?": [
+  "mantra",
+  "menace",
+  "motive"
+ ],
+ "Hvad hedder 'modvilligt' på engelsk?": [
+  "relentlessly",
+  "resolutely",
+  "repeatedly"
+ ],
+ "Hvad hedder 'stige kraftigt / svæve' på engelsk?": [
+  "sow",
+  "soak",
+  "sear"
+ ],
+ "Hvad hedder 'underbygge / dokumentere' på engelsk?": [
+  "substitute",
+  "subsidise",
+  "subordinate"
+ ],
+ "Hvad hedder 'bekræfte / støtte op om' på engelsk?": [
+  "collaborate",
+  "commemorate",
+  "coordinate"
+ ],
+ "Hvad hedder 'ikke desto mindre' på engelsk i 'It was raining. ___, we went out'?": [
+  "furthermore",
+  "therefore",
+  "meanwhile"
+ ],
+ "Hvad hedder 'styrtdykke' på engelsk?": [
+  "pummel",
+  "plunder",
+  "flutter"
+ ],
+ "Hvad hedder 'offentlig granskning' på engelsk i 'The plan came under public ___'?": [
+  "security",
+  "scarcity",
+  "mutiny"
+ ],
+ "Hvad hedder 'modvillig / afvisende over for' på engelsk i 'He is not ___ to risk'?": [
+  "adverse",
+  "diverse",
+  "immune"
+ ],
+ "Hvad hedder 'efterspil / følgevirkninger' på engelsk?": [
+  "afterthought",
+  "afternoon",
+  "aftershave"
+ ],
+ "Hvad hedder 'overveje / betragte' på engelsk?": [
+  "contaminate",
+  "congratulate",
+  "consolidate"
+ ],
+ "Hvad hedder 'diskret' på engelsk?": [
+  "discrete",
+  "distinct",
+  "devout"
+ ],
+ "Hvad hedder 'udskyde / trække tiden' på engelsk?": [
+  "proliferate",
+  "prosecute",
+  "propagate"
+ ],
+ "Hvad hedder 'tilbageslag' på engelsk?": [
+  "feedback",
+  "backlog",
+  "outset"
+ ],
+ "Hvad hedder 'at huske på' på engelsk?": [
+  "to bear a grudge",
+  "to bear fruit",
+  "to mind the gap"
+ ],
+ "Hvad hedder 'adskilte / særskilte' på engelsk?": [
+  "discreet",
+  "concrete",
+  "obsolete"
+ ],
+ "Hvad hedder 'gennembrud' på engelsk?": [
+  "breakdown",
+  "walkthrough",
+  "outbreak"
+ ],
+ "Hvad hedder 'gentage' på engelsk?": [
+  "retaliate",
+  "reinstate",
+  "irritate"
+ ],
+ "Hvad hedder 'smuthul' på engelsk?": [
+  "porthole",
+  "foothold",
+  "pothole"
+ ],
+ "Hvad hedder 'bagklogskab' på engelsk?": [
+  "foresight",
+  "insight",
+  "eyesight"
+ ],
+ "Hvad hedder 'fremsynethed' på engelsk?": [
+  "hindsight",
+  "oversight",
+  "eyesight"
+ ],
+ "Hvad hedder 'at opfinde den dybe tallerken' på engelsk?": [
+  "to take the wheel",
+  "to break the mould",
+  "to grease the wheels"
+ ],
+ "Hvad hedder 'at kun lige berøre emnet' på engelsk?": [
+  "to scratch your head",
+  "to test the water",
+  "to touch wood"
+ ],
+ "Hvad hedder 'at begrave stridsøksen' på engelsk?": [
+  "to hatch a plan",
+  "to burn your bridges",
+  "to cross swords"
+ ],
+ "Hvad hedder 'at ændre reglerne undervejs' på engelsk?": [
+  "to move the needle",
+  "to shift the blame",
+  "to score an own goal"
+ ],
+ "Hvad hedder 'at stjæle opmærksomheden' på engelsk?": [
+  "to run the show",
+  "to steal a glance",
+  "to save the day"
+ ],
+ "Hvad hedder 'at være i strid' på engelsk?": [
+  "to be at a loss",
+  "to be at large",
+  "to be on the same page"
+ ],
+ "Hvad hedder 'et utal' på engelsk i 'a ___ of options'?": [
+  "mirage",
+  "shortage",
+  "review"
+ ],
+ "Hvad hedder 'overflod' på engelsk?": [
+  "plateau",
+  "pleasure",
+  "phantom"
+ ],
+ "Hvad hedder 'mangel' på engelsk?": [
+  "death",
+  "depth",
+  "hearth"
+ ],
+ "Hvad hedder 'sammenhæng / sammenhold' på engelsk?": [
+  "collision",
+  "coercion",
+  "corrosion"
+ ],
+ "Hvad hedder 'trods / uanset' på engelsk i '___ the cost, the project went ahead'?": [
+  "in addition to",
+  "on behalf of",
+  "with regard to"
+ ],
+ "Hvad hedder 'ulighed / forskel' på engelsk?": [
+  "dispersal",
+  "prosperity",
+  "depravity"
+ ],
+ "Hvad hedder 'hidtil' på engelsk i 'a ___ unknown species'?": [
+  "thereby",
+  "hereafter",
+  "otherwise"
+ ],
+ "Hvad hedder 'stille op over for hinanden' på engelsk?": [
+  "transpose",
+  "expose",
+  "propose"
+ ],
+ "Hvad hedder 'være indbegrebet af' på engelsk?": [
+  "optimise",
+  "economise",
+  "apologise"
+ ],
+ "Hvad hedder 'omvendt' på engelsk?": [
+  "concisely",
+  "consequently",
+  "conveniently"
+ ],
+ "Hvad hedder 'utilsigtet' på engelsk?": [
+  "indefinitely",
+  "intermittently",
+  "independently"
+ ],
+ "Hvad hedder 'tilsyneladende / angiveligt' på engelsk?": [
+  "extensively",
+  "ostentatiously",
+  "sensibly"
+ ]
+}
