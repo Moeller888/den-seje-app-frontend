@@ -198,10 +198,19 @@ FROM public.questions WHERE metadata ? 'level_batch' GROUP BY 1 ORDER BY 1;
 -- WHERE learning_objective = 'english' AND metadata->>'level_batch' = 'pilot';
 ```
 
-### 2.8 Engelsk 5.000: plan for anvendelse og trinvis aktivering (2026-11-05, intet udført)
+### 2.8 Engelsk 5.000: plan for anvendelse og trinvis aktivering (2026-11-05)
 
 Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokumenteret i
 [`english-5000-e5.md`](english-5000-e5.md).
+
+**Status:**
+- 2026-11-06: ejeren har taget et dump af `public.questions` (2.143 rækker med struktur), fordi produktionen
+  ikke har nogen gendannelig backup.
+- **Trin 1a er udført 2026-11-06.** `20261020125000_english_grade6_9` er anvendt som ledger-version
+  `20261106094831`. Efterkontrollen viste 120 rækker, 0 aktive og 0 uden niveau eller CEFR, og indholdet er
+  identisk med repoet. Se
+  [`production-actions/2026-11-06T0948Z-english-grade6-9-applied.md`](production-actions/2026-11-06T0948Z-english-grade6-9-applied.md).
+- Trin 1b–1d og hele fase 2 er ikke udført.
 
 **Godkendelser:**
 - Hvert trin herunder kræver sit eget GO fra ejeren (E2, D-110). Det gælder også hver `apply_migration`, hver
