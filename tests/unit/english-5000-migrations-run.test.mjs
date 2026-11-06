@@ -140,7 +140,8 @@ test("CEFR coverage: every level group is filled, and batch7-batch10 each span a
   const { items } = await loadAll();
   const perCefr = {};
   for (const { cefr } of items) perCefr[cefr] = (perCefr[cefr] ?? 0) + 1;
-  assert.deepEqual(perCefr, { "pre-A1": 440, A1: 510, A2: 703, B1: 1213, B2: 1100, C1: 1034 });
+  // After the E5 review (2026-11-05), which moved 97 reused questions a full CEFR band down.
+  assert.deepEqual(perCefr, { "pre-A1": 440, A1: 525, A2: 753, B1: 1183, B2: 1086, C1: 1013 });
   for (const batch of NEW_BATCHES) {
     const own = items.filter((item) => item.batch === batch);
     for (const cefr of CEFR_ORDER) {
@@ -252,4 +253,31 @@ test("batch7-batch10 are exactly what the generator builds from its inputs", () 
   const files = migrationFiles();
   assert.equal(Object.keys(files).length, 12);
   for (const [name, sql] of Object.entries(files)) assert.equal(read(name), sql, `${name} is out of date`);
+});
+
+test("the E5 sample is deterministic and covers every portion × CEFR cell (10 %, at least 6)", async () => {
+  const { e5Sample, allNewQuestions, levelBatch, E5_MIN, E5_RATE } = await import("../../tools/questions/english-5000-sample.mjs");
+  const first = e5Sample();
+  assert.deepEqual(e5Sample().map((item) => item.q), first.map((item) => item.q));
+  const cells = new Map();
+  for (const item of allNewQuestions()) {
+    const key = `${levelBatch(item.file)}|${item.cefr}`;
+    cells.set(key, (cells.get(key) ?? 0) + 1);
+  }
+  for (const [key, size] of cells) {
+    const picked = first.filter((item) => `${item.batch}|${item.cefr}` === key).length;
+    assert.equal(picked, Math.min(size, Math.max(E5_MIN, Math.ceil(size * E5_RATE))), key);
+  }
+});
+
+test("the production precheck only reads, and expects the real portion sizes", async () => {
+  const { beforeSql, afterSql, portionSizes, EXPECTED_PER_BATCH } = await import("../../tools/questions/english-5000-precheck.mjs");
+  for (const sql of [beforeSql(), afterSql()]) {
+    const code = sql.split("\n").filter((line) => !line.startsWith("--")).join("\n");
+    assert.doesNotMatch(code, /\b(INSERT|UPDATE|DELETE|ALTER|DROP|CREATE|GRANT|REVOKE|TRUNCATE)\b/i);
+    assert.match(code, /SELECT/);
+  }
+  assert.equal((beforeSql().match(/'[0-9a-f]{32}'/g) ?? []).length, 5000);
+  assert.deepEqual(portionSizes(), EXPECTED_PER_BATCH);
+  assert.equal(Object.values(EXPECTED_PER_BATCH).reduce((sum, n) => sum + n, 0), 5000);
 });

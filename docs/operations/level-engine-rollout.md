@@ -198,6 +198,124 @@ FROM public.questions WHERE metadata ? 'level_batch' GROUP BY 1 ORDER BY 1;
 -- WHERE learning_objective = 'english' AND metadata->>'level_batch' = 'pilot';
 ```
 
+### 2.8 Engelsk 5.000: plan for anvendelse og trinvis aktivering (2026-11-05, intet udført)
+
+Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokumenteret i
+[`english-5000-e5.md`](english-5000-e5.md).
+
+**Godkendelser:**
+- Hvert trin herunder kræver sit eget GO fra ejeren (E2, D-110). Det gælder også hver `apply_migration`, hver
+  aktiveringsmigration og hver tilbagerulning.
+- Et GO til ét trin dækker ikke det næste.
+
+**Ingen backup:** ifølge den senest kendte status har produktionen ingen gendannelig backup (gratis plan, PITR slået fra). Det bekræftes før fase 1.
+- Indsættelsen er additiv og inaktiv.
+- En fejl rulles tilbage med `DELETE` eller `UPDATE` på `metadata.level_batch`, ikke med en gendannelse.
+
+#### A. Forudsætninger (læsende)
+
+1. E5-PR'en er merget, og main-CI er grøn.
+2. Kør `node tools/questions/english-5000-precheck.mjs before`. Den giver kun `SELECT` og kører én gang via `execute_sql`.
+   Forventet resultat:
+   - `has_difficulty_level = 1`;
+   - ingen rækker med `level_batch`;
+   - `text_collisions = 0`. Den levende `unique_question_text` ville ellers afvise en hel migration;
+   - triggere, constraints og indeks på `public.questions` svarer til repoet:
+     - `questions_answer_format_check`;
+     - `questions_target_grade_check` (3–9);
+     - `questions_difficulty_band_check` (1–5);
+     - `questions_difficulty_level_check` (1–10.000);
+     - `unique_question_text`;
+     - `idx_questions_objective_level`;
+     - ingen ukendt `INSERT`-trigger.
+
+   Afviger noget: stop og rapportér.
+3. `LEVEL_ENGINE` er uændret (`v1`). Inaktive opgaver serveres ikke: alle motorens udvælgelser filtrerer på
+   `is_active = true` (migration B), og `20261102100000_release_open_rounds_on_inactive_questions` er anvendt.
+
+#### B. Fase 1: indsættelse, alle inaktive (31 × `apply_migration`)
+
+Filerne anvendes én ad gangen i versionsorden, med den nøjagtige fil fra `main`. Elever mærker intet.
+
+| Trin | Migrationer | Rækker | Formål |
+|---|---|---|---|
+| 1a | `20261020125000_english_grade6_9` | 120 | Prøv mekanikken på den mindste fil |
+| 1b | `2026102013000[1-3]` (pilot) | 500 | |
+| 1c | `202610201[4-8]000[1-3]` (batch2–batch6) | 2.500 | |
+| 1d | `2026102019000[1-3]` … `2026102022000[1-3]` (batch7–batch10) | 1.880 | |
+
+**Efter hver fil:**
+- Kør `node tools/questions/english-5000-precheck.mjs after` (læsende). Portionen skal have det forventede antal, 0 aktive og
+  0 uden niveau eller CEFR.
+- Notér produktionens ledger-version.
+- Efter hvert trin: en bogførings-PR, der flytter filerne fra `NOT_IN_PRODUCTION` til `APPLIED_IN_PRODUCTION`
+  (`tests/isolated/schema/replay-plan.mjs`), plus en log i `production-actions/`.
+
+**Tilbagerulning (fase 1, eget GO):**
+1. Bekræft først, at ingen instanser peger på portionen:
+   ```sql
+   SELECT count(*) FROM question_instances qi
+   JOIN questions q ON q.id = qi.question_id
+   WHERE q.metadata->>'level_batch' = '<portion>';
+   ```
+   Forventet: 0, fordi portionen er inaktiv.
+2. Slet derefter:
+   ```sql
+   DELETE FROM public.questions
+   WHERE learning_objective = 'english'
+     AND metadata->>'level_batch' = '<portion>'
+     AND NOT is_active;
+   ```
+
+#### C. Fase 2: trinvis aktivering
+
+Én aktiveringsmigration pr. trin. Den skrives i en PR med eget GO, anvendes med eget GO, og antallet er låst:
+
+```sql
+DO $$
+DECLARE n integer;
+BEGIN
+  UPDATE public.questions SET is_active = true
+  WHERE learning_objective = 'english' AND metadata->>'level_batch' = 'batch7' AND NOT is_active;
+  GET DIAGNOSTICS n = ROW_COUNT;
+  IF n <> 470 THEN RAISE EXCEPTION 'batch7: expected 470 rows, got %', n; END IF;
+END $$;
+```
+
+| Trin | Portioner | Rækker | Begrundelse |
+|---|---|---|---|
+| 2a | batch7 | 470 | Første indholdscanary: alle seks CEFR-niveauer, nyt indhold, laveste E5-rate (stikprøve 4 %) |
+| 2b | batch8, batch9, batch10 (ét ad gangen eller samlet) | 1.410 | Samme kilde og kontrol som 2a |
+| 2c | batch6, grade6_9 | 620 | Fuldt gennemgået i E5 |
+| 2d | pilot, batch2, batch3 | 1.500 | Fuldt gennemgået i E5, få fund |
+| 2e | batch4, batch5 | 1.000 | Flest E5-fund (forvanskede distraktorer og CEFR), alle rettet. Aktiveres sidst |
+
+Efter 2e har engelsk cirka 6.088 aktive opgaver. Det svarer til lasttesten i §4.2 (6.090 aktive engelskopgaver,
+kandidatvalget under 50 ms). §2.5-målingen i produktion bør tages efter 2b. Guarden blokerer `execute_sql` mod
+app-funktioner, så målingen køres af ejeren i dashboardet.
+
+**Observation mellem trinene:** mindst tre skoledage med elevtrafik, kun læsende og kun aggregeret.
+- **`get-next-question`:** 0 5xx, og `LEVEL_ENGINE:`-linjerne viser kandidater > 0 i engelsk.
+- **Opgaver med mistanke om forkert facit:** ≥ 20 besvarelser og under 15 % rigtige. De gennemgås og kan deaktiveres
+  enkeltvis (eget GO).
+- **For lette opgaver på et højt niveau:** ≥ 20 besvarelser, over 97 % rigtige og B2 eller højere. Kandidat til et nyt
+  niveau i en senere PR.
+- **Elevernes niveauer:** fordelingen i `student_subject_level` for engelsk. Ingen massiv ophobning ved 1 eller 10.000.
+
+**Stop-kriterier:** et 5xx fra niveaumotoren, et bekræftet forkert facit eller en klage fra en lærer. Næste trin venter,
+til fundet er rettet.
+
+**Tilbagerulning (fase 2, eget GO):** ét af følgende.
+- Hele portionen:
+  ```sql
+  UPDATE public.questions SET is_active = false
+  WHERE learning_objective = 'english' AND metadata->>'level_batch' = '<portion>';
+  ```
+- Én opgave: samme `UPDATE` med `WHERE id = …`.
+
+Åbne runder på deaktiverede opgaver frigives af `release_open_rounds_on_inactive_questions`. Besvarede instanser og
+niveaurækker bevares.
+
 ---
 
 ## 3. Tilbagerulning

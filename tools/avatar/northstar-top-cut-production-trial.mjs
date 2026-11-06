@@ -17,9 +17,10 @@
 //              chest, sleeve end) per recipe; the swatches.
 //   page     — a private index.html with the comparison, the candidates' verdicts (verdicts.json, written by hand after the visual
 //              review), the timings and the capacity assessment (capacity.json).
+// D-354 adds: edges (before/after of the same edge areas against --prev) and edgepage (the private edge decision page).
 // D-352 adds: bands (the trim bands of a cut with them, overlays), decision (the private decision page with before/after against --prev),
 // and --recipes <file> (another recipe file with its own "cuts", e.g. the trim-band contract versions; default D-351's).
-// Usage: node --expose-gc tools/avatar/northstar-top-cut-production-trial.mjs --phase control|bands|approvedprints|render|outfits|views|page|decision --out <dir> --dwebp <exe> [--cut <id>] [--recipes <file>] [--prev <dir>]
+// Usage: node --expose-gc tools/avatar/northstar-top-cut-production-trial.mjs --phase control|bands|approvedprints|render|outfits|views|page|decision|edges|edgepage --out <dir> --dwebp <exe> [--cut <id>] [--recipes <file>] [--prev <dir>]
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -84,6 +85,8 @@ const rawMotif = {}, motifRaw = (n) => rawMotif[n] || (rawMotif[n] = TMM.decodeR
 let PRINT_SAFE = false;
 const designOf = (r, c) => ({ swatch: RC.swatchOf(r.fabric), trim: r.trim && c.trim.bands === "seam-rule" ? RC.swatchOf(r.trim) : null,
   print: r.motif && !PRINT_SAFE ? motifFor(r.motif, c.print.boxOnC) : null, printSafe: r.motif && PRINT_SAFE ? motifRaw(r.motif) : null });
+// D-354: a unit is reused only when the kit and the recipe module are the same files (a changed edge rule re-renders every unit)
+const CODE_KEY = sha(["northstar-top-cut-kit.mjs", "northstar-top-cut-recipes.mjs"].map((f) => sha(readFileSync(join(ROOT, "tools", "avatar", f)))).join("|"));
 const unitId = (cut, r) => cut + "--" + r.id + "-" + r.slug;
 const diffBytes = (a, b) => { let d = 0; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) d++; return d; };
 
@@ -104,7 +107,12 @@ function controlCut(cutId, E, D) {
     const h = K.behindBottom(ctx); res.behindBottom = { file: c.runtime.hipSeam, bytesDiffering: diffBytes(h.layer, D.dec(c.runtime.hipSeam)) }; }
   else throw new Error(cutId + ": no control here (the tee is D-342's --phase control)");
   const a = K.renderDesign(ctx, { rgb: PF.COLOURS.navy }), b = K.renderDesign(ctx, { swatch: RC.swatchOf({ type: "solid", base: PF.COLOURS.navy }) }); let mx = 0, n = 0, al = 0;
-  for (let i = 0; i < N * 4; i++) { const d = Math.abs(a.layer[i] - b.layer[i]); if (d) { n++; mx = Math.max(mx, d); if (i % 4 === 3) al++; } } res.solidSwatchAgainstRgb = { bytesDiffering: n, maxDiff: mx, alphaDiffering: al, ok: mx <= 1 && al === 0 };
+  // D-354: on a cut with edges.rim the fabric path gives the outline's outer fringe the contour ink — the rgb layer with the same rule
+  // applied must then equal the fabric layer as before (so the solid swatch differs from TM.render ONLY on those rim pixels, in RGB)
+  const ref = Uint8ClampedArray.from(a.layer), rim = !c.edges ? 0 : c.edges.rim === "figure-or-ink" ? ((r) => r.ink + r.figure)(K.rimEdge(ctx.t, ref, ctx.E.base)) : c.edges.rim === "contour-ink" ? K.rimToContourInk(ctx.t, ref) : 0;
+  for (let i = 0; i < N * 4; i++) { const d = Math.abs(ref[i] - b.layer[i]); if (d) { n++; mx = Math.max(mx, d); if (i % 4 === 3) al++; } }
+  let outsideRim = 0; if (rim) for (let i = 0; i < N; i++) { const ch = [0, 1, 2, 3].some((k) => a.layer[i * 4 + k] !== b.layer[i * 4 + k]), r = [0, 1, 2].some((k) => ref[i * 4 + k] !== a.layer[i * 4 + k]); if (ch && !r) { if ([0, 1, 2, 3].some((k) => Math.abs(a.layer[i * 4 + k] - b.layer[i * 4 + k]) > 1)) outsideRim++; } }
+  res.solidSwatchAgainstRgb = { bytesDiffering: n, maxDiff: mx, alphaDiffering: al, rimPx: rim, changedOutsideRim: outsideRim, ok: mx <= 1 && al === 0 && outsideRim === 0 };
   const ok = Object.entries(res).every(([k, v]) => k === "solidSwatchAgainstRgb" ? v.ok : k === "behindBottom" ? v.bytesDiffering === 0 : v.topBodyBytesDiffering === 0 && !v.sleevesBytesDiffering && (listOf(cutId) !== "tank-v3" || v.sleevePx === 0));
   return { ok, trimRegions: ctx.trimRegions || null, res };
 }
@@ -116,6 +124,33 @@ function phaseControl(OUT, DW) {
   console.log(JSON.stringify({ ok, cuts: Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.ok])) })); if (!ok) process.exitCode = 1;
 }
 
+/** D-354 — the REGRESSION MEASURES of D-354's edge faults on a cut's bands (0 is the target for each):
+ *    gapsPx      — core pixels outside a band with the same band directly above and below or left and right (a one-row gap, the shoulder);
+ *    pocketsPx   — core pixels outside an opening band that touch it and lie within 2 px of the contour ink, in its widened hole box
+ *                  (the wedge between the neck rib and the shoulder);
+ *    softEdgePx  — soft pixels (alpha > 0, not core) touching a band's core pixel but not in it (light specks along the band's edge);
+ *    seamStepMax — per column band, the largest jump of the band's inner boundary between neighbouring columns (the cuff's spikes);
+ *    rimLeft     — rim pixels (outside the contour, against the outside) of a solid fabric render that still have the fabric's colour
+ *                  with the cut's rim rule applied (the coloured specks on the skin). */
+function bandResidue(ctx) {
+  const { c, t, master, bands } = ctx, nb4 = [-1, 1, -W, W], res = { gapsPx: 0, pocketsPx: 0, softEdgePx: 0, seamStepMax: {}, rimLeft: null };
+  const near = new Uint8Array(N); for (let i = 0; i < N; i++) if (t.contour[i * 4 + 3] >= 128) { const x = i % W; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, j = i + dy * W + dx; if (xx >= 0 && xx < W && j >= 0 && j < N) near[j] = 1; } }
+  const regions = c.trim.regions || [], openMarks = regions.map((r, k) => (r.edge === "opening" ? { mark: k + 1, box: [r.hole[0] - r.depth[1] - 6, r.hole[1] - r.depth[1] - 6, r.hole[2] + r.depth[1] + 6, r.hole[3] + r.depth[1] + 6] } : null)).filter(Boolean);
+  for (let i = W + 1; i < N - W - 1; i++) { if (bands[i]) continue; const x = i % W, y = (i / W) | 0;
+    if (t.core[i] && ((bands[i - W] && bands[i - W] === bands[i + W]) || (bands[i - 1] && bands[i - 1] === bands[i + 1]))) res.gapsPx++;
+    if (t.core[i] && near[i] && t.contour[i * 4 + 3] < 128 && nb4.some((k) => { const o = openMarks.find((q) => q.mark === bands[i + k]); return o && x >= o.box[0] && x <= o.box[2] && y >= o.box[1] && y <= o.box[3] && master.panel[i + k] === master.panel[i]; })) res.pocketsPx++;
+    if (t.alpha[i] && !t.core[i] && [-W - 1, -W, -W + 1, -1, 1, W - 1, W, W + 1].some((k) => bands[i + k] && t.core[i + k])) res.softEdgePx++; }
+  // the band's inner boundary per column, counted only where it meets fabric (a pixel of the panel just inside it, not the outline):
+  // at a column where the side outline curves over the band, the band follows the outline and that is not a seam step
+  regions.forEach((r, k) => { if (r.edge === "opening") return; const dir = r.edge === "top" ? 1 : -1, P = { body: 0, left: 1, right: 2 }[r.panel], inner = []; for (let x = r.x ? r.x[0] : 0; x <= (r.x ? r.x[1] : W - 1); x++) { let yy = null; for (let y = 0; y < N / W; y++) if (bands[y * W + x] === k + 1) { if (dir < 0) { yy = y; break; } yy = y; }
+      if (yy === null) continue; const j = (yy + dir) * W + x; if (t.core[j] && !bands[j] && !t.contour[j * 4 + 3] && master.panel[j] === P) inner.push([x, yy]); }
+    let m = 0; for (let j = 1; j < inner.length; j++) if (inner[j][0] === inner[j - 1][0] + 1) m = Math.max(m, Math.abs(inner[j][1] - inner[j - 1][1])); res.seamStepMax[r.name] = m; });
+  // rimLeft: rim pixels whose colour is still the fabric's (the same render without the rule)
+  if (c.edges && c.edges.rim) { const sw = RC.swatchOf({ type: "solid", base: [200, 60, 60] }), lay = K.renderDesign(ctx, { swatch: sw }).layer, lay0 = K.renderDesign({ ...ctx, c: { ...c, edges: undefined } }, { swatch: sw }).layer; let n = 0;
+    for (let i = W; i < N - W; i++) { if (!lay[i * 4 + 3] || t.contour[i * 4 + 3] || !near[i] || ![-W - 1, -W, -W + 1, -1, 1, W - 1, W, W + 1].some((k) => !t.alpha[i + k])) continue; if ([0, 1, 2].every((q) => lay[i * 4 + q] === lay0[i * 4 + q])) n++; } res.rimLeft = n; }
+  return res;
+}
+
 /** D-352 — the trim bands of each cut with seam-rule bands: per region its pixels, columns and seam depth, and overlays (the band in
  *  magenta over a plain heather render, x3) of the neck, hem and cuffs, plain beside overlaid. */
 function phaseBands(OUT) {
@@ -124,7 +159,7 @@ function phaseBands(OUT) {
     for (let i = 0; i < N; i++) if (ctx.bands[i]) { o[i * 4] = Math.round(o[i * 4] * 0.45 + 255 * 0.55); o[i * 4 + 1] = Math.round(o[i * 4 + 1] * 0.45); o[i * 4 + 2] = Math.round(o[i * 4 + 2] * 0.45 + 200 * 0.55); }
     const boxes = { neck: [400, 430, 624, 540], "hem left": [360, 740, 520, 830], "hem right": [504, 740, 664, 830], "cuff left": [250, 800, 420, 920], "cuff right": [604, 800, 774, 920] };
     const plain = flat(r.layer, [255, 255, 255]), t = []; for (const b of Object.values(boxes)) { t.push(crop(plain, b, 3)); t.push(crop(o, b, 3)); }
-    const g = grid(t, 2, 8); writeFileSync(join(V, cut + "--bands--x3.png"), encodePng(g.w, g.h, g.px)); rec[cut] = ctx.trimRegions; gc(); }
+    const g = grid(t, 2, 8); writeFileSync(join(V, cut + "--bands--x3.png"), encodePng(g.w, g.h, g.px)); rec[cut] = { ...ctx.trimRegions, residue: bandResidue(ctx) }; gc(); }
   writeFileSync(join(OUT, "bands.json"), JSON.stringify({ decision: "D-352", regions: rec }, null, 2) + "\n"); console.log(JSON.stringify(rec));
 }
 
@@ -135,12 +170,12 @@ function phaseRender(OUT, onlyCut) {
     if (seam) writeFileSync(join(OUT, "layers", cut + "--behind-bottom.png"), encodePng(W, H, seam.layer));
     let contourPx = 0; for (let i = 0; i < N; i++) if (ctx.t.contour[i * 4 + 3] === 255) contourPx++;
     writeFileSync(join(OUT, "units", cut + "--prepare.json"), JSON.stringify({ cut, seconds: prepS, behindBottom: seam ? { addedPx: seam.addedPx } : null, contourPx, printBox: c.print.boxOnC }, null, 2) + "\n");
-    for (const r of R) { const id = unitId(cut, r), uf = join(OUT, "units", id + ".json"), key = sha(JSON.stringify([RC.REVISION, K.FABRIC_SAMPLER, cut, c.trim, r, PRINT_SAFE ? K.PRINT_FIT : null]));
+    for (const r of R) { const id = unitId(cut, r), uf = join(OUT, "units", id + ".json"), key = sha(JSON.stringify([RC.REVISION, K.FABRIC_SAMPLER, cut, c, r, PRINT_SAFE ? K.PRINT_FIT : null, CODE_KEY]));
       if (existsSync(uf) && existsSync(join(OUT, "layers", id + ".png")) && json(uf).key === key) continue;
       const t1 = Date.now(), swatch = RC.swatchOf(r.fabric), design = { ...designOf(r, c), swatch }, x = K.renderDesign(ctx, design);
       let alphaDiff = 0, contourDiff = 0, sleevePx = 0; for (let i = 0; i < N; i++) { if (x.layer[i * 4 + 3] !== ctx.t.alpha[i]) alphaDiff++; if (ctx.t.contour[i * 4 + 3] === 255 && [0, 1, 2].some((k) => x.layer[i * 4 + k] !== ctx.t.contour[i * 4 + k])) contourDiff++; if (x.layers.sleeves[i * 4 + 3]) sleevePx++; }
       const fit = R1.checkItem(w, base, T, ctx.t, x.layers); let minClear = null; if (x.print) { minClear = 99; for (const i of x.print.footprint) minClear = Math.min(minClear, clear[i]); }
-      const sw = RC.seamless(swatch), checks = { alphaPxDifferingFromCut: alphaDiff, contourInkPxChanged: contourDiff, fit: { ok: fit.ok, failed: fit.failed }, sleeveLayerPx: sleevePx, tankHasNoSleeves: cut !== "tank-v3" || sleevePx === 0,
+      const sw = RC.seamless(swatch), checks = { alphaPxDifferingFromCut: alphaDiff, contourInkPxChanged: contourDiff, fit: { ok: fit.ok, failed: fit.failed }, sleeveLayerPx: sleevePx, tankHasNoSleeves: listOf(cut) !== "tank-v3" || sleevePx === 0, rimPx: x.rimPx || 0, rimInk: x.rim ? x.rim.ink : 0, rimFigure: x.rim ? x.rim.figure : 0,
         print: x.print ? { at: x.print.at, footprintPx: x.print.footprintPx, onContour: x.print.onContour, minClearancePx: minClear, safe: minClear >= PF.MARGIN && x.print.onContour === 0, fit: x.print.fit ? { rule: x.print.fit.rule, shiftPx: x.print.fit.shiftPx, scale: x.print.fit.scale, box: x.print.fit.box, clearanceBefore: x.print.fit.clearanceBefore ?? null } : null } : null, swatch: { w: swatch.w, h: swatch.h, seamless: sw } };
       const ok = alphaDiff === 0 && contourDiff === 0 && fit.ok && checks.tankHasNoSleeves && (!x.print || checks.print.safe) && sw.ok;
       writeFileSync(join(OUT, "layers", id + ".png"), encodePng(W, H, x.layer));
@@ -271,6 +306,63 @@ function phaseDecision(OUT, PREV) {
   writeFileSync(join(OUT, "index.html"), html); console.log("decision page written", before.length + " before/after sheets");
 }
 
+/** D-354 — BEFORE/AFTER OF THE SAME EDGE AREAS for every candidate: this run against --prev (the previous run's out dir, the cut each
+ *  version derives from: tee-hip-v2 <- tee-hip, sweater-long-v3 <- sweater-long-v2, tank-v5 <- tank-v4), the light outfit, on a light and
+ *  a dark background; per area the before and after at 1:1 and x5 side by side. Areas: the neckline meeting each shoulder, each side of
+ *  the neck opening, each armhole, each cuff seam (sweater) and the hem rib (sweater). Reads only written composites. */
+export const EDGE_AREAS = Object.freeze({
+  "hals mod venstre skulder": [444, 446, 494, 496], "hals mod højre skulder": [530, 446, 580, 496],
+  "halsåbning venstre": [446, 470, 486, 530], "halsåbning højre": [538, 470, 578, 530],
+  "armhul venstre": [372, 520, 422, 600], "armhul højre": [602, 520, 652, 600],
+  "manchetsøm venstre": [296, 786, 376, 826], "manchetsøm højre": [640, 786, 720, 826], "bundrib": [440, 750, 520, 800],
+});
+const PREV_OF = { "tee-hip-v2": "tee-hip", "sweater-long-v3": "sweater-long-v2", "tank-v5": "tank-v4" };
+function phaseEdges(OUT, PREV) {
+  if (!PREV) throw new Error("--prev <the previous run's out dir>");
+  const R = recipes(), V = join(OUT, "edges"), index = []; mkdirSync(V, { recursive: true });
+  for (const r of R) for (const cut of RUN_CUTS) { const pc = PREV_OF[cut] || cut, fa = join(PREV, "full", unitId(pc, r) + "--light.png"), fb = join(OUT, "full", unitId(cut, r) + "--light.png"); if (!existsSync(fa) || !existsSync(fb)) continue;
+    const A = loadPx(fa), B = loadPx(fb), areas = Object.entries(EDGE_AREAS).filter(([k]) => (listOf(cut) === "sweater-long" ? true : !k.startsWith("manchet") && k !== "bundrib")), tiles = [];
+    for (const [, bg] of [["light", LIGHT], ["dark", DARK]]) { const a = flat(A, bg), b = flat(B, bg); for (const [, box] of areas) { tiles.push(crop(a, box, 1)); tiles.push(crop(b, box, 1)); tiles.push(crop(a, box, 5)); tiles.push(crop(b, box, 5)); } }
+    let diff = 0; for (let i = 0; i < N * 4; i++) if (A[i] !== B[i]) diff++;
+    const n = "edges--" + unitId(cut, r) + ".png", g = grid(tiles, 4, 6); writeFileSync(join(V, n), encodePng(g.w, g.h, g.px)); index.push({ file: n, recipe: r.id, cut, previous: pc, areas: areas.map(([k]) => k), compositeBytesDiffering: diff }); gc(); }
+  writeFileSync(join(OUT, "edges.json"), JSON.stringify({ decision: "D-354", layout: "per area (rows): before 1:1, after 1:1, before x5, after x5; the light background first, then the dark", sheets: index }, null, 2) + "\n");
+  console.log(index.length + " edge sheets");
+}
+
+/** D-354 — the private EDGE DECISION page: the causes with their regression measures before (--prev's bands.json measured on D-352's
+ *  cut versions, written to OUT/residue-before-d352) and after (OUT/bands.json), every candidate's before/after sheet of the same edge
+ *  areas (edges/) with its verdict and note (verdicts.json), the review crops (study/), the findings on published files (findings/),
+ *  the comparison and app sizes (views/). Reads only written files. */
+function phaseEdgePage(OUT) {
+  const R = recipes(), V = json(join(OUT, "verdicts.json")), esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"), img = (f, alt) => `<figure><img src="${f}" alt="${esc(alt)}" loading="lazy"><figcaption>${esc(alt)}</figcaption></figure>`;
+  const B = existsSync(join(OUT, "residue-before-d352", "bands.json")) ? json(join(OUT, "residue-before-d352", "bands.json")).regions : {}, A = json(join(OUT, "bands.json")).regions;
+  const res = (r) => (r && r.residue ? r.residue : {}), cell = (v) => (v === null || v === undefined ? "–" : typeof v === "object" ? Object.entries(v).map(([k, x]) => k + " " + x).join(", ") : v);
+  const rrows = [["sweater", "sweater-long-v2", "sweater-long-v3"], ["tanktop", "tank-v4", "tank-v5"]].map(([n, b, a]) => ["gapsPx", "pocketsPx", "softEdgePx", "seamStepMax", "rimLeft"].map((k) => `<tr><td>${n}</td><td>${k}</td><td>${cell(res(B[b])[k])}</td><td><b>${cell(res(A[a])[k])}</b></td></tr>`).join("")).join("");
+  const PR = existsSync(join(OUT, "findings", "published-rim.json")) ? json(join(OUT, "findings", "published-rim.json")).counts : {};
+  const rows = []; for (const r of R) for (const cut of RUN_CUTS) { const id = unitId(cut, r), v = V.candidates[id] || {}; rows.push(`<tr><td>${r.id}</td><td>${esc(r.name)}${r.motif === "planet" ? " <b>(motivet er endnu ikke godkendt)</b>" : ""}</td><td>${cut}</td><td><b>${esc(v.verdict || "–")}</b></td><td>${esc(v.note || "")}</td><td><a href="edges/edges--${id}.png">før/efter</a></td></tr>`); }
+  const html = `<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>D-354 kantfejl</title>
+<style>body{font:15px/1.5 system-ui,sans-serif;margin:0 auto;max-width:1400px;padding:16px;background:#f6f4ef;color:#1d1d1f}img{max-width:100%;height:auto;image-rendering:pixelated;border:1px solid #ccc;background:#fff}table{border-collapse:collapse;width:100%;font-size:13px}td,th{border:1px solid #ccc;padding:4px 6px;text-align:left;vertical-align:top}th{background:#e8e4da}figure{margin:12px 0}h2{margin-top:32px}.warn{background:#fff3cd;padding:8px 12px;border-left:4px solid #c90}</style></head><body>
+<h1>D-354 · kantfejl: hals mod skulder, manchetsøm og halsåbning</h1>
+<p class="warn">PRIVAT — siden viser C og må ikke offentliggøres. Alle 36 er kandidater, ikke godkendte produkter. Ejerens seks skærmbilleder var ikke vedhæftet i samtalen; fejlene er knyttet til områderne, som ejeren beskrev dem, og vises som før/efter-par af præcis de samme områder (D-352 → D-354).</p>
+<h2>1. Årsager og regressionsmål (0 er målet)</h2>
+<ul><li><b>A · yderkant uden for konturen</b>: farvede pixels ved halsåbningen og langs omridset → reglen <code>edges.rim: figure-or-ink</code>: pixlen får C's egen farve lige ved siden af, eller konturfarve mod baggrund (målt som <i>rimLeft</i>). Prøvet og forkastet: konturfarve overalt (sorte prikker), fjernelse over hud (afvist af pasformskontrollen, fordi C's grundtøj ligger under).</li>
+<li><b>B · bløde kantpixels ved båndet</b>: lyse prikker langs båndets kant → ét skridt fra båndets kerne (<i>softEdgePx</i>).</li>
+<li><b>C · manchetsømmen</b>: takker og sprungne hjørnekolonner → sømmen som én glat kurve over alle kolonner (<i>seamStepMax</i>).</li>
+<li><b>D · kile ved skulderen</b>: stof mellem halsribben og skulderens kontur → hjørnelukning ved åbninger (<i>pocketsPx</i>).</li>
+<li><b>E · hul på én række</b> ved skuldersømmen → hullukning (<i>gapsPx</i>).</li></ul>
+<table><tr><th>Snit</th><th>Mål</th><th>D-352 (før)</th><th>D-354 (efter)</th></tr>${rrows}</table>
+<h2>2. Kandidater og vurdering</h2><table><tr><th>Opskrift</th><th>Navn</th><th>Snit</th><th>Anbefaling</th><th>Note</th><th>Ark</th></tr>${rows.join("")}</table>
+<h2>3. Gennemsyn af de rettede områder (før | efter, ×4)</h2>${["review-sweater-light-x4.png", "review-sweater-dark-x4.png", "review-tank-light-x4.png", "review-tank-dark-x4.png"].filter((f) => existsSync(join(OUT, "study", f))).map((f) => img("study/" + f, f.replace(/\.png$/, "") + " · par: før, efter · sweater: venstre hals, højre hals, venstre manchet, højre manchet · tanktop: venstre og højre halsåbning · rækker R05–R08")).join("")}
+${existsSync(join(OUT, "study", "neck-before-after-x8.png")) ? img("study/neck-before-after-x8.png", "halsen ×8: venstre før, højre efter (sweater venstre og højre, tanktop venstre og højre)") : ""}${existsSync(join(OUT, "study", "outline-before-after.png")) ? img("study/outline-before-after.png", "konturvægt ved armhul og side: før og efter ved 1:1 og ×4 (T-shirt R06, sweater R03, tanktop R01)") : ""}
+<h2>4. Alle 36: før/efter af de samme områder</h2><p>Hvert ark: pr. område (rækker) før 1:1, efter 1:1, før ×5, efter ×5; først lys, så mørk baggrund.</p>${R.flatMap((r) => RUN_CUTS.map((cut) => img("edges/edges--" + unitId(cut, r) + ".png", r.id + " " + r.name + " · " + cut))).join("")}
+<h2>5. Særskilt fund: de publicerede filer (kun læst; intet ændret)</h2><p>Samme yderkantfejl (A) findes i de publicerede lag: stoffarvede pixels uden for konturen langs omridset. Lyse pixels uden for konturen: ${Object.entries(PR).map(([k, v]) => esc(k) + " " + v).join(", ")}. Navy-varianterne har dem også, men mørke (tælles ikke som lyse).</p>${existsSync(join(OUT, "findings", "published-neck-rim-on-skin-x5.png")) ? img("findings/published-neck-rim-on-skin-x5.png", "publicerede lag på hudfarve ×5: creme-, blå og ræv-navy-T-shirt, navy- og lyng-sweater, navy- og lyng-tanktop") : ""}
+${existsSync(join(OUT, "findings", "tank-armhole-published-vs-candidate-x6.png")) ? img("findings/tank-armhole-published-vs-candidate-x6.png", "tanktoppens armhul ×6: publiceret lyng (venstre) og kandidat (højre) — konturens trappetrin stammer fra kildeitemet og findes i begge; yderkantpixlen har nu C's farve i stedet for stoffets") : ""}
+<p>T-shirtens tal i tabellen over er ikke med: dens konstruktionsbånd bruges ikke til trim.</p><p>Fundet fra D-352 står fortsat: de publicerede rævetanktoppe (TK-HEATHER-FOX, TK-NAVY-FOX) står 3 px under halskantens stinglinje.</p>
+<h2>6. Sammenligning og appstørrelse</h2>${["fabric", "pattern", "motif"].flatMap((g) => ["light", "dark"].map((t) => img("views/compare--" + g + "--figure--" + t + ".png", g + " · " + t))).join("")}${img("views/app--110x165.png", "110×165")}${img("views/app--300x450.png", "300×450")}
+</body></html>`;
+  writeFileSync(join(OUT, "index.html"), html); console.log("edge decision page written");
+}
+
 async function main() {
   const args = process.argv.slice(2), at = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null), phase = at("--phase"), OUT = at("--out"), DW = at("--dwebp"), r = relative(ROOT, resolve(OUT || "."));
   if (!OUT || !(r.startsWith("..") || isAbsolute(r))) throw new Error("--out must be outside the repository (the views show C)"); mkdirSync(OUT, { recursive: true });
@@ -278,12 +370,14 @@ async function main() {
   if (phase === "views") return phaseViews(OUT);
   if (phase === "bands") return phaseBands(OUT);
   if (phase === "decision") return phaseDecision(OUT, at("--prev"));
+  if (phase === "edges") return phaseEdges(OUT, at("--prev"));
+  if (phase === "edgepage") return phaseEdgePage(OUT);
   if (phase === "page") return phasePage(OUT);
   if (phase === "render") return phaseRender(OUT, at("--cut"));
   if (!DW || !existsSync(DW)) throw new Error("--dwebp <the vendored dwebp>");
   if (phase === "control") return phaseControl(OUT, DW);
   if (phase === "approvedprints") return phaseApprovedPrints(OUT, DW);
   if (phase === "outfits") return phaseOutfits(OUT, DW, at("--cut"));
-  throw new Error("--phase control|bands|approvedprints|render|outfits|views|page|decision");
+  throw new Error("--phase control|bands|approvedprints|render|outfits|views|page|decision|edges|edgepage");
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((e) => { console.error("REFUSED: " + e.message); process.exit(1); });

@@ -18,7 +18,8 @@ const read = (n) => readFileSync(join(ROOT, "supabase", "migrations", n), "utf8"
 const MIGRATION_A = read("20261020120000_difficulty_scale_a.sql");
 const PILOT = [1, 2, 3].map((n) => read(`2026102013000${n}_english_level_pilot_${n}.sql`));
 
-const CEFR = { A2: [3001, 5000], B1: [5001, 7000], B2: [7001, 8500], C1: [8501, 10000] };
+// A1 since the E5 review (2026-11-05): items found a full CEFR band too high were moved down.
+const CEFR = { A1: [1501, 3000], A2: [3001, 5000], B1: [5001, 7000], B2: [7001, 8500], C1: [8501, 10000] };
 
 async function load(t) {
   const pg = new PGlite();
@@ -81,7 +82,7 @@ test("the pilot inserts 500 well-formed English MC questions on the level scale"
       assert.equal(/Ã|�/.test(text), false, `mojibake in: ${text}`);
     }
   }
-  assert.deepEqual(perCefr, { A2: 60, B1: 160, B2: 150, C1: 130 });
+  assert.deepEqual(perCefr, { A2: 63, B1: 162, B2: 148, C1: 127 });
   assert.equal(rows[0].difficulty_level, 3001);
   assert.equal(rows[rows.length - 1].difficulty_level, 10000);
 
@@ -94,7 +95,7 @@ test("the pilot inserts 500 well-formed English MC questions on the level scale"
 test("the pilot's metadata follows the existing English batches, plus cefr", async (t) => {
   const pg = await load(t);
   const rows = (await pg.query("SELECT metadata, difficulty_level FROM public.questions")).rows;
-  const ROLE = { A2: "reinforcement", B1: "challenge", B2: "challenge", C1: "deep_challenge" };
+  const ROLE = { A1: "reinforcement", A2: "reinforcement", B1: "challenge", B2: "challenge", C1: "deep_challenge" };
   for (const { metadata: m } of rows) {
     assert.ok(["ordforråd", "hverdagsudtryk", "grammatik", "læseforståelse"].includes(m.concepts[0]));
     assert.equal(m.challenge_role, ROLE[m.cefr]);
