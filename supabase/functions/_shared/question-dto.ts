@@ -42,10 +42,11 @@
 
 import { matchLayout, type MatchLayout } from "./match-pairs.ts";
 import { orderLayout, type OrderLayout } from "./order-items.ts";
+import { categorizeLayout, type CategorizeLayout } from "./categorize.ts";
 import { publicStimulus, type PublicStimulus } from "./stimulus.ts";
 import { parseTrueFalseContent, TRUE_FALSE_FORMAT } from "./true-false.ts";
 
-export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "option_details", "type", "force_text", "match", "order", "stimulus"] as const);
+export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "option_details", "type", "force_text", "match", "order", "categorize", "stimulus"] as const);
 
 /** D-332: upper bound per option description — the same bound the Lærligverse bridge protocol enforces. */
 export const MAX_OPTION_DETAIL_CHARS = 400;
@@ -67,6 +68,7 @@ export type PublicContent = {
   force_text?: true;
   match?: MatchLayout;
   order?: OrderLayout;
+  categorize?: CategorizeLayout;
   stimulus?: PublicStimulus;
 };
 
@@ -143,6 +145,12 @@ export function toPublicQuestion(rawContent: unknown, format: string, rawMetadat
   // content.items, whose order is the facit (_shared/order-items.ts).
   if (format === "order") {
     content.order = orderLayout(rawContent, instanceKey);
+  }
+
+  // Kategorisering: the category labels and the item texts in the instance's SHOWN order — never an
+  // item's category, which is the facit (_shared/categorize.ts).
+  if (format === "categorize") {
+    content.categorize = categorizeLayout(rawContent, instanceKey);
   }
 
   if (typeof rawContent.type === "string") content.type = rawContent.type;

@@ -141,7 +141,7 @@ test("registry: order is classified, has its own wire format and renderer, and i
 test("get-next-question: the key is drawn once at instance creation; open and repeated rounds read it like Match par", () => {
   const index = code(read("supabase/functions/get-next-question/index.ts"));
   assert.match(index, /if \(answer_format === "order"\) \{\s*return \{ question, correct: createOrderKey\(parseOrderContent\(raw\)\.items\.length\) \};\s*\}/);
-  assert.match(index, /const KEYED_FORMATS: ReadonlySet<string> = new Set\(\["match", "order"\]\);/);
+  assert.match(index, /const KEYED_FORMATS: ReadonlySet<string> = new Set\(\["match", "order", "categorize"\]\);/);
   // v1 maps "order" to "mc" (unknown format) and the row, having no options, is skipped — never shown as MC.
   assert.match(index, /function mapAnswerFormat\(format: string \| null\) \{[\s\S]*?return "mc";\s*\}/);
 });
@@ -272,6 +272,7 @@ test("app.js: the order renderer is built from js/order-items.js; a wrong answer
   assert.match(wrong, /orderCorrectionText\(currentOrderControl\.layout, data\.correct_answer\)/);
   assert.match(wrong, /feedback\.textContent = "Ikke helt\. " \+ correctOrder;/);
   assert.match(app, /currentOrderControl = null;/);
-  assert.match(app, /\|\| renderer === ANSWER_RENDERERS\.ORDER_ITEMS\) \{/);
+  // Kinds built later (Kategorisering, F-05) may follow ORDER_ITEMS in the same fallback condition.
+  assert.match(app, /\|\| renderer === ANSWER_RENDERERS\.ORDER_ITEMS(\s*\|\| renderer === ANSWER_RENDERERS\.[A-Z_]+)*\) \{/);
   assert.match(read("index.html"), /<link rel="stylesheet" href="css\/order-items\.css">/);
 });

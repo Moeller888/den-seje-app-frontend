@@ -217,7 +217,7 @@ test("get-next-question: the key is drawn at instance creation and every path la
   // The rows built from are the delivered version when there is one, else the question row (unchanged).
   assert.match(index, /const delivered = servedSnapshot \? await deliveredFor\(instance\.id\) : null;\s*const q = delivered \?\? instance\.questions;/);
   // The keyed formats are exactly Match par and Rækkefølge (F-04); every other format passes no key.
-  assert.match(index, /const KEYED_FORMATS: ReadonlySet<string> = new Set\(\["match", "order"\]\);/);
+  assert.match(index, /const KEYED_FORMATS: ReadonlySet<string> = new Set\(\["match", "order", "categorize"\]\);/);
   assert.match(index, /const instanceKey = delivered\s*\? \(KEYED_FORMATS\.has\(format\) \? delivered\.key : undefined\)\s*: await matchInstanceKey\(format, instance\.id\);\s*const pub = toPublicQuestion\(q\.content, format, q\.metadata, instanceKey\)/);
   assert.match(index, /toPublicQuestion\(q\.content, format, q\.metadata, normalized\.correct\)/);
   assert.match(index, /const delivered = servedSnapshot \? await deliveredFor\(repeatRow\.id\) : null;\s*const src = delivered \?\? rq;/);

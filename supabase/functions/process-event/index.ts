@@ -4,6 +4,7 @@ import { publishableKey, serviceKey, serviceKeySource } from "../_shared/supabas
 import { isTextAnswerCorrect } from "../_shared/answer-evaluation.ts";
 import { canonicalMatchAnswer } from "../_shared/match-pairs.ts";
 import { canonicalOrderAnswer } from "../_shared/order-items.ts";
+import { canonicalCategorizeAnswer } from "../_shared/categorize.ts";
 import { ADMIN_CLIENT_OPTIONS, isInstanceOwner, callProcessTextAnswer, callProcessQuestionAttempt } from "./text-answer-rpc.ts";
 import { callProcessTextAnswerV2, callProcessQuestionAttemptV2, LEGACY_ANSWER_RPCS } from "./text-answer-rpc.ts";
 import { updateOwnInstance, recordMisconceptionSignal, type InstanceWriteResult } from "./instance-writes.ts";
@@ -355,6 +356,21 @@ serve(async (req) => {
       if (canonical === null) {
         return new Response(
           JSON.stringify({ status: "invalid", error: "Sæt alle elementer i rækkefølge, før du sender." }),
+          { status: 400, headers: corsHeaders }
+        )
+      }
+      gradedAnswer = canonical
+    }
+    // Kategorisering: the same shape check for the pupil's placement (one category per shown item) —
+    // canonicalCategorizeAnswer (../_shared/categorize.ts) accepts only a complete placement in the
+    // instance's categories and writes it in the key's form. process_question_attempt compares and awards
+    // as for MC: all or nothing, one reward path. An incomplete placement is refused before anything is
+    // recorded or paid.
+    if (format === "categorize") {
+      const canonical = canonicalCategorizeAnswer(answer, correct_answer)
+      if (canonical === null) {
+        return new Response(
+          JSON.stringify({ status: "invalid", error: "Placér alle elementer, før du sender." }),
           { status: 400, headers: corsHeaders }
         )
       }
