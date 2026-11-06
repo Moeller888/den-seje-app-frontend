@@ -1048,12 +1048,6 @@ export function northstarUseAccount(identity) {
   const c = identity && typeof identity === "object" ? identity.northstar : null;
   _nsAccount = c && typeof c === "object" && !Array.isArray(c) ? c : {};
 }
-// The account's choice with one key changed, as set_avatar_northstar takes it: only the fields that hold a value.
-export function northstarChoiceWith(key, value) {
-  const out = {};
-  for (const [k, f] of Object.entries(_NS_ACCOUNT_FIELDS)) { const v = k === key ? value : _nsStorage(k); if (typeof v === "string" && v) out[f] = v; }
-  return out;
-}
 function _nsStorage(key) {
   if (AVATAR_NORTHSTAR_WARDROBE && _nsAccount !== undefined && Object.prototype.hasOwnProperty.call(_NS_ACCOUNT_FIELDS, key)) {
     const v = _nsAccount[_NS_ACCOUNT_FIELDS[key]];
@@ -1217,6 +1211,74 @@ export function northstarCompose(plan, pixelsOf, n) {
     }
   }
   return out;
+}
+// D-359: the wardrobe of single parts. Every outfit the approved lists reach, found through the very gates the renderer uses, so a part
+// can never be shown in a combination that was not approved. Each outfit keeps the simplest stored choice that draws it, so the account
+// format (D-357) is unchanged and no migration is needed. Built once per page.
+export const NORTHSTAR_START_OUTFIT = "K07";
+let _nsApproved = null;
+export function northstarApprovedOutfits() {
+  if (_nsApproved) return _nsApproved;
+  const map = new Map();
+  const tees = [null, ...Object.keys(NORTHSTAR_PRINT_TEES)], pants = [null, ...Object.keys(NORTHSTAR_SOLID_PANTS)];
+  const shoes = [null, ...Object.keys(NORTHSTAR_SHOE_CHOICES)], tops = [null, ...Object.keys(NORTHSTAR_TOP_CHOICES)];
+  for (const k of Object.keys(NORTHSTAR_OUTFITS)) for (const t of tees) {
+    if (t && !northstarTeeAllowed(k)) continue;
+    for (const p of pants) {
+      if (p && !northstarPantsAllowed(k, t)) continue;
+      for (const s of shoes) {
+        if (s && !northstarShoeAllowed(k, t, p, s)) continue;
+        for (const w of tops) {
+          if (w && !northstarSweaterAllowed(k, t, p, s, w)) continue;
+          const o = northstarOutfitFor(k, t, p, s, w), id = o.top + "+" + o.bottom + "+" + o.shoes;
+          if (map.has(id) || !northstarPlanFor(o)) continue;
+          const choice = { outfit: k };
+          if (t) choice.tee = t;
+          if (p) choice.pants = p;
+          if (s) choice.shoes = s;
+          if (w) choice.top = w;
+          map.set(id, Object.freeze({ top: o.top, bottom: o.bottom, shoes: o.shoes, choice: Object.freeze(choice) }));
+        }
+      }
+    }
+  }
+  _nsApproved = map;
+  return map;
+}
+// The single parts of the approved outfits, in catalogue order: { item, category }.
+export function northstarPieces() {
+  const used = new Set();
+  for (const o of northstarApprovedOutfits().values()) { used.add(o.top); used.add(o.bottom); used.add(o.shoes); }
+  return Object.keys(NORTHSTAR_ITEMS).filter((id) => used.has(id)).map((id) => Object.freeze({ item: id, category: NORTHSTAR_ITEMS[id].category }));
+}
+// What the pupil wears now, or null while on today's avatar.
+export function northstarOutfitNow() {
+  const k = northstarSelectedOutfit();
+  return k ? northstarOutfitFor(k, northstarSelectedTee(), northstarSelectedPants(), northstarSelectedShoe(), northstarSelectedSweater()) : null;
+}
+// Puts one part on. The part always goes on; when it is not approved with the rest, as little as possible changes: fewest other parts,
+// shoes before the bottom before the top, then the part approved with most outfits, then catalogue order. Deterministic. Null for an unknown part.
+export function northstarFitPiece(item) {
+  const it = typeof item === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_ITEMS, item) ? NORTHSTAR_ITEMS[item] : null;
+  if (!it) return null;
+  const all = northstarApprovedOutfits(), now = northstarOutfitNow() ?? NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT], cats = ["top", "bottom", "shoes"];
+  const count = new Map();
+  for (const o of all.values()) for (const c of cats) count.set(o[c], (count.get(o[c]) ?? 0) + 1);
+  let best = null, bestRank = null;
+  for (const o of all.values()) {
+    if (o[it.category] !== item) continue;
+    const gone = cats.filter((c) => c !== it.category && o[c] !== now[c]);
+    const rank = [gone.length, gone.includes("top") ? 1 : 0, gone.includes("bottom") ? 1 : 0, -gone.reduce((a, c) => a + count.get(o[c]), 0)];
+    const d = bestRank ? rank.findIndex((v, i) => v !== bestRank[i]) : -1;
+    if (!bestRank || (d !== -1 && rank[d] < bestRank[d])) { best = { o, gone }; bestRank = rank; }
+  }
+  if (!best) return null;
+  return Object.freeze({ top: best.o.top, bottom: best.o.bottom, shoes: best.o.shoes, choice: best.o.choice, changed: Object.freeze(best.gone.map((c) => Object.freeze({ category: c, from: now[c], to: best.o[c] }))) });
+}
+// The layers of one part, for its picture in the wardrobe.
+export function northstarPieceLayers(item) {
+  const it = typeof item === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_ITEMS, item) ? NORTHSTAR_ITEMS[item] : null;
+  return it ? it.layers.map((l) => NORTHSTAR_BASE_PATH + "/" + item + "-" + l + "-v" + (it.layerRev || 1) + ".webp") : [];
 }
 // What mountC2Avatar shows on the Northstar path, or null for today's path: the flag/opt-in is off,
 // the surface is not one of NORTHSTAR_SURFACES, no valid K outfit is stored, or an equipped cosmetic

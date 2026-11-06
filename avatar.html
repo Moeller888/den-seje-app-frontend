@@ -672,6 +672,11 @@
     #avatarWrap[data-gender="girl"] { --avatar-inner: #f8b8d4; --avatar-outer: #5a0d2a; }
     /* D-242: the local Northstar wardrobe opt-in panel (shown only in an opted-in browser) */
     .northstar-panel { margin-top: 12px; }
+    .northstar-wardrobe { margin-top: 20px; }
+    .northstar-wardrobe .northstar-subtitle { font-size: 14px; margin: 16px 0 8px; }
+    .northstar-wardrobe .northstar-outfit { margin-top: 8px; }
+    .northstar-thumb { position: relative; width: 88px; height: 88px; margin: 0 auto 8px; overflow: hidden; border-radius: 8px; background: #c9d2e3; }
+    .northstar-thumb img { position: absolute; max-width: none; height: auto; }
     .northstar-outfits { display: flex; flex-wrap: wrap; gap: 6px; }
     .northstar-outfit { font: inherit; font-size: 13px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--border-btn); background: var(--btn-bg); color: var(--text-dim); cursor: pointer; }
     .northstar-outfit:hover { background: var(--btn-bg-hover); }
@@ -702,7 +707,7 @@
       <div id="avatar-preview"><!-- layers injected by JS --></div>
     </div>
 
-    <!-- D-242/D-357: the Northstar wardrobe (js/avatar-northstar-panel.js); stays hidden if the module cannot load -->
+    <!-- D-242: the local opt-in panel, only while the flag is off (js/avatar-northstar-panel.js) -->
     <div class="northstar-panel" id="northstarPanel" hidden></div>
 
     <div class="slot-list" id="slotList"><!-- slot rows injected by JS --></div>
@@ -717,6 +722,8 @@
       Du ejer ingen items endnu.<br>
       <a href="shop.html">Gå i butikken</a> for at købe noget!
     </p>
+    <!-- D-359: the Northstar wardrobe, single parts (js/avatar-northstar-panel.js); stays hidden if the module cannot load -->
+    <div class="northstar-wardrobe" id="northstarWardrobe" hidden></div>
   </div>
 
 </div>
@@ -1650,13 +1657,18 @@ try {
   const layers = await import("./js/avatar-layers.js");
   ns.applyNorthstarUrlOptIn(location.search);
   layers.northstarUseAccount(avatarIdentity);
-  ns.mountNorthstarPanel(document.getElementById("northstarPanel"), document.getElementById("avatar-preview"), {
-    saveChoice: async (choice) => {
-      const { error } = await supabase.rpc("set_avatar_northstar", { p_choice: choice });
-      if (error) console.error("set_avatar_northstar failed:", error.message);
-      return !error;
-    },
-  });
+  const preview = document.getElementById("avatar-preview");
+  if (layers.AVATAR_NORTHSTAR_WARDROBE) {
+    ns.mountNorthstarWardrobe(document.getElementById("northstarWardrobe"), preview, {
+      saveChoice: async (choice) => {
+        const { error } = await supabase.rpc("set_avatar_northstar", { p_choice: choice });
+        if (error) console.error("set_avatar_northstar failed:", error.message);
+        return !error;
+      },
+    });
+  } else {
+    ns.mountNorthstarPanel(document.getElementById("northstarPanel"), preview);
+  }
 } catch (_e) { /* no panel */ }
 // Fallback: renderAvatarC2() now inits the engines once its layers are appended
 // (the atomic R2 preload can delay that past this point). Guard against a double
