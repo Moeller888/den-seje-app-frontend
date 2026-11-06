@@ -97,6 +97,23 @@ Hvert forkert svar skal kunne vælges af en elev, der har læst overfladisk elle
 ikke være absurd eller handle om noget, teksten ikke nævner. Spørg dig selv: Hvilket forkert svar ville en
 svag læser vælge, og hvorfor? Findes der ikke et, er opgaven for let, uanset niveauet.
 
+## Facit skal lyde som et menneske
+
+Ejeren læste opgaverne og fandt, at facit ofte ikke gav mening. Facit var sjældent forkert, men svarede som
+en analytiker og ikke som et menneske.
+
+**Spisebordstesten:** Sig facit højt efter spørgsmålet. Ville en voksen sige det sådan til et barn ved
+spisebordet? Hvis ikke, skrives det om.
+
+- Svar direkte på det, der spørges om, med samme slags svar. "Hvad føler hun?" besvares med en følelse.
+- Brug ordene fra teksten. Facit må ikke være mere abstrakt end teksten: skriv "tåle at tabe", ikke
+  "håndtere nederlag", og skriv "syg", ikke "det alvorlige".
+- Beskriv det, der sker, ikke tekstens opbygning.
+- Ingen pynt som "et stille savn" og "rummer en skjult afstandtagen".
+- Læg ikke en tolkning ind, som teksten ikke klart bærer.
+- Alle fire svar skal være skrevet i samme naturlige sprog, ellers afslører stilen facit.
+- Forklaringen skal give eleven en grund i almindelige ord, med henvisning til det, der står i teksten.
+
 ## Erfaringer fra piloten
 
 - Niveauet følger ordets eller opgavens reelle sværhed. Læg ikke lette ord højt i klassetrinnet blot

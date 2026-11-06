@@ -502,7 +502,7 @@ klasse, fordi ordforråd og emne ikke passer dertil. Fordelingen i §12.1 er tal
 **Dokumentationen viser læringsmål, ikke læringseffekt.** Den er en faglig vurdering. Om opgaverne faktisk
 lærer eleverne noget, kan først ses af svardata: Efter aktivering bør de korte opgaver sammenlignes med
 læseforståelsesopgaver på samme niveau, på svarprocent og på om dygtigere elever klarer dem bedre.
-Opgaver, der ikke skiller, flyttes eller fjernes. Filen rummer de 196 opgaver, der stadig er i banken efter §12.8.
+Opgaver, der ikke skiller, flyttes eller fjernes. Filen rummer de 190 opgaver, der stadig er i banken efter §12.8 og §12.9.
 
 ### 12.8 Blokerede emner (ejerbeslutning 2026-11-06)
 
@@ -528,3 +528,30 @@ Neutrale ord og fakta er ikke omfattet: "hospital" i en staveopgave, "Folketinge
 De 35 fjernede er erstattet af nye, neutrale opgaver på samme niveauer, så banken stadig er på 5.000.
 En staveopgave om mobning fik en ny sætning. Reglen står i `AUTHORING.md`, og `check-danish-items.mjs`
 afviser de tydelige tilfælde i læseforståelse og litteratur.
+
+### 12.9 Facit skal give mening for et menneske
+
+Ejeren læste opgaverne og fandt, at facit på mange spørgsmål ikke gav mening. Facit var sjældent forkert, men
+svarede som en analytiker: "håndtere nederlag" i stedet for "tåle at tabe". Korrekturen i §12.4 opdagede det
+ikke, fordi den spurgte, om facit var rigtigt, ikke om det lød som et svar.
+
+**Spisebordstesten** blev derefter fast regel i `AUTHORING.md`: Ville en voksen sige facit sådan til et barn
+ved spisebordet? Alle 1.450 opgaver i læseforståelse og litteratur er læst igen med den test:
+
+| Del | Læst | Rettet | Erstattet (blokeret emne) |
+|---|---:|---:|---:|
+| Læseforståelse 7.–9. | 345 | 230 | 14 |
+| Læseforståelse 5.–6. | 320 | 110 | 36 |
+| Læseforståelse 3.–4. | 325 | 61 | 22 |
+| Litteratur 7.–9. | 315 | 40 | 28 |
+| Litteratur 3.–6. | 145 | 31 | 3 |
+| **I alt** | **1.450** | **472** | **103** |
+
+Ejeren læste og godkendte 20 opgaver fra læseforståelse 7.–9., heraf 5 urørte, før resten blev rettet.
+
+De blokerede emner blev fundet ved læsning, fordi mange tekster kun antyder dem. Redaktørerne læste reglen
+forsigtigt, så nogle grænsetilfælde er erstattet (et barn, der mangler fem kroner), og andre er beholdt
+(en veninde, der flytter). Ordforråd, grammatik, stavning og tegnsætning er ikke læst med spisebordstesten;
+stikprøven viste 5 fund i 28 i ordforråd og grammatik.
+
+Tallene i §12.4 gælder teksterne, som de så ud før §12.8 og §12.9. E5 skal køres på den endelige bank.
