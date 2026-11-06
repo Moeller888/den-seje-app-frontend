@@ -15,7 +15,12 @@ import { PGlite } from "@electric-sql/pglite";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const MIGRATION = readFileSync(join(ROOT, "supabase", "migrations", "20261020125000_english_grade6_9.sql"), "utf8");
 
-test("the migration inserts 120 inactive, levelled English MC questions, 30 per grade 6-9", async (t) => {
+// Levels: originally the §4.1 cell midpoint of each question's grade 6-9 and band 1-4. The E5 review
+// (2026-11-05) moved the questions that were a full CEFR band off to a level that fits their content;
+// target_grade/difficulty_band follow the level (the §4.1 cell), and metadata.cefr follows the level.
+const CEFR = { A1: [1501, 3000], A2: [3001, 5000], B1: [5001, 7000], B2: [7001, 8500], C1: [8501, 10000] };
+
+test("the migration inserts 120 inactive, levelled English MC questions", async (t) => {
   const pg = new PGlite();
   t.after(() => pg.close());
   await pg.exec(`
@@ -34,6 +39,7 @@ test("the migration inserts 120 inactive, levelled English MC questions, 30 per 
   assert.equal(rows.length, 120);
 
   const perGrade = {};
+  const perCefr = {};
   for (const q of rows) {
     perGrade[q.target_grade] = (perGrade[q.target_grade] ?? 0) + 1;
     assert.equal(q.learning_objective, "english");
@@ -42,11 +48,14 @@ test("the migration inserts 120 inactive, levelled English MC questions, 30 per 
     assert.equal(q.question_type, "auto");
     assert.equal(q.is_active, false);
     assert.equal(q.metadata.level_batch, "grade6_9");
-    assert.ok(["A2", "B1", "B2", "C1"].includes(q.metadata.cefr));
-    assert.ok([1, 2, 3, 4].includes(q.difficulty_band));
+    const [lo, hi] = CEFR[q.metadata.cefr] ?? [];
+    assert.ok(lo, `unknown cefr ${q.metadata.cefr}`);
+    assert.ok(q.difficulty_level >= lo && q.difficulty_level <= hi, `${q.difficulty_level} outside ${q.metadata.cefr}`);
     assert.equal(q.difficulty, q.difficulty_band);
-    const expectedLevel = Math.round((((q.target_grade - 3) * 5 + q.difficulty_band - 1) * 10000 + 5000) / 35);
-    assert.equal(q.difficulty_level, expectedLevel);
+    const cell = (q.target_grade - 3) * 5 + (q.difficulty_band - 1);
+    assert.ok(q.difficulty_level > cell * 10000 / 35 && q.difficulty_level <= (cell + 1) * 10000 / 35,
+      `level ${q.difficulty_level} is not in the cell of grade ${q.target_grade} band ${q.difficulty_band}`);
+    perCefr[q.metadata.cefr] = (perCefr[q.metadata.cefr] ?? 0) + 1;
     const { question, options, correct, accepted_answers, review_text } = q.content;
     assert.ok(question && review_text, "question and review_text present");
     assert.equal(options.length, 4);
@@ -57,11 +66,8 @@ test("the migration inserts 120 inactive, levelled English MC questions, 30 per 
       assert.equal(/Ã|�/.test(text), false, `mojibake in: ${text}`);
     }
   }
-  assert.deepEqual(perGrade, { 6: 30, 7: 30, 8: 30, 9: 30 });
-  for (const g of [6, 7, 8, 9]) {
-    const inGrade = rows.filter((q) => q.target_grade === g);
-    assert.deepEqual([...new Set(inGrade.map((q) => q.difficulty_band))].sort(), [1, 2, 3, 4]);
-  }
+  assert.deepEqual(perCefr, { A1: 5, A2: 28, B1: 42, B2: 25, C1: 20 });
+  assert.equal(Object.values(perGrade).reduce((a, b) => a + b, 0), 120);
   // No question text is repeated anywhere (live enforces this with unique_question_text).
   const texts = rows.map((q) => q.content.question);
   assert.equal(new Set(texts).size, texts.length, "duplicate question text");
