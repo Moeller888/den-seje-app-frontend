@@ -189,6 +189,11 @@ test("3. 'Dine elever' lists EVERY pupil — also those with no pending answers"
   await expect(page).toHaveURL(/student-detail\.html\?id=s-bo$/);
 });
 
+test("3a. a pupil who has answered has a level without any start test (D-356)", async ({ page }) => {
+  await openTeacher(page, { students: [student({ student_id: "s-new", placement_band: null, current_band: 2, total_attempts: 4 })] });
+  await expect(page.locator("#studentRows .row-level")).toHaveText("Niveau: band 2");
+});
+
 test("3b. pupil names are rendered as text, never as markup", async ({ page }) => {
   await openTeacher(page, { students: [student({ student_id: "s-evil", display_name: "<img src=x onerror=alert(1)>" })] });
   await expect(page.locator("#studentRows .row-name")).toHaveText("<img src=x onerror=alert(1)>");

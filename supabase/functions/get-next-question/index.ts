@@ -10,6 +10,12 @@ import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
 import { servableWireFormat } from "../_shared/interaction-kinds.ts";
 import { pupilLogHash } from "./log-pseudonym.ts";
 import { createMatchKey, parseMatchPairs } from "../_shared/match-pairs.ts";
+import { createOrderKey, parseOrderContent } from "../_shared/order-items.ts";
+
+// Formats whose instance key (question_instances.correct_answer) lays out what the browser sees: Match
+// par (the shuffled right column) and Rækkefølge (the shuffled presentation; the facit is the authored
+// order). Only these make the extra backend key read below; every other format reads exactly as before.
+const KEYED_FORMATS: ReadonlySet<string> = new Set(["match", "order"]);
 import {
   CANARY_ALLOWLIST_ENV, LEVEL_ENGINE_CANARY, chooseSelectionRoute, loadLevelPlan, resolveLevelEngineForStudent,
   type LevelReadClient,
@@ -80,6 +86,12 @@ function normalizeContent(raw: any, answer_format: string) {
     // Match par: the key is this instance's shuffle of the right column, drawn here, once, and stored
     // as correct_answer (../_shared/match-pairs.ts). content.correct is not used.
     return { question, correct: createMatchKey(parseMatchPairs(raw).length) };
+  }
+
+  if (answer_format === "order") {
+    // Rækkefølge: the key is this instance's shuffle of the PRESENTATION, drawn here, once, and stored as
+    // correct_answer (../_shared/order-items.ts). The facit stays the authored order of content.items.
+    return { question, correct: createOrderKey(parseOrderContent(raw).items.length) };
   }
 
   return { question, correct };
@@ -184,13 +196,13 @@ serve(async (req) => {
     const wireFormat = (row: { answer_format?: unknown; answer_type?: unknown; content?: unknown }): string | null =>
       mixEngine === "v2" ? servableWireFormat(row) : mapAnswerFormat(row.answer_format as string | null);
 
-    // Match par only: the instance key (question_instances.correct_answer) lays out the shuffled right
-    // column (../_shared/match-pairs.ts). It is read here, on the backend client, scoped to the verified
-    // student and ONLY for a "match" row — every other format makes exactly the reads it made before
+    // Keyed formats only (Match par, Rækkefølge): the instance key (question_instances.correct_answer) lays out the shuffled
+    // right column / presentation (../_shared/match-pairs.ts, order-items.ts). It is read here, on the backend client, scoped to the verified
+    // student and ONLY for a KEYED_FORMATS row — every other format makes exactly the reads it made before
     // (release gate, docs/operations/level-engine-rollout.md §3.1). The key is never put into a response.
     // No row → null → toPublicQuestion throws → the row is skipped as unrenderable.
     const matchInstanceKey = async (format: string, instanceId: string): Promise<unknown> => {
-      if (format !== "match") return undefined;
+      if (!KEYED_FORMATS.has(format)) return undefined;
       const { data: keyRows, error: keyError } = await admin()
         .from("question_instances")
         .select("correct_answer")
@@ -270,7 +282,7 @@ serve(async (req) => {
         const format = wireFormat(q);
         if (format === null) throw new Error(`Unservable format: ${q.answer_format}`);
         const instanceKey = delivered
-          ? (format === "match" ? delivered.key : undefined)
+          ? (KEYED_FORMATS.has(format) ? delivered.key : undefined)
           : await matchInstanceKey(format, instance.id);
         const pub = toPublicQuestion(q.content, format, q.metadata, instanceKey);
 
@@ -513,7 +525,7 @@ serve(async (req) => {
               const format = wireFormat(src);
               if (format === null) throw new Error(`Unservable format: ${src.answer_format}`);
               const instanceKey = delivered
-                ? (format === "match" ? delivered.key : undefined)
+                ? (KEYED_FORMATS.has(format) ? delivered.key : undefined)
                 : await matchInstanceKey(format, repeatRow.id);
               const pub = toPublicQuestion(src.content, format, src.metadata, instanceKey);
 

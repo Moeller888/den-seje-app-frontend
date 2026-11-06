@@ -295,6 +295,44 @@ Rules (binding):
    Scoring is binary (correct/incorrect) — no partial credit — so XP/coins, spaced repetition and
    the response shape `{ status, correct_answer, review_text?, misconception_type? }` stay unchanged.
 
+**Rækkefølge / tidslinje (`order_items`, F-04, 2026-11-05 — built, NOT servable, not deployed).**
+Contract, key and answer shape in `supabase/functions/_shared/order-items.ts`; browser control
+`js/order-items.js`. **The facit is the authored order of `content.items` and is never randomised — only
+the presentation is shuffled**, once per instance: `question_instances.correct_answer` holds the display
+positions of the items in the correct order (never the identity, so the list is never shown solved). The
+payload carries `content.order = { items (shown order), sequence }` only. `content.sequence` is required:
+`chronological` (what happened first — a time order, not a causal claim; the authoring check warns on
+causal wording), `process` (step by step) or `logical` (a subject relationship). The pupil reorders with
+▲/▼ buttons (mouse, touch, keyboard; every move announced) and sends once; `process-event` accepts only a
+permutation of the shown positions (`canonicalOrderAnswer`) and `process_question_attempt` grades it like
+MC — **all or nothing, one reward path** (tested on the replayed production function:
+`tests/unit/order-items-grading.test.mjs`). Why all or nothing for now: partial credit is undecided
+(D-277 LP-7) and binary scoring is rule 4 above; a random order of 4 items is right 1 time in 24 (1 in 23
+for a pupil who knows the shown order is never the facit), so a correct answer is strong evidence, whereas partial credit would reward near-random orders. The feedback
+still shows the whole correct order after a wrong answer. 3 items (1 in 6) is a practice size. **Before
+pupils can get it:** a reviewed activation migration (production's `questions_answer_format_check` and
+`content_valid_check` refuse `order` rows today; `question_is_servable` must flip in the same PR as the
+registry), deploys of `get-next-question` (manifest in the rollout runbook) and `process-event` (the
+shape check), and content — each its own owner GO.
+
+**Stimulus contract (F-07, 2026-11-05 — implemented in code, not deployed, no content).** A question of
+any format may carry `content.stimulus`, built field by field by `supabase/functions/_shared/stimulus.ts`
+and rendered by `js/stimulus.js` above the question:
+
+| kind | Required | Optional | Accessibility |
+|---|---|---|---|
+| `source` (Kilde + spørgsmål) | `text`, `credit.source` | `title`, `credit.creator/year/license` | the quiz's read-aloud player on the text |
+| `image` (Billede + svar) | `file`, `alt`, `credit.source` | `caption` | `alt` is mandatory and should say what the image shows |
+| `audio` (Lytteopgave) | `file`, `transcript`, `credit.source` | `title` | native controls + the transcript behind "Vis teksten" |
+
+Media are bare file names (`[a-z0-9-]` + `.svg/.png/.webp` or `.wav`) loaded from this site's own
+`assets/stimulus/`, never URLs. Every text is rendered with `textContent`. Only whitelisted fields leave the
+server, so a grading field inside a stimulus never reaches the browser; a stimulus that breaks the contract
+makes the row unservable, and the client shows the visible error if one arrives anyway. A stimulus changes
+no evaluator, no reward path and no SQL: the existing answer form (MC, number, text, …) is graded exactly as
+without it. Example sequence (introduction → comprehension check → application):
+`tools/stimulus/examples/grundloven-1849.json`, proven in `tests/stimulus-quiz.spec.ts`.
+
 Privileged award RPCs: `process_text_answer` takes the verdict (`p_is_correct`) and the pupil
 (`p_user_id`) as parameters, and `process_question_attempt` takes the pupil (`p_student_id`), so both
 must be reachable only from the backend. `process-event` calls each through a separate admin client
@@ -517,7 +555,9 @@ write `answered_at = now()` in the same UPDATE as the verdict, and a pupil's nex
 after the previous one committed. `server-band.ts` is the TS specification of the fold, pinned equal
 to the SQL in PGlite. The band is one level across subjects, like the client's today; a per-subject
 level is a separate product decision. `profiles.current_band`,
-`profiles.placement_band` (both client-writable) and the request body are not inputs.
+`profiles.placement_band` (both client-writable) and the request body are not inputs. Since D-356
+the client no longer starts placement, so a new pupil always seeds from the grade's start band;
+`start_placement`, `submit_placement` and existing `placement_sessions` rows are unchanged.
 
 **Adding a new kind:** (1) registry entry with `servable: false`; (2) renderer in
 `js/answer-input.js`, evaluator/award path in `process-event`, deliberate extension of
@@ -536,8 +576,8 @@ due and repeat instances look as first served. *Payload:* `content.match = { lef
 lists of texts; `content.pairs` never leaves the server. *Answer:* the browser sends
 `[[left, right], …]` in display positions; `process-event` accepts only one connection per item
 (else 400, nothing recorded) and rewrites it in the key's form; **`process_question_attempt` grades
-and pays it exactly like MC** (its `[^a-z0-9]` normalisation makes `0:2,1:0,2:1` and the key compare as
-`021021`, unambiguous with ≤ 6 pairs) — full award once, the 2-XP repeat award, streak, quests,
+and pays it exactly like MC** (`normalize_choice_answer`; since D-290 G1 it keeps punctuation, so the
+canonical `0:2,1:0,2:1` must equal the key exactly — the canonical form guarantees it) — full award once, the 2-XP repeat award, streak, quests,
 `next_review_at`. No new RPC, no migration. Not `process_text_answer`: it ignores `repeat_count`, and
 the repeat RPC reopens every non-`text` auto-graded instance. *Browser:* `js/match-pairs.js` (tap an
 item, then its partner; arrows, Enter/Space, Escape; colour + number per pair; live region),

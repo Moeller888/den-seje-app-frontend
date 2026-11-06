@@ -36,7 +36,7 @@ test("D-281 the proposed item entry is the olive trousers' shape (D-283 integrat
   const olive = AL.NORTHSTAR_ITEMS[PS.SHADOW_OF];
   assert.deepEqual(PS.ITEM_SHAPE, { category: olive.category, layers: olive.layers, shadows: olive.shadows });
   for (const k of Object.values(C.candidates)) assert.deepEqual({ ...AL.NORTHSTAR_ITEMS[k.item] }, { ...PS.ITEM_SHAPE, shadowsOf: PS.SHADOW_OF }, k.item);
-  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, true);
 });
 
 test("D-281 the advisory colour classes use D-271's thresholds", () => {

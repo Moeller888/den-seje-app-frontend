@@ -66,5 +66,5 @@ test("D-336/D-337 published under the owner's permission: exactly the 15 registe
   for (const [f, h] of Object.entries(STAGED)) assert.equal(sha(readFileSync(join(ROOT, "assets", "avatar-northstar", f))), h, f);
   const mine = A.combinations.map((c) => c.top + "+" + c.bottom + "+" + c.shoes); assert.ok(mine.every((k) => AL.NORTHSTAR_LS2_COMBOS.includes(k)));   // D-340 extended the list to 270
   for (const d of Object.values(A.designs)) { const it = AL.NORTHSTAR_ITEMS[d.proposedRuntimeItem]; assert.equal(it.shadowsOf, P.CUT_ITEM); assert.equal(it.hipSeam, P.HIP_SEAM_FILE); }
-  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, true);
 });

@@ -60,5 +60,5 @@ test("D-326/D-331 published under the owner's permission: exactly the 4 register
   for (const [f, [h, n]] of Object.entries(STAGED)) { const b = readFileSync(join(ROOT, "assets", "avatar-northstar", f)); assert.equal(sha(b), h, f); assert.equal(b.length, n, f); }
   for (const b of A.approved) { assert.equal(AL.NORTHSTAR_AB1_BOOTS[b.id].item, b.proposedRuntimeItem); assert.deepEqual({ ...AL.NORTHSTAR_ITEMS[b.proposedRuntimeItem], layers: [...AL.NORTHSTAR_ITEMS[b.proposedRuntimeItem].layers], shadows: [...AL.NORTHSTAR_ITEMS[b.proposedRuntimeItem].shadows] }, { ...P.RUNTIME_ITEM_SHAPE, layers: ["shoes"], shadows: ["body"] }); }
   assert.ok(!("AB1-BOOT-BLACKGUM" in AL.NORTHSTAR_AB1_BOOTS)); assert.deepEqual([...AL.NORTHSTAR_AB1_BOOT_COMBOS].sort(), P.combinations(AL, A).map((c) => c.key).sort());
-  assert.ok(!AL.NORTHSTAR_SV1_SHOE_COMBOS.some((k) => k.includes("ab1"))); assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.ok(!AL.NORTHSTAR_SV1_SHOE_COMBOS.some((k) => k.includes("ab1"))); assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, true);
 });

@@ -40,10 +40,14 @@ const LOCAL_FRONTEND: Record<string, string> = {
   '/app.js': path.join(REPO, 'app.js'),
   '/js/answer-input.js': path.join(REPO, 'js', 'answer-input.js'),
   '/js/match-pairs.js': path.join(REPO, 'js', 'match-pairs.js'),
-  '/js/true-false.js': path.join(REPO, 'js', 'true-false.js'),
+  '/js/stimulus.js': path.join(REPO, 'js', 'stimulus.js'),
+  '/js/order-items.js': path.join(REPO, 'js', 'order-items.js'),
   '/js/flags.js': path.join(REPO, 'js', 'flags.js'),
   '/css/match-pairs.css': path.join(REPO, 'css', 'match-pairs.css'),
+  '/css/stimulus.css': path.join(REPO, 'css', 'stimulus.css'),
+  '/js/true-false.js': path.join(REPO, 'js', 'true-false.js'),
   '/css/true-false.css': path.join(REPO, 'css', 'true-false.css'),
+  '/css/order-items.css': path.join(REPO, 'css', 'order-items.css'),
 };
 
 const CORS = {
