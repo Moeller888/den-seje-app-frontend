@@ -21,6 +21,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { toPublicQuestion } from "../supabase/functions/_shared/question-dto.ts";
+import { closeOfflineQuiz } from "./support/close-offline-quiz";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -233,7 +234,7 @@ for (const v of VIEWPORTS) {
 
     expect(answers).toEqual(["Enevælde", "En kvinde på 40 år med egen gård", "30", s4.options[1]]);
     for (const p of payloads) for (const k of GRADING_KEYS) expect(p.includes(`"${k}"`), `payload carries ${k}`).toBe(false);
-    await page.context().close();
+    await closeOfflineQuiz(page);
   });
 }
 
@@ -248,7 +249,7 @@ test("a stimulus that breaks the contract: visible error with a way out, never t
   await expect(stimulus(page)).toBeHidden();
   await expect(page.locator("img[src*='evil.example']")).toHaveCount(0);
   expect(answers).toEqual([]);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("HTML in a source is shown as text, never run", async ({ browser }) => {
@@ -257,5 +258,5 @@ test("HTML in a source is shown as text, never run", async ({ browser }) => {
   await expect(stimulus(page).locator("blockquote")).toContainText('<img src=x onerror="window.__pwned=1"> <b>fed</b>');
   await expect(stimulus(page).locator("blockquote img, blockquote b")).toHaveCount(0);
   expect(await page.evaluate(() => (window as any).__pwned)).toBeUndefined();
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
