@@ -57,5 +57,5 @@ test("D-331 the plan draws the boot with its own covering mask and the published
   for (const [s, b] of Object.entries(L.NORTHSTAR_AB1_BOOTS)) { const plan = L.northstarPlanFor(L.northstarOutfitFor("K16", null, "TS-NAV", s)), srcs = plan.flatMap((x) => [x.src, x.cut].filter(Boolean).map((f) => f.split("/").pop()));
     assert.ok(srcs.includes(b.item + "-shoes-v1.webp")); assert.ok(srcs.includes("hide-" + b.item + "-v1.webp")); assert.ok(srcs.includes("shoes-ankleboots-brown-shadow-body-v1.webp"));
     assert.ok(!srcs.includes("shoes-ankleboots-brown-shoes-v1.webp"), "the outfit's own boots are not drawn"); }
-  assert.deepEqual(A.approved.map((b) => b.proposedRuntimeItem), Object.values(L.NORTHSTAR_AB1_BOOTS).map((b) => b.item)); assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.deepEqual(A.approved.map((b) => b.proposedRuntimeItem), Object.values(L.NORTHSTAR_AB1_BOOTS).map((b) => b.item)); assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
 });

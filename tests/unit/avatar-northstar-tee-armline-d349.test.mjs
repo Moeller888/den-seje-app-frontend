@@ -43,7 +43,7 @@ test("D-349 layerRev: exactly the 18 tees set 2 and draw their -v2 layers with v
   assert.ok(shades.length > 0 && shades.every((f) => f.endsWith("-v1.webp")), "shadows keep their files");
   for (const c of [...L.NORTHSTAR_LS2_COMBOS, ...L.NORTHSTAR_TANK_COMBOS]) { const [top, bottom, shoes] = c.split("+");
     assert.deepEqual(L.northstarPlanFor({ top, bottom, shoes }), L.northstarPlanFor({ top, bottom, shoes }, T1), c); }
-  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
 });
 
 test("D-349 the candidate list (historical) and the publication: the 36 approved -v2 files are published with their sha256, the v1 files kept", () => {
