@@ -23,7 +23,8 @@ const BATCH3 = [1, 2, 3].map((n) => read(`2026102015000${n}_english_level_batch3
 const BATCH4 = [1, 2, 3].map((n) => read(`2026102016000${n}_english_level_batch4_${n}.sql`));
 const BATCH = [1, 2, 3].map((n) => read(`2026102017000${n}_english_level_batch5_${n}.sql`));
 
-const CEFR = { A2: [3001, 5000], B1: [5001, 7000], B2: [7001, 8500], C1: [8501, 10000] };
+// A1 since the E5 review (2026-11-05): items found a full CEFR band too high were moved down.
+const CEFR = { A1: [1501, 3000], A2: [3001, 5000], B1: [5001, 7000], B2: [7001, 8500], C1: [8501, 10000] };
 
 async function load(t) {
   const pg = new PGlite();
@@ -90,8 +91,8 @@ test("portion 5 inserts 500 well-formed English MC questions on the level scale"
       assert.equal(/Ã|�/.test(text), false, `mojibake in: ${text}`);
     }
   }
-  assert.deepEqual(perCefr, { A2: 70, B1: 160, B2: 140, C1: 130 });
-  assert.equal(rows[0].difficulty_level, 3001);
+  assert.deepEqual(perCefr, { A1: 1, A2: 83, B1: 151, B2: 135, C1: 130 });
+  assert.equal(rows[0].difficulty_level, 2600);
   assert.equal(rows[rows.length - 1].difficulty_level, 10000);
 
   // The correct answer is spread evenly over the four positions.
@@ -105,7 +106,7 @@ test("portion 5's metadata follows the existing English batches, plus cefr", asy
   const rows = (await pg.query(
     "SELECT metadata, difficulty_level FROM public.questions WHERE id NOT IN (SELECT id FROM public.pilot_ids)")).rows;
   assert.equal(rows.length, 500);
-  const ROLE = { A2: "reinforcement", B1: "challenge", B2: "challenge", C1: "deep_challenge" };
+  const ROLE = { A1: "reinforcement", A2: "reinforcement", B1: "challenge", B2: "challenge", C1: "deep_challenge" };
   for (const { metadata: m } of rows) {
     assert.ok(["ordforråd", "hverdagsudtryk", "grammatik", "læseforståelse"].includes(m.concepts[0]));
     assert.equal(m.challenge_role, ROLE[m.cefr]);
