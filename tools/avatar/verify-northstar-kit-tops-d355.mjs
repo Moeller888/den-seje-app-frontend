@@ -1,6 +1,6 @@
-// D-355 BROWSER VERIFICATION AND PRIVATE PREVIEW of the 33 prepared tops (a proposal; nothing published) in the Northstar opt-in, on the
-// real renderer, panel and engines in Chromium against a local server of this checkout; the new layer files are served from the PRIVATE
-// staging (--staging, never copied into the repository); origin/main's modules under /__main/ for the baseline (D-348's tool):
+// D-355 BROWSER VERIFICATION AND PRIVATE PREVIEW of the 33 tops in the Northstar opt-in, on the real renderer, panel and engines in
+// Chromium against a local server of this checkout; the new layer files come from the repository once published (D-355) and only
+// otherwise from the PRIVATE staging (--staging, never copied by this tool); origin/main's modules under /__main/ for the baseline:
 //   1. BASELINE — without the opt-in (a top of the 33 stored or not), without an outfit, where a top of the 33 is not allowed (a sweater
 //      or tank of the 33 on the shorts), with an unknown ID, and the approved tees, print tees, sweaters and tank tops: every surface
 //      pixel-identical to origin/main;
@@ -66,8 +66,8 @@ const pages = {}, refs = {}, served = new Set(), server = http.createServer((req
   const u = decodeURIComponent(req.url.split("?")[0]); if (pages[u]) { res.writeHead(200, { "content-type": "text/html" }); return res.end(pages[u]); }
   if (u.startsWith("/__ref/")) { const k = u.slice(7, -4); res.writeHead(200, { "content-type": "image/png" }); return res.end(refs[k]); }
   if (u.startsWith("/__main/")) { try { const b = mainFile(u.slice(8)); res.writeHead(200, { "content-type": TYPES[extname(u)] || "application/octet-stream" }); return res.end(b); } catch { res.writeHead(404); return res.end(); } }
-  // the 33's layers exist only in the private staging: served from there, never from the repository
-  const f = u.split("/").pop(); if (u.startsWith("/assets/avatar-northstar/") && M.files.some((e) => e.file === f)) { served.add(f); res.writeHead(200, { "content-type": "image/webp" }); return res.end(readFileSync(join(STAGED, f))); }
+  // the 33's layers: from the repository once published (D-355), else from the private staging (never copied into the repository)
+  const f = u.split("/").pop(); if (u.startsWith("/assets/avatar-northstar/") && M.files.some((e) => e.file === f) && !existsSync(join(ROOT, "assets", "avatar-northstar", f))) { served.add(f); res.writeHead(200, { "content-type": "image/webp" }); return res.end(readFileSync(join(STAGED, f))); }
   const p = join(ROOT, u); if (!p.startsWith(ROOT) || !existsSync(p) || statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { "content-type": TYPES[extname(p)] || "application/octet-stream" }); res.end(readFileSync(p));
 });
@@ -76,7 +76,7 @@ async function main() {
   const { chromium } = await import("@playwright/test");
   const L = await import(pathToFileURL(join(ROOT, "js", "avatar-layers.js")).href);
   const tmp = join(tmpdir(), "d355b-" + process.pid); mkdirSync(tmp, { recursive: true }); const dec = {};
-  const pixelsOf = (src) => { const f = src.split("/").pop(); if (!dec[f]) { const o = join(tmp, "x.png"), dir = M.files.some((e) => e.file === f) ? STAGED : join(ROOT, "assets", "avatar-northstar"); execFileSync(DWEBP, ["-quiet", join(dir, f), "-o", o]); dec[f] = Uint8ClampedArray.from(decodePng(readFileSync(o)).px); } return dec[f]; };
+  const pixelsOf = (src) => { const f = src.split("/").pop(); if (!dec[f]) { const o = join(tmp, "x.png"), dir = M.files.some((e) => e.file === f) && !existsSync(join(ROOT, "assets", "avatar-northstar", f)) ? STAGED : join(ROOT, "assets", "avatar-northstar"); execFileSync(DWEBP, ["-quiet", join(dir, f), "-o", o]); dec[f] = Uint8ClampedArray.from(decodePng(readFileSync(o)).px); } return dec[f]; };
   // [K, tee, trousers, shoe, top]: the three cuts; fabrics, patterns, motifs; every bottom; beige, SV1, AB-1, white, lace-up and brown shoes
   const FIG = [["K01", null, null, null, "TEE-FOREST-MELANGE"], ["K04", null, null, "SV1-V5-CHARCOAL", "TEE-BRETON-STRIPE"], ["K09", null, "TS-NAV", null, "TEE-MINT-TEAPOT"],
     ["K01", null, null, "AB1-BOOT-ORIGINAL", "LS2-BURGUNDY-PIQUE"], ["K17", null, null, null, "LS2-GREEN-CHECK"], ["K07", "TP-FOX-NAV", "TS-SND", null, "LS2-LIGHTDENIM-SHIELD"],

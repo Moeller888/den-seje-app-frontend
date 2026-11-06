@@ -54,7 +54,7 @@ test("D-274/D-275 published under the owner's permission: exactly D-274's 32 lis
   assert.deepEqual(printItems, APPROVAL.approved.map((id) => TL.itemOf(CAND, id).item).sort()); assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
   assert.deepEqual(Object.keys(AL.NORTHSTAR_PRINT_TEES).sort(), [...APPROVAL.approved].sort()); for (const id of Object.keys(APPROVAL.notApproved)) assert.ok(!(id in AL.NORTHSTAR_PRINT_TEES), id);
   const m = JSON.parse(file("assets/avatar-northstar/manifest.json").toString("utf8")), ext = m.extensions.find((e) => e.decision === "D-274");
-  assert.match(ext.authorisation, /D-274 OFFENTLIGGØRELSE GODKENDT/); assert.equal(m.files.filter((f) => f.origin && f.origin.decision === "D-274").length, 32); assert.equal(m.files.length, 31 + 32 + 2 + 8 + 4 + 15 + 8 + 36, "D-242's 31, D-274's 32, D-281's 2, D-305's 8, D-326's 4, D-336's 15, D-345's 8 (D-348) and D-349's 36");
+  assert.match(ext.authorisation, /D-274 OFFENTLIGGØRELSE GODKENDT/); assert.equal(m.files.filter((f) => f.origin && f.origin.decision === "D-274").length, 32); assert.equal(m.files.length, 31 + 32 + 2 + 8 + 4 + 15 + 8 + 36 + 55, "D-242's 31, D-274's 32, D-281's 2, D-305's 8, D-326's 4, D-336's 15, D-345's 8 (D-348), D-349's 36 and D-355's 55");
 });
 
 test("D-274 the layer build refuses an --out inside the repository", () => {

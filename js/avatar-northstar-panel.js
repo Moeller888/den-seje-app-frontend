@@ -16,7 +16,7 @@
 // approved combinations (D-336's 30 with the beige sneakers, D-340's 240 with the other shoes); stored the same way (avatar_northstar_sweater); "Outfittets egen top" returns.
 // D-348: the row (now "Overdel") also offers the 6 owner-approved tank tops (D-345/D-348), each against its own list of 264 combinations;
 // the same store, so at most one sweater or tank top is chosen; the same rule and fallback.
-// D-355 (preparation; the list is a proposal the owner has not approved): the 33 tops of D-354 in ONE compact list under the row (grouped
+// D-355 (owner-approved 2026-11-06: 1441 combinations): the 33 tops of D-354 in ONE compact list under the row (grouped
 // by cut: T-shirts, sweatere, tanktoppe) instead of 33 more buttons; the same store, rule and fallback; an option not possible for this
 // outfit is disabled and says so. "Outfittets egen top" returns as before.
 import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_KIT_TOPS, NORTHSTAR_SELECTABLE_TOPS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor } from "./avatar-layers.js";
@@ -95,7 +95,7 @@ export function mountNorthstarPanel(panel, preview) {
   sweaterNote.textContent = topBlocked.length ? topBlocked.join(" og ") + ": ikke mulig her. " + sweaterReason(current, shown, shownPants, shownShoe) : "";
   const kitLabel = document.createElement("label");
   kitLabel.className = "northstar-kit";
-  kitLabel.textContent = "Flere overdele (forslag): ";
+  kitLabel.textContent = "Flere overdele: ";
   const kit = document.createElement("select");
   kit.className = "northstar-kit-select";
   const none = document.createElement("option");

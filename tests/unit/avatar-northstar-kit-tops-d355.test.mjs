@@ -1,13 +1,15 @@
-// D-355 — D-354's 33 owner-approved tops PREPARED for the Northstar opt-in (no private file needed): the approval names exactly R01–R11 on
+// D-355 — D-354's 33 owner-approved tops in the Northstar opt-in (no private file needed): the approval names exactly R01–R11 on
 // tee-hip-v2, sweater-long-v3 and tank-v5 with the hashes D-354 registered, never the planet; each top is an item of its cut's family with
 // that family's published shadows and hip seam or hem junction; the proposed list is each cut's current (bottom, shoes) pairs and nothing
 // else, without the sweater's olive trousers with the beige sneakers that no outfit can show (1441, every entry reachable); a top of the 33
 // replaces the top only where its whole outfit is on the list, on the same stored choice as the sweaters and tank tops, whose behaviour is
-// unchanged; the plan draws each family's own order; nothing is published (no layer file, no manifest entry); the flag is false.
-// Passing approves nothing.
+// unchanged; the plan draws each family's own order; the owner's D-355 approval (55 files bound to the staging manifest's sha256, the 1441
+// combinations, the tees' D-349 split) is exactly what is published and listed — the 55 files with their sha256 and bytes, in the manifest
+// with decision D-355 and its extension, and no other file of the 33; the flag is false. Passing approves nothing.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as L from "../../js/avatar-layers.js";
@@ -15,6 +17,7 @@ import { applyNorthstarUrlOptIn } from "../../js/avatar-northstar-panel.js";
 import { approval, kitTopCombos, cutPairs, itemOfCandidate, itemShape, CUT_FAMILY, TOP_SPLIT, NOT_SHOWN } from "../../tools/avatar/northstar-kit-tops-d355.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", ".."), A = approval(), key = (o) => [o.top, o.bottom, o.shoes].join("+");
+const D355 = JSON.parse(readFileSync(join(REPO, "tools", "avatar", "fixtures", "northstar-wardrobe", "top-cuts", "kit-tops-owner-approval-d355.json"), "utf8")), sha = (b) => createHash("sha256").update(b).digest("hex");
 const withStorage = (entries, fn) => { const prev = globalThis.localStorage; const m = new Map(Object.entries(entries));
   globalThis.localStorage = { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) };
   try { return fn(m); } finally { if (prev === undefined) delete globalThis.localStorage; else globalThis.localStorage = prev; } };
@@ -86,7 +89,7 @@ test("D-355 the stored choice on every surface; outside the list the own top wit
   assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
 });
 
-test("D-355 the plan: each family's own order and shared files; the tee's sleeves after the arms; nothing of the 33 is published", () => {
+test("D-355 the plan: each family's own order and shared files; the tee's sleeves after the arms", () => {
   const order = (o) => L.northstarPlanFor(o).map((s) => s.src.split("/").pop());
   const tee = order({ top: "top-tee-hip-green-check", bottom: "bottom-skirt-sand", shoes: "shoes-sneakers-white" });
   assert.ok(tee.indexOf("top-tee-hip-green-check-top-body-v1.webp") < tee.indexOf("figure-arms-v1.webp") && tee.indexOf("figure-arms-v1.webp") < tee.indexOf("top-tee-hip-green-check-sleeves-v1.webp"));
@@ -95,10 +98,26 @@ test("D-355 the plan: each family's own order and shared files; the tee's sleeve
   assert.equal(sw[k - 1], "shoes-ankleboots-brown-shoes-v1.webp"); assert.equal(sw[k + 1], "bottom-trousers-square-sand-pants-v1.webp"); assert.ok(sw.includes("top-sweater-ls2-shadow-arms-v1.webp") && sw.includes("top-sweater-ls2-denim-twill-sleeves-v1.webp"));
   const tk = order({ top: "top-tank-sand-fox", bottom: "bottom-capri-lightblue", shoes: "shoes-sneakers-beige" }), j = tk.indexOf(L.NORTHSTAR_TANK_HEM_JUNCTION);
   assert.equal(tk[j + 1], "bottom-capri-lightblue-pants-v1.webp"); assert.ok(!tk.some((f) => f.includes("sleeves")) && tk.includes("top-tank-shadow-body-v1.webp") && !tk.includes("top-tank-shadow-arms-v1.webp"));
-  const m = JSON.parse(readFileSync(join(REPO, "assets", "avatar-northstar", "manifest.json"), "utf8"));
-  for (const t of Object.values(L.NORTHSTAR_KIT_TOPS)) for (const part of ["top-body", "sleeves"]) { const f = t.item + "-" + part + "-v1.webp"; assert.equal(existsSync(join(REPO, "assets", "avatar-northstar", f)), false, f + " is not published");
-    assert.ok(!m.files.some((x) => x.file === f)); }
   for (const files of Object.values(CUT_FAMILY)) for (const p of files.shadows) assert.ok(existsSync(join(REPO, "assets", "avatar-northstar", files.shadowsOf + "-shadow-" + p + "-v1.webp")));
+});
+
+test("D-355 the owner's approval is what is published and listed: the 55 files (sha256, bytes, manifest), the 1441 combinations; no planet", () => {
+  assert.equal(D355.decision, "D-355"); assert.equal(D355.owner[0], "Jeg godkender samlet:");
+  assert.equal(D355.staging.manifestSha256, "1779129579b76014e252d49162dc45b43c3589ecd90cb782598cdbe0ef1cf457"); assert.equal(D355.staging.files.length, 55);
+  assert.equal(D355.basedOn.head, "0d772cfaf20a19e41339eaaf14f0c3800b7fe006"); assert.equal(D355.count, 1441);
+  assert.deepEqual(D355.combinations.map(key).sort(), [...L.NORTHSTAR_KIT_TOP_COMBOS].sort());
+  const m = JSON.parse(readFileSync(join(REPO, "assets", "avatar-northstar", "manifest.json"), "utf8")), ext = m.extensions.find((e) => e.decision === "D-355");
+  for (const f of D355.staging.files) { const b = readFileSync(join(REPO, "assets", "avatar-northstar", f.file)); assert.equal(sha(b), f.sha256, f.file); assert.equal(b.length, f.bytes);
+    const e = m.files.find((x) => x.file === f.file); assert.ok(e && e.sha256 === f.sha256 && e.origin.decision === "D-355" && e.origin.approval.endsWith("kit-tops-owner-approval-d355.json"), f.file); }
+  // exactly the 33's layer files are published: every one the plan can draw, nothing else of theirs, never the planet
+  const want = Object.values(L.NORTHSTAR_KIT_TOPS).flatMap((t) => L.NORTHSTAR_ITEMS[t.item].layers.map((l) => t.item + "-" + l + "-v1.webp")).sort();
+  assert.deepEqual(D355.staging.files.map((f) => f.file).sort(), want); assert.equal(want.length, 55);
+  const kitFiles = readdirSync(join(REPO, "assets", "avatar-northstar")).filter((f) => Object.values(L.NORTHSTAR_KIT_TOPS).some((t) => f.startsWith(t.item + "-"))).sort(); assert.deepEqual(kitFiles, want);
+  assert.ok(!readdirSync(join(REPO, "assets", "avatar-northstar")).some((f) => /planet/.test(f)));
+  assert.equal(ext.publishedBy, "D-355"); assert.deepEqual(ext.files, want); assert.equal(ext.stagedManifestSha256, D355.staging.manifestSha256);
+  assert.deepEqual([...ext.combinations].sort(), [...L.NORTHSTAR_KIT_TOP_COMBOS].sort()); assert.equal(ext.equivalence.outfitsDiffering, 0); assert.equal(ext.equivalence.approvedCombinations, 1441);
+  for (const [id, it] of Object.entries(ext.itemTable)) assert.deepEqual(JSON.parse(JSON.stringify(L.NORTHSTAR_ITEMS[id])), it);
+  assert.equal(m.counts.d355Files, 55); assert.equal(m.counts.files, m.files.length); assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
 });
 
 test("D-355 the list explained: each cut's pairs from its source, all 1441 selectable (the sweater's olive with beige left out), no restriction widened", async () => {

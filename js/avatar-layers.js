@@ -977,9 +977,9 @@ export const NORTHSTAR_TANK_COMBOS = Object.freeze(Object.values(NORTHSTAR_TANKS
 // The opt-in's top choice (one stored value, avatar_northstar_sweater): the 6 sweaters and the 6 tank tops, each checked against its own
 // approved list; at most one replaces the outfit's own tee.
 export const NORTHSTAR_TOP_CHOICES = Object.freeze({ ...NORTHSTAR_LS2_SWEATERS, ...NORTHSTAR_TANKS });
-// D-355 (PREPARATION: the combination list is a PROPOSAL the owner has not approved, and the layer files are staged privately, not
-// published): D-354's 33 owner-approved candidates (production-trial-owner-approval-d354.json; R01–R11 on tee-hip-v2, sweater-long-v3 and
-// tank-v5 — never the planet R12) as top choices on the same stored choice. Each joins its cut's family and reuses its published shared
+// D-355: D-354's 33 owner-approved candidates (production-trial-owner-approval-d354.json; R01–R11 on tee-hip-v2, sweater-long-v3 and
+// tank-v5 — never the planet R12) as top choices on the same stored choice. The owner approved the 55 layer files, the 1441 combinations
+// and the tees' D-349 split on 2026-11-06 (kit-tops-owner-approval-d355.json; manifest extension D-355). Each joins its cut's family and reuses its published shared
 // files: the tee the cream tee's skin shadow (its layers split as the tees' since D-349), the sweater the LS2 shadow and hip seam, the
 // tank the tank's shadow and hem junction. Each is offered over its cut's current pairs only, no bottom or shoe added: the tee the 43 the
 // cream and print tees are shown with, the sweater the sweaters' 45 without the one no outfit can show (olive trousers with the beige

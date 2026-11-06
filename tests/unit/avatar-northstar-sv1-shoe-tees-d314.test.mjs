@@ -33,8 +33,10 @@ test("D-314 the runtime list is 21 + 305 = 326; 323 reachable, all approved; the
     if (/trousers/.test(o.bottom)) assert.ok(!L.northstarShoeAllowed(k, t, p, "SV1-V5-CHARCOAL"), [k, t, p].join("+") + ": charcoal with long trousers");
     assert.ok(!L.northstarShoeAllowed(k, t, p, "SV1-V5-ORANGE") && !L.northstarShoeAllowed(k, t, p, null)); }
   // D-314 added no file: 73 before it; D-331, D-337 and D-348 later published D-326's 4 boot files, D-336's 15 sweater files and D-345's 8 tank files under their own permissions,
-  // and D-349 the 36 tee layer files of revision 2 (top-tee-hip-*-v2, U-343-1)
-  const man = JSON.parse(read("assets/avatar-northstar/manifest.json")), notD326 = (f) => !/^(hide-)?shoes-ankleboots-ab1-/.test(f) && !/^top-sweater-ls2-/.test(f) && !/^top-tank-/.test(f) && !/^top-tee-hip-[a-z-]+-(top-body|sleeves)-v2\.webp$/.test(f);
+  // and D-349 the 36 tee layer files of revision 2 (top-tee-hip-*-v2, U-343-1), and D-355 the 55 layer files of D-354's 33 tops
+  const man = JSON.parse(read("assets/avatar-northstar/manifest.json")), d355 = new Set(man.files.filter((f) => f.origin && f.origin.decision === "D-355").map((f) => f.file));
+  const notD326 = (f) => !/^(hide-)?shoes-ankleboots-ab1-/.test(f) && !/^top-sweater-ls2-/.test(f) && !/^top-tank-/.test(f) && !/^top-tee-hip-[a-z-]+-(top-body|sleeves)-v2\.webp$/.test(f) && !d355.has(f);
+  assert.equal(d355.size, 55);
   assert.equal(readdirSync(join(REPO, "assets", "avatar-northstar")).filter((f) => f !== "manifest.json" && notD326(f)).length, 73); assert.equal(man.files.filter((f) => notD326(f.file)).length, 73);
   assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
 });
