@@ -18,6 +18,9 @@
 //   content.match       Match par only: { left, right } — two lists of item texts, the right list in
 //                       the instance's shuffled order (_shared/match-pairs.ts). Never content.pairs,
 //                       which names the right partner of every item.
+//   content.stimulus    when present: the material shown before the question — a source excerpt, an
+//                       image or an audio clip — built field by field by _shared/stimulus.ts (F-07).
+//                       Any format may carry one; it never changes grading.
 //   (Sandt/falsk)       answer_format "true_false" sends content.question (the statement) and nothing
 //                       else of its own: the two answers are fixed ("Sandt", "Falsk", _shared/true-false.ts)
 //                       and never carry a marker. The stored content is checked against the contract
@@ -34,9 +37,10 @@
 // Edge Functions run.
 
 import { matchLayout, type MatchLayout } from "./match-pairs.ts";
+import { publicStimulus, type PublicStimulus } from "./stimulus.ts";
 import { parseTrueFalseContent, TRUE_FALSE_FORMAT } from "./true-false.ts";
 
-export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "type", "force_text", "match"] as const);
+export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "type", "force_text", "match", "stimulus"] as const);
 
 export const PUBLIC_METADATA_KEYS = Object.freeze([
   "difficulty_type",
@@ -53,6 +57,7 @@ export type PublicContent = {
   type?: string;
   force_text?: true;
   match?: MatchLayout;
+  stimulus?: PublicStimulus;
 };
 
 export type PublicQuestion = {
@@ -115,6 +120,8 @@ export function toPublicQuestion(rawContent: unknown, format: string, rawMetadat
 
   if (typeof rawContent.type === "string") content.type = rawContent.type;
   if (rawContent.force_text === true) content.force_text = true;
+  // A stimulus that breaks its contract throws here, so the row is skipped, never served without it.
+  if (rawContent.stimulus !== undefined) content.stimulus = publicStimulus(rawContent.stimulus);
 
   return { content, metadata: publicMetadata(rawMetadata) };
 }

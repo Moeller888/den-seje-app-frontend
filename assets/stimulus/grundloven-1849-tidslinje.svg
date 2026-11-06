@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 400" width="360" height="400" role="img" aria-labelledby="t d">
+  <title id="t">Tidslinje: fra enevælde til folkestyre</title>
+  <desc id="d">Tidslinje 1660–1849. 1660: enevælden indføres, kongen får al magt. 1788: stavnsbåndet ophæves. 5. juni 1849: Grundloven underskrives, og Danmark får folkestyre.</desc>
+  <rect width="360" height="400" fill="#ffffff"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <rect x="20" y="24" width="30" height="276" rx="6" fill="#c62828"/>
+    <rect x="20" y="300" width="30" height="94" rx="6" fill="#2e7d32"/>
+    <text x="35" y="162" font-size="18" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 35 162)">ENEVÆLDE</text>
+    <text x="35" y="347" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 35 347)">FOLKESTYRE</text>
+
+    <line x1="50" y1="34" x2="74" y2="34" stroke="#1a1a1a" stroke-width="3"/>
+    <text x="82" y="42" font-size="26" font-weight="bold" fill="#1a1a1a">1660</text>
+    <text x="82" y="68" font-size="19" fill="#1a1a1a">Enevælden indføres.</text>
+    <text x="82" y="92" font-size="19" fill="#1a1a1a">Kongen får al magt.</text>
+
+    <line x1="50" y1="170" x2="74" y2="170" stroke="#1a1a1a" stroke-width="3"/>
+    <text x="82" y="178" font-size="26" font-weight="bold" fill="#1a1a1a">1788</text>
+    <text x="82" y="204" font-size="19" fill="#1a1a1a">Stavnsbåndet ophæves.</text>
+
+    <line x1="50" y1="300" x2="74" y2="300" stroke="#1a1a1a" stroke-width="3"/>
+    <text x="82" y="308" font-size="26" font-weight="bold" fill="#1a1a1a">1849</text>
+    <text x="82" y="334" font-size="19" fill="#1a1a1a">5. juni: Grundloven</text>
+    <text x="82" y="358" font-size="19" fill="#1a1a1a">underskrives.</text>
+
+    <text x="350" y="392" font-size="12" fill="#555555" text-anchor="end">Tegning: Lærlig</text>
+  </g>
+</svg>

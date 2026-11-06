@@ -295,6 +295,24 @@ Rules (binding):
    Scoring is binary (correct/incorrect) — no partial credit — so XP/coins, spaced repetition and
    the response shape `{ status, correct_answer, review_text?, misconception_type? }` stay unchanged.
 
+**Stimulus contract (F-07, 2026-11-05 — implemented in code, not deployed, no content).** A question of
+any format may carry `content.stimulus`, built field by field by `supabase/functions/_shared/stimulus.ts`
+and rendered by `js/stimulus.js` above the question:
+
+| kind | Required | Optional | Accessibility |
+|---|---|---|---|
+| `source` (Kilde + spørgsmål) | `text`, `credit.source` | `title`, `credit.creator/year/license` | the quiz's read-aloud player on the text |
+| `image` (Billede + svar) | `file`, `alt`, `credit.source` | `caption` | `alt` is mandatory and should say what the image shows |
+| `audio` (Lytteopgave) | `file`, `transcript`, `credit.source` | `title` | native controls + the transcript behind "Vis teksten" |
+
+Media are bare file names (`[a-z0-9-]` + `.svg/.png/.webp` or `.wav`) loaded from this site's own
+`assets/stimulus/`, never URLs. Every text is rendered with `textContent`. Only whitelisted fields leave the
+server, so a grading field inside a stimulus never reaches the browser; a stimulus that breaks the contract
+makes the row unservable, and the client shows the visible error if one arrives anyway. A stimulus changes
+no evaluator, no reward path and no SQL: the existing answer form (MC, number, text, …) is graded exactly as
+without it. Example sequence (introduction → comprehension check → application):
+`tools/stimulus/examples/grundloven-1849.json`, proven in `tests/stimulus-quiz.spec.ts`.
+
 Privileged award RPCs: `process_text_answer` takes the verdict (`p_is_correct`) and the pupil
 (`p_user_id`) as parameters, and `process_question_attempt` takes the pupil (`p_student_id`), so both
 must be reachable only from the backend. `process-event` calls each through a separate admin client

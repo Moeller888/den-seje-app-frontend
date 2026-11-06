@@ -1,0 +1,95 @@
+{
+  "title": "Grundloven 1849 og valgretten — introduktion, forståelsestjek og selvstændig anvendelse",
+  "status": "EKSEMPEL — ikke i databasen, ikke aktiveret. Bruges af tests/stimulus-quiz.spec.ts og tools/stimulus/demo.html.",
+  "competence": "Historie (Fælles Mål, kronologi og sammenhæng + kildearbejde): forstå overgangen fra enevælde til folkestyre i 1849 og bruge Grundlovens valgretsregel (§ 35) på konkrete personer.",
+  "audio_note": "Lydfilen grundloven-1849-valgret.wav findes IKKE i repoet. Den skal indtales med den licenserede 157P-stemme (Azure) og lægges i assets/stimulus/ før aktivering. Testene leverer et testsignal i stedet. Transskriptionen herunder er den tekst, klippet skal indeholde.",
+  "steps": [
+    {
+      "phase": "introduktion",
+      "form": "Billede + svar",
+      "row": {
+        "answer_format": "mc",
+        "answer_type": "short",
+        "content": {
+          "question": "Se tidslinjen. Hvilken styreform havde Danmark lige før Grundloven i 1849?",
+          "options": ["Enevælde", "Folkestyre", "Republik", "Diktatur"],
+          "correct": "Enevælde",
+          "review_text": "Fra 1660 til 1849 havde kongen al magt. Det kaldes enevælde. Med Grundloven i 1849 fik Danmark folkestyre.",
+          "stimulus": {
+            "kind": "image",
+            "file": "grundloven-1849-tidslinje.svg",
+            "alt": "Lodret tidslinje fra 1660 til 1849. En rød bjælke mærket 'Enevælde' går fra 1660 til 1849. En grøn bjælke mærket 'Folkestyre' begynder i 1849. Markeringer: 1660 enevælden indføres, og kongen får al magt. 1788 stavnsbåndet ophæves. 5. juni 1849 Grundloven underskrives.",
+            "caption": "Fra enevælde til folkestyre.",
+            "credit": { "source": "Lærlig, egen tegning", "year": "2026" }
+          }
+        }
+      }
+    },
+    {
+      "phase": "introduktion",
+      "form": "Lytteopgave",
+      "row": {
+        "answer_format": "mc",
+        "answer_type": "short",
+        "content": {
+          "question": "Lyt til klippet (eller åbn teksten). Hvem af disse fik IKKE valgret i 1849?",
+          "options": ["En kvinde på 40 år med egen gård", "En mand på 40 år med egen gård", "En mand på 55 år med eget værksted", "En mand på 35 år med egen butik"],
+          "correct": "En kvinde på 40 år med egen gård",
+          "review_text": "Grundloven i 1849 gav kun mænd valgret. Kvinder fik først valgret til Rigsdagen i 1915.",
+          "stimulus": {
+            "kind": "audio",
+            "file": "grundloven-1849-valgret.wav",
+            "title": "Hvem måtte stemme i 1849?",
+            "transcript": "Den 5. juni 1849 underskrev kong Frederik 7. Danmarks første grundlov. Nu skulle folket være med til at bestemme gennem valg til Rigsdagen. Men langt fra alle fik lov at stemme. Kvinder fik ikke valgret. Det fik heller ikke mænd under 30 år, tjenestefolk uden egen husstand og fattige, der fik hjælp fra fattigvæsenet.",
+            "credit": { "source": "Lærlig, fortællende tekst", "year": "2026" }
+          }
+        }
+      }
+    },
+    {
+      "phase": "forståelsestjek",
+      "form": "Kilde + spørgsmål",
+      "row": {
+        "answer_format": "number",
+        "answer_type": "short",
+        "content": {
+          "question": "Læs kilden. Hvor gammel skulle en mand mindst være for at få valgret til Folketinget? Skriv alderen med cifre.",
+          "correct": "30",
+          "accepted_answers": ["30"],
+          "review_text": "Der står \"naar han har fyldt sit 30te Aar\". En mand skulle altså være fyldt 30 år.",
+          "stimulus": {
+            "kind": "source",
+            "title": "Danmarks Riges Grundlov, 5. juni 1849, § 35",
+            "text": "Valgret til Folkethinget har enhver uberygtet Mand, som har Indfødsret, naar han har fyldt sit 30te Aar, medmindre han:\na) uden at have egen Huusstand staaer i privat Tjenesteforhold;\nb) nyder eller har nydt Understøttelse af Fattigvæsenet, som ikke er enten eftergiven eller tilbagebetalt;\nc) er ude af Raadigheden over sit Bo;\nd) ikke har havt fast Bopæl i eet Aar i den Valgkreds eller den Stad, hvori han opholder sig paa den Tid, Valget foregaaer.\n\nOrdforklaringer: uberygtet = ikke straffet for noget vanærende · Huusstand = eget hjem · Fattigvæsenet = den offentlige hjælp til fattige · Bo = formue og ejendele.",
+            "credit": { "source": "Danmarks Riges Grundlov af 5. juni 1849, § 35 (gengivet efter danmarkshistorien.lex.dk). Ordforklaringer: Lærlig", "year": "1849", "license": "Offentligt domæne" }
+          }
+        }
+      }
+    },
+    {
+      "phase": "selvstændig anvendelse",
+      "form": "Kilde + spørgsmål",
+      "row": {
+        "answer_format": "mc",
+        "answer_type": "short",
+        "content": {
+          "question": "Brug § 35 på fire mænd i 1849. Alle er uberygtede og har indfødsret. Hvem af dem havde valgret til Folketinget?",
+          "options": [
+            "Hans, 45 år, gårdmand med egen husstand, har boet i sognet i 20 år",
+            "Peder, 40 år, tjenestekarl, bor hos den gårdmand, han arbejder for",
+            "Niels, 50 år, har fået hjælp af fattigvæsenet og ikke betalt den tilbage",
+            "Jens, 26 år, smed med eget værksted, har boet i byen i fem år"
+          ],
+          "correct": "Hans, 45 år, gårdmand med egen husstand, har boet i sognet i 20 år",
+          "review_text": "Kun Hans opfylder alle krav. Peder er i privat tjeneste uden egen husstand (a). Niels har fået fattighjælp, som ikke er betalt tilbage (b). Jens er under 30 år.",
+          "stimulus": {
+            "kind": "source",
+            "title": "Danmarks Riges Grundlov, 5. juni 1849, § 35",
+            "text": "Valgret til Folkethinget har enhver uberygtet Mand, som har Indfødsret, naar han har fyldt sit 30te Aar, medmindre han:\na) uden at have egen Huusstand staaer i privat Tjenesteforhold;\nb) nyder eller har nydt Understøttelse af Fattigvæsenet, som ikke er enten eftergiven eller tilbagebetalt;\nc) er ude af Raadigheden over sit Bo;\nd) ikke har havt fast Bopæl i eet Aar i den Valgkreds eller den Stad, hvori han opholder sig paa den Tid, Valget foregaaer.\n\nOrdforklaringer: uberygtet = ikke straffet for noget vanærende · Huusstand = eget hjem · Fattigvæsenet = den offentlige hjælp til fattige · Bo = formue og ejendele.",
+            "credit": { "source": "Danmarks Riges Grundlov af 5. juni 1849, § 35 (gengivet efter danmarkshistorien.lex.dk). Ordforklaringer: Lærlig", "year": "1849", "license": "Offentligt domæne" }
+          }
+        }
+      }
+    }
+  ]
+}

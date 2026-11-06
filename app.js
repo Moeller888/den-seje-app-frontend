@@ -15,6 +15,7 @@ import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { prepareChoiceOptions } from "./js/answer-options.js";
 import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer, shortTextCorrection } from "./js/answer-input.js";
 import { buildMatchPairsAnswer, matchCorrectionText, readMatchLayout } from "./js/match-pairs.js";
+import { readStimulus, buildStimulus } from "./js/stimulus.js";
 import { buildTrueFalseAnswer, readTrueFalseContent, trueFalseCorrection } from "./js/true-false.js";
 import { buildNumberAnswer } from "./js/number-answer.js";
 import { initAnalytics, track } from "./js/analytics.js";
@@ -189,6 +190,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!authorized) return;
 
   const questionElement = document.getElementById("question");
+  const stimulusElement = document.getElementById("stimulus");
   const optionsContainer = document.getElementById("options");
   const feedback = document.getElementById("feedback");
   const reviewFeedback = document.getElementById("review-feedback");
@@ -1652,9 +1654,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     return true;
   }
 
+  // F-07: the stimulus (source, image or audio clip) of the question on screen. Cleared for every new
+  // question, so a question without one shows nothing extra — exactly as before.
+  function clearStimulus() {
+    if (!stimulusElement) return;
+    stimulusElement.textContent = "";
+    stimulusElement.hidden = true;
+  }
+
+  // Shows the question's stimulus above it. True when there is none or it was shown; false when the
+  // payload carries a stimulus that breaks the contract (the caller then fails loud).
+  function renderStimulus(content) {
+    clearStimulus();
+    const stimulus = readStimulus(content);
+    if (stimulus === null) return true;
+    if (stimulus.invalid || !stimulusElement) {
+      logError("INVALID_STIMULUS", { kind: content?.stimulus?.kind ?? null });
+      return false;
+    }
+    stimulusElement.appendChild(buildStimulus(document, stimulus, {
+      attachReadAloud: attachReadAloudControl,
+      readAloudContext: { subject: currentSubject, target: "source" },
+    }));
+    stimulusElement.hidden = false;
+    return true;
+  }
+
   async function loadAndRenderQuestion() {
     // Clean up reflection state if active from previous question
     stopReadAloud();
+    clearStimulus();
     optionsContainer.style.display = "";
     reviewFeedback.textContent = "";
     reviewFeedback.classList.remove("visible");
@@ -1725,6 +1754,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       retryBtn.onclick = () => { loadAndRenderQuestion(); };
       optionsContainer.appendChild(retryBtn);
 
+      return;
+    }
+
+    if (!renderStimulus(question.content)) {
+      // The material the question is about could not be shown: never ask the question without it.
+      // Same exit as an unsupported interaction type below — visible error, a way out, no dead state.
+      uiState = "IDLE";
+      questionElement.textContent = "";
+      questionElement.dataset.state = "error";
+      optionsContainer.innerHTML = "";
+      const msg = document.createElement("p");
+      msg.id = "unsupported-format";
+      msg.className = "feedback-error";
+      msg.setAttribute("role", "alert");
+      msg.textContent = "⚠️ Denne opgavetype kan ikke vises endnu.";
+      optionsContainer.appendChild(msg);
+      const hubBtn = document.createElement("button");
+      hubBtn.id = "go-hub-btn";
+      hubBtn.textContent = "Gå til hub";
+      hubBtn.className = "submit-btn";
+      hubBtn.onclick = () => { window.location.href = "hub.html"; };
+      optionsContainer.appendChild(hubBtn);
       return;
     }
 
