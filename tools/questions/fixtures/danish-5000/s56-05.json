@@ -12,7 +12,7 @@
 {"l":5246,"k":"s","q":"Find den rigtige stavning: 'Vinduet er lavet af ___ glas.'","o":["gennemsigtig","gennemsigti","gennemsiktig","genemsigtig"],"a":"gennemsigtig","r":"Ordet begynder med 'gennem' med dobbelt n, og der står g foran t."},
 {"l":5258,"k":"s","q":"Når en dommer skal afgøre en strid, holdes der en ___. Hvad er stavet rigtigt?","o":["retsag","retssag","rettsag","retsagg"],"a":"retssag","r":"Der er fuge-s efter 'ret', og 'sag' begynder med s. Derfor står der to s'er."},
 {"l":5270,"k":"s","q":"Et smil eller en rynket pande er et ___. Hvordan staves ordet?","o":["ansigtudtryk","ansigsudtryk","ansigtsudtryk","ansidsudtryk"],"a":"ansigtsudtryk","r":"Ordet har gt i 'ansigt' og fuge-s foran 'udtryk'."},
-{"l":5282,"k":"s","q":"Her venter du, når du skal med bybussen. Hvordan staves stedet?","o":["bustoppested","buststoppested","busstoppeted","busstoppested"],"a":"busstoppested","r":"Ordet er sammensat af 'bus' og 'stoppested'. Derfor står der to s'er i træk."},
+{"l":5282,"k":"s","q":"Her venter du, når du skal med bybussen. Hvordan staves stedet?","o":["bustoppested","bus stoppested","busstopsted","busstoppested"],"a":"busstoppested","r":"Ordet er sammensat af 'bus' og 'stoppested'. Derfor står der to s'er i træk."},
 {"l":5294,"k":"s","q":"Hun tjekker elevernes højde og vægt på skolen. Hvilket ord er stavet rigtigt?","o":["sundhedplejerske","sunhedsplejerske","sundhedsplejerske","sundhesplejerske"],"a":"sundhedsplejerske","r":"Ordet har d både i 'sund' og i '-hed' og fuge-s foran 'plejerske'."},
 {"l":5306,"k":"s","q":"En stærk vind, der drejer rundt i ring: Hvad er stavet rigtigt?","o":["virvelvind","hvirvlevind","hvirvelvind","hvirrelvind"],"a":"hvirvelvind","r":"Første del begynder med stumt h foran v, ligesom 'hvid'. Der står v efter r."},
 {"l":5318,"k":"s","q":"Vælg rigtigt: 'Vi havde en ___ dag på stranden.'","o":["hvidunderlig","vidundelig","viddunderlig","vidunderlig"],"a":"vidunderlig","r":"Ordet har ikke noget h foran v, og det slutter på -derlig med r."},
@@ -24,7 +24,7 @@
 {"l":5390,"k":"s","q":"Sæt ind: 'Turen varer ___ en time.'","o":["omtrænt","omtret","omtrendt","omtrent"],"a":"omtrent","r":"Ordet staves med e og ender på -nt uden d."},
 {"l":5402,"k":"s","q":"Hvilket ord mangler? 'Min bror elsker fodbold, ___ jeg helst vil svømme.'","o":["vorimod","hvorimod","hvorimodt","hvoriemod"],"a":"hvorimod","r":"Ordet begynder med stumt h og skrives i ét."},
 {"l":5414,"k":"s","q":"Hvordan skrives vendingen? 'Kun én elev må gå ind til lægen ___.'","o":["af gangen","ad gangen","at gangen","a gangen"],"a":"ad gangen","r":"Vendingen skrives med 'ad', altså med d, selvom det lyder som 'a'. Den betyder 'pr. gang'."},
-{"l":5426,"k":"s","q":"Vælg den rigtige skrivemåde: 'Nu går vi ___ med opgaven.'","o":["igang","i gangg","i gang","i kang"],"a":"i gang","r":"Vendingen skrives i to ord, selvom den udtales som ét."},
+{"l":5426,"k":"s","q":"Vælg den rigtige skrivemåde: 'Nu går vi ___ med opgaven.'","o":["igang","i gang","i-gang","ingang"],"a":"i gang","r":"Vendingen skrives i to ord, selvom den udtales som ét."},
 {"l":5438,"k":"s","q":"Hvad er stavet rigtigt? 'Efter tre års studier skal hun op til en stor ___.'","o":["eksamen","examen","eksammen","eksamn"],"a":"eksamen","r":"På dansk skrives x-lyden ks. Der er kun ét m, fordi a'et er langt."},
 {"l":5450,"k":"s","q":"Sæt det rigtige ord ind: 'Der lød en høj ___, da vulkanen gik i udbrud.'","o":["eksplotion","eksplosion","explosion","eksplosjon"],"a":"eksplosion","r":"Ordet begynder med eks og ender på -sion, ikke på -tion."},
 {"l":5462,"k":"s","q":"Find den rigtige stavemåde: 'Polarforskerne tog ud på en lang ___ til Grønland.'","o":["ekspidition","expedition","eksbedition","ekspedition"],"a":"ekspedition","r":"Ordet har eks, derefter e efter p, og slutter på -tion."},
@@ -34,7 +34,7 @@
 {"l":5510,"k":"s","q":"Find det rigtige ord: 'Bagerens ___ er kanelsnegle.'","o":["spesialitet","specialitæt","specielitet","specialitet"],"a":"specialitet","r":"S-lyden skrives med c, der er a efter i, og ordet ender på -itet."},
 {"l":5522,"k":"s","q":"Sæt ind: 'I et ___ kan man se stjernehimlen på et stort loft.'","o":["planetarium","planatarium","planetariom","planettarium"],"a":"planetarium","r":"Ordet kommer af 'planet' og ender på -arium."},
 {"l":5534,"k":"s","q":"Hvad er stavet rigtigt? 'Delfiner er kendt for deres høje ___.'","o":["inteligens","intelligens","intelligents","intelligence"],"a":"intelligens","r":"Ordet har dobbelt l og ender på -ens på dansk."},
-{"l":5546,"k":"s","q":"Vælg rigtigt: 'Sangeren synger i en ___ på scenen.'","o":["mikrophon","mikrafon","mickrofon","mikrofon"],"a":"mikrofon","r":"På dansk skrives f-lyden f, og ordet har o efter r."},
+{"l":5546,"k":"s","q":"Vælg rigtigt: 'Sangeren stod foran en flot malet ___ på scenen.'","o":["kulisse","kullisse","kulise","kulice"],"a":"kulisse","r":"Ordet har ét l og dobbelt-s. Det er den malede væg, der viser, hvor stykket foregår."},
 {"l":5558,"k":"s","q":"Hvad skal der stå? 'Vores skole har et ___ med 20 musikere.'","o":["orkester","orkestra","orchester","orkæster"],"a":"orkester","r":"På dansk staves ordet med k og slutter på -er."},
 {"l":5570,"k":"s","q":"Personen graver gamle ting op og undersøger fortiden. Hvad er stavet rigtigt?","o":["arkeolog","akæolog","arkæolog","arkæulog"],"a":"arkæolog","r":"Ordet har r efter a og æ efter k. Det ender på -log."},
 {"l":5582,"k":"s","q":"Et ord, der betyder næsten det samme som et andet ord, kaldes et ___. Hvordan staves det?","o":["synonym","sinonym","synonum","synonnym"],"a":"synonym","r":"Ordet kommer fra græsk og har y i både første og sidste stavelse."},
@@ -44,9 +44,9 @@
 {"l":5630,"k":"s","q":"Vælg stavemåden: 'Kunstneren malede et ___ af dronningen.'","o":["portrætt","portræt","portrait","pårtræt"],"a":"portræt","r":"Ordet staves med æ og slutter på ét t."},
 {"l":5642,"k":"s","q":"Hvad skal der stå? 'En ___ er en voldsom storm med kraftig vind.'","o":["syklon","cyklonn","cyklon","cycklon"],"a":"cyklon","r":"Ordet begynder med c og y og ender på ét n."},
 {"l":5654,"k":"s","q":"En firkant med fire lige lange sider og rette vinkler er et ___. Hvad er stavet rigtigt?","o":["qvadrat","kvaddrat","kvadrat","kvadrad"],"a":"kvadrat","r":"Ordet begynder med kv, har ét d og ender på t."},
-{"l":5666,"k":"s","q":"Find den rigtige stavemåde: 'Vi kom en stor ___ på pizzaen sammen med skinken.'","o":["sjampinjon","champignon","champinjon","champingon"],"a":"champignon","r":"Ordet er fransk: sj-lyden skrives ch, og gn lyder som nj."},
+{"l":5666,"k":"s","q":"Find den rigtige stavemåde: 'Vi skar en stor ___ i skiver til pizzaen.'","o":["sjampinjon","champignon","champinjon","champingon"],"a":"champignon","r":"Ordet er fransk: sj-lyden skrives ch, og gn lyder som nj."},
 {"l":5678,"k":"s","q":"Hvilket ord er stavet rigtigt? 'Hun går til ___ og øver sig på tåspids.'","o":["balet","ballett","ballet","balett"],"a":"ballet","r":"Ordet er fransk og har dobbelt l og kun ét t til sidst."},
 {"l":5690,"k":"s","q":"Tør munden med en ___. Hvordan staves ordet?","o":["servjet","serviett","serviet","sørviet"],"a":"serviet","r":"Ordet har i efter v, og det slutter på ét t."},
 {"l":5702,"k":"s","q":"Vælg det rigtige ord: 'Min tante dufter af en dyr ___.'","o":["parfyme","parfumme","perfume","parfume"],"a":"parfume","r":"Ordet er fransk, har u efter f og ét m."},
-{"l":5714,"k":"s","q":"Hvad er rigtigt? 'Hun blev ___, da hendes veninde fik en ny bedste ven.'","o":["jalu","jaloux","jalous","jaluks"],"a":"jaloux","r":"Ordet er fransk og ender på -oux. X'et høres ikke."}
+{"l":5714,"k":"s","q":"Hvad er rigtigt? 'Hunden bliver ___, når vi klapper katten.'","o":["jalu","jaloux","jalous","jaluks"],"a":"jaloux","r":"Ordet er fransk og ender på -oux. X'et høres ikke."}
 ]

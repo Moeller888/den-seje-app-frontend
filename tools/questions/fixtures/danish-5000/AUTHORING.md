@@ -114,6 +114,19 @@ spisebordet? Hvis ikke, skrives det om.
 - Alle fire svar skal være skrevet i samme naturlige sprog, ellers afslører stilen facit.
 - Forklaringen skal give eleven en grund i almindelige ord, med henvisning til det, der står i teksten.
 
+## Niveauet skal passe til opgaven
+
+E5 viste, at mange lette opgaver lå for højt. Klassetrinnet er det, opgaven kræver af en gennemsnitlig elev.
+Spørg: Kan en elev to klassetrin lavere klare den uden at have lært stoffet? Så ligger den for højt.
+
+- **Stavning:** ordet skal være svært på klassetrinnet. 'ballon' og 'novelle' hører ikke til i 8.–9. klasse.
+- **Grammatik:** opgaven må ikke kunne løses på gehør, når den ligger i 7.–9. klasse. Eleven skal bruge begrebet.
+- **Tegnsætning:** stort begyndelsesbogstav i et oplagt navn er stof fra 4.–5. klasse. Højere oppe skal
+  reglen være sværere, eller sætningen skal kræve en vurdering.
+- **Form må ikke afsløre facit:** facit må ikke være det eneste svar med 'at', med bindestreg, med en bestemt
+  form eller med ord fra spørgsmålet. De tre forkerte må ikke alle være det modsatte af facit.
+- **Medtag den fejl, elever faktisk laver,** som et af de forkerte svar.
+
 ## Erfaringer fra piloten
 
 - Niveauet følger ordets eller opgavens reelle sværhed. Læg ikke lette ord højt i klassetrinnet blot

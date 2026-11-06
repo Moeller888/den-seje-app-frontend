@@ -551,7 +551,7 @@ Ejeren læste og godkendte 20 opgaver fra læseforståelse 7.–9., heraf 5 urø
 
 De blokerede emner blev fundet ved læsning, fordi mange tekster kun antyder dem. Redaktørerne læste reglen
 forsigtigt, så nogle grænsetilfælde er erstattet (et barn, der mangler fem kroner), og andre er beholdt
-(en veninde, der flytter). Ordforråd, grammatik, stavning og tegnsætning er ikke læst med spisebordstesten;
-stikprøven viste 5 fund i 28 i ordforråd og grammatik.
+(en veninde, der flytter). Bagefter blev ordforråd og grammatik også læst med testen: 2.210 læst, 374 rettet.
 
-Tallene i §12.4 gælder teksterne, som de så ud før §12.8 og §12.9. E5 skal køres på den endelige bank.
+Tallene i §12.4 gælder teksterne, som de så ud før §12.8 og §12.9. E5 er kørt i to runder uden at bestå, se
+[`operations/danish-5000-e5.md`](operations/danish-5000-e5.md) §7.

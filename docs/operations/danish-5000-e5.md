@@ -90,3 +90,46 @@ Fund registreres i `danish-5000-e5-findings.json` med portion, emne, niveau, kat
 Alle 31 major er niveau eller blokeret emne; niveaufundene er anmeldernes skøn. Der er 0 forkerte facit: fundet i E5-2 er et upræcist facit, hvor svaret stadig er det bedste. Et af fundene i E5-7 er en opgave, læreren har godkendt, og det rettes ikke.
 
 **Efter kriteriet i §3 skal alle 10 portioner gennemgås i deres helhed.**
+
+## 7. Fuld gennemgang og anden runde (2026-11-06)
+
+Ejeren valgte fuld gennemgang af alle emner undtagen ordforråd (3.670 opgaver), fordi ordforråd lå under grænsen. 794 opgaver blev ændret, uden at niveauer blev flyttet. Alle fund fra første runde blev rettet.
+
+Anden runde brugte en ny stikprøve (offset 0,5) og fire nye anmeldere: 526 opgaver, 82 med fund (15,6 %), heraf 23 major. Fundene står i `danish-5000-e5-round2-findings.json` og er rettet. **Kriteriet i §3 er stadig ikke opfyldt: alle portioner ligger over 5 %.**
+
+| Kategori | Runde 1 | Runde 2 |
+|---|---:|---:|
+| E5-3 niveau | 31 | 34 |
+| E5-6 facit giver sig selv | 27 | 32 |
+| E5-7 blokeret emne | 3 | 6 |
+| E5-4 sprog | 4 | 4 |
+| E5-5 spisebordstesten | 4 | 4 |
+| E5-1 uklart | 5 | 2 |
+| E5-8 forklaring | 4 | 0 |
+| E5-2 facit | 1 | 1 |
+
+Tre målinger afgør, hvordan tallet skal læses:
+
+| Måling | Resultat |
+|---|---:|
+| Fund i opgaver rettet i runde 2 | 13/73 (17,8 %) |
+| Fund i opgaver, runde 2 ikke rørte | 51/321 (15,9 %) |
+| Ordforråd, ikke rørt mellem runderne | 4,5 % → 13,6 % |
+
+| Klassetrin | Fund |
+|---|---:|
+| 3. | 2,6 % |
+| 4. | 10,0 % |
+| 5. | 6,6 % |
+| 6. | 22,1 % |
+| 7. | 19,5 % |
+| 8. | 25,4 % |
+| 9. | 22,8 % |
+
+**Vurdering:**
+- Tallet er ikke faldet, og rettede opgaver klarer sig ikke bedre end urørte. Ordforråd steg uden at være ændret, så anmeldernes skøn svinger lige så meget som den effekt, der skulle måles.
+- E5-3 og E5-6 udgør 80 % af fundene og er skøn. De kan ikke afgøres af AI-læsere alene.
+- Hårde fejl (facit, sprog, uklart, blokeret emne) er 13 af 526 (2,5 %). Facit var forkert i ét tilfælde: titlen hos T.S. Eliot.
+- Forskellen på 3.–5. og 6.–9. klasse er et reelt signal: de høje niveauer er ikke svære nok.
+
+Flere AI-runder vil næppe ændre billedet. Spørgsmålet om, hvordan kriteriet skal håndteres, ligger hos ejeren.
