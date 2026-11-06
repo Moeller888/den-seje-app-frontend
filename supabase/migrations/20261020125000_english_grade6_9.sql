@@ -1,6 +1,7 @@
 -- Engelsk 6.-9. klasse — fortsættelse af 20261001000000_english_grade3_5 og batch 2 (3.-5.)
--- 120 MC-spørgsmål: learning_objective='english', target_grade 6/7/8/9 (30/30/30/30),
--- difficulty_band 1-4. Ordforråd, hverdagsudtryk, grammatik og læseforståelse.
+-- 120 MC-spørgsmål: learning_objective='english', oprindeligt target_grade 6/7/8/9 (30/30/30/30) og
+-- difficulty_band 1-4. Efter E5-kontrollen 2026-11-05 er spørgsmål, der lå et helt CEFR-niveau forkert,
+-- flyttet; target_grade/difficulty_band følger nu niveauet (cellen i §4.1). Ordforråd, hverdagsudtryk, grammatik og læseforståelse.
 -- Spørgsmålene stilles på dansk med engelske ord/sætninger, som de eksisterende engelskopgaver.
 --
 -- Leveres kun, når eleven vælger "Engelsk" på Spil-siden (subject='engelsk' i get-next-question).
@@ -26,11 +27,11 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvilket ord passer: 'She ___ to school every day.'","options":["go","going","goes","gone"],"correct":"goes","accepted_answers":["goes"],"review_text":"Ved he/she/it i nutid får udsagnsordet -s eller -es: she goes."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',6,1,4429
+  'mc_single',3,'auto',false,'english',4,3,2200
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
-  $${"question":"Hvordan spørger man høfligt om vej til stationen på engelsk?","options":["Sorry, I am the station.","Please, the station is me.","Thanks, station where?","Excuse me, where is the station?"],"correct":"Excuse me, where is the station?","accepted_answers":["Excuse me, where is the station?"],"review_text":"'Excuse me' bruger man for at få nogens opmærksomhed høfligt."}$$::jsonb,
+  $${"question":"Hvordan spørger man høfligt om vej til stationen på engelsk?","options":["Excuse me, where the station is?","Sorry, where is station?","Excuse me, how is the station?","Excuse me, where is the station?"],"correct":"Excuse me, where is the station?","accepted_answers":["Excuse me, where is the station?"],"review_text":"'Excuse me' bruger man for at få nogens opmærksomhed høfligt."}$$::jsonb,
   'mc','short',$${"concepts":["hverdagsudtryk"],"cognitive_skill":"comprehension","difficulty_type":"conceptual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
   'mc_single',1,'auto',false,'english',6,1,4429
 );
@@ -56,7 +57,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad hedder 'lørdag' på engelsk?","options":["Sunday","Thursday","Tuesday","Saturday"],"correct":"Saturday","accepted_answers":["Saturday"],"review_text":"Lørdag hedder 'Saturday'. Ugedage skrives med stort på engelsk."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',6,1,4429
+  'mc_single',2,'auto',false,'english',4,2,2000
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -86,7 +87,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvilket ord passer: 'There ___ two cats in the garden.'","options":["are","is","am","be"],"correct":"are","accepted_answers":["are"],"review_text":"Flere katte: there are. Én kat: there is."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',2,'auto',false,'english',6,2,4714
+  'mc_single',2,'auto',false,'english',4,2,1800
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -146,7 +147,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvilket ord passer: 'This is ___ book. It belongs to me.'","options":["me","I","my","mine"],"correct":"my","accepted_answers":["my"],"review_text":"Foran et navneord bruger man 'my': my book. 'Mine' står alene: it is mine."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',3,'auto',false,'english',6,3,5000
+  'mc_single',4,'auto',false,'english',4,4,2500
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -200,7 +201,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvilket ord passer: 'They ___ watching TV right now.'","options":["is","was","be","are"],"correct":"are","accepted_answers":["are"],"review_text":"'Right now' viser, at det sker nu. They are watching."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',7,1,5857
+  'mc_single',4,'auto',false,'english',4,4,2500
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -212,7 +213,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad betyder 'Could you help me, please?'","options":["Skal jeg hjælpe dig?","Kan du hjælpe mig?","Hjælp mig nu!","Har du brug for hjælp?"],"correct":"Kan du hjælpe mig?","accepted_answers":["Kan du hjælpe mig?"],"review_text":"'Could you…, please?' er en høflig måde at bede om noget på."}$$::jsonb,
   'mc','short',$${"concepts":["hverdagsudtryk"],"cognitive_skill":"comprehension","difficulty_type":"conceptual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',7,1,5857
+  'mc_single',2,'auto',false,'english',5,2,3300
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -236,7 +237,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad er det modsatte af 'cheap'?","options":["cheerful","expensive","easy","poor"],"correct":"expensive","accepted_answers":["expensive"],"review_text":"Cheap betyder billig, expensive betyder dyr."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',7,1,5857
+  'mc_single',3,'auto',false,'english',5,3,3500
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -380,13 +381,13 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvilket ord passer: 'I ___ never seen snow before.'","options":["has","have","am","did"],"correct":"have","accepted_answers":["have"],"review_text":"Førnutid med 'I': I have never seen."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',8,1,7286
+  'mc_single',4,'auto',false,'english',5,4,4000
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad hedder 'uddannelse' på engelsk?","options":["edition","election","education","eduction"],"correct":"education","accepted_answers":["education"],"review_text":"Uddannelse hedder 'education'. 'Election' er et valg."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',8,1,7286
+  'mc_single',2,'auto',false,'english',6,2,4800
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -404,7 +405,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad er datid af 'teach'?","options":["teached","taught","thought","teaches"],"correct":"taught","accepted_answers":["taught"],"review_text":"Teach – taught. 'Thought' er datid af 'think'."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',8,1,7286
+  'mc_single',1,'auto',false,'english',6,1,4500
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -422,19 +423,19 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvilket ord passer: 'English ___ in many countries.'","options":["is spoken","speaks","is speaking","spoke"],"correct":"is spoken","accepted_answers":["is spoken"],"review_text":"Sproget taler ikke selv – det bliver talt. Passiv: is spoken."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',2,'auto',false,'english',8,2,7571
+  'mc_single',1,'auto',false,'english',7,1,6000
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad betyder 'opinion'?","options":["mulighed","mening","operation","modstand"],"correct":"mening","accepted_answers":["mening"],"review_text":"'Opinion' betyder mening. Mulighed hedder 'option' eller 'opportunity'."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',2,'auto',false,'english',8,2,7571
+  'mc_single',2,'auto',false,'english',6,2,4600
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvilket ord passer: 'You ___ wear a helmet. It's the law.'","options":["might","could","must","would"],"correct":"must","accepted_answers":["must"],"review_text":"'Must' bruges om noget, man skal. Det er loven."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',2,'auto',false,'english',8,2,7571
+  'mc_single',5,'auto',false,'english',5,5,4200
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -464,7 +465,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad betyder 'to avoid'?","options":["at aflevere","at undskylde","at vinde","at undgå"],"correct":"at undgå","accepted_answers":["at undgå"],"review_text":"'Avoid' betyder at undgå."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',2,'auto',false,'english',8,2,7571
+  'mc_single',1,'auto',false,'english',7,1,6000
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -554,25 +555,25 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad betyder 'society'?","options":["sikkerhed","sociale medier","samfund","sundhed"],"correct":"samfund","accepted_answers":["samfund"],"review_text":"'Society' betyder samfund."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',9,1,8714
+  'mc_single',5,'auto',false,'english',6,5,5500
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvilket ord passer: 'She has worked here ___ ten years.'","options":["since","from","during","for"],"correct":"for","accepted_answers":["for"],"review_text":"'For' bruges med en periode: for ten years."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',9,1,8714
+  'mc_single',4,'auto',false,'english',5,4,4000
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad hedder 'ansvar' på engelsk?","options":["responsibility","response","respect","reliability"],"correct":"responsibility","accepted_answers":["responsibility"],"review_text":"Ansvar hedder 'responsibility'. 'Response' er et svar."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',9,1,8714
+  'mc_single',1,'auto',false,'english',7,1,6000
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad betyder 'That makes sense'?","options":["Det gør ondt","Det giver mening","Det laver sjov","Det er forkert"],"correct":"Det giver mening","accepted_answers":["Det giver mening"],"review_text":"'Make sense' betyder at give mening."}$$::jsonb,
   'mc','short',$${"concepts":["hverdagsudtryk"],"cognitive_skill":"comprehension","difficulty_type":"conceptual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',9,1,8714
+  'mc_single',5,'auto',false,'english',6,5,5500
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -584,25 +585,25 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad er datid af 'catch'?","options":["catched","cought","catches","caught"],"correct":"caught","accepted_answers":["caught"],"review_text":"Catch – caught – caught."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',9,1,8714
+  'mc_single',1,'auto',false,'english',6,1,4500
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad betyder 'to consider'?","options":["at overveje","at bestå af","at konkludere","at kontrollere"],"correct":"at overveje","accepted_answers":["at overveje"],"review_text":"'Consider' betyder at overveje. At bestå af hedder 'consist of'."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',9,1,8714
+  'mc_single',5,'auto',false,'english',6,5,5600
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvad er det modsatte af 'ancient'?","options":["angry","modern","annual","anxious"],"correct":"modern","accepted_answers":["modern"],"review_text":"Ancient betyder gammel/oldtids-, modern betyder moderne."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',1,'auto',false,'english',9,1,8714
+  'mc_single',1,'auto',false,'english',7,1,5800
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvilket ord passer: 'The results ___ next week.'","options":["will announce","announce","will be announced","announcing"],"correct":"will be announced","accepted_answers":["will be announced"],"review_text":"Resultaterne offentliggør ikke selv – de bliver offentliggjort. Passiv: will be announced."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',2,'auto',false,'english',9,2,9000
+  'mc_single',2,'auto',false,'english',8,2,7500
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -614,7 +615,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvilket ord passer: 'I'm not sure ___ he will come.'","options":["whether","weather","what","which"],"correct":"whether","accepted_answers":["whether"],"review_text":"'Whether' betyder om. 'Weather' betyder vejr."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',2,'auto',false,'english',9,2,9000
+  'mc_single',1,'auto',false,'english',7,1,6000
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -650,7 +651,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
   $${"question":"Hvilket ord passer: 'He denied ___ the window.'","options":["to break","break","breaking","broke"],"correct":"breaking","accepted_answers":["breaking"],"review_text":"Efter 'deny' bruger man -ing: denied breaking."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","level_batch":"grade6_9","domain":"english"}$$::jsonb,
-  'mc_single',3,'auto',false,'english',9,3,9286
+  'mc_single',2,'auto',false,'english',8,2,7500
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level) VALUES (
@@ -734,6 +735,8 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 UPDATE public.questions
 SET metadata = metadata || jsonb_build_object(
   'cefr', CASE
+    WHEN difficulty_level <= 1500 THEN 'pre-A1'
+    WHEN difficulty_level <= 3000 THEN 'A1'
     WHEN difficulty_level <= 5000 THEN 'A2'
     WHEN difficulty_level <= 7000 THEN 'B1'
     WHEN difficulty_level <= 8500 THEN 'B2'

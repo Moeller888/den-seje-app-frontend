@@ -998,6 +998,12 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   Alle indsættes **inaktive** med eksplicit niveau og CEFR og er dækket af
   `tests/unit/english-5000-migrations-run.test.mjs`. Intet er anvendt eller aktiveret. Hver
   migration og hver aktivering kræver sin egen ejergodkendelse.
+- **E5 gennemført 2026-11-05** ([`operations/english-5000-e5.md`](operations/english-5000-e5.md)):
+  - 3.320 opgaver gennemgået med 301 fund, som alle er rettet.
+  - De syv overtagne portioner er gennemgået fuldt, de fire nye ved stikprøve (fundrate 2 %).
+  - Planen for anvendelse (31 × `apply_migration`, inaktive) og trinvis aktivering (batch7 først, batch4/batch5 sidst)
+    står i runbookens §2.8.
+  - Intet er anvendt.
 - Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
   `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.
