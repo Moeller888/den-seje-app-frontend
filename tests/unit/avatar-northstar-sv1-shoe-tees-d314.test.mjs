@@ -38,5 +38,5 @@ test("D-314 the runtime list is 21 + 305 = 326; 323 reachable, all approved; the
   const notD326 = (f) => !/^(hide-)?shoes-ankleboots-ab1-/.test(f) && !/^top-sweater-ls2-/.test(f) && !/^top-tank-/.test(f) && !/^top-tee-hip-[a-z-]+-(top-body|sleeves)-v2\.webp$/.test(f) && !d355.has(f);
   assert.equal(d355.size, 55);
   assert.equal(readdirSync(join(REPO, "assets", "avatar-northstar")).filter((f) => f !== "manifest.json" && notD326(f)).length, 73); assert.equal(man.files.filter((f) => notD326(f.file)).length, 73);
-  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
 });

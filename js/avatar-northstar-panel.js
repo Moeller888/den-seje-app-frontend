@@ -19,7 +19,9 @@
 // D-355 (owner-approved 2026-11-06: 1441 combinations): the 33 tops of D-354 in ONE compact list under the row (grouped
 // by cut: T-shirts, sweatere, tanktoppe) instead of 33 more buttons; the same store, rule and fallback; an option not possible for this
 // outfit is disabled and says so. "Outfittets egen top" returns as before.
-import { NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_KIT_TOPS, NORTHSTAR_SELECTABLE_TOPS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor } from "./avatar-layers.js";
+// D-357: the panel is every pupil's wardrobe. With saveChoice (avatar.html) a choice is saved on the pupil's account and the labels are
+// words, not K numbers; without it (the opt-in with the flag off, the verifiers) it is stored in this browser as before.
+import { northstarChoiceWith, NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_KIT_TOPS, NORTHSTAR_SELECTABLE_TOPS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor } from "./avatar-layers.js";
 
 function store(key, value) {
   try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch (_e) { return false; }
@@ -33,7 +35,18 @@ export function applyNorthstarUrlOptIn(search) {
   return v;
 }
 
-export function mountNorthstarPanel(panel, preview) {
+// The words for one K outfit: its top, bottom and shoes.
+const NAMES = Object.freeze({
+  "top-tee-hip-cream": "Creme T-shirt", "top-tee-hip-blue": "Blå T-shirt",
+  "bottom-skirt-sand": "sandfarvet nederdel", "bottom-shorts-navy": "marineblå shorts", "bottom-capri-lightblue": "lyseblå capribukser", "bottom-trousers-square-olive": "olivengrønne bukser",
+  "shoes-sneakers-beige": "beige sneakers", "shoes-boots-laceup-black": "sorte snørestøvler", "shoes-sneakers-white": "hvide sneakers", "shoes-ankleboots-brown": "brune støvletter",
+});
+export function northstarOutfitLabel(key) {
+  const o = typeof key === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_OUTFITS, key) ? NORTHSTAR_OUTFITS[key] : null;
+  return o ? NAMES[o.top] + ", " + NAMES[o.bottom] + ", " + NAMES[o.shoes] : "";
+}
+
+export function mountNorthstarPanel(panel, preview, { saveChoice = null } = {}) {
   if (!panel || !isNorthstarWardrobeOn()) return false;
   const current = northstarSelectedOutfit(), tee = northstarSelectedTee(), teeOk = northstarTeeAllowed(current), shown = teeOk && tee ? tee : null;
   const pants = northstarSelectedPants(), pantsOk = northstarPantsAllowed(current, shown), shownPants = pantsOk && pants ? pants : null;
@@ -42,11 +55,21 @@ export function mountNorthstarPanel(panel, preview) {
   panel.textContent = "";
   const title = document.createElement("div");
   title.className = "panel-title";
-  title.textContent = "Northstar-garderobe (lokal test)";
+  title.textContent = saveChoice ? "Ny avatar" : "Northstar-garderobe (lokal test)";
   const status = document.createElement("p");
   status.className = "northstar-status";
   status.setAttribute("role", "status");
-  const pick = (key, value) => { if (store(key, value)) location.reload(); else status.textContent = "Valget kunne ikke gemmes i denne browser."; };
+  const pick = async (key, value) => {
+    if (!saveChoice) { if (store(key, value)) location.reload(); else status.textContent = "Valget kunne ikke gemmes i denne browser."; return; }
+    const buttons = Array.from(panel.querySelectorAll("button")), was = buttons.map((b) => b.disabled);
+    buttons.forEach((b) => { b.disabled = true; });
+    status.textContent = "Gemmer …";
+    let ok = false;
+    try { ok = (await saveChoice(northstarChoiceWith(key, value))) === true; } catch (_e) { ok = false; }
+    if (ok) { location.reload(); return; }
+    buttons.forEach((b, i) => { b.disabled = was[i]; });
+    status.textContent = "Valget kunne ikke gemmes. Prøv igen.";
+  };
   const row = (cls) => { const d = document.createElement("div"); d.className = "northstar-outfits " + cls; return d; };
   const button = (list, label, key, value, on, disabled) => {
     const b = document.createElement("button");
@@ -59,11 +82,11 @@ export function mountNorthstarPanel(panel, preview) {
     list.appendChild(b);
   };
   const list = row("northstar-outfit-list");
-  for (const k of Object.keys(NORTHSTAR_OUTFITS)) button(list, k, NORTHSTAR_OUTFIT_KEY, k, k === current, false);
+  for (const k of Object.keys(NORTHSTAR_OUTFITS)) button(list, saveChoice ? northstarOutfitLabel(k) : k, NORTHSTAR_OUTFIT_KEY, k, k === current, false);
   button(list, "Nuværende avatar", NORTHSTAR_OUTFIT_KEY, null, current === null, false);
   const teeTitle = document.createElement("div");
   teeTitle.className = "northstar-subtitle";
-  teeTitle.textContent = "T-shirt med tryk (til K01–K09)";
+  teeTitle.textContent = saveChoice ? "T-shirt med tryk (til outfits med creme T-shirt)" : "T-shirt med tryk (til K01–K09)";
   const tees = row("northstar-tee-list");
   for (const [id, t] of Object.entries(NORTHSTAR_PRINT_TEES)) button(tees, t.label, NORTHSTAR_TEE_KEY, id, id === shown, !teeOk);
   button(tees, "Outfittets egen T-shirt", NORTHSTAR_TEE_KEY, null, teeOk && !shown, !teeOk);
@@ -114,12 +137,12 @@ export function mountNorthstarPanel(panel, preview) {
   kit.addEventListener("change", () => { if (kit.value) pick(NORTHSTAR_SWEATER_KEY, kit.value); });
   kitLabel.appendChild(kit);
   const what = () => { const parts = [shown ? NORTHSTAR_PRINT_TEES[shown].label : null, shownPants ? NORTHSTAR_SOLID_PANTS[shownPants].label : null, shownShoe ? NORTHSTAR_SHOE_CHOICES[shownShoe].label : null, shownSweater ? NORTHSTAR_SELECTABLE_TOPS[shownSweater].label : null].filter(Boolean);
-    return current ? current + (parts.length ? " med " + parts.join(" og ") : "") : ""; };
+    return current ? (saveChoice ? northstarOutfitLabel(current) : current) + (parts.length ? " med " + parts.join(" og ") : "") : ""; };
   const describe = () => {
     const path = preview && preview.dataset ? preview.dataset.avatarRenderPath : null;
-    if (!current) status.textContent = "Vælg et outfit for at se den nye figur. Valget gemmes kun i denne browser.";
-    else if (path === "northstar") status.textContent = what() + " vises. Figuren blinker ikke endnu og har et neutralt udtryk." + (teeOk ? "" : " T-shirts med tryk kan vælges til K01–K09.");
-    else if (path) status.textContent = what() + " er valgt, men den nuværende avatar vises: noget af dit udstyr passer ikke til den nye figur endnu, eller et lag kunne ikke hentes.";
+    if (!current) status.textContent = "Vælg et outfit for at se den nye figur. " + (saveChoice ? "Valget gemmes på din konto, og du kan altid skifte tilbage." : "Valget gemmes kun i denne browser.");
+    else if (path === "northstar") status.textContent = what() + " vises. Figuren blinker ikke endnu og har et neutralt udtryk." + (teeOk ? "" : saveChoice ? " T-shirts med tryk kan vælges til outfits med creme T-shirt." : " T-shirts med tryk kan vælges til K01–K09.");
+    else if (path) status.textContent = what() + " er valgt, men den nuværende avatar vises: noget af dit udstyr passer ikke til den nye figur endnu, eller et lag kunne ikke hentes." + (saveChoice ? " Tag hat og andet udstyr af for at se figuren. Aura og ryg må blive på." : "");
   };
   describe();
   if (preview && typeof MutationObserver !== "undefined") new MutationObserver(describe).observe(preview, { attributes: true, attributeFilter: ["data-avatar-render-path"] });

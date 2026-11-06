@@ -38,5 +38,5 @@ test("D-305 published by D-308 exactly as staged: the 8 files with D-305's hashe
   for (const [id, item] of Object.entries(P.RUNTIME_ITEMS)) { assert.equal(AL.NORTHSTAR_SV1_SHOES[id].item, item); assert.deepEqual({ ...AL.NORTHSTAR_ITEMS[item], layers: [...AL.NORTHSTAR_ITEMS[item].layers], shadows: [...AL.NORTHSTAR_ITEMS[item].shadows] }, { ...P.RUNTIME_ITEM_SHAPE, layers: [...P.RUNTIME_ITEM_SHAPE.layers], shadows: [...P.RUNTIME_ITEM_SHAPE.shadows] }); }
   const d305 = A.combinations.map((c) => c.top + "+" + c.bottom + "+" + P.RUNTIME_ITEMS[c.candidate]); assert.ok(d305.every((k) => AL.NORTHSTAR_SV1_SHOE_COMBOS.includes(k)), "D-305's 21 stay approved");
   assert.equal(AL.NORTHSTAR_SV1_SHOE_COMBOS.length, 21 + 305, "D-314 added exactly D-312's 305 candidates");
-  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false); assert.deepEqual(Object.keys(P.RUNTIME_ITEMS), Object.keys(M.candidates));
+  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, true); assert.deepEqual(Object.keys(P.RUNTIME_ITEMS), Object.keys(M.candidates));
 });

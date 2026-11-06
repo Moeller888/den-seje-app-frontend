@@ -704,7 +704,7 @@
       <div id="avatar-preview"><!-- layers injected by JS --></div>
     </div>
 
-    <!-- D-242: local opt-in only (js/avatar-northstar-panel.js); hidden for everyone else -->
+    <!-- D-242/D-357: the Northstar wardrobe (js/avatar-northstar-panel.js); stays hidden if the module cannot load -->
     <div class="northstar-panel" id="northstarPanel" hidden></div>
 
     <div class="slot-list" id="slotList"><!-- slot rows injected by JS --></div>
@@ -759,14 +759,6 @@ import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine }   from "./js/avatar-presence-engine.js";
 import { BlinkEngine }      from "./js/avatar-blink-engine.js";
-
-// D-242: the Northstar wardrobe opt-in (local, default off). Loaded dynamically and fail-soft, so this
-// page never depends on the module: without it the page is exactly as before.
-try {
-  const ns = await import("./js/avatar-northstar-panel.js");
-  ns.applyNorthstarUrlOptIn(location.search);
-  ns.mountNorthstarPanel(document.getElementById("northstarPanel"), document.getElementById("avatar-preview"));
-} catch (_e) { /* no panel */ }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -1652,6 +1644,22 @@ async function handleEquipTitle(titleId) {
 
 initBadges("avatar");
 await loadAll();
+
+// D-242/D-357: the Northstar wardrobe. Mounted after loadAll, because the choice is read from the pupil's account. Loaded dynamically
+// and fail-soft, so this page never depends on the module: without it the page is exactly as before.
+try {
+  const ns = await import("./js/avatar-northstar-panel.js");
+  const layers = await import("./js/avatar-layers.js");
+  ns.applyNorthstarUrlOptIn(location.search);
+  layers.northstarUseAccount(avatarIdentity);
+  ns.mountNorthstarPanel(document.getElementById("northstarPanel"), document.getElementById("avatar-preview"), {
+    saveChoice: async (choice) => {
+      const { error } = await supabase.rpc("set_avatar_northstar", { p_choice: choice });
+      if (error) console.error("set_avatar_northstar failed:", error.message);
+      return !error;
+    },
+  });
+} catch (_e) { /* no panel */ }
 // Fallback: renderAvatarC2() now inits the engines once its layers are appended
 // (the atomic R2 preload can delay that past this point). Guard against a double
 // init — only create here if the render did not already.

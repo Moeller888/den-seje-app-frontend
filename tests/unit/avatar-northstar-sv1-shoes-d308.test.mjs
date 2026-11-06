@@ -90,6 +90,6 @@ test("D-308 without the opt-in nothing changes, even with a stored shoe; ?norths
   const src = read("js/avatar-northstar-panel.js");
   assert.match(src, /"Sko"/); assert.match(src, /Outfittets egne sko/); assert.match(src, /northstarShoeAllowed\(current, shown, shownPants, id\)/);
   assert.match(src, /Koks er ikke godkendt med lange bukser/); assert.ok(!/kun godkendt med den cremefarvede T-shirt/.test(src), "D-314: the cream-only reason is gone");
-  assert.ok(!/supabase|fetch\(|insert|update\(/i.test(src)); assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.ok(!/supabase|fetch\(|insert|update\(/i.test(src)); assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
   assert.deepEqual(Object.values(L.NORTHSTAR_SV1_SHOES).map((s) => s.label), ["Lave sneakers · kridt", "Lave sneakers · koks", "Lave sneakers · navy/hvid", "Lave sneakers · bordeaux/gummi"]);
 });

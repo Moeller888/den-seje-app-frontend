@@ -5,7 +5,9 @@
 // replaces the top only where its whole outfit is on the list, on the same stored choice as the sweaters and tank tops, whose behaviour is
 // unchanged; the plan draws each family's own order; the owner's D-355 approval (55 files bound to the staging manifest's sha256, the 1441
 // combinations, the tees' D-349 split) is exactly what is published and listed — the 55 files with their sha256 and bytes, in the manifest
-// with decision D-355 and its extension, and no other file of the 33; the flag is false. Passing approves nothing.
+// with decision D-355 and its extension, and no other file of the 33. D-357 turned the flag on (every pupil's wardrobe, the choice on the
+// account): a top of the 33 is shown from the pupil's account where its outfit is listed, and never from another pupil's browser.
+// Passing approves nothing.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
@@ -77,16 +79,22 @@ test("D-355 one stored choice: a top of the 33 where its whole outfit is listed;
       assert.deepEqual(L.northstarOutfitFor(k, null, p, s, w), on ? { ...o, top: L.NORTHSTAR_KIT_TOPS[w].item } : o); } }
 });
 
-test("D-355 the stored choice on every surface; outside the list the own top with the choice kept; no opt-in, nothing; ?northstar=0 forgets it", () => {
+test("D-355 the stored choice on every surface; outside the list the own top with the choice kept; ?northstar=0 forgets it; D-357: the account decides", () => {
   const on = { avatar_northstar: "1", avatar_northstar_outfit: "K01", avatar_northstar_sweater: "TK-MUSTARD-DOTS" };
   for (const s of ["avatar", "quiz", "hub"]) { const r = withStorage(on, () => L.northstarRenderFor(s, [])); assert.deepEqual([r.key, r.sweater, r.tee], ["K01+TK-MUSTARD-DOTS", "TK-MUSTARD-DOTS", null]);
     assert.ok(r.plan.some((p) => p.src.endsWith("/top-tank-mustard-dots-top-body-v1.webp"))); }
   withStorage({ ...on, avatar_northstar_outfit: "K04" }, (m) => { assert.equal(L.northstarRenderFor("hub", []).key, "K04"); assert.equal(m.get("avatar_northstar_sweater"), "TK-MUSTARD-DOTS"); });
   assert.equal(withStorage({ ...on, avatar_northstar_outfit: "K04", avatar_northstar_sweater: "TEE-MINT-TEAPOT" }, () => L.northstarRenderFor("quiz", [])).key, "K04+TEE-MINT-TEAPOT");
   assert.equal(withStorage({ ...on, avatar_northstar_sweater: "LS2-NAVY" }, () => L.northstarRenderFor("hub", [])).key, "K01+LS2-NAVY", "an approved sweater as before");
-  assert.equal(withStorage({ avatar_northstar_outfit: "K01", avatar_northstar_sweater: "TEE-SAND-FOX" }, () => L.northstarRenderFor("hub", [])), null, "no opt-in: today's avatar");
   withStorage({ ...on }, (m) => { applyNorthstarUrlOptIn("?northstar=0"); assert.equal(m.has("avatar_northstar_sweater"), false); });
-  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  // D-357: the flag is on and the named pupil's account decides — a top of the 33 from the account, never another pupil's browser choice
+  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
+  L.northstarUseAccount({ v: 1, northstar: { outfit: "K01", top: "TEE-SAND-FOX" } });
+  for (const s of ["avatar", "quiz", "hub"]) assert.equal(withStorage({ avatar_northstar_outfit: "K07", avatar_northstar_sweater: "TK-NAVY" }, () => L.northstarRenderFor(s, [])).key, "K01+TEE-SAND-FOX");
+  L.northstarUseAccount({ v: 1, northstar: { outfit: "K04", top: "LS2-SAND-FOX" } });
+  assert.equal(withStorage({}, () => L.northstarRenderFor("hub", [])).key, "K04", "a sweater of the 33 is not listed with the shorts: the own top");
+  for (const bad of ["TEE-CHARCOAL-PLANET", "LS2-CHARCOAL-PLANET", "top-tank-sand-fox"]) { L.northstarUseAccount({ v: 1, northstar: { outfit: "K01", top: bad } }); assert.equal(withStorage({}, () => L.northstarRenderFor("hub", [])).key, "K01", bad + " is ignored"); }
+  L.northstarUseAccount({ v: 1 }); assert.equal(withStorage({ avatar_northstar_outfit: "K01", avatar_northstar_sweater: "TEE-SAND-FOX" }, () => L.northstarRenderFor("hub", [])), null, "no choice on the account: today's avatar");
 });
 
 test("D-355 the plan: each family's own order and shared files; the tee's sleeves after the arms", () => {
@@ -117,7 +125,7 @@ test("D-355 the owner's approval is what is published and listed: the 55 files (
   assert.equal(ext.publishedBy, "D-355"); assert.deepEqual(ext.files, want); assert.equal(ext.stagedManifestSha256, D355.staging.manifestSha256);
   assert.deepEqual([...ext.combinations].sort(), [...L.NORTHSTAR_KIT_TOP_COMBOS].sort()); assert.equal(ext.equivalence.outfitsDiffering, 0); assert.equal(ext.equivalence.approvedCombinations, 1441);
   for (const [id, it] of Object.entries(ext.itemTable)) assert.deepEqual(JSON.parse(JSON.stringify(L.NORTHSTAR_ITEMS[id])), it);
-  assert.equal(m.counts.d355Files, 55); assert.equal(m.counts.files, m.files.length); assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(m.counts.d355Files, 55); assert.equal(m.counts.files, m.files.length); assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true, "D-357");
 });
 
 test("D-355 the list explained: each cut's pairs from its source, all 1441 selectable (the sweater's olive with beige left out), no restriction widened", async () => {

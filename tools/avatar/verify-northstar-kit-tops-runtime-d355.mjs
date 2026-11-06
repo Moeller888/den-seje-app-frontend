@@ -58,7 +58,7 @@ async function main() {
       const got = AL.northstarCompose(plan, px, N); if (sha(Buffer.from(got.buffer, got.byteOffset, got.byteLength)) !== c.compositeSha256) eq.differing.push(c.id); eq.checked++; } }
   finally { rmSync(tmp, { recursive: true, force: true }); }
   const ok = { files: files.count === 55 && !files.bytesOrShaDiffering.length && !files.notInManifest.length && files.extensionNamesExactly && !!files.stagingManifestSha256 && files.noPlanet,
-    list: list.equalsApproval && list.count === 1441 && list.itemTableEqual, reachable: reachable.equalsList, equivalence: eq.checked > 0 && eq.differing.length === 0, flagFalse: AL.AVATAR_NORTHSTAR_WARDROBE === false };
+    list: list.equalsApproval && list.count === 1441 && list.itemTableEqual, reachable: reachable.equalsList, equivalence: eq.checked > 0 && eq.differing.length === 0, flagOnPerD357: AL.AVATAR_NORTHSTAR_WARDROBE === true };   // D-357 (owner, 2026-11-06): the wardrobe is every pupil's
   writeFileSync(join(OUT, "result-runtime" + (CUT ? "-" + CUT : "") + ".json"), JSON.stringify({ decision: "D-355", ok, files, list, reachable, equivalence: eq }, null, 2) + "\n");
   console.log(JSON.stringify({ ok, files: { count: files.count, differing: files.bytesOrShaDiffering.length }, list, reachable, equivalence: { checked: eq.checked, differing: eq.differing.length } }));
   if (!Object.values(ok).every(Boolean)) process.exit(1);

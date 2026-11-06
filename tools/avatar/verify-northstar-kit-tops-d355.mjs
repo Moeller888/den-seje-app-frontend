@@ -1,7 +1,7 @@
 // D-355 BROWSER VERIFICATION AND PRIVATE PREVIEW of the 33 tops in the Northstar opt-in, on the real renderer, panel and engines in
 // Chromium against a local server of this checkout; the new layer files come from the repository once published (D-355) and only
 // otherwise from the PRIVATE staging (--staging, never copied by this tool); origin/main's modules under /__main/ for the baseline:
-//   1. BASELINE — without the opt-in (a top of the 33 stored or not), without an outfit, where a top of the 33 is not allowed (a sweater
+//   1. BASELINE — without a stored outfit, without an outfit, where a top of the 33 is not allowed (a sweater
 //      or tank of the 33 on the shorts), with an unknown ID, and the approved tees, print tees, sweaters and tank tops: every surface
 //      pixel-identical to origin/main;
 //   2. FIGURE — tops of the 33 (all three cuts; fabrics, patterns, motifs; skirt, shorts, capri and the three trousers; beige, SV1, AB-1,
@@ -12,6 +12,7 @@
 //      top"; "Nuværende avatar"; the twelve approved buttons as before;
 //   4. FAILURE — a staged layer or a shared shadow that does not load gives today's path whole, the choice kept;
 //   5. PREVIEW — the panel with the list (K01 and K04) at desktop and phone width, for the private decision page.
+// D-357 (flag on, the choice on the account): each page's identity carries the choice this browser stored, as the pupil's account would.
 // --part baseline|figure|choice runs one part alone (choice = 3, 4 and 5) and writes result-<part>.json.
 // Usage: node tools/avatar/verify-northstar-kit-tops-d355.mjs --dwebp <dwebp.exe> --staging <D-355 staging dir> --out <dir outside the repository> [--part <part>]
 import http from "node:http";
@@ -50,7 +51,9 @@ function page(s, { code, storage, keep = false }) {
 window.__AVATAR_TEST__ = true; ${keep ? `if (!sessionStorage.getItem("seeded")) { sessionStorage.setItem("seeded", "1"); localStorage.clear(); for (const [k, v] of Object.entries(${JSON.stringify(storage || {})})) localStorage.setItem(k, v); }` : `localStorage.clear(); for (const [k, v] of Object.entries(${JSON.stringify(storage || {})})) localStorage.setItem(k, v);`}
 const before = JSON.stringify({ ...localStorage });
 const L = await import("${base}/js/avatar-layers.js"), R = await import("${base}/js/avatar-render-c2.js"), E = await import("${base}/js/avatar-expression-engine.js");
-const el = document.querySelector(${JSON.stringify(S.sel)}), identity = ${JSON.stringify(IDENTITY)};
+// D-357: the figure reads the pupil's ACCOUNT (identity.northstar); the page's account is what this browser stored (the panel's local mode)
+const identity = { ...${JSON.stringify(IDENTITY)}, northstar: Object.fromEntries([["outfit", "avatar_northstar_outfit"], ["tee", "avatar_northstar_tee"], ["pants", "avatar_northstar_pants"], ["shoes", "avatar_northstar_shoes"], ["top", "avatar_northstar_sweater"]].map(([f, k]) => [f, localStorage.getItem(k)]).filter(([, v]) => v)) };
+const el = document.querySelector(${JSON.stringify(S.sel)});
 const path = await R.mountC2Avatar(el, identity, { layerClass: ${JSON.stringify(S.layerClass)}, cosmetics: [], surface: ${JSON.stringify(s)} });
 let ee = null; try { ee = new E.ExpressionEngine(el); } catch (_e) {}
 await R.markAvatarRendered(el);
@@ -100,7 +103,8 @@ async function main() {
   const same = (a, b) => a.w === b.w && a.h === b.h && a.px.every((v, i) => v === b.px[i]);
   const OPT = { avatar_northstar: "1" };
   try {
-    const states = { "no opt-in": {}, "top of the 33 stored, no opt-in": { avatar_northstar_outfit: "K01", avatar_northstar_sweater: "TEE-SAND-FOX" },
+    // D-357: with the flag on, a stored top of the 33 on an outfit where it is listed IS shown (part 2 checks it), so it is no baseline state
+    const states = { "no opt-in": {},
       "opt-in, no outfit, top of the 33": { ...OPT, avatar_northstar_sweater: "LS2-GREEN-CHECK" }, "opt-in K04 (shorts) + sweater of the 33": { ...OPT, avatar_northstar_outfit: "K04", avatar_northstar_sweater: "LS2-MUSTARD-DOTS" },
       "opt-in K05 (shorts) + tank of the 33": { ...OPT, avatar_northstar_outfit: "K05", avatar_northstar_sweater: "TK-BLOCK-STRIPES" }, "opt-in K18 (olive) + tee of the 33": { ...OPT, avatar_northstar_outfit: "K18", avatar_northstar_sweater: "TEE-GREEN-CHECK" },
       "opt-in K01 + the planet": { ...OPT, avatar_northstar_outfit: "K01", avatar_northstar_sweater: "TEE-CHARCOAL-PLANET" }, "opt-in K01 (tee)": { ...OPT, avatar_northstar_outfit: "K01" },
@@ -149,7 +153,7 @@ async function main() {
       result.preview.push({ name, key: o.info.key, options: await o.p.$$eval(".northstar-kit-select option", (os) => os.map((x) => (x.parentElement.label || "") + " | " + x.textContent + (x.disabled ? " [off]" : ""))) }); await o.c.close(); }
   } finally { await browser.close(); server.close(); }
   const ch = result.choice, off22 = (c) => c.kit.off.length === 22 && c.kit.off.every((v) => /^(LS2|TK)-/.test(v));
-  const all = { baseline: result.baseline.length === 36 && result.baseline.every((b) => b.identicalToMain && b.layersEqualToMain && b.path === b.mainPath && b.storageUnchanged),
+  const all = { baseline: result.baseline.length === 33 && result.baseline.every((b) => b.identicalToMain && b.layersEqualToMain && b.path === b.mainPath && b.storageUnchanged),
     figure: result.figure.length === 9 * 3 && result.figure.every((f) => f.path === "northstar" && f.key === f.want && f.blob && f.natural[0] === 1024 && f.natural[1] === 1536 && f.light.maxDiff <= 3 && f.light.pxOver2 <= 5 && f.dark.maxDiff <= 3 && f.dark.pxOver2 <= 5 && !f.overlayVisible && f.storageUnchanged && f.layers.filter((m) => m === "base").length === 1),
     choice: ch.length === 10 && ch[0].key === "K01" && ch[0].kit.options === 33 && ch[0].kit.off.length === 0 && ch[0].kit.groups.join() === "T-shirts:11,Sweatere:11,Tanktoppe:11" && ch[0].pressed.join() === "Outfittets egen top"
       && ch[1].key === "K01+TEE-SAND-FOX" && ch[1].path === "northstar" && ch[1].kit.value === "TEE-SAND-FOX" && ch[1].pressed.length === 0
