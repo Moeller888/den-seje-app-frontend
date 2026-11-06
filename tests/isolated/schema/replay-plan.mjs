@@ -120,6 +120,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
   "20261105120000_true_false_activation.sql":
     "F-02 Sandt/falsk activation, not applied in production and not to be applied before the get-next-question deploy that makes true_false servable: it admits true_false rows in questions and flips question_is_servable for them",
+  "20261105141500_match_pairs_activation.sql":
+    "F-03 Match par activation, not applied in production and not to be applied before production step Q-21 (process-event deploy) and the get-next-question deploy that makes match servable: it admits valid match rows in questions and flips question_is_servable for them",
   "20261020125000_english_grade6_9.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020130001_english_level_pilot_1.sql":

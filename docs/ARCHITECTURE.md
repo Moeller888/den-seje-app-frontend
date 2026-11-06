@@ -525,10 +525,12 @@ level is a separate product decision. `profiles.current_band`,
 reviewed migration), extending both parity tests. The candidate window and the mix need no change: a
 new `answer_format` gets its own stratum, and the mix reads limits from the registry.
 
-**Match par (`match_pairs`) — steps 1 and 2 done (2026-10-22), step 3 NOT done: not servable.**
+**Match par (`match_pairs`) — steps 1 and 2 done (2026-10-22); step 3 prepared in F-03 (2026-11-05, code
+servable in the repository, NOT live — see "Activation (F-03)" below).**
 Contract in `supabase/functions/_shared/match-pairs.ts`. Stored row: `answer_format = 'match'`,
-`answer_type = 'short'`, `content = { question, pairs: [{ left, right }, …] }` with 2–6 pairs, unique
-texts per side, no `options` (`RECOMMENDED_PAIRS_BY_BAND`: band 1 → 2–3 pairs … band 5 → 5–6).
+`answer_type = 'short'`, `content = { question, correct, pairs: [{ left, right }, …] }` with 2–6 pairs, unique
+texts per side, no `options` (`correct` is never read — the key is per instance — but every questions row
+keeps it: `content_valid_check`, `auto_requires_correct`) (`RECOMMENDED_PAIRS_BY_BAND`: band 1 → 2–3 pairs … band 5 → 5–6).
 *Key:* when `get-next-question` creates the instance it shuffles the right column once (crypto,
 never the identity) and stores that shuffle as `question_instances.correct_answer`, e.g.
 `0:2,1:0,2:1` = left 0 belongs with right display position 2. The key alone rebuilds the layout, so
@@ -542,11 +544,23 @@ and pays it exactly like MC** (its `[^a-z0-9]` normalisation makes `0:2,1:0,2:1`
 the repeat RPC reopens every non-`text` auto-graded instance. *Browser:* `js/match-pairs.js` (tap an
 item, then its partner; arrows, Enter/Space, Escape; colour + number per pair; live region),
 `css/match-pairs.css`, demo `tools/match-pairs/demo.html` (local only). Tap-to-connect and grading through
-`process_question_attempt` are owner decisions (2026-10-22, ROADMAP → Opgaveformer). *Step 3 must
-also* teach v1's `mapAnswerFormat` `"match"` (today it maps it to `"mc"`, and the row is then skipped
-for lack of options) or retire v1; show a Match par `user_answer` to teachers as pairs in words
-(`js/student-detail.js` prints it raw, as it does for MC); and add the content through a reviewed
-migration.
+`process_question_attempt` are owner decisions (2026-10-22, ROADMAP → Opgaveformer).
+
+*Activation (F-03), prepared, nothing live.* The registry says `servable: true`; v1's `mapAnswerFormat`
+maps `"match"` to `"match"` and skips (`null`) every other unknown format instead of sending it as
+`"mc"`; migration `20261105141500_match_pairs_activation.sql` (in `NOT_IN_PRODUCTION`) adds the
+validator `match_pairs_content_is_valid(jsonb)` (the contract above, never more lenient than
+`parseMatchPairs`), extends `questions_answer_format_check` and `content_valid_check` by a match branch
+(old definition OR match; `answer_type` NULL/`short`, no `force_text`) and flips the one `'match'` line in
+`question_is_servable`. Its guard accepts production as it is today and production with F-02's
+`20261105120000` applied. Proven in `tests/unit/match-pairs-activation-migration-run.test.mjs`. The
+production order, each step with its own owner GO: **(0) Q-21** — the process-event deploy in the H5/K1
+chain; the deployed process-event (v34 code) has no Match par path and would grade the JSON connections
+as an MC string, so nothing below may happen first; **(1)** deploy `get-next-question` from the F-03
+commit (release gate, `docs/operations/level-engine-rollout.md` §3.1); **(2)** apply the migration;
+**(3)** content through its own reviewed migration, every row with `validateMatchContent` errors empty.
+Still open: show a Match par `user_answer` to teachers as pairs in words (`js/student-detail.js` prints
+it raw, as it does for MC).
 
 **Sandt/falsk (`true_false`, F-02) — steps 1 and 2 done (2026-11-05), step 3 NOT done: not servable.**
 Contract in `supabase/functions/_shared/true-false.ts`. Stored row: `answer_format = 'true_false'`,
