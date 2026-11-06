@@ -212,6 +212,65 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
     expect(await (await next(request, p)).json()).toMatchObject({ learning_step: "guided_practice", question_instance_id: s.question_instance_id });
   });
 
+  // F10-B: the SAME sequence over production's answer path today — process-event's legacy route (no round_no /
+  // submission_id, so no H5 and no K1 involved). These are ordinary tests, NOT marked expected-to-fail: they must
+  // pass with and without K1 in the stack. They prove what the sequence needs from the answer path (an answered
+  // instance with a server verdict and answered_at), and nothing about H5 evidence: there is no attempt row here,
+  // no submission id and no content version — exactly the limits of the legacy path (F10-B report §E).
+  const answerLegacy = (request, p, served, text) => request.post(`${SUPA}/functions/v1/process-event`, {
+    headers: { apikey: ANON, authorization: `Bearer ${p.token}`, ...json },
+    data: { question_instance_id: served.question_instance_id, answer: text, question_shown_at: Date.now() },
+  });
+  const verdicts = async (request, p) => (await (await request.get(
+    `${SUPA}/rest/v1/question_instances?select=was_correct&student_id=eq.${p.id}&answered=eq.true&order=answered_at,id`, { headers: svc },
+  )).json()).map((r) => r.was_correct);
+  async function legacyStep(request, p, expected, right) {
+    const r = await next(request, p);
+    expect(r.status(), await r.text()).toBe(200);
+    const s = await r.json();
+    expect(s, `expected step ${expected}`).toMatchObject({ learning_objective: OBJECTIVE, learning_step: expected });
+    expect(s.content.question).toBe(ITEM[expected].content.question);
+    const g = await answerLegacy(request, p, s, right ? ITEM[expected].content.correct : wrongOf(expected));
+    expect(g.status(), await g.text()).toBe(200);
+    expect(await g.json()).toMatchObject({ status: right ? "correct" : "incorrect" });
+    return s;
+  }
+
+  test("legacy answer path (production today): wrong practice → revision → application → transfer; the revisit WAITS", async ({ request }, testInfo) => {
+    const p = await makePupil(request, "legacy-b", testInfo.project.name);
+    await legacyStep(request, p, "guided_practice", false);
+    await legacyStep(request, p, "revision", false);
+    await legacyStep(request, p, "independent_application", true);
+    await legacyStep(request, p, "transfer", true);
+    const w = await (await next(request, p)).json();
+    expect(w).toMatchObject({ step: "sequence_waiting", learning_objective: OBJECTIVE, learning_step: "revisit" });
+    expect(Date.parse(w.due_at)).toBeGreaterThan(Date.now() + 19 * 3_600_000);
+    expect(await verdicts(request, p)).toEqual([false, false, true, true]);
+    // The legacy path writes no H5 attempt: the sequence does not depend on one.
+    expect(await attempts(request, p)).toEqual([]);
+  });
+
+  test("legacy answer path: a replayed answer changes nothing, and the revisit opens only when due (TEST MANIPULATION of answered_at)", async ({ request }, testInfo) => {
+    const p = await makePupil(request, "legacy-r", testInfo.project.name);
+    const g = await legacyStep(request, p, "guided_practice", true);
+    // Replay of the same answer (a retry after a lost reply): no second verdict, no second reward.
+    const before = await progress(request, p);
+    const again = await answerLegacy(request, p, g, ITEM.guided_practice.content.correct);
+    expect(again.status(), await again.text()).toBe(200);
+    expect(await progress(request, p)).toEqual(before);
+    expect(await verdicts(request, p)).toEqual([true]);
+    await legacyStep(request, p, "independent_application", true);
+    const t = await legacyStep(request, p, "transfer", true);
+    expect((await (await next(request, p)).json()).step).toBe("sequence_waiting");
+    // SIMULATION, not retention: move the transfer answer 21 h into the past in the isolated database.
+    const back = await request.patch(`${SUPA}/rest/v1/question_instances?id=eq.${t.question_instance_id}`, {
+      headers: { ...svc, ...json, prefer: "return=minimal" }, data: { answered_at: new Date(Date.now() - 21 * 3_600_000).toISOString() },
+    });
+    expect(back.status(), await back.text()).toBe(204);
+    await legacyStep(request, p, "revisit", true);
+    expect(await (await next(request, p)).json()).toMatchObject({ step: "sequence_complete", learning_objective: OBJECTIVE });
+  });
+
   test("off path: without `sequence` the same objective is served untagged-aware but WITHOUT a step (today's targeting)", async ({ request }, testInfo) => {
     const p = await makePupil(request, "off", testInfo.project.name);
     const r = await request.post(`${SUPA}/functions/v1/get-next-question`, { headers: { apikey: ANON, authorization: `Bearer ${p.token}`, ...json }, data: { subject: "historie", learning_objective: OBJECTIVE } });
