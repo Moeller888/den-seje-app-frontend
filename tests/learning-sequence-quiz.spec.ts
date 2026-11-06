@@ -19,6 +19,7 @@ import * as path from "path";
 import { fileURLToPath } from "url";
 import { toPublicQuestion } from "../supabase/functions/_shared/question-dto.ts";
 import { canonicalOrderAnswer } from "../supabase/functions/_shared/order-items.ts";
+import { closeOfflineQuiz } from "./support/close-offline-quiz";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -203,7 +204,7 @@ for (const v of VIEWPORTS) {
     const orderPayload = payloads[3];
     expect(orderPayload.includes(JSON.stringify(ITEMS))).toBe(false);
     for (const leak of ['"correct"', '"review_text"', ORDER_KEY, '"accepted_answers"']) expect(orderPayload.includes(leak), leak).toBe(false);
-    await page.context().close();
+    await closeOfflineQuiz(page);
   });
 }
 
@@ -215,7 +216,7 @@ test("a wrong order without an explanation: the correct order in the shown texts
   await expect(page.locator("#feedback")).toHaveText(`Ikke helt. Den rigtige rækkefølge: ${ITEMS.join(" → ")}`);
   await expect(page.locator("#feedback")).not.toContainText(ORDER_KEY);
   expect(answers).toHaveLength(1);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("a wrong order with an explanation: the reflection is led by the correct order, then Videre", async ({ browser }) => {
@@ -225,7 +226,7 @@ test("a wrong order with an explanation: the reflection is led by the correct or
   await expect(page.locator("#review-feedback")).toContainText("Den siger ikke i sig selv, at den ene begivenhed var årsag til den næste.");
   await page.locator("#reflection-continue").click();
   await expect(page.locator("#question")).toContainText(STEPS[2].row.content.question, { timeout: 10000 });
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("a second Svar while the order is on its way is not sent; a failed send hands the order back", async ({ browser }) => {
@@ -237,7 +238,7 @@ test("a second Svar while the order is on its way is not sent; a failed send han
   await held.page.waitForTimeout(300);
   expect(held.answers).toHaveLength(1);
   held.release();
-  await held.page.context().close();
+  await closeOfflineQuiz(held.page);
 
   const failed = await openQuiz(browser, { width: 900, height: 700 }, ORDER_ONLY, { failFirst: true });
   await solveOrder(failed.page, "click");
@@ -249,5 +250,5 @@ test("a second Svar while the order is on its way is not sent; a failed send han
   await failed.page.locator("#order-items button.order-submit").click();
   await expect(failed.page.locator("#feedback")).toHaveText("Ja! 🎯");
   expect(failed.answers).toEqual(["[2,0,3,1]", "[2,0,3,1]"]);
-  await failed.page.context().close();
+  await closeOfflineQuiz(failed.page);
 });
