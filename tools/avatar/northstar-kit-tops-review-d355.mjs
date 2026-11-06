@@ -8,7 +8,8 @@
 //             one, no alpha lower (no hole), none darker (no heavier contour); per side; and the private sheets (both arm edges at 1:1,
 //             magnified and at app size, with the changed pixels marked).
 //   lists   — the proposed list explained: each cut's pairs with their source, the pairs allowed against those selectable in the panel
-//             (the browser's own functions), and that no restriction of a family is widened.
+//             (the browser's own functions), the pairs left out because no outfit can show them (NOT_SHOWN), and that no restriction of a
+//             family is widened.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { encodePng } from "./r3-hair-tool-v2.mjs";
@@ -59,7 +60,7 @@ export function phaseArmEdge(OUT, ctx) {
 }
 
 /** The proposed list explained; pure (no image). */
-export function lists(AL, kitTopCombos, cutPairs) {
+export function lists(AL, kitTopCombos, cutPairs, NOT_SHOWN = {}) {
   const P = cutPairs(AL), C = kitTopCombos(AL), out = { cuts: {} };
   // the tee's pairs by source: the K outfit itself (its own bottom and shoes), the solid trousers (D-281/D-283), a shoe choice (D-305/D-314 SV1, D-326/D-331 AB-1)
   const teeSrc = {}; for (const k of Object.keys(AL.NORTHSTAR_OUTFITS)) { if (AL.NORTHSTAR_OUTFITS[k].top !== "top-tee-hip-cream") continue;
@@ -73,15 +74,18 @@ export function lists(AL, kitTopCombos, cutPairs) {
     "tank-v5": { source: "NORTHSTAR_TANK_COMBOS: D-345/D-348's 44 par (T-shirt-godkendte par uden shorts og uden oliven med beige)", of: () => "D-345/D-348" } };
   const reach = new Set(); for (const k of Object.keys(AL.NORTHSTAR_OUTFITS)) for (const t of [null, ...Object.keys(AL.NORTHSTAR_PRINT_TEES)]) for (const p of [null, ...Object.keys(AL.NORTHSTAR_SOLID_PANTS)]) for (const s of [null, ...Object.keys(AL.NORTHSTAR_SHOE_CHOICES)]) for (const w of Object.keys(AL.NORTHSTAR_KIT_TOPS)) {
     if (!AL.northstarSweaterAllowed(k, t, p, s, w)) continue; const o = AL.northstarOutfitFor(k, t, p, s, w); reach.add([o.top, o.bottom, o.shoes].join("+")); }
-  for (const cut of Object.keys(P)) { const pairs = [...P[cut]].sort(), cc = C.filter((x) => x.cut === cut);
+  for (const cut of Object.keys(P)) { const omitted = NOT_SHOWN[cut] || [], pairs = [...P[cut]].filter((k) => !omitted.includes(k)).sort(), cc = C.filter((x) => x.cut === cut);
     const rows = pairs.map((k) => { const [b, s] = k.split("|"), here = cc.filter((x) => x.bottom === b && x.shoes === s), sel = here.filter((x) => reach.has([x.top, x.bottom, x.shoes].join("+"))).length; return { bottom: b, shoes: s, source: fam[cut].of(k), selectable: sel === here.length, designs: here.length }; });
-    out.cuts[cut] = { source: fam[cut].source, pairs: rows.length, allowed: cc.length, selectable: cc.filter((x) => reach.has([x.top, x.bottom, x.shoes].join("+"))).length, notSelectable: rows.filter((r) => !r.selectable).map((r) => r.bottom + "+" + r.shoes), rows }; }
+    out.cuts[cut] = { source: fam[cut].source, pairs: rows.length, allowed: cc.length, selectable: cc.filter((x) => reach.has([x.top, x.bottom, x.shoes].join("+"))).length, notSelectable: rows.filter((r) => !r.selectable).map((r) => r.bottom + "+" + r.shoes), omitted: omitted.map((k) => k.replace("|", "+")), rows }; }
   // no restriction widened: each family's pair set equals its existing one; the family limits hold
   const fset = (list, item) => new Set(list.filter((k) => k.startsWith(item + "+")).map((k) => k.split("+").slice(1).join("|")));
   const same = (a, b) => a.size === b.size && [...a].every((x) => b.has(x));
   const checks = {
     teeEqualsPrintTeePairs: same(P["tee-hip-v2"], (() => { const s = new Set(); for (const k of Object.keys(AL.NORTHSTAR_OUTFITS)) for (const t of Object.keys(AL.NORTHSTAR_PRINT_TEES)) for (const p of [null, ...Object.keys(AL.NORTHSTAR_SOLID_PANTS)]) for (const sh of [null, ...Object.keys(AL.NORTHSTAR_SHOE_CHOICES)]) { const o = AL.northstarOutfitFor(k, t, p, sh); if (o.top === AL.NORTHSTAR_PRINT_TEES[t].item && AL.northstarPlanFor(o)) s.add(o.bottom + "|" + o.shoes); } return s; })()),
     sweaterEqualsEachApprovedSweater: Object.values(AL.NORTHSTAR_LS2_SWEATERS).every((sw) => same(P["sweater-long-v3"], fset(AL.NORTHSTAR_LS2_COMBOS, sw.item))),
+    // the proposal is that list without exactly the pairs no outfit can show — and those are unreachable for the approved sweaters too
+    sweaterProposalIsListMinusNotShown: same(new Set(C.filter((x) => x.cut === "sweater-long-v3").map((x) => x.bottom + "|" + x.shoes)), new Set([...P["sweater-long-v3"]].filter((k) => !(NOT_SHOWN["sweater-long-v3"] || []).includes(k)))),
+    notShownUnreachableForApprovedSweaters: (NOT_SHOWN["sweater-long-v3"] || []).every((k) => { const [b, s] = k.split("|"); for (const kk of Object.keys(AL.NORTHSTAR_OUTFITS)) for (const t of [null, ...Object.keys(AL.NORTHSTAR_PRINT_TEES)]) for (const p of [null, ...Object.keys(AL.NORTHSTAR_SOLID_PANTS)]) for (const sh of [null, ...Object.keys(AL.NORTHSTAR_SHOE_CHOICES)]) for (const w of Object.keys(AL.NORTHSTAR_LS2_SWEATERS)) { const o = AL.northstarOutfitFor(kk, t, p, sh, w); if (o.bottom === b && o.shoes === s) return false; } return true; }),
     tankEqualsEachApprovedTank: Object.values(AL.NORTHSTAR_TANKS).every((tk) => same(P["tank-v5"], fset(AL.NORTHSTAR_TANK_COMBOS, tk.item))),
     noShortsOnSweaterOrTank: !C.some((x) => x.cut !== "tee-hip-v2" && x.bottom === "bottom-shorts-navy"),
     teeNeverOliveOrBrownBoots: !C.some((x) => x.cut === "tee-hip-v2" && (x.bottom === "bottom-trousers-square-olive" || x.shoes === "shoes-ankleboots-brown")),

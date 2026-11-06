@@ -982,7 +982,9 @@ export const NORTHSTAR_TOP_CHOICES = Object.freeze({ ...NORTHSTAR_LS2_SWEATERS, 
 // tank-v5 — never the planet R12) as top choices on the same stored choice. Each joins its cut's family and reuses its published shared
 // files: the tee the cream tee's skin shadow (its layers split as the tees' since D-349), the sweater the LS2 shadow and hip seam, the
 // tank the tank's shadow and hem junction. Each is offered over its cut's current pairs only, no bottom or shoe added: the tee the 43 the
-// cream and print tees are shown with, the sweater the sweaters' 45, the tank the tank tops' 44 — 11 x (43 + 45 + 44) = 1452.
+// cream and print tees are shown with, the sweater the sweaters' 45 without the one no outfit can show (olive trousers with the beige
+// sneakers: the approved sweaters' list keeps it, this proposal does not), the tank the tank tops' 44 — 11 x (43 + 44 + 44) = 1441, all
+// selectable in the panel.
 const _KIT_DESIGNS = Object.freeze({ "forest-melange": "skovgrøn melange", "burgundy-pique": "bordeaux piqué", "mustard-slub": "sennep slub", "denim-twill": "denimblå twill",
   "breton-stripe": "bretonsk stribe", "block-stripes": "blokstriber", "green-check": "grøn tern", "mustard-dots": "sennepsprikker",
   "mint-teapot": "mint · tekande", "lightdenim-shield": "lys denim · skjold", "sand-fox": "sand · ræv" });
@@ -995,7 +997,8 @@ const _KIT_TEE_SHOES = Object.freeze({
   "shoes-sneakers-low-sv1-burgundygum": _KIT_TEE_FIVE, "shoes-sneakers-low-sv1-chalk": _KIT_TEE_FIVE, "shoes-sneakers-low-sv1-navywhite": _KIT_TEE_FIVE,
   "shoes-sneakers-low-sv1-charcoal": ["skirt-sand", "shorts-navy", "capri-lightblue"], "shoes-sneakers-white": _KIT_TEE_FIVE,
 });
-const _KIT_PAIRS = Object.freeze({ "top-tee-hip": _KIT_TEE_SHOES, [NORTHSTAR_LS2_BASE]: _LS2_SHOES, [NORTHSTAR_TANK_BASE]: _TANK_SHOES });
+const _KIT_LS2_SHOES = Object.freeze({ ..._LS2_SHOES, "shoes-sneakers-beige": _LS2_FIVE.filter((b) => b !== "trousers-square-olive") });
+const _KIT_PAIRS = Object.freeze({ "top-tee-hip": _KIT_TEE_SHOES, [NORTHSTAR_LS2_BASE]: _KIT_LS2_SHOES, [NORTHSTAR_TANK_BASE]: _TANK_SHOES });
 export const NORTHSTAR_KIT_TOP_COMBOS = Object.freeze(Object.values(NORTHSTAR_KIT_TOPS).flatMap((t) =>
   Object.entries(_KIT_PAIRS[t.family]).flatMap(([shoes, bottoms]) => bottoms.map((b) => t.item + "+bottom-" + b + "+" + shoes))));
 // Every top the stored choice can name: the approved sweaters and tank tops and (D-355) the 33.

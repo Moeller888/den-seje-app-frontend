@@ -64,10 +64,14 @@ export function cutPairs(AL) {
   const of = (list) => new Set(list.map((c) => { const [, b, s] = c.split("+"); return b + "|" + s; }));
   return { "tee-hip-v2": tee, "sweater-long-v3": of(AL.NORTHSTAR_LS2_COMBOS), "tank-v5": of(AL.NORTHSTAR_TANK_COMBOS) };
 }
-/** The proposed combinations: every approved candidate over its cut's current pairs, in the approval's order, the pairs sorted. */
+/** The pairs of a cut's list that no outfit of the opt-in can show, left out of the proposal (owner 2026-11-06): the sweaters' olive
+ *  trousers with the beige sneakers (D-336 approved it; no K outfit, trousers or shoe choice gives it). The approved lists keep it. */
+export const NOT_SHOWN = Object.freeze({ "sweater-long-v3": Object.freeze(["bottom-trousers-square-olive|shoes-sneakers-beige"]) });
+/** The proposed combinations: every approved candidate over its cut's current pairs that the panel can show, in the approval's order,
+ *  the pairs sorted (1441). */
 export function kitTopCombos(AL, A = approval()) {
   const P = cutPairs(AL), out = [];
-  for (const c of A.approved) for (const p of [...P[c.cut]].sort()) { const [bottom, shoes] = p.split("|"), top = itemOfCandidate(c.cut, c.slug);
+  for (const c of A.approved) for (const p of [...P[c.cut]].sort()) { if ((NOT_SHOWN[c.cut] || []).includes(p)) continue; const [bottom, shoes] = p.split("|"), top = itemOfCandidate(c.cut, c.slug);
     out.push({ id: c.cut + "--" + c.recipe + "--" + bottom.replace("bottom-", "") + "--" + shoes.replace("shoes-", ""), candidate: c.id, cut: c.cut, recipe: c.recipe, top, bottom, shoes }); }
   return out;
 }
@@ -183,7 +187,7 @@ async function main() {
   if (!outside(OUT)) throw new Error("--out must be outside the repository (the views show C)"); mkdirSync(OUT, { recursive: true });
   const AL = await import(pathToFileURL(join(ROOT, "js", "avatar-layers.js")).href);
   if (phase === "sheets") return phaseSheets(AL, OUT);
-  if (phase === "lists") { const RV = await import("./northstar-kit-tops-review-d355.mjs"), r = RV.lists(AL, kitTopCombos, cutPairs); writeFileSync(join(OUT, "lists.json"), JSON.stringify({ decision: "D-355", ...r }, null, 2) + "\n");
+  if (phase === "lists") { const RV = await import("./northstar-kit-tops-review-d355.mjs"), r = RV.lists(AL, kitTopCombos, cutPairs, NOT_SHOWN); writeFileSync(join(OUT, "lists.json"), JSON.stringify({ decision: "D-355", ...r }, null, 2) + "\n");
     return console.log(JSON.stringify({ total: r.total, checks: r.checks, cuts: Object.fromEntries(Object.entries(r.cuts).map(([k, v]) => [k, { pairs: v.pairs, allowed: v.allowed, selectable: v.selectable, notSelectable: v.notSelectable }])) })); }
   if (phase === "page") return (await import("./northstar-kit-tops-page-d355.mjs")).writePage(AL, OUT, at("--staging"));
   if (!DW || !existsSync(DW)) throw new Error("--dwebp");

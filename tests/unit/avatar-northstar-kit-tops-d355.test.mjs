@@ -1,7 +1,7 @@
 // D-355 — D-354's 33 owner-approved tops PREPARED for the Northstar opt-in (no private file needed): the approval names exactly R01–R11 on
 // tee-hip-v2, sweater-long-v3 and tank-v5 with the hashes D-354 registered, never the planet; each top is an item of its cut's family with
 // that family's published shadows and hip seam or hem junction; the proposed list is each cut's current (bottom, shoes) pairs and nothing
-// else (1452), every entry reachable but the sweater's olive trousers with the beige sneakers (as the approved sweaters'); a top of the 33
+// else, without the sweater's olive trousers with the beige sneakers that no outfit can show (1441, every entry reachable); a top of the 33
 // replaces the top only where its whole outfit is on the list, on the same stored choice as the sweaters and tank tops, whose behaviour is
 // unchanged; the plan draws each family's own order; nothing is published (no layer file, no manifest entry); the flag is false.
 // Passing approves nothing.
@@ -12,7 +12,7 @@ import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as L from "../../js/avatar-layers.js";
 import { applyNorthstarUrlOptIn } from "../../js/avatar-northstar-panel.js";
-import { approval, kitTopCombos, cutPairs, itemOfCandidate, itemShape, CUT_FAMILY, TOP_SPLIT } from "../../tools/avatar/northstar-kit-tops-d355.mjs";
+import { approval, kitTopCombos, cutPairs, itemOfCandidate, itemShape, CUT_FAMILY, TOP_SPLIT, NOT_SHOWN } from "../../tools/avatar/northstar-kit-tops-d355.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", ".."), A = approval(), key = (o) => [o.top, o.bottom, o.shoes].join("+");
 const withStorage = (entries, fn) => { const prev = globalThis.localStorage; const m = new Map(Object.entries(entries));
@@ -40,8 +40,11 @@ test("D-355 the 33 in the runtime: one item per approved candidate, in its cut's
   for (const t of Object.values(L.NORTHSTAR_KIT_TOPS)) assert.ok(!older.includes(t.item) && !Object.keys(L.NORTHSTAR_TOP_CHOICES).includes(t.item), t.item + " is a new name");
 });
 
-test("D-355 the proposed list: each cut's current pairs and nothing else (1452); every entry reachable but the sweater's olive with beige", () => {
-  assert.deepEqual([...L.NORTHSTAR_KIT_TOP_COMBOS].sort(), kitTopCombos(L).map(key).sort()); assert.equal(L.NORTHSTAR_KIT_TOP_COMBOS.length, 1452);
+test("D-355 the proposed list: each cut's current pairs and nothing else, the unshowable olive with beige left out (1441); all reachable", () => {
+  assert.deepEqual([...L.NORTHSTAR_KIT_TOP_COMBOS].sort(), kitTopCombos(L).map(key).sort()); assert.equal(L.NORTHSTAR_KIT_TOP_COMBOS.length, 1441);
+  assert.deepEqual(NOT_SHOWN, { "sweater-long-v3": ["bottom-trousers-square-olive|shoes-sneakers-beige"] });
+  assert.ok(!L.NORTHSTAR_KIT_TOP_COMBOS.some((k) => k.endsWith("+bottom-trousers-square-olive+shoes-sneakers-beige")));
+  assert.equal(L.NORTHSTAR_LS2_COMBOS.filter((k) => k.endsWith("+bottom-trousers-square-olive+shoes-sneakers-beige")).length, 6, "the approved sweaters' list keeps the pair");
   const P = cutPairs(L); assert.deepEqual([P["tee-hip-v2"].size, P["sweater-long-v3"].size, P["tank-v5"].size], [43, 45, 44]);
   // no bottom or shoe is added: every pair is one the cut's family is already shown or approved with
   const used = new Set(), have = new Set(); for (const k of L.NORTHSTAR_KIT_TOP_COMBOS) { const [, b, s] = k.split("+"); used.add(b); used.add(s); }
@@ -51,7 +54,7 @@ test("D-355 the proposed list: each cut's current pairs and nothing else (1452);
   // reachability through the browser's own functions
   const reach = new Set(); for (const k of Object.keys(L.NORTHSTAR_OUTFITS)) for (const t of [null, ...Object.keys(L.NORTHSTAR_PRINT_TEES)]) for (const p of [null, ...Object.keys(L.NORTHSTAR_SOLID_PANTS)]) for (const s of [null, ...Object.keys(L.NORTHSTAR_SHOE_CHOICES)]) for (const w of Object.keys(L.NORTHSTAR_KIT_TOPS)) {
     if (!L.northstarSweaterAllowed(k, t, p, s, w)) continue; const o = L.northstarOutfitFor(k, t, p, s, w); assert.equal(o.top, L.NORTHSTAR_KIT_TOPS[w].item); reach.add(key(o)); }
-  const missing = L.NORTHSTAR_KIT_TOP_COMBOS.filter((k) => !reach.has(k)); assert.equal(missing.length, 11); assert.ok(missing.every((k) => k.startsWith("top-sweater-ls2-") && k.endsWith("+bottom-trousers-square-olive+shoes-sneakers-beige")));
+  const missing = L.NORTHSTAR_KIT_TOP_COMBOS.filter((k) => !reach.has(k)); assert.deepEqual(missing, [], "every proposed combination is selectable");
   assert.ok([...reach].every((k) => L.NORTHSTAR_KIT_TOP_COMBOS.includes(k)), "nothing outside the list is reachable");
 });
 
@@ -98,11 +101,11 @@ test("D-355 the plan: each family's own order and shared files; the tee's sleeve
   for (const files of Object.values(CUT_FAMILY)) for (const p of files.shadows) assert.ok(existsSync(join(REPO, "assets", "avatar-northstar", files.shadowsOf + "-shadow-" + p + "-v1.webp")));
 });
 
-test("D-355 the list explained: each cut's pairs from its source, 1441 of 1452 selectable (the sweater's olive with beige never), no restriction widened", async () => {
-  const { lists } = await import("../../tools/avatar/northstar-kit-tops-review-d355.mjs"), r = lists(L, kitTopCombos, cutPairs);
-  assert.deepEqual(r.total, { allowed: 1452, selectable: 1441, notSelectable: 11 });
-  assert.deepEqual(Object.fromEntries(Object.entries(r.cuts).map(([k, v]) => [k, [v.pairs, v.allowed, v.selectable, v.notSelectable]])),
-    { "tee-hip-v2": [43, 473, 473, []], "sweater-long-v3": [45, 495, 484, ["bottom-trousers-square-olive+shoes-sneakers-beige"]], "tank-v5": [44, 484, 484, []] });
+test("D-355 the list explained: each cut's pairs from its source, all 1441 selectable (the sweater's olive with beige left out), no restriction widened", async () => {
+  const { lists } = await import("../../tools/avatar/northstar-kit-tops-review-d355.mjs"), r = lists(L, kitTopCombos, cutPairs, NOT_SHOWN);
+  assert.deepEqual(r.total, { allowed: 1441, selectable: 1441, notSelectable: 0 });
+  assert.deepEqual(Object.fromEntries(Object.entries(r.cuts).map(([k, v]) => [k, [v.pairs, v.allowed, v.selectable, v.notSelectable, v.omitted]])),
+    { "tee-hip-v2": [43, 473, 473, [], []], "sweater-long-v3": [44, 484, 484, [], ["bottom-trousers-square-olive+shoes-sneakers-beige"]], "tank-v5": [44, 484, 484, [], []] });
   for (const [k, v] of Object.entries(r.checks)) assert.equal(v, true, k);
   assert.ok(r.cuts["tee-hip-v2"].rows.every((x) => typeof x.source === "string" && x.source.length));
 });
