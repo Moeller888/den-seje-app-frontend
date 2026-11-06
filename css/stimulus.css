@@ -1,0 +1,96 @@
+/* Stimulus (js/stimulus.js, F-07): the source, image or audio clip shown above the question. Uses the
+   theme tokens from css/theme.css. Readable line length and spacing for pupils with reading
+   difficulties, an image that never overflows a phone screen, and a visible focus ring on the
+   transcript disclosure. The container is empty and hidden for every question without a stimulus. */
+
+#stimulus[hidden] { display: none; }
+
+#stimulus {
+  margin: 0 0 14px;
+}
+
+#stimulus .stimulus {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#stimulus .stimulus-label {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+#stimulus .stimulus-title {
+  margin: 0 0 8px;
+  font-weight: bold;
+  color: var(--text-bright);
+}
+
+#stimulus .stimulus-text {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--text-main);
+  white-space: pre-line;        /* blank lines in the source are paragraphs */
+  overflow-wrap: anywhere;
+  max-width: 68ch;
+}
+
+#stimulus .stimulus-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: 50vh;
+  margin: 0 auto;
+  border-radius: 6px;
+  background: #fff;
+}
+
+#stimulus .stimulus-caption,
+#stimulus .stimulus-transcript-text {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-main);
+  white-space: pre-line;
+}
+
+#stimulus .stimulus-audio {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+}
+
+#stimulus .stimulus-transcript {
+  margin-top: 8px;
+}
+
+#stimulus .stimulus-transcript summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--text-bright);
+  font-weight: bold;
+}
+
+#stimulus .stimulus-transcript summary:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#stimulus .stimulus-credit {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}

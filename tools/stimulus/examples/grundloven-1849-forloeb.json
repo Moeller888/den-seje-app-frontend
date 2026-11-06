@@ -1,0 +1,128 @@
+{
+  "title": "Læringsforløb: Grundloven 1849 — fra enevælde til folkestyre",
+  "status": "EKSEMPEL — ikke i databasen, ikke aktiveret. Bruges af tests/learning-sequence-quiz.spec.ts. Rækkefølge (order) er bygget, men ikke servable.",
+  "objective": "Eleven kan placere Grundloven 1849 i forløbet fra enevælde til folkestyre, forklare hvem der fik valgret, og bruge § 35 på konkrete personer.",
+  "progression_note": "Trin 6 er repetition som en afstand mellem to holdepunkter. Egentlig spredt repetition (hvornår trinet vender tilbage) kræver mestringsmotoren (D-277 LP-4) og er IKKE bygget; forløbet viser opgaverne i rækkefølge.",
+  "steps": [
+    {
+      "phase": "1. introduktion",
+      "form": "Billede + svar (stimulus + multiple choice)",
+      "purpose": "Ny viden: enevælde 1660 → folkestyre 1849, vist på en tidslinje.",
+      "row": {
+        "answer_format": "mc",
+        "answer_type": "short",
+        "content": {
+          "question": "Se tidslinjen. Hvilken styreform havde Danmark lige før Grundloven i 1849?",
+          "options": ["Enevælde", "Folkestyre", "Republik", "Diktatur"],
+          "correct": "Enevælde",
+          "review_text": "Fra 1660 til 1849 havde kongen al magt. Det kaldes enevælde. Med Grundloven i 1849 fik Danmark folkestyre.",
+          "stimulus": {
+            "kind": "image",
+            "file": "grundloven-1849-tidslinje.svg",
+            "alt": "Lodret tidslinje fra 1660 til 1849. En rød bjælke mærket 'Enevælde' går fra 1660 til 1849. En grøn bjælke mærket 'Folkestyre' begynder i 1849. Markeringer: 1660 enevælden indføres, og kongen får al magt. 1788 stavnsbåndet ophæves. 5. juni 1849 Grundloven underskrives.",
+            "caption": "Fra enevælde til folkestyre.",
+            "credit": { "source": "Lærlig, egen tegning", "year": "2026" }
+          }
+        }
+      }
+    },
+    {
+      "phase": "2. forståelse af kilden",
+      "form": "Kilde + spørgsmål (stimulus + tal)",
+      "purpose": "Læse en historisk kilde og finde en konkret oplysning.",
+      "row": {
+        "answer_format": "number",
+        "answer_type": "short",
+        "content": {
+          "question": "Læs kilden. Hvor gammel skulle en mand mindst være for at få valgret til Folketinget? Skriv alderen med cifre.",
+          "correct": "30",
+          "accepted_answers": ["30"],
+          "review_text": "Der står \"naar han har fyldt sit 30te Aar\". En mand skulle altså være fyldt 30 år.",
+          "stimulus": {
+            "kind": "source",
+            "title": "Danmarks Riges Grundlov, 5. juni 1849, § 35",
+            "text": "Valgret til Folkethinget har enhver uberygtet Mand, som har Indfødsret, naar han har fyldt sit 30te Aar, medmindre han:\na) uden at have egen Huusstand staaer i privat Tjenesteforhold;\nb) nyder eller har nydt Understøttelse af Fattigvæsenet, som ikke er enten eftergiven eller tilbagebetalt;\nc) er ude af Raadigheden over sit Bo;\nd) ikke har havt fast Bopæl i eet Aar i den Valgkreds eller den Stad, hvori han opholder sig paa den Tid, Valget foregaaer.\n\nOrdforklaringer: uberygtet = ikke straffet for noget vanærende · Huusstand = eget hjem · Fattigvæsenet = den offentlige hjælp til fattige · Bo = formue og ejendele.",
+            "credit": { "source": "Danmarks Riges Grundlov af 5. juni 1849, § 35 (gengivet efter danmarkshistorien.lex.dk). Ordforklaringer: Lærlig", "year": "1849", "license": "Offentligt domæne" }
+          }
+        }
+      }
+    },
+    {
+      "phase": "3. talspørgsmål om året",
+      "form": "Tal / årstal",
+      "purpose": "Genkalde holdepunktet fra introduktionen uden at se det.",
+      "row": {
+        "answer_format": "number",
+        "answer_type": "short",
+        "content": {
+          "question": "I hvilket år underskrev Frederik 7. Danmarks første grundlov? Skriv årstallet med fire cifre.",
+          "correct": "1849",
+          "accepted_answers": ["1849"],
+          "review_text": "Den 5. juni 1849 underskrev Frederik 7. Grundloven. Enevælden sluttede, og Danmark fik folkestyre."
+        }
+      }
+    },
+    {
+      "phase": "4. tidslinje",
+      "form": "Rækkefølge (kronologisk) med en kort kilde",
+      "purpose": "Placere fire begivenheder i tid — uden årstal i elementerne, så eleven må bruge det, forløbet har vist.",
+      "row": {
+        "answer_format": "order",
+        "answer_type": "short",
+        "content": {
+          "question": "Sæt begivenhederne i den rækkefølge, de skete.",
+          "items": ["Enevælden indføres", "Stavnsbåndet ophæves", "Grundloven underskrives", "Kvinder får valgret til Rigsdagen"],
+          "sequence": "chronological",
+          "review_text": "Enevælden blev indført i 1660, stavnsbåndet blev ophævet i 1788, Grundloven blev underskrevet i 1849, og kvinder fik valgret til Rigsdagen i 1915. Rækkefølgen viser, hvornår tingene skete. Den siger ikke i sig selv, at den ene begivenhed var årsag til den næste.",
+          "stimulus": {
+            "kind": "source",
+            "title": "Kvinderne måtte vente",
+            "text": "Grundloven fra 1849 gav kun mænd valgret. Først i 1915 blev grundloven ændret, så kvinder også fik valgret til Rigsdagen.",
+            "credit": { "source": "Lærlig, fortællende tekst", "year": "2026" }
+          }
+        }
+      }
+    },
+    {
+      "phase": "5. anvendelse",
+      "form": "Kilde + spørgsmål (stimulus + multiple choice)",
+      "purpose": "Bruge § 35's regler på nye tilfælde — ikke slå svaret op.",
+      "row": {
+        "answer_format": "mc",
+        "answer_type": "short",
+        "content": {
+          "question": "Brug § 35 på fire mænd i 1849. Alle er uberygtede og har indfødsret. Hvem af dem havde valgret til Folketinget?",
+          "options": [
+            "Hans, 45 år, gårdmand med egen husstand, har boet i sognet i 20 år",
+            "Peder, 40 år, tjenestekarl, bor hos den gårdmand, han arbejder for",
+            "Niels, 50 år, har fået hjælp af fattigvæsenet og ikke betalt den tilbage",
+            "Jens, 26 år, smed med eget værksted, har boet i byen i fem år"
+          ],
+          "correct": "Hans, 45 år, gårdmand med egen husstand, har boet i sognet i 20 år",
+          "review_text": "Kun Hans opfylder alle krav. Peder er i privat tjeneste uden egen husstand (a). Niels har fået fattighjælp, som ikke er betalt tilbage (b). Jens er under 30 år.",
+          "stimulus": {
+            "kind": "source",
+            "title": "Danmarks Riges Grundlov, 5. juni 1849, § 35",
+            "text": "Valgret til Folkethinget har enhver uberygtet Mand, som har Indfødsret, naar han har fyldt sit 30te Aar, medmindre han:\na) uden at have egen Huusstand staaer i privat Tjenesteforhold;\nb) nyder eller har nydt Understøttelse af Fattigvæsenet, som ikke er enten eftergiven eller tilbagebetalt;\nc) er ude af Raadigheden over sit Bo;\nd) ikke har havt fast Bopæl i eet Aar i den Valgkreds eller den Stad, hvori han opholder sig paa den Tid, Valget foregaaer.\n\nOrdforklaringer: uberygtet = ikke straffet for noget vanærende · Huusstand = eget hjem · Fattigvæsenet = den offentlige hjælp til fattige · Bo = formue og ejendele.",
+            "credit": { "source": "Danmarks Riges Grundlov af 5. juni 1849, § 35 (gengivet efter danmarkshistorien.lex.dk). Ordforklaringer: Lærlig", "year": "1849", "license": "Offentligt domæne" }
+          }
+        }
+      }
+    },
+    {
+      "phase": "6. repetition",
+      "form": "Tal — afstand mellem to holdepunkter",
+      "purpose": "Hente to årstal frem igen og koble dem: fra viden om årstal til forståelse af tid.",
+      "row": {
+        "answer_format": "number",
+        "answer_type": "short",
+        "content": {
+          "question": "Hvor mange år gik der, fra Grundloven blev underskrevet, til kvinder fik valgret til Rigsdagen? Skriv antallet med cifre.",
+          "correct": "66",
+          "accepted_answers": ["66"],
+          "review_text": "1915 − 1849 = 66. Kvinderne måtte vente 66 år på valgret til Rigsdagen."
+        }
+      }
+    }
+  ]
+}

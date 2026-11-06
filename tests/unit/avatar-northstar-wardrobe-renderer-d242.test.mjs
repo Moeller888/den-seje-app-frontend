@@ -23,13 +23,13 @@ const withStorage = (entries, fn) => { const prev = globalThis.localStorage; con
   globalThis.localStorage = { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) };
   try { return fn(); } finally { if (prev === undefined) delete globalThis.localStorage; else globalThis.localStorage = prev; } };
 
-test("D-242 flag: OFF by default; only the explicit local opt-in turns it on; a blocked storage never throws", () => {
-  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
-  assert.equal(L.isNorthstarWardrobeOn(), false);
+test("D-357 flag: ON for every pupil (owner, 2026-11-06), whatever this browser holds; a blocked storage never throws", () => {
+  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
+  assert.equal(L.isNorthstarWardrobeOn(), true);
   assert.equal(withStorage({ avatar_northstar: "1" }, () => L.isNorthstarWardrobeOn()), true);
-  for (const v of ["0", "true", "yes", "", " 1"]) assert.equal(withStorage({ avatar_northstar: v }, () => L.isNorthstarWardrobeOn()), false, v);
+  for (const v of ["0", "true", "yes", "", " 1"]) assert.equal(withStorage({ avatar_northstar: v }, () => L.isNorthstarWardrobeOn()), true, v);
   const prev = globalThis.localStorage; globalThis.localStorage = { getItem() { throw new Error("blocked"); } };
-  try { assert.equal(L.isNorthstarWardrobeOn(), false); assert.equal(L.northstarSelectedOutfit(), null); } finally { if (prev === undefined) delete globalThis.localStorage; else globalThis.localStorage = prev; }
+  try { assert.equal(L.isNorthstarWardrobeOn(), true); assert.equal(L.northstarSelectedOutfit(), null); } finally { if (prev === undefined) delete globalThis.localStorage; else globalThis.localStorage = prev; }
 });
 
 test("D-242 outfits: exactly the 19 ready K outfits; the known-faulty combinations and untested ones cannot be chosen", () => {

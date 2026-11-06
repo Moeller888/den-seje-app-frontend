@@ -23,7 +23,7 @@ test("D-312 the map: 342 new composable combinations with stable, unique IDs; no
 test("D-312 charcoal with the three long trousers is held out (37), everything else is a candidate (305); after D-314 only the 37 remain outside the runtime list", () => {
   const held = C.filter((c) => c.heldOut); assert.equal(held.length, 37); assert.ok(held.every((c) => c.shoe === "SV1-V5-CHARCOAL" && HELD_OUT_BOTTOMS.includes(c.bottom)));
   assert.equal(C.filter((c) => c.shoe === "SV1-V5-CHARCOAL" && HELD_OUT_BOTTOMS.includes(c.bottom)).length, 37); assert.equal(C.length - held.length, 305);
-  assert.equal(L.NORTHSTAR_SV1_SHOE_COMBOS.length, 21 + 305); assert.deepEqual(newCombinations(L).map((c) => c.id), held.map((c) => c.id), "D-314: only the held-out 37 stay outside"); assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(L.NORTHSTAR_SV1_SHOE_COMBOS.length, 21 + 305); assert.deepEqual(newCombinations(L).map((c) => c.id), held.map((c) => c.id), "D-314: only the held-out 37 stay outside"); assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
 });
 
 test("D-312 the candidate file is the map: 305 recommended (all technical PASS, runtime byte-identical, no missing asset), 37 held out", async () => {

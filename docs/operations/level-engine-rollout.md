@@ -198,6 +198,133 @@ FROM public.questions WHERE metadata ? 'level_batch' GROUP BY 1 ORDER BY 1;
 -- WHERE learning_objective = 'english' AND metadata->>'level_batch' = 'pilot';
 ```
 
+### 2.8 Engelsk 5.000: plan for anvendelse og trinvis aktivering (2026-11-05)
+
+Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokumenteret i
+[`english-5000-e5.md`](english-5000-e5.md).
+
+**Status:**
+- 2026-11-06: ejeren har taget et dump af `public.questions` (2.143 rækker med struktur), fordi produktionen
+  ikke har nogen gendannelig backup.
+- **Trin 1a er udført 2026-11-06.** `20261020125000_english_grade6_9` er anvendt som ledger-version
+  `20261106094831`. Efterkontrollen viste 120 rækker, 0 aktive og 0 uden niveau eller CEFR, og indholdet er
+  identisk med repoet. Se
+  [`production-actions/2026-11-06T0948Z-english-grade6-9-applied.md`](production-actions/2026-11-06T0948Z-english-grade6-9-applied.md).
+- Trin 1b–1d og hele fase 2 er ikke udført.
+
+**Godkendelser:**
+- Hvert trin herunder kræver sit eget GO fra ejeren (E2, D-110). Det gælder også hver `apply_migration`, hver
+  aktiveringsmigration og hver tilbagerulning.
+- Et GO til ét trin dækker ikke det næste.
+
+**Ingen backup:** ifølge den senest kendte status har produktionen ingen gendannelig backup (gratis plan, PITR slået fra). Det bekræftes før fase 1.
+- Indsættelsen er additiv og inaktiv.
+- En fejl rulles tilbage med `DELETE` eller `UPDATE` på `metadata.level_batch`, ikke med en gendannelse.
+
+#### A. Forudsætninger (læsende)
+
+1. E5-PR'en er merget, og main-CI er grøn.
+2. Kør `node tools/questions/english-5000-precheck.mjs before`. Den giver kun `SELECT` og kører én gang via `execute_sql`.
+   Forventet resultat:
+   - `has_difficulty_level = 1`;
+   - ingen rækker med `level_batch`;
+   - `text_collisions = 0`. Den levende `unique_question_text` ville ellers afvise en hel migration;
+   - triggere, constraints og indeks på `public.questions` svarer til repoet:
+     - `questions_answer_format_check`;
+     - `questions_target_grade_check` (3–9);
+     - `questions_difficulty_band_check` (1–5);
+     - `questions_difficulty_level_check` (1–10.000);
+     - `unique_question_text`;
+     - `idx_questions_objective_level`;
+     - ingen ukendt `INSERT`-trigger.
+
+   Afviger noget: stop og rapportér.
+3. `LEVEL_ENGINE` er uændret (`v1`). Inaktive opgaver serveres ikke: alle motorens udvælgelser filtrerer på
+   `is_active = true` (migration B), og `20261102100000_release_open_rounds_on_inactive_questions` er anvendt.
+
+#### B. Fase 1: indsættelse, alle inaktive (31 × `apply_migration`)
+
+Filerne anvendes én ad gangen i versionsorden, med den nøjagtige fil fra `main`. Elever mærker intet.
+
+| Trin | Migrationer | Rækker | Formål |
+|---|---|---|---|
+| 1a | `20261020125000_english_grade6_9` | 120 | Prøv mekanikken på den mindste fil |
+| 1b | `2026102013000[1-3]` (pilot) | 500 | |
+| 1c | `202610201[4-8]000[1-3]` (batch2–batch6) | 2.500 | |
+| 1d | `2026102019000[1-3]` … `2026102022000[1-3]` (batch7–batch10) | 1.880 | |
+
+**Efter hver fil:**
+- Kør `node tools/questions/english-5000-precheck.mjs after` (læsende). Portionen skal have det forventede antal, 0 aktive og
+  0 uden niveau eller CEFR.
+- Notér produktionens ledger-version.
+- Efter hvert trin: en bogførings-PR, der flytter filerne fra `NOT_IN_PRODUCTION` til `APPLIED_IN_PRODUCTION`
+  (`tests/isolated/schema/replay-plan.mjs`), plus en log i `production-actions/`.
+
+**Tilbagerulning (fase 1, eget GO):**
+1. Bekræft først, at ingen instanser peger på portionen:
+   ```sql
+   SELECT count(*) FROM question_instances qi
+   JOIN questions q ON q.id = qi.question_id
+   WHERE q.metadata->>'level_batch' = '<portion>';
+   ```
+   Forventet: 0, fordi portionen er inaktiv.
+2. Slet derefter:
+   ```sql
+   DELETE FROM public.questions
+   WHERE learning_objective = 'english'
+     AND metadata->>'level_batch' = '<portion>'
+     AND NOT is_active;
+   ```
+
+#### C. Fase 2: trinvis aktivering
+
+Én aktiveringsmigration pr. trin. Den skrives i en PR med eget GO, anvendes med eget GO, og antallet er låst:
+
+```sql
+DO $$
+DECLARE n integer;
+BEGIN
+  UPDATE public.questions SET is_active = true
+  WHERE learning_objective = 'english' AND metadata->>'level_batch' = 'batch7' AND NOT is_active;
+  GET DIAGNOSTICS n = ROW_COUNT;
+  IF n <> 470 THEN RAISE EXCEPTION 'batch7: expected 470 rows, got %', n; END IF;
+END $$;
+```
+
+| Trin | Portioner | Rækker | Begrundelse |
+|---|---|---|---|
+| 2a | batch7 | 470 | Første indholdscanary: alle seks CEFR-niveauer, nyt indhold, laveste E5-rate (stikprøve 4 %) |
+| 2b | batch8, batch9, batch10 (ét ad gangen eller samlet) | 1.410 | Samme kilde og kontrol som 2a |
+| 2c | batch6, grade6_9 | 620 | Fuldt gennemgået i E5 |
+| 2d | pilot, batch2, batch3 | 1.500 | Fuldt gennemgået i E5, få fund |
+| 2e | batch4, batch5 | 1.000 | Flest E5-fund (forvanskede distraktorer og CEFR), alle rettet. Aktiveres sidst |
+
+Efter 2e har engelsk cirka 6.088 aktive opgaver. Det svarer til lasttesten i §4.2 (6.090 aktive engelskopgaver,
+kandidatvalget under 50 ms). §2.5-målingen i produktion bør tages efter 2b. Guarden blokerer `execute_sql` mod
+app-funktioner, så målingen køres af ejeren i dashboardet.
+
+**Observation mellem trinene:** mindst tre skoledage med elevtrafik, kun læsende og kun aggregeret.
+- **`get-next-question`:** 0 5xx, og `LEVEL_ENGINE:`-linjerne viser kandidater > 0 i engelsk.
+- **Opgaver med mistanke om forkert facit:** ≥ 20 besvarelser og under 15 % rigtige. De gennemgås og kan deaktiveres
+  enkeltvis (eget GO).
+- **For lette opgaver på et højt niveau:** ≥ 20 besvarelser, over 97 % rigtige og B2 eller højere. Kandidat til et nyt
+  niveau i en senere PR.
+- **Elevernes niveauer:** fordelingen i `student_subject_level` for engelsk. Ingen massiv ophobning ved 1 eller 10.000.
+
+**Stop-kriterier:** et 5xx fra niveaumotoren, et bekræftet forkert facit eller en klage fra en lærer. Næste trin venter,
+til fundet er rettet.
+
+**Tilbagerulning (fase 2, eget GO):** ét af følgende.
+- Hele portionen:
+  ```sql
+  UPDATE public.questions SET is_active = false
+  WHERE learning_objective = 'english' AND metadata->>'level_batch' = '<portion>';
+  ```
+- Én opgave: samme `UPDATE` med `WHERE id = …`.
+
+Åbne runder på deaktiverede opgaver frigives af `release_open_rounds_on_inactive_questions`. Besvarede instanser og
+niveaurækker bevares.
+
 ---
 
 ## 3. Tilbagerulning
@@ -235,7 +362,10 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (F-02 Sandt/falsk, PR #607) — **ikke deployet** | dette repository | 16 | `00ddba65243d69fffeb9ea8f7b01714d5745cf7bfe0945330123919b3237f1ca` |
+| Kandidat (F-04 Rækkefølge, oven på F-02 og F-07) — **ikke deployet** | dette repository | 18 | `06a6ccb9a2e5640abaa71a69581f3f42b5192c7dc91d865580099bf6004b3c4e` |
+| Forrige kandidat (F-02 Sandt/falsk #607 + F-07 stimulus, PR #618) — ikke deployet | #618 | 17 | `1df4cb344dfe97bde6f14b8e34adb9db26a44e948b6d197d01f2b9baa3104c8d` |
+| Forrige kandidat (F-02 Sandt/falsk, PR #607, merget uden stimulus) | main `3a2d2f37` | 16 | `00ddba65243d69fffeb9ea8f7b01714d5745cf7bfe0945330123919b3237f1ca` |
+| Forrige kandidat (F-07 stimulus alene) | `c1bfdcba` | 16 | `44ee77a4233f8699f1a342e2584f7b69ef1be1175415866e335854175856b29c` |
 | Deployet i produktion 2026-11-04 (`a7450b0f`, version 181 og senere secret-versioner) | `a7450b0f` | 15 | `1f508a8459f5141f1e629dec94ec979ce34bafdcecdbc650b8d6db2a2f7c3bbe` |
 | Forrige kandidat (før R2-canary'en, §2.6.1) | main før canary'en | 15 | `4a89e9e6e33b363c9e8360bb81b19077dcb26c4791c3a086a66c73386b718f8d` |
 | Forrige kandidat (før L1 K1's `served-snapshot.ts`) | main før K1 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
@@ -245,6 +375,13 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 | Historisk rollback til version 179 (det, `materialize-rollback` skriver) | `21ec9ff` med låsningen (kun linje 2 i `index.ts` er ændret) | 11 | `ca21b993839e48ff4e5baf3189306860d6b349fdcc7eea12f65ab78a73e418c6` |
 | Version 179, som deployet | `21ec9ff` uændret | 11 | `c4414671f3a5aff1e8d5bc3cb57ec4e92bb0d70ef8008a7ade39a75730c81985` |
 
+**F-04 Rækkefølge ændrer grafen fra 17 til 18 filer** (oven på F-02 og F-07). `_shared/order-items.ts` er ny (kontrakt,
+instansnøgle og layout; facit er den forfattede rækkefølge, kun præsentationen blandes), og
+`index.ts`, `_shared/question-dto.ts` og `_shared/interaction-kinds.ts` ændres: `index.ts` trækker
+nøglen for `order` ved oprettelse og læser den for åbne og gentagne runder præcis som for `match`
+(`KEYED_FORMATS`). Formatet er ikke servable, så ingen elev kan få det; for alle andre formater er
+læsningerne uændrede (slukket-pariteten er grøn). Kandidaten er **ikke** deployet.
+
 **F-02 Sandt/falsk (PR #607) ændrer grafen fra 15 til 16 filer.** `_shared/question-dto.ts` importerer
 nu `_shared/true-false.ts` og kontrollerer en `true_false`-række mod kontrakten, før instansen indsættes,
 så en række med en forkert nøgle springes over i stedet for at blive udleveret. `question-dto.ts` og
@@ -253,6 +390,12 @@ så en række med en forkert nøgle springes over i stedet for at blive udlevere
 filer), og Sandt/falsk er ikke servable, så ingen elev kan få en `true_false`-opgave, før ejeren har
 godkendt aktiveringen (`docs/ARCHITECTURE.md`, Sandt/falsk) og et særskilt deploy. Kodestien for
 andre opgaveformer er uændret (slukket-pariteten ovenfor er grøn med den nye graf).
+
+**F-07 stimulus ændrer grafen fra 16 til 17 filer** (oven på F-02). `_shared/question-dto.ts` importerer nu
+`_shared/stimulus.ts` og bygger `content.stimulus` (kilde, billede eller lydklip) felt for felt efter
+kontrakten; en række med et ugyldigt stimulus springes over i stedet for at blive udleveret uden sit
+materiale. `question-dto.ts` ændres, og `stimulus.ts` er ny; resten er som F-02-kandidaten ovenfor. Uden et `stimulus`-felt er payloaden uændret (slukket-pariteten ovenfor er grøn med den nye
+graf), og ingen række i produktionen har et `stimulus`-felt. Kandidaten er **ikke** deployet.
 
 Kandidaten adskiller sig fra version 179 i `index.ts` (niveaugrenen, låsningen, H5's `round_no` og
 Match par's nøglelæsning), `instance-insert.ts` (læser `repeat_count` tilbage, H5),
@@ -369,7 +512,7 @@ reference.
 - `entrypoint_path` `functions/get-next-question/index.ts`;
 - `import_map_path` `functions/get-next-question/deno.json`;
 - `verify_jwt` `false`, ellers fejler browserens OPTIONS-preflight;
-- præcis filerne i kandidatmanifestet (16 for kandidaten ovenfor), med stierne som i manifestet.
+- præcis filerne i kandidatmanifestet (17 for kandidaten ovenfor), med stierne som i manifestet.
 
 Ingen secret ændres.
 
@@ -579,6 +722,6 @@ at blive sprunget over. Lokalt springes den over, medmindre `LEVEL_ENGINE_PG_URL
 | R2 | `v1` er globalt, så der er ingen pilot på enkelte elever | **Lukket 2026-11-04.** Canary'en pr. elev (§2.6.1) blev deployet og afprøvet med én test-elev, før `v1` blev slået til for alle. Allowlisten er beholdt til hurtig tilbagegang |
 | R3 | Første kald folder hele elevens historik i faget. Elever med lang historik flyttes mange niveauer på én gang | Det er tilsigtet: den tidligere historik giver det bedste startestimat. Trinene bliver mindre med antal svar. Kan ses i fold-loggen |
 | R4 | Samtidighedstesten kræver en rigtig PostgreSQL | **Løst:** den kører i unit-jobbet mod en PostgreSQL 17.6-servicecontainer og fejler, hvis serveren mangler (§4.5) |
-| R5 | Placeringstesten måler kun historie, så engelsk og dansk starter på klassetrinnets startbånd | Bevidst (B9 er udskudt). De store første trin flytter eleven hurtigt |
+| R5 | Nye elever tager ingen placeringstest (D-356), så alle fag starter på klassetrinnets startbånd | Bevidst (B9 er afgjort af D-356). De store første trin flytter eleven hurtigt |
 | R6 | Indholdets egne tests bruger stadig et forenklet skema | Kørt én gang 2026-10-22: alle 18 indholdsfiler (3.000 rækker) indsat på det produktionstro skema efter #351 → A → B, alle inaktive og mærket, niveau 1–3.000 (`batch6`) og 3.001–10.000 (de øvrige). Opgave-PR'ernes egne tests skal flyttes over på `tests/unit/helpers/prod-base-schema.mjs`, når #356 og B er merget |
 | R7 | En elev, der har set eller ikke kan få de 600 nærmeste opgaver i faget, rammer fallback ved hvert kald (~60 ms ved 6.090 aktive, lineært voksende) | Det rammer kun elever med en meget lang historik omkring deres niveau. Følg det i produktion. Et bredere andet vindue før den fulde søgning er en mulig senere ændring (separat beslutning) |

@@ -50,7 +50,37 @@ export function sample(perStratum = 4) {
   return picked;
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === join(process.argv[1])) {
+export function levelBatch(file) {
+  return file.includes("grade6_9") ? "grade6_9" : /_level_(\w+?)_\d\.sql$/.exec(file)[1];
+}
+
+// E5 (design §10): every portion × CEFR cell, 10 % of the cell but at least 6 questions (or the
+// whole cell when it is smaller), evenly spaced in level order.
+export const E5_RATE = 0.1;
+export const E5_MIN = 6;
+export function e5Sample() {
+  const items = allNewQuestions().sort((left, right) => left.l - right.l || left.q.localeCompare(right.q, "da"));
+  const cells = new Map();
+  for (const item of items) {
+    const key = `${levelBatch(item.file)}|${item.cefr}`;
+    if (!cells.has(key)) cells.set(key, []);
+    cells.get(key).push(item);
+  }
+  const picked = [];
+  for (const [key, stratum] of [...cells].sort(([left], [right]) => left.localeCompare(right))) {
+    const n = Math.min(stratum.length, Math.max(E5_MIN, Math.ceil(stratum.length * E5_RATE)));
+    for (let i = 0; i < n; i++) {
+      const item = stratum[Math.floor(((i + 0.5) * stratum.length) / n)];
+      picked.push({ ...item, batch: key.split("|")[0] });
+    }
+  }
+  return picked;
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === join(process.argv[1]) && process.argv[2] === "--e5") {
+  console.log(JSON.stringify(e5Sample().map(({ batch, cefr, l, source, q, o, a, file }, index) =>
+    ({ id: index + 1, batch, cefr, l, source, q, o, a, file })), null, 1));
+} else if (process.argv[1] && fileURLToPath(import.meta.url) === join(process.argv[1])) {
   const per = Number(process.argv[2] ?? 4);
   const cell = (text) => String(text).replaceAll("|", "\\|");
   console.log("| # | CEFR | Niveau | Kilde | Spørgsmål | Svarmuligheder | Facit |");

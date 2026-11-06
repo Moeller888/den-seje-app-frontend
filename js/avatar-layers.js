@@ -818,7 +818,11 @@ export function hasR2StackFor(identity) {
 // this browser only (localStorage) — no database, catalog, purchase or ownership change.
 // Opt-in on one browser: localStorage.setItem("avatar_northstar", "1") (or avatar.html?northstar=1),
 // then pick an outfit in the panel on avatar.html.
-export const AVATAR_NORTHSTAR_WARDROBE = false;
+// D-357 (owner, 2026-11-06): the flag is ON, so every pupil is offered the wardrobe on avatar.html and chooses freely; nobody is moved
+// without choosing ("Nuværende avatar" stays the default). Rollback: set the flag to false and redeploy; every pupil is back on today's
+// path, and the stored choices stay unread in the database. The choice lives on the pupil's account (avatar_identity.northstar, written
+// only by the set_avatar_northstar RPC), not in the browser, so pupils sharing a school computer never see each other's outfit.
+export const AVATAR_NORTHSTAR_WARDROBE = true;
 export const NORTHSTAR_OPT_IN_KEY = "avatar_northstar";
 export const NORTHSTAR_OUTFIT_KEY = "avatar_northstar_outfit";
 export const NORTHSTAR_BASE_PATH = "/assets/avatar-northstar";
@@ -1034,7 +1038,27 @@ export const NORTHSTAR_KNOWN_FAULTY = Object.freeze([
   "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-white",
 ]);
 
+// D-357: the signed-in pupil's stored choice. undefined until a surface has named an account (northstarUseAccount); from then on, with
+// the flag on, the five choice keys are read from the account and never from this browser.
+const _NS_ACCOUNT_FIELDS = Object.freeze({ avatar_northstar_outfit: "outfit", avatar_northstar_tee: "tee", avatar_northstar_pants: "pants", avatar_northstar_shoes: "shoes", avatar_northstar_sweater: "top" });
+let _nsAccount;
+// Names the account whose choice applies. A missing or malformed identity is an account with no choice: today's avatar, never a stored
+// outfit of whoever used this browser before.
+export function northstarUseAccount(identity) {
+  const c = identity && typeof identity === "object" ? identity.northstar : null;
+  _nsAccount = c && typeof c === "object" && !Array.isArray(c) ? c : {};
+}
+// The account's choice with one key changed, as set_avatar_northstar takes it: only the fields that hold a value.
+export function northstarChoiceWith(key, value) {
+  const out = {};
+  for (const [k, f] of Object.entries(_NS_ACCOUNT_FIELDS)) { const v = k === key ? value : _nsStorage(k); if (typeof v === "string" && v) out[f] = v; }
+  return out;
+}
 function _nsStorage(key) {
+  if (AVATAR_NORTHSTAR_WARDROBE && _nsAccount !== undefined && Object.prototype.hasOwnProperty.call(_NS_ACCOUNT_FIELDS, key)) {
+    const v = _nsAccount[_NS_ACCOUNT_FIELDS[key]];
+    return typeof v === "string" ? v : null;
+  }
   try { return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null; } catch (_e) { return null; }
 }
 // The flag, or this browser's explicit opt-in. Never throws.
@@ -1199,6 +1223,7 @@ export function northstarCompose(plan, pixelsOf, n) {
 // sits in a slot the figure does not support. Supported cosmetics keep their src and C2 z.
 export function northstarRenderFor(surface, cosmetics) {
   if (!isNorthstarWardrobeOn()) return null;
+  if (_nsAccount === undefined && _nsStorage(NORTHSTAR_OPT_IN_KEY) !== "1") return null;   // D-357: no account named → a browser's choice still needs its opt-in
   if (NORTHSTAR_SURFACES.indexOf(surface) === -1) return null;
   const outfitKey = northstarSelectedOutfit(), base = northstarOutfitFor(outfitKey, northstarSelectedTee(), northstarSelectedPants(), northstarSelectedShoe());
   const outfit = northstarOutfitFor(outfitKey, northstarSelectedTee(), northstarSelectedPants(), northstarSelectedShoe(), northstarSelectedSweater());

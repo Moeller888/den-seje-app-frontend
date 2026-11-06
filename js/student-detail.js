@@ -474,7 +474,7 @@ function renderStudent(student, profileData) {
   const container = document.getElementById("studentInfo");
 
   const grade         = profileData?.selected_grade != null ? profileData.selected_grade + ". klasse" : "Ikke valgt";
-  const placementBand = profileData?.placement_band != null ? "Band " + profileData.placement_band    : "Ikke afsluttet";
+  const placementBand = profileData?.placement_band != null ? "Band " + profileData.placement_band    : "Ikke taget";
 
   container.innerHTML = `
     <p><strong>Email:</strong> <span id="studentEmailValue"></span></p>
@@ -507,7 +507,7 @@ function renderBandPanel(profileData) {
   const placement = profileData?.placement_band ?? null;
   const current   = profileData?.current_band   ?? null;
 
-  const placementText = placement != null ? "Band " + placement : "Ikke afsluttet";
+  const placementText = placement != null ? "Band " + placement : "Ikke taget";
   const currentText   = current   != null ? "Band " + current   : "Ingen aktiv session";
 
   let html = `<p><strong>Placering:</strong> ${placementText}</p>`;

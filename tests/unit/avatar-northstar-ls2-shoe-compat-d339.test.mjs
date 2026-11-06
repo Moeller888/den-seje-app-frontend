@@ -30,5 +30,5 @@ test("D-339 the review groups: 5 hip joins, 40 hem joins (both already reviewed)
 });
 
 test("D-339 itself extended nothing; D-340 then put exactly these 240 on the runtime list (with D-336's 30); the flag false", () => {
-  const keys = K.candidates.map((c) => c.top + "+" + c.bottom + "+" + c.shoes); assert.ok(keys.every((k) => AL.NORTHSTAR_LS2_COMBOS.includes(k))); assert.equal(AL.NORTHSTAR_LS2_COMBOS.length, 270); assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
+  const keys = K.candidates.map((c) => c.top + "+" + c.bottom + "+" + c.shoes); assert.ok(keys.every((k) => AL.NORTHSTAR_LS2_COMBOS.includes(k))); assert.equal(AL.NORTHSTAR_LS2_COMBOS.length, 270); assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, true);
 });

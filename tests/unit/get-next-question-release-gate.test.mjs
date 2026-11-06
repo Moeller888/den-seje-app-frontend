@@ -159,8 +159,10 @@ test("the guard itself: floating specifiers are rejected, exact ones accepted", 
 
 test("the runbook records this tree's candidate manifest, the pinned supabase-js and the rollback source", () => {
   const m = manifest(read, graphFiles(read));
-  assert.equal(m.files.length, 16);
+  assert.equal(m.files.length, 18);
+  assert.ok(m.files.includes("functions/_shared/stimulus.ts"), "F-07: question-dto builds content.stimulus");
   assert.ok(m.files.includes("functions/_shared/true-false.ts"), "F-02: question-dto checks true_false content");
+  assert.ok(m.files.includes("functions/_shared/order-items.ts"), "F-04: Rækkefølge key and layout");
   assert.ok(m.files.includes("functions/get-next-question/served-snapshot.ts"), "L1 K1");
   assert.ok(m.files.includes("functions/get-next-question/level-flow.ts"));
   assert.ok(m.files.includes("functions/_shared/match-pairs.ts"));

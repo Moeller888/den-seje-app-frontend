@@ -1,7 +1,7 @@
 # Sværhedsskala 1–10.000 — designforslag
 
 **Status:** GODKENDT DESIGN. B1–B8 er besluttet af ejeren 2026-10-20 (§9), og E1–E5 2026-10-22 (§10).
-B9 er udskudt.
+B9 er afgjort af ejeren 2026-11-06 (D-356).
 Intet i dette dokument er bygget eller anvendt.
 **Dato:** 2026-10-20 · **Grundlag:** `main` @ `d93faff`
 **Anledning:** Ejeren ønsker 10.000 sværere engelskopgaver fordelt på niveau 1–10.000. Den 19.
@@ -218,7 +218,7 @@ Hvis niveauerne skal kunne skrives til, skal de have et indhold. Forslag: forank
    **inaktive** (`is_active=false`) og mærket `metadata.level_batch` (E1). Hver migration anvendes
    kun med ejerens godkendelse af netop den migration (E2).
 7. **Stikprøvekontrol (E5):** dokumenteret kontrol på tværs af alle niveauer og portioner, før noget
-   aktiveres.
+   aktiveres. **Gennemført 2026-11-05** for de 5.000 engelskopgaver (§11.4).
 8. **Aktivering af indholdet:** en separat migration pr. portion,
    `UPDATE … SET is_active = true WHERE learning_objective = 'english' AND metadata->>'level_batch' = …`,
    hver med egen ejergodkendelse.
@@ -244,7 +244,7 @@ E2E: en elev i 3. klasse med højt niveau får B1-opgaver.
 | B6 | Rækkefølge i forhold til PR #351 (serverejet bånd) | **BESLUTTET 2026-10-20: #351 merges først**, og niveauet bygges på dens mekanisme |
 | B7 | CEFR-forankringen i §7 til engelsk | **BESLUTTET 2026-10-20: ja** |
 | B8 | Hvad ser eleven? (niveautal, CEFR-mærke eller ingenting) | **BESLUTTET 2026-10-20: ingenting i v1**; læreren ser niveauet pr. fag |
-| B9 | Udfases placeringstesten, når skalaen kører? | Udskudt: særskilt beslutning, når skalaen kører |
+| B9 | Udfases placeringstesten, når skalaen kører? | Ja, for nye elever: [D-356](decisions/D-356.md), 2026-11-06 |
 
 Beslutningerne er registreret i `docs/ROADMAP.md`. `docs/ARCHITECTURE.md` opdateres i samme PR som migration A,
 når datamodellen faktisk findes. PR #351 er merget (B6 opfyldt i repoet).
@@ -289,11 +289,14 @@ stikprøvekontrol, med en særskilt aktiveringsmigration pr. portion og en særs
 | CEFR | Antal |
 |---|---|
 | før A1 | 440 |
-| A1 | 510 |
-| A2 | 703 |
-| B1 | 1.213 |
-| B2 | 1.100 |
-| C1 | 1.034 |
+| A1 | 525 |
+| A2 | 753 |
+| B1 | 1.183 |
+| B2 | 1.086 |
+| C1 | 1.013 |
+
+Tallene er efter E5 (§11.4), som flyttede 97 overtagne opgaver et helt CEFR-niveau ned. Før E5 var de 440, 510,
+703, 1.213, 1.100 og 1.034.
 
 Hver af `batch7`–`batch10` spænder over hele skalaen og alle seks grupper.
 
@@ -361,8 +364,16 @@ uafhængig gennemgang.
   - en uheldig distraktor ("lust").
 - Der var 0 forkerte facit og 0 fund i de nyskrevne opgaver i den uafhængige gennemgang.
 
-Det er **ikke** den fulde E5-kontrol før aktivering. Den skal stadig laves og dokumenteres pr.
-portion.
+Det var ikke den fulde E5-kontrol.
+
+**E5 er gennemført 2026-11-05.** Resultatet er dokumenteret i
+[`operations/english-5000-e5.md`](operations/english-5000-e5.md):
+- en lagdelt stikprøve på 525 opgaver;
+- fuld gennemgang af de syv overtagne portioner, fordi de lå over acceptgrænsen på 5 %;
+- i alt 3.320 opgaver gennemgået med 301 fund, som alle er rettet.
+
+Planen for anvendelse og trinvis aktivering står i runbookens §2.8
+(`operations/level-engine-rollout.md`).
 
 ### 11.5 Kendte begrænsninger
 

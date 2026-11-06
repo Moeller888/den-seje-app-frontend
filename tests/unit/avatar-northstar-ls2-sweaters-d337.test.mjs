@@ -53,5 +53,5 @@ test("D-337 the plan: the hip seam after the shoes and right before the bottom, 
     assert.equal(srcs[k - 1], c.shoes + "-shoes-v1.webp"); assert.equal(srcs[k + 1], c.bottom + "-pants-v1.webp"); assert.ok(srcs.indexOf(c.top + "-top-body-v1.webp") > k + 1);
     assert.ok(srcs.includes("top-sweater-ls2-shadow-body-v1.webp") && srcs.includes("top-sweater-ls2-shadow-arms-v1.webp")); }
   for (const k of Object.keys(L.NORTHSTAR_OUTFITS)) assert.ok(!L.northstarPlanFor(L.NORTHSTAR_OUTFITS[k]).some((s) => s.src.includes("hip-seam")));
-  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
 });

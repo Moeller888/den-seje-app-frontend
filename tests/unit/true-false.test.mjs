@@ -91,7 +91,11 @@ test("registry: true_false is classified, has its own wire format and renderer, 
     teacherGraded: false, guessFloor: 0.5,
   });
   assert.ok(Object.isFrozen(spec));
-  assert.equal(KIND_ORDER[KIND_ORDER.length - 1], "true_false", "appended: existing tie-breaks unchanged");
+  // Appended after the kinds that existed before it, so their tie-breaks are unchanged; kinds built later
+  // (Rækkefølge, F-04) are appended after it in turn.
+  assert.deepEqual(KIND_ORDER.slice(0, KIND_ORDER.indexOf("true_false") + 1),
+    ["choice", "short_text", "long_text", "number", "force_text", "match_pairs", "true_false"],
+    "appended: existing tie-breaks unchanged");
   assert.equal(classifyQuestion(ROW), "true_false");
   assert.equal(classifyQuestion({ answer_format: "true_false" }), "true_false");
   assert.equal(isServableKind("true_false"), false);
@@ -323,7 +327,8 @@ test("app.js: the true_false renderer is built from js/true-false.js; malformed 
   assert.match(block, /buildTrueFalseAnswer\(document, \{\s*onSubmit: submitAnswer,\s*describedBy: questionElement\.id,\s*\}\)/);
   assert.match(block, /return true;/);
   assert.match(block, /logError\("INVALID_TRUE_FALSE_CONTENT"/);
-  assert.match(app, /if \(renderer === ANSWER_RENDERERS\.UNSUPPORTED \|\| renderer === ANSWER_RENDERERS\.MATCH_PAIRS\s*\|\| renderer === ANSWER_RENDERERS\.TRUE_FALSE\) \{/);
+  // Kinds built later (Rækkefølge, F-04) may follow TRUE_FALSE in the same fallback condition.
+  assert.match(app, /if \(renderer === ANSWER_RENDERERS\.UNSUPPORTED \|\| renderer === ANSWER_RENDERERS\.MATCH_PAIRS\s*\|\| renderer === ANSWER_RENDERERS\.TRUE_FALSE(\s*\|\| renderer === ANSWER_RENDERERS\.[A-Z_]+)*\) \{/);
   // The statement gets the quiz's read-aloud player like every question text.
   assert.match(app, /attachReadAloudControl\(questionElement, question\.content\.question, \{ subject: currentSubject \}\);/);
   // Its stylesheet is on the quiz page.
