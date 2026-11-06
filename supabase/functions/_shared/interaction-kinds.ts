@@ -32,6 +32,10 @@
 //                (not "mc"): the browser pads answer_format "mc" to four options with legacy years
 //                (js/answer-options.js), which a two-choice task must never get. maxShare 0 until the
 //                owner decides its share (it is a forståelsestjek, docs/learning-progression-design.md).
+//   order_items  answer_format "order" (ROADMAP #12)      auto-graded   renderer "order_items" — BUILT, NOT
+//                servable: contract, key and answer shape in _shared/order-items.ts (the facit is the
+//                authored order; only the presentation is shuffled); graded by process_question_attempt
+//                like Match par (process-event checks the answer's shape first)
 //
 // GUESS FLOOR (guessFloor)
 // The chance that a pure random answer is right, where that is a FIXED property of the kind. Future
@@ -70,11 +74,12 @@ export type InteractionKind =
   | "number"
   | "force_text"
   | "match_pairs"
-  | "true_false";
+  | "true_false"
+  | "order_items";
 
 export type InteractionKindSpec = {
   // The answer_format value get-next-question sends to the browser for this kind.
-  wireFormat: "mc" | "text" | "number" | "match" | "true_false";
+  wireFormat: "mc" | "text" | "number" | "match" | "true_false" | "order";
   // js/answer-input.js ANSWER_RENDERERS value, or null when no client renderer exists yet.
   renderer: string | null;
   // May the server hand this kind out as a NEW question to the current client?
@@ -99,6 +104,7 @@ export const INTERACTION_KINDS: Readonly<Record<InteractionKind, Readonly<Intera
   force_text:  Object.freeze({ wireFormat: "mc",          renderer: "force_text", servable: true,  base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
   match_pairs: Object.freeze({ wireFormat: "match",       renderer: "match_pairs", servable: false, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
   true_false:  Object.freeze({ wireFormat: "true_false",  renderer: "true_false", servable: false, base: false, maxShare: 0,    teacherGraded: false, guessFloor: 0.5 }),
+  order_items: Object.freeze({ wireFormat: "order",       renderer: "order_items", servable: false, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
 });
 
 // Registry order is the deterministic tie-break wherever two kinds score the same.
@@ -154,6 +160,7 @@ export function classifyQuestion(row: StoredFormatFields | null | undefined): In
 
   if (format === "match") return forceText ? null : "match_pairs";
   if (format === "true_false") return forceText ? null : "true_false";
+  if (format === "order") return forceText ? null : "order_items";
 
   // mapAnswerFormat (server) tests "mc" first, resolveAnswerRenderer (browser) tests "number" first:
   // a format containing both would be graded as one kind and shown as the other.

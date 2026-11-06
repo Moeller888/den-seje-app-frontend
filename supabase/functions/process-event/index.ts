@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { publishableKey, serviceKey, serviceKeySource } from "../_shared/supabase-keys.ts";
 import { isTextAnswerCorrect } from "../_shared/answer-evaluation.ts";
 import { canonicalMatchAnswer } from "../_shared/match-pairs.ts";
+import { canonicalOrderAnswer } from "../_shared/order-items.ts";
 import { ADMIN_CLIENT_OPTIONS, isInstanceOwner, callProcessTextAnswer, callProcessQuestionAttempt } from "./text-answer-rpc.ts";
 import { callProcessTextAnswerV2, callProcessQuestionAttemptV2, LEGACY_ANSWER_RPCS } from "./text-answer-rpc.ts";
 import { updateOwnInstance, recordMisconceptionSignal, type InstanceWriteResult } from "./instance-writes.ts";
@@ -355,6 +356,20 @@ serve(async (req) => {
       if (canonical === null) {
         return new Response(
           JSON.stringify({ status: "invalid", error: "Forbind alle par, før du sender." }),
+          { status: 400, headers: corsHeaders }
+        )
+      }
+      gradedAnswer = canonical
+    }
+    // Rækkefølge: the same shape check for the pupil's order (display positions, top to bottom) —
+    // canonicalOrderAnswer (../_shared/order-items.ts) accepts only a permutation of the instance's
+    // positions and writes it in the key's form. process_question_attempt compares and awards as for MC:
+    // all or nothing, one reward path. A malformed order is refused before anything is recorded or paid.
+    if (format === "order") {
+      const canonical = canonicalOrderAnswer(answer, correct_answer)
+      if (canonical === null) {
+        return new Response(
+          JSON.stringify({ status: "invalid", error: "Sæt alle elementer i rækkefølge, før du sender." }),
           { status: 400, headers: corsHeaders }
         )
       }

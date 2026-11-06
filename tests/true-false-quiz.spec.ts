@@ -19,6 +19,7 @@ import * as http from "http";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
+import { closeOfflineQuiz } from "./support/close-offline-quiz";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -167,7 +168,7 @@ for (const v of VIEWPORTS) {
     if (v.hasTouch) await opt(page, "Falsk").tap(); else await opt(page, "Falsk").click();
     await expect(page.locator("#feedback")).toHaveText("Ja! 🎯");
     expect(writes, "the page writes no progress itself").toEqual([]);
-    await page.context().close();
+    await closeOfflineQuiz(page);
   });
 }
 
@@ -190,7 +191,7 @@ test("right answer: sent once as the option text, \"Ja! 🎯\", then the next st
   await expect.poll(() => answers).toEqual(["Falsk", "Sandt"]);
   await expect(page.locator("#question")).toContainText(STATEMENTS[2], { timeout: 10000 });
   expect(writes, "the page writes no progress itself").toEqual([]);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("wrong answer without an explanation: the quiz names the right answer and moves on", async ({ browser }) => {
@@ -200,7 +201,7 @@ test("wrong answer without an explanation: the quiz names the right answer and m
   await expect(page.locator("#feedback")).toHaveClass("feedback-error");
   await expect(page.locator("#question")).toContainText(STATEMENTS[1], { timeout: 10000 });
   expect(answers).toEqual(["Sandt"]);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("wrong answer with an explanation: the reflection is led by the right judgement, then \"Videre\"", async ({ browser }) => {
@@ -217,7 +218,7 @@ test("wrong answer with an explanation: the reflection is led by the right judge
   await expect(page.locator("#question")).toContainText(STATEMENTS[1], { timeout: 10000 });
   await expect(opt(page, "Sandt")).toBeEnabled();
   expect(answers).toEqual(["Sandt"]);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("a failed send hands the answer back: visible error, focus back, and it can be given again", async ({ browser }) => {
@@ -232,7 +233,7 @@ test("a failed send hands the answer back: visible error, focus back, and it can
   await page.keyboard.press("Enter");
   await expect(page.locator("#feedback")).toHaveText("Ja! 🎯");
   expect(answers).toEqual(["Sandt", "Sandt"]);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("a second click while the answer is on its way sends nothing", async ({ browser }) => {
@@ -249,5 +250,5 @@ test("a second click while the answer is on its way sends nothing", async ({ bro
   release();
   await expect(page.locator("#feedback")).toHaveText("Ja! 🎯");
   expect(answers).toEqual(["Sandt"]);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });

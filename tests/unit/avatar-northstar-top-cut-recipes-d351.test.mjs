@@ -65,5 +65,5 @@ test("D-351 the representative pairs are on all three cuts' current lists (no co
   for (const c of CUTS) for (const p of Object.values(P)) assert.ok(lists[c].has(p.bottom + "|" + p.shoes), c);
   const r = spawnSync(process.execPath, [join(REPO, "tools", "avatar", "northstar-top-cut-production-trial.mjs"), "--phase", "views", "--out", join(REPO, "tmp-d351")], { cwd: REPO, encoding: "utf8", windowsHide: true, timeout: 60000 });
   assert.equal(r.status, 1); assert.match(r.stderr, /--out must be outside the repository/);
-  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
 });

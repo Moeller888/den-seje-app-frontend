@@ -26,7 +26,7 @@ test("D-345 the family: 44 tee-approved pairs x 6 designs = 264; olive with beig
   assert.equal(C.filter((c) => c.reviewedInD343).length, 24);
   // D-348 integrated the six after the owner's approval: the runtime's tank items are exactly the staged item table, nothing else
   assert.deepEqual(Object.keys(AL.NORTHSTAR_ITEMS).filter((k) => k.startsWith(TF.CUT_ITEM)), Object.keys(TF.DESIGNS).map(TF.itemOf), "the runtime's tank items are the six");
-  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, true);
 });
 
 test("D-345 the runtime item shape: the hem junction after the shoes and before the bottom, a body layer, no sleeves, the cut's shadow", () => {

@@ -62,6 +62,8 @@ export function checkCut(c) {
     if (s && !(c.panels.armpitOut && c.panels.armpitOut.left && c.panels.armpitOut.right)) p.push("a sleeved cut gives the armpit direction per side");
     if (![1, 128].includes(c.sleeves.layerSplitFromArmAlpha)) p.push("sleeves.layerSplitFromArmAlpha: 128 (production) or 1 (D-335)");
     if (!["r1c-construction", "seam-rule", "none"].includes(c.trim.bands)) p.push("trim.bands: r1c-construction | seam-rule | none");
+    if (c.trim.revision !== undefined && ![1, 2].includes(c.trim.revision)) p.push("trim.revision: 1 (D-352) | 2 (D-354)");
+    if (c.edges !== undefined && !(c.edges && ["contour-ink", "figure-or-ink"].includes(c.edges.rim))) p.push("edges.rim: contour-ink | figure-or-ink (D-354)");
     if (c.trim.bands === "seam-rule") { const R = c.trim.regions; if (!Array.isArray(R) || !R.length) p.push("a seam-rule cut lists its trim.regions");
       else for (const r of R) { if (!r.name || !["body", "left", "right"].includes(r.panel) || !["top", "bottom", "opening"].includes(r.edge)) p.push("trim region: name, panel body|left|right, edge top|bottom|opening");
         if ((r.edge === "opening") !== (Array.isArray(r.hole) && r.hole.length === 4 && r.hole.every(Number.isInteger))) p.push(r.name + ": an opening region (and only it) gives its hole box [x0, y0, x1, y1]");
@@ -128,10 +130,105 @@ export function seamBands(c, t, master) {
       const dir = r.edge === "top" ? 1 : -1; let best = null, bv = 9; for (let d = r.depth[0]; d <= r.depth[1]; d++) { const y = e + dir * d, i = y * W + x; if (y < 0 || y >= N / W || !t.core[i] || master.panel[i] !== p || t.contour[i * 4 + 3]) continue; if (master.ratio[i] < bv) { bv = master.ratio[i]; best = d; } }
       if (best !== null) cols.push({ x, e, d: best }); }
     const ds = cols.map((q) => q.d); let n = 0;
-    cols.forEach((q, j) => { const win = ds.slice(Math.max(0, j - 4), j + 5).sort((a, b) => a - b), d = win[win.length >> 1], dir = r.edge === "top" ? 1 : -1;
+    if ((c.trim.revision || 1) >= 2 && cols.length >= 5) { n = seamCurveBand(r, k + 1, p, t, master, band, cols); }
+    else cols.forEach((q, j) => { const win = ds.slice(Math.max(0, j - 4), j + 5).sort((a, b) => a - b), d = win[win.length >> 1], dir = r.edge === "top" ? 1 : -1;
       for (let s = 0; s <= d; s++) { const i = (q.e + dir * s) * W + q.x; if (t.core[i] && master.panel[i] === p && !band[i]) { band[i] = k + 1; n++; } } });
     const sd = [...ds].sort((a, b) => a - b); out[r.name] = { px: n, columns: cols.length, depth: cols.length ? [sd[0], sd[sd.length >> 1], sd[sd.length - 1]] : null }; });
+  if ((c.trim.revision || 1) >= 2) { // the three closures feed each other (a filled corner opens a gap, a gap a soft edge): run them together
+    // until nothing changes (at most 8 rounds)
+    const openings = (c.trim.regions || []).map((r, k) => (r.edge === "opening" ? { mark: k + 1, box: [r.hole[0] - r.depth[1] - 6, r.hole[1] - r.depth[1] - 6, r.hole[2] + r.depth[1] + 6, r.hole[3] + r.depth[1] + 6] } : null)).filter(Boolean);
+    out.cornerPx = 0; out.gapPx = 0; out.softEdgePx = 0;
+    // (the soft-edge step only adds soft pixels from the band's CORE pixels, so it cannot creep along the outline; all three are safe
+    // to repeat together)
+    out.softEdgePx = 0; for (let round = 0; round < 8; round++) { const a = cornerClosure(t, master, band, openings), b = gapClosure(t, master, band), d = softEdgeClosure(t, band); out.cornerPx += a; out.gapPx += b; out.softEdgePx += d; if (!a && !b && !d) break; } }
   return { band, regions: out };
+}
+
+/** D-354 (trim.revision 2) — the seam of a column region as ONE smooth curve: the per-column seam rows (edge -+ the darkest depth) are
+ *  fitted by least squares with a quadratic in x, columns more than 3 px off the first fit are dropped and the curve refitted; the band
+ *  is then every pixel of the panel within the region's x range on the edge side of the curve (the curve's row included), over ALL its
+ *  columns — also those whose own edge was skipped (the cuff's rounded corners, D-352's gaps) — so the band ends on one smooth line
+ *  instead of a stepped one (D-352's spikes up into the sleeve). */
+function seamCurveBand(r, mark, p, t, master, band, cols) {
+  const dir = r.edge === "top" ? 1 : -1, pts = cols.map((q) => [q.x, q.e + dir * q.d]);
+  const fit = (P) => { let s0 = 0, s1 = 0, s2 = 0, s3 = 0, s4 = 0, t0 = 0, t1 = 0, t2 = 0; const m = P.reduce((a, q) => a + q[0], 0) / P.length;
+    for (const [x0, y] of P) { const x = x0 - m, x2 = x * x; s0++; s1 += x; s2 += x2; s3 += x2 * x; s4 += x2 * x2; t0 += y; t1 += x * y; t2 += x2 * y; }
+    const A = [[s4, s3, s2, t2], [s3, s2, s1, t1], [s2, s1, s0, t0]]; for (let i = 0; i < 3; i++) { let b = i; for (let j = i + 1; j < 3; j++) if (Math.abs(A[j][i]) > Math.abs(A[b][i])) b = j; [A[i], A[b]] = [A[b], A[i]];
+      for (let j = 0; j < 3; j++) if (j !== i && A[i][i]) { const f = A[j][i] / A[i][i]; for (let k = i; k < 4; k++) A[j][k] -= f * A[i][k]; } }
+    const [a, b, c] = [0, 1, 2].map((i) => (A[i][i] ? A[i][3] / A[i][i] : 0)); return (x) => a * (x - m) ** 2 + b * (x - m) + c; };
+  let f = fit(pts); const keep = pts.filter(([x, y]) => Math.abs(y - f(x)) <= 3); if (keep.length >= 5) f = fit(keep);
+  const x0 = r.x ? r.x[0] : 0, x1 = r.x ? r.x[1] : W - 1; let n = 0;
+  for (let x = x0; x <= x1; x++) { const ys = Math.round(f(x)); for (let y = 0; y < N / W; y++) { const i = y * W + x; if (!t.core[i] || master.panel[i] !== p || band[i]) continue; if (dir < 0 ? y >= ys : y <= ys) { band[i] = mark; n++; } } }
+  return n;
+}
+
+/** D-354 (trim.revision 2) — a band's GAPS: a core pixel with the same band directly above and below it, or directly left and right
+ *  of it, joins that band (two passes), whatever its panel (such a gap can sit on a panel's seam, as at the shoulder). The opening's per-sector seam depth can leave a one-row gap where two sectors meet
+ *  (a row of fabric across the neck rib at the shoulder in D-352); a band never has such a gap in the drawing. */
+export function gapClosure(t, master, band) {
+  let n = 0;
+  for (let pass = 0; pass < 2; pass++) { const add = [];
+    for (let i = W + 1; i < N - W - 1; i++) { if (band[i] || !t.core[i]) continue;
+      for (const [a, b] of [[i - W, i + W], [i - 1, i + 1]]) if (band[a] && band[a] === band[b]) { add.push([i, band[a]]); break; } }
+    for (const [i, m] of add) { band[i] = m; n++; } }
+  return n;
+}
+
+/** D-354 (trim.revision 2) — a band's CORNERS: a core pixel of the same panel that touches the band and lies within 2 px of the contour's
+ *  ink (alpha >= 128) joins the band (three passes). Where a rib ends at the cut's outline (the neck rib meeting the shoulder) the
+ *  opening's distance rule leaves a small wedge of fabric between the band and the outline — the light sliver at the shoulder in D-352;
+ *  this closes it up to the outline and never beyond it (the contour itself is not band, and nothing outside the core is added here).
+ *  Only OPENING bands, within their hole box widened by the depth (a hem or cuff band must not creep up the side outline). */
+function cornerClosure(t, master, band, openings) {
+  if (!openings.length) return 0; const inBox = (i, b) => { const x = i % W, y = (i / W) | 0; return x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3]; };
+  const near = new Uint8Array(N); for (let i = 0; i < N; i++) if (t.contour[i * 4 + 3] >= 128) { const x = i % W; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, j = i + dy * W + dx; if (xx >= 0 && xx < W && j >= 0 && j < N) near[j] = 1; } }
+  let n = 0;
+  for (let pass = 0; pass < 3; pass++) { const add = [];
+    for (let i = W; i < N - W; i++) { if (band[i] || !t.core[i] || !near[i] || t.contour[i * 4 + 3] >= 128) continue; for (const k of [-1, 1, -W, W]) { const j = i + k, o = openings.find((q) => q.mark === band[j]); if (o && inBox(i, o.box) && master.panel[j] === master.panel[i]) { add.push([i, band[j]]); break; } } }
+    for (const [i, m] of add) { band[i] = m; n++; } }
+  return n;
+}
+
+/** D-354 (trim.revision 2) — a band's SOFT EDGE: the cut's soft outer pixels (alpha > 0, not core) next to a band pixel belong to that
+ *  band (one step from the band's core pixels), so the band's colour reaches the cut's own edge instead of leaving the body fabric there (D-352's light specks along
+ *  the neckline and the light sliver where the neck rib meets the shoulder). Nothing beyond the cut's alpha is added. */
+function softEdgeClosure(t, band) {
+  // ONE step from the band's core pixels only: a soft pixel never passes the band on to the next soft pixel, so the band's colour cannot
+  // creep along the outline's soft fringe away from the rib
+  const add = [];
+  for (let i = W; i < N - W; i++) { if (band[i] || !t.alpha[i] || t.core[i]) continue; for (const k of [-W - 1, -W, -W + 1, -1, 1, W - 1, W, W + 1]) if (band[i + k] && t.core[i + k]) { add.push([i, band[i + k]]); break; } }
+  for (const [i, m] of add) band[i] = m;
+  return add.length;
+}
+
+/** D-354 — the cut's RIM outside its contour: a pixel of the layer with alpha > 0 and no contour ink that touches the outside (an
+ *  8-neighbour with alpha 0) and lies within 2 px of the contour's ink (alpha >= 128) is the outline's outermost fringe, not fabric. D-352
+ *  painted it with the fabric or trim: coloured specks on the skin just outside the neckline.
+ *    "contour-ink"       — it takes the median contour ink, alpha unchanged (the first D-354 rule: the specks became dark specks);
+ *    "figure-or-ink"     — it takes the mean colour of C itself at its outside neighbours (C's pixels there with alpha >= 128: skin at
+ *                          the neck opening, skin or C's shading at an armhole): what is seen right beside it then runs up to the
+ *                          drawn outline. It is NOT cleared: C's base garment can lie under it (clearing it failed the fit check,
+ *                          FIT-4-COVERAGE, in D-354's first try), so its alpha stays and keeps covering. Where no outside neighbour is
+ *                          on C (the background) it takes the contour ink. (D-354's second try coloured only skin and inked the rest:
+ *                          dark beads along the tank's armholes.)
+ *  Returns { ink, figure }. Nothing is added beyond the cut's alpha. */
+export function rimEdge(t, layer, base) {
+  const ink = [0, 1, 2].map((k) => { const v = []; for (let i = 0; i < N; i++) if (t.contour[i * 4 + 3] >= 200) v.push(t.contour[i * 4 + k]); v.sort((a, b) => a - b); return v.length ? v[v.length >> 1] : 30; });
+  const near = new Uint8Array(N); for (let i = 0; i < N; i++) if (t.contour[i * 4 + 3] >= 128) { const x = i % W; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, j = i + dy * W + dx; if (xx >= 0 && xx < W && j >= 0 && j < N) near[j] = 1; } }
+  const nb = [-W - 1, -W, -W + 1, -1, 1, W - 1, W, W + 1], todo = [];
+  for (let i = W; i < N - W; i++) { if (!layer[i * 4 + 3] || t.contour[i * 4 + 3] || !near[i]) continue; const out = nb.filter((k) => !t.alpha[i + k]); if (!out.length) continue;
+    const onC = out.filter((k) => base.R[(i + k) * 4 + 3] >= 128); todo.push([i, onC.length ? onC : null]); }
+  let inkN = 0, figN = 0;
+  for (const [i, onC] of todo) { if (onC) { for (let q = 0; q < 3; q++) layer[i * 4 + q] = Math.round(onC.reduce((a, k) => a + base.R[(i + k) * 4 + q], 0) / onC.length); figN++; }
+    else { layer[i * 4] = ink[0]; layer[i * 4 + 1] = ink[1]; layer[i * 4 + 2] = ink[2]; inkN++; } }
+  return { ink: inkN, figure: figN };
+}
+export function rimToContourInk(t, layer) {
+  const ink = [0, 1, 2].map((k) => { const v = []; for (let i = 0; i < N; i++) if (t.contour[i * 4 + 3] >= 200) v.push(t.contour[i * 4 + k]); v.sort((a, b) => a - b); return v.length ? v[v.length >> 1] : 30; });
+  const near = new Uint8Array(N); for (let i = 0; i < N; i++) if (t.contour[i * 4 + 3] >= 128) { const x = i % W; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, j = i + dy * W + dx; if (xx >= 0 && xx < W && j >= 0 && j < N) near[j] = 1; } }
+  let n = 0; for (let i = W; i < N - W; i++) { if (!layer[i * 4 + 3] || t.contour[i * 4 + 3] || !near[i]) continue; if (![-W - 1, -W, -W + 1, -1, 1, W - 1, W, W + 1].some((k) => !t.alpha[i + k])) continue;
+    layer[i * 4] = ink[0]; layer[i * 4 + 1] = ink[1]; layer[i * 4 + 2] = ink[2]; n++; }
+  return n;
 }
 
 function openingBand(r, mark, p, t, master, band) {
@@ -203,11 +300,13 @@ export function placePrintSafe(ctx, plain, motif) {
  *  is laid by renderFabric (the same mapping, sampled bilinearly); an rgb design is rendered by TM.render exactly as before. */
 export function renderDesign(ctx, design) {
   const { c, t, master, E, bands } = ctx, plain = design.swatch ? renderFabric(master, t, design.swatch, bands, design.trim || null) : TM.render(master, t, E.base, bands, { body: design.rgb });
+  // D-354: only a fabric design on a cut with edges.rim (an rgb design — every approved item — is rendered exactly as before)
+  const rim = design.swatch && c.edges ? (c.edges.rim === "figure-or-ink" ? rimEdge(t, plain.layer, E.base) : c.edges.rim === "contour-ink" ? { ink: rimToContourInk(t, plain.layer), figure: 0 } : null) : null, rimPx = rim ? rim.ink + rim.figure : 0;
   let layer = plain.layer, print = null;
   if (design.print) { const p = PF.placePrint(master, t, E.base, plain.layer, design.print, c.print.boxOnC); layer = p.layer; print = { at: p.at, footprintPx: p.footprint.length, onContour: p.onContour, footprint: p.footprint }; }
   else if (design.printSafe) { const p = placePrintSafe(ctx, plain.layer, design.printSafe); layer = p.layer; print = { at: p.at, footprintPx: p.footprint.length, onContour: p.onContour, footprint: p.footprint, fit: p.fit }; }
   const sp = LS2.splitLayers(layer, E.base, c.sleeves.layerSplitFromArmAlpha);
-  return { layer, layers: sp.layers, movedToSleevesPx: c.sleeves.layerSplitFromArmAlpha < 128 ? sp.moved : 0, print };
+  return { layer, layers: sp.layers, movedToSleevesPx: c.sleeves.layerSplitFromArmAlpha < 128 ? sp.moved : 0, print, rimPx, rim };
 }
 
 /** The print's safe area on the cut (chessboard distance from the cut's edge, contour, sleeve panels, trim bands and C's arms). */
