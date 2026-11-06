@@ -1,5 +1,6 @@
-// Section 134: End-to-end verification of the adaptive placement lifecycle.
-// Exercises: trigger → complete → DB save → skip on second login → current_band persist.
+// Section 134, changed by D-356: end-to-end verification of how a pupil's starting band is chosen.
+// There is no start test any more. Exercises: new pupil → quiz at the grade's start band; a band from
+// the old test is still honoured; current_band is persisted and then wins on the next login.
 // Requires Section 132 RLS fix (profiles_self_update policy) to pass.
 
 import { test, expect } from '@playwright/test';
@@ -37,27 +38,16 @@ async function loginStudent(page: any): Promise<void> {
   await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
 }
 
-// Click through all 10 placement questions then wait for quiz to load.
-async function completePlacementFlow(page: any): Promise<void> {
-  // Overlay must already be visible before calling this.
-  for (let i = 0; i < 10; i++) {
-    await page.waitForSelector(
-      '#placement-options .placement-option-btn:not(:disabled)',
-      { timeout: 10000 }
-    );
-    await page.locator('#placement-options .placement-option-btn:not(:disabled)').first().click();
-    // After the last click the overlay closes (1100ms delay in app); no new buttons appear.
-    // For earlier questions, wait until the next question's buttons are enabled.
-    if (i < 9) {
-      await page.waitForSelector(
-        '#placement-options .placement-option-btn:not(:disabled)',
-        { timeout: 6000 }
-      );
+// Records what the page asks the backend for. Must be called before loginStudent.
+function watchQuizStart(page: any) {
+  const seen = { placementStarted: false, firstBand: null as number | null };
+  page.on('request', (req: any) => {
+    if (req.url().includes('/rpc/start_placement')) seen.placementStarted = true;
+    if (seen.firstBand === null && req.method() === 'POST' && req.url().includes('/functions/v1/get-next-question')) {
+      seen.firstBand = req.postDataJSON()?.current_difficulty_band ?? null;
     }
-  }
-  // Overlay hides after savePlacementBand + 1100ms delay.
-  await page.waitForSelector('#placement-overlay', { state: 'hidden', timeout: 15000 });
-  await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
+  });
+  return seen;
 }
 
 // Answer one quiz question and wait for the NEXT question to be ready.
@@ -89,14 +79,12 @@ async function answerAndAdvance(page: any): Promise<void> {
 }
 
 // ── Execution mode ───────────────────────────────────────────────────────────
-// These tests form a chain: test 2 writes placement_band, tests 3-5 depend on it, and test 4
-// writes the current_band that test 5 reads. beforeAll deliberately clears those columns to
-// establish the unplaced starting point.
+// These tests form a chain: test 2 sets placement_band, test 3 writes the current_band that test 4
+// reads. beforeAll deliberately clears those columns to establish the new-pupil starting point.
 //
-// Without serial mode that chain is not retry-safe. Playwright restarts the worker after a
-// failure, beforeAll runs again, placement_band is cleared — and the retry of test 3, 4 or 5
-// then logs in as an unplaced student, gets the placement overlay instead of the quiz, and can
-// never pass. One genuine failure turned into six red results that way (run 31106350724).
+// Without serial mode that chain is not retry-safe: Playwright restarts the worker after a failure,
+// beforeAll runs again and the columns a later test depends on are gone. One genuine failure turned
+// into six red results that way (run 31106350724).
 //
 // Serial mode retries the group as a whole from test 1, so the chain is always rebuilt in order
 // before the test that depends on it runs.
@@ -113,7 +101,7 @@ test.beforeAll(async () => {
   if (!user) throw new Error(`Test student not found: ${STUDENT_EMAIL}`);
   studentId = user.id;
 
-  // Placement preconditions: grade set, no band data, no instances.
+  // New-pupil preconditions: grade set, no band data, no instances.
   await adminClient.from('profiles').update({
     selected_grade: 7,
     placement_band: null,
@@ -137,51 +125,44 @@ test.afterAll(async () => {
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-test('1. Placement overlay appears for unplaced grade-7 student', async ({ page }) => {
-  await loginStudent(page);
-  // Grade is set, placement_band is null → overlay must appear
-  await expect(page.locator('#placement-overlay')).toBeVisible({ timeout: 15000 });
-  await expect(page.locator('#placement-question')).not.toBeEmpty();
-});
-
-test('2. Placement completes and saves placement_band to DB', async ({ page }) => {
-  // placement flow + question load in Firefox requires more than the 30s default.
+test('1. New pupil goes straight to the quiz at the grade start band', async ({ page }) => {
+  // login + question load in Firefox requires more than the 30s default.
   test.setTimeout(60_000);
 
-  // placement_band is still null (test 1 did not complete the flow)
+  const seen = watchQuizStart(page);
   await loginStudent(page);
-  await page.waitForSelector('#placement-overlay', { state: 'visible', timeout: 15000 });
-  await completePlacementFlow(page);
+  await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
 
-  // Quiz is live
-  await expect(page.locator('#question[data-state="ready"]')).toBeVisible();
+  await expect(page.locator('#placement-overlay')).not.toBeVisible();
+  expect(seen.placementStarted, 'the start test must not be started').toBe(false);
+  // GRADE_START_BAND[7] in app.js.
+  expect(seen.firstBand, 'grade 7 starts at band 1').toBe(1);
 
-  // DB must now contain placement_band in [1, 4]
   const { data } = await adminClient
     .from('profiles')
     .select('placement_band')
     .eq('id', studentId)
     .maybeSingle();
 
-  expect(data?.placement_band, 'placement_band must be written to DB').not.toBeNull();
-  expect(data?.placement_band).toBeGreaterThanOrEqual(1);
-  expect(data?.placement_band).toBeLessThanOrEqual(4);
+  expect(data?.placement_band, 'nothing may write a placement band').toBeNull();
 });
 
-test('3. Second login skips placement (placement_band already set)', async ({ page }) => {
+test('2. A band from the old start test is still honoured', async ({ page }) => {
   // login + question load in Firefox requires more than the 30s default.
   test.setTimeout(60_000);
 
-  // placement_band was saved by test 2 — placement must NOT retrigger
+  await adminClient.from('profiles').update({ placement_band: 3 }).eq('id', studentId);
+
+  const seen = watchQuizStart(page);
   await loginStudent(page);
   await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
 
-  const overlay = page.locator('#placement-overlay');
-  // Overlay should never become visible when placement_band is already set
-  await expect(overlay).not.toBeVisible();
+  await expect(page.locator('#placement-overlay')).not.toBeVisible();
+  expect(seen.placementStarted, 'the start test must not be started').toBe(false);
+  expect(seen.firstBand, 'the quiz starts at the placement band').toBe(3);
 });
 
-test('4. 10 answered questions triggers current_band persistence', async ({ page }) => {
+test('3. 10 answered questions triggers current_band persistence', async ({ page }) => {
   // 10 question cycles take ~40-80s depending on browser/network — extend timeout.
   test.setTimeout(120_000);
 
@@ -211,16 +192,15 @@ test('4. 10 answered questions triggers current_band persistence', async ({ page
   expect(data?.current_band).toBeLessThanOrEqual(5);
 });
 
-test('5. Third login uses current_band and skips placement', async ({ page }) => {
+test('4. Next login uses current_band', async ({ page }) => {
   // login + question load in Firefox requires more than the 30s default.
   test.setTimeout(60_000);
 
-  // Primary assertion: quiz loads directly — no placement overlay.
-  // This holds whether the startup band comes from current_band or placement_band,
-  // as long as at least one is set (placement_band was set by test 2).
+  const seen = watchQuizStart(page);
   await loginStudent(page);
   await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
   await expect(page.locator('#placement-overlay')).not.toBeVisible();
+  expect(seen.placementStarted, 'the start test must not be started').toBe(false);
 
   // DB check: verify both bands persisted by this point
   const { data } = await adminClient
@@ -230,5 +210,6 @@ test('5. Third login uses current_band and skips placement', async ({ page }) =>
     .maybeSingle();
 
   expect(data?.placement_band, 'placement_band must be set from test 2').not.toBeNull();
-  expect(data?.current_band, 'current_band must be set from test 4').not.toBeNull();
+  expect(data?.current_band, 'current_band must be set from test 3').not.toBeNull();
+  expect(seen.firstBand, 'the earned band wins over the placement band').toBe(data?.current_band);
 });

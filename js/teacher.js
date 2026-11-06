@@ -778,9 +778,10 @@ function gradeText(grade) {
 }
 
 function levelText(s) {
-  // placement_band is set by the placement questions; before that the pupil has no level yet.
-  // current_band is then the band of the pupil's recent answers.
-  if (s.placement_band == null) return "Niveau ikke fundet endnu";
+  // The level comes from the pupil's answers: current_band is the band of the recent ones. Pupils
+  // no longer take a start test (D-356), so placement_band stays empty for new pupils. The overview
+  // reports current_band 1 for a pupil with no answers, so that value alone is not a level.
+  if (s.placement_band == null && (s.total_attempts ?? 0) === 0) return "Niveau ikke fundet endnu";
   const band = s.current_band ?? s.placement_band;
   return "Niveau: band " + band;
 }
