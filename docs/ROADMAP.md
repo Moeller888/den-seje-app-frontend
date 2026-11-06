@@ -23,9 +23,11 @@ _Last reviewed: 2026-07-01._
   når eleven går fra Hub'en til quizzen ("Spil").
 - Uændret: lærer → `teacher.html`, super_admin → `admin.html`, `must_reset_password` →
   `reset-password.html?forced=1` (som efter skiftet sender tilbage til login og dermed til Hub'en).
-- Næste skridt (ikke bygget): måle-spørgsmål i **alle** fag. I dag måler placeringstesten kun
-  historie og gemmer ét fælles `profiles.placement_band`. Et designforslag kommer før kode og skal
-  passe med sværhedsskalaen 1–10.000 (niveau pr. fag, B1; udfasning af placeringstesten udskudt, B9).
+- **Ejerbeslutning 2026-11-06 (D-356):** nye elever tager ikke længere de 10 spørgsmål. De går
+  direkte til quizzen og starter på klassetrinnets startbånd, hvorefter niveauet følger deres svar.
+  Et bånd fra en tidligere placeringstest gælder stadig. Det afgør B9.
+- Næste skridt (ikke bygget, og ikke besluttet efter D-356): måle-spørgsmål i **alle** fag. Et
+  designforslag kommer før kode og skal passe med sværhedsskalaen 1–10.000 (niveau pr. fag, B1).
 
 ---
 
