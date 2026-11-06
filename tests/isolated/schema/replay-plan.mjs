@@ -50,6 +50,9 @@ export const CONTENT_ONLY = Object.freeze({
   "20260602050000_middle_ages_band5.sql": "question-bank content (INSERT into questions only)",
   "20260602070000_prehistoric_denmark_band5.sql": "question-bank content (INSERT into questions only)",
   "20261019120002_danish_grade6_9.sql": "question-bank content (INSERT into questions only); token scan hit the word LISTEN in a question",
+  "20261020130001_english_level_pilot_1.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and OWNER in a question",
+  "20261020130002_english_level_pilot_2.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role)",
+  "20261020130003_english_level_pilot_3.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and POLICY in a question",
 });
 
 export const DATA_PRECONDITION = Object.freeze({});
@@ -118,12 +121,6 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
   "20261105120000_true_false_activation.sql":
     "F-02 Sandt/falsk activation, not applied in production and not to be applied before the get-next-question deploy that makes true_false servable: it admits true_false rows in questions and flips question_is_servable for them",
-  "20261020130001_english_level_pilot_1.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
-  "20261020130002_english_level_pilot_2.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
-  "20261020130003_english_level_pilot_3.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020140001_english_level_batch2_1.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020140002_english_level_batch2_2.sql":
@@ -203,6 +200,9 @@ export const ACCOUNTED_FROM = "20261020000000";
 export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261020120000_difficulty_scale_a.sql": "20261030045204",
   "20261020125000_english_grade6_9.sql": "20261106094831",
+  "20261020130001_english_level_pilot_1.sql": "20261106192437",
+  "20261020130002_english_level_pilot_2.sql": "20261106193242",
+  "20261020130003_english_level_pilot_3.sql": "20261106194452",
   "20261022120000_fix_mc_correct_answer_not_in_options.sql": "20261029141201",
   "20261025120000_student_rpc_caller_scope.sql": "20261025172041",
   "20261026110000_leaderboard_execute_containment.sql": "20261026113548",
