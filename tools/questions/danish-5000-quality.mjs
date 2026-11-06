@@ -104,6 +104,25 @@ export function structuralProblems(item) {
   return problems;
 }
 
+// Blocked topics (owner decision 2026-11-06, D-358): reading and literature texts about death, serious
+// illness, divorce, money trouble, losing a job, bullying or a political stance. This catches the clear
+// cases only: it cannot see an opinion, and AUTHORING.md holds the rule. Neutral words and facts are
+// allowed, so vocabulary and spelling are not scanned. `approved` holds the texts a teacher has passed.
+const KIN = "mor|far|mormor|morfar|farmor|farfar|bedstemor|bedstefar|mand|kone|søster|bror|onkel|moster|faster";
+const BLOCKED_TOPICS = [
+  /\b(begravelse\w*|dødsfald|selvmord\w*|gravsten\w*|kirkegård\w*|skilsmisse\w*|skilles|fyring\w*|arbejdsløs\w*|hjemløs\w*|gæld|gælden|mobb\w*|mobning\w*)\b/i,
+  /\b(blev|er|bliver) fyret\b/i,
+  /\b(da|efter at) (hun|han) (døde|var død)\b/i,
+  new RegExp(`\\b(${KIN})\\b[^.!?]{0,40}\\b(døde|død|blev syg|er syg|var syg)\\b`, "i"),
+];
+
+export function blockedTopicProblems(item, approved) {
+  if (item.k !== "l" && item.k !== "f") return [];
+  if (approved.has(item.q)) return [];
+  const hit = BLOCKED_TOPICS.find((pattern) => pattern.test(item.q));
+  return hit ? [`blocked topic: "${hit.exec(item.q)[0]}"`] : [];
+}
+
 const norm = (text) => String(text).toLowerCase().replace(/[^\p{L}0-9_ ]+/gu, " ").replace(/\s+/g, " ").trim();
 const firstQuoted = (text) => {
   const found = /'([^']+)'/.exec(text);

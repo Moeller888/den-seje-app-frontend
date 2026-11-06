@@ -467,9 +467,7 @@ læsningen er foretaget af AI, ikke af en dansklærer.
   Ejeren besluttede 2026-11-06, at det bevares: der skal også være noget til de dygtige.
 - **Læringsværdien af de korte tekster er vurderet, ikke målt** (§12.7).
 - **En for let opgave er ikke ændret:** `t6789-03.json#52` (anførselstegn om en titel, niveau 7414).
-- **34 opgaver rører svære emner** (sorg, sygdom, skilsmisse, penge, mobning, holdninger). Ejeren besluttede
-  2026-11-06, at en lærer skal se dem. Gennemgangen er ikke sket og er en betingelse for aktivering af
-  de portioner, opgaverne ligger i.
+- **Blokerede emner, se §12.8.** Kontrollen fanger kun de tydelige tilfælde og kan ikke se en holdning.
 - **Sammenligning med produktionsbanken mangler.** Teksterne er tjekket mod alle migrationer i repoet
   og mod PR #349, ikke mod live. Det gøres pr. portion før anvendelse (§12.6).
 
@@ -502,6 +500,31 @@ Længden var ikke afgørende. Mange af de flyttede opgaver havde svage distrakto
 klasse, fordi ordforråd og emne ikke passer dertil. Fordelingen i §12.1 er tallene efter flytningen.
 
 **Dokumentationen viser læringsmål, ikke læringseffekt.** Den er en faglig vurdering. Om opgaverne faktisk
-lærer eleverne noget, kan først ses af svardata: Efter aktivering bør de 200 tilbageværende korte opgaver
-sammenlignes med læseforståelsesopgaver på samme niveau, på svarprocent og på om dygtigere elever klarer
-dem bedre. Opgaver, der ikke skiller, flyttes eller fjernes.
+lærer eleverne noget, kan først ses af svardata: Efter aktivering bør de korte opgaver sammenlignes med
+læseforståelsesopgaver på samme niveau, på svarprocent og på om dygtigere elever klarer dem bedre.
+Opgaver, der ikke skiller, flyttes eller fjernes. Filen rummer de 196 opgaver, der stadig er i banken efter §12.8.
+
+### 12.8 Blokerede emner (ejerbeslutning 2026-11-06)
+
+34 opgaver blev sendt til lærergennemgang. Læreren vurderede 29: 7 "Kan bruges" og 22 "Skal fjernes".
+Ejeren besluttede derefter, at spørgsmål med disse emner fremover blot blokeres:
+
+- død og sorg hos mennesker;
+- alvorlig sygdom;
+- skilsmisse og konflikter i familien;
+- pengenød, fyring og arbejdsløshed;
+- mobning og udelukkelse;
+- stillingtagen i et politisk spørgsmål.
+
+Neutrale ord og fakta er ikke omfattet: "hospital" i en staveopgave, "Folketinget" som samfundsord.
+
+| Gruppe | Opgaver | Følge |
+|---|---:|---|
+| Læreren: "Skal fjernes" | 22 | Fjernet |
+| Ikke vurderet af læreren | 5 | Fjernet, fordi de falder under reglen og ikke er godkendt |
+| Samme type, uden for lærerens liste | 8 | Fjernet |
+| Læreren: "Kan bruges" | 7 | Beholdt i `teacher-approved.json` |
+
+De 35 fjernede er erstattet af nye, neutrale opgaver på samme niveauer, så banken stadig er på 5.000.
+En staveopgave om mobning fik en ny sætning. Reglen står i `AUTHORING.md`, og `check-danish-items.mjs`
+afviser de tydelige tilfælde i læseforståelse og litteratur.

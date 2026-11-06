@@ -11,7 +11,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { extractMcQuestions } from "../question-quality/length-cue.mjs";
-import { QUOTA, SLOTS, gradeBandForLevel, structuralProblems, substanceKey } from "./danish-5000-quality.mjs";
+import { QUOTA, SLOTS, blockedTopicProblems, gradeBandForLevel, structuralProblems, substanceKey } from "./danish-5000-quality.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const MIGRATIONS = join(ROOT, "supabase", "migrations");
@@ -41,8 +41,14 @@ export function bankTexts() {
   return texts;
 }
 
+// The texts on blocked topics that a teacher has passed (D-358). New questions are never added here.
+export function teacherApproved() {
+  return new Set(JSON.parse(readFileSync(join(FIXTURES, "teacher-approved.json"), "utf8")));
+}
+
 export function slotProblems(slot, items, bank) {
   const [concept, grades] = SLOTS[slot];
+  const approved = teacherApproved();
   const problems = [];
   const counts = {};
   const bands = {};
@@ -51,6 +57,7 @@ export function slotProblems(slot, items, bank) {
   for (const item of items) {
     const say = (text) => problems.push(`${item.at}: ${text}`);
     structuralProblems(item).forEach(say);
+    blockedTopicProblems(item, approved).forEach(say);
     if (item.k !== concept) say(`concept ${item.k}, slot is ${concept}`);
     if (Number.isInteger(item.l) && item.l >= 1 && item.l <= 10000) {
       const { g, b } = gradeBandForLevel(item.l);

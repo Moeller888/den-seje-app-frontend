@@ -12,8 +12,8 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { findLengthCue } from "../../tools/question-quality/length-cue.mjs";
-import { CONCEPTS, QUOTA, gradeBandForLevel, roleForLevel, structuralProblems, substanceKey } from "../../tools/questions/danish-5000-quality.mjs";
-import { bankTexts } from "../../tools/questions/check-danish-items.mjs";
+import { CONCEPTS, QUOTA, blockedTopicProblems, gradeBandForLevel, roleForLevel, structuralProblems, substanceKey } from "../../tools/questions/danish-5000-quality.mjs";
+import { bankTexts, teacherApproved } from "../../tools/questions/check-danish-items.mjs";
 import { migrationFiles } from "../../tools/questions/build-danish-5000.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -152,6 +152,21 @@ test("every row passes the structure, length and text rules", async () => {
     assert.equal(substance.has(key), false, `same task twice: ${key}`);
     substance.add(key);
   }
+});
+
+test("no row is on a blocked topic, except the texts a teacher has passed", async () => {
+  const { rows } = await loadAll();
+  const approved = teacherApproved();
+  assert.equal(approved.size, 7);
+  const found = [];
+  for (const row of rows) {
+    const k = Object.keys(CONCEPTS).find((key) => CONCEPTS[key].concept === row.metadata.concepts[0]);
+    found.push(...blockedTopicProblems({ k, q: row.content.question }, approved));
+  }
+  assert.deepEqual(found, []);
+  assert.deepEqual(blockedTopicProblems({ k: "l", q: "Læs: 'Efter begravelsen gik de hjem.' Hvad sker der?" }, approved).length, 1);
+  assert.deepEqual(blockedTopicProblems({ k: "l", q: "Læs: 'Da morfar blev syg, flyttede de.' Hvad sker der?" }, approved).length, 1);
+  assert.deepEqual(blockedTopicProblems({ k: "s", q: "Sæt ind: 'Stedet, hvor du kommer hen, hvis du er meget syg.'" }, approved), []);
 });
 
 test("the migration files are exactly the generator's output", () => {

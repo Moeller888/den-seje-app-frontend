@@ -324,15 +324,6 @@
   "reason": "Kun ét svarpar indeholder forbeholdsord, så tænkningen er let. Ordforrådet holder den i 7. klasse."
  },
  {
-  "q": "Læs: 'Vores skole vil indføre ens trøjer, for så bliver ingen drillet med sit tøj. Men i 6.a, hvor alle alligevel går i det samme, bliver folk drillet med deres sko, taske og hår.' Hvad er skribentens indvending?",
-  "skill": "argumentanalyse",
-  "goal": "Eleven øver at se, hvordan eksemplet fra 6.a bruges som indvending mod påstanden om ens trøjer.",
-  "verdict": "keep",
-  "level_before": 5914,
-  "level": 5914,
-  "reason": "Eleven skal selv formulere, hvad eksemplet beviser. Distraktoren om sko og tasker er god."
- },
- {
   "q": "Læs: 'Overskrift i skolebladet: Elever fra 8. klasse underviser ældre i at bruge tablet.' Hvorfor er overskriften tvetydig?",
   "skill": "sproglig virkning",
   "goal": "Eleven øver at opdage, at 'ældre' i overskriften både kan være seniorer og elever, der er ældre end 8. klasse.",
@@ -963,15 +954,6 @@
   "reason": "Basisrate er svært. Stærk opgave på rigtigt niveau."
  },
  {
-  "q": "Læs: 'Jeg kunne godt lide, at bedstemor sagde mit navn forkert. Efter begravelsen sagde alle det rigtigt, og det lød som en andens.' Hvad udtrykker den sidste sætning?",
-  "skill": "implicit budskab",
-  "goal": "Eleven øver at forstå, hvad det betyder, at navnet lyder fremmed, når det siges rigtigt efter begravelsen.",
-  "verdict": "keep",
-  "level_before": 7069,
-  "level": 7069,
-  "reason": "Sørgmodig undertekst, som kræver indlevelse. Fortjener sit niveau."
- },
- {
   "q": "Læs: 'Før i tiden rettede hver by sig efter solen, og klokken var derfor ikke helt den samme i København og Esbjerg. Da jernbanen bredte sig, blev det et problem.' Hvorfor blev det sandsynligvis et problem?",
   "skill": "slutning",
   "goal": "Eleven øver at slutte selv, hvorfor forskellige klokkeslæt bliver et problem, da togene kommer.",
@@ -1089,15 +1071,6 @@
   "reason": "Abstrakt modsætning i få ord, hvor eleven selv skal formulere problemet. Rigtig sværhed."
  },
  {
-  "q": "Læs: 'Selskabet skriver, at ingen medarbejdere er blevet fyret. 40 ansatte er blot blevet frigjort til nye muligheder uden for virksomheden.' Hvad gør sprogbrugen?",
-  "skill": "sproglig virkning",
-  "goal": "Eleven øver at genkende eufemismen 'frigjort til nye muligheder' som en omskrivning af fyring.",
-  "verdict": "lower",
-  "level_before": 8766,
-  "level": 7400,
-  "reason": "Teksten siger selv 'fyret' og stiller ordene op mod hinanden. Hører til i 8. klasse."
- },
- {
   "q": "Læs: 'Undersøgelsen konkluderer, at 80 procent af danskerne dyrker motion flere gange om ugen. Spørgeskemaerne blev delt ud i kommunens idrætshaller.' Hvad er problemet med konklusionen?",
   "skill": "kildekritik",
   "goal": "Eleven øver at se, at svar indsamlet i idrætshaller ikke er repræsentative for alle danskere.",
@@ -1123,15 +1096,6 @@
   "level_before": 7420,
   "level": 7420,
   "reason": "Reklameanalyse med en sproglig afvisning, der ikke må tages bogstaveligt. God."
- },
- {
-  "q": "Læs: 'Stor ros til ministeriet for at have opdaget, at skolebørn har brug for pauser. Det krævede kun en undersøgelse til fem millioner kroner.' Hvad er skribentens budskab?",
-  "skill": "tone og hensigt",
-  "goal": "Eleven øver at læse 'Stor ros' og 'kun' som ironi om en dyr undersøgelse af noget oplagt.",
-  "verdict": "keep",
-  "level_before": 7442,
-  "level": 7442,
-  "reason": "Ironi over for en myndighed kræver baggrundsforståelse. Rigtig sværhed."
  },
  {
   "q": "Læs: 'Hvor længe skal vi finde os i, at vores skolemad er dårligere end nabokommunens?' Hvilket synspunkt er indbygget i spørgsmålet?",
@@ -1305,15 +1269,6 @@
   "reason": "Sprogligt argument på abstrakt niveau. Rigtig sværhed."
  },
  {
-  "q": "Læs: 'Forestil dig en pige på otte år, der står alene ved busstoppestedet i mørket, fordi kommunen har skåret aftenbussen væk.' Hvilken appelform bruger skribenten især?",
-  "skill": "sproglig virkning",
-  "goal": "Eleven øver at genkende patos i billedet af den otteårige pige alene ved busstoppestedet.",
-  "verdict": "keep",
-  "level_before": 7944,
-  "level": 7944,
-  "reason": "Appelformerne er stof fra de ældste klassetrin, og eleven skal skelne dem. Passer."
- },
- {
   "q": "Læs: 'Skolen bør tilbyde morgenmad, fordi sultne elever ikke kan koncentrere sig i timerne.' Hvilken uudtalt forudsætning bygger argumentet på?",
   "skill": "forudsætning",
   "goal": "Eleven øver at finde den uudtalte antagelse om skolens ansvar, der binder sult og 'skolen bør' sammen.",
@@ -1321,15 +1276,6 @@
   "level_before": 7967,
   "level": 7967,
   "reason": "Hjemmel i et argument er svært, og distraktorerne er troværdige. Stærk opgave."
- },
- {
-  "q": "Læs: 'Den, der står ved siden af, mens nogen bliver drillet, og tier, tror måske, at han ingenting gør. Men for den, der bliver drillet, er tavsheden også et svar.' Hvad er tekstens påstand?",
-  "skill": "argumentanalyse",
-  "goal": "Eleven øver at forstå tekstens påstand om, at tilskuerens tavshed også er et svar.",
-  "verdict": "lower",
-  "level_before": 9623,
-  "level": 8000,
-  "reason": "Pointen står næsten direkte i sidste sætning. Vigtigt emne, men lettere end niveauet."
  },
  {
   "q": "Læs: 'I forbindelse med sagen om de forsvundne elevlister skriver kommunen: Der er desværre blevet begået fejl.' Hvad opnår kommunen med denne formulering?",
@@ -1357,15 +1303,6 @@
   "level_before": 8069,
   "level": 8069,
   "reason": "Eleven skal holde to tekster op mod hinanden og undgå at dømme. Stærk opgave."
- },
- {
-  "q": "Læs: 'Vindmøller er grimme, siger nogle. Kraftværker var også grimme, men dem kunne man bare ikke se fra sin terrasse.' Hvad antyder skribenten om kritikerne?",
-  "skill": "implicit budskab",
-  "goal": "Eleven øver at forstå antydningen om, at kritikken af vindmøller mest handler om udsigten fra egen terrasse.",
-  "verdict": "keep",
-  "level_before": 8092,
-  "level": 8092,
-  "reason": "Skjult motiv hos modparten kræver opmærksomhed. Rigtig sværhed."
  },
  {
   "q": "Læs: 'Kommunens nye strategi: Vi sætter borgeren i centrum, tænker på tværs og skaber værdi i fællesskab.' Hvad er problemet med teksten for en kritisk læser?",
@@ -1629,15 +1566,6 @@
   "reason": "Skelnen mellem antal og andel. Rigtig sværhed."
  },
  {
-  "q": "Læs: 'Forbud mod salg af energidrik til unge er formynderi, siger nogle. Men vi forbyder også unge at køre bil, og det kalder ingen formynderi.' Hvad skal en modstander vise for at svække sammenligningen?",
-  "skill": "argumentanalyse",
-  "goal": "Eleven øver at finde det punkt, hvor sammenligningen mellem energidrik og bilkørsel kan angribes.",
-  "verdict": "keep",
-  "level_before": 8933,
-  "level": 8933,
-  "reason": "Eleven skal tænke som modstander af en analogi. Rigtig sværhed."
- },
- {
   "q": "Læs: 'Overskrift: Chokolade gør dig klogere. I artiklen står der, at lande med et højt forbrug af chokolade også har flest prismodtagere inden for forskning.' Hvad er særligt problematisk ved overskriftens konklusion?",
   "skill": "kildekritik",
   "goal": "Eleven øver at se, at overskriften slutter fra tal om hele lande til enkelte menneskers evner.",
@@ -1744,15 +1672,6 @@
   "level_before": 9492,
   "level": 9492,
   "reason": "Fortættet og åben undertekst. Rigtig sværhed."
- },
- {
-  "q": "Læs: 'Byrådet kalder biblioteksbussen en udgift. Det er en redningsvest også, lige indtil båden vælter. I Sønderby er bussen det eneste sted, hvor ældre uden bil møder andre uden at skulle have en grund. Taleren sagde ikke mere, men satte sig.' Hvordan angriber taleren byrådets ord?",
-  "skill": "sproglig virkning",
-  "goal": "Eleven øver at forstå, hvordan en sammenligning angriber et ord ved at flytte blikket fra pris til det, man mister.",
-  "verdict": "rework",
-  "level_before": 9540,
-  "level": 9540,
-  "reason": "Facit kan diskuteres: Billedet er først og fremmest et argument, ikke kun humor. Bygger også på en kendt talemåde."
  },
  {
   "q": "Læs: 'Romanen er velskrevet på samme måde, som en hotelreception er venlig: korrekt, tandløs og uden interesse for, hvem man er.' Hvad er anmelderens dom?",

@@ -74,6 +74,29 @@ Filen er et JSON-array, ét objekt pr. linje, UTF-8:
 - **Fakta skal være sikre.** Skriv kun litteraturhistoriske fakta, du er helt sikker på (årstal,
   forfattere, perioder). Er du i tvivl, så vælg et andet spørgsmål.
 
+## Blokerede emner (ejerbeslutning 2026-11-06)
+
+Nye opgaver må ikke handle om følgende, og der findes ingen undtagelser for nye opgaver:
+
+- død og sorg hos mennesker;
+- alvorlig sygdom;
+- skilsmisse og konflikter i familien;
+- pengenød, fyring og arbejdsløshed;
+- mobning og udelukkelse;
+- stillingtagen i et politisk spørgsmål.
+
+Reglen gælder tekster, hvor emnet rammer mennesker eller er selve indholdet. Den gælder ikke neutrale ord
+og fakta: "hospital" i en staveopgave, "Folketinget" som samfundsord eller et dyr, der dør i en fagtekst.
+
+`check-danish-items.mjs` fanger de tydelige tilfælde i læseforståelse og litteratur, men ikke alle, og
+den kan ikke se en holdning. Reglen gælder uanset, om værktøjet melder noget.
+
+## Forkerte svar skal friste
+
+Hvert forkert svar skal kunne vælges af en elev, der har læst overfladisk eller misforstået stoffet. Det må
+ikke være absurd eller handle om noget, teksten ikke nævner. Spørg dig selv: Hvilket forkert svar ville en
+svag læser vælge, og hvorfor? Findes der ikke et, er opgaven for let, uanset niveauet.
+
 ## Erfaringer fra piloten
 
 - Niveauet følger ordets eller opgavens reelle sværhed. Læg ikke lette ord højt i klassetrinnet blot
