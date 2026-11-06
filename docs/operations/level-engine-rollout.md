@@ -198,10 +198,19 @@ FROM public.questions WHERE metadata ? 'level_batch' GROUP BY 1 ORDER BY 1;
 -- WHERE learning_objective = 'english' AND metadata->>'level_batch' = 'pilot';
 ```
 
-### 2.8 Engelsk 5.000: plan for anvendelse og trinvis aktivering (2026-11-05, intet udført)
+### 2.8 Engelsk 5.000: plan for anvendelse og trinvis aktivering (2026-11-05)
 
 Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokumenteret i
 [`english-5000-e5.md`](english-5000-e5.md).
+
+**Status:**
+- 2026-11-06: ejeren har taget et dump af `public.questions` (2.143 rækker med struktur), fordi produktionen
+  ikke har nogen gendannelig backup.
+- **Trin 1a er udført 2026-11-06.** `20261020125000_english_grade6_9` er anvendt som ledger-version
+  `20261106094831`. Efterkontrollen viste 120 rækker, 0 aktive og 0 uden niveau eller CEFR, og indholdet er
+  identisk med repoet. Se
+  [`production-actions/2026-11-06T0948Z-english-grade6-9-applied.md`](production-actions/2026-11-06T0948Z-english-grade6-9-applied.md).
+- Trin 1b–1d og hele fase 2 er ikke udført.
 
 **Godkendelser:**
 - Hvert trin herunder kræver sit eget GO fra ejeren (E2, D-110). Det gælder også hver `apply_migration`, hver
@@ -353,7 +362,9 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (F-02 Sandt/falsk, PR #607) — **ikke deployet** | dette repository | 16 | `00ddba65243d69fffeb9ea8f7b01714d5745cf7bfe0945330123919b3237f1ca` |
+| Kandidat (F-02 Sandt/falsk #607 + F-07 stimulus) — **ikke deployet** | dette repository | 17 | `1df4cb344dfe97bde6f14b8e34adb9db26a44e948b6d197d01f2b9baa3104c8d` |
+| Forrige kandidat (F-02 Sandt/falsk, PR #607, merget uden stimulus) | main `3a2d2f37` | 16 | `00ddba65243d69fffeb9ea8f7b01714d5745cf7bfe0945330123919b3237f1ca` |
+| Forrige kandidat (F-07 stimulus alene) | `c1bfdcba` | 16 | `44ee77a4233f8699f1a342e2584f7b69ef1be1175415866e335854175856b29c` |
 | Deployet i produktion 2026-11-04 (`a7450b0f`, version 181 og senere secret-versioner) | `a7450b0f` | 15 | `1f508a8459f5141f1e629dec94ec979ce34bafdcecdbc650b8d6db2a2f7c3bbe` |
 | Forrige kandidat (før R2-canary'en, §2.6.1) | main før canary'en | 15 | `4a89e9e6e33b363c9e8360bb81b19077dcb26c4791c3a086a66c73386b718f8d` |
 | Forrige kandidat (før L1 K1's `served-snapshot.ts`) | main før K1 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
@@ -371,6 +382,12 @@ så en række med en forkert nøgle springes over i stedet for at blive udlevere
 filer), og Sandt/falsk er ikke servable, så ingen elev kan få en `true_false`-opgave, før ejeren har
 godkendt aktiveringen (`docs/ARCHITECTURE.md`, Sandt/falsk) og et særskilt deploy. Kodestien for
 andre opgaveformer er uændret (slukket-pariteten ovenfor er grøn med den nye graf).
+
+**F-07 stimulus ændrer grafen fra 16 til 17 filer** (oven på F-02). `_shared/question-dto.ts` importerer nu
+`_shared/stimulus.ts` og bygger `content.stimulus` (kilde, billede eller lydklip) felt for felt efter
+kontrakten; en række med et ugyldigt stimulus springes over i stedet for at blive udleveret uden sit
+materiale. `question-dto.ts` ændres, og `stimulus.ts` er ny; resten er som F-02-kandidaten ovenfor. Uden et `stimulus`-felt er payloaden uændret (slukket-pariteten ovenfor er grøn med den nye
+graf), og ingen række i produktionen har et `stimulus`-felt. Kandidaten er **ikke** deployet.
 
 Kandidaten adskiller sig fra version 179 i `index.ts` (niveaugrenen, låsningen, H5's `round_no` og
 Match par's nøglelæsning), `instance-insert.ts` (læser `repeat_count` tilbage, H5),
