@@ -108,3 +108,14 @@ test("D-359: the page shows the wardrobe in the items column, no sets, and saves
   assert.match(w, /Tag hat og andet udstyr af/);
   assert.match(w, /Brug min nuværende avatar/);
 });
+
+test("the avatar stands still: only the right column scrolls, and everything below the items stays inside it", () => {
+  const H = read("avatar.html");
+  assert.match(H, /body \{ overflow: hidden; \}/);
+  assert.match(H, /\.right-column \{ min-height: 0; overflow-y: auto;/);
+  const right = H.slice(H.indexOf('<div class="right-column">'), H.indexOf('<script type="module">'));
+  for (const id of ['class="inventory-panel"', 'id="northstarWardrobe"', 'id="titlesPanel"', 'id="identityPanel"']) assert.ok(right.includes(id), id);
+  assert.ok(H.indexOf('<div class="avatar-panel">') < H.indexOf('<div class="right-column">'), "the avatar is outside the scrolling column");
+  assert.match(H, /document\.body\.style\.display = "block"/);
+  assert.ok(H.indexOf('<div class="page-shell">') < H.indexOf('<div class="topbar">'), "the height lives on a wrapper, since the reveal sets the body to block");
+});
