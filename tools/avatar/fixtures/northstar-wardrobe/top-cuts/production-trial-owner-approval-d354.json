@@ -1,0 +1,459 @@
+{
+  "decision": "D-354",
+  "kind": "OWNER VISUAL APPROVAL of D-354's candidates (registered in PR #629, merged 0263541e). NOT a permission to publish, integrate or extend any list.",
+  "owner": [
+    "det er godkendt",
+    "Alle 36 undtagen planeten; registrér det i en dokumentations-PR"
+  ],
+  "date": "2026-11-06",
+  "tool": {
+    "pr": 627,
+    "mergeCommit": "11e0f854bb56c6f6dce9f2e7c9151eb8d36cd081",
+    "recipes": "tools/avatar/fixtures/northstar-wardrobe/top-cuts/production-trial-recipes-v3.json"
+  },
+  "register": {
+    "pr": 629,
+    "mergeCommit": "0263541ed5cb9e5667f4a771a1bc08c5777af7f6",
+    "doc": "docs/decisions/D-354.md"
+  },
+  "count": 33,
+  "approved": [
+    {
+      "id": "tee-hip-v2--R01-forest-melange",
+      "cut": "tee-hip-v2",
+      "recipe": "R01",
+      "slug": "forest-melange",
+      "name": "Skovgrøn melange",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R01-forest-melange.png",
+        "sha256": "7ef255abe3b463f50414ac63b1b2750e0c22ae9e891a0e0076ecb7b8fa801aeb",
+        "pixelSha256": "edf01541220cb316517b38fa67112345415101fc92e9e9cc9d66012041912270"
+      }
+    },
+    {
+      "id": "tee-hip-v2--R02-burgundy-pique",
+      "cut": "tee-hip-v2",
+      "recipe": "R02",
+      "slug": "burgundy-pique",
+      "name": "Bordeaux piqué",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R02-burgundy-pique.png",
+        "sha256": "c8839ed998e10bf9a6638d3cb41bb81a14bb20e79359e10c4b30b10e429a2b2c",
+        "pixelSha256": "fff9c444a54a59029a9fb6699ce933d4f8a72aadd04de2f6f00bbf900e4da6e9"
+      }
+    },
+    {
+      "id": "tee-hip-v2--R03-mustard-slub",
+      "cut": "tee-hip-v2",
+      "recipe": "R03",
+      "slug": "mustard-slub",
+      "name": "Sennep slub",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R03-mustard-slub.png",
+        "sha256": "565465bbe901edbe1c3f89eeef46e0cb0ff5058e785b5cba19fd1f13b1ba8ad2",
+        "pixelSha256": "0695f1e338ee32c5e6a1e08d519945640fab3cddba4a021d296e77509e3c960a"
+      }
+    },
+    {
+      "id": "tee-hip-v2--R04-denim-twill",
+      "cut": "tee-hip-v2",
+      "recipe": "R04",
+      "slug": "denim-twill",
+      "name": "Denimblå twill",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R04-denim-twill.png",
+        "sha256": "3dde0846dd504671581e3658c885cbb398105e99a22fe60ed8673f05c06bd479",
+        "pixelSha256": "c923e47302ff9a40c68bf37db96428b086c0b12681aa6794db7afb18de7e561b"
+      }
+    },
+    {
+      "id": "tee-hip-v2--R05-breton-stripe",
+      "cut": "tee-hip-v2",
+      "recipe": "R05",
+      "slug": "breton-stripe",
+      "name": "Bretonsk stribe (navy på creme)",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R05-breton-stripe.png",
+        "sha256": "34b8c94039a19c6faa4dd15bc06feb406ea4638a7602e5c16dc45ee39ab31ca1",
+        "pixelSha256": "a7af70f5a9d2bc1db585b870227696676beb95278f9f219aec18b58e8ba2e60e"
+      }
+    },
+    {
+      "id": "tee-hip-v2--R06-block-stripes",
+      "cut": "tee-hip-v2",
+      "recipe": "R06",
+      "slug": "block-stripes",
+      "name": "Blokstriber (terracotta og sand)",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R06-block-stripes.png",
+        "sha256": "c8743201e1eefa249777ae8b82d8a3786e3d0d40436403d3e5f359b7aaca5563",
+        "pixelSha256": "0fcfb00d1eb17517e95b7ab2ca88a845ea857a7ec6c20730a1986f18f4c25d67"
+      }
+    },
+    {
+      "id": "tee-hip-v2--R07-green-check",
+      "cut": "tee-hip-v2",
+      "recipe": "R07",
+      "slug": "green-check",
+      "name": "Grøn tern",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R07-green-check.png",
+        "sha256": "e37d17e56d913eeb7e9d8601b422aed78078d39d4c8bc20551f33e321e1bb74a",
+        "pixelSha256": "975111129094a4b254a2e1d33289ecc0da8335f1b9ab952ecc9f8f46ec720ff9"
+      }
+    },
+    {
+      "id": "tee-hip-v2--R08-mustard-dots",
+      "cut": "tee-hip-v2",
+      "recipe": "R08",
+      "slug": "mustard-dots",
+      "name": "Sennepsprikker på navy",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R08-mustard-dots.png",
+        "sha256": "b9a0ea129dc8a0dd419f2d5f35a450b611590c5a1c994f8e57fcc4d0cc068664",
+        "pixelSha256": "c8af6c8b0d209da093a623a1fe324d1c43cbba85cf0d71e343a33384e5ca8f69"
+      }
+    },
+    {
+      "id": "tee-hip-v2--R09-mint-teapot",
+      "cut": "tee-hip-v2",
+      "recipe": "R09",
+      "slug": "mint-teapot",
+      "name": "Tekande på mintmelange",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R09-mint-teapot.png",
+        "sha256": "9a45f2591910265181d81b35e3ae03b9304501b949540b28f39b2cf5cf6ae548",
+        "pixelSha256": "babb6620d5b843c7507c251ee3da6e9e0abc26ac09aebfad325fc72ee23e3947"
+      }
+    },
+    {
+      "id": "tee-hip-v2--R10-lightdenim-shield",
+      "cut": "tee-hip-v2",
+      "recipe": "R10",
+      "slug": "lightdenim-shield",
+      "name": "Skjold på lys denim-twill",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R10-lightdenim-shield.png",
+        "sha256": "2715280d5f04b22853aba9d40afe894b56ca4bff19ad2de8837b9b9cec2a0d6f",
+        "pixelSha256": "12e986d50bf80fdc5fe416bd077f1c6a519f94eb7414384568bfb92be487ec9d"
+      }
+    },
+    {
+      "id": "tee-hip-v2--R11-sand-fox",
+      "cut": "tee-hip-v2",
+      "recipe": "R11",
+      "slug": "sand-fox",
+      "name": "Ræv på sand piqué",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R11-sand-fox.png",
+        "sha256": "2325782668f1b60f2e6cc2c9d98102413f6fa3189bf31d3b27711829e93b1920",
+        "pixelSha256": "20bf0a45e167bfdba5b67809cd92a1fede8c660d4a4fb388c2d5ab8a7fbf58f3"
+      }
+    },
+    {
+      "id": "sweater-long-v3--R01-forest-melange",
+      "cut": "sweater-long-v3",
+      "recipe": "R01",
+      "slug": "forest-melange",
+      "name": "Skovgrøn melange",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R01-forest-melange.png",
+        "sha256": "5ee60539f6cb6d652c85fc88fbd3fbb181cff3479a2a99df31187e1b59ecef03",
+        "pixelSha256": "fcdebe3232978cd29211dbf36fb5ecdb2bee7ead355ca5f02079bc42cbfed50b"
+      }
+    },
+    {
+      "id": "sweater-long-v3--R02-burgundy-pique",
+      "cut": "sweater-long-v3",
+      "recipe": "R02",
+      "slug": "burgundy-pique",
+      "name": "Bordeaux piqué",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R02-burgundy-pique.png",
+        "sha256": "1ef561583be8307d8be5a76fc6c7dfedcb9937be8d5cb67587c06b35f361ffd0",
+        "pixelSha256": "2a8cb902a228e33469d4afc9cdd5eb32bc26b747e1c2eb8713ea5f8b09e42d0f"
+      }
+    },
+    {
+      "id": "sweater-long-v3--R03-mustard-slub",
+      "cut": "sweater-long-v3",
+      "recipe": "R03",
+      "slug": "mustard-slub",
+      "name": "Sennep slub",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R03-mustard-slub.png",
+        "sha256": "12ae6afa704abe0df5f3c43bab98ae4b50c6841f6d251112a2059d1e27a9cd7e",
+        "pixelSha256": "46d51293d1714a9d32c1f01c759f718a758e193fda9458dadd9501151b50d9a5"
+      }
+    },
+    {
+      "id": "sweater-long-v3--R04-denim-twill",
+      "cut": "sweater-long-v3",
+      "recipe": "R04",
+      "slug": "denim-twill",
+      "name": "Denimblå twill",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R04-denim-twill.png",
+        "sha256": "9767ab71da4fee4e5ffcc4e4bd559a60193a95266d51363af277fa6508b7474a",
+        "pixelSha256": "cf542938238ff7000ebbcdc4352e1b7630cb0ab8804ab63a486c11fbb62f2fd0"
+      }
+    },
+    {
+      "id": "sweater-long-v3--R05-breton-stripe",
+      "cut": "sweater-long-v3",
+      "recipe": "R05",
+      "slug": "breton-stripe",
+      "name": "Bretonsk stribe (navy på creme)",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R05-breton-stripe.png",
+        "sha256": "e7d37a036beec121013873fb304912dd556023c94929ff11805a40629c2a576d",
+        "pixelSha256": "49d967f63f615535ce9f11d273d25bf807f29ff3b577255bb9bf7a6cbdb17eb5"
+      }
+    },
+    {
+      "id": "sweater-long-v3--R06-block-stripes",
+      "cut": "sweater-long-v3",
+      "recipe": "R06",
+      "slug": "block-stripes",
+      "name": "Blokstriber (terracotta og sand)",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R06-block-stripes.png",
+        "sha256": "569e722908b7735fbbab603b61641f19f8a902ed364df427b342eaaa6338d482",
+        "pixelSha256": "1be70193f9a0bdb7ca4cd54e749acf269f1c1df9f42860a384eb9e9a41d95024"
+      }
+    },
+    {
+      "id": "sweater-long-v3--R07-green-check",
+      "cut": "sweater-long-v3",
+      "recipe": "R07",
+      "slug": "green-check",
+      "name": "Grøn tern",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R07-green-check.png",
+        "sha256": "ff607d6d3c1d3ae308002dee9776715ffe1e28c421e3b1697faa86b176c12042",
+        "pixelSha256": "078b5ad6cdaa2617bf85eca7619eaa913e1485621d3221af59f896bbeecc4839"
+      }
+    },
+    {
+      "id": "sweater-long-v3--R08-mustard-dots",
+      "cut": "sweater-long-v3",
+      "recipe": "R08",
+      "slug": "mustard-dots",
+      "name": "Sennepsprikker på navy",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R08-mustard-dots.png",
+        "sha256": "a772b8f67dfda3df3fca16bbebe92ba78458f1f50f50b5dcb8ff5168aa551d8d",
+        "pixelSha256": "aed31357739eb0800ec5bbce70b4229e536aac01662208caa40df18c34525722"
+      }
+    },
+    {
+      "id": "sweater-long-v3--R09-mint-teapot",
+      "cut": "sweater-long-v3",
+      "recipe": "R09",
+      "slug": "mint-teapot",
+      "name": "Tekande på mintmelange",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R09-mint-teapot.png",
+        "sha256": "d10227fcaa0cd01251564a7b43faa6100a486da17d78e1a6f14ec93d7bc3c1aa",
+        "pixelSha256": "0b07d06b21063c5fc269cb27be461490ca6e2c29dfa5802e16eb35b14d1cfd64"
+      }
+    },
+    {
+      "id": "sweater-long-v3--R10-lightdenim-shield",
+      "cut": "sweater-long-v3",
+      "recipe": "R10",
+      "slug": "lightdenim-shield",
+      "name": "Skjold på lys denim-twill",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R10-lightdenim-shield.png",
+        "sha256": "0f4f061494f196defb3090fd13c5df13c4df7759b66ff285064574f6933b2d26",
+        "pixelSha256": "c00014012610071636ef2126e47976327935d078971ecb100d819303fc4ee728"
+      }
+    },
+    {
+      "id": "sweater-long-v3--R11-sand-fox",
+      "cut": "sweater-long-v3",
+      "recipe": "R11",
+      "slug": "sand-fox",
+      "name": "Ræv på sand piqué",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R11-sand-fox.png",
+        "sha256": "d6162b78d4a906b821f4a0f5f6bbff369323ef36b474fdefd52a9eb0992658ab",
+        "pixelSha256": "d28314e2abb7c7b04a1b5524801a2f687e67b7161da8c86c5d12db1472c74e73"
+      }
+    },
+    {
+      "id": "tank-v5--R01-forest-melange",
+      "cut": "tank-v5",
+      "recipe": "R01",
+      "slug": "forest-melange",
+      "name": "Skovgrøn melange",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R01-forest-melange.png",
+        "sha256": "0278a7abf5caf9350fde891d39802d2157f569afdcf16c5593acdd2c3cb521d9",
+        "pixelSha256": "8c1bf9ecdbb082c69984b5942abf5be3b60b5c82cb90f3a436f8079eb6ac2183"
+      }
+    },
+    {
+      "id": "tank-v5--R02-burgundy-pique",
+      "cut": "tank-v5",
+      "recipe": "R02",
+      "slug": "burgundy-pique",
+      "name": "Bordeaux piqué",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R02-burgundy-pique.png",
+        "sha256": "6a535106dd396b0900585846f8ae7654bfa5414bb017a65afd63ab279be1781b",
+        "pixelSha256": "f1636eba984269c8ee36870364496aafb67fc7c14b5f07742037f6027292b899"
+      }
+    },
+    {
+      "id": "tank-v5--R03-mustard-slub",
+      "cut": "tank-v5",
+      "recipe": "R03",
+      "slug": "mustard-slub",
+      "name": "Sennep slub",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R03-mustard-slub.png",
+        "sha256": "3404d1566fb92f484b65321a22ddbfce5d2eae1f1892ca791252cbe475e1fa90",
+        "pixelSha256": "1c427462e9e473b1977a117dadf60c4c26b4417bb0c9d22d1e5c176e4e5f5bfe"
+      }
+    },
+    {
+      "id": "tank-v5--R04-denim-twill",
+      "cut": "tank-v5",
+      "recipe": "R04",
+      "slug": "denim-twill",
+      "name": "Denimblå twill",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R04-denim-twill.png",
+        "sha256": "1efb69c78513ef9dac7400291d30d805e66e09e533d7b30f09ae6aef17b1a488",
+        "pixelSha256": "71b93d65159c64c3da0872f9003078785f3946bfe41c56fd1e5ccc8060f2e461"
+      }
+    },
+    {
+      "id": "tank-v5--R05-breton-stripe",
+      "cut": "tank-v5",
+      "recipe": "R05",
+      "slug": "breton-stripe",
+      "name": "Bretonsk stribe (navy på creme)",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R05-breton-stripe.png",
+        "sha256": "ed6c7d7fe837f1ecdbcececb05a7874ddb0f6e7cf9743e067b2eee6e88659181",
+        "pixelSha256": "bc63be49b3df61c69c09d809a6aaa949b03a6dee74d8fe3996d12f2211adbd54"
+      }
+    },
+    {
+      "id": "tank-v5--R06-block-stripes",
+      "cut": "tank-v5",
+      "recipe": "R06",
+      "slug": "block-stripes",
+      "name": "Blokstriber (terracotta og sand)",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R06-block-stripes.png",
+        "sha256": "2e3a7c8655e1f68abacfaf42826f98c4871113174e052b71c55a9de511c7a8ce",
+        "pixelSha256": "e551a7283de1e2519c46e37ef8de805eee0c92db482df89e220a6d1cd5b73d68"
+      }
+    },
+    {
+      "id": "tank-v5--R07-green-check",
+      "cut": "tank-v5",
+      "recipe": "R07",
+      "slug": "green-check",
+      "name": "Grøn tern",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R07-green-check.png",
+        "sha256": "0f0f7a79c1f6756bfe77838d8e4e9a6738bf2d11d5fa9723088470d8a7ffd1f1",
+        "pixelSha256": "b7684e82ff7ea6cfe53e4a3405dde508ae71532b8cbdc06d8f361e9cbdb22eb7"
+      }
+    },
+    {
+      "id": "tank-v5--R08-mustard-dots",
+      "cut": "tank-v5",
+      "recipe": "R08",
+      "slug": "mustard-dots",
+      "name": "Sennepsprikker på navy",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R08-mustard-dots.png",
+        "sha256": "66de0692724e9c0a513391db882dffedbc6d0c166e9877feea738039a805da17",
+        "pixelSha256": "37d00efd90c34d04cc54c15c90fa2e3af948e65c80840942f17239b35501d68f"
+      }
+    },
+    {
+      "id": "tank-v5--R09-mint-teapot",
+      "cut": "tank-v5",
+      "recipe": "R09",
+      "slug": "mint-teapot",
+      "name": "Tekande på mintmelange",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R09-mint-teapot.png",
+        "sha256": "4c649f62eb915618934731794cd27745e002237042f7eccc783853ea82fc64d1",
+        "pixelSha256": "96babfcabcb20dfdb2118630c8f799ee3ccfdee5461828973eabd707b8416867"
+      }
+    },
+    {
+      "id": "tank-v5--R10-lightdenim-shield",
+      "cut": "tank-v5",
+      "recipe": "R10",
+      "slug": "lightdenim-shield",
+      "name": "Skjold på lys denim-twill",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R10-lightdenim-shield.png",
+        "sha256": "97dc16f0b369c3c1c6339f952fd07b87d89ae4b95dda3d662761703b04405234",
+        "pixelSha256": "188ca074526068894a9af3266e5c82ab7cec0cff409ee218aff0140271346aad"
+      }
+    },
+    {
+      "id": "tank-v5--R11-sand-fox",
+      "cut": "tank-v5",
+      "recipe": "R11",
+      "slug": "sand-fox",
+      "name": "Ræv på sand piqué",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R11-sand-fox.png",
+        "sha256": "4493866177144607a95d8a19bd1e7ac98b88ff28f2629dd32dbbaaca4dca01fa",
+        "pixelSha256": "c7dd8a8b40e50930e41f2fee68b11ace54039450ce1ff5e64084b24c4964a4cc"
+      }
+    }
+  ],
+  "notApproved": [
+    {
+      "id": "tee-hip-v2--R12-charcoal-planet",
+      "cut": "tee-hip-v2",
+      "recipe": "R12",
+      "slug": "charcoal-planet",
+      "name": "Planet på koksgrå melange (motivet er ikke godkendt som tryk)",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tee-hip-v2--R12-charcoal-planet.png",
+        "sha256": "b02e51751d9756753fe207e14b0306c00b12b48819ffef15f62d6a3da3a37f32",
+        "pixelSha256": "4b284ba6bac4a95bdcf3b516a8b887e341312005cdeb220a5f099ece19bae794"
+      },
+      "why": "the planet (R12): the owner excluded it; the motif is not approved as a print"
+    },
+    {
+      "id": "sweater-long-v3--R12-charcoal-planet",
+      "cut": "sweater-long-v3",
+      "recipe": "R12",
+      "slug": "charcoal-planet",
+      "name": "Planet på koksgrå melange (motivet er ikke godkendt som tryk)",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/sweater-long-v3--R12-charcoal-planet.png",
+        "sha256": "00efe38c0fe0ee83fd74a6899e3d5eba45c0886595be25dfdb17576a5923ab79",
+        "pixelSha256": "13da0529a7937d52bd6d22efd1e187c6f8219090b7dce00a024c0a92328c7117"
+      },
+      "why": "the planet (R12): the owner excluded it; the motif is not approved as a print"
+    },
+    {
+      "id": "tank-v5--R12-charcoal-planet",
+      "cut": "tank-v5",
+      "recipe": "R12",
+      "slug": "charcoal-planet",
+      "name": "Planet på koksgrå melange (motivet er ikke godkendt som tryk)",
+      "layer": {
+        "file": "<Documents>/DenSejeApp-artefacts/d354-edge-fixes/layers/tank-v5--R12-charcoal-planet.png",
+        "sha256": "22338a7f9390c2d47885849800dc2a13d28d74a6d48121f0c017048df30c94c5",
+        "pixelSha256": "ca163abad1a2f2f888699131cd56e6098ac4c215ea2257ab8944f1be34e5bb32"
+      },
+      "why": "the planet (R12): the owner excluded it; the motif is not approved as a print"
+    }
+  ]
+}
