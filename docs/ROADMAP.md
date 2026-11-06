@@ -894,7 +894,8 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   - De syv overtagne portioner er gennemgået fuldt, de fire nye ved stikprøve (fundrate 2 %).
   - Planen for anvendelse (31 × `apply_migration`, inaktive) og trinvis aktivering (batch7 først, batch4/batch5 sidst)
     står i runbookens §2.8.
-  - Intet er anvendt.
+- **Trin 1a anvendt 2026-11-06:** `grade6_9` (120 opgaver) ligger inaktivt i produktionen (ledger
+  `20261106094831`). De øvrige 30 migrationer er ikke anvendt, og intet er aktiveret.
 - Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
   `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.
