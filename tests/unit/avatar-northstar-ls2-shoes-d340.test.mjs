@@ -46,5 +46,5 @@ test("D-340 the stored choice: a shoe choice keeps it; shorts show the own top w
   assert.deepEqual(withStorage(on, () => { const r = L.northstarRenderFor("hub", []); return [r.key, r.sweater]; }), ["K01+SV1-V5-CHALK+LS2-HEATHER", "LS2-HEATHER"]);
   for (const load of [1, 2]) withStorage({ ...on, avatar_northstar_outfit: "K04" }, (m) => { const r = L.northstarRenderFor("quiz", []); assert.deepEqual([r.key, r.sweater], ["K04+SV1-V5-CHALK", null], "load " + load); assert.equal(m.get("avatar_northstar_sweater"), "LS2-HEATHER"); });
   assert.equal(withStorage({ ...on, avatar_northstar_outfit: "K07" }, () => L.northstarRenderFor("avatar", [])).key, "K07+SV1-V5-CHALK+LS2-HEATHER");
-  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
 });

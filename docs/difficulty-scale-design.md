@@ -1,7 +1,7 @@
 # Sværhedsskala 1–10.000 — designforslag
 
 **Status:** GODKENDT DESIGN. B1–B8 er besluttet af ejeren 2026-10-20 (§9), og E1–E5 2026-10-22 (§10).
-B9 er udskudt.
+B9 er afgjort af ejeren 2026-11-06 (D-356).
 Intet i dette dokument er bygget eller anvendt.
 **Dato:** 2026-10-20 · **Grundlag:** `main` @ `d93faff`
 **Anledning:** Ejeren ønsker 10.000 sværere engelskopgaver fordelt på niveau 1–10.000. Den 19.
@@ -244,7 +244,7 @@ E2E: en elev i 3. klasse med højt niveau får B1-opgaver.
 | B6 | Rækkefølge i forhold til PR #351 (serverejet bånd) | **BESLUTTET 2026-10-20: #351 merges først**, og niveauet bygges på dens mekanisme |
 | B7 | CEFR-forankringen i §7 til engelsk | **BESLUTTET 2026-10-20: ja** |
 | B8 | Hvad ser eleven? (niveautal, CEFR-mærke eller ingenting) | **BESLUTTET 2026-10-20: ingenting i v1**; læreren ser niveauet pr. fag |
-| B9 | Udfases placeringstesten, når skalaen kører? | Udskudt: særskilt beslutning, når skalaen kører |
+| B9 | Udfases placeringstesten, når skalaen kører? | Ja, for nye elever: [D-356](decisions/D-356.md), 2026-11-06 |
 
 Beslutningerne er registreret i `docs/ROADMAP.md`. `docs/ARCHITECTURE.md` opdateres i samme PR som migration A,
 når datamodellen faktisk findes. PR #351 er merget (B6 opfyldt i repoet).

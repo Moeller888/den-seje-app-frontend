@@ -307,8 +307,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ── Placement assessment system ────────────────────────────────────────
-  // Runs once on first login after grade selection: 10 questions across bands 1-4
-  // (no XP, no question_instances created) seed the starting difficulty.
+  // NOT STARTED ANY MORE (D-356): a new pupil goes straight to the quiz at GRADE_START_BAND. Only
+  // loadAdaptiveBands and persistCurrentBand below are still in use; a band a pupil got from the
+  // test earlier is still honoured. runPlacementFlow was: 10 questions across bands 1-4 (no XP, no
+  // question_instances created) that seeded the starting difficulty.
   // SERVER-OWNED (answer keys server-side, E1): start_placement() picks the questions and
   // returns display data only — never the answer — and submit_placement() grades the chosen
   // answers once, writes profiles.placement_band and returns only the band. The browser
@@ -1886,15 +1888,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (selectedGrade === null) await showGradeSelector();
 
   // Load both bands, then resolve starting difficulty.
-  // Priority: persistedBand (earned) > placementBand (assessed) > GRADE_START_BAND (default).
+  // Priority: persistedBand (earned) > placementBand (assessed before D-356) > GRADE_START_BAND (default).
   await loadAdaptiveBands();
-  if (placementBand === null && selectedGrade !== null) {
-    await runPlacementFlow(); // first-time only — sets placementBand
-  }
   if (persistedBand !== null) {
     currentDifficultyBand = persistedBand;          // returning student — resume at earned level
   } else if (placementBand !== null) {
-    currentDifficultyBand = placementBand;           // post-placement first session
+    currentDifficultyBand = placementBand;           // placed before D-356, no earned level yet
   }
   // else: currentDifficultyBand stays at GRADE_START_BAND[grade] set by loadGrade()
 

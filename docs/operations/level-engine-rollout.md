@@ -198,10 +198,19 @@ FROM public.questions WHERE metadata ? 'level_batch' GROUP BY 1 ORDER BY 1;
 -- WHERE learning_objective = 'english' AND metadata->>'level_batch' = 'pilot';
 ```
 
-### 2.8 Engelsk 5.000: plan for anvendelse og trinvis aktivering (2026-11-05, intet udført)
+### 2.8 Engelsk 5.000: plan for anvendelse og trinvis aktivering (2026-11-05)
 
 Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokumenteret i
 [`english-5000-e5.md`](english-5000-e5.md).
+
+**Status:**
+- 2026-11-06: ejeren har taget et dump af `public.questions` (2.143 rækker med struktur), fordi produktionen
+  ikke har nogen gendannelig backup.
+- **Trin 1a er udført 2026-11-06.** `20261020125000_english_grade6_9` er anvendt som ledger-version
+  `20261106094831`. Efterkontrollen viste 120 rækker, 0 aktive og 0 uden niveau eller CEFR, og indholdet er
+  identisk med repoet. Se
+  [`production-actions/2026-11-06T0948Z-english-grade6-9-applied.md`](production-actions/2026-11-06T0948Z-english-grade6-9-applied.md).
+- Trin 1b–1d og hele fase 2 er ikke udført.
 
 **Godkendelser:**
 - Hvert trin herunder kræver sit eget GO fra ejeren (E2, D-110). Det gælder også hver `apply_migration`, hver
@@ -721,6 +730,6 @@ at blive sprunget over. Lokalt springes den over, medmindre `LEVEL_ENGINE_PG_URL
 | R2 | `v1` er globalt, så der er ingen pilot på enkelte elever | **Lukket 2026-11-04.** Canary'en pr. elev (§2.6.1) blev deployet og afprøvet med én test-elev, før `v1` blev slået til for alle. Allowlisten er beholdt til hurtig tilbagegang |
 | R3 | Første kald folder hele elevens historik i faget. Elever med lang historik flyttes mange niveauer på én gang | Det er tilsigtet: den tidligere historik giver det bedste startestimat. Trinene bliver mindre med antal svar. Kan ses i fold-loggen |
 | R4 | Samtidighedstesten kræver en rigtig PostgreSQL | **Løst:** den kører i unit-jobbet mod en PostgreSQL 17.6-servicecontainer og fejler, hvis serveren mangler (§4.5) |
-| R5 | Placeringstesten måler kun historie, så engelsk og dansk starter på klassetrinnets startbånd | Bevidst (B9 er udskudt). De store første trin flytter eleven hurtigt |
+| R5 | Nye elever tager ingen placeringstest (D-356), så alle fag starter på klassetrinnets startbånd | Bevidst (B9 er afgjort af D-356). De store første trin flytter eleven hurtigt |
 | R6 | Indholdets egne tests bruger stadig et forenklet skema | Kørt én gang 2026-10-22: alle 18 indholdsfiler (3.000 rækker) indsat på det produktionstro skema efter #351 → A → B, alle inaktive og mærket, niveau 1–3.000 (`batch6`) og 3.001–10.000 (de øvrige). Opgave-PR'ernes egne tests skal flyttes over på `tests/unit/helpers/prod-base-schema.mjs`, når #356 og B er merget |
 | R7 | En elev, der har set eller ikke kan få de 600 nærmeste opgaver i faget, rammer fallback ved hvert kald (~60 ms ved 6.090 aktive, lineært voksende) | Det rammer kun elever med en meget lang historik omkring deres niveau. Følg det i produktion. Et bredere andet vindue før den fulde søgning er en mulig senere ændring (separat beslutning) |

@@ -585,7 +585,9 @@ write `answered_at = now()` in the same UPDATE as the verdict, and a pupil's nex
 after the previous one committed. `server-band.ts` is the TS specification of the fold, pinned equal
 to the SQL in PGlite. The band is one level across subjects, like the client's today; a per-subject
 level is a separate product decision. `profiles.current_band`,
-`profiles.placement_band` (both client-writable) and the request body are not inputs.
+`profiles.placement_band` (both client-writable) and the request body are not inputs. Since D-356
+the client no longer starts placement, so a new pupil always seeds from the grade's start band;
+`start_placement`, `submit_placement` and existing `placement_sessions` rows are unchanged.
 
 **Adding a new kind:** (1) registry entry with `servable: false`; (2) renderer in
 `js/answer-input.js`, evaluator/award path in `process-event`, deliberate extension of

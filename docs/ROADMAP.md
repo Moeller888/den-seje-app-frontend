@@ -23,9 +23,11 @@ _Last reviewed: 2026-07-01._
   når eleven går fra Hub'en til quizzen ("Spil").
 - Uændret: lærer → `teacher.html`, super_admin → `admin.html`, `must_reset_password` →
   `reset-password.html?forced=1` (som efter skiftet sender tilbage til login og dermed til Hub'en).
-- Næste skridt (ikke bygget): måle-spørgsmål i **alle** fag. I dag måler placeringstesten kun
-  historie og gemmer ét fælles `profiles.placement_band`. Et designforslag kommer før kode og skal
-  passe med sværhedsskalaen 1–10.000 (niveau pr. fag, B1; udfasning af placeringstesten udskudt, B9).
+- **Ejerbeslutning 2026-11-06 (D-356):** nye elever tager ikke længere de 10 spørgsmål. De går
+  direkte til quizzen og starter på klassetrinnets startbånd, hvorefter niveauet følger deres svar.
+  Et bånd fra en tidligere placeringstest gælder stadig. Det afgør B9.
+- Næste skridt (ikke bygget, og ikke besluttet efter D-356): måle-spørgsmål i **alle** fag. Et
+  designforslag kommer før kode og skal passe med sværhedsskalaen 1–10.000 (niveau pr. fag, B1).
 
 ---
 
@@ -894,7 +896,8 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   - De syv overtagne portioner er gennemgået fuldt, de fire nye ved stikprøve (fundrate 2 %).
   - Planen for anvendelse (31 × `apply_migration`, inaktive) og trinvis aktivering (batch7 først, batch4/batch5 sidst)
     står i runbookens §2.8.
-  - Intet er anvendt.
+- **Trin 1a anvendt 2026-11-06:** `grade6_9` (120 opgaver) ligger inaktivt i produktionen (ledger
+  `20261106094831`). De øvrige 30 migrationer er ikke anvendt, og intet er aktiveret.
 - Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
   `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.

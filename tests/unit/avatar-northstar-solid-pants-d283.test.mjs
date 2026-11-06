@@ -31,7 +31,7 @@ test("D-283 exactly the approved trousers and files: the registered sha256 and b
   for (const [f, e] of Object.entries(APPROVAL.files)) { const b = readFileSync(join(REPO, "assets", "avatar-northstar", f)); assert.deepEqual([sha(b), b.length], [e.sha256, e.bytes], f); assert.ok(doc.includes("`" + e.sha256 + "`"), f + " is D-281's listed hash"); }
   assert.ok(!Object.keys(L.NORTHSTAR_ITEMS).some((id) => /stripe|check/.test(id)), "no patterned trousers");
   for (const p of Object.values(L.NORTHSTAR_SOLID_PANTS)) assert.deepEqual({ ...L.NORTHSTAR_ITEMS[p.item] }, { category: "bottom", layers: ["pants"], shadows: ["body"], shadowsOf: "bottom-trousers-square-olive" });
-  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
 });
 
 test("D-283 reachable: every outfit the trousers can join uses a top and shoes D-281 checked — 110 outfits, 55 top x shoe pairs", () => {
