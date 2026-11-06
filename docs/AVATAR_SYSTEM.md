@@ -28,7 +28,8 @@ art layer behind them can be upgraded without a rewrite.
 ## 2. Current state (the honest picture)
 
 - **Northstar wardrobe for every pupil — D-357 (owner decision 2026-11-06).** This entry supersedes the "browser opt-in only" limits below where they differ.
-  - **Access:** `AVATAR_NORTHSTAR_WARDROBE = true`. Every pupil gets the wardrobe on `avatar.html` and chooses freely; nobody is moved automatically, and "Nuværende avatar" stays the default.
+  - **Access:** `AVATAR_NORTHSTAR_WARDROBE = true`. Every pupil gets the wardrobe on `avatar.html` and chooses freely; nobody is moved automatically, and today's avatar stays the default.
+  - **Wardrobe (D-359):** single parts in the right-hand column, no sets: 30 tops, 6 bottoms, 10 shoes over the 1304 approved outfits. A click always works; when a part is not approved with the rest, the fewest other parts change and the pupil is told.
   - **Storage:** the choice is `avatar_identity.northstar`, written only by `set_avatar_northstar`. Once a surface has named the account, the browser's stored choice is not read.
   - **Items:** what was already published, within the approved combination lists. D-354's 33 tops are a later step and need combination checks and owner approval.
   - **Limits:** one face, skin tone and hairstyle; no blink; equipment outside aura/back falls back to today's avatar; shop previews keep today's avatar.

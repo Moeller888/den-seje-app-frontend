@@ -16,9 +16,9 @@
 // approved combinations (D-336's 30 with the beige sneakers, D-340's 240 with the other shoes); stored the same way (avatar_northstar_sweater); "Outfittets egen top" returns.
 // D-348: the row (now "Overdel") also offers the 6 owner-approved tank tops (D-345/D-348), each against its own list of 264 combinations;
 // the same store, so at most one sweater or tank top is chosen; the same rule and fallback.
-// D-357: the panel is every pupil's wardrobe. With saveChoice (avatar.html) a choice is saved on the pupil's account and the labels are
-// words, not K numbers; without it (the opt-in with the flag off, the verifiers) it is stored in this browser as before.
-import { northstarChoiceWith, NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_TOP_CHOICES, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor } from "./avatar-layers.js";
+// D-359: with the flag on pupils get mountNorthstarWardrobe below: single parts in the right-hand column, no sets. The K panel is what
+// the local opt-in shows while the flag is off, and what the verifiers drive.
+import { northstarPieces, northstarPieceLayers, northstarFitPiece, northstarOutfitNow, NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_TOP_CHOICES, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor } from "./avatar-layers.js";
 
 function store(key, value) {
   try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch (_e) { return false; }
@@ -32,18 +32,7 @@ export function applyNorthstarUrlOptIn(search) {
   return v;
 }
 
-// The words for one K outfit: its top, bottom and shoes.
-const NAMES = Object.freeze({
-  "top-tee-hip-cream": "Creme T-shirt", "top-tee-hip-blue": "Blå T-shirt",
-  "bottom-skirt-sand": "sandfarvet nederdel", "bottom-shorts-navy": "marineblå shorts", "bottom-capri-lightblue": "lyseblå capribukser", "bottom-trousers-square-olive": "olivengrønne bukser",
-  "shoes-sneakers-beige": "beige sneakers", "shoes-boots-laceup-black": "sorte snørestøvler", "shoes-sneakers-white": "hvide sneakers", "shoes-ankleboots-brown": "brune støvletter",
-});
-export function northstarOutfitLabel(key) {
-  const o = typeof key === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_OUTFITS, key) ? NORTHSTAR_OUTFITS[key] : null;
-  return o ? NAMES[o.top] + ", " + NAMES[o.bottom] + ", " + NAMES[o.shoes] : "";
-}
-
-export function mountNorthstarPanel(panel, preview, { saveChoice = null } = {}) {
+export function mountNorthstarPanel(panel, preview) {
   if (!panel || !isNorthstarWardrobeOn()) return false;
   const current = northstarSelectedOutfit(), tee = northstarSelectedTee(), teeOk = northstarTeeAllowed(current), shown = teeOk && tee ? tee : null;
   const pants = northstarSelectedPants(), pantsOk = northstarPantsAllowed(current, shown), shownPants = pantsOk && pants ? pants : null;
@@ -52,21 +41,11 @@ export function mountNorthstarPanel(panel, preview, { saveChoice = null } = {}) 
   panel.textContent = "";
   const title = document.createElement("div");
   title.className = "panel-title";
-  title.textContent = saveChoice ? "Ny avatar" : "Northstar-garderobe (lokal test)";
+  title.textContent = "Northstar-garderobe (lokal test)";
   const status = document.createElement("p");
   status.className = "northstar-status";
   status.setAttribute("role", "status");
-  const pick = async (key, value) => {
-    if (!saveChoice) { if (store(key, value)) location.reload(); else status.textContent = "Valget kunne ikke gemmes i denne browser."; return; }
-    const buttons = Array.from(panel.querySelectorAll("button")), was = buttons.map((b) => b.disabled);
-    buttons.forEach((b) => { b.disabled = true; });
-    status.textContent = "Gemmer …";
-    let ok = false;
-    try { ok = (await saveChoice(northstarChoiceWith(key, value))) === true; } catch (_e) { ok = false; }
-    if (ok) { location.reload(); return; }
-    buttons.forEach((b, i) => { b.disabled = was[i]; });
-    status.textContent = "Valget kunne ikke gemmes. Prøv igen.";
-  };
+  const pick = (key, value) => { if (store(key, value)) location.reload(); else status.textContent = "Valget kunne ikke gemmes i denne browser."; };
   const row = (cls) => { const d = document.createElement("div"); d.className = "northstar-outfits " + cls; return d; };
   const button = (list, label, key, value, on, disabled) => {
     const b = document.createElement("button");
@@ -79,11 +58,11 @@ export function mountNorthstarPanel(panel, preview, { saveChoice = null } = {}) 
     list.appendChild(b);
   };
   const list = row("northstar-outfit-list");
-  for (const k of Object.keys(NORTHSTAR_OUTFITS)) button(list, saveChoice ? northstarOutfitLabel(k) : k, NORTHSTAR_OUTFIT_KEY, k, k === current, false);
+  for (const k of Object.keys(NORTHSTAR_OUTFITS)) button(list, k, NORTHSTAR_OUTFIT_KEY, k, k === current, false);
   button(list, "Nuværende avatar", NORTHSTAR_OUTFIT_KEY, null, current === null, false);
   const teeTitle = document.createElement("div");
   teeTitle.className = "northstar-subtitle";
-  teeTitle.textContent = saveChoice ? "T-shirt med tryk (til outfits med creme T-shirt)" : "T-shirt med tryk (til K01–K09)";
+  teeTitle.textContent = "T-shirt med tryk (til K01–K09)";
   const tees = row("northstar-tee-list");
   for (const [id, t] of Object.entries(NORTHSTAR_PRINT_TEES)) button(tees, t.label, NORTHSTAR_TEE_KEY, id, id === shown, !teeOk);
   button(tees, "Outfittets egen T-shirt", NORTHSTAR_TEE_KEY, null, teeOk && !shown, !teeOk);
@@ -114,12 +93,12 @@ export function mountNorthstarPanel(panel, preview, { saveChoice = null } = {}) 
   button(sweaterList, "Outfittets egen top", NORTHSTAR_SWEATER_KEY, null, !!current && !shownSweater, !current);
   sweaterNote.textContent = topBlocked.length ? topBlocked.join(" og ") + ": ikke mulig her. " + sweaterReason(current, shown, shownPants, shownShoe) : "";
   const what = () => { const parts = [shown ? NORTHSTAR_PRINT_TEES[shown].label : null, shownPants ? NORTHSTAR_SOLID_PANTS[shownPants].label : null, shownShoe ? NORTHSTAR_SHOE_CHOICES[shownShoe].label : null, shownSweater ? NORTHSTAR_TOP_CHOICES[shownSweater].label : null].filter(Boolean);
-    return current ? (saveChoice ? northstarOutfitLabel(current) : current) + (parts.length ? " med " + parts.join(" og ") : "") : ""; };
+    return current ? current + (parts.length ? " med " + parts.join(" og ") : "") : ""; };
   const describe = () => {
     const path = preview && preview.dataset ? preview.dataset.avatarRenderPath : null;
-    if (!current) status.textContent = "Vælg et outfit for at se den nye figur. " + (saveChoice ? "Valget gemmes på din konto, og du kan altid skifte tilbage." : "Valget gemmes kun i denne browser.");
-    else if (path === "northstar") status.textContent = what() + " vises. Figuren blinker ikke endnu og har et neutralt udtryk." + (teeOk ? "" : saveChoice ? " T-shirts med tryk kan vælges til outfits med creme T-shirt." : " T-shirts med tryk kan vælges til K01–K09.");
-    else if (path) status.textContent = what() + " er valgt, men den nuværende avatar vises: noget af dit udstyr passer ikke til den nye figur endnu, eller et lag kunne ikke hentes." + (saveChoice ? " Tag hat og andet udstyr af for at se figuren. Aura og ryg må blive på." : "");
+    if (!current) status.textContent = "Vælg et outfit for at se den nye figur. Valget gemmes kun i denne browser.";
+    else if (path === "northstar") status.textContent = what() + " vises. Figuren blinker ikke endnu og har et neutralt udtryk." + (teeOk ? "" : " T-shirts med tryk kan vælges til K01–K09.");
+    else if (path) status.textContent = what() + " er valgt, men den nuværende avatar vises: noget af dit udstyr passer ikke til den nye figur endnu, eller et lag kunne ikke hentes.";
   };
   describe();
   if (preview && typeof MutationObserver !== "undefined") new MutationObserver(describe).observe(preview, { attributes: true, attributeFilter: ["data-avatar-render-path"] });
@@ -157,4 +136,127 @@ function sweaterReason(key, tee, pants, shoe) {
   if (!o) return "Vælg først et outfit.";
   if (/shorts/.test(o.bottom)) return "Trøjer og tanktoppe er ikke godkendt med shorts.";
   return "Kombinationen er ikke godkendt.";
+}
+
+// D-359: the pupil's wardrobe. One card per approved part, in the same column and with the same card as the pupil's other items.
+const BASE_NAMES = Object.freeze({
+  "top-tee-hip-cream": "T-shirt · creme", "top-tee-hip-blue": "T-shirt · blå",
+  "bottom-skirt-sand": "Nederdel · sand", "bottom-shorts-navy": "Shorts · marineblå", "bottom-capri-lightblue": "Capribukser · lyseblå", "bottom-trousers-square-olive": "Lige bukser · oliven",
+  "shoes-sneakers-beige": "Sneakers · beige", "shoes-boots-laceup-black": "Snørestøvler · sorte", "shoes-sneakers-white": "Sneakers · hvide", "shoes-ankleboots-brown": "Støvletter · brune",
+});
+const CATEGORIES = Object.freeze([["top", "Overdele", "Overdel"], ["bottom", "Underdele", "Underdel"], ["shoes", "Sko", "Sko"]]);
+// Where each category sits on the 1024×1536 canvas: centre and the side of the square that holds it (measured over all layers).
+const CROP = Object.freeze({ top: { x: 511, y: 650, side: 440 }, bottom: { x: 510, y: 1074, side: 640 }, shoes: { x: 511, y: 1396, side: 370 } });
+const THUMB = 88, NOTE_KEY = "avatar_northstar_note";
+
+export function northstarPieceLabel(item) {
+  if (Object.prototype.hasOwnProperty.call(BASE_NAMES, item)) return BASE_NAMES[item];
+  const tee = Object.values(NORTHSTAR_PRINT_TEES).find((t) => t.item === item);
+  if (tee) return "T-shirt · " + tee.label.charAt(0).toLowerCase() + tee.label.slice(1);
+  const other = [...Object.values(NORTHSTAR_SOLID_PANTS), ...Object.values(NORTHSTAR_SHOE_CHOICES), ...Object.values(NORTHSTAR_TOP_CHOICES)].find((t) => t.item === item);
+  return other ? other.label : "";
+}
+const lower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
+// What the pupil is told when a part had to change: "Shorts · marineblå passer ikke til Sweater · navy, så du har fået ... på."
+export function northstarFitNote(item, changed) {
+  if (!Array.isArray(changed) || changed.length === 0) return "";
+  const from = changed.map((c) => northstarPieceLabel(c.from)).join(" og "), to = changed.map((c) => lower(northstarPieceLabel(c.to))).join(" og ");
+  return from + " passer ikke til " + lower(northstarPieceLabel(item)) + ", så du har fået " + to + " på.";
+}
+function session(key, value) {
+  try {
+    if (value === undefined) { const v = sessionStorage.getItem(key); sessionStorage.removeItem(key); return v; }
+    sessionStorage.setItem(key, value);
+  } catch (_e) { /* the note is a convenience; the choice itself is saved */ }
+  return null;
+}
+function thumb(item, category, name) {
+  const box = document.createElement("div");
+  box.className = "northstar-thumb";
+  const c = CROP[category], scale = THUMB / c.side;
+  for (const src of northstarPieceLayers(item)) {
+    const img = document.createElement("img");
+    img.src = src; img.alt = ""; img.loading = "lazy"; img.decoding = "async";
+    img.style.width = 1024 * scale + "px";
+    img.style.left = THUMB / 2 - c.x * scale + "px";
+    img.style.top = THUMB / 2 - c.y * scale + "px";
+    box.appendChild(img);
+  }
+  box.setAttribute("role", "img"); box.setAttribute("aria-label", name);
+  return box;
+}
+
+export function mountNorthstarWardrobe(root, preview, { saveChoice } = {}) {
+  if (!root || typeof saveChoice !== "function") return false;
+  const pieces = northstarPieces(), now = northstarOutfitNow();
+  root.textContent = "";
+  const status = document.createElement("p");
+  status.className = "northstar-status";
+  status.setAttribute("role", "status");
+  const save = async (choice, note) => {
+    const buttons = Array.from(root.querySelectorAll("button"));
+    buttons.forEach((b) => { b.disabled = true; });
+    status.textContent = "Gemmer …";
+    let ok = false;
+    try { ok = (await saveChoice(choice)) === true; } catch (_e) { ok = false; }
+    if (ok) { if (note) session(NOTE_KEY, note); location.reload(); return; }
+    buttons.forEach((b) => { b.disabled = false; });
+    status.textContent = "Valget kunne ikke gemmes. Prøv igen.";
+  };
+  const note = session(NOTE_KEY);
+  const describe = () => {
+    const path = preview && preview.dataset ? preview.dataset.avatarRenderPath : null;
+    const base = !now ? "Vælg en del for at prøve den nye figur. Valget gemmes på din konto, og du kan altid skifte tilbage."
+      : path && path !== "northstar" ? "Din nuværende avatar vises: noget af dit udstyr passer ikke til den nye figur endnu, eller et lag kunne ikke hentes. Tag hat og andet udstyr af for at se figuren. Aura og ryg må blive på."
+      : "Den nye figur blinker ikke endnu og har et neutralt udtryk.";
+    status.textContent = (note ? note + " " : "") + base;
+  };
+  describe();
+  if (preview && typeof MutationObserver !== "undefined") new MutationObserver(describe).observe(preview, { attributes: true, attributeFilter: ["data-avatar-render-path"] });
+  const title = document.createElement("div");
+  title.className = "panel-title";
+  title.textContent = "Tøj";
+  root.appendChild(title);
+  root.appendChild(status);
+  if (now) {
+    const back = document.createElement("button");
+    back.type = "button"; back.className = "northstar-outfit"; back.textContent = "Brug min nuværende avatar";
+    back.addEventListener("click", () => save({}, null));
+    root.appendChild(back);
+  }
+  for (const [category, heading, one] of CATEGORIES) {
+    const subtitle = document.createElement("div");
+    subtitle.className = "northstar-subtitle";
+    subtitle.textContent = heading;
+    const grid = document.createElement("div");
+    grid.className = "inventory-grid";
+    for (const p of pieces) {
+      if (p.category !== category) continue;
+      const name = northstarPieceLabel(p.item), worn = !!now && now[category] === p.item;
+      const card = document.createElement("div");
+      card.className = "item-card" + (worn ? " equipped" : "");
+      card.dataset.rarity = "common"; card.dataset.piece = p.item;
+      const label = document.createElement("div"); label.className = "item-name"; label.textContent = name;
+      const slot = document.createElement("div"); slot.className = "slot-label"; slot.textContent = one;
+      card.append(thumb(p.item, category, name), label, slot);
+      if (worn) {
+        const on = document.createElement("span"); on.className = "equipped-label"; on.textContent = "✓ På";
+        card.appendChild(on);
+      } else {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "equip-btn"; b.textContent = "Tag på";
+        b.addEventListener("click", () => {
+          const fit = northstarFitPiece(p.item);
+          if (fit) save(fit.choice, now ? northstarFitNote(p.item, fit.changed) : null);
+          else status.textContent = "Delen kunne ikke tages på.";
+        });
+        card.appendChild(b);
+      }
+      grid.appendChild(card);
+    }
+    root.appendChild(subtitle);
+    root.appendChild(grid);
+  }
+  root.hidden = false;
+  return true;
 }
