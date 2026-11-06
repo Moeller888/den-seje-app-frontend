@@ -22,6 +22,11 @@ export interface ServiceTask {
   readonly contextKey: string;
   /** Answer round on the server (H5 `round_no`). */
   readonly roundNo: number;
+  /**
+   * The learning objective the SERVER confirmed for this instance (D-329 echo), or null when the backend
+   * did not target one. Never the world's own claim.
+   */
+  readonly objective?: string | null;
 }
 
 export interface TaskQuery {

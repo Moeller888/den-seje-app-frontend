@@ -258,7 +258,8 @@ export class TaskView {
     // Self-explanation shown back next to the explanation, so the pupil compares their reason with it.
     if (this.reason !== null) this.feedback.append(el("p", { id: "lv-own-reason" }, `Din begrundelse: ${this.reason.toLowerCase()}. Sammenlign den med forklaringen ovenfor.`));
     // Display only: the server decided what this answer counts as.
-    const counts = r.evidence === "evidence" ? "Tæller som selvstændig opgave." : r.evidence === "practice" ? "Tæller som øvelse." : "";
+    // An OBSERVATION, not a verdict on learning (D-330): "independent" is not "documented learning".
+    const counts = r.evidence === "evidence" ? "Løst selvstændigt, uden hjælp." : r.evidence === "practice" ? "Løst med hjælp eller som øvelse." : "";
     if (counts !== "") this.feedback.append(el("p", { id: "lv-evidence", "data-evidence": r.evidence }, counts));
     this.closeBtn.hidden = false;
     // Step 5: a wrong assessment can be revised on a NEW task after reading the feedback.

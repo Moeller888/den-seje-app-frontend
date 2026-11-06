@@ -24,6 +24,8 @@ export const DRAWER_KEY = "skuffe";
 export const DRAWER_RESULT_ACTION = "bridge.result.skuffe";
 /** D-322 step 8: the verdict of the (prototype) revisit task. */
 export const REVISIT_RESULT_ACTION = "bridge.result.genbesoeg";
+/** D-332 step 7: the verdict of the transfer task (another period). */
+export const TRANSFER_RESULT_ACTION = "bridge.result.overfoersel";
 
 export const archiveContent: ContentPackage = {
   game: {
@@ -94,7 +96,7 @@ export const archiveContent: ContentPackage = {
       id: "cabinet",
       kind: "logic",
       nodes: [
-        { id: "c0", type: "entry", name: "main", next: ["c1", "r1", "r2", "r3", "d1", "d2", "d3", "v1", "v2"] },
+        { id: "c0", type: "entry", name: "main", next: ["c1", "r1", "r2", "r3", "d1", "d2", "d3", "t1", "t2", "v1", "v2"] },
         // Exploring is free and never a task (F0 11 §2.2 rule 6). Only the locked cabinet asks for one.
         { id: "c1", type: "guard", expr: is("$action", "interact"), next: ["c2"] },
         { id: "c2", type: "walk_to", actor: "marker", spot: "cabinet_spot", next: ["c3", "c5", "c6g"] },
@@ -123,6 +125,11 @@ export const archiveContent: ContentPackage = {
         { id: "d2a", type: "say", speaker: "marker", textKey: "line.drawer_wrong", next: [] },
         { id: "d3", type: "guard", expr: all(is("$action", DRAWER_RESULT_ACTION), is("$outcome", "aborted")), next: ["d3a"] },
         { id: "d3a", type: "say", speaker: "marker", textKey: "line.connection", next: [] },
+        // D-332 step 7 (transfer to 1864): the world only comments.
+        { id: "t1", type: "guard", expr: all(is("$action", TRANSFER_RESULT_ACTION), is("$outcome", "correct")), next: ["t1a"] },
+        { id: "t1a", type: "say", speaker: "marker", textKey: "line.transfer_done", next: [] },
+        { id: "t2", type: "guard", expr: all(is("$action", TRANSFER_RESULT_ACTION), is("$outcome", "incorrect")), next: ["t2a"] },
+        { id: "t2a", type: "say", speaker: "marker", textKey: "line.transfer_wrong", next: [] },
         // D-322 step 8 (prototype revisit): the world only comments; no mastery exists in the game.
         { id: "v1", type: "guard", expr: all(is("$action", REVISIT_RESULT_ACTION), is("$outcome", "correct")), next: ["v1a"] },
         { id: "v1a", type: "say", speaker: "marker", textKey: "line.revisit_done", next: [] },
@@ -142,7 +149,9 @@ export const archiveContent: ContentPackage = {
       "line.cabinet_locked": "Skabet er låst. På hylden ligger fire kilder. Jeg skal finde den, der bedst kan undersøge en påstand.",
       "line.cabinet_is_open": "Skabet står åbent, og skuffen er tom. Kilderne er sat på plads.",
       "line.drawer": "I skuffen ligger en ny påstand og fire nye kilder. Samme metode, ny situation.",
-      "line.drawer_done": "Skuffen glider i. Jeg brugte de samme tre spørgsmål på en ny påstand.",
+      "line.drawer_done": "Skuffen glider i. Jeg brugte de samme fire spørgsmål på en ny påstand.",
+      "line.transfer_done": "Arkivaren lægger brevet fra 1864 i en ny mappe: samme metode virkede i en helt anden tid.",
+      "line.transfer_wrong": "Ikke helt. Også i 1864 gælder det: hvem har lavet kilden, hvornår, til hvem — og hvorfor?",
       "line.drawer_wrong": "Den kilde passer ikke til den nye påstand. Hvem har lavet den, og hvad kunne de vide?",
       "line.revisit_done": "Arkivaren nikker: du brugte de fire spørgsmål igen, uden hjælp.",
       "line.revisit_wrong": "Ikke helt. Spørg kilden igen: hvem, hvornår, til hvem — og hvorfor?",

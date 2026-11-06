@@ -6,9 +6,9 @@ import { Engine } from "@adventure-engine/core";
 import { HeadlessAdapter } from "@adventure-engine/scenario-runner";
 import { describe, expect, it } from "vitest";
 import { CONTEXT_KEY, DRAWER_KEY, DRAWER_RESULT_ACTION, RESULT_ACTION, TASK_REQUEST_GLOBAL, archiveContent } from "../src/content.ts";
-import { ARCHIVE_ITEMS } from "../src/host-items.ts";
+import { ARCHIVE_ITEMS, ITEM_REVIEW, OBJECTIVE } from "../src/host-items.ts";
 import { INTRO_CARDS, INTRO_CHECK, wordCount } from "../src/intro-content.ts";
-import { ACTIVITIES, ARCHIVE_CARD_EXERCISE, DECISION_POINTS, REFLECTION, REVISION_KEY, REVISIT_KEY, REVISIT_RESULT_ACTION, SOURCE_FIELDS, checkArchiveCard, parseSourceBack } from "../src/sequence.ts";
+import { ACTIVITIES, ARCHIVE_CARD_EXERCISE, DECISION_POINTS, OBJECTIVE_ID, REFLECTION, REVISION_KEY, REVISIT_KEY, REVISIT_RESULT_ACTION, SOURCE_FIELDS, TRANSFER_KEY, TRANSFER_RESULT_ACTION, checkArchiveCard, parseSourceBack } from "../src/sequence.ts";
 
 /** Headless run of the Arkivskabet scene (D-307): speech is confirmed, time runs until the world is idle. */
 function world() {
@@ -121,22 +121,24 @@ describe("Arkivskabet v2 — the learning sequence as data (D-322)", () => {
       expect(a.label.length, a.id).toBeGreaterThan(0);
       if (a.mayBecomeEvidence) expect(a.judgedBy, a.id).toBe("server");
     }
-    expect(Object.values(ACTIVITIES).filter((a) => a.mayBecomeEvidence).map((a) => a.id).sort()).toEqual(["revisit", "transfer"]);
+    expect(Object.values(ACTIVITIES).filter((a) => a.mayBecomeEvidence).map((a) => a.id).sort()).toEqual(["revisit", "transfer", "transferPeriod"]);
     for (const id of ["intro", "introCheck", "archiveCard", "flip", "hypothesis", "revision", "reflection", "worldReaction"]) expect(ACTIVITIES[id]?.mayBecomeEvidence, id).toBe(false);
   });
 
-  it("decision points: revision asks for the SAME objective as the hypothesis; transfer and revisit ask for their own", () => {
+  it("decision points: ONE objective for every step (D-330); the steps differ by purpose and context", () => {
     expect(DECISION_POINTS[REVISION_KEY]?.objectiveId).toBe(DECISION_POINTS[CONTEXT_KEY]?.objectiveId);
     expect(DECISION_POINTS[DRAWER_KEY]?.purpose).toBe("check");
     expect(DECISION_POINTS[REVISIT_KEY]?.purpose).toBe("review");
     expect(DECISION_POINTS[REVISIT_KEY]?.resultAction).toBe(REVISIT_RESULT_ACTION);
     const ids = new Set(Object.values(DECISION_POINTS).map((p) => p.objectiveId));
-    expect(ids.size).toBe(3);
+    expect([...ids]).toEqual(["kildekritik.ophav"]);
   });
 
   it("the test adapter has a task for every decision point, and the revision is a NEW instance (other option ids)", () => {
-    for (const p of Object.values(DECISION_POINTS)) expect(ARCHIVE_ITEMS.some((i) => i.objectiveId === p.objectiveId), p.objectiveId).toBe(true);
-    const kilde = ARCHIVE_ITEMS.filter((i) => i.objectiveId === DECISION_POINTS[CONTEXT_KEY]?.objectiveId);
+    for (const [key, p] of Object.entries(DECISION_POINTS)) {
+      expect(ARCHIVE_ITEMS.filter((i) => i.objectiveId === p.objectiveId && i.contextKey === key), key).toHaveLength(1);
+    }
+    const kilde = [CONTEXT_KEY, REVISION_KEY].map((k) => ARCHIVE_ITEMS.find((i) => i.contextKey === k) as (typeof ARCHIVE_ITEMS)[number]);
     expect(kilde).toHaveLength(2);
     const [first, revision] = kilde.map((i) => new Set((i.options ?? []).map((o) => o.id)));
     expect([...(revision ?? [])].some((id) => first?.has(id))).toBe(false);
@@ -234,5 +236,57 @@ describe("Arkivskabet — the game's import graph never reaches answer keys or t
     const specs = [...reachable("host-main.ts").values()].flat();
     expect(specs).toContain("@adventure-engine/learning-bridge/test-service");
     expect(specs).toContain("./host-items.ts");
+  });
+});
+
+describe("Arkivskabet F5 — one precise objective, a coherent item set (D-332)", () => {
+  it("the game's objective id is the host's proposed objective, and every item belongs to it", () => {
+    expect(OBJECTIVE_ID).toBe(OBJECTIVE.id);
+    expect(OBJECTIVE.status).toMatch(/FORSLAG.*LP-2.*LP-13/);
+    for (const i of ARCHIVE_ITEMS) expect(i.objectiveId, i.id).toBe(OBJECTIVE.id);
+  });
+
+  it("every item has complete teacher-review data, a qualitative difficulty (no invented number), and a stated limit", () => {
+    for (const i of ARCHIVE_ITEMS) {
+      const r = ITEM_REVIEW[i.id];
+      expect(r, i.id).toBeDefined();
+      for (const k of ["step", "progression", "prerequisites", "trains", "expectedAction", "scoring", "evidenceRole", "cannotDocument", "context", "sourceStatus"] as const) expect((r?.[k] ?? "").length, `${i.id}.${k}`).toBeGreaterThan(5);
+      expect(r?.misconceptions.length, i.id).toBeGreaterThan(0);
+      expect(["lav", "middel", "høj"]).toContain(r?.difficulty);
+      // Every correct feedback says what the source can NOT be used for (no overinterpretation).
+      expect(i.feedbackCorrect, i.id).toMatch(/IKKE/);
+    }
+    expect(Object.keys(ITEM_REVIEW).sort()).toEqual(ARCHIVE_ITEMS.map((i) => i.id).sort());
+  });
+
+  it("revision is a NEW claim with NEW sources (not the practice task reshuffled)", () => {
+    const practice = ARCHIVE_ITEMS.find((i) => i.contextKey === "arkivskab");
+    const revision = ARCHIVE_ITEMS.find((i) => i.contextKey === REVISION_KEY);
+    expect(revision?.prompt).not.toContain((practice?.prompt ?? "x").split("»")[1]?.split("«")[0] ?? "x");
+    const practiceDetails = new Set((practice?.options ?? []).map((o) => o.detail));
+    expect((revision?.options ?? []).filter((o) => practiceDetails.has(o.detail))).toEqual([]);
+  });
+
+  it("step 7 transfers to ANOTHER period with other source types, and is introduced in the task itself", () => {
+    const transfer = ARCHIVE_ITEMS.find((i) => i.contextKey === TRANSFER_KEY);
+    expect(transfer?.prompt).toMatch(/^Baggrund: .*1864/);
+    expect((transfer?.options ?? []).some((o) => /1940/.test(o.detail ?? ""))).toBe(false);
+    expect(DECISION_POINTS[TRANSFER_KEY]).toMatchObject({ objectiveId: OBJECTIVE.id, purpose: "application", resultAction: TRANSFER_RESULT_ACTION });
+  });
+
+  it("the world comments on the transfer verdict and changes nothing else", () => {
+    for (const [outcome, line] of [["correct", "line.transfer_done"], ["incorrect", "line.transfer_wrong"]] as const) {
+      const { engine, settle } = world();
+      const before = JSON.stringify([...engine.globals.entries()]);
+      engine.event("cabinet", TRANSFER_RESULT_ACTION, { $outcome: outcome });
+      expect(settle()).toEqual([line]);
+      expect(JSON.stringify([...engine.globals.entries()])).toBe(before);
+    }
+  });
+
+  it("the introduction now teaches context and 'what the source can and cannot be evidence for' before any task", () => {
+    const text = INTRO_CARDS.map((c) => c.text).join(" ");
+    expect(text).toMatch(/Kontekst er situationen/);
+    expect(text).toMatch(/belæg for/);
   });
 });

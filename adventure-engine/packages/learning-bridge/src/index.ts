@@ -16,3 +16,17 @@ export {
   type LaerligverseFlags,
   type Subject,
 } from "./laerlig-service.ts";
+export {
+  assessObjectives,
+  evidenceEligibility,
+  observationFromAttemptRow,
+  REVISIT_MIN_HOURS,
+  type AttemptObservation,
+  type EvidenceVerdict,
+  type ExposureObservation,
+  type Observation,
+  type ObjectiveAssessment,
+  type StateStatus,
+  type StateVerdict,
+  type WorkingState,
+} from "./evidence.ts";

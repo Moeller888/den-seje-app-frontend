@@ -150,12 +150,15 @@ test("the key-bearing reads run on the backend client, scoped to the verified st
   const reads = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.from\("question_instances"\)[\s\S]*?;/g)].map((m) => m[0]);
   const selected = reads.map((r) => /\.select\((["`])([\s\S]*?)\1\)/.exec(r)?.[2].replace(/\s+/g, " ").trim());
   assert.deepEqual(selected, [
+    "answered, was_correct, answered_at, questions!inner(learning_objective, metadata)", // D-338 step history (sequence only)
     "correct_answer",                                                          // Match par's key (match only)
     "served_snapshot",                                                         // L1 K1's delivered version
     'id, repeat_count, next_review_at, questions (${targeting.mode === "on" ? "\\n learning_objective," : ""} content, answer_format, answer_type, metadata, is_active )', // due (+ D-329's objective)
     "id",                                                                      // D-329 lost-race check
     "id, repeat_count, questions ( content, answer_format, answer_type, metadata, is_active )",                 // repeat
   ]);
+  // D-338: the step-history read carries no content and no key — only the verdict, time and step tag.
+  assert.equal(/content|correct_answer/.test(selected[0]), false);
   const idOnly = reads.filter((r) => /\.select\("id"\)/.test(r));
   assert.match(idOnly[0], /\.eq\("student_id", student_id\)\s*\.eq\("answered", false\)/);
   assert.ok(INDEX_CODE.indexOf(idOnly[0]) > INDEX_CODE.indexOf('if (!inserted && targeting.mode === "on") {'), "only on the targeted path");
@@ -165,4 +168,25 @@ test("the key-bearing reads run on the backend client, scoped to the verified st
     "no question_instances read on the user client");
   assert.equal(/supabase\.rpc\(\s*"(get_unserved_questions|request_repeat_question)/.test(INDEX_CODE), false,
     "the key-bearing RPCs are never called on the user client");
+});
+
+test("D-332: option_details (the back of each source) pass only for MC, one per option, as text — and nothing else rides along", () => {
+  const raw = {
+    question: "Hvilken kilde er bedst?",
+    options: ["Brev", "Mindetale"],
+    option_details: ["Afsender: en soldat|Tid: april 1864", "Afsender: en politiker|Tid: 1914"],
+    correct: "Brev",
+    accepted_answers: ["Brev"],
+  };
+  const pub = toPublicQuestion(raw, "mc", null);
+  assert.deepEqual(pub.content, { question: raw.question, options: raw.options, option_details: raw.option_details });
+  assert.equal(JSON.stringify(pub).includes("correct"), false, "no key, no accepted answers");
+  // Absent: the payload is exactly what it was before D-332.
+  assert.deepEqual(toPublicQuestion({ question: "Q?", options: ["a", "b"], correct: "a" }, "mc", null).content, { question: "Q?", options: ["a", "b"] });
+  // Malformed: refused as bad content (the caller skips the question), never passed through.
+  for (const bad of [["only one"], "not an array", [1, 2], ["", "x"], ["x", "y".repeat(401)]]) {
+    assert.throws(() => toPublicQuestion({ ...raw, option_details: bad }, "mc", null), /invalid option_details/, JSON.stringify(bad));
+  }
+  // Not for other formats.
+  assert.equal("option_details" in toPublicQuestion({ question: "Stav", option_details: ["x"], correct: "y" }, "text", null).content, false);
 });
