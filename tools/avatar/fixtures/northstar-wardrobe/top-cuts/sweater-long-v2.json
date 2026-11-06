@@ -1,0 +1,208 @@
+{
+  "id": "sweater-long-v2",
+  "label": "Sweater, long sleeve (D-336 cut) with trim bands (D-352)",
+  "contract": "top-cut-v1",
+  "family": "sweater",
+  "note": "the D-333 long-sleeve master's per-cut data (northstar-longsleeve-master.mjs SPEC), unchanged, plus D-335 v3's two cut repairs (layer split from arm alpha 1, hip seam behind the bottom) and D-336's runtime split",
+  "source": {
+    "item": "top-sweater-green",
+    "run": "d-239-targeted-correction/final1-pilot",
+    "method": "d239",
+    "template": "item-layers",
+    "from": "R1.templateFromLayers of the processed item's layers and skin shadow"
+  },
+  "panels": {
+    "seams": {
+      "left": [
+        [
+          380,
+          500
+        ],
+        [
+          392,
+          540
+        ],
+        [
+          399,
+          560
+        ],
+        [
+          405,
+          585
+        ],
+        [
+          408,
+          620
+        ],
+        [
+          408,
+          650
+        ]
+      ],
+      "right": [
+        [
+          642,
+          500
+        ],
+        [
+          631,
+          540
+        ],
+        [
+          624,
+          560
+        ],
+        [
+          616,
+          585
+        ],
+        [
+          613,
+          620
+        ],
+        [
+          613,
+          650
+        ]
+      ]
+    },
+    "seamSearchPx": 8,
+    "extendPx": 14,
+    "armpitOut": {
+      "left": [
+        0,
+        1
+      ],
+      "right": [
+        0,
+        1
+      ]
+    }
+  },
+  "warp": {
+    "cylinder": 0.1,
+    "foldMaxPx": 3,
+    "foldBlur": 14
+  },
+  "sleeves": {
+    "kind": "long",
+    "layerSplitFromArmAlpha": 1
+  },
+  "cuffs": {
+    "kind": "rib",
+    "drawnBy": "the source item (rib band); checked with wristAndGap: hand visible, no arm skin between armpit and cuff"
+  },
+  "trim": {
+    "bands": "seam-rule",
+    "rule": "K.seamBands: the strip between the cut edge and the seam line the cut item draws parallel to it (D-352)",
+    "regions": [
+      {
+        "name": "neck rib",
+        "panel": "body",
+        "edge": "opening",
+        "hole": [
+          458,
+          455,
+          566,
+          505
+        ],
+        "depth": [
+          6,
+          26
+        ]
+      },
+      {
+        "name": "hem rib",
+        "panel": "body",
+        "edge": "bottom",
+        "depth": [
+          18,
+          40
+        ]
+      },
+      {
+        "name": "cuff left",
+        "panel": "left",
+        "edge": "bottom",
+        "x": [
+          306,
+          364
+        ],
+        "depth": [
+          30,
+          46
+        ],
+        "edgeY": [
+          832,
+          852
+        ]
+      },
+      {
+        "name": "cuff right",
+        "panel": "right",
+        "edge": "bottom",
+        "x": [
+          648,
+          716
+        ],
+        "depth": [
+          30,
+          46
+        ],
+        "edgeY": [
+          832,
+          852
+        ]
+      }
+    ],
+    "why": "the neck rib, hem rib and cuffs are separate knitted bands in the cut item (drawn rib lines and a seam line); a pattern ends at them"
+  },
+  "print": {
+    "rule": "D-269 chest-center",
+    "boxOnC": [
+      437,
+      537,
+      150,
+      135
+    ],
+    "boxFrom": "the box on C (the fraction rule's body width is undefined on a long sleeve, D-333)"
+  },
+  "shadow": {
+    "from": "the cut item's skin shadow",
+    "split": "arms where C's arm alpha >= 128, body elsewhere on C's body (D-242)",
+    "publishedAs": "top-sweater-ls2"
+  },
+  "hipSeam": {
+    "rule": "LS2.hipSeamLayer",
+    "rows": [
+      -20,
+      80
+    ],
+    "drawn": "after the shoes, before the bottom",
+    "publishedAs": "top-sweater-ls2-hip-seam-v1.webp"
+  },
+  "runtime": {
+    "layers": [
+      "top-body",
+      "sleeves"
+    ],
+    "shadows": [
+      "body",
+      "arms"
+    ],
+    "shadowsOf": "top-sweater-ls2",
+    "hipSeam": "top-sweater-ls2-hip-seam-v1.webp"
+  },
+  "control": {
+    "what": "the 6 owner-approved sweaters (D-336), published as top-sweater-ls2-<design>-{top-body,sleeves}-v1.webp, the hip seam and the cut's skin shadow (top-sweater-ls2-shadow-{body,arms}-v1.webp)",
+    "approval": "tools/avatar/fixtures/northstar-wardrobe/sweater/ls2-owner-approval-v1.json"
+  },
+  "oneTimeWork": [
+    "the two armhole seams entered by hand as a polyline of 6 points per side (D-333)",
+    "the armpit direction (straight down into the gap) (D-333)",
+    "the layer split threshold, found by tracing a warm line along C's arm edge (D-335)",
+    "the hip seam rule, found by tracing a light notch at the right hip (D-335)",
+    "D-352: the trim regions (panel, edge, x range, search depth) read once from the cut item at x4; the seam itself is found by the rule"
+  ],
+  "derivedFrom": "sweater-long.json (unchanged; only id, label, trim and oneTimeWork differ)"
+}

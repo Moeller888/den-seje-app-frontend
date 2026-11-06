@@ -25,8 +25,23 @@
 //   match_pairs  answer_format "match" (ROADMAP #13)      auto-graded   renderer "match_pairs" — BUILT, NOT
 //                servable: contract, key and answer shape in _shared/match-pairs.ts; graded by
 //                process_question_attempt like MC (process-event canonicalises the connections first)
+//   true_false   answer_format "true_false" (F-02)        auto-graded   renderer "true_false" — BUILT, NOT
+//                servable: contract and key in _shared/true-false.ts; the key is the option text
+//                ("Sandt"/"Falsk"), so process_question_attempt grades it with normalize_choice_answer
+//                exactly like MC — no grading change in process-event or SQL. Its own wire format
+//                (not "mc"): the browser pads answer_format "mc" to four options with legacy years
+//                (js/answer-options.js), which a two-choice task must never get. maxShare 0 until the
+//                owner decides its share (it is a forståelsestjek, docs/learning-progression-design.md).
 //
-// ADDING A KIND (Match par has done steps 1 and 2) — the order matters, each step is its own reviewed
+// GUESS FLOOR (guessFloor)
+// The chance that a pure random answer is right, where that is a FIXED property of the kind. Future
+// mastery logic must never count one correct answer of a kind with a high floor as mastery
+// (docs/learning-progression-design.md, the guess-floor table). null = not a fixed property of the kind:
+// choice is 1/(number of options) and match_pairs 1/(n! − 1) per question, and typed answers are ≈ 0 —
+// none of them is modelled yet, so a reader must treat null as "unknown", never as 0. Nothing on the
+// serving or grading path reads this field today.
+//
+// ADDING A KIND (Match par and Sandt/falsk have done steps 1 and 2) — the order matters, each step is its own reviewed
 // change:
 //   1. add the entry below with servable: false (content may then be authored, inactive or not,
 //      and is never served);
@@ -40,7 +55,10 @@
 // window itself needs no change: it stratifies by the stored fields, not by kind names.
 // Match par, step 3 also: get-next-question's v1 mapAnswerFormat still maps "match" to "mc" (the row is
 // then skipped, because it has no options), so Match par reaches pupils only under QUESTION_MIX_ENGINE=v2
-// until v1 is retired or taught "match" in the same reviewed change.
+// until v1 is retired or taught "match" in the same reviewed change. The same holds for "true_false".
+// Both also need a reviewed migration before a row can even be STORED: production's questions table
+// checks answer_format (questions_answer_format_check: mc, number, text) and content
+// (content_valid_check: content.type mc/text/number), and neither admits "match" or "true_false".
 //
 // Pure TypeScript with no Deno or network imports, so the Node unit suite tests exactly what the
 // Edge Functions run.
@@ -51,11 +69,12 @@ export type InteractionKind =
   | "long_text"
   | "number"
   | "force_text"
-  | "match_pairs";
+  | "match_pairs"
+  | "true_false";
 
 export type InteractionKindSpec = {
   // The answer_format value get-next-question sends to the browser for this kind.
-  wireFormat: "mc" | "text" | "number" | "match";
+  wireFormat: "mc" | "text" | "number" | "match" | "true_false";
   // js/answer-input.js ANSWER_RENDERERS value, or null when no client renderer exists yet.
   renderer: string | null;
   // May the server hand this kind out as a NEW question to the current client?
@@ -67,15 +86,19 @@ export type InteractionKindSpec = {
   maxShare: number;
   // Teacher-graded work creates teacher load and waits for a verdict; never repeated automatically.
   teacherGraded: boolean;
+  // Chance that a pure random answer is right, when that is fixed for the kind; null = depends on the
+  // question or is not modelled (see GUESS FLOOR above). Read by nothing on the serving path.
+  guessFloor: number | null;
 };
 
 export const INTERACTION_KINDS: Readonly<Record<InteractionKind, Readonly<InteractionKindSpec>>> = Object.freeze({
-  choice:      Object.freeze({ wireFormat: "mc",          renderer: "choice",     servable: true,  base: true,  maxShare: 0,    teacherGraded: false }),
-  short_text:  Object.freeze({ wireFormat: "text",        renderer: "short_text", servable: true,  base: false, maxShare: 0.15, teacherGraded: false }),
-  long_text:   Object.freeze({ wireFormat: "text",        renderer: "long_text",  servable: true,  base: false, maxShare: 0,    teacherGraded: true  }),
-  number:      Object.freeze({ wireFormat: "number",      renderer: "number",     servable: true,  base: false, maxShare: 0.15, teacherGraded: false }),
-  force_text:  Object.freeze({ wireFormat: "mc",          renderer: "force_text", servable: true,  base: false, maxShare: 0.15, teacherGraded: false }),
-  match_pairs: Object.freeze({ wireFormat: "match",       renderer: "match_pairs", servable: false, base: false, maxShare: 0.15, teacherGraded: false }),
+  choice:      Object.freeze({ wireFormat: "mc",          renderer: "choice",     servable: true,  base: true,  maxShare: 0,    teacherGraded: false, guessFloor: null }),
+  short_text:  Object.freeze({ wireFormat: "text",        renderer: "short_text", servable: true,  base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
+  long_text:   Object.freeze({ wireFormat: "text",        renderer: "long_text",  servable: true,  base: false, maxShare: 0,    teacherGraded: true,  guessFloor: null }),
+  number:      Object.freeze({ wireFormat: "number",      renderer: "number",     servable: true,  base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
+  force_text:  Object.freeze({ wireFormat: "mc",          renderer: "force_text", servable: true,  base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
+  match_pairs: Object.freeze({ wireFormat: "match",       renderer: "match_pairs", servable: false, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
+  true_false:  Object.freeze({ wireFormat: "true_false",  renderer: "true_false", servable: false, base: false, maxShare: 0,    teacherGraded: false, guessFloor: 0.5 }),
 });
 
 // Registry order is the deterministic tie-break wherever two kinds score the same.
@@ -130,6 +153,7 @@ export function classifyQuestion(row: StoredFormatFields | null | undefined): In
   if (answerType !== "short") return null;
 
   if (format === "match") return forceText ? null : "match_pairs";
+  if (format === "true_false") return forceText ? null : "true_false";
 
   // mapAnswerFormat (server) tests "mc" first, resolveAnswerRenderer (browser) tests "number" first:
   // a format containing both would be graded as one kind and shown as the other.

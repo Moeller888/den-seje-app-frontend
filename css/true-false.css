@@ -1,0 +1,55 @@
+/* Sandt/falsk (js/true-false.js). Selectors start with #options so they outrank the quiz page's
+   `#options button` rule (id specificity), exactly like css/match-pairs.css. Two large answer buttons
+   side by side, ≥ 44px touch targets, a focus ring that is visible on every theme, and the chosen answer
+   marked by aria-pressed (border AND weight, never colour alone). Uses the theme tokens from
+   css/theme.css. */
+
+#options .true-false {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+#options .true-false-instructions {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+#options .true-false-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+#options button.true-false-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 72px;
+  padding: 14px 12px;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  border-width: 2px;
+  touch-action: manipulation;  /* no double-tap zoom delay on tablets and phones */
+}
+
+#options button.true-false-option:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+#options .true-false button.true-false-option[aria-pressed="true"] {
+  border-color: var(--accent);
+  border-width: 3px;
+  color: var(--text-bright);
+}
+
+/* While the answer is on its way the pressed button keeps full strength, so the pupil sees what was
+   sent; the other one dims with the quiz's normal disabled rule. */
+#options .true-false button.true-false-option[aria-pressed="true"]:disabled {
+  opacity: 1;
+}
