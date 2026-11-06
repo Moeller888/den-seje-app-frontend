@@ -12,6 +12,8 @@
 //   answer_format contains "mc"        → "choice"       option buttons, unchanged
 //   answer_format "match"              → "match_pairs"  Match par (js/match-pairs.js)
 //   answer_format "true_false"         → "true_false"   Sandt/falsk (js/true-false.js)
+//   answer_format "order"              → "order_items"  Rækkefølge (js/order-items.js)
+//   answer_format "categorize"         → "categorize"   Kategorisering (js/categorize.js)
 //   anything else                      → "unsupported"  visible error, never option buttons
 //
 // "text" without an answer_type is short: get-next-question already sends `answer_type || "short"`,
@@ -35,6 +37,7 @@ export const ANSWER_RENDERERS = Object.freeze({
   MATCH_PAIRS: "match_pairs",
   TRUE_FALSE: "true_false",
   ORDER_ITEMS: "order_items",
+  CATEGORIZE: "categorize",
   UNSUPPORTED: "unsupported",
 });
 
@@ -56,6 +59,7 @@ export function resolveAnswerRenderer(question) {
 
   if (format === "true_false") return ANSWER_RENDERERS.TRUE_FALSE;
   if (format === "order") return ANSWER_RENDERERS.ORDER_ITEMS;
+  if (format === "categorize") return ANSWER_RENDERERS.CATEGORIZE;
 
   return ANSWER_RENDERERS.UNSUPPORTED;
 }

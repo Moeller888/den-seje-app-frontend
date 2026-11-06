@@ -1,0 +1,30 @@
+{
+  "title": "Grundloven 1849 — Kategorisering: enevælde eller folkestyre?",
+  "status": "EKSEMPEL — ikke i databasen, ikke aktiveret. Kategorisering (F-05) er bygget, men ikke servable.",
+  "phase": "Anvendelse (begrebsforståelse): eleven bruger begreberne enevælde og grundlovsstyre på kendetegn, der ikke står ordret i forløbets tidligere trin.",
+  "fits_after": "Trin 5 (anvendelse af § 35) i grundloven-1849-forloeb.json; erstatter ikke tidslinjen.",
+  "sources": [
+    "Danmarks Riges Grundlov af 5. juni 1849, § 2 (magtens tredeling) og § 35 (valgret), danmarkshistorien.lex.dk",
+    "Kongeloven af 1665 (enevældens forfatning), danmarkshistorien.lex.dk"
+  ],
+  "guess_chance": "6 elementer i 2 kategorier: 1/64 ved rent gæt, 1/62 hvis eleven ved, at ingen kategori er tom. Antallet pr. kategori vises ikke (3 + 3 ville give 1/20).",
+  "row": {
+    "answer_format": "categorize",
+    "answer_type": "short",
+    "difficulty_band": 3,
+    "learning_objective": "revolutions_democracy",
+    "content": {
+      "question": "Hvilke kendetegn hører til enevælden, og hvilke til styret efter Grundloven 1849?",
+      "categories": ["Enevælden (1660–1849)", "Efter Grundloven 1849"],
+      "items": [
+        { "text": "Kongen giver og ophæver love alene", "category": "Enevælden (1660–1849)" },
+        { "text": "Kongeloven fra 1665 er rigets grundlov", "category": "Enevælden (1660–1849)" },
+        { "text": "Ingen valgt forsamling vedtager lovene", "category": "Enevælden (1660–1849)" },
+        { "text": "Rigsdagen og kongen vedtager lovene sammen", "category": "Efter Grundloven 1849" },
+        { "text": "Domstolene har den dømmende magt", "category": "Efter Grundloven 1849" },
+        { "text": "Mænd over 30 med egen husstand kan stemme", "category": "Efter Grundloven 1849" }
+      ],
+      "review_text": "Under enevælden samlede kongen al magten, og Kongeloven fra 1665 gav ham den; stænderforsamlingerne fra 1830'erne kunne kun rådgive. Grundloven af 5. juni 1849 delte magten: Rigsdagen og kongen giver lovene sammen, kongen har den udøvende magt, og domstolene dømmer (§ 2). Valgretten gjaldt mænd over 30 med egen husstand (§ 35)."
+    }
+  }
+}
