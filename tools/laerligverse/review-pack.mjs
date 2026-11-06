@@ -7,6 +7,7 @@
 //
 // The decision file (docs/laerligverse/kildekritik-godkendelse.json) belongs to the TEACHER: this tool creates
 // it with every element "ikke_gennemgaaet" and NEVER overwrites a decision. Nothing here approves anything.
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,7 +18,29 @@ export const PACK = join(ROOT, "docs", "laerligverse", "kildekritik-laerergennem
 export const HTML = join(ROOT, "docs", "laerligverse", "kildekritik-laerergennemgang.html");
 export const DECISIONS = join(ROOT, "docs", "laerligverse", "kildekritik-godkendelse.json");
 export const FIXTURE = join(ROOT, "tests", "isolated", "fixtures", "kildekritik-questions.json");
-export const STATUSES = Object.freeze(["ikke_gennemgaaet", "godkendt", "godkendt_med_aendringer", "afvist", "kraever_undersoegelse"]);
+// D-341: the teacher's three decisions, plus the default that is NOT a decision.
+export const STATUSES = Object.freeze(["ikke_gennemgaaet", "godkendt", "skal_rettes", "afvist"]);
+
+/** D-341: how the server moves on after each step (the PROVISIONAL test policy, LP-13), in plain words. */
+export const NEXT_STEP = Object.freeze({
+  guided_practice: "Næste: revision, hvis svaret er forkert, ellers selvstændig anvendelse. Det er en foreløbig testpolitik (LP-13).",
+  revision: "Næste: selvstændig anvendelse, uanset svaret (højst én revision). Det er en foreløbig testpolitik (LP-13).",
+  independent_application: "Næste: overførsel.",
+  transfer: "Næste: genbesøg, tidligst 20 timer efter overførslen (forslag; i demoen er tiden simuleret).",
+  revisit: "Næste: forløbet er gennemført. Det betyder kun, at alle trin har et svar, ikke at målet er mestret.",
+});
+
+/** D-341: known historical uncertainties per task, for the teacher to resolve. */
+export const UNCERTAINTY = Object.freeze({
+  "h4-kilde": "Proklamationen er parafraseret (»bevare ro og orden«). Kontrollér parafrasen mod originalteksten.",
+  "h4-kilde-revision": "Ordren er et konstrueret eksempel. Kontrollér fremstillingen af regeringens og hærledelsens rolle den 9. april 1940.",
+  "h4-overfoersel": "Dagbogen er konstrueret. Kontrollér, at den er entydigt den bedste kilde til påstanden om én københavners oplevelse.",
+  t1864: "Kontrollér baggrundsteksten: krigen mod Preussen og Østrig, Dybbøl-skanserne og stormen den 18. april 1864.",
+  "h4-genbesoeg": "Kontrollér, at der blev kæmpet nogle steder den 9. april 1940 (bl.a. i Sønderjylland og ved Amalienborg).",
+});
+
+/** What the platform OBSERVES for a server-graded task — the same for all five (H5; L1 K1 not applied). */
+export const OBSERVED = "Serveren registrerer valgt kilde, rigtigt/forkert, tidspunkt og runde (H5, kun i testmiljøet). Den registrerer ikke elevens begrundelse, hvilke dokumenter der blev vendt, tidsforbrug eller hjælp (L1 K1 er ikke anvendt).";
 /** The isolated stack's TEST objective — a fixture name, never a product objective (LP-2). */
 export const TEST_OBJECTIVE = "test_kildekritik_ophav";
 
@@ -49,15 +72,43 @@ export async function elements() {
   return { list: out, objective: items.OBJECTIVE };
 }
 
+/** D-344: JSON with sorted keys, so a fingerprint depends on content only, never on key order. */
+export function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${stableJson(value[k])}`).join(",")}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
+
+/** D-344: what the review page shows for one element — its own data plus the shared texts printed next to it. */
+export function shownContent(element, objective) {
+  const shown = { element };
+  if (element.kind === "maal") shown.objective = objective;
+  if (element.kind === "opgave") {
+    shown.objective = objective;
+    shown.nextStep = NEXT_STEP[element.serverStep] ?? null;
+    shown.uncertainty = UNCERTAINTY[element.id] ?? null;
+    shown.observed = OBSERVED;
+  }
+  return shown;
+}
+
+/** D-344: id → SHA-256 of the content the teacher sees, for the given elements. */
+export function fingerprintsOf({ list, objective }) {
+  return Object.fromEntries(list.map((e) => [e.id, createHash("sha256").update(stableJson(shownContent(e, objective))).digest("hex")]));
+}
+
 function md({ list, objective }) {
   const L = [];
   L.push("# Lærergennemgang: kildekritisk forløb i Arkivskabet (D-332)", "");
   L.push("> **GENERERET** af `tools/laerligverse/review-pack.mjs` fra de samme data, som spillet og serverens testfixture bruger. Ret ikke her; ret i `host-items.ts`, `intro-content.ts` eller `sequence.ts` og generér igen.", "");
   L.push("**Sådan bruges pakken:** Læs hvert element. Skriv din afgørelse i `docs/laerligverse/kildekritik-godkendelse.json`:");
   L.push("- `godkendt`");
-  L.push("- `godkendt_med_aendringer` (skriv ændringerne i `kommentar`)");
+  L.push("- `skal_rettes` (skriv, hvad der skal rettes, i `aendringer`)");
   L.push("- `afvist`");
-  L.push("- `kraever_undersoegelse`");
+  L.push("");
+  L.push("Det er lettest at bruge den lokale side: `node tools/laerligverse/serve-review.mjs` og derefter http://127.0.0.1:4340/.");
   L.push("");
   L.push("Intet er godkendt, før du har skrevet det. Værktøjet ændrer aldrig en afgørelse.", "");
   L.push("**Konstrueret undervisningsmateriale.** Kun proklamationen af 9. april 1940 er et autentisk dokument, og den er parafraseret, ikke citeret. Alle andre kilder er opfundne eksempler på en kildetype og er mærket »(konstrueret eksempel)«.", "");
@@ -104,6 +155,9 @@ function md({ list, objective }) {
       L.push(`- **Fagligt mål:** ${objective.text}`);
       L.push(`- **Progression:** ${review.progression}`);
       L.push(`- **Servertrin (D-338):** \`${e.serverStep}\`. Serveren udleverer opgaven, når eleven er på dette trin (foreløbig testpolitik, LP-13)`);
+      L.push(`- **Progression til næste trin:** ${NEXT_STEP[e.serverStep]}`);
+      L.push(`- **Observation (hvad platformen registrerer):** ${OBSERVED}`);
+      L.push(`- **Kendt faglig usikkerhed:** ${UNCERTAINTY[item.id] ?? "ingen noteret"}`);
       L.push(`- **Forudsat viden:** ${review.prerequisites}`);
       L.push(`- **Træner:** ${review.trains}`);
       L.push(`- **Forventet elevhandling:** ${review.expectedAction}`);
@@ -163,7 +217,7 @@ function emptyDecisions(list) {
     _om: "Lærerens afgørelser (D-332). Tilladte status: " + STATUSES.join(", ") + ". Værktøjet overskriver aldrig en afgørelse.",
     laerer: "",
     dato: "",
-    elementer: Object.fromEntries(list.map((e) => [e.id, { status: "ikke_gennemgaaet", kommentar: "" }])),
+    elementer: Object.fromEntries(list.map((e) => [e.id, { status: "ikke_gennemgaaet", kommentar: "", aendringer: "" }])),
   };
 }
 
@@ -171,7 +225,7 @@ const esc = (t) => String(t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").
 
 /** D-338: the review page, built from the same elements; it never reads or writes the decision file itself. */
 function html({ list, objective }) {
-  const LABEL = { ikke_gennemgaaet: "Ikke gennemgået", godkendt: "Godkendt", godkendt_med_aendringer: "Godkendt med ændringer", afvist: "Afvist", kraever_undersoegelse: "Kræver yderligere undersøgelse" };
+  const LABEL = { ikke_gennemgaaet: "Ikke gennemgået", godkendt: "Godkendt", skal_rettes: "Skal rettes", afvist: "Afvist" };
   const block = (e) => {
     const parts = [];
     if (e.kind === "maal") parts.push(`<p><strong>Formulering:</strong> ${esc(objective.text)}</p><p><strong>Status:</strong> ${esc(objective.status)}</p>`);
@@ -183,13 +237,14 @@ function html({ list, objective }) {
       const { item, review } = e;
       parts.push(`<p><strong>Opgavetekst:</strong> ${esc(item.prompt)}</p>`);
       parts.push(`<table><thead><tr><th>Kilde</th><th>Bagside</th></tr></thead><tbody>${item.options.map((o) => `<tr${o.id === item.answer ? ' class="right"' : ""}><td>${esc(o.label)}${o.id === item.answer ? " <strong>(rigtigt)</strong>" : ""}</td><td>${back(o.detail).map(esc).join("<br>")}</td></tr>`).join("")}</tbody></table>`);
-      const rows = [["Placering", `${review.step} · servertrin ${e.serverStep}`], ["Forudsat viden", review.prerequisites], ["Træner", review.trains], ["Bedømmelse", review.scoring], ["Rigtigt svar og begrundelse", `${item.correctLabel}. ${item.feedbackCorrect}`], ["Historisk kontekst", review.context], ["Kildestatus", review.sourceStatus], ["Vanskelighed", review.difficulty], ["Kan dokumentere", review.evidenceRole], ["Kan IKKE dokumentere", review.cannotDocument]];
+      const rows = [["Placering", `${review.step} · servertrin ${e.serverStep}`], ["Progression til næste trin", NEXT_STEP[e.serverStep]], ["Forudsat viden", review.prerequisites], ["Træner", review.trains], ["Bedømmelse", review.scoring], ["Rigtigt svar og begrundelse", `${item.correctLabel}. ${item.feedbackCorrect}`], ["Feedback ved forkert svar (generelt)", item.feedbackIncorrect], ["Historisk kontekst", review.context], ["Kildestatus", review.sourceStatus], ["Kendt faglig usikkerhed", UNCERTAINTY[item.id] ?? "ingen noteret"], ["Vanskelighed", review.difficulty], ["Observation (registreres)", OBSERVED], ["Fortolkning: kan dokumentere", review.evidenceRole], ["Fortolkning: kan IKKE dokumentere", review.cannotDocument]];
       parts.push(`<dl>${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`);
       parts.push(`<p><strong>Typiske fejl:</strong></p><ul>${review.misconceptions.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>`);
       parts.push(`<p><strong>Feedback pr. forkert valg:</strong></p><ul>${item.options.filter((o) => o.id !== item.answer).map((o) => `<li><em>${esc(o.label)}:</em> ${esc(item.optionFeedback?.[o.id] ?? item.feedbackIncorrect)}</li>`).join("")}</ul>`);
+      if (item.hints.length > 0) parts.push(`<p><strong>Hjælp (hints, kun i øvelse):</strong></p><ol>${item.hints.map((h) => `<li>${esc(h)}</li>`).join("")}</ol>`);
     }
     const radios = STATUSES.map((s) => `<label><input type="radio" name="st-${e.id}" value="${s}"${s === "ikke_gennemgaaet" ? " checked" : ""}> ${LABEL[s]}</label>`).join(" ");
-    return `<section class="el" id="${e.id}"><h2>${esc(e.title)}</h2>${parts.join("")}<fieldset><legend>Din afgørelse for ${esc(e.id)}</legend>${radios}<label class="c">Kommentar <textarea name="km-${e.id}" rows="2"></textarea></label></fieldset></section>`;
+    return `<section class="el" id="${e.id}" data-status="ikke_gennemgaaet"><h2>${esc(e.title)}</h2>${parts.join("")}<fieldset><legend>Din afgørelse for ${esc(e.title)}</legend>${radios}<label class="c">Kommentar <textarea name="km-${e.id}" rows="2"></textarea></label><label class="c">Hvad skal rettes? (udfyldes ved »Skal rettes«) <textarea name="ae-${e.id}" rows="2"></textarea></label></fieldset></section>`;
   };
   return `<!doctype html>
 <html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -203,20 +258,24 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px}dt{font-weigh
 fieldset{border:1px dashed #9a8f73;border-radius:6px;margin-top:10px}fieldset label{margin-right:10px;white-space:nowrap}label.c{display:block;margin-top:6px;white-space:normal}textarea{width:100%;font:inherit}
 .bar{position:sticky;top:0;background:#faf8f3;padding:8px 0;border-bottom:1px solid #d6cfbf;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .bar input[type=text]{font:inherit;padding:4px}button{font:inherit;padding:6px 12px}.note{font-size:14px;color:#5a4f3a}
+.el[data-status="godkendt"]{border-left:6px solid #2d6a3e}.el[data-status="skal_rettes"]{border-left:6px solid #9a6a00}.el[data-status="afvist"]{border-left:6px solid #9b1c1c}#count{font-weight:600}
 @media (max-width:560px){dl{grid-template-columns:1fr}fieldset label{white-space:normal;display:block}}
 </style></head><body>
 <h1>Lærergennemgang: kildekritisk forløb (D-332/D-338)</h1>
 <p class="note">GENERERET af tools/laerligverse/review-pack.mjs. Siden virker uden internet. Den gemmer intet selv: når du er færdig, trykker du »Gem afgørelser som fil« og lægger filen i <code>docs/laerligverse/kildekritik-godkendelse.json</code> (eller sender den). Intet er godkendt, før du har valgt det.</p>
 <div class="bar"><label>Lærer <input type="text" id="laerer" autocomplete="name"></label><label>Dato <input type="text" id="dato" placeholder="ÅÅÅÅ-MM-DD"></label>
-<label>Indlæs tidligere afgørelser <input type="file" id="load" accept="application/json"></label><button type="button" id="save">Gem afgørelser som fil</button><span id="msg" role="status" aria-live="polite"></span></div>
+<label>Indlæs tidligere afgørelser <input type="file" id="load" accept="application/json"></label><button type="button" id="save">Gem afgørelser som fil</button><span id="count" aria-live="polite"></span><span id="msg" role="status" aria-live="polite"></span></div>
 <section class="el"><h2>Historiefaglig egenkontrol (udviklerens, ikke en godkendelse)</h2><ul>${SELF_CHECK.map(([k, v]) => `<li><strong>${esc(k)}:</strong> ${esc(v)}</li>`).join("")}</ul></section>
 ${list.map(block).join("\n")}
 <script>
 const IDS = ${JSON.stringify(list.map((e) => e.id))};
+const FP = ${JSON.stringify(fingerprintsOf({ list, objective }))};
 const STATUSES = ${JSON.stringify(STATUSES)};
-function collect(){const el={};for(const id of IDS){const s=document.querySelector('input[name="st-'+id+'"]:checked');el[id]={status:s?s.value:"ikke_gennemgaaet",kommentar:document.querySelector('textarea[name="km-'+id+'"]').value}}return{_om:"Lærerens afgørelser (D-332). Tilladte status: "+STATUSES.join(", ")+". Værktøjet overskriver aldrig en afgørelse.",laerer:document.getElementById("laerer").value,dato:document.getElementById("dato").value,elementer:el}}
-document.getElementById("save").addEventListener("click",()=>{const d=collect();const decided=Object.values(d.elementer).some(v=>v.status!=="ikke_gennemgaaet");if(decided&&(!d.laerer||!d.dato)){document.getElementById("msg").textContent="Skriv dit navn og datoen, før du gemmer afgørelser.";return}const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)+"\n"],{type:"application/json"}));a.download="kildekritik-godkendelse.json";a.click();document.getElementById("msg").textContent="Gemt som fil."});
-document.getElementById("load").addEventListener("change",async(ev)=>{const f=ev.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());document.getElementById("laerer").value=d.laerer||"";document.getElementById("dato").value=d.dato||"";for(const id of IDS){const v=(d.elementer||{})[id];if(!v)continue;const r=document.querySelector('input[name="st-'+id+'"][value="'+v.status+'"]');if(r)r.checked=true;document.querySelector('textarea[name="km-'+id+'"]').value=v.kommentar||""}document.getElementById("msg").textContent="Afgørelser indlæst."}catch{document.getElementById("msg").textContent="Filen kunne ikke læses."}});
+function collect(){const el={};for(const id of IDS){const s=document.querySelector('input[name="st-'+id+'"]:checked');el[id]={status:s?s.value:"ikke_gennemgaaet",kommentar:document.querySelector('textarea[name="km-'+id+'"]').value,aendringer:document.querySelector('textarea[name="ae-'+id+'"]').value}}return{_om:"Lærerens afgørelser (D-332/D-341). Tilladte status: "+STATUSES.join(", ")+". Værktøjet overskriver aldrig en afgørelse.",laerer:document.getElementById("laerer").value,dato:document.getElementById("dato").value,elementer:el,indhold:FP}}
+function count(){const d=collect().elementer;const done=Object.values(d).filter(v=>v.status!=="ikke_gennemgaaet").length;document.getElementById("count").textContent=done+" af "+IDS.length+" gennemgået";for(const id of IDS)document.getElementById(id).dataset.status=d[id].status}
+document.addEventListener("change",count);count();
+document.getElementById("save").addEventListener("click",()=>{const d=collect();const decided=Object.values(d.elementer).some(v=>v.status!=="ikke_gennemgaaet");if(decided&&(!d.laerer||!d.dato)){document.getElementById("msg").textContent="Skriv dit navn og datoen, før du gemmer afgørelser.";return}const missing=IDS.filter(id=>d.elementer[id].status==="skal_rettes"&&!d.elementer[id].aendringer.trim());if(missing.length){document.getElementById("msg").textContent="Skriv, hvad der skal rettes, for: "+missing.join(", ");return}const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)+"\\n"],{type:"application/json"}));a.download="kildekritik-godkendelse.json";a.click();document.getElementById("msg").textContent="Gemt som fil."});
+document.getElementById("load").addEventListener("change",async(ev)=>{const f=ev.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());document.getElementById("laerer").value=d.laerer||"";document.getElementById("dato").value=d.dato||"";for(const id of IDS){const v=(d.elementer||{})[id];if(!v)continue;const r=document.querySelector('input[name="st-'+id+'"][value="'+v.status+'"]');if(r)r.checked=true;document.querySelector('textarea[name="km-'+id+'"]').value=v.kommentar||"";document.querySelector('textarea[name="ae-'+id+'"]').value=v.aendringer||""}count();document.getElementById("msg").textContent="Afgørelser indlæst."}catch(e){document.getElementById("msg").textContent="Filen kunne ikke læses: "+(e&&e.message?e.message:String(e))}});
 </script></body></html>
 `;
 }
@@ -237,6 +296,7 @@ export async function check() {
     // A decision needs a signature: any status other than "ikke_gennemgaaet" requires the teacher's name and a date.
     const decided = Object.values(d.elementer ?? {}).some((v) => v?.status !== "ikke_gennemgaaet");
     if (decided && (!d.laerer || !d.dato)) problems.push("the decision file has decisions but no teacher name or date");
+    for (const [id, v] of Object.entries(d.elementer ?? {})) if (v?.status === "skal_rettes" && !String(v?.aendringer ?? "").trim()) problems.push(`${id}: "skal_rettes" without a requested change`);
   }
   return problems;
 }

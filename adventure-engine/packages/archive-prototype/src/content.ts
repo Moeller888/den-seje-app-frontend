@@ -141,6 +141,7 @@ export const archiveContent: ContentPackage = {
   animations: [],
   sounds: [],
   i18n: {
+    // D-341: the world's lines state WHAT was chosen, never HOW the pupil thought (a right choice can be a guess).
     da: {
       "s.arkiv": "Arkivet",
       "a.marker": "Dig",
@@ -149,11 +150,11 @@ export const archiveContent: ContentPackage = {
       "line.cabinet_locked": "Skabet er låst. På hylden ligger fire kilder. Jeg skal finde den, der bedst kan undersøge en påstand.",
       "line.cabinet_is_open": "Skabet står åbent, og skuffen er tom. Kilderne er sat på plads.",
       "line.drawer": "I skuffen ligger en ny påstand og fire nye kilder. Samme metode, ny situation.",
-      "line.drawer_done": "Skuffen glider i. Jeg brugte de samme fire spørgsmål på en ny påstand.",
-      "line.transfer_done": "Arkivaren lægger brevet fra 1864 i en ny mappe: samme metode virkede i en helt anden tid.",
+      "line.drawer_done": "Skuffen glider i. Dagbogen passer til den nye påstand.",
+      "line.transfer_done": "Arkivaren lægger brevet fra 1864 i en ny mappe: det passer til påstanden.",
       "line.transfer_wrong": "Ikke helt. Også i 1864 gælder det: hvem har lavet kilden, hvornår, til hvem — og hvorfor?",
       "line.drawer_wrong": "Den kilde passer ikke til den nye påstand. Hvem har lavet den, og hvad kunne de vide?",
-      "line.revisit_done": "Arkivaren nikker: du brugte de fire spørgsmål igen, uden hjælp.",
+      "line.revisit_done": "Arkivaren nikker: rapporten passer til påstanden, og du valgte uden hints.",
       "line.revisit_wrong": "Ikke helt. Spørg kilden igen: hvem, hvornår, til hvem — og hvorfor?",
       "line.unlocked": "Klik! Låsen giver efter, og skabet glider op.",
       "line.still_locked": "Låsen rører sig ikke. Jeg kan prøve igen med en ny opgave.",

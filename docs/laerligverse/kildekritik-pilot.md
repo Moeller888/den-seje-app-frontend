@@ -8,6 +8,11 @@ indsamles ingen data. Den generelle evalueringsmodel står i
 modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som
 belæg for.
 
+> **F8 (D-344): §1–5 og §7 er afløst af måleopgaverne v1** i `docs/laerligverse/laererpakke/` (genereret fra
+> `tools/laerligverse/assessment-v1.mjs`), se `docs/laerligverse/laeringsmaaling.md` §3. Grunden: i §1, §3 og §5 er
+> det rigtige svar hver gang den personlige kilde, så »vælg altid dagbogen« gav fuldt hus. Kildesættene herunder er
+> genbrugt i v1's del 3. Teksten står uændret som historik. §8–14 gælder stadig, suppleret af §15–18.
+
 Alle opgaver nedenfor er **nye** og **konstrueret undervisningsmateriale**. De er ikke kopier af øveopgaverne
 i spillet, og de skal godkendes af en historielærer sammen med lærergennemgangspakken.
 
@@ -131,5 +136,149 @@ end MC.
 5. Tærsklerne for at fortsætte, revidere eller stoppe (forslag i D-323 §6.3).
 6. Samtykke og information til forældre efter skolens praksis. Data opbevares kun hos skolen og læreren, og
    intet sendes til Lærlig.
-7. Teknik: Arkivskabet i piloten kører på **testadapteren** (lokal demo), indtil serveren kan vælge opgaver
-   pr. læringstrin. Lærligs server registrerer da intet; præ/post foregår på papir.
+7. Teknik: Arkivskabet i piloten kører på **testadapteren** (lokal demo). Serveren *kan* nu vælge opgaver pr.
+   læringstrin (D-338), men kun i den isolerede teststak, og funktionen er slået fra. At bruge den med rigtige
+   elever kræver deploy, migrationer (H5, L1 K1) og særskilte GO'er. Indtil da registrerer Lærligs server
+   intet; præ/post foregår på papir.
+8. LP-13-beslutningerne i `lp13-beslutningskatalog.md` (mindst LP13-1 til LP13-4, LP13-6 og LP13-7).
+
+---
+
+## 9. Kontrol af falske effekter (D-341)
+
+| Trussel | Hvordan den ville se ud | Kontrol |
+|---|---|---|
+| Testeffekt | Posttest er bedre, fordi eleven har set prætesten | Parallelle, ikke identiske opgaver; design B eller C |
+| Gæt | MC rigtigt uden forståelse (25 %) | Rubrik på åbne svar (PR-3/PO-3) vægtes tungere end MC |
+| Overfladeheuristik | »Vælg altid dagbogen/den personlige kilde« | Mindst én opgave, hvor den personlige kilde er det forkerte svar (PR-2/PO-2: »kan ikke«) |
+| Lærereffekt | Læreren underviser ekstra i spilklassen | Samme lærer, samme tid, ingen ekstra gennemgang; lærerens noter |
+| Nyhedseffekt | Spillet er spændende første gang | Forsinket genbesøg (GB-1); spørg ikke kun lige efter |
+| Simuleret tid | Et »genbesøg« i demoen, efter knappen »+20 timer« | Bruges aldrig i piloten. Kun GB-1 på papir efter reel tid tæller |
+| Frafald | Kun de stærke elever er med til GB-1 | Rapportér frafald pr. gruppe; analysér kun elever med alle målinger, og rapportér resten |
+| Bedømmerbias | Bedømmeren ved, hvilken gruppe svaret kommer fra | Bedømmeren ser ikke gruppe eller tidspunkt (præ/post blandes) |
+
+## 10. Dataordbog (kun hos skolen/læreren; intet sendes til Lærlig)
+
+| Felt | Type | Værdier | Bemærkning |
+|---|---|---|---|
+| `elev_kode` | tekst | fx `A07` | Pseudonym, som kun læreren kan koble til en elev. Ingen navne i filen |
+| `gruppe` | tekst | `spil`, `papir` (design B) / `spil_foerst`, `papir_foerst` (C) | |
+| `pr1`, `po1`, `ov1`, `gb1` | 0/1 | rigtigt/forkert | MC |
+| `pr2`, `po2` | 0/1 | rigtigt/forkert | »kan ikke«-opgaven |
+| `pr3_*`, `po3_*` | 0–2 | pr. rubrikkriterium | §7 |
+| `fravaer_*` | ja/nej | pr. måling | Fravær er IKKE 0 point |
+| `gb_dage` | heltal | dage mellem post og GB-1 | Rigtig tid |
+| `noter` | tekst | lærerens observation | Ingen personoplysninger |
+
+## 11. Analyseplan (fastlægges FØR data ses)
+
+1. **Gennemførlighed:** andel elever, der gennemfører hele forløbet; tidsforbrug; lærerens noter om
+   forvirring.
+2. **Præstation:** gennemsnit og fordeling af `po1+po2` og rubrikken på `po3`, pr. gruppe.
+3. **Ændring:** `post − præ` pr. elev (MC og rubrik). Rapportér median og spredning. Ingen p-værdier med
+   1–2 klasser; brug kun beskrivende tal.
+4. **Overførsel:** andel rigtige på `ov1` pr. gruppe.
+5. **Fastholdelse:** `gb1` sammenlignet med `po1`, kun for elever med begge. Rapportér frafald.
+6. **Skelneevne:** opgaver, som (næsten) alle eller ingen løser, markeres til revision.
+7. **Rapportform:** »Vi observerede …«, aldrig »forløbet virker«.
+
+## 12. Minimumskrav før en pilot
+
+- Lærergennemgangen er afsluttet: alle 12 elementer har en afgørelse, ingen er »Skal rettes« uden
+  rettelse, og læreren har skrevet navn og dato (D-341-siden kræver det).
+- Paralleltestene er prøvet på 2–3 elever uden for piloten.
+- LP-13-beslutningerne i §8 er truffet.
+- Samtykke/information efter skolens praksis.
+- Ingen elevkonti oprettes til piloten, og Lærligs server modtager ingen pilotdata.
+
+## 13. Håndtering af fravær
+
+- En elev, der mangler en måling, får `fravaer_* = ja`. Målingen tæller ikke som 0.
+- Prætest mangler → eleven indgår ikke i `post − præ`, men gerne i gennemførlighed.
+- GB-1 mangler → eleven indgår ikke i fastholdelse. Rapportér antallet pr. gruppe.
+
+## 14. Privatliv
+
+- Filen indeholder kun pseudonymer; nøglen (kode → elev) bliver hos læreren og slettes efter skolens praksis.
+- Intet uploades til Lærlig, Supabase, Cloudflare eller andre tjenester.
+- Lærergennemgangssiden (`node tools/laerligverse/serve-review.mjs`) kører kun på lærerens egen computer
+  (127.0.0.1) og gemmer intet på en server.
+
+---
+
+## 15. Tre pilotdesigns (F8, D-344)
+
+Alle tre bruger lærerpakken v1 (`laererpakke/`): prætest A, Arkivskabet, posttest B, transfertest T, forsinket test C,
+lærerobservation og elevfeedback. Ingen af dem sender data til Lærlig.
+
+| | **A. Lille gennemførlighedspilot** | **B. Én klasse, præ/post** | **C. Sammenligning** |
+|---|---|---|---|
+| Elever | 4–6 | én klasse (ca. 20–25) | to parallelle klasser (ca. 40–50) eller én klasse delt i to |
+| Arbejdstid, lærer | ca. 2½ t (en dobbeltlektion + 30 min bedømmelse + 15 min opfølgning) | ca. 5 t (en dobbeltlektion + 15 min efter 7 dage, bedømmelse af ca. 100 ark, genbedømmelse af 10) | ca. 9 t (4 lektioner, ca. 200 ark, genbedømmelse) |
+| Krav til læreren | historielærer, der har godkendt prøverne; tid til at observere hver elev | samme + blind bedømmelse (bland ark) | samme + den samme lærer i begge grupper; referenceaktivitet på papir med **samme kilder, påstande og feedback** som spillet; A/B byttes for halvdelen |
+| Teknik | den lokale demo på en lærer-pc (`serve-local.mjs`, testadapter); ingen konti | samme på klassens maskiner, eller demoen på en skole-pc pr. elevpar | samme |
+| Data | papir: delscorer, noter, feedback; ingen navne | registreringsskemaet, pseudonymer | samme + `gruppe` |
+| Mulige konklusioner | om forløbet kan gennemføres; om eleverne forstår opgaverne og spillet; om prøverne skelner (loft/gulv); tekniske fejl | beskrivende: fordeling af delscorer før og efter; transfer; fastholdelse; skelneevne pr. opgave | om spillet tilføjer noget ud over *indholdet* — kun som en tendens, ikke en kausal effekt med 1–2 klasser |
+| Begrænsninger | ingen tal kan generaliseres | ingen kontrolgruppe: testeffekt, lærer og form kan forklare en ændring | klasser er aldrig ens; to klasser = én sammenligning; kræver mere af skolen |
+| Risiko for fejlkonklusion | lav (der konkluderes intet om læring) | **middel:** fristelsen til at kalde en stigning »effekt« | middel: en lille forskel mellem to klasser tages for et resultat |
+
+**Anbefaling: design A først, derefter B.** Grunde:
+
+1. Prøverne v1 er ikke afprøvet, og rubrikforsøget fandt fem tvetydigheder (`laeringsmaaling.md` §5). De skal
+   afprøves på få elever, før en hel klasse bruger dem.
+2. Spillet har ingen oplæsning (`laeringsmaaling.md` §6), og vi ved ikke, hvordan ordblinde elever klarer
+   bagsiderne. Det ser man i en lille gruppe.
+3. Design C giver kun mening, når A og B fungerer og referenceaktiviteten er lavet og godkendt.
+
+## 16. Pilotprotokol (design A → B)
+
+| Trin | Hvad | Hvem | Tid |
+|---|---|---|---|
+| 0 | GO'er: prøverne godkendt af en lærer; LP-13 (mindst LP13-1–4, -6, -7) besluttet; skolens tilladelse og information (§17) | Christopher, skolen | — |
+| 1 | Elevkoder; koblingen kode → elev bliver hos læreren | lærer | 10 min |
+| 2 | Prætest A (oplæsning tilladt for alle, noteres; side 1 samles ind før side 2) | lærer | 13 min |
+| 3 | Introduktion i Arkivskabet: tre kort og et tjek | elev | 5 min |
+| 4 | Arkivskabet: trin 3–8 i den lokale demo. Genbesøget springes over i piloten, så »+20 timer« bruges ikke | elev; lærer observerer (lærervejledning §7) | 15–20 min |
+| 5 | Posttest B, straks efter | lærer | 13 min |
+| 6 | Transfertest T | lærer | 10 min |
+| 7 | Elevfeedback (4 spørgsmål) | lærer | 3 min |
+| 8 | Forsinket test C efter reel tid (forslag 7 dage, LP13-6). Ingen ny undervisning imellem | lærer | 13 min |
+| 9 | Bedømmelse: blandede ark, rubrik, 10 genbedømt af en kollega | lærer + kollega | 30–60 min |
+| 10 | Analyse efter §11 og lærervejledning §9; rapport med »vi observerede …« | Christopher | — |
+
+**Stopkriterier undervejs:**
+
+- en elev bliver ked af det eller sidder fast i mere end 5 min, uden at hjælp virker;
+- en teknisk fejl stopper spillet;
+- læreren vurderer, at en opgave er fagligt forkert.
+
+Stop for den elev, og notér det. Data fra en stoppet elev bruges kun i gennemførligheden.
+
+## 17. Spørgsmål om databeskyttelse til særskilt vurdering
+
+F8 tager **ingen** juridisk stilling til samtykke eller behandlingsgrundlag. Spørgsmålene skal afklares af skolen, kommunen
+eller en rådgiver, før en pilot:
+
+1. **Hvilke oplysninger indsamles?** Delscorer, lærernoter, elevfeedback, klassetrin, brug af støtte. Er
+   oplysningen om oplæsning eller ordblindhed en *helbreds*- eller anden særlig kategori, og må den så
+   registreres?
+2. **Er personhenførbare data nødvendige?** Forslaget bruger pseudonymer. Koblingen kode → elev hos læreren gør
+   dem stadig personoplysninger. Er det nødvendigt, eller kan forsinket test kobles på anden måde?
+3. **Opbevaring:** Papir og regneark hos læreren/skolen. Hvilket system må skolen bruge? Intet hos Lærlig.
+4. **Adgang:** Kun læreren og den kollega, der genbedømmer. Må Christopher se pseudonymiserede delscorer?
+5. **Opbevaringstid og sletning:** Hvor længe, og hvem sletter koblingen og arkene?
+6. **Information:** Hvad skal elever og forældre have at vide, og af hvem? Kræver skolen samtykke, eller er det
+   almindelig undervisning med en evaluering?
+7. **Godkendelser:** Skal skoleledelse, kommune eller forældreråd godkende? Gælder der regler for forsøg i
+   undervisningen?
+8. **Lærlig som aktør:** Bliver Lærlig databehandler, hvis Christopher får data? Kræves en aftale?
+
+## 18. Status (F8)
+
+| Del | Status |
+|---|---|
+| Arkivskabets 12 elementer | **Godkendt** af Christopher Møller 04-11-2026 |
+| Prøverne v1 | **Afventer** særskilt faglig godkendelse |
+| LP-13 | **Afventer** beslutning |
+| Elevpilot | **Ikke autoriseret** |
+| Produktion | **Ikke autoriseret** |

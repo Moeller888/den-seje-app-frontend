@@ -17,6 +17,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { assertIsolated, SYNTHETIC_EMAIL_DOMAIN } from "./isolation-guard.mjs";
 import { startHarness, HOST_ORIGIN, GAME_ORIGIN } from "./laerligverse-harness/serve-harness.mjs";
+import { K1_GAP, k1InStack } from "./k1-probe.mjs";
 import { assessObjectives, observationFromAttemptRow } from "../../laerligverse/host/bridge/evidence.js";
 
 assertIsolated(process.env);
@@ -34,7 +35,9 @@ const byPrompt = new Map(FIXTURE.map((r) => [r.content.question, r]));
 test.describe.configure({ mode: "serial" });
 
 let harness;
+let K1;
 test.beforeAll(async ({ request }) => {
+  K1 = await k1InStack(request, SUPA, svc);
   // Idempotent: the fixture rows are inserted once per stack (projects run one after another).
   const have = await (await request.get(`${SUPA}/rest/v1/questions?select=id&learning_objective=eq.${OBJECTIVE}`, { headers: svc })).json();
   if (have.length === 0) {
@@ -77,6 +80,8 @@ const answer = (request, p, id, text, roundNo) => request.post(`${SUPA}/function
 const attempts = async (request, p) => await (await request.get(`${SUPA}/rest/v1/question_attempts?select=question_instance_id,submission_id,attempt_no,grading,was_correct,is_repeat,answered_at,xp_awarded,coins_awarded&student_id=eq.${p.id}&order=created_at`, { headers: svc })).json();
 
 test("the precise objective serves ONLY the reviewed items, with their backs and without their keys; the server grades with the reviewed key and registers every attempt; then 'exhausted', never a repeat", async ({ request }, testInfo) => {
+  test.fail(!K1, K1_GAP);
+  if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
   test.skip(testInfo.project.name !== "chromium", "backend path: once per run");
   const p = await makePupil(request, "http", testInfo.project.name);
   const seen = [];
@@ -118,6 +123,8 @@ test("the precise objective serves ONLY the reviewed items, with their backs and
 });
 
 test("through the real host page: the game receives the documents' backs for the precise objective, and no token or key; the server grades", async ({ page, request, browserName }) => {
+  test.fail(!K1, K1_GAP);
+  if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
   const p = await makePupil(request, "host", browserName);
   await page.goto(`${HOST_ORIGIN}/`);
   await page.locator("#lv-email").fill(p.email);
