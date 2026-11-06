@@ -1,0 +1,113 @@
+/* Kategorisering (js/categorize.js). Selectors start with #options so they outrank the quiz page's
+   `#options button` rule, like css/order-items.css. Each item: its text on one line, then one button per
+   category (≥ 44 px touch targets) that wrap on a narrow screen; nothing overflows a phone. The chosen
+   category is marked by colour AND a check mark, never by colour alone. Uses the theme tokens from
+   css/theme.css. */
+
+#options .categorize {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+#options .categorize-instructions {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
+#options .categorize-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#options .categorize-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: var(--btn-bg);
+  border: 2px solid var(--border-btn);
+  border-radius: 10px;
+  min-width: 0;
+}
+
+#options .categorize-item.is-placed {
+  border-style: solid;
+}
+
+#options .categorize-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+#options .categorize-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  line-height: 1.35;
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+
+#options .categorize-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#options button.categorize-choice {
+  display: block;              /* inline flow, so the ✓ of a chosen category sits before its label */
+  flex: 1 1 8em;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 15px;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: left;
+  border-radius: 8px;
+}
+
+#options button.categorize-choice {
+  border-width: 2px;
+  touch-action: manipulation;  /* no double-tap zoom delay on tablets and phones */
+}
+
+#options .categorize button.categorize-choice[aria-pressed="true"] {
+  border-color: var(--accent);
+  border-width: 3px;
+  color: var(--text-bright);
+  font-weight: bold;
+}
+
+#options .categorize button.categorize-choice[aria-pressed="true"]::before {
+  content: "✓ ";
+}
+
+/* While the answer is on its way the chosen buttons keep full strength, so the pupil sees what was sent. */
+#options .categorize button.categorize-choice[aria-pressed="true"]:disabled {
+  opacity: 1;
+}
+
+#options button.categorize-choice:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+#options .categorize-live {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 14px;
+  color: var(--text-dim);
+}

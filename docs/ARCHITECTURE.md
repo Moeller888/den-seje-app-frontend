@@ -295,6 +295,36 @@ Rules (binding):
    Scoring is binary (correct/incorrect) — no partial credit — so XP/coins, spaced repetition and
    the response shape `{ status, correct_answer, review_text?, misconception_type? }` stay unchanged.
 
+**Kategorisering (`categorize`, F-05, 2026-11-05 — built, NOT servable, not deployed).**
+Contract, key, guess chance and answer shape in `supabase/functions/_shared/categorize.ts`; browser control
+`js/categorize.js`. The pupil places 4–8 items in 2–3 categories (cause / effect, before / after an event,
+democracy / dictatorship, renewable / not, supports / contradicts a claim); categories may hold different
+numbers of items, none is empty. **Each item's category is authored and never randomised — only the
+presentation of the items is shuffled**, once per instance: `question_instances.correct_answer` holds one
+`item:category` pair per shown position. The payload carries `content.categorize = { categories, items
+(shown order) }` only — never an item's category, and never a count per category (a shown 3 + 3 split
+would raise a pure guess on 6 items from 1 in 62 to 1 in 20). The control is one labelled group per item
+with a button per category (`aria-pressed`; mouse, touch, keyboard and screen reader alike, nothing
+dragged), every placement announced; Svar sends only a complete placement — an incomplete one is refused
+visibly ("… 2 mangler") with nothing sent. `process-event` accepts only one category per shown item
+(`canonicalCategorizeAnswer`) and `process_question_attempt` grades it like MC — **all or nothing, one
+reward path** (tested on the replayed production function: `tests/unit/categorize-grading.test.mjs`, all
+15 wrong placements of 4 items in 2 categories earn 0). *Guess chance* is computed for the task, never
+assumed: 1/kⁿ for a pure guess, 1/S(n,k) for a pupil who knows no category is empty (2 × 4: 1/14; 2 × 6:
+1/62; 3 × 6: 1/540) — floors for a pupil who knows nothing; partial knowledge raises it steeply (sure of 4
+of 6 in 2 categories → the last 2 are 1 in 4). The authoring check flags tasks above 1 in 20 as practice
+(2 × 4), matching Rækkefølge's 4-item evidence size. *Why all or nothing:* partial credit is undecided
+(D-277 LP-7), and per-item credit would pay ~50 % for a random 2-category placement; the feedback still
+states the whole correct placement, grouped by category. *Pedagogy:* the kind trains concept use —
+applying a concept to cases the pupil has not seen word for word — so it belongs after the introduction
+and comprehension check, as application (`tools/stimulus/examples/grundloven-1849-kategorisering.json`).
+*Adaptive engine:* a correct first answer folds like MC (its guess floor is far below MC's 1/4 from 4
+items up), so no exclusion like Sandt/falsk's is needed; `guessFloor` is null because it depends on the
+task. **Before pupils can get it:** a reviewed activation migration (`questions_answer_format_check` and
+`content_valid_check` refuse `categorize` today; `question_is_servable` flips in the same PR as the
+registry), deploys of `get-next-question` (manifest in the rollout runbook) and `process-event`, and
+content — each its own owner GO.
+
 **Rækkefølge / tidslinje (`order_items`, F-04, 2026-11-05 — built, NOT servable, not deployed).**
 Contract, key and answer shape in `supabase/functions/_shared/order-items.ts`; browser control
 `js/order-items.js`. **The facit is the authored order of `content.items` and is never randomised — only
