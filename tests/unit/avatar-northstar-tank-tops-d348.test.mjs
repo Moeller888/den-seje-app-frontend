@@ -31,7 +31,7 @@ test("D-348 the approval: D-345's 264 candidates on tank-v3, the owner's words; 
   assert.deepEqual(Object.keys(L.NORTHSTAR_TANKS), Object.keys(TF.DESIGNS)); for (const [id, t] of Object.entries(L.NORTHSTAR_TANKS)) { assert.equal(t.item, TF.itemOf(id)); assert.deepEqual(L.NORTHSTAR_ITEMS[t.item], A.staging.itemTable[t.item]); }
   const reach = reachableTankOutfits(L).map(([, o]) => key(o)).sort(); assert.deepEqual(reach, want, "every approved combination is reachable, nothing else");
   assert.ok(!L.NORTHSTAR_TANK_COMBOS.some((k) => k.includes("bottom-shorts-navy"))); assert.ok(!L.NORTHSTAR_TANK_COMBOS.some((k) => k.endsWith("+bottom-trousers-square-olive+shoes-sneakers-beige")));
-  assert.equal(Object.keys(L.NORTHSTAR_OUTFITS).length, 19); assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, false);
+  assert.equal(Object.keys(L.NORTHSTAR_OUTFITS).length, 19); assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
 });
 
 test("D-348 one top choice: a tank or a sweater, each by its own list; the sweaters' behaviour is unchanged; unknown IDs ignored", () => {

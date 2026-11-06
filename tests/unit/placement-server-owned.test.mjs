@@ -6,8 +6,8 @@
 // readable by any pupil (and, through the PUBLIC policy, by anyone) and let the browser decide its own
 // band. NOW: start_placement() returns display data only, submit_placement() grades server-side once
 // and writes the band; the browser only collects which option the pupil chose.
-//   The live flow (overlay → answers → band in the DB) is exercised by tests/placement-e2e.spec.ts; the
-// server functions by tests/unit/answer-keys-server-side-migration-run.test.mjs and
+//   Since D-356 the quiz does not start this flow at all (tests/placement-e2e.spec.ts proves that in the
+// browser); the code stays, so these checks still guard it. The server functions are covered by tests/unit/answer-keys-server-side-migration-run.test.mjs and
 // tests/unit/answer-keys-client-paths-lockdown-migration-run.test.mjs.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -29,6 +29,12 @@ const PLACEMENT = APP.slice(start, end);
 test("the placement block is found", () => {
   assert.ok(start > 0 && end > start, "placement section not found in app.js");
   assert.match(PLACEMENT, /async function runPlacementFlow\(\)/);
+});
+
+test("the quiz never starts the placement test (D-356)", () => {
+  assert.equal(/\brunPlacementFlow\(\)/.test(APP.replace("async function runPlacementFlow()", "")), false,
+    "nothing may call runPlacementFlow — a new pupil goes straight to the quiz");
+  assert.match(APP, /await loadAdaptiveBands\(\);\s*if \(persistedBand !== null\)/);
 });
 
 test("app.js never reads the questions table", () => {

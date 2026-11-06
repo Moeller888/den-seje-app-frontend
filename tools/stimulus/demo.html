@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stimulus-demo — Grundloven 1849</title>
+  <!-- LOKAL DEMO (F-07). Åbn via en lokal webserver fra repoets rod, fx:
+         npx http-server . -p 8080   →   http://localhost:8080/tools/stimulus/demo.html
+       Siden bruger den rigtige js/stimulus.js og css/stimulus.css på eksemplet i
+       tools/stimulus/examples/grundloven-1849.json. Svarene bedømmes HER I BROWSEREN, kun til demo: i quizzen
+       bedømmer serveren (process-event), og browseren kender aldrig facit. Ingen Supabase, ingen netværk
+       ud over denne mappe. Lydklippet findes ikke endnu (se audio_note i eksemplet); brug "Vis teksten". -->
+  <link rel="stylesheet" href="../../css/theme.css">
+  <link rel="stylesheet" href="../../css/stimulus.css">
+  <style>
+    body { margin: 0; background: var(--bg-main); color: var(--text-main); font-family: Arial, Helvetica, sans-serif; }
+    main { max-width: 640px; margin: 0 auto; padding: 16px; }
+    .demo-bar { font-size: 13px; color: var(--text-dim); border: 1px dashed var(--border-btn); border-radius: 6px; padding: 8px 10px; margin-bottom: 14px; }
+    .phase { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: .04em; color: var(--text-dim); margin: 0 0 8px; }
+    #question { font-size: 20px; line-height: 1.5; color: var(--text-bright); margin: 0 0 14px; }
+    #options { display: flex; flex-direction: column; gap: 10px; }
+    #options button, #options input { font-size: 17px; min-height: 48px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-btn); background: var(--btn-bg); color: var(--text-main); text-align: left; }
+    #options button:focus-visible, #options input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    #options .send { background: var(--accent); color: #fff; text-align: center; }
+    #feedback { min-height: 1.5em; margin-top: 14px; font-weight: bold; }
+    #why { margin-top: 6px; line-height: 1.5; }
+    #next { margin-top: 14px; min-height: 48px; width: 100%; font-size: 17px; border-radius: 10px; border: 1px solid var(--border-btn); background: var(--btn-bg); color: var(--text-main); }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="demo-bar">Lokal demo af opgaveformerne Billede + svar, Lytteopgave og Kilde + spørgsmål. Ikke elevernes quiz; facit bedømmes her kun til demo.</p>
+    <p class="phase" id="phase"></p>
+    <div id="stimulus" hidden></div>
+    <p id="question"></p>
+    <div id="options"></div>
+    <p id="feedback" role="status" aria-live="polite"></p>
+    <p id="why"></p>
+    <button type="button" id="next" hidden>Videre →</button>
+  </main>
+  <script type="module">
+    import { readStimulus, buildStimulus } from "../../js/stimulus.js";
+
+    const PHASE = { "introduktion": "1. Introduktion", "forståelsestjek": "2. Forståelsestjek", "selvstændig anvendelse": "3. Selvstændig anvendelse" };
+    const $ = (id) => document.getElementById(id);
+    const example = await (await fetch("examples/grundloven-1849.json")).json();
+    let i = 0;
+
+    function show() {
+      const step = example.steps[i];
+      const { content, answer_format: format } = step.row;
+      $("phase").textContent = `${PHASE[step.phase] ?? step.phase} · ${step.form}`;
+      const box = $("stimulus");
+      box.textContent = "";
+      const s = readStimulus(content);
+      box.hidden = !s || s.invalid;
+      if (s && !s.invalid) box.appendChild(buildStimulus(document, s, { mediaBase: "../../assets/stimulus/" }));
+      $("question").textContent = content.question;
+      $("feedback").textContent = ""; $("why").textContent = ""; $("next").hidden = true;
+      const opts = $("options"); opts.textContent = "";
+      const answer = (value) => {
+        opts.querySelectorAll("button, input").forEach((el) => { el.disabled = true; });
+        const ok = String(value).trim() === content.correct;
+        $("feedback").textContent = ok ? "Ja! 🎯" : `Ikke helt — svaret er ${content.correct}.`;
+        $("why").textContent = ok ? "" : content.review_text;
+        $("next").hidden = i >= example.steps.length - 1;
+        if (!$("next").hidden) $("next").focus();
+      };
+      if (format === "mc") {
+        for (const o of content.options) {
+          const b = document.createElement("button"); b.type = "button"; b.textContent = o;
+          b.addEventListener("click", () => answer(o)); opts.appendChild(b);
+        }
+      } else {
+        const input = document.createElement("input"); input.type = "text"; input.inputMode = "numeric";
+        input.setAttribute("aria-label", "Skriv dit svar som et tal");
+        const send = document.createElement("button"); send.type = "button"; send.className = "send"; send.textContent = "Svar";
+        send.addEventListener("click", () => answer(input.value));
+        input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); answer(input.value); } });
+        opts.append(input, send);
+      }
+    }
+    $("next").addEventListener("click", () => { i++; show(); });
+    show();
+  </script>
+</body>
+</html>
