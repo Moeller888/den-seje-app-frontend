@@ -38,10 +38,11 @@
 
 import { matchLayout, type MatchLayout } from "./match-pairs.ts";
 import { orderLayout, type OrderLayout } from "./order-items.ts";
+import { categorizeLayout, type CategorizeLayout } from "./categorize.ts";
 import { publicStimulus, type PublicStimulus } from "./stimulus.ts";
 import { parseTrueFalseContent, TRUE_FALSE_FORMAT } from "./true-false.ts";
 
-export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "type", "force_text", "match", "order", "stimulus"] as const);
+export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "type", "force_text", "match", "order", "categorize", "stimulus"] as const);
 
 export const PUBLIC_METADATA_KEYS = Object.freeze([
   "difficulty_type",
@@ -59,6 +60,7 @@ export type PublicContent = {
   force_text?: true;
   match?: MatchLayout;
   order?: OrderLayout;
+  categorize?: CategorizeLayout;
   stimulus?: PublicStimulus;
 };
 
@@ -124,6 +126,12 @@ export function toPublicQuestion(rawContent: unknown, format: string, rawMetadat
   // content.items, whose order is the facit (_shared/order-items.ts).
   if (format === "order") {
     content.order = orderLayout(rawContent, instanceKey);
+  }
+
+  // Kategorisering: the category labels and the item texts in the instance's SHOWN order — never an
+  // item's category, which is the facit (_shared/categorize.ts).
+  if (format === "categorize") {
+    content.categorize = categorizeLayout(rawContent, instanceKey);
   }
 
   if (typeof rawContent.type === "string") content.type = rawContent.type;
