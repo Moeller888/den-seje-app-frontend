@@ -9,7 +9,7 @@
 // this module inlines the SVG and sets those two CSS variables from the identity's
 // resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
 
-import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, R2_COSMETIC_Z, r2HeadwearTransformFor, r2EyesTransformFor, r2FaceTransformFor, r2FaceZFor, r2RequiresC2Fallback, r2CosmeticRenderable, r2ItemAssetSrcFor, northstarRenderFor, northstarCompose, NORTHSTAR_CANVAS } from "./avatar-layers.js";
+import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, R2_COSMETIC_Z, r2HeadwearTransformFor, r2EyesTransformFor, r2FaceTransformFor, r2FaceZFor, r2RequiresC2Fallback, r2CosmeticRenderable, r2ItemAssetSrcFor, northstarRenderFor, northstarUseAccount, NORTHSTAR_SURFACES, northstarCompose, NORTHSTAR_CANVAS } from "./avatar-layers.js";
 import { cdnUrl } from "./cloudinary.js";
 import { emitR2RenderObservability } from "./avatar-r2-observability.js";
 
@@ -289,6 +289,8 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
   // every supported cosmetic must load, or the WHOLE avatar takes today's path below (no item lost silently).
   // The student's stored identity and equipment are only read, never changed.
   let nsLayers = null;
+  // D-357: the pupil's own stored choice, on the surfaces that can show the figure; shop previews and forced C2 name no account.
+  if (!forceC2 && NORTHSTAR_SURFACES.indexOf(surface) !== -1) northstarUseAccount(identity);
   const ns = forceC2 ? null : northstarRenderFor(surface, cosmetics);
   if (ns) {
     try {

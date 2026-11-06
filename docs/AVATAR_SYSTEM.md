@@ -27,6 +27,13 @@ art layer behind them can be upgraded without a rewrite.
 
 ## 2. Current state (the honest picture)
 
+- **Northstar wardrobe for every pupil — D-357 (owner decision 2026-11-06).** This entry supersedes the "browser opt-in only" limits below where they differ.
+  - **Access:** `AVATAR_NORTHSTAR_WARDROBE = true`. Every pupil gets the wardrobe on `avatar.html` and chooses freely; nobody is moved automatically, and "Nuværende avatar" stays the default.
+  - **Storage:** the choice is `avatar_identity.northstar`, written only by `set_avatar_northstar`. Once a surface has named the account, the browser's stored choice is not read.
+  - **Items:** what was already published, within the approved combination lists. D-354's 33 tops are a later step and need combination checks and owner approval.
+  - **Limits:** one face, skin tone and hairstyle; no blink; equipment outside aura/back falls back to today's avatar; shop previews keep today's avatar.
+  - **Open findings:** the rim fault on published tops and the print distance on the two fox tank tops, to be fixed after launch as new file versions.
+  - **Rollback:** set the flag to `false` and redeploy. See `docs/decisions/D-357.md`.
 - **Northstar test wardrobe (browser opt-in only) — status after D-314, owner-tested and approved in the app (2026-11-02).**
   - **What works in the opt-in** (`avatar.html?northstar=1`, `localStorage` only; `AVATAR_NORTHSTAR_WARDROBE = false`; no shop, catalogue, ordinary pupil activation or flag change):
     - **Tops:** the cream and blue tees, and 16 print tees (teapot and shield in six colours, fox in four; D-274/D-275).
