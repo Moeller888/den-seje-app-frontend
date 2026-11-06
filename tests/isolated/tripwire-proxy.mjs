@@ -41,9 +41,16 @@ export function startTripwire({ port = 0, host = "127.0.0.1", now = () => Date.n
     res.end("isolated E2E: egress refused");
   });
   server.on("connect", (req, socket) => {
+    // A browser that is shutting down resets the refused tunnel (ECONNRESET). Without a listener that
+    // error is thrown in the RUNNER process and kills it before the summary is written (seen in CI
+    // 2026-11-05/06). The refusal is recorded FIRST, so it still fails the run.
+    socket.on("error", () => {});
     record("CONNECT", String(req.url ?? "unknown"), req);
     socket.end("HTTP/1.1 403 Forbidden\r\n\r\n");
   });
+  // The same for a plain request whose client resets mid-response, and for a malformed request.
+  server.on("connection", (socket) => { socket.on("error", () => {}); });
+  server.on("clientError", (_err, socket) => { try { socket.destroy(); } catch { /* already gone */ } });
   return new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(port, host, () => {

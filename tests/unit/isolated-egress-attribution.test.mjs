@@ -38,6 +38,39 @@ test("agentFamily: the browser family only, never the string", () => {
   assert.equal(agentFamily(undefined), "none");
 });
 
+// CI 2026-11-05 16:54 and 2026-11-06 05:22: a WebKit context closing resets the refused tunnel, the reset
+// was an unhandled 'error' on the CONNECT socket, and it killed the runner before the summary. The probe
+// runs in a child process, so a crash is a non-zero exit there rather than a crash of this test runner.
+export const RESET_PROBE = `
+  import { connect } from "node:net";
+  const { startTripwire } = await import(process.argv[1]);
+  const t = await startTripwire();
+  const port = Number(new URL(t.url).port);
+  for (let i = 0; i < 20; i++) {
+    await new Promise((ok) => {
+      const s = connect(port, "127.0.0.1", () => {
+        s.write("CONNECT tjzbehwfagiwpwodsgwg.supabase.co:443 HTTP/1.1\\r\\nHost: tjzbehwfagiwpwodsgwg.supabase.co:443\\r\\n\\r\\n");
+        // The proxy reads the request, records it and starts its 403; the browser is torn down before it
+        // reads the answer and resets the connection.
+        setTimeout(() => { s.resetAndDestroy(); setTimeout(ok, 20); }, 30);
+      });
+      s.on("error", () => {});
+    });
+  }
+  await new Promise((ok) => setTimeout(ok, 200));
+  console.log(JSON.stringify({ hits: t.hits.length }));
+  await t.close();
+`;
+
+test("tripwire: a browser resetting a refused tunnel neither crashes the runner nor loses the refusal", async () => {
+  const { spawnSync } = await import("node:child_process");
+  const mod = new URL("../isolated/tripwire-proxy.mjs", import.meta.url).href;
+  const r = spawnSync(process.execPath, ["--input-type=module", "-e", RESET_PROBE, mod], { encoding: "utf8", timeout: 30000 });
+  assert.equal(r.status, 0, `the runner process survived (stderr: ${String(r.stderr).slice(0, 300)})`);
+  const out = JSON.parse(String(r.stdout).trim().split("\n").pop());
+  assert.ok(out.hits >= 1, "every reset tunnel that reached the proxy is still recorded — the run still fails");
+});
+
 test("tripwire: still refuses and records host-only hits; events add time, kind and family — nothing else", async () => {
   let clock = 1000;
   const t = await startTripwire({ now: () => clock++ });
