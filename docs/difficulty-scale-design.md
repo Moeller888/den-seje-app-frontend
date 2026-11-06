@@ -2,6 +2,8 @@
 
 **Status:** GODKENDT DESIGN. B1–B8 er besluttet af ejeren 2026-10-20 (§9), og E1–E5 2026-10-22 (§10).
 B9 er udskudt.
+Indplacering pr. fag og ændringsforslag til §3.1/§4.1 (kalibrering), §3.2, §4.2 og §6: se
+[`subject-placement-design.md`](subject-placement-design.md) (teknisk forslag 2026-10-28, ikke besluttet).
 Intet i dette dokument er bygget eller anvendt.
 **Dato:** 2026-10-20 · **Grundlag:** `main` @ `d93faff`
 **Anledning:** Ejeren ønsker 10.000 sværere engelskopgaver fordelt på niveau 1–10.000. Den 19.
