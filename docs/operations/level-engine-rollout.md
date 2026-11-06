@@ -210,7 +210,21 @@ Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokume
   `20261106094831`. Efterkontrollen viste 120 rækker, 0 aktive og 0 uden niveau eller CEFR, og indholdet er
   identisk med repoet. Se
   [`production-actions/2026-11-06T0948Z-english-grade6-9-applied.md`](production-actions/2026-11-06T0948Z-english-grade6-9-applied.md).
-- Trin 1b–1d og hele fase 2 er ikke udført.
+- **Trin 1b er udført 2026-11-06.** De tre pilotfiler er anvendt hver for sig med hvert sit GO:
+
+  | Fil | Ledger-version | Rækker | Log |
+  |---|---|---|---|
+  | `20261020130001_english_level_pilot_1` | `20261106192437` | 167 | [1924Z](production-actions/2026-11-06T1924Z-english-pilot-1-applied.md) |
+  | `20261020130002_english_level_pilot_2` | `20261106193242` | 167 | [1932Z](production-actions/2026-11-06T1932Z-english-pilot-2-applied.md) |
+  | `20261020130003_english_level_pilot_3` | `20261106194452` | 166 | [1944Z](production-actions/2026-11-06T1944Z-english-pilot-3-applied.md) |
+
+  Efterkontrollen viste 500 pilotrækker, 0 aktive og 0 uden niveau eller CEFR. Niveauerne ligger i 3.001–10.000, og
+  fordelingen er A2 63, B1 162, B2 148 og C1 127. Indholdet er identisk med repoet, og banken har nu 2.763 rækker.
+- **Åbent punkt før aktivering af piloten (trin 2d):** opgaven "She has a ___ memory. She never forgets anything."
+  (pilot_2, niveau 7.856, B2) har det rigtige facit, `sharp`. Forklaringsteksten siger dog kun "Man siger 'a strong
+  (or good) memory'." og nævner ikke `sharp`. Den skal rettes både i repoet og i den levende række, med eget GO,
+  før piloten aktiveres.
+- Trin 1c–1d og hele fase 2 er ikke udført.
 
 **Godkendelser:**
 - Hvert trin herunder kræver sit eget GO fra ejeren (E2, D-110). Det gælder også hver `apply_migration`, hver
