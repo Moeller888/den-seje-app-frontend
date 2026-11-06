@@ -376,7 +376,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (Lærligverse-integration lag 3: F-04/F-02/F-07, D-329 `objective-target.ts`, D-332 `option_details`, D-338 `learning-sequence.ts`) — **ikke deployet** | dette repository | 20 | `cf71236f4e54cf6aeb719d83bd7e94754c9ae279dd2c17c0c24f06f3bec3bda2` |
+| Kandidat (lag 3 plus F10-B: et målrettet kald går aldrig gennem niveaumotoren) — **ikke deployet** | dette repository | 20 | `e20c056b935880c72a87e7875a797c4070ad1fe54d4d8035bcfb834fe6daefe6` |
+| Forrige kandidat (Lærligverse-integration lag 3: F-04/F-02/F-07, D-329 `objective-target.ts`, D-332 `option_details`, D-338 `learning-sequence.ts`) — ikke deployet | dette repository | 20 | `cf71236f4e54cf6aeb719d83bd7e94754c9ae279dd2c17c0c24f06f3bec3bda2` |
 | Forrige kandidat (Lærligverse-integration lag 2: F-04/F-02/F-07 plus D-329, før D-332 og D-338) — ikke deployet | dette repository | 19 | `7438c77f914aa458cef9ce4b0118bfc8d61f3871eedb3a55eecbd4e2d2d7355b` |
 | Forrige kandidat (F-04 Rækkefølge, oven på F-02 og F-07, før D-329) — ikke deployet | dette repository | 18 | `06a6ccb9a2e5640abaa71a69581f3f42b5192c7dc91d865580099bf6004b3c4e` |
 | Forrige kandidat (F-02 Sandt/falsk #607 + F-07 stimulus, PR #618) — ikke deployet | #618 | 17 | `1df4cb344dfe97bde6f14b8e34adb9db26a44e948b6d197d01f2b9baa3104c8d` |

@@ -241,6 +241,11 @@ serve(async (req) => {
       if (roleError) throw roleError;
       if ((roleRow as { role?: unknown } | null)?.role !== "student") levelEngine = "off";
     }
+    // F10-B: a targeted request (D-329, and the D-338 sequence on top of it) is a COURSE request. A course
+    // objective is not on the difficulty scale, so the level route would serve none of its questions (only
+    // questions with a difficulty_level are candidates) and would advance the pupil's subject level on a course
+    // call. It therefore always takes the classic route on the narrowed scope. Untargeted requests: unchanged.
+    if (targeting.mode === "on") levelEngine = "off";
     const route = chooseSelectionRoute(mixEngine, levelEngine);
     // L1 K1 (Edge secret K1_SERVED_SNAPSHOT, ./served-snapshot.ts): unset = everything below runs exactly
     // as before; "on" (only after migration 20261103110000) makes every response and the recorded delivered
