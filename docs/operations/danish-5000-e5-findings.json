@@ -1,0 +1,792 @@
+[
+ {
+  "portion": "danish1",
+  "k": "s",
+  "level": 5733,
+  "q": "Hvad skal der stå på stregen? 'Hun glemte ___ låse døren, da hun gik.'",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "at/og foran et udsagnsord i navneform i en kort, enkel sætning er stof fra cirka 4.-5. klasse, men ligger i 7. klasse. To af de forkerte svar (ad, af) frister næsten ikke her. Niveauet er mindst to klassetrin for højt.",
+  "fix": "Behold niveauet og erstat opgaven med en reel 7.-klasses-skelnen. q: \"Hvad skal der stå på stregen? 'Bilen kørte langsomt op ___ bakken.'\" o: [\"ad\",\"af\",\"at\",\"og\"] a: \"ad\" r: \"'Op ad' viser, at man bevæger sig langs bakken, og skrives med d. 'Af' bruger man, når noget kommer ud fra noget, for eksempel 'op af vandet'.\" Alternativt: behold teksten og sæt level til ca. 3600."
+ },
+ {
+  "portion": "danish1",
+  "k": "g",
+  "level": 6466,
+  "q": "Hvilken form passer: 'Vi købte et ___ tæppe til stuen.'?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Intetkøn af et almindeligt farveord i en kort sætning hører til cirka 5. klasse. Banken har samme regel på niveau 1280 ('et gammelt tæppe'). 'blåe' og 'blåen' frister ikke, så kun 'blå' er et reelt forkert svar. Niveauet er to klassetrin for højt.",
+  "fix": "level: 3400. o: [\"blåt\",\"blå\",\"blått\",\"blåd\"]. a og r uændrede."
+ },
+ {
+  "portion": "danish1",
+  "k": "t",
+  "level": 4442,
+  "q": "Hvilken sætning har kommaet på et rigtigt sted, når Emil fortæller, hvorfor han bliver hjemme?",
+  "category": "E5-8",
+  "severity": "minor",
+  "reason": "Forklaringen siger om kommaet: 'Det må ikke stå midt i en sætning.' Det er forkert som regel, for kommaer står ofte midt i en sætning, også i selve facit. Eleven lærer en falsk regel.",
+  "fix": "r: \"Et komma foran en ledsætning står lige før det ord, der indleder den, her 'fordi'. Derfor skal kommaet stå efter 'hjemme'.\""
+ },
+ {
+  "portion": "danish1",
+  "k": "t",
+  "level": 6900,
+  "q": "Hvilken sætning om vejret bruger semikolon rigtigt?",
+  "category": "E5-8",
+  "severity": "minor",
+  "reason": "'Det må ikke stå efter en ledsætning' gælder ikke generelt: en helsætning kan godt slutte med en ledsætning og efterfølges af semikolon. Reglen er for bred. Den egentlige grund er, at 'Da regnen holdt op' ikke kan stå alene.",
+  "fix": "r: \"Semikolon kan stå mellem to hele hovedsætninger, der hører sammen. 'Da regnen holdt op' er en ledsætning og kan ikke stå alene, så der skal komma i stedet.\""
+ },
+ {
+  "portion": "danish1",
+  "k": "l",
+  "level": 3352,
+  "q": "Læs: 'Morfar sad altid på den samme bænk ved havnen. Efter at han var død, tog Elias derhen om søndagen. Han sagde ikke noget, men kiggede på bådene, ligesom morfar havde gjort. Nogle gange kunne han næsten høre ham nynne.' Hvorfor går Elias hen til bænken?",
+  "category": "E5-7",
+  "severity": "major",
+  "reason": "Blokeret emne: død og sorg hos mennesker. Teksten handler direkte om et barn, der sørger over sin morfar ('Efter at han var død').",
+  "fix": "q: \"Læs: 'Morfar sad altid på den samme bænk ved havnen. Efter at han var flyttet til Norge, tog Elias derhen om søndagen. Han sagde ikke noget, men kiggede på bådene, ligesom morfar havde gjort. Nogle gange kunne han næsten høre ham nynne.' Hvorfor går Elias hen til bænken?\" o, a og r uændrede."
+ },
+ {
+  "portion": "danish1",
+  "k": "l",
+  "level": 5356,
+  "q": "Læs: 'Hvis du får en mail fra din bank, der beder dig skrive din kode, så skal du ikke svare. Banker spørger aldrig om koder i en mail. Svindlere kan lave beskeder, der ligner de ægte, og de skriver tit, at sagen haster. Hastværket skal få dig til at glemme at tænke dig om.' Hvorfor skriver svindlere, at sagen haster?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Alle tre forkerte svar handler om noget, teksten ikke nævner (bankens åbningstid, svindlernes computer, at spare penge), og ingen af dem frister en 6.-klasses-elev. Facit står næsten ordret i tekstens sidste sætning.",
+  "fix": "o: [\"Fordi banken har brug for koden med det samme\",\"Fordi koden snart holder op med at virke\",\"Fordi banken ellers lukker modtagerens konto\",\"Fordi modtageren så ikke når at tænke sig om\"]. a og r uændrede."
+ },
+ {
+  "portion": "danish1",
+  "k": "l",
+  "level": 6200,
+  "q": "Læs: 'Efter to år og tre udvalgsmøder er kommunens bedste bud på en sikker cykelsti en hvid streg på asfalten. Men her er vi så.' Hvad er skribentens holdning til cykelstien?",
+  "category": "E5-7",
+  "severity": "major",
+  "reason": "Teksten er et spydigt indlæg mod en kommunes politiske udvalg, og facit kræver, at eleven genkender stillingtagen i et lokalpolitisk spørgsmål. Det er et grænsetilfælde, fordi sagen er lille og uden partier, men reglen 'stillingtagen i et politisk spørgsmål' dækker ordlyden. Opgaven fungerer lige så godt uden politik.",
+  "fix": "q: \"Læs: 'Efter to år og tre bestyrelsesmøder er klubbens bedste bud på et nyt klubhus en ny dørmåtte. Men her er vi så.' Hvad er skribentens holdning til dørmåtten?\" o: [\"Det er et flot resultat efter så lang tid\",\"Det var slet ikke nødvendigt at købe den\",\"Det er alt for lidt efter så lang tid\",\"Den fylder alt for meget i gangen\"] a: \"Det er alt for lidt efter så lang tid\" r: \"To år og tre møder endte med en dørmåtte. 'Bedste bud' er ment spydigt: Skribenten synes, at en dørmåtte er alt for lidt.\""
+ },
+ {
+  "portion": "danish2",
+  "k": "s",
+  "level": 3179,
+  "q": "Hvad skal der stå? 'Hvem har ___ de våde støvler midt i gangen?'",
+  "category": "E5-8",
+  "severity": "minor",
+  "reason": "'Efter 'har' hedder det et kort ord med ét t' er uforståeligt. Eleven får ikke at vide, hvilket ord det er, eller hvad 'et kort ord' betyder.",
+  "fix": "r: \"Nogen har flyttet støvlerne, så ordet kommer af 'sætte'. Efter 'har' hedder det 'sat' med ét t.\""
+ },
+ {
+  "portion": "danish2",
+  "k": "s",
+  "level": 7393,
+  "q": "Sæt det rigtige ord ind: 'Barnet holdt fast i en rød ___ ved snoren.'",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "'ballon' er et ord fra indskolingen og mellemtrinnet (cirka 4. klasse), men ligger i 8. klasse. Det er præcis det, AUTHORING advarer mod: et let ord lagt højt for at fylde et bånd. Niveauet er fire klassetrin for højt.",
+  "fix": "Behold niveauet og erstat ordet. q: \"Sæt det rigtige ord ind: 'Skibet tog sten om bord som ___, så det lå roligt i vandet.'\" o: [\"balast\",\"ballasst\",\"ballast\",\"ballest\"] a: \"ballast\" r: \"Ordet har dobbelt-l og ét s og ender på -ast. Det er ekstra vægt, der holder skibet stabilt.\" Alternativt: behold opgaven og sæt level til ca. 2200."
+ },
+ {
+  "portion": "danish2",
+  "k": "o",
+  "level": 8890,
+  "q": "Hvordan lever en person, der lever 'asketisk'?",
+  "category": "E5-5",
+  "severity": "minor",
+  "reason": "'meget enkelt og helt med vilje uden luksus' er ikke naturligt talt dansk. Sætningen er strakt for at nå de forkerte svars længde, og 'helt med vilje uden luksus' siger ingen ved spisebordet.",
+  "fix": "o og a: erstat facit med \"enkelt og uden luksus, fordi man selv vil det\". r uændret."
+ },
+ {
+  "portion": "danish2",
+  "k": "t",
+  "level": 1260,
+  "q": "Efter hvilket ord mangler kommaet: 'Hvis det regner bliver vi inde.'?",
+  "category": "E5-3",
+  "severity": "minor",
+  "reason": "Komma efter en foranstillet ledsætning og begrebet 'ledsætning' i forklaringen er for meget til 3. klasse. Samme regel ligger i 4. klasse ved 'Mens vi spiste ringede telefonen.' Niveauet er ét klassetrin for lavt.",
+  "fix": "level: 1700. Øvrige felter uændrede."
+ },
+ {
+  "portion": "danish2",
+  "k": "l",
+  "level": 4695,
+  "q": "Læs: 'Det hele startede med en løgn. Oscar sagde, at han kunne svømme. Så skulle han vise det på lejren. Derfor sagde han, at han havde ondt i ørerne. Så skulle han til sygeplejersken. Da hun ringede til hans mor, kom sandheden om svømningen også frem.' Hvad er budskabet?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "'Man bør aldrig tage på lejrskole' og 'Man skal altid spørge sin mor' er absurde som budskab, og teksten åbner med ordet 'løgn'. Facit giver sig selv i 6. klasse.",
+  "fix": "o: [\"En løgn fører let til flere løgne\",\"Man skal lære at svømme, før man tager på lejr\",\"Man skal sige det til en voksen, når man har ondt\",\"Man skal altid fortælle sin mor, hvor man er\"]. a og r uændrede."
+ },
+ {
+  "portion": "danish2",
+  "k": "l",
+  "level": 5632,
+  "q": "Læs: 'Der findes to måder at fortælle om en dårlig kamp. Den ene: Vi blev slået med 7-1. Den anden: Vi scorede mod ligaens stærkeste hold. Begge sætninger er sande. Men hvis du er træner, og du vil have, at holdet møder op til næste træning, ved du, hvilken du skal vælge.' Hvad viser eksemplet med de to sætninger?",
+  "category": "E5-5",
+  "severity": "minor",
+  "reason": "'At noget kan være sandt og alligevel virke forskelligt' hænger ikke sammen: 'noget' er ental, mens 'forskelligt' kræver to ting. Facit er mere abstrakt end teksten, der taler om to sætninger, og er desuden det længste svar.",
+  "fix": "o og a: erstat facit med \"At to sande sætninger kan virke helt forskelligt\". r uændret."
+ },
+ {
+  "portion": "danish3",
+  "k": "s",
+  "level": 6864,
+  "q": "Find det rigtige ord: 'Der var ___ af billetterne i toget.'",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "'kontrol' er et almindeligt ord på cirka 5.-klasses-niveau, men ligger i 7. klasse. 'kontrool' og 'kontrrol' er desuden ikke fejl, elever laver (også E5-6), så kun 'kontroll' frister. Niveauet er to klassetrin for højt.",
+  "fix": "level: 3200. o: [\"kontrol\",\"kontroll\",\"kontrolle\",\"kontrål\"]. a og r uændrede."
+ },
+ {
+  "portion": "danish3",
+  "k": "s",
+  "level": 8745,
+  "q": "Hvad er rigtigt? 'En ___ er en kort fortælling med få personer.'",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Eleverne møder ordet 'novelle' fast fra mellemtrinnet, og stavningen er ligetil. Det hører til cirka 6.-7. klasse, ikke 9. 'novvelle' er ikke en troværdig fejl. Niveauet er mindst to klassetrin for højt.",
+  "fix": "level: 5800. o: [\"novele\",\"nouvelle\",\"novælle\",\"novelle\"]. a og r uændrede."
+ },
+ {
+  "portion": "danish3",
+  "k": "t",
+  "level": 7568,
+  "q": "Hvilket ord skal skrives med stort: 'Efter en lang gåtur gennem engene stod vi ved vadehavet.'?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Stort begyndelsesbogstav i et stednavn er stof fra cirka 4.-5. klasse, men ligger i 8. klasse. De forkerte svar (lang, gåtur, engene) er tydeligvis ikke navne, så opgaven er ikke sværere, end den ser ud. Niveauet er mindst tre klassetrin for højt.",
+  "fix": "level: 3300. Øvrige felter uændrede."
+ },
+ {
+  "portion": "danish3",
+  "k": "l",
+  "level": 5482,
+  "q": "Læs: 'Forestil dig, at Jordens hele historie var én dag på 24 timer. Livet opstår tidligt om morgenen. Dinosaurerne kommer først om aftenen, og mennesket dukker først op et par sekunder før midnat. Den sammenligning giver os noget at tænke over, når vi kalder os herrer over planeten.' Hvad vil forfatteren opnå med sammenligningen?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "'At forklare, hvornår dinosaurerne gik i seng' og 'At lære læseren at læse et ur rigtigt' er absurde. Facit giver sig selv i 6. klasse, og tekstens pointe prøves ikke.",
+  "fix": "o: [\"At forklare, hvornår dinosaurerne levede på Jorden\",\"At vise, at mennesket har været her i kort tid\",\"At vise, at mennesket er det vigtigste på planeten\",\"At vise, at Jordens historie varer kortere, end man tror\"]. a og r uændrede."
+ },
+ {
+  "portion": "danish3",
+  "k": "f",
+  "level": 4676,
+  "q": "Hvor bor Karius og Baktus i Thorbjørn Egners historie?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Karius og Baktus er en børnefortælling, som de fleste kender før skolestart, og spørgsmålet er ren genkendelse af handlingen. Det er 3.-klasses-stof, men ligger i 6. klasse. Niveauet er tre klassetrin for højt.",
+  "fix": "level: 1100. Øvrige felter uændrede."
+ },
+ {
+  "portion": "danish4",
+  "k": "s",
+  "level": 4092,
+  "q": "Hvad er stavet rigtigt? 'I februar holder eleverne en uges ___.'",
+  "category": "E5-3",
+  "severity": "minor",
+  "reason": "'vinterferie' er sammensat af to ord, som elever kender fra 3.-4. klasse, og staves, som det lyder. Det hører ikke hjemme i toppen af 5. klasse. AUTHORING: læg ikke lette ord højt for at fylde et bånd op.",
+  "fix": "level: 1900 (4. klasse). Eller skift ordet ud med et sværere sammensat ord i samme bånd."
+ },
+ {
+  "portion": "danish4",
+  "k": "s",
+  "level": 6903,
+  "q": "Hvad står der rigtigt? 'Min ___ for rummet startede, da jeg var seks år.'",
+  "category": "E5-4",
+  "severity": "minor",
+  "reason": "'Hvad står der rigtigt?' er ikke naturligt dansk, og det siger ikke, at der spørges til stavning.",
+  "fix": "q: \"Hvilken stavemåde er rigtig? 'Min ___ for rummet startede, da jeg var seks år.'\""
+ },
+ {
+  "portion": "danish4",
+  "k": "s",
+  "level": 8443,
+  "q": "Find stavemåden: 'Efter faldet på cyklen fik han en ___.'",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "'hjernerystelse' består af to almindelige ord, og kun hj- er svært. To af distraktorerne ('hjernerysselse', 'hjernerøstelse') frister ikke en 8.-klasseelev. Det reelle niveau er omkring 6. klasse, altså to klassetrin for højt.",
+  "fix": "level: 5000 (6. klasse)."
+ },
+ {
+  "portion": "danish4",
+  "k": "t",
+  "level": 5900,
+  "q": "Hvorfor står der kolon i 'Hun sagde: »Det er nok nu.«'?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Kolon foran direkte tale er samme stof som danish5/t niveau 2125 (4. klasse), og distraktorerne om forkortelse og udeladt bogstav passer slet ikke til sætningen. Reelt 4.-5. klasse, ikke 7.",
+  "fix": "level: 3400 (5. klasse)."
+ },
+ {
+  "portion": "danish4",
+  "k": "l",
+  "level": 6090,
+  "q": "Læs: 'På hylden står en pokal, hvor der står Nr. 2. Malte har stillet den, så teksten vender ind mod væggen. Hans mor drejer den, hver gang hun støver af. Dagen efter vender den ind mod væggen igen.' Hvad viser det, at pokalen bliver ved med at blive drejet?",
+  "category": "E5-7",
+  "severity": "major",
+  "reason": "Hele teksten er en ordløs kamp mellem mor og søn, og facit og forklaring siger, at de to er uenige. Det er mildt, men uenigheden i familien er selve indholdet (blokeret emne: konflikter i familien, også som antydning). Grænsetilfælde, men let at fjerne. Samtidig er 'hvor der står' klodset, og 'står' gentages.",
+  "fix": "q: \"Læs: 'På hylden i klubhuset står en pokal med teksten Nr. 2. Malte har stillet den, så teksten vender ind mod væggen. Træneren drejer den, hver gang han rydder op. Dagen efter vender den ind mod væggen igen.' Hvad viser det, at pokalen bliver ved med at blive drejet?\" o: [\"De synes ikke det samme om den pokal\", \"Træneren har ikke opdaget, at den er blevet flyttet\", \"Malte vil gerne have, at alle ser teksten\", \"Træneren er utilfreds med drengens indsats\"]. a uændret. r: \"Malte gemmer teksten, fordi han kun blev nummer to. Træneren vender den tilbage igen og igen. Uden at sige noget viser de, at de ikke synes det samme om den.\""
+ },
+ {
+  "portion": "danish4",
+  "k": "f",
+  "level": 8416,
+  "q": "Hvem udgav i 1800-tallet tyske folkeeventyr som 'Hans og Grete'?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Brødrene Grimm og 'Hans og Grete' kendes fra mellemtrinnet, og banken bruger selv Grimm som distraktor på niveau 390. 'Schlegel', 'Humboldt' og 'Mann' er ukendte for eleverne, så facit giver sig selv (også E5-6). Reelt 5. klasse, ikke 8.",
+  "fix": "level: 3300 (5. klasse). o: [\"Brødrene Grimm\", \"H.C. Andersen\", \"Charles Perrault\", \"Thorbjørn Egner\"]. r uændret."
+ },
+ {
+  "portion": "danish5",
+  "k": "s",
+  "level": 5980,
+  "q": "Hvad er stavet rigtigt? 'Har du ___ den nye film om pingviner?'",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "'set' er et grundord fra indskolingen. Fejlen 'sæt' for 'set' er ægte, men hører til 4. klasse, og 'seet' og 'sett' frister ikke i 7. klasse. Niveauet er tre klassetrin for højt. AUTHORING: læg ikke lette ord højt.",
+  "fix": "level: 2400 (4. klasse)."
+ },
+ {
+  "portion": "danish5",
+  "k": "o",
+  "level": 1347,
+  "q": "Hvad betyder det at 'bide i det sure æble'?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Billedsproget 'bide i det sure æble' er sværere end 3. klasse; banken lægger 'have ben i næsen' og 'tabe ansigt' i 6. klasse. Reelt omkring 5. klasse. Facit er også upræcist: DDO siger 'noget ubehageligt', ikke 'kedeligt'.",
+  "fix": "level: 3500 (5. klasse). a og o: \"at gøre noget ubehageligt, man ikke kan slippe for\" i stedet for \"at gøre noget kedeligt, man ikke kan slippe for\"."
+ },
+ {
+  "portion": "danish5",
+  "k": "o",
+  "level": 9340,
+  "q": "René Descartes mente, at sikker viden først og fremmest kommer fra fornuften. Hvilken retning hører han til?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Distraktorerne er kunstretninger, som ikke handler om viden. Den oplagte fristelse i 9. klasse, 'empirisme', mangler, så 'fornuften' og 'rationalisme' kan kobles sammen uden forståelse.",
+  "fix": "o: [\"rationalisme\", \"empirisme\", \"romantik\", \"naturalisme\"]. r: \"Latin 'ratio' betyder fornuft. Rationalisterne stoler mere på tænkning end på sanserne, mens empiristerne stoler mest på sanserne.\""
+ },
+ {
+  "portion": "danish5",
+  "k": "g",
+  "level": 1046,
+  "q": "Er det en hel sætning: 'Solen skinner over byen'?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Ét ja mod tre nej om en sætning, der tydeligt er hel: Facit giver sig selv uden kendskab til grundled og udsagnsled, og det er også klart det længste svar (38 mod 30 tegn).",
+  "fix": "q: \"Hvad mangler der, før det bliver en hel sætning: 'skinner over byen'?\" o: [\"et grundled\", \"et udsagnsled\", \"et tillægsord\", \"et biord\"]. a: \"et grundled\". r: \"'Skinner' er udsagnsled, men vi får ikke at vide, hvad der skinner. Der mangler et grundled, for eksempel 'Solen'.\""
+ },
+ {
+  "portion": "danish5",
+  "k": "g",
+  "level": 4092,
+  "q": "Hvilken form af 'at stoppe' passer: 'Regnen havde ___, da vi gik ud.'",
+  "category": "E5-4",
+  "severity": "minor",
+  "reason": "'Regnen havde stoppet' er ikke naturligt dansk. Når 'stoppe' betyder 'holde op', tager det 'være' (DDO: 'stoppe' 2.a), så man siger 'Regnen var stoppet'. Opgaven lærer eleven en forkert vending.",
+  "fix": "q: \"Hvilken form af 'at stoppe' passer: 'Målmanden havde ___ bolden, da fløjten lød.'\" o, a og r uændret."
+ },
+ {
+  "portion": "danish5",
+  "k": "g",
+  "level": 8268,
+  "q": "Hvilket uddrag ligner mest talesprog?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "'Altså, øh, jeg tror ligesom ikke, det går.' kan genkendes som talesprog af en elev i 4.-5. klasse, og de tre andre svar er tydeligt skriftsprog. Facit giver sig selv (også E5-6). Niveauet er tre klassetrin for højt.",
+  "fix": "level: 3800 (5. klasse)."
+ },
+ {
+  "portion": "danish5",
+  "k": "g",
+  "level": 9037,
+  "q": "Hvilken sætning har rigtig kongruens mellem genstandsled og tillægsord?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Eleven hører 'malede skuret grønt' uden at kende ordet kongruens, og 'grønne' og 'grønnes' frister ikke. Opgaven kan løses på gehør fra mellemtrinnet, så den måler ikke 9. klasse (også E5-6).",
+  "fix": "q: \"Hvilket led er 'grønt' i: 'Anton malede skuret grønt.'?\" o: [\"omsagnsled til genstandsled\", \"omsagnsled til grundled\", \"genstandsled\", \"hensynsled\"]. a: \"omsagnsled til genstandsled\". r: \"'Grønt' siger noget om genstandsleddet 'skuret' og bøjes efter det: intetkøn ental giver -t.\""
+ },
+ {
+  "portion": "danish5",
+  "k": "t",
+  "level": 2505,
+  "q": "Hvilken sætning om børnenes tur er rigtig?",
+  "category": "E5-1",
+  "severity": "minor",
+  "reason": "'Hvilken sætning ... er rigtig?' siger ikke, at der spørges til komma. Alle fire sætninger har samme indhold, så en 4.-klasseelev kan ikke se, hvad der skal vurderes.",
+  "fix": "q: \"Hvilken sætning om børnenes tur har kommaerne de rigtige steder?\""
+ },
+ {
+  "portion": "danish5",
+  "k": "t",
+  "level": 2825,
+  "q": "Hvilket ord skal skrives med stort: 'Da toget kørte fra roskilde, var klokken otte om tirsdagen.'?",
+  "category": "E5-4",
+  "severity": "minor",
+  "reason": "'var klokken otte om tirsdagen' er ikke naturligt dansk: 'om tirsdagen' betyder normalt hver tirsdag og passer ikke til én bestemt togafgang.",
+  "fix": "q: \"Hvilket ord skal skrives med stort: 'Da toget kørte fra roskilde, var klokken otte, og det var tirsdagen før ferien.'?\" o, a og r uændret."
+ },
+ {
+  "portion": "danish5",
+  "k": "l",
+  "level": 8707,
+  "q": "Læs: 'Skolen bør have en lektiecafé. Mange elever får ikke hjælp derhjemme. Lektier er en del af undervisningen. Alle børn har ret til samme hjælp.' Hvilken sætning er tekstens påstand?",
+  "category": "E5-3",
+  "severity": "minor",
+  "reason": "Tekstens påstand står først med 'bør', og resten er tydeligt begrundelser. Det er 7.-klassestof og lettere end hjemmelopgaven på niveau 7760.",
+  "fix": "level: 7000 (7. klasse)."
+ },
+ {
+  "portion": "danish5",
+  "k": "f",
+  "level": 6753,
+  "q": "Læs: 'Hvem vil ikke gerne have en renere skolegård?' Hvad kaldes denne type sætning i en tale?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Eksemplet er et spørgsmål, og kun ét svar indeholder ordet 'spørgsmål'. Facit kan vælges uden at vide, hvad retorisk betyder.",
+  "fix": "q: \"Læs: 'Hvem vil ikke gerne have en renere skolegård?' Hvorfor stiller taleren det spørgsmål?\" o: [\"For at få tilhørerne til at give taleren ret\", \"For at finde ud af, hvem der er imod\", \"Fordi taleren ikke selv kender svaret\", \"For at få tilhørerne til at række hånden op\"]. a: \"For at få tilhørerne til at give taleren ret\". r: \"Det er et retorisk spørgsmål: Taleren venter ikke et svar, for svaret er givet på forhånd.\""
+ },
+ {
+  "portion": "danish6",
+  "k": "s",
+  "level": 5426,
+  "q": "Vælg den rigtige skrivemåde: 'Nu går vi ___ med opgaven.'",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Kun 'igang' frister. 'i gangg' og 'i kang' er ikke fejl, som elever i 6. klasse laver, så valget står reelt mellem to svar.",
+  "fix": "o: [\"igang\", \"i gang\", \"i-gang\", \"ingang\"]."
+ },
+ {
+  "portion": "danish6",
+  "k": "o",
+  "level": 5543,
+  "q": "Hvad er en 'eufemisme'?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "'eufemisme' er et fagudtryk fra de ældste klasser. Banken lægger samme begreb og samme eksempel på niveau 8205 (8. klasse). Niveauet er to klassetrin for lavt.",
+  "fix": "level: 7900 (8. klasse). Overvej også at bruge et andet eksempel i r, da 'det lille hus' også står i opgaven på niveau 8205."
+ },
+ {
+  "portion": "danish6",
+  "k": "g",
+  "level": 6378,
+  "q": "Hvad angiver ledsætningen i: 'Vi aflyste turen, fordi bussen var gået i stykker.'?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Ledsætningen begynder med 'fordi', så årsag er umiddelbart givet, og forklaringen siger netop det. 'fordi' er stof fra 5. klasse (niveau 2981 i samme portion). Niveauet er to klassetrin for højt (også E5-6).",
+  "fix": "q: \"Hvad angiver ledsætningen i: 'Vi gennemførte turen, selvom bussen var gået i stykker.'?\" o uændret. a: \"indrømmelse\". r: \"'Selvom' viser, at noget kunne have stoppet turen, men ikke gjorde det. Sådan en ledsætning angiver en indrømmelse.\""
+ },
+ {
+  "portion": "danish6",
+  "k": "g",
+  "level": 7982,
+  "q": "Hvad kalder man sprog, der hænger sammen med folks sociale gruppe?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Spørgsmålet siger 'sociale gruppe', og facit hedder 'sociolekt'. Eleven kan parre ordene uden at kende begrebet.",
+  "fix": "q: \"Hvad kalder man det sprog, der viser, hvilken gruppe i samfundet man tilhører?\""
+ },
+ {
+  "portion": "danish6",
+  "k": "g",
+  "level": 9059,
+  "q": "Hvilken sætning har rigtig ordstilling, når ledsætningen står i forfeltet?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Eleven hører det rigtige svar uden at kende forfeltet. En dansktalende elev i 4.-5. klasse afviser de tre andre på gehør, og 'Da klokken ringede eleverne, gik hjem.' frister ikke. Opgaven måler ikke 9. klasse (også E5-6).",
+  "fix": "q: \"Hvad står i forfeltet i: 'Da klokken ringede, gik eleverne hjem.'?\" o: [\"Da klokken ringede\", \"Da\", \"gik\", \"eleverne\"]. a: \"Da klokken ringede\". r: \"Forfeltet er pladsen foran det bøjede udsagnsord 'gik'. Her fylder hele ledsætningen den plads, og derfor kommer grundleddet 'eleverne' efter 'gik'.\""
+ },
+ {
+  "portion": "danish6",
+  "k": "t",
+  "level": 7678,
+  "q": "Hvorfor skrives 'Mælkevejen' med stort?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Stort bogstav i egennavne er stof fra 4.-5. klasse (jf. 'paris' og 'ribe'). Facit bruger den kendte regel, og de andre svar er tydeligt forkerte. Reelt omkring 6. klasse, ikke 8.",
+  "fix": "level: 5300 (6. klasse)."
+ },
+ {
+  "portion": "danish6",
+  "k": "l",
+  "level": 3952,
+  "q": "Læs: 'Hver sommer, når vandet i Vesterled Sø bliver varmt, kommer der blågrønne alger. De kan være giftige for både mennesker og hunde. Kommunen sætter skilte op, når der er for mange. Sidste år var søen lukket for badning i tre uger. Læg mærke til skiltene, inden du går i vandet.' Hvorfor er teksten skrevet?",
+  "category": "E5-5",
+  "severity": "minor",
+  "reason": "Svaret på 'Hvorfor er teksten skrevet?' lyder ikke som talt dansk: Man svarer 'For at advare ...', ikke 'At advare ...'. Det gælder alle fire svar.",
+  "fix": "o: [\"For at forklare, hvordan alger får deres farve\", \"For at fortælle, hvornår søen er bedst\", \"For at advare folk mod giftige alger i søen\", \"For at få kommunen til at sætte skilte op\"]. a: \"For at advare folk mod giftige alger i søen\"."
+ },
+ {
+  "portion": "danish6",
+  "k": "l",
+  "level": 4625,
+  "q": "Læs: 'Lokalavisen skrev: Skolebestyrelsen vil lukke biblioteket. Dagen efter stod der med småt: Rettelse. Bestyrelsen vil flytte biblioteket til nye lokaler. Men da var der allerede kommet 60 vrede mails, og flere forældre havde delt den første artikel.' Hvad er tekstens pointe?",
+  "category": "E5-5",
+  "severity": "minor",
+  "reason": "Facit taler om en 'overskrift', men teksten siger 'artikel' ('den første artikel') og nævner ingen overskrift. AUTHORING: brug ordene fra teksten.",
+  "fix": "a og o: \"At en forkert artikel kan gøre skade, selv når den rettes\" i stedet for \"At en forkert overskrift kan gøre skade, selv når den rettes\"."
+ },
+ {
+  "portion": "danish6",
+  "k": "l",
+  "level": 6948,
+  "q": "Læs: 'Forslaget om at lukke Vestre Bad har fået 1.200 underskrifter imod. Borgmesteren siger: Vi lytter til borgerne, men tallene er, som de er.' Hvad antyder borgmesterens svar?",
+  "category": "E5-1",
+  "severity": "minor",
+  "reason": "Det er uklart, hvad 'tallene' i borgmesterens svar henviser til. De eneste tal i teksten er underskrifterne, og så giver svaret ikke mening. Forklaringen gentager blot vendingen uden at gøre den klar.",
+  "fix": "q: \"Læs: 'Forslaget om at lukke Vestre Bad har fået 1.200 underskrifter imod. Borgmesteren siger: Vi lytter til borgerne, men bygningen er, som den er.' Hvad antyder borgmesterens svar?\" r: \"Efter 'men' siger borgmesteren, at bygningen er, som den er. Det er ikke et direkte nej, men det lyder ikke, som om underskrifterne gør en forskel.\""
+ },
+ {
+  "portion": "danish7",
+  "k": "s",
+  "level": 4490,
+  "q": "Udfyld: 'En hulahopring er formet som en ___.'",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "'cirkel' er et ord fra matematik i de små klasser, og Forfatterreglerne advarer mod at lægge lette ord højt i klassetrinnet. Ordet hører hjemme omkring 4. klasse, ikke 6.",
+  "fix": "level: ca. 2200 (4. klasse). Skal niveauet bevares, så erstat med q: \"Udfyld: 'En sodavandsdåse har form som en ___.'\" o: [\"sylinder\",\"cylinder\",\"cyllinder\",\"cylindder\"] a: \"cylinder\" r: \"Ordet begynder med c, som lyder som s foran y. Det har ét l og ét d.\""
+ },
+ {
+  "portion": "danish7",
+  "k": "o",
+  "level": 1212,
+  "q": "Amina har 'ansvar' for kaninen. Hvad betyder det?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Facit er det eneste svar om at passe på dyret. Ingen elev vælger 'sælge den til en af naboerne' eller 'holde sig langt væk fra den', og niveauet ligger i toppen af 3. klasse, ikke i de allerletteste.",
+  "fix": "o: [\"at hun skal sørge for, at den har det godt\",\"at hun selv ejer den og bestemmer dens navn\",\"at hun skal lege med den hver eneste dag\",\"at hun altid må tage den med op i sengen\"] (a og r uændret)"
+ },
+ {
+  "portion": "danish7",
+  "k": "g",
+  "level": 6807,
+  "q": "Hvordan skrives talesprogets 'ku' i formelt skriftsprog: 'Jeg ku ikke komme i går.'?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "At 'ku' i en sætning med 'i går' skrives 'kunne', kan en elev i 4.–5. klasse. 'i går' udelukker 'kan', og 'kunnet' kræver 'har'. Niveauet ligger mindst to klassetrin for højt.",
+  "fix": "level: ca. 3000 (5. klasse)"
+ },
+ {
+  "portion": "danish7",
+  "k": "t",
+  "level": 5544,
+  "q": "Hvilket ord skal have stort: 'Min onkel arbejder som læge i sønderjylland.'?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Stort begyndelsesbogstav i et stednavn er stof fra de små klasser, og banken har selv en tilsvarende opgave på niveau 2445 ('nationalmuseet'). Sønderjylland er også det eneste navn blandt svarene, så facit giver sig selv (E5-6).",
+  "fix": "level: ca. 1400, eller bevar niveauet med q: \"Hvilket ord skal have stort: 'Vi læste om den franske revolution og besøgte bagefter folketinget.'?\" o: [\"franske\",\"revolution\",\"folketinget\",\"besøgte\"] a: \"folketinget\" r: \"Folketinget er navnet på en bestemt institution og skrives med stort. Tillægsord som 'fransk' og ordet 'revolution' skrives med lille.\""
+ },
+ {
+  "portion": "danish7",
+  "k": "l",
+  "level": 2889,
+  "q": "Læs: 'Søholm Bibliotek har fået en læsehund. Hunden hedder Balder, og den ligger stille ved siden af børn, der øver sig i at læse højt. Den retter aldrig fejl og griner aldrig. Derfor tør mange børn læse mere, end de plejer, siger bibliotekaren.' Hvorfor tør børnene læse mere, når Balder er der?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Facit gentager tekstens sætning næsten ordret, og teksten siger 'derfor' lige efter. De tre forkerte svar handler om præmier, onsdage og lette bøger, som teksten ikke nævner, så de frister ingen, der har læst teksten overfladisk.",
+  "fix": "o: [\"Fordi Balder hverken retter dem eller griner af dem\",\"Fordi Balder retter fejlene på en venlig måde\",\"Fordi bibliotekaren lytter med og roser dem\",\"Fordi hunden ligger stille og selv lytter til ordene\"] (a og r uændret)"
+ },
+ {
+  "portion": "danish7",
+  "k": "l",
+  "level": 5622,
+  "q": "Læs: 'Tænk på en vej i Grønland. Der er ikke nogen. Tænk på en butik uden kø. Tænk på en dag, hvor solen aldrig går ned. Sådan begynder rejsebogen om Ilulissat, og skribenten skriver det ikke for at sælge rejser, men fordi hun aldrig selv helt forstod det. Bogen er ikke en guide, men et brev til den, hun var før rejsen.' Hvad er særligt ved bogen?",
+  "category": "E5-1",
+  "severity": "minor",
+  "reason": "Teksten siger 'Tænk på en vej i Grønland. Der er ikke nogen.' Det passer ikke: ifølge da.wikipedia er der veje i byerne, men ikke mellem byerne. Eleven kan tage det for en kendsgerning, og Forfatterreglerne kræver sikre fakta.",
+  "fix": "q: skift 'Tænk på en vej i Grønland.' til 'Tænk på en vej mellem to byer i Grønland.' Resten er uændret."
+ },
+ {
+  "portion": "danish7",
+  "k": "l",
+  "level": 7700,
+  "q": "Læs: 'Hvorfor nøjes? Du har fortjent det.' Hvad gør reklamen ved købet?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Facit gentager 'fortjent' fra teksten og er det eneste svar, der siger 'du', mens de andre siger 'køberen' eller 'varen'. Stilen afslører altså facit. 'Hvad gør reklamen ved købet?' er også en uklar og unaturlig måde at spørge på (E5-1).",
+  "fix": "q: \"Læs reklamen: 'Hvorfor nøjes? Du har fortjent det.' Hvad vil reklamen have dig til at tænke?\" o: [\"At varen er billigere end de andre\",\"At du har ret til at unde dig selv noget\",\"At du skal spare og nøjes med mindre\",\"At varen holder længere end de andre\"] a: \"At du har ret til at unde dig selv noget\" r: \"Der står intet om varen, kun om dig. Du skal føle, at du har ret til at købe den.\""
+ },
+ {
+  "portion": "danish7",
+  "k": "f",
+  "level": 6736,
+  "q": "Læs: 'Bang! Døren smækkede, og vasen klirrede mod gulvet.' Hvilket virkemiddel er 'bang'?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "'Lydord' om 'Bang!' er stof fra 4.–5. klasse. Ordet siger selv, at det handler om en lyd, og de andre svar (ironi, symbol, sammenligning) passer slet ikke, så opgaven er også for let (E5-6).",
+  "fix": "level: ca. 3000 (5. klasse)"
+ },
+ {
+  "portion": "danish8",
+  "k": "s",
+  "level": 5941,
+  "q": "Vælg det rigtige navneord: 'Mål bordets ___ med et målebånd.'",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "'længde' er et hverdagsord fra matematik og står her i 7. klasse. 'længte' og 'længe' falder bort, så snart spørgsmålet beder om et navneord, og 'lengde' ligner norsk. Opgaven passer til 4.–5. klasse.",
+  "fix": "level: ca. 3200 (5. klasse)"
+ },
+ {
+  "portion": "danish8",
+  "k": "o",
+  "level": 5963,
+  "q": "Hvad laver en 'faktatjekker' på en nyhedsredaktion?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Ordet forklarer sig selv (fakta + tjekke), og kun facit handler om at tjekke noget. De andre svar handler om overskrifter, læserbreve og billeder.",
+  "fix": "o: [\"tjekker, at artiklerne er stavet rigtigt\",\"undersøger, om påstande passer\",\"tjekker, at nyhederne bliver færdige til tiden\",\"skriver faktabokse ved siden af artiklerne\"] (a og r uændret)"
+ },
+ {
+  "portion": "danish8",
+  "k": "g",
+  "level": 5333,
+  "q": "Hvilken sætning om svømmehallen har den rigtige ordstilling?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Svaret høres med det samme af en dansktalende elev i 3.–4. klasse. 'I morgen vi i svømmehallen skal.' og 'I morgen skal i svømmehallen vi.' frister ikke (E5-6). Opgaven måler ikke reglen på 6.-klasses-niveau.",
+  "fix": "level: ca. 2000, eller bevar niveauet med q: \"Hvilket led står lige efter 'I morgen' i: 'I morgen skal vi i svømmehallen.'?\" o: [\"udsagnsleddet\",\"grundleddet\",\"genstandsleddet\",\"forholdsordsleddet\"] a: \"udsagnsleddet\" (r uændret)"
+ },
+ {
+  "portion": "danish8",
+  "k": "g",
+  "level": 8795,
+  "q": "Hvad er forskellen på 'en dansk lærer' og 'en dansklærer'?",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Forskellen på 'en dansk lærer' og 'en dansklærer' kræver kun, at man kender ordene. En elev i 6.–7. klasse kan det, men opgaven ligger i 9. klasse sammen med 'obskur' og 'plutokrati'.",
+  "fix": "level: ca. 5500 (6. klasse)"
+ },
+ {
+  "portion": "danish8",
+  "k": "t",
+  "level": 4138,
+  "q": "Hvilken del af sætningen er ledsætningen: 'Hvad der skete i går, ved ingen.'?",
+  "category": "E5-8",
+  "severity": "minor",
+  "reason": "Forklaringen er fagligt forkert: 'Den er grundled i hovedsætningen ved ingen.' Grundleddet er 'ingen' (Ingen ved, hvad der skete i går). Ledsætningen er genstandsled. Facit er rigtigt, men eleven lærer en fejl. Efter E5-reglen er det minor, men det bør rettes først.",
+  "fix": "r: \"Ledsætningen går fra 'Hvad' hen til kommaet. Den fortæller, hvad det er, ingen ved, så den er genstandsled, og 'ingen' er grundleddet.\""
+ },
+ {
+  "portion": "danish8",
+  "k": "t",
+  "level": 6340,
+  "q": "Hvilket tegn binder to tætte hovedsætninger sammen i: 'Butikken var lukket ___ vi måtte gå tomhændede hjem.'?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Hverken apostrof, bindestreg eller anførselstegn kan stå mellem to sætninger, så facit giver sig selv. Svarmulighederne kan ikke gøres stærkere, fordi komma, kolon og tankestreg også kan stå der. Opgaven skal derfor stilles om.",
+  "fix": "q: \"Hvilken sætning om indkøbsturen bruger semikolon rigtigt?\" o: [\"Butikken var lukket; vi måtte gå tomhændede hjem.\",\"Da butikken var lukket; gik vi tomhændede hjem.\",\"Butikken var lukket, fordi; vi kom for sent.\",\"Vi ville købe; mælk, brød og ost.\"] a: \"Butikken var lukket; vi måtte gå tomhændede hjem.\" r: \"Semikolon kan stå mellem to hovedsætninger, der hører tæt sammen. 'Da butikken var lukket' er en ledsætning og skal have komma.\""
+ },
+ {
+  "portion": "danish8",
+  "k": "l",
+  "level": 2469,
+  "q": "Læs: 'Danmark har mere end 400 navngivne øer, men kun en del af dem er beboede. Mange øer er så små, at der kun bor fugle. Sjælland er den største, og flest mennesker bor dér.' Hvilken ø bor der flest mennesker på?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Sjælland er det eneste ønavn i teksten, så man kan svare uden at læse. Fyn, Bornholm og Lolland nævnes slet ikke.",
+  "fix": "q: \"Læs: 'Danmark har mere end 400 navngivne øer, men kun en del af dem er beboede. Mange øer er så små, at der kun bor fugle. Bornholm ligger langt mod øst, Lolland mod syd og Fyn midt i landet. Sjælland er den største, og flest mennesker bor dér.' Hvilken ø bor der flest mennesker på?\" r: \"Sidste sætning siger, at der bor flest mennesker på Sjælland. De andre øer nævnes kun for, hvor de ligger.\""
+ },
+ {
+  "portion": "danish8",
+  "k": "f",
+  "level": 2710,
+  "q": "Hvad kaldes en enkelt linje i et digt?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Spørgsmålet siger 'linje', og kun facit indeholder 'linje', så opgaven kan løses uden at kende begrebet.",
+  "fix": "q: \"Et digt står på korte rækker, som tit ikke går helt ud til kanten. Hvad kaldes sådan en række?\" (o, a og r uændret)"
+ },
+ {
+  "portion": "danish8",
+  "k": "f",
+  "level": 4438,
+  "q": "Hvad er forskellen på en fabel og et eventyr?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "De tre forkerte svar siger alle 'skal', og kun facit gør det ikke. Stilen afslører facit, og Forfatterreglerne kræver, at alle fire svar er skrevet på samme måde.",
+  "fix": "o: [\"En fabel handler om prinser og prinsesser\",\"En fabel er lang og har mange kapitler\",\"En fabel er kort og har en tydelig moral\",\"En fabel foregår på et kongeslot\"] (a og r uændret)"
+ },
+ {
+  "portion": "danish8",
+  "k": "f",
+  "level": 8959,
+  "q": "Læs: 'Efter at skolen fik nye gardiner, steg karaktererne. Altså giver gardiner bedre karakterer.' Hvad er fejlen?",
+  "category": "E5-2",
+  "severity": "minor",
+  "reason": "Facit og forklaring siger 'sker samtidig', men teksten siger 'Efter at skolen fik nye gardiner, steg karaktererne'. Det ene sker efter det andet. Facit er det bedste svar, men det beskriver ikke teksten præcist.",
+  "fix": "o og a: skift facit til \"At to ting, der sker efter hinanden, gøres til årsag og virkning\". r: \"At noget sker bagefter, er ikke det samme, som at det skyldes det, der kom før. Karaktererne kan være steget af helt andre grunde.\""
+ },
+ {
+  "portion": "danish9",
+  "k": "g",
+  "level": 4498,
+  "q": "Vælg datid af 'at sige': 'Hvad ___ du lige før?'",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "Opgaven siger selv 'datid', og den tester kun bøjningen af et af de mest almindelige udsagnsord. Det er stof fra omkring 4. klasse, men ligger i 6. klasse. Sammenlign 'tre søstre' på niveau 1453.",
+  "fix": "level: ca. 2000 (4. klasse). Tekster uændrede."
+ },
+ {
+  "portion": "danish9",
+  "k": "g",
+  "level": 5925,
+  "q": "Find at-sætningen: 'Før bussen kørte, sagde mor, at vi skulle skynde os.'",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Spørgsmålet siger 'at-sætning', og kun ét svar begynder med 'at'. Eleven kan finde facit uden at forstå noget om sætninger, og det svarer ikke til 7. klasse.",
+  "fix": "q: \"Find ledsætningen, der fortæller, hvad mor sagde: 'Før bussen kørte, sagde mor, at vi skulle skynde os.'\" o og a uændrede. r: \"'At vi skulle skynde os' fortæller, hvad mor sagde. 'Før bussen kørte' er også en ledsætning, men den fortæller, hvornår det skete.\""
+ },
+ {
+  "portion": "danish9",
+  "k": "g",
+  "level": 7421,
+  "q": "Hvilket ord kan erstatte slangordet i en formel tekst: 'Det var virkelig nederen, at kampen blev aflyst.'?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Alle tre forkerte svar betyder det modsatte af 'nederen', så eleven vælger på betydningen alene. Det, opgaven vil teste i 8. klasse, nemlig skriftligt niveau, bliver ikke testet.",
+  "fix": "o: [\"ærgerligt\",\"træls\",\"skod\",\"surt\"]. a uændret. r: \"'Nederen' er slang for noget ærgerligt. 'Træls', 'skod' og 'surt' betyder næsten det samme, men de hører til talesproget. Kun 'ærgerligt' passer i en formel tekst.\""
+ },
+ {
+  "portion": "danish9",
+  "k": "t",
+  "level": 3644,
+  "q": "Hvilket ord skal skrives med stort: 'Vi så rundetårn, da vi var i København.'?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "'Rundetårn' er det eneste navneord blandt svarene. 'Så', 'da' og 'var' frister ikke en elev i 5. klasse.",
+  "fix": "q: \"Hvilket ord skal skrives med stort: 'På turen til København så vi rundetårn og en gammel kirke.'?\" o: [\"turen\",\"rundetårn\",\"kirke\",\"gammel\"]. a og r uændrede."
+ },
+ {
+  "portion": "danish9",
+  "k": "t",
+  "level": 4689,
+  "q": "Hvilken sætning er rigtig, når Clara bliver tiltalt først i sætningen?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Den fejl, elever faktisk laver, er at udelade kommaet efter navnet, og den står ikke blandt svarene. De forkerte svar har komma midt i sætningen, hvor ingen ville sætte det.",
+  "fix": "Erstat \"Clara kan du, hjælpe mig med at bære?\" i o med \"Clara kan du hjælpe mig med at bære?\". q, a og r uændrede."
+ },
+ {
+  "portion": "danish9",
+  "k": "t",
+  "level": 7100,
+  "q": "Hvad viser anførselstegnene i: 'Hans »hjælp« gjorde kun tingene værre.'?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Anførselstegn viser aldrig flertal, forkortelse eller stednavn, så de tre forkerte svar frister ikke i 7. klasse.",
+  "fix": "o: [\"At ordet er ekstra vigtigt\",\"At ordet er titlen på en bog\",\"At ordet er lånt fra engelsk\",\"At ordet er ment ironisk\"]. a og r uændrede."
+ },
+ {
+  "portion": "danish9",
+  "k": "l",
+  "level": 6662,
+  "q": "Læs: 'Kære dagbog. I dag sagde Oliver hej til mig. Han sagde også hej til læreren, pedellen og en hund, men det er ikke det, der er pointen.' Hvad viser sidste del af teksten?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "To af de forkerte svar er absurde (uhøfligt at hilse på en hund, irriteret over pedellen), og ingen af de tre bygger på en oplagt fejllæsning. Forklaringens 'men vil gerne håbe' lægger desuden en tolkning ind, som teksten ikke nævner, og den siger ikke, hvad der håbes på.",
+  "fix": "o: [\"Skribenten tror, at Oliver hilste mest på skribenten\",\"Skribenten ved godt, at hilsenen ikke betød noget særligt\",\"Skribenten er ked af, at Oliver hilste på de andre først\",\"Skribenten vil fortælle, hvor venlig Oliver er mod alle\"]. a uændret. r: \"Skribenten nævner selv, at Oliver også sagde hej til læreren, pedellen og en hund. Så var hilsenen ikke noget særligt, selv om skribenten siger, at det ikke er pointen.\""
+ },
+ {
+  "portion": "danish9",
+  "k": "f",
+  "level": 2070,
+  "q": "Ræven siger til ravnen, at den sikkert synger smukt. Hvad sker der, da ravnen åbner næbbet?",
+  "category": "E5-1",
+  "severity": "minor",
+  "reason": "Spørgsmålet nævner hverken fablen eller osten. Uden den viden kan man ikke svare, og en elev kan ikke se, at der spørges til en bestemt tekst. Opgaven kan ikke stå alene.",
+  "fix": "q: \"I fablen om ræven og ravnen siger ræven, at ravnen sikkert synger smukt. Hvad sker der, da ravnen åbner næbbet?\" o, a og r uændrede."
+ },
+ {
+  "portion": "danish9",
+  "k": "f",
+  "level": 9245,
+  "q": "Læs: 'Fruen smilede. Hun løftede koppen og satte den ned igen. Der var stille et øjeblik. – Er det ikke snart forår? sagde hun og så ud ad vinduet.' Hvordan kan vi mærke, hvad fruen føler?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Facit er det eneste svar, der svarer på 'Hvordan kan vi mærke' med 'Af det, …'. Stilen afslører det, og reglen om samme sprog i alle fire svar er brudt. Forklaringens 'urolig' står heller ikke i teksten, hvor fruen smiler.",
+  "fix": "o: [\"Af det, fortælleren siger direkte om hende\",\"Af det, hun selv forklarer om sine tanker\",\"Af et langt tilbageblik på hendes liv\",\"Af det, hun gør, og det lille, hun siger\"]. a uændret. r: \"Koppen, stilheden og blikket ud ad vinduet viser, at der er noget, hun ikke siger. Fortælleren skriver det ikke, så læseren må selv regne det ud, som i impressionismen.\""
+ },
+ {
+  "portion": "danish10",
+  "k": "s",
+  "level": 4802,
+  "q": "Hvordan staves ordet her? 'Koncerten var helt ___.'",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "'Fantastisk' er et almindeligt ord, der staves næsten, som det lyder, og det passer til 4. klasse, ikke 6. Det er det, AUTHORING advarer imod: lette ord lagt højt i klassetrinnet. Distraktoren 'fantastik' er desuden et rigtigt ord (DDO: litterær fremstilling af det overnaturlige).",
+  "fix": "level: ca. 2500 (4. klasse). Erstat \"fantastik\" i o med \"fantasstisk\". q, a og r uændrede."
+ },
+ {
+  "portion": "danish10",
+  "k": "s",
+  "level": 7645,
+  "q": "Hvad er stavet rigtigt? 'Jeg glemte ___ min madpakke, så jeg måtte låne penge.'",
+  "category": "E5-3",
+  "severity": "major",
+  "reason": "'Uheldigvis' er sat sammen af to velkendte dele og passer til omkring 6. klasse, ikke 8. Samme problem: et let ord lagt højt.",
+  "fix": "level: ca. 5000 (6. klasse), eller behold niveauet og skift til et sværere ord. Tekster uændrede."
+ },
+ {
+  "portion": "danish10",
+  "k": "g",
+  "level": 8026,
+  "q": "Hvilken sætning er en opfordring til en gruppe, man selv er med i?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "To svar står i datid og er fortællinger, ikke opfordringer, så kun 'Gå hjem med dem nu.' er tilbage som modstand. Facit giver sig selv i 8. klasse. 'De gik hjem for længst' lyder også skævt.",
+  "fix": "o: [\"Lad dem gå hjem nu.\",\"Lad os gå hjem nu.\",\"Lad mig gå hjem nu.\",\"Gå hjem nu, alle sammen.\"]. a uændret. r: \"'Os' betyder, at den, der taler, selv er med i gruppen. 'Lad dem' og 'lad mig' handler ikke om hele gruppen, og 'Gå hjem nu, alle sammen' retter sig kun mod de andre.\""
+ },
+ {
+  "portion": "danish10",
+  "k": "g",
+  "level": 8740,
+  "q": "Hvilket af disse morfemer er bundet, så det ikke kan stå alene som et ord?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "Facit er det eneste svar med bindestreg, og det afslører svaret, før eleven har tænkt over morfemer. Spørgsmålet forklarer også selv begrebet.",
+  "fix": "q: \"Hvilket af ordene indeholder et bundet morfem?\" o: [\"husdyr\",\"solskin\",\"frihed\",\"bogreol\"]. a: \"frihed\". r: \"'-hed' kan ikke stå alene og skal sidde på et andet morfem, som i 'frihed'. 'Husdyr', 'solskin' og 'bogreol' består af to frie morfemer, der begge kan stå alene.\""
+ },
+ {
+  "portion": "danish10",
+  "k": "l",
+  "level": 2613,
+  "q": "Læs: 'Min mormor bliver tit spurgt, hvor gammel hun er. Hun svarer altid: Gammel nok til at vide bedre, og ung nok til at gøre det alligevel.' Hvad fortæller hendes svar om hende?",
+  "category": "E5-4",
+  "severity": "minor",
+  "reason": "Der står komma foran 'og' mellem to sideordnede led, der ikke er sætninger: 'Gammel nok til at vide bedre, og ung nok til …'. Det er ikke korrekt tegnsætning i en læsetekst til danskfaget.",
+  "fix": "q: \"Læs: 'Min mormor bliver tit spurgt, hvor gammel hun er. Hun svarer altid: Gammel nok til at vide bedre og ung nok til at gøre det alligevel.' Hvad fortæller hendes svar om hende?\" Resten uændret."
+ },
+ {
+  "portion": "danish10",
+  "k": "l",
+  "level": 3253,
+  "q": "Læs: 'Stære samler sig om efteråret i enorme flokke over Vadehavet. Flokken kan bestå af tusindvis af fugle, som flyver tæt sammen og danner skiftende former på himlen. Når solen går ned, kan det se ud, som om himlen bliver mørk. Det kaldes sort sol.' Hvorfor hedder fænomenet sort sol?",
+  "category": "E5-1",
+  "severity": "minor",
+  "reason": "Teksten kobler aldrig fuglene til mørket. 'Når solen går ned, kan det se ud, som om himlen bliver mørk' passer på enhver solnedgang. Forklaringen siger, at teksten forklarer, at flokkene gør himlen mørk, men det står der ikke.",
+  "fix": "q: \"Læs: 'Stære samler sig om efteråret i enorme flokke over Vadehavet. Flokken kan bestå af tusindvis af fugle, som flyver tæt sammen og danner skiftende former på himlen. Når solen går ned, kan flokken være så stor, at himlen ser mørk ud. Det kaldes sort sol.' Hvorfor hedder fænomenet sort sol?\" o, a og r uændrede."
+ },
+ {
+  "portion": "danish10",
+  "k": "f",
+  "level": 4937,
+  "q": "Læs: 'Trinnene kom nærmere. Ét. To. Tre. Så blev der stille.' Hvordan skaber forfatteren spænding?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "To forkerte svar handler om noget, teksten slet ikke har (en lang beskrivelse, en person der råber om hjælp). Facit er det eneste, der ligner teksten, så det frister ikke, og reglen om forkerte svar er brudt.",
+  "fix": "o: [\"Med korte sætninger og en pludselig stilhed\",\"Med lange sætninger, der bygger op til stilheden\",\"Med en fortæller, der siger, at han er bange\",\"Med ord, der rimer på hinanden\"]. a og r uændrede."
+ },
+ {
+  "portion": "danish10",
+  "k": "f",
+  "level": 6209,
+  "q": "Læs: 'Skolen bør have mere idræt, fordi eleverne bliver bedre til at koncentrere sig af at bevæge sig.' Hvor står belægget?",
+  "category": "E5-6",
+  "severity": "minor",
+  "reason": "'Kun i ordet idræt' og 'Kun i ordet bør' er ikke troværdige, og 'fordi' peger selv på svaret, så opgaven kun har ét reelt valg. Den tester ikke, om eleven forstår belæg i modsætning til påstand og hjemmel.",
+  "fix": "q: \"Læs: 'Skolen bør have mere idræt, fordi eleverne bliver bedre til at koncentrere sig af at bevæge sig.' Hvad er belægget?\" o: [\"At skolen bør have mere idræt, end den har i dag\",\"At eleverne koncentrerer sig bedre, når de bevæger sig\",\"At det er vigtigt, at eleverne kan koncentrere sig\",\"At elever skal have lov til at bevæge sig i timerne\"]. a: \"At eleverne koncentrerer sig bedre, når de bevæger sig\". r: \"Belægget er begrundelsen for påstanden, og her står den efter 'fordi'. At skolen bør have mere idræt, er selve påstanden.\""
+ }
+]
