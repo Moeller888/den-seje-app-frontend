@@ -57,8 +57,8 @@ const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers
 // et åbent tilbud vises igen ved hvert registreret svar, indtil eleven svarer (serverens regel).
 type Offer = { id: string; game: string; status: "offered" | "accepted" | "declined" };
 type Sim = { until: number | null; reply: "new" | "v34" | "ok" | "starts"; served: number; answers: number; statusCalls: number;
-  earnOffer: boolean; offer: Offer | null; visible: (number | null)[]; responds: boolean[] };
-const sim = (): Sim => ({ until: null, reply: "new", served: 0, answers: 0, statusCalls: 0, earnOffer: false, offer: null, visible: [], responds: [] });
+  earnOffer: boolean; offer: Offer | null; visible: (number | null)[]; responds: boolean[]; stimulus: unknown };
+const sim = (): Sim => ({ until: null, reply: "new", served: 0, answers: 0, statusCalls: 0, earnOffer: false, offer: null, visible: [], responds: [], stimulus: null });
 const OFFER_ID = "22222222-2222-4222-8222-222222222222";
 // Serverens "nu" følger browserens styrede Date (begge starter i T0 og flyttes af page.clock).
 let serverNow = () => T0;
@@ -73,7 +73,7 @@ function routeFor(s: Sim) {
     const j = (b: any, status = 200) => route.fulfill({ status, headers: { ...CORS, "content-type": "application/json" }, body: JSON.stringify(b) });
     if (p.startsWith("/auth/v1/user")) return j(USER);
     if (p.startsWith("/auth/v1/token")) return j(SESSION);
-    if (p.startsWith("/functions/v1/get-next-question")) { s.served++; return j(QUESTION(s.served)); }
+    if (p.startsWith("/functions/v1/get-next-question")) { s.served++; const q: any = QUESTION(s.served); if (s.stimulus) q.content.stimulus = s.stimulus; return j(q); }
     if (p.startsWith("/functions/v1/process-event")) {
       s.answers++;
       if (s.reply === "ok") return j({ status: "incorrect", correct_answer: "Alfa", review_text: null, misconception_type: null });
@@ -416,5 +416,25 @@ test("D-347: et forkert svar uden pause viser tilbuddet med det samme, som før"
   expect(s.served).toBe(1);
   await page.getByRole("button", { name: "Nej, ellers tak" }).click();
   await expect(page.locator("#question")).toContainText("Spørgsmål nummer 2?");
+  await ctx.close();
+});
+
+// ── Samspil med F-07: kilden over spørgsmålet hører til spørgsmålet og må ikke stå tilbage over pausen ──
+test("F-07: en kilde over spørgsmålet skjules i pausen og vises igen med næste spørgsmål", async ({ browser }) => {
+  const s = sim();
+  s.stimulus = { kind: "source", text: "Kongen underskrev grundloven.", credit: { source: "Testkilde" } };
+  const ctx = await context(browser, s);
+  const page = await openQuiz(ctx);
+  const stimulus = page.locator("#stimulus");
+  await expect(stimulus).toContainText("Kongen underskrev grundloven.");
+  s.until = T0 + 120_000;
+  await option(page, "Beta").click();                     // afvist af serveren: pausen starter fra spørgsmålet
+  await expect(panel(page)).toBeVisible();
+  await expect(stimulus).toBeHidden();
+  await pass(page, 120_000);
+  await expect(cont(page)).toBeEnabled();
+  await cont(page).click();
+  await expect(option(page, "Alfa")).toBeVisible();
+  await expect(stimulus).toContainText("Kongen underskrev grundloven.");
   await ctx.close();
 });

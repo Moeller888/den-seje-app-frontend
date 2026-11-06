@@ -214,6 +214,8 @@ Når det samme svar både starter en anti-gætte-pause og optjener et spilletilb
 
 Et forkert svar, der ikke starter en pause, viser tilbuddet med det samme, som før.
 
+En F-07-kilde (tekst, billede eller lyd over spørgsmålet) skjules i pausen sammen med spørgsmålet og vises igen, når spørgsmålet kommer tilbage.
+
 Afviste forsøg registrerer intet og kalder ikke `minigame_break_after_answer`. Samspillet er testet i
 `tests/quiz-cooldown.spec.ts` (tre D-347-tests) og låst i `tests/unit/minigame-break.test.mjs`.
 

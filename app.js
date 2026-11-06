@@ -1071,6 +1071,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     questionElement.style.display = "none";
     optionsContainer.style.display = "none";
+    clearStimulus();   // F-07: a source, image or audio clip belongs to the question; it comes back with it
     reviewFeedback.classList.remove("visible");
     reflectionContinue.style.display = "none";
     feedback.textContent = `${COOLDOWN_TEXT.title} ${COOLDOWN_TEXT.body}`;
