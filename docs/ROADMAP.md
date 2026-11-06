@@ -958,12 +958,19 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
     lægger samme beløb til igen. Udgaven med 4 argumenter har ingen sikring mod en ny bedømmelse, som
     derfor udbetaler igen. Ingen bedømmelser i produktion siden 2026-04-22. Særskilt opgave; skal være
     afklaret, før bedømmelser flyttes til hændelseshistorikken.
-  - **Backup og gendannelse (driftsspørgsmål, ikke startet):** projektet er på Supabase' Free-plan, og
-    på den plan har vi ingen almindelig adgang til backups (hverken visning, download eller
-    gendannelse). Ifølge Supabase' Knowledge Base kan Free-projekter i øjeblikket have op til syv daglige
-    backups, der først bliver tilgængelige efter en opgradering; det er ikke efterprøvet for dette
-    projekt, og PITR kræver en betalt plan. Backupmulighederne kræver en særskilt ejerbeslutning.
-    Gendannelse af historiske elevsvar er ikke ønsket nu.
+  - **Backup og gendannelse (databasen verificeret 2026-11-06, ikke færdigt):** projektet er på
+    Supabase' Free-plan uden platformsbackups og uden PITR, så vores eneste gendannelsespunkt er
+    manuelle dumps. Dumpet `dump-20261106T100041Z` (ligger privat, aldrig i repoet) er verificeret:
+    SHA-256 stemmer, rækketal stemmer med produktionen på alle tabeller, og en gendannelse i en
+    isoleret PostgreSQL-klynge gav rækkehashes identiske med produktionen for alle 42 `public`-tabeller.
+    Testklyngen er væk igen. Backupkravet til K1 er dermed opfyldt, men det er ikke et GO til K1.
+    **Mangler:** (1) Storage-filerne er ikke med (273 objekter, ca. 758 KB, heraf 6 private dokumenter);
+    (2) gendannelse til et rigtigt Supabase-projekt er ikke afprøvet; (3) trigger på `auth.users`, to
+    politikker på `storage.objects` og cron-jobbet ligger uden for dumpet (privat tillægsfil, ikke
+    afprøvet); (4) syv funktioner mistede CR-tegn og tages fra migrationerne ved gendannelse;
+    (5) Edge Functions, secrets og Auth-konfiguration er ikke med; (6) der findes kun én ukrypteret kopi
+    på én maskine; (7) dumpet ældes: produktionen har allerede 2 migrationer, som er nyere, så der skal
+    tages et friskt dump lige før K1. Gendannelse af historiske elevsvar er ikke ønsket nu.
 - **2-0B — RPC EXECUTE-hygiejne (ikke startet):** `get_my_students`, `set_spotlight`,
   `remove_spotlight`, `set_student_domains`, `get_classroom_leaderboard` og `get_weekly_activity`
   har stadig EXECUTE for `anon`. De afviser kald uden `auth.uid()`, så det er P3 — men `anon` bør
