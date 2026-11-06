@@ -34,6 +34,7 @@ export const ANSWER_RENDERERS = Object.freeze({
   CHOICE: "choice",
   MATCH_PAIRS: "match_pairs",
   TRUE_FALSE: "true_false",
+  ORDER_ITEMS: "order_items",
   UNSUPPORTED: "unsupported",
 });
 
@@ -54,6 +55,7 @@ export function resolveAnswerRenderer(question) {
   if (format === "match") return ANSWER_RENDERERS.MATCH_PAIRS;
 
   if (format === "true_false") return ANSWER_RENDERERS.TRUE_FALSE;
+  if (format === "order") return ANSWER_RENDERERS.ORDER_ITEMS;
 
   return ANSWER_RENDERERS.UNSUPPORTED;
 }

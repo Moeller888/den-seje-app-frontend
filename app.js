@@ -15,6 +15,8 @@ import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { prepareChoiceOptions } from "./js/answer-options.js";
 import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer, shortTextCorrection } from "./js/answer-input.js";
 import { buildMatchPairsAnswer, matchCorrectionText, readMatchLayout } from "./js/match-pairs.js";
+import { buildOrderAnswer, orderCorrectionText, readOrderLayout } from "./js/order-items.js";
+import { readStimulus, buildStimulus } from "./js/stimulus.js";
 import { buildTrueFalseAnswer, readTrueFalseContent, trueFalseCorrection } from "./js/true-false.js";
 import { buildNumberAnswer } from "./js/number-answer.js";
 import { initAnalytics, track } from "./js/analytics.js";
@@ -189,6 +191,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!authorized) return;
 
   const questionElement = document.getElementById("question");
+  const stimulusElement = document.getElementById("stimulus");
   const optionsContainer = document.getElementById("options");
   const feedback = document.getElementById("feedback");
   const reviewFeedback = document.getElementById("review-feedback");
@@ -229,6 +232,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   let currentRenderer = null;
   // The Match par control on screen, so the graded response can mark its connections.
   let currentMatchControl = null;
+  // Rækkefølge: the control on screen, so a wrong answer can be explained in the shown texts.
+  let currentOrderControl = null;
 
   // Session rhythm tracking — Section 55.
   // sessionQuestionCount: total answered this session, passed to get-next-question.
@@ -1386,7 +1391,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             ? matchCorrectionText(currentMatchControl.layout, data.correct_answer)
             : currentRenderer === ANSWER_RENDERERS.TRUE_FALSE
               ? trueFalseCorrection(data.correct_answer)
-              : null;
+              : currentRenderer === ANSWER_RENDERERS.ORDER_ITEMS && currentOrderControl
+                ? orderCorrectionText(currentOrderControl.layout, data.correct_answer)
+                : null;
         setTimeout(() => enterReflectionState(reviewText, correction), 400);
         return;
       }
@@ -1404,6 +1411,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         setUIState(UI_STATES.TRANSITIONING);
         setTimeout(() => { loadAndRenderQuestion(); }, 4000);
         return;
+      }
+
+      // Rækkefølge: the key is display positions, not words — state the correct order in the shown texts
+      // and leave a little longer to read it.
+      if (currentRenderer === ANSWER_RENDERERS.ORDER_ITEMS && currentOrderControl) {
+        const correctOrder = orderCorrectionText(currentOrderControl.layout, data.correct_answer);
+        if (correctOrder) {
+          feedback.textContent = "Ikke helt. " + correctOrder;
+          feedback.className = "feedback-error";
+          setUIState(UI_STATES.TRANSITIONING);
+          setTimeout(() => { loadAndRenderQuestion(); }, 5000);
+          return;
+        }
       }
 
       feedback.textContent = "Svaret er " + (data.correct_answer ?? "ukendt") + " — husk det nu.";
@@ -1484,6 +1504,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const renderer = resolveAnswerRenderer(question);
     currentRenderer = renderer;
     currentMatchControl = null;
+    currentOrderControl = null;
 
     // 157E: analytics — question shown (format only, no content). No-op unless active.
     track("question_shown", { format });
@@ -1584,6 +1605,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       logError("INVALID_TRUE_FALSE_CONTENT", { format });
     }
 
+    if (renderer === ANSWER_RENDERERS.ORDER_ITEMS) {
+      // Rækkefølge (js/order-items.js): the server sent the item texts in a shuffled order; the correct
+      // order is never in the payload. A payload that is not a valid layout falls through to the visible
+      // "unsupported" error below.
+      const layout = readOrderLayout(content);
+      if (layout) {
+        const control = buildOrderAnswer(document, {
+          layout,
+          onSubmit: submitAnswer,
+          describedBy: questionElement.id,
+          attachReadAloud: attachOptionReadAloudControl,
+          readAloudContext: { subject: currentSubject, question: content.question, options: layout.items },
+        });
+        currentOrderControl = { ...control, layout };
+        optionsContainer.appendChild(control.root);
+        return true;
+      }
+      logError("INVALID_ORDER_LAYOUT", { format });
+    }
+
     if (renderer === ANSWER_RENDERERS.LONG_TEXT) {
       const textarea = document.createElement("textarea");
 
@@ -1610,7 +1651,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (renderer === ANSWER_RENDERERS.UNSUPPORTED || renderer === ANSWER_RENDERERS.MATCH_PAIRS
-      || renderer === ANSWER_RENDERERS.TRUE_FALSE) {
+      || renderer === ANSWER_RENDERERS.TRUE_FALSE
+      || renderer === ANSWER_RENDERERS.ORDER_ITEMS) {
       // An interaction type this client has no renderer for must fail loud — never fall through
       // to option buttons (ARCHITECTURE.md → Question Interaction model, rule 2).
       logError("UNSUPPORTED_ANSWER_FORMAT", { format, answer_type: question.answer_type ?? null });
@@ -1652,9 +1694,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     return true;
   }
 
+  // F-07: the stimulus (source, image or audio clip) of the question on screen. Cleared for every new
+  // question, so a question without one shows nothing extra — exactly as before.
+  function clearStimulus() {
+    if (!stimulusElement) return;
+    stimulusElement.textContent = "";
+    stimulusElement.hidden = true;
+  }
+
+  // Shows the question's stimulus above it. True when there is none or it was shown; false when the
+  // payload carries a stimulus that breaks the contract (the caller then fails loud).
+  function renderStimulus(content) {
+    clearStimulus();
+    const stimulus = readStimulus(content);
+    if (stimulus === null) return true;
+    if (stimulus.invalid || !stimulusElement) {
+      logError("INVALID_STIMULUS", { kind: content?.stimulus?.kind ?? null });
+      return false;
+    }
+    stimulusElement.appendChild(buildStimulus(document, stimulus, {
+      attachReadAloud: attachReadAloudControl,
+      readAloudContext: { subject: currentSubject, target: "source" },
+    }));
+    stimulusElement.hidden = false;
+    return true;
+  }
+
   async function loadAndRenderQuestion() {
     // Clean up reflection state if active from previous question
     stopReadAloud();
+    clearStimulus();
     optionsContainer.style.display = "";
     reviewFeedback.textContent = "";
     reviewFeedback.classList.remove("visible");
@@ -1725,6 +1794,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       retryBtn.onclick = () => { loadAndRenderQuestion(); };
       optionsContainer.appendChild(retryBtn);
 
+      return;
+    }
+
+    if (!renderStimulus(question.content)) {
+      // The material the question is about could not be shown: never ask the question without it.
+      // Same exit as an unsupported interaction type below — visible error, a way out, no dead state.
+      uiState = "IDLE";
+      questionElement.textContent = "";
+      questionElement.dataset.state = "error";
+      optionsContainer.innerHTML = "";
+      const msg = document.createElement("p");
+      msg.id = "unsupported-format";
+      msg.className = "feedback-error";
+      msg.setAttribute("role", "alert");
+      msg.textContent = "⚠️ Denne opgavetype kan ikke vises endnu.";
+      optionsContainer.appendChild(msg);
+      const hubBtn = document.createElement("button");
+      hubBtn.id = "go-hub-btn";
+      hubBtn.textContent = "Gå til hub";
+      hubBtn.className = "submit-btn";
+      hubBtn.onclick = () => { window.location.href = "hub.html"; };
+      optionsContainer.appendChild(hubBtn);
       return;
     }
 
