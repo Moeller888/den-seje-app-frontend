@@ -18,7 +18,8 @@
 //   sheets — the visual review: per cut and bottom, the 11 designs (rows) over its shoes (columns) at app size, light and dark; the hip at
 //            1:1; the selector previews come from verify-northstar-kit-tops-d355.mjs.
 //   page   — the private decision page (index.html) from the written files.
-// Usage: node --expose-gc tools/avatar/northstar-kit-tops-d355.mjs --phase verify|check|stage|equiv|sheets|page --out <dir> --dwebp <exe>
+//   armedge, lists — the bounded checks of the tee's arm edge and of the list's sources (northstar-kit-tops-review-d355.mjs).
+// Usage: node --expose-gc tools/avatar/northstar-kit-tops-d355.mjs --phase verify|check|stage|equiv|armedge|lists|sheets|page --out <dir> --dwebp <exe>
 //        [--cwebp <exe>] [--staging <dir>] [--cut <id>] [--from <n>] [--count <n>]
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -182,12 +183,17 @@ async function main() {
   if (!outside(OUT)) throw new Error("--out must be outside the repository (the views show C)"); mkdirSync(OUT, { recursive: true });
   const AL = await import(pathToFileURL(join(ROOT, "js", "avatar-layers.js")).href);
   if (phase === "sheets") return phaseSheets(AL, OUT);
+  if (phase === "lists") { const RV = await import("./northstar-kit-tops-review-d355.mjs"), r = RV.lists(AL, kitTopCombos, cutPairs); writeFileSync(join(OUT, "lists.json"), JSON.stringify({ decision: "D-355", ...r }, null, 2) + "\n");
+    return console.log(JSON.stringify({ total: r.total, checks: r.checks, cuts: Object.fromEntries(Object.entries(r.cuts).map(([k, v]) => [k, { pairs: v.pairs, allowed: v.allowed, selectable: v.selectable, notSelectable: v.notSelectable }])) })); }
   if (phase === "page") return (await import("./northstar-kit-tops-page-d355.mjs")).writePage(AL, OUT, at("--staging"));
   if (!DW || !existsSync(DW)) throw new Error("--dwebp");
   if (phase === "verify") return phaseVerify(OUT, DW);
   if (phase === "check") return phaseCheck(AL, OUT, DW, at("--cut"), Number(at("--from") || 0), Number(at("--count") || 0));
   if (phase === "stage") { if (!at("--cwebp") || !existsSync(at("--cwebp"))) throw new Error("--cwebp"); return phaseStage(OUT, DW, at("--cwebp"), at("--staging")); }
   if (phase === "equiv") return phaseEquiv(AL, OUT, DW, at("--staging"), at("--cut"));
-  throw new Error("--phase verify|check|stage|equiv|sheets|page");
+  if (phase === "armedge") { const STG = at("--staging"), M = json(join(STG, "staging-manifest.json")), staged = join(STG, "staging"), D = decoder(DW), RV = await import("./northstar-kit-tops-review-d355.mjs");
+    for (const e of M.files) if (sha(readFileSync(join(staged, e.file))) !== e.sha256) throw new Error("the staging changed: " + e.file);
+    try { return RV.phaseArmEdge(OUT, { A: approval(), AL, M, px: (src) => { const f = src.split("/").pop(); return D.dec(f, existsSync(join(staged, f)) ? staged : PUB); }, approvedLayer, itemOf: (c) => itemOfCandidate(c.cut, c.slug), ART354: join(ART, "d354-edge-fixes"), loadPx, TOP_SPLIT, contour: K.cutOf(K.loadCut("tee-hip-v2"), K.envC()).t.contour }); } finally { D.done(); } }
+  throw new Error("--phase verify|check|stage|equiv|armedge|lists|sheets|page");
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((e) => { console.error(e); process.exit(1); });

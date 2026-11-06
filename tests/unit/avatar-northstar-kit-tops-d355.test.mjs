@@ -97,3 +97,12 @@ test("D-355 the plan: each family's own order and shared files; the tee's sleeve
     assert.ok(!m.files.some((x) => x.file === f)); }
   for (const files of Object.values(CUT_FAMILY)) for (const p of files.shadows) assert.ok(existsSync(join(REPO, "assets", "avatar-northstar", files.shadowsOf + "-shadow-" + p + "-v1.webp")));
 });
+
+test("D-355 the list explained: each cut's pairs from its source, 1441 of 1452 selectable (the sweater's olive with beige never), no restriction widened", async () => {
+  const { lists } = await import("../../tools/avatar/northstar-kit-tops-review-d355.mjs"), r = lists(L, kitTopCombos, cutPairs);
+  assert.deepEqual(r.total, { allowed: 1452, selectable: 1441, notSelectable: 11 });
+  assert.deepEqual(Object.fromEntries(Object.entries(r.cuts).map(([k, v]) => [k, [v.pairs, v.allowed, v.selectable, v.notSelectable]])),
+    { "tee-hip-v2": [43, 473, 473, []], "sweater-long-v3": [45, 495, 484, ["bottom-trousers-square-olive+shoes-sneakers-beige"]], "tank-v5": [44, 484, 484, []] });
+  for (const [k, v] of Object.entries(r.checks)) assert.equal(v, true, k);
+  assert.ok(r.cuts["tee-hip-v2"].rows.every((x) => typeof x.source === "string" && x.source.length));
+});
