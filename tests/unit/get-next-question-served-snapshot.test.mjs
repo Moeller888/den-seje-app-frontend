@@ -47,7 +47,9 @@ test("index.ts wiring: switch read once; new instances propose; open and repeate
   // Repeat: the reopen took the snapshot; the response is built from it.
   assert.match(INDEX, /const delivered = servedSnapshot \? await deliveredFor\(repeatRow\.id\) : null;\s*const src = delivered \?\? rq;/);
   assert.match(INDEX, /const pub = toPublicQuestion\(src\.content, format, src\.metadata, instanceKey\);/);
-  assert.equal((INDEX.match(/\? \(format === "match" \? delivered\.key : undefined\)/g) ?? []).length, 2);
+  // The snapshot's key lays out the keyed formats only — Match par and Rækkefølge (F-04).
+  assert.match(INDEX, /const KEYED_FORMATS: ReadonlySet<string> = new Set\(\["match", "order"\]\);/);
+  assert.equal((INDEX.match(/\? \(KEYED_FORMATS\.has\(format\) \? delivered\.key : undefined\)/g) ?? []).length, 2);
   // The snapshot read is scoped to the verified student and fails loud.
   assert.match(INDEX, /\.select\("served_snapshot"\)\s*\.eq\("id", instanceId\)\s*\.eq\("student_id", student_id\)\s*\.limit\(1\);/);
   assert.match(INDEX, /if \(error\) throw new InstanceKeyReadError\(`Served snapshot read failed/);

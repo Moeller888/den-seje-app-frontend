@@ -362,7 +362,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (F-02 Sandt/falsk #607 + F-07 stimulus) — **ikke deployet** | dette repository | 17 | `1df4cb344dfe97bde6f14b8e34adb9db26a44e948b6d197d01f2b9baa3104c8d` |
+| Kandidat (F-04 Rækkefølge, oven på F-02 og F-07) — **ikke deployet** | dette repository | 18 | `06a6ccb9a2e5640abaa71a69581f3f42b5192c7dc91d865580099bf6004b3c4e` |
+| Forrige kandidat (F-02 Sandt/falsk #607 + F-07 stimulus, PR #618) — ikke deployet | #618 | 17 | `1df4cb344dfe97bde6f14b8e34adb9db26a44e948b6d197d01f2b9baa3104c8d` |
 | Forrige kandidat (F-02 Sandt/falsk, PR #607, merget uden stimulus) | main `3a2d2f37` | 16 | `00ddba65243d69fffeb9ea8f7b01714d5745cf7bfe0945330123919b3237f1ca` |
 | Forrige kandidat (F-07 stimulus alene) | `c1bfdcba` | 16 | `44ee77a4233f8699f1a342e2584f7b69ef1be1175415866e335854175856b29c` |
 | Deployet i produktion 2026-11-04 (`a7450b0f`, version 181 og senere secret-versioner) | `a7450b0f` | 15 | `1f508a8459f5141f1e629dec94ec979ce34bafdcecdbc650b8d6db2a2f7c3bbe` |
@@ -373,6 +374,13 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 | Version 180, som deployet 2026-10-31 — **rollback-mål før H5-aktivering** | `1aee47a` (main, merge af #487), uændret | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
 | Historisk rollback til version 179 (det, `materialize-rollback` skriver) | `21ec9ff` med låsningen (kun linje 2 i `index.ts` er ændret) | 11 | `ca21b993839e48ff4e5baf3189306860d6b349fdcc7eea12f65ab78a73e418c6` |
 | Version 179, som deployet | `21ec9ff` uændret | 11 | `c4414671f3a5aff1e8d5bc3cb57ec4e92bb0d70ef8008a7ade39a75730c81985` |
+
+**F-04 Rækkefølge ændrer grafen fra 17 til 18 filer** (oven på F-02 og F-07). `_shared/order-items.ts` er ny (kontrakt,
+instansnøgle og layout; facit er den forfattede rækkefølge, kun præsentationen blandes), og
+`index.ts`, `_shared/question-dto.ts` og `_shared/interaction-kinds.ts` ændres: `index.ts` trækker
+nøglen for `order` ved oprettelse og læser den for åbne og gentagne runder præcis som for `match`
+(`KEYED_FORMATS`). Formatet er ikke servable, så ingen elev kan få det; for alle andre formater er
+læsningerne uændrede (slukket-pariteten er grøn). Kandidaten er **ikke** deployet.
 
 **F-02 Sandt/falsk (PR #607) ændrer grafen fra 15 til 16 filer.** `_shared/question-dto.ts` importerer
 nu `_shared/true-false.ts` og kontrollerer en `true_false`-række mod kontrakten, før instansen indsættes,
@@ -504,7 +512,7 @@ reference.
 - `entrypoint_path` `functions/get-next-question/index.ts`;
 - `import_map_path` `functions/get-next-question/deno.json`;
 - `verify_jwt` `false`, ellers fejler browserens OPTIONS-preflight;
-- præcis filerne i kandidatmanifestet (16 for kandidaten ovenfor), med stierne som i manifestet.
+- præcis filerne i kandidatmanifestet (17 for kandidaten ovenfor), med stierne som i manifestet.
 
 Ingen secret ændres.
 

@@ -37,10 +37,11 @@
 // Edge Functions run.
 
 import { matchLayout, type MatchLayout } from "./match-pairs.ts";
+import { orderLayout, type OrderLayout } from "./order-items.ts";
 import { publicStimulus, type PublicStimulus } from "./stimulus.ts";
 import { parseTrueFalseContent, TRUE_FALSE_FORMAT } from "./true-false.ts";
 
-export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "type", "force_text", "match", "stimulus"] as const);
+export const PUBLIC_CONTENT_KEYS = Object.freeze(["question", "options", "type", "force_text", "match", "order", "stimulus"] as const);
 
 export const PUBLIC_METADATA_KEYS = Object.freeze([
   "difficulty_type",
@@ -57,6 +58,7 @@ export type PublicContent = {
   type?: string;
   force_text?: true;
   match?: MatchLayout;
+  order?: OrderLayout;
   stimulus?: PublicStimulus;
 };
 
@@ -116,6 +118,12 @@ export function toPublicQuestion(rawContent: unknown, format: string, rawMetadat
   if (format === TRUE_FALSE_FORMAT) {
     // Validation only: the statement is content.question above; the key never leaves.
     parseTrueFalseContent(rawContent);
+  }
+
+  // Rækkefølge: the item texts in the instance's SHOWN order and the kind of sequence — never
+  // content.items, whose order is the facit (_shared/order-items.ts).
+  if (format === "order") {
+    content.order = orderLayout(rawContent, instanceKey);
   }
 
   if (typeof rawContent.type === "string") content.type = rawContent.type;
