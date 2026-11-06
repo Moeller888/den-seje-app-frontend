@@ -1,0 +1,126 @@
+{
+  "id": "tee-hip-v2",
+  "label": "Tee, hip length (tee-hip) with the rim rule (D-354)",
+  "contract": "top-cut-v1",
+  "family": "tee",
+  "note": "the D-264 tee master's per-cut data (northstar-tee-master.mjs SPEC), unchanged, plus the rules spread over D-269/D-271/D-274 (print box, layer split, skin shadow)",
+  "source": {
+    "item": "top-tee-hip-cream",
+    "template": "r1c-cut",
+    "from": "RC.cutOf: the cream tee's template and its R1C construction layer (trim bands), as D-271/D-274 used it"
+  },
+  "panels": {
+    "seams": {
+      "left": [
+        [
+          381,
+          500
+        ],
+        [
+          390,
+          530
+        ],
+        [
+          398,
+          565
+        ],
+        [
+          404,
+          600
+        ],
+        [
+          408,
+          638
+        ]
+      ],
+      "right": [
+        [
+          642,
+          500
+        ],
+        [
+          633,
+          530
+        ],
+        [
+          625,
+          565
+        ],
+        [
+          619,
+          600
+        ],
+        [
+          615,
+          638
+        ]
+      ]
+    },
+    "seamSearchPx": 8,
+    "extendPx": 14,
+    "armpitOut": {
+      "left": [
+        -1,
+        0.35
+      ],
+      "right": [
+        1,
+        0.35
+      ]
+    }
+  },
+  "warp": {
+    "cylinder": 0.1,
+    "foldMaxPx": 3,
+    "foldBlur": 14
+  },
+  "sleeves": {
+    "kind": "short",
+    "layerSplitFromArmAlpha": 128
+  },
+  "cuffs": null,
+  "trim": {
+    "bands": "r1c-construction"
+  },
+  "print": {
+    "rule": "D-269 chest-center",
+    "boxOnC": [
+      437,
+      537,
+      150,
+      135
+    ],
+    "boxFrom": "PF.placementBox(geometry, chest-center) on this cut; equal to the box on C"
+  },
+  "shadow": {
+    "from": "the cut item's skin shadow",
+    "split": "arms where C's arm alpha >= 128, body elsewhere on C's body (D-242)",
+    "publishedAs": "top-tee-hip-cream"
+  },
+  "hipSeam": null,
+  "runtime": {
+    "layers": [
+      "top-body",
+      "sleeves"
+    ],
+    "shadows": [
+      "body",
+      "arms"
+    ]
+  },
+  "control": {
+    "what": "the 16 owner-approved print tees (D-274), published as top-tee-hip-print-<motif>-<colour>-{top-body,sleeves}-v1.webp, and the cut's skin shadow (top-tee-hip-cream-shadow-{body,arms}-v1.webp)",
+    "approval": "tools/avatar/fixtures/northstar-wardrobe/tee-master/tp-owner-approval-v1.json"
+  },
+  "oneTimeWork": [
+    "the two armhole seams entered by hand as a polyline of 5 points per side (D-264)",
+    "the armpit direction per side (D-264)",
+    "the chest-center placement fractions (D-269), now held as the box on C",
+    "D-354: no new hand-entered data; the edge rules are shared (trim.revision 2, edges.rim)"
+  ],
+  "edges": {
+    "rim": "figure-or-ink",
+    "why": "the outline's outermost fringe (alpha > 0 outside the contour, touching the outside): C's own colour right beside it (it keeps covering C's base garment), the contour ink where only background lies beside it (D-354)"
+  },
+  "derivedFrom": "tee-hip.json (unchanged; only id, label, trim.revision, edges, oneTimeWork and derivedFrom differ)"
+}

@@ -12,6 +12,7 @@ import * as http from "http";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
+import { closeOfflineQuiz } from "./support/close-offline-quiz";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -117,7 +118,7 @@ test("empty field: the Danish error is shown, nothing is sent, and the pupil can
   await expect(page.locator("#number-answer-hint")).toHaveText("");
   await input.press("Enter");
   await expect.poll(() => answers).toEqual(["1849"]);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("a valid Danish number via Enter is sent as the canonical integer", async ({ browser }) => {
@@ -125,7 +126,7 @@ test("a valid Danish number via Enter is sent as the canonical integer", async (
   await page.locator("#number-answer-input").fill("1 849");
   await page.locator("#number-answer-input").press("Enter");
   await expect.poll(() => answers).toEqual(["1849"]);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("a valid number via the button is sent as the canonical integer", async ({ browser }) => {
@@ -133,7 +134,7 @@ test("a valid number via the button is sent as the canonical integer", async ({ 
   await page.locator("#number-answer-input").fill("1.849");
   await page.locator("#options button.submit-btn", { hasText: "Svar" }).click();
   await expect.poll(() => answers).toEqual(["1849"]);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("repeated Enter while the answer is on its way sends exactly once", async ({ browser }) => {
@@ -150,5 +151,5 @@ test("repeated Enter while the answer is on its way sends exactly once", async (
   release();
   await expect(page.locator("#feedback")).not.toHaveText("", { timeout: 10000 });
   expect(answers).toEqual(["-50"]);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
