@@ -1,8 +1,10 @@
 # Lærligverse: hvad vi vil måle, og hvordan (D-344, F8)
 
-Status: **FORSLAG.** Måleopgaverne og rubrikken er ikke godkendt af en lærer, ikke afprøvet med elever og ikke
-validerede. Godkendelsen af Arkivskabets 12 elementer (Christopher Møller, 04-11-2026) omfatter ikke dette
-dokument. Læringsmodellen (syv niveauer) og evidenskataloget står i `laeringsmodel-og-evidens.md` (D-341). Her
+Status (opdateret F10-B, 06-11-2026): prøverne A, B, T, C og rubrikken er **godkendt af en lærer i version 1.5**
+(Christopher Møller, 05-11-2026, `proeve-godkendelse-register-v1.5.json`, D-346 §18). De er **ikke afprøvet med
+elever og ikke validerede** (sværhed, bedømmerenighed, loft/gulv er ukendte). Godkendelsen er faglig og er ikke et
+GO til elevpilot, merge eller produktion. Afsnittene nedenfor er skrevet i F8 og beskriver v1; den gældende tekst
+står i `tools/laerligverse/assessment-v1.mjs` og lærerpakken. Læringsmodellen (syv niveauer) og evidenskataloget står i `laeringsmodel-og-evidens.md` (D-341). Her
 står, hvad der skal måles for `kildekritik.ophav`, med hvilke opgaver, og hvad vi må og ikke må konkludere.
 
 Kildefiler:

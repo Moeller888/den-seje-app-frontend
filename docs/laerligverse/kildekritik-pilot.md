@@ -81,7 +81,7 @@ Det, der er ændret i forhold til spillet: emne, periode, kildetyper (plakat og 
 art (en myndigheds vilje, ikke en oplevelse). Det, der er fælles: kompetencen, dvs. at matche kildens
 afsender, tid og formål med det, påstanden handler om.
 
-## 5. Forsinket genbesøg (forslag: efter 2–4 uger, skal godkendes)
+## 5. Forsinket genbesøg (F5-forslag 2–4 uger; erstattet: forsinket test C efter 7 dage, LP13-6 i lærerens v1.5-fil, se §16)
 
 **GB-1.** Påstand: »Rejsende med Danmarks første jernbane mellem København og Roskilde i 1847 syntes, at turen
 gik meget hurtigt.«
@@ -273,12 +273,12 @@ eller en rådgiver, før en pilot:
    undervisningen?
 8. **Lærlig som aktør:** Bliver Lærlig databehandler, hvis Christopher får data? Kræves en aftale?
 
-## 18. Status (F8)
+## 18. Status (F8, opdateret F10-B 06-11-2026)
 
 | Del | Status |
 |---|---|
 | Arkivskabets 12 elementer | **Godkendt** af Christopher Møller 04-11-2026 |
-| Prøverne v1 | **Afventer** særskilt faglig godkendelse |
-| LP-13 | **Afventer** beslutning |
+| Prøverne A, B, T, C og rubrikken | **Godkendt i v1.5** af Christopher Møller 05-11-2026 (`proeve-godkendelse-register-v1.5.json`); ikke afprøvet med elever |
+| LP-13 | Valg registreret i lærerens v1.5-fil (fx forsinket test 7 dage, genbesøg 1–3 dage); **ikke aktiveret** i kode, og ikke et GO |
 | Elevpilot | **Ikke autoriseret** |
 | Produktion | **Ikke autoriseret** |

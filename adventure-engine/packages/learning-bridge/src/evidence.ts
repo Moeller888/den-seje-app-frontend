@@ -12,9 +12,10 @@
  *   - "documented progression" has NO approved rule (LP-13/K7 are owner decisions) — it is never true here.
  * Everything that is a threshold (e.g. the ≥ 20 h revisit, LPD §4.3) is marked PROPOSAL.
  *
- * WHAT THE SERVER REGISTERS TODAY. question_attempts (H5, applied only in the isolated stack) has
- * was_correct, is_repeat, attempt_no, submission_id, grading, answered_at — but NO mode and NO hints:
- * those are L1 K1 (PR #536, another track, not merged). So from server data alone: "practised" and a
+ * WHAT THE SERVER REGISTERS TODAY. question_attempts (H5: bootstrap and alignment applied in production
+ * 2026-11-04, but no deployed process-event writes it yet) has was_correct, is_repeat, attempt_no,
+ * submission_id, grading, answered_at — but NO mode and NO hints: those are L1 K1 (migration
+ * 20261103110000, merged, NOT applied in production; another track). So from server data alone: "practised" and a
  * correct answer can be observed; "supported" / "independent" / "applied" / "revisited" are UNKNOWN, and
  * nothing is evidence. The test adapter knows mode and hints, so it can SHOW the rules — labelled as such.
  *
