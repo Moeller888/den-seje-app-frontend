@@ -18,6 +18,7 @@ import * as path from "path";
 import { fileURLToPath } from "url";
 import { toPublicQuestion } from "../supabase/functions/_shared/question-dto.ts";
 import { canonicalCategorizeAnswer } from "../supabase/functions/_shared/categorize.ts";
+import { closeOfflineQuiz } from "./support/close-offline-quiz";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -186,7 +187,7 @@ for (const v of VIEWPORTS) {
     // The payload holds labels and shown texts only: never an item's category, the key or the explanation.
     for (const leak of ['"category"', '"correct"', '"review_text"', KEY, '"accepted_answers"']) expect(payloads[0].includes(leak), leak).toBe(false);
     await expect(page.locator("#question")).toContainText(NEXT.content.question, { timeout: 10000 });
-    await page.context().close();
+    await closeOfflineQuiz(page);
   });
 }
 
@@ -197,7 +198,7 @@ test("a wrong placement without an explanation: the correct placement in the sho
   await expect(page.locator("#feedback")).toHaveText(`Ikke helt. ${CORRECTION}`);
   await expect(page.locator("#feedback")).not.toContainText("3:1");
   expect(answers).toHaveLength(1);
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("a wrong placement with an explanation: the reflection is led by the correct placement, then Videre", async ({ browser }) => {
@@ -208,7 +209,7 @@ test("a wrong placement with an explanation: the reflection is led by the correc
   await expect(page.locator("#review-feedback")).toContainText("Grundloven af 5. juni 1849 delte magten");
   await page.locator("#reflection-continue").click();
   await expect(page.locator("#question")).toContainText(NEXT.content.question, { timeout: 10000 });
-  await page.context().close();
+  await closeOfflineQuiz(page);
 });
 
 test("a second Svar while the placement is on its way is not sent; a failed send hands the placement back", async ({ browser }) => {
@@ -221,7 +222,7 @@ test("a second Svar while the placement is on its way is not sent; a failed send
   await held.page.waitForTimeout(300);
   expect(held.answers).toHaveLength(1);
   held.release();
-  await held.page.context().close();
+  await closeOfflineQuiz(held.page);
 
   const failed = await openQuiz(browser, { width: 900, height: 700 }, [ROW, NEXT], { failFirst: true });
   await place(failed.page, RIGHT, "click");
@@ -233,5 +234,5 @@ test("a second Svar while the placement is on its way is not sent; a failed send
   await failed.page.locator("#categorize button.categorize-submit").click();
   await expect(failed.page.locator("#feedback")).toHaveText("Ja! 🎯");
   expect(failed.answers).toEqual([JSON.stringify(RIGHT), JSON.stringify(RIGHT)]);
-  await failed.page.context().close();
+  await closeOfflineQuiz(failed.page);
 });
