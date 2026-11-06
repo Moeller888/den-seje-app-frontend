@@ -15,11 +15,13 @@
 //    every test passed.
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { appendFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { appendFileSync, existsSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertIsolated, isLoopbackHttpUrl, mentionsProd, FORBIDDEN_VARS, SYNTHETIC_EMAIL_DOMAIN } from "./isolation-guard.mjs";
 import { startTripwire } from "./tripwire-proxy.mjs";
+import { attributeEgress, parseTimeline } from "./egress-attribution.mjs";
 import { provisionPrimaryAccount } from "./seed/primary-account.mjs";
 import { createClient } from "@supabase/supabase-js";
 
@@ -35,7 +37,7 @@ const PASSWORD_VARS = ["TEST_STUDENT_PASSWORD", "TEST_TEACHER_PASSWORD", "TEST_S
 
 const runPassword = () => randomBytes(18).toString("base64url") + "Aa1!";
 
-export function buildSuiteEnv(env, { runId = randomBytes(4).toString("hex"), password = runPassword, tripwire } = {}) {
+export function buildSuiteEnv(env, { runId = randomBytes(4).toString("hex"), password = runPassword, tripwire, timelineFile } = {}) {
   const out = { ...env };
   delete out.E2E_SLOT; // slots are a production-account mechanism; isolated runs have their own accounts
   out.ISOLATED_SUITE = "1";
@@ -48,6 +50,9 @@ export function buildSuiteEnv(env, { runId = randomBytes(4).toString("hex"), pas
   out.TEST_STUDENT2_EMAIL = `pupil2-${runId}@${SYNTHETIC_EMAIL_DOMAIN}`;
   for (const v of PASSWORD_VARS) out[v] = password();
   if (tripwire) out.ISOLATED_TRIPWIRE_PROXY = tripwire;
+  // Diagnostics only: tests/isolated/egress-timeline-reporter.mjs writes the test timeline here, so a
+  // tripwire refusal can be attributed to the test that was running.
+  if (timelineFile) out.ISOLATED_TIMELINE_FILE = timelineFile;
   return out;
 }
 
@@ -79,7 +84,8 @@ async function main(args) {
   assertIsolated(process.env);
   const tripwire = await startTripwire();
   const runId = randomBytes(4).toString("hex");
-  const env = buildSuiteEnv(process.env, { runId, tripwire: tripwire.url });
+  const timelineFile = join(tmpdir(), `isolated-timeline-${runId}.jsonl`);
+  const env = buildSuiteEnv(process.env, { runId, tripwire: tripwire.url, timelineFile });
   const v = suiteViolations(env);
   if (v.length) { await tripwire.close(); throw new Error("REFUSED — suite environment:\n  " + v.join("\n  ")); }
   const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
@@ -106,6 +112,19 @@ async function main(args) {
   ].join("\n");
   console.log(md);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+  // Diagnostics only (D-110): name the test that was running at each refusal. Hosts and browser
+  // families only — never a path, header or body. The decision below does not depend on it.
+  if (tripwire.events.length) {
+    try {
+      const timeline = existsSync(timelineFile) ? parseTimeline(readFileSync(timelineFile, "utf8")) : [];
+      const lines = attributeEgress(tripwire.events, timeline, { t0 }).map((a, i) => `${i + 1}. ${a.text}`);
+      const att = ["#### tripwire refusals, attributed", "", ...lines, ""].join("\n");
+      console.error(att);
+      if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, att);
+    } catch (e) {
+      console.error(`tripwire attribution failed (${e?.message ?? e}); the run still fails below`);
+    }
+  }
   if (tripwire.hits.length) { console.error(`tripwire: ${tripwire.hits.length} browser request(s) left loopback — failing the run`); process.exit(1); }
   process.exit(code);
 }

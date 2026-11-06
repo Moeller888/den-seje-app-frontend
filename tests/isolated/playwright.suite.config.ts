@@ -39,7 +39,9 @@ export default {
   testDir: resolve(ROOT, "tests"),
   globalSetup: resolve(ROOT, "tests", "global-setup.ts"),
   outputDir: resolve(ROOT, "test-results-isolated"),
-  reporter: [["list"], ["html", { open: "never", outputFolder: resolve(ROOT, "playwright-report-isolated") }], [resolve(ROOT, "tests", "support", "timing-reporter.mjs")]],
+  reporter: [["list"], ["html", { open: "never", outputFolder: resolve(ROOT, "playwright-report-isolated") }], [resolve(ROOT, "tests", "support", "timing-reporter.mjs")],
+    // Diagnostics only: the test timeline that names the test running at a tripwire refusal.
+    [resolve(ROOT, "tests", "isolated", "egress-timeline-reporter.mjs")]],
   // ignoreHTTPSErrors: only the local CDN stand-in speaks HTTPS here, with a self-signed certificate.
   use: { ...base.use, proxy, ignoreHTTPSErrors: true },
   projects: (base.projects ?? []).map((p) => ({ ...p, use: projectUse(p) })),
