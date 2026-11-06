@@ -7,11 +7,11 @@
 //   2. FIGURE — tops of the 33 (all three cuts; fabrics, patterns, motifs; skirt, shorts, capri and the three trousers; beige, SV1, AB-1,
 //      white, lace-up and brown shoes; a print tee replaced) on quiz, hub and avatar: the key names the top, the picture equals Node's
 //      northstarCompose of the runtime plan over the staged and published files; sheets at 600 and 360 px;
-//   3. CHOICE — the compact list: K01 → a tee of the 33, a reload keeps it; K04 (shorts) keeps the tee, the 22 sweaters and tank tops of
-//      the 33 disabled; K07; a sweater of the 33; an approved tank top button replaces it (one choice); a tank of the 33; "Outfittets egen
-//      top"; "Nuværende avatar"; the twelve approved buttons as before;
+//   3. CHOICE — D-359's wardrobe of single parts (the 33 are cards among the tops: 63): from K01 put on a tee of the 33, a reload keeps
+//      it; the navy shorts (the tee stays); a sweater of the 33 (the bottom is swapped off the shorts); an approved tank top; a tank of the
+//      33; "Brug min nuværende avatar" — every result an approved outfit, drawn on the Northstar path;
 //   4. FAILURE — a staged layer or a shared shadow that does not load gives today's path whole, the choice kept;
-//   5. PREVIEW — the panel with the list (K01 and K04) at desktop and phone width, for the private decision page.
+//   5. PREVIEW — the wardrobe at 1100 and 390 px (no horizontal scroll), for the private decision page.
 // D-357 (flag on, the choice on the account): each page's identity carries the choice this browser stored, as the pupil's account would.
 // --part baseline|figure|choice runs one part alone (choice = 3, 4 and 5) and writes result-<part>.json.
 // Usage: node tools/avatar/verify-northstar-kit-tops-d355.mjs --dwebp <dwebp.exe> --staging <D-355 staging dir> --out <dir outside the repository> [--part <part>]
@@ -33,13 +33,13 @@ if (!arg("--out") || OUT.toLowerCase().startsWith(ROOT.toLowerCase())) throw new
 if (!arg("--staging") || STG.toLowerCase().startsWith(ROOT.toLowerCase()) || !existsSync(join(STG, "staging-manifest.json"))) throw new Error("--staging <the private D-355 staging>");
 if (!DWEBP || !existsSync(DWEBP)) throw new Error("--dwebp <the vendored dwebp>");
 mkdirSync(OUT, { recursive: true });
-const STAGED = join(STG, "staging"), M = JSON.parse(readFileSync(join(STG, "staging-manifest.json"), "utf8"));
+const STAGED = join(STG, "staging"), M = JSON.parse(readFileSync(join(STG, "staging-manifest.json"), "utf8")), KIT = Object.keys(M.itemTable);
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".json": "application/json" };
 const IDENTITY = { body_type: "neutral", skin_tone: "medium", hairstyle: "default", hair_color: "brown" };
 const SURFACES = {
   quiz: { file: "index.html", box: '<div class="game-identity"><div id="avatar-display"></div></div>', sel: "#avatar-display", layerClass: "quiz-avatar-layer" },
   hub: { file: "hub.html", box: '<div class="avatar-showcase" id="avatarShowcase"><div class="profile-avatar" id="profileAvatar"></div></div>', sel: "#profileAvatar", layerClass: "profile-avatar-layer" },
-  avatar: { file: "avatar.html", box: '<div class="avatar-wrap" id="avatarWrap"><div class="avatar-aura"></div><div id="avatar-preview"></div></div><div class="northstar-panel" id="northstarPanel" hidden></div>', sel: "#avatar-preview", layerClass: "avatar-layer" },
+  avatar: { file: "avatar.html", box: '<div class="avatar-wrap" id="avatarWrap"><div class="avatar-aura"></div><div id="avatar-preview"></div></div><div class="northstar-panel" id="northstarPanel" hidden></div><div class="northstar-wardrobe" id="northstarWardrobe" hidden></div>', sel: "#avatar-preview", layerClass: "avatar-layer" },
 };
 const mainFile = (f) => execFileSync("git", ["show", `origin/main:${f}`], { cwd: ROOT, maxBuffer: 1 << 26 });
 const style = (html) => [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
@@ -57,10 +57,13 @@ const el = document.querySelector(${JSON.stringify(S.sel)});
 const path = await R.mountC2Avatar(el, identity, { layerClass: ${JSON.stringify(S.layerClass)}, cosmetics: [], surface: ${JSON.stringify(s)} });
 let ee = null; try { ee = new E.ExpressionEngine(el); } catch (_e) {}
 await R.markAvatarRendered(el);
-${s === "avatar" && code === "pr" ? `const P = await import("/js/avatar-northstar-panel.js"); P.mountNorthstarPanel(document.getElementById("northstarPanel"), el);` : ""}
+${s === "avatar" && code === "pr" ? `const P = await import("/js/avatar-northstar-panel.js"), KEYS = { outfit: "avatar_northstar_outfit", tee: "avatar_northstar_tee", pants: "avatar_northstar_pants", shoes: "avatar_northstar_shoes", top: "avatar_northstar_sweater" };
+// D-359: the pupil's wardrobe of single parts; saving writes the page's account (this browser's keys), as set_avatar_northstar would
+P.mountNorthstarWardrobe(document.getElementById("northstarWardrobe"), el, { saveChoice: async (c) => { for (const k of Object.values(KEYS)) localStorage.removeItem(k); for (const [f, k] of Object.entries(KEYS)) if (c[f]) localStorage.setItem(k, c[f]); return true; } });` : ""}
 const overlay = el.querySelector(".avatar-expr-overlay"), ns = L.northstarRenderFor ? L.northstarRenderFor(${JSON.stringify(s)}, []) : null;
 const kids = [...el.children].map((c) => ({ marker: c.getAttribute("data-c2-layer") || c.id, src: (c.getAttribute("src") || "").replace(/^blob:.*/, "blob:"), z: c.style.zIndex }));
-window.__done = { path, kids, key: ns ? ns.key : null, overlayVisible: !!overlay && getComputedStyle(overlay).display !== "none", storageUnchanged: JSON.stringify({ ...localStorage }) === before, storage: { ...localStorage } };
+const now = L.northstarOutfitNow ? L.northstarOutfitNow() : null, nowId = now ? now.top + "+" + now.bottom + "+" + now.shoes : null;
+window.__done = { path, kids, key: ns ? ns.key : null, now: nowId, nowApproved: !!nowId && !!L.northstarApprovedOutfits && L.northstarApprovedOutfits().has(nowId), overlayVisible: !!overlay && getComputedStyle(overlay).display !== "none", storageUnchanged: JSON.stringify({ ...localStorage }) === before, storage: { ...localStorage } };
 document.body.dataset.done = "1";
 </script></body></html>`;
 }
@@ -132,41 +135,36 @@ async function main() {
         result.figure.push({ want: keyOf(f), surface: s, path: o.info.path, key: o.info.key, layers: o.info.kids.map((c) => c.marker), overlayVisible: o.info.overlayVisible, storageUnchanged: o.info.storageUnchanged, ...cmp }); }
       await o.c.close(); }
     for (const [name, imgs] of Object.entries(sheets)) { const g = grid(imgs, imgs.length, 16); writeFileSync(join(OUT, "sheet-" + name + ".png"), encodePng(g.w, g.h, g.px)); }
-    if (RUN("choice")) { const o = await open("avatar", { code: "pr", storage: { ...OPT, avatar_northstar_outfit: "K01" }, keep: true });
+    if (RUN("choice")) { const o = await open("avatar", { code: "pr", storage: { ...OPT, avatar_northstar_outfit: "K01" }, keep: true }, { width: 1100 });
       const snap = async (label) => { await o.p.waitForSelector("body[data-done='1']", { timeout: 60000 });
-        const info = await o.p.evaluate(() => window.__done), pressed = await o.p.$$eval(".northstar-sweater-list button[aria-pressed='true']", (b) => b.map((x) => x.textContent));
-        const disabled = await o.p.$$eval(".northstar-sweater-list button", (b) => b.filter((x) => x.disabled).map((x) => x.textContent));
-        const kit = await o.p.$eval(".northstar-kit-select", (s) => ({ value: s.value, disabled: s.disabled, options: [...s.options].filter((x) => x.value).length, off: [...s.options].filter((x) => x.value && x.disabled).map((x) => x.value), groups: [...s.querySelectorAll("optgroup")].map((g) => g.label + ":" + g.children.length) }));
-        result.choice.push({ did: label, path: info.path, key: info.key, sweater: info.storage.avatar_northstar_sweater || null, outfit: info.storage.avatar_northstar_outfit || null, pressed, disabled, kit }); };
-      const click = async (label) => { await Promise.all([o.p.waitForEvent("load"), o.p.getByRole("button", { name: label, exact: true }).click()]); await snap(label); };
-      const choose = async (id) => { await Promise.all([o.p.waitForEvent("load"), o.p.selectOption(".northstar-kit-select", id)]); await snap("vælg " + id); };
+        const info = await o.p.evaluate(() => window.__done), cards = await o.p.$$eval(".northstar-wardrobe .item-card", (cs) => cs.map((c) => ({ piece: c.dataset.piece, on: c.classList.contains("equipped"), name: (c.querySelector(".item-name") || {}).textContent || "" })));
+        result.choice.push({ did: label, path: info.path, now: info.now, nowApproved: info.nowApproved, cards: cards.length, topCards: cards.filter((c) => c.piece.startsWith("top-")).length, kitCards: cards.filter((c) => KIT.includes(c.piece)).length, worn: cards.filter((c) => c.on).map((c) => c.piece), unnamed: cards.filter((c) => !c.name).length }); };
+      const put = async (piece) => { await Promise.all([o.p.waitForEvent("load"), o.p.click(`.northstar-wardrobe .item-card[data-piece="${piece}"] .equip-btn`)]); await snap("tag på " + piece); };
+      const back = async () => { await Promise.all([o.p.waitForEvent("load"), o.p.getByRole("button", { name: "Brug min nuværende avatar", exact: true }).click()]); await snap("nuværende avatar"); };
       const reload = async () => { await Promise.all([o.p.waitForEvent("load"), o.p.reload()]); await snap("(reload)"); };
-      await snap("(start K01)"); await choose("TEE-SAND-FOX"); await reload(); await click("K04"); await click("K07"); await choose("LS2-GREEN-CHECK"); await click("Tanktop · navy"); await choose("TK-BRETON-STRIPE");
-      await click("Outfittets egen top"); await click("Nuværende avatar"); await o.c.close(); }
+      await snap("(start K01)"); await put("top-tee-hip-sand-fox"); await reload(); await put("bottom-shorts-navy"); await put("top-sweater-ls2-green-check");
+      await put("top-tank-navy"); await put("top-tank-breton-stripe"); await back(); await o.c.close(); }
     if (RUN("choice")) for (const file of ["top-tee-hip-sand-fox-sleeves-v1.webp", "top-sweater-ls2-green-check-top-body-v1.webp", "top-tank-shadow-body-v1.webp"]) {
       const sw = file.startsWith("top-tee") ? "TEE-SAND-FOX" : file.startsWith("top-sweater") ? "LS2-GREEN-CHECK" : "TK-BRETON-STRIPE";
       const o = await open("hub", { code: "pr", storage: { ...OPT, avatar_northstar_outfit: "K07", avatar_northstar_sweater: sw } }, { block: file });
       result.failure.push({ blocked: file, path: o.info.path, figureMounted: o.info.kids.some((c) => c.src === "blob:"), storageUnchanged: o.info.storageUnchanged }); await o.c.close(); }
-    if (RUN("choice")) for (const [name, k, width] of [["k01-desktop", "K01", 900], ["k04-desktop", "K04", 900], ["k01-phone", "K01", 390]]) {
-      const o = await open("avatar", { code: "pr", storage: { ...OPT, avatar_northstar_outfit: k, avatar_northstar_sweater: "TEE-MINT-TEAPOT" } }, { width, dpr: 1 });
-      await o.p.screenshot({ path: join(OUT, "preview-panel-" + name + ".png"), fullPage: true });
-      result.preview.push({ name, key: o.info.key, options: await o.p.$$eval(".northstar-kit-select option", (os) => os.map((x) => (x.parentElement.label || "") + " | " + x.textContent + (x.disabled ? " [off]" : ""))) }); await o.c.close(); }
+    if (RUN("choice")) for (const [name, width] of [["wardrobe-desktop", 1100], ["wardrobe-phone", 390]]) {
+      const o = await open("avatar", { code: "pr", storage: { ...OPT, avatar_northstar_outfit: "K01", avatar_northstar_sweater: "TEE-MINT-TEAPOT" } }, { width, dpr: 1 });
+      await o.p.screenshot({ path: join(OUT, "preview-" + name + ".png"), fullPage: true });
+      const scroll = await o.p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+      result.preview.push({ name, key: o.info.key, horizontalScroll: scroll, tops: await o.p.$$eval(".northstar-wardrobe .item-card", (cs) => cs.filter((c) => c.dataset.piece.startsWith("top-")).map((c) => c.querySelector(".item-name").textContent)) }); await o.c.close(); }
   } finally { await browser.close(); server.close(); }
-  const ch = result.choice, off22 = (c) => c.kit.off.length === 22 && c.kit.off.every((v) => /^(LS2|TK)-/.test(v));
+  const ch = result.choice, top = (c) => (c.now || "").split("+")[0], bottom = (c) => (c.now || "").split("+")[1];
   const all = { baseline: result.baseline.length === 33 && result.baseline.every((b) => b.identicalToMain && b.layersEqualToMain && b.path === b.mainPath && b.storageUnchanged),
     figure: result.figure.length === 9 * 3 && result.figure.every((f) => f.path === "northstar" && f.key === f.want && f.blob && f.natural[0] === 1024 && f.natural[1] === 1536 && f.light.maxDiff <= 3 && f.light.pxOver2 <= 5 && f.dark.maxDiff <= 3 && f.dark.pxOver2 <= 5 && !f.overlayVisible && f.storageUnchanged && f.layers.filter((m) => m === "base").length === 1),
-    choice: ch.length === 10 && ch[0].key === "K01" && ch[0].kit.options === 33 && ch[0].kit.off.length === 0 && ch[0].kit.groups.join() === "T-shirts:11,Sweatere:11,Tanktoppe:11" && ch[0].pressed.join() === "Outfittets egen top"
-      && ch[1].key === "K01+TEE-SAND-FOX" && ch[1].path === "northstar" && ch[1].kit.value === "TEE-SAND-FOX" && ch[1].pressed.length === 0
-      && ch[2].key === "K01+TEE-SAND-FOX" && ch[2].sweater === "TEE-SAND-FOX"
-      && ch[3].key === "K04+TEE-SAND-FOX" && off22(ch[3]) && ch[3].disabled.length === 12
-      && ch[4].key === "K07+TEE-SAND-FOX" && ch[4].kit.off.length === 0
-      && ch[5].key === "K07+LS2-GREEN-CHECK" && ch[5].kit.value === "LS2-GREEN-CHECK"
-      && ch[6].key === "K07+TK-NAVY" && ch[6].sweater === "TK-NAVY" && ch[6].pressed.join() === "Tanktop · navy" && ch[6].kit.value === ""
-      && ch[7].key === "K07+TK-BRETON-STRIPE" && ch[7].kit.value === "TK-BRETON-STRIPE" && ch[7].pressed.length === 0
-      && ch[8].key === "K07" && ch[8].sweater === null && ch[8].pressed.join() === "Outfittets egen top" && ch[8].kit.value === ""
-      && ch[9].path === "r2" && ch[9].outfit === null && ch[9].key === null && ch[9].kit.disabled,
+    choice: ch.length === 8 && ch.every((c, i) => i === 7 || (c.path === "northstar" && c.nowApproved && c.topCards === 63 && c.kitCards === 33 && c.unnamed === 0))
+      && top(ch[0]) === "top-tee-hip-cream" && top(ch[1]) === "top-tee-hip-sand-fox" && ch[2].now === ch[1].now
+      && bottom(ch[3]) === "bottom-shorts-navy" && top(ch[3]) === "top-tee-hip-sand-fox"
+      && top(ch[4]) === "top-sweater-ls2-green-check" && bottom(ch[4]) !== "bottom-shorts-navy"
+      && top(ch[5]) === "top-tank-navy" && top(ch[6]) === "top-tank-breton-stripe" && ch[6].worn.includes("top-tank-breton-stripe")
+      && ch[7].path === "r2" && ch[7].now === null,
     failure: result.failure.length === 3 && result.failure.every((f) => f.path === "r2" && !f.figureMounted && f.storageUnchanged),
-    preview: result.preview.length === 3 && result.preview.every((p) => p.options.length === 34),
+    preview: result.preview.length === 2 && result.preview.every((p) => p.tops.length === 63 && !p.horizontalScroll),
     noPageErrors: result.errors.length === 0 };
   const parts = { baseline: ["baseline"], figure: ["figure"], choice: ["choice", "failure", "preview"] }, ok = Object.fromEntries(Object.entries(all).filter(([k]) => k === "noPageErrors" || !PART || parts[PART].includes(k)));
   writeFileSync(join(OUT, PART ? "result-" + PART + ".json" : "result.json"), JSON.stringify({ ok, servedFromStaging: [...served].sort(), ...result }, null, 2) + "\n");
