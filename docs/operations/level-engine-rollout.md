@@ -376,7 +376,9 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (F-05 Kategorisering, oven på F-04) — **ikke deployet** | dette repository | 19 | `467f9582454a8d36f6d5f6010c6736b9911bee2ac1e3c8c42edd36d55f14d5c6` |
+| Kandidat (F-05 Kategorisering oven på F-04, plus D-329 `objective-target.ts`, Lærligverse-integration lag 2) — **ikke deployet** | dette repository | 20 | `a0688ada4117ac2f2d58ef9e7fd4badfc714417f8cad80fa183e2990b9a6196f` |
+| Forrige kandidat (F-04 + D-329, Lærligverse-integration lag 2 før F-05) — ikke deployet | `223a5bd9` | 19 | `7438c77f914aa458cef9ce4b0118bfc8d61f3871eedb3a55eecbd4e2d2d7355b` |
+| Forrige kandidat (F-05 Kategorisering, oven på F-04, før D-329) — ikke deployet | main `479bb193` | 19 | `467f9582454a8d36f6d5f6010c6736b9911bee2ac1e3c8c42edd36d55f14d5c6` |
 | Forrige kandidat (F-04 Rækkefølge, oven på F-02 og F-07, PR #624) — ikke deployet | #624 | 18 | `06a6ccb9a2e5640abaa71a69581f3f42b5192c7dc91d865580099bf6004b3c4e` |
 | Forrige kandidat (F-02 Sandt/falsk #607 + F-07 stimulus, PR #618) — ikke deployet | #618 | 17 | `1df4cb344dfe97bde6f14b8e34adb9db26a44e948b6d197d01f2b9baa3104c8d` |
 | Forrige kandidat (F-02 Sandt/falsk, PR #607, merget uden stimulus) | main `3a2d2f37` | 16 | `00ddba65243d69fffeb9ea8f7b01714d5745cf7bfe0945330123919b3237f1ca` |
@@ -434,6 +436,13 @@ PR #379 tilføjer feltet `pupil` (et envejs-pseudonym af eleven, `log-pseudonym.
 `FORMAT_MIX:`-loglinjer (shadow og v2). Slukket-pariteten kontrollerer, at hver `FORMAT_MIX:`-linje
 har præcis det forventede pseudonym, og at ingen anden linje har det. Først derefter fjernes feltet,
 og resten skal stadig være identisk med version 179.
+D-329 (Lærligverse F4-B) tilføjer `objective-target.ts` og målretning af ét eksisterende
+`learning_objective`. Den er **slukket**, medmindre Edge-secret'en `LAERLIGVERSE_OBJECTIVE_TARGETING` er
+præcis `on` **og** anmodningen indeholder `learning_objective`. Slukket laver funktionen præcis de samme
+kald som før. `learning_objective` læses kun i den åbne instans' select, når målretningen er tændt, så
+slukket-pariteten er uændret. Tændt kan den kun indsnævre det server-afledte scope. Den springer
+gentagelsestrinnet over (E2) og svarer 409 på en åben instans fra et andet mål, og 409 `open_question_exists`, hvis en samtidig anmodning vandt den ene åbne instans. Secret'en sættes ikke i
+produktionen uden ejerens særskilte GO.
 Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
 kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten
@@ -534,7 +543,7 @@ reference.
 - `entrypoint_path` `functions/get-next-question/index.ts`;
 - `import_map_path` `functions/get-next-question/deno.json`;
 - `verify_jwt` `false`, ellers fejler browserens OPTIONS-preflight;
-- præcis filerne i kandidatmanifestet (17 for kandidaten ovenfor), med stierne som i manifestet.
+- præcis filerne i kandidatmanifestet (19 for kandidaten ovenfor), med stierne som i manifestet.
 
 Ingen secret ændres.
 

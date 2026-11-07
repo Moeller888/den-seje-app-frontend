@@ -1,0 +1,66 @@
+.lv-connection { position: fixed; right: 8px; top: 8px; margin: 0; padding: 3px 8px; border-radius: 10px; background: rgba(0, 0, 0, 0.55); color: #fff; font: 13px system-ui, sans-serif; z-index: 20; }
+.lv-task { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(12, 14, 18, 0.55); z-index: 30; font-family: "Atkinson Hyperlegible", system-ui, sans-serif; }
+.lv-task[hidden] { display: none; }
+.lv-sheet { width: min(760px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; padding: 20px 22px; border-radius: 10px; background: #f3ead6; color: #1f1a12; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); }
+.lv-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.lv-head h2 { margin: 0; font-size: 20px; }
+.lv-mode { font-size: 13px; padding: 2px 8px; border-radius: 10px; background: #e1d4b4; }
+.lv-prompt { font-size: 18px; margin: 12px 0; }
+.lv-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.lv-cards[hidden] { display: none; }
+/* Symmetric: every card looks the same; only the pupil's own choice is marked. */
+.lv-card { min-height: 72px; padding: 10px 12px; text-align: left; font: inherit; border: 2px solid #b9a77c; border-radius: 6px; background: #fffaf0; color: inherit; cursor: pointer; }
+.lv-card[aria-pressed="true"] { border-color: #2f4f7a; outline: 3px solid #2f4f7a; outline-offset: 1px; }
+.lv-card:focus-visible, .lv-sheet button:focus-visible, #lv-text:focus-visible { outline: 3px solid #1d5fd1; outline-offset: 2px; }
+#lv-text { width: 100%; padding: 10px; font: inherit; font-size: 18px; }
+#lv-text[hidden] { display: none; }
+.lv-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.lv-sheet button:not(.lv-card) { padding: 9px 14px; font: inherit; border-radius: 6px; border: 1px solid #6d5d3b; background: #fff; color: inherit; cursor: pointer; }
+.lv-sheet button.lv-primary { background: #2f4f7a; border-color: #2f4f7a; color: #fff; }
+.lv-sheet button:disabled { opacity: 0.55; cursor: default; }
+.lv-sheet button[hidden] { display: none; }
+.lv-hints { margin: 10px 0 0; padding-left: 20px; }
+.lv-status { min-height: 1.4em; margin: 10px 0 0; font-weight: 600; }
+.lv-feedback p { margin: 6px 0; }
+/* D-310: source investigation, self-explanation and the introduction. */
+.lv-source { display: flex; flex-direction: column; gap: 6px; }
+.lv-source .lv-card { width: 100%; }
+.lv-sheet button.lv-inspect { align-self: flex-start; padding: 4px 10px; font-size: 14px; }
+.lv-detail { margin: 0; padding: 8px 10px; border-left: 4px solid #b9a77c; background: #fbf5e6; font-size: 15px; }
+.lv-detail[hidden] { display: none; }
+.lv-guide { margin: 0 0 10px; font-style: italic; }
+.lv-guide:empty { display: none; }
+.lv-reasons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.lv-reasons[hidden] { display: none; }
+.lv-reasons .lv-card-title { width: 100%; margin: 0; }
+.lv-sheet button.lv-reason[aria-pressed="true"] { border-color: #2f4f7a; outline: 2px solid #2f4f7a; }
+.lv-card-title { margin: 10px 0 4px; font-size: 16px; }
+.lv-note { margin: 12px 0 0; font-size: 13px; color: #5a4f3a; }
+.lv-note[hidden] { display: none; }
+/* D-322: activity badge, document back, revision, archive card, reflection, revisit. */
+.lv-activity { font-size: 13px; padding: 2px 8px; border-radius: 10px; background: #d9e3f0; color: #1f2f47; }
+.lv-activity[hidden], .lv-activity:empty { display: none; }
+.lv-back { display: grid; grid-template-columns: max-content 1fr; gap: 2px 10px; }
+.lv-back dt { font-weight: 700; }
+.lv-back dd { margin: 0; }
+.lv-back[hidden] { display: none; }
+.lv-source[data-relevant="true"] .lv-card { border-color: #2d6a3e; outline: 3px solid #2d6a3e; outline-offset: 1px; }
+.lv-sort { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 10px; }
+.lv-sort-row { display: grid; grid-template-columns: 1fr minmax(12em, auto); gap: 4px 10px; align-items: center; }
+.lv-sort-row select { font: inherit; padding: 6px; min-height: 44px; }
+.lv-sort-row[data-ok="false"] select { border: 2px solid #9a3b1b; }
+.lv-sort-row[data-ok="true"] select { border: 2px solid #2d6a3e; }
+.lv-why { grid-column: 1 / -1; margin: 0; font-size: 15px; }
+.lv-why[hidden] { display: none; }
+#lv-reflection-text { width: 100%; box-sizing: border-box; padding: 10px; font: inherit; font-size: 17px; background: #fffaf0; color: #1f1a12; border: 1px solid #6d5d3b; border-radius: 6px; }
+#lv-reflection-text[readonly] { background: #fbf5e6; border-style: dashed; }
+.lv-sheet select:focus-visible, #lv-reflection-text:focus-visible { outline: 3px solid #1d5fd1; outline-offset: 2px; }
+.lv-feedback[hidden] { display: none; }
+/* Small screens: one column, full-width actions, touch-sized targets. */
+@media (max-width: 560px) {
+  .lv-sheet { width: calc(100% - 16px); max-height: calc(100% - 16px); padding: 14px; }
+  .lv-cards { grid-template-columns: 1fr; }
+  .lv-sort-row { grid-template-columns: 1fr; }
+  .lv-actions button { flex: 1 1 100%; min-height: 44px; }
+  .lv-head { flex-wrap: wrap; }
+}
