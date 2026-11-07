@@ -10,6 +10,7 @@ import { callProcessTextAnswerV2, callProcessQuestionAttemptV2, LEGACY_ANSWER_RP
 import { updateOwnInstance, recordMisconceptionSignal, type InstanceWriteResult } from "./instance-writes.ts";
 import { readInstanceForGrading } from "./instance-read.ts";
 import { answerMode, replyForV2, isRevokedLegacyRpc, errorCodeOf, CLIENT_OUTDATED, UNEXPECTED_RESULT } from "./answer-v2.ts";
+import { ATTEMPT_CONTEXT_ENV, attemptContextEnabled, attemptContextOf, readAttemptFacts, type AttemptContext } from "./attempt-context.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -107,6 +108,11 @@ serve(async (req) => {
     }
     const h5 = mode.kind === "h5" ? mode : null
 
+    // Lærligverse L5 + L3 (./attempt-context.ts): only an H5 request with the Edge secret
+    // LAERLIGVERSE_ATTEMPT_CONTEXT exactly "on" derives mode and hints from server facts. Otherwise every read
+    // and call below is exactly as before, and _v2 gets the L1 constants.
+    const attemptContextOn = h5 !== null && attemptContextEnabled(Deno.env.get(ATTEMPT_CONTEXT_ENV))
+
     // ── Fetch instance + question meta ───────────────────────────────────────
     // A backend read (./instance-read.ts): the answer key and the question content are server-only.
     // Nothing from the row is used or returned before the ownership check below.
@@ -158,6 +164,21 @@ serve(async (req) => {
     const misconceptionType = extractMisconceptionType(metadata)
 
     console.log("DEBUG META:", { format, answerType, hasReviewText: !!reviewText, misconceptionType })
+
+    // L5 + L3: the attempt's mode (the instance's served_mode; NULL → quiz_v1) and hints used (distinct levels
+    // in the server's hint log for this round), read in a separate backend read right before the _v2 call
+    // (./attempt-context.ts). Never from the body. Called only on the H5 paths and only when attemptContextOn;
+    // a broken value or a failed read is a 500 with nothing recorded — never a silent default.
+    async function serverAttemptContext(roundNo: number): Promise<AttemptContext | null> {
+      const facts = await readAttemptFacts(makeAdminClient, { instanceId: question_instance_id, studentId: user!.id, roundNo })
+      const context = attemptContextOf(facts)
+      if (!context.ok) {
+        console.error("ATTEMPT CONTEXT ERROR:", JSON.stringify({ instance_id: question_instance_id, problem: context.problem, code: errorCodeOf(facts.error) }))
+        return null
+      }
+      console.log("ATTEMPT CONTEXT:", { mode: context.mode, hintsUsed: context.hintsUsed })
+      return { mode: context.mode, hintsUsed: context.hintsUsed }
+    }
 
     // ── PATH 1: Long answer → save for teacher, no auto-grade ───────────────
     // Also with valid H5 fields: long answers are not covered by the answer history yet (H4 is open),
@@ -229,19 +250,26 @@ serve(async (req) => {
         let v2Data: unknown
         let v2Error: unknown
         try {
-          ({ data: v2Data, error: v2Error } = await callProcessTextAnswerV2(
-            makeAdminClient,
-            {
-              instanceId:        question_instance_id,
-              userId:            user.id,
-              answer,
-              isCorrect,
-              roundNo:           h5.roundNo,
-              submissionId:      h5.submissionId,
-              reviewText,
-              misconceptionType,
+          const award = {
+            instanceId:        question_instance_id,
+            userId:            user.id,
+            answer,
+            isCorrect,
+            roundNo:           h5.roundNo,
+            submissionId:      h5.submissionId,
+            reviewText,
+            misconceptionType,
+          }
+          // Off: undefined → the L1 constants, exactly as before.
+          let context: AttemptContext | undefined = undefined
+          if (attemptContextOn) {
+            const derived = await serverAttemptContext(h5.roundNo)
+            if (derived === null) {
+              return new Response(JSON.stringify(UNEXPECTED_RESULT), { status: 500, headers: corsHeaders })
             }
-          ))
+            context = derived
+          }
+          ({ data: v2Data, error: v2Error } = await callProcessTextAnswerV2(makeAdminClient, award, context))
         } catch (keyError: any) {
           // serviceKey()'s messages name the variables, never their values.
           console.error("ADMIN CLIENT ERROR:", keyError?.message ?? keyError)
@@ -394,18 +422,25 @@ serve(async (req) => {
       let v2Data: unknown
       let v2Error: unknown
       try {
-        ({ data: v2Data, error: v2Error } = await callProcessQuestionAttemptV2(
-          makeAdminClient,
-          {
-            studentId:         user.id,
-            instanceId:        question_instance_id,
-            answer:            gradedAnswer,
-            roundNo:           h5.roundNo,
-            submissionId:      h5.submissionId,
-            reviewText,
-            misconceptionType,
+        const attempt = {
+          studentId:         user.id,
+          instanceId:        question_instance_id,
+          answer:            gradedAnswer,
+          roundNo:           h5.roundNo,
+          submissionId:      h5.submissionId,
+          reviewText,
+          misconceptionType,
+        }
+        // Off: undefined → the L1 constants, exactly as before.
+        let context: AttemptContext | undefined = undefined
+        if (attemptContextOn) {
+          const derived = await serverAttemptContext(h5.roundNo)
+          if (derived === null) {
+            return new Response(JSON.stringify(UNEXPECTED_RESULT), { status: 500, headers: corsHeaders })
           }
-        ))
+          context = derived
+        }
+        ({ data: v2Data, error: v2Error } = await callProcessQuestionAttemptV2(makeAdminClient, attempt, context))
       } catch (keyError: any) {
         // serviceKey()'s messages name the variables, never their values.
         console.error("ADMIN CLIENT ERROR:", keyError?.message ?? keyError)

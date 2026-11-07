@@ -163,8 +163,11 @@ test("the admin client is used only by the grading read, the two privileged answ
   // (./instance-read.ts), the short-text award, the MC/number attempt, the long-answer save, the
   // two misconception-signal writes (./instance-writes.ts) and the two H5 _v2 calls (D-273,
   // ./text-answer-rpc.ts). It is never invoked directly, so nothing else can run on it.
+  // Lærligverse L5 + L3 adds a ninth call site: the attempt-facts read (served_mode + the hint log,
+  // ./attempt-context.ts), run only with LAERLIGVERSE_ATTEMPT_CONTEXT=on on the H5 paths.
   const uses = INDEX_CODE.match(/makeAdminClient/g) ?? [];
-  assert.equal(uses.length, 9, "one definition + eight call sites");
+  assert.equal(uses.length, 10, "one definition + nine call sites");
+  assert.match(INDEX_CODE, /const facts = await readAttemptFacts\(makeAdminClient, \{ instanceId: question_instance_id, studentId: user!\.id, roundNo \}\)/);
   assert.match(PATH_TEXT, /await callProcessTextAnswerV2\(\s*makeAdminClient,/);
   assert.match(PATH_MC, /await callProcessQuestionAttemptV2\(\s*makeAdminClient,/);
   assert.match(INDEX_CODE, /await readInstanceForGrading\(\s*makeAdminClient,/);
