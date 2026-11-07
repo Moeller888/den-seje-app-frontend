@@ -15,9 +15,10 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
 const wear = (choice) => L.northstarUseAccount({ northstar: choice });
 
-test("D-359: 1304 approved outfits; each stored choice draws exactly that outfit on the render path", () => {
+test("D-359: 1304 approved outfits and D-355's 1441 (2745); each stored choice draws exactly that outfit on the render path", () => {
   const all = L.northstarApprovedOutfits();
-  assert.equal(all.size, 1304);
+  assert.equal(all.size, 1304 + 1441, "D-359's 1304 and D-355's 1441");
+  assert.equal([...all.values()].filter((o) => L.NORTHSTAR_KIT_TOP_COMBOS.includes(o.top + "+" + o.bottom + "+" + o.shoes)).length, 1441);
   for (const [id, o] of all) {
     wear(o.choice);
     const r = L.northstarRenderFor("avatar", []);
@@ -37,12 +38,12 @@ test("D-359: the known faults and the excluded pairs are not in the list", () =>
   }
 });
 
-test("D-359: 46 single parts, each with a label and existing layer files, and no planet", () => {
+test("D-359: 46 single parts and D-355's 33 tops (79), each with a label and existing layer files, and no planet", () => {
   const pieces = L.northstarPieces();
   const by = (c) => pieces.filter((p) => p.category === c).length;
-  assert.deepEqual([by("top"), by("bottom"), by("shoes")], [30, 6, 10]);
+  assert.deepEqual([by("top"), by("bottom"), by("shoes")], [30 + 33, 6, 10]);
   const names = pieces.map((p) => P.northstarPieceLabel(p.item));
-  assert.equal(new Set(names).size, 46, "every label is different");
+  assert.equal(new Set(names).size, 46 + 33, "every label is different");
   for (const n of names) { assert.ok(n && !/undefined|K\d/.test(n), n); assert.ok(!/planet/i.test(n), n); }
   for (const p of pieces) {
     const srcs = L.northstarPieceLayers(p.item);

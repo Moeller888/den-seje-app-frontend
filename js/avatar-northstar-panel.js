@@ -18,7 +18,7 @@
 // the same store, so at most one sweater or tank top is chosen; the same rule and fallback.
 // D-359: with the flag on pupils get mountNorthstarWardrobe below: single parts in the right-hand column, no sets. The K panel is what
 // the local opt-in shows while the flag is off, and what the verifiers drive.
-import { northstarPieces, northstarPieceLayers, northstarFitPiece, northstarOutfitNow, NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_TOP_CHOICES, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor } from "./avatar-layers.js";
+import { northstarPieces, northstarPieceLayers, northstarFitPiece, northstarOutfitNow, NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_TOP_CHOICES, NORTHSTAR_SELECTABLE_TOPS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor } from "./avatar-layers.js";
 
 function store(key, value) {
   try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch (_e) { return false; }
@@ -92,7 +92,7 @@ export function mountNorthstarPanel(panel, preview) {
     if (blockedHere) topBlocked.push(group); }
   button(sweaterList, "Outfittets egen top", NORTHSTAR_SWEATER_KEY, null, !!current && !shownSweater, !current);
   sweaterNote.textContent = topBlocked.length ? topBlocked.join(" og ") + ": ikke mulig her. " + sweaterReason(current, shown, shownPants, shownShoe) : "";
-  const what = () => { const parts = [shown ? NORTHSTAR_PRINT_TEES[shown].label : null, shownPants ? NORTHSTAR_SOLID_PANTS[shownPants].label : null, shownShoe ? NORTHSTAR_SHOE_CHOICES[shownShoe].label : null, shownSweater ? NORTHSTAR_TOP_CHOICES[shownSweater].label : null].filter(Boolean);
+  const what = () => { const parts = [shown ? NORTHSTAR_PRINT_TEES[shown].label : null, shownPants ? NORTHSTAR_SOLID_PANTS[shownPants].label : null, shownShoe ? NORTHSTAR_SHOE_CHOICES[shownShoe].label : null, shownSweater ? NORTHSTAR_SELECTABLE_TOPS[shownSweater].label : null].filter(Boolean);
     return current ? current + (parts.length ? " med " + parts.join(" og ") : "") : ""; };
   const describe = () => {
     const path = preview && preview.dataset ? preview.dataset.avatarRenderPath : null;
@@ -153,7 +153,7 @@ export function northstarPieceLabel(item) {
   if (Object.prototype.hasOwnProperty.call(BASE_NAMES, item)) return BASE_NAMES[item];
   const tee = Object.values(NORTHSTAR_PRINT_TEES).find((t) => t.item === item);
   if (tee) return "T-shirt · " + tee.label.charAt(0).toLowerCase() + tee.label.slice(1);
-  const other = [...Object.values(NORTHSTAR_SOLID_PANTS), ...Object.values(NORTHSTAR_SHOE_CHOICES), ...Object.values(NORTHSTAR_TOP_CHOICES)].find((t) => t.item === item);
+  const other = [...Object.values(NORTHSTAR_SOLID_PANTS), ...Object.values(NORTHSTAR_SHOE_CHOICES), ...Object.values(NORTHSTAR_SELECTABLE_TOPS)].find((t) => t.item === item);   // D-355: the 33 tops too
   return other ? other.label : "";
 }
 const lower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
