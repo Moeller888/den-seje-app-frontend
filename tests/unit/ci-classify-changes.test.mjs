@@ -468,7 +468,13 @@ test("workflow: the unit suite runs on every event with no mode condition (shard
   assert.ok(!shardJob.includes("if:"), "the unit shards must not be conditional");
   assert.ok(!shardJob.includes("needs:"), "the unit shards must not depend on classification");
   assert.ok(shardJob.includes("run: npm run test:unit:ci"), "each shard must run the unit runner");
-  assert.ok(shardJob.includes("shard: [1, 2, 3]") && shardJob.includes("UNIT_SHARD: ${{ matrix.shard }}/3"),
+  // D-361: UNIT_SHARD reads the count from the matrix itself (strategy.job-total), so the two cannot
+  // disagree; the matrix must still be exactly 1..N.
+  const matrix = /\n {8}shard: \[([\d, ]+)\]\n/.exec(shardJob);
+  assert.ok(matrix, "unit-shard matrix not found");
+  const shards = matrix[1].split(",").map((x) => Number(x.trim()));
+  assert.deepEqual(shards, shards.map((_, i) => i + 1), "the matrix must be 1..N");
+  assert.ok(shardJob.includes("UNIT_SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}"),
     "the matrix and UNIT_SHARD must agree on the shard count");
   assert.ok(shardJob.includes("fail-fast: false"), "one failing shard must not hide the others' results");
 
