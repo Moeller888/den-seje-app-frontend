@@ -1,0 +1,101 @@
+{
+  "_om": "D-346: lærerens godkendelse af kildekritik-maaling-v1.5, bundet til det indhold, den blev givet på. Genereret af tools/laerligverse/assessment-register.mjs register-final. Ret ikke i hånden. En godkendelse gælder kun indhold, hvis fingeraftryk er uændret. Godkendelserne er faglige og er IKKE et GO til elevpilot, produktion, LP-13 eller merge.",
+  "godkendelsesfil": "docs/laerligverse/proeve-godkendelse-2026-11-05-v1.5.json",
+  "original_filnavn": "proeve-godkendelse (3).json",
+  "sha256": "141eaffd573b2cce99773db5fc6368f40c096913dc4500ff8cf9e9b430daa27f",
+  "format": "laerligverse-proeve-godkendelse/1",
+  "version": "kildekritik-maaling-v1.5",
+  "rubrikversion": "kildekritik-rubrik-v1.5",
+  "laerer": "christopher møller",
+  "dato": "05-11-2026",
+  "bemaerkninger": [],
+  "afgoerelser": {
+    "A": {
+      "status": "godkendt",
+      "fingeraftryk": "4d71ac22bf2d8da716ca01574933328dc327ee283f5446bb5326d89763139c5a"
+    },
+    "B": {
+      "status": "godkendt",
+      "fingeraftryk": "056f7f524f91e0a9dd9126dc94747b12c7e35862d1eb3a2a699af1891033f588"
+    },
+    "T": {
+      "status": "godkendt",
+      "fingeraftryk": "bfb9fbb5eed21be9c4a8a3907ecc8493c817995fa97528986d2e20f8d01c4543"
+    },
+    "C": {
+      "status": "godkendt",
+      "fingeraftryk": "4e0e0e7d401417e667472accde34ef210560c722b07f5f9c8976d7d4e48fbdc3"
+    },
+    "rubrik": {
+      "status": "godkendt",
+      "fingeraftryk": "a00327966f790b73e823b56b4daf2ca4e118d66a209461a02e9be41c2519ecaf"
+    }
+  },
+  "tvetydigheder": {
+    "S2": {
+      "valg": "2",
+      "kilde": "fil"
+    },
+    "S3": {
+      "valg": "1",
+      "kilde": "fil"
+    },
+    "S4": {
+      "valg": "1",
+      "kilde": "fil"
+    },
+    "S6": {
+      "valg": "foelgefejl",
+      "kilde": "fil"
+    },
+    "S7": {
+      "valg": "spoerg",
+      "kilde": "fil"
+    }
+  },
+  "rubrikbeslutninger": {
+    "T1": {
+      "valg": "saerskilt",
+      "kilde": "fil"
+    }
+  },
+  "lp13": {
+    "LP13-1": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-2": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-3": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-4": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-5": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "genbesoeg": {
+      "valg": "B",
+      "kilde": "fil"
+    },
+    "forsinket": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-7": {
+      "valg": "B",
+      "kilde": "fil"
+    },
+    "pilot": {
+      "valg": "A",
+      "kilde": "fil"
+    }
+  },
+  "registreret_paa": "e286d6b2e58042f3f75dbc31f41b9e78caa5437e"
+}

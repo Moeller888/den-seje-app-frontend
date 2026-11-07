@@ -117,8 +117,6 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
   "20261101120000_night_owl_stop_new_awards.sql":
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
-  "20261103110000_l1_k1_attempt_context.sql":
-    "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
   "20261105120000_true_false_activation.sql":
     "F-02 Sandt/falsk activation, not applied in production and not to be applied before the get-next-question deploy that makes true_false servable: it admits true_false rows in questions and flips question_is_servable for them",
   "20261020140001_english_level_batch2_1.sql":
@@ -185,6 +183,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
 export const REPO_AHEAD_OF_PRODUCTION = Object.freeze({
   "20260808010000_password_help_reserve_rpc.sql":
     "repository ahead of production: the repository's request-password-help calls public.reserve_password_help, which production does not have (catalog, 2026-10-25) — open production task D-243",
+  "20261103110000_l1_k1_attempt_context.sql":
+    "EXPERIMENT (F10-B2, NOT for merge without the owner's decision): L1 K1 is not applied in production; replayed here only to exercise process-event's H5 path (p_mode/p_hints_used) against the 9/10-parameter _v2 in the isolated stack (closes the D-341 gap in this branch only)",
   "20261030211428_question_attempts_v2.sql":
     "repository ahead of production: the repository's process-event calls process_question_attempt_v2 / process_text_answer_v2 behind the H5 switch, which production does not have (catalog, 2026-11-01) — open production task D-266/D-273 (H5)",
 });

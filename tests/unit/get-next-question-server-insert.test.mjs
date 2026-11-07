@@ -157,6 +157,9 @@ test("the admin client is used only for the instance insert and the server-only 
   assert.match(INDEX_CODE, /await insertQuestionInstance\(makeAdminClient, \{/);
   const adminUses = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.(from|rpc)\(\s*"([a-z_]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
   assert.deepEqual(adminUses, [
+    // D-338, sequence requests only (LAERLIGVERSE_SEQUENCE=on + targeting + body.sequence): the pupil's own
+    // history in the objective — answered, verdict, time and the question's step tag; no content, no key.
+    "from:question_instances",
     // Match par only (PR #377): the instance key of a "match" row, read on its own so every other
     // format makes the release-gated reads unchanged (pinned in match-pairs.test.mjs).
     "from:question_instances",
@@ -165,6 +168,9 @@ test("the admin client is used only for the instance insert and the server-only 
     "from:question_instances",
     "from:question_instances",
     "rpc:get_unserved_questions_for_student",
+    // D-329, targeted requests only: the lost-race check reads ONLY the id of the verified pupil's open
+    // instance (no key), before "objective_exhausted" may be claimed; it never reaches the repeat RPCs below.
+    "from:question_instances",
     // QUESTION_MIX_ENGINE "v2" only: the same repeat with exhaustion judged on servable formats
     // (migration 20261019150000; service_role only, same student-scoped guards).
     "rpc:request_repeat_question_servable_for_student",
@@ -184,8 +190,8 @@ test("the admin client is used only for the instance insert and the server-only 
   // pinned in level-flow.test.mjs.
   assert.equal((INDEX_CODE.match(/await loadLevelPlan\(admin\(\) as unknown as LevelReadClient, \{\s*studentId: student_id,/g) ?? []).length, 1,
     "the level engine call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 11,
-    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read)");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 13,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {

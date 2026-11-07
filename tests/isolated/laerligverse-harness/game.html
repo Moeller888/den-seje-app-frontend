@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <title>Lærligverse · spil (testharness)</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@adventure-engine/core": "/pkg/core/src/index.ts",
+          "@adventure-engine/content": "/pkg/content/src/index.ts",
+          "@adventure-engine/geometry": "/pkg/geometry/src/index.ts"
+        }
+      }
+    </script>
+  </head>
+  <body data-bridge="connecting" data-cabinet="default" data-cabinet-open="false" data-task="none">
+    <p id="banner">TEKNISK INTEGRATIONSHARNESS (D-315): spørgsmålet er et tilfældigt Lærlig-spørgsmål fra elevens fag, ikke Arkivskabets faglige opgave.</p>
+    <button id="use-cabinet" type="button">Brug arkivskabet</button>
+    <ol id="lines"></ol>
+    <section id="task" hidden>
+      <p id="prompt"></p>
+      <div id="options"></div>
+      <input id="text" type="text" hidden />
+      <button id="commit" type="button" disabled>Aflever</button>
+      <p id="verdict"></p>
+    </section>
+    <script type="module" src="/game.mjs"></script>
+  </body>
+</html>
