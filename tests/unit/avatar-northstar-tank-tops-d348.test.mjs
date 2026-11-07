@@ -75,7 +75,9 @@ test("D-348 the published files: exactly the 8 staged files with their sha256, i
   const m = JSON.parse(readFileSync(join(REPO, "assets", "avatar-northstar", "manifest.json"), "utf8")), ext = m.extensions.find((e) => e.decision === "D-345");
   for (const f of A.staging.files) { const b = readFileSync(join(REPO, "assets", "avatar-northstar", f.file)); assert.equal(sha(b), f.sha256, f.file); assert.equal(b.length, f.bytes);
     const e = m.files.find((x) => x.file === f.file); assert.ok(e && e.sha256 === f.sha256 && e.origin.decision === "D-345", f.file); }
-  assert.equal(m.files.filter((f) => f.file.startsWith("top-tank-")).length, 8); assert.equal(m.counts.d345Files, 8); assert.equal(m.counts.files, m.files.length);
+  // D-355 publishes the 11 tank tops of D-354 under their own decision; D-345's are still exactly the 8
+  assert.equal(m.files.filter((f) => f.file.startsWith("top-tank-") && f.origin.decision !== "D-355").length, 8); assert.equal(m.counts.d345Files, 8); assert.equal(m.counts.files, m.files.length);
+  assert.equal(m.files.filter((f) => f.file.startsWith("top-tank-") && f.origin.decision === "D-355").length, 11);
   assert.equal(ext.publishedBy, "D-348"); assert.deepEqual([...ext.combinations].sort(), want); assert.equal(ext.equivalence.outfitsDiffering, 0); assert.equal(ext.equivalence.approvedCombinations, 264);
   assert.deepEqual(ext.files, A.staging.files.map((f) => f.file).sort()); assert.equal(ext.ownerApproval, A.owner);
 });
