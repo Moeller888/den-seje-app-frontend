@@ -295,7 +295,7 @@ Rules (binding):
    Scoring is binary (correct/incorrect) — no partial credit — so XP/coins, spaced repetition and
    the response shape `{ status, correct_answer, review_text?, misconception_type? }` stay unchanged.
 
-**Kategorisering (`categorize`, F-05, 2026-11-05 — built, NOT servable, not deployed).**
+**Kategorisering (`categorize`, F-05, 2026-11-05 — built; servable in the registry since D-362 (2026-11-07); activation migration NOT applied; not deployed).**
 Contract, key, guess chance and answer shape in `supabase/functions/_shared/categorize.ts`; browser control
 `js/categorize.js`. The pupil places 4–8 items in 2–3 categories (cause / effect, before / after an event,
 democracy / dictatorship, renewable / not, supports / contradicts a claim); categories may hold different
@@ -320,12 +320,19 @@ applying a concept to cases the pupil has not seen word for word — so it belon
 and comprehension check, as application (`tools/stimulus/examples/grundloven-1849-kategorisering.json`).
 *Adaptive engine:* a correct first answer folds like MC (its guess floor is far below MC's 1/4 from 4
 items up), so no exclusion like Sandt/falsk's is needed; `guessFloor` is null because it depends on the
-task. **Before pupils can get it:** a reviewed activation migration (`questions_answer_format_check` and
-`content_valid_check` refuse `categorize` today; `question_is_servable` flips in the same PR as the
-registry), deploys of `get-next-question` (manifest in the rollout runbook) and `process-event`, and
-content — each its own owner GO.
+task. **Before pupils can get it (D-362):** the code half is done — `_shared/interaction-kinds.ts` marks
+`categorize` servable and `get-next-question`'s v1 `mapAnswerFormat` maps `"categorize"` to itself — and
+the reviewed activation migration `20261108090000_order_categorize_activation.sql` exists but is **NOT
+applied** (production's `questions_answer_format_check` and `content_valid_check` still refuse
+`categorize`; the migration adds `categorize_content_is_valid`, the database twin of
+`parseCategorizeContent`, and flips `question_is_servable`). Order, each its own owner GO: (0) production
+step Q-21 — the deployed `process-event` (v34) has no shape check and would grade the placement as an MC
+string; (1) deploy `get-next-question` (manifest in the rollout runbook); (2) apply the migration;
+(3) content (`20261108090200_order_categorize_pilot_content.sql`). A stored row keeps `content.correct`
+(any non-null value, never read: the key is per instance). The migration is independent of F-02 and F-03,
+but their own guards refuse to run after it, so they go first if wanted.
 
-**Rækkefølge / tidslinje (`order_items`, F-04, 2026-11-05 — built, NOT servable, not deployed).**
+**Rækkefølge / tidslinje (`order_items`, F-04, 2026-11-05 — built; servable in the registry since D-362 (2026-11-07); activation migration NOT applied; not deployed).**
 Contract, key and answer shape in `supabase/functions/_shared/order-items.ts`; browser control
 `js/order-items.js`. **The facit is the authored order of `content.items` and is never randomised — only
 the presentation is shuffled**, once per instance: `question_instances.correct_answer` holds the display
@@ -340,10 +347,17 @@ MC — **all or nothing, one reward path** (tested on the replayed production fu
 (D-277 LP-7) and binary scoring is rule 4 above; a random order of 4 items is right 1 time in 24 (1 in 23
 for a pupil who knows the shown order is never the facit), so a correct answer is strong evidence, whereas partial credit would reward near-random orders. The feedback
 still shows the whole correct order after a wrong answer. 3 items (1 in 6) is a practice size. **Before
-pupils can get it:** a reviewed activation migration (production's `questions_answer_format_check` and
-`content_valid_check` refuse `order` rows today; `question_is_servable` must flip in the same PR as the
-registry), deploys of `get-next-question` (manifest in the rollout runbook) and `process-event` (the
-shape check), and content — each its own owner GO.
+pupils can get it (D-362):** the code half is done — `_shared/interaction-kinds.ts` marks `order_items`
+servable and `get-next-question`'s v1 `mapAnswerFormat` maps `"order"` to itself — and the reviewed
+activation migration `20261108090000_order_categorize_activation.sql` exists but is **NOT applied**
+(production's `questions_answer_format_check` and `content_valid_check` still refuse `order` rows; the
+migration adds `order_items_content_is_valid`, the database twin of `parseOrderContent`, and flips
+`question_is_servable`). Order, each its own owner GO: (0) production step Q-21 — the deployed
+`process-event` (v34) has no shape check and would grade the order as an MC string; (1) deploy
+`get-next-question` (manifest in the rollout runbook); (2) apply the migration; (3) content
+(`20261108090200_order_categorize_pilot_content.sql`). A stored row keeps `content.correct` (any non-null
+value, never read: the facit is the authored `content.items`). The migration is independent of F-02 and
+F-03, but their own guards refuse to run after it, so they go first if wanted.
 
 **Stimulus contract (F-07, 2026-11-05 — implemented in code, not deployed, no content).** A question of
 any format may carry `content.stimulus`, built field by field by `supabase/functions/_shared/stimulus.ts`
