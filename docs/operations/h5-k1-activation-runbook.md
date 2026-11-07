@@ -1,6 +1,6 @@
 # H5/K1 — aktiveringsrunbook for svarloggen
 
-**Status:** H5 og K1 er merget på `main` (K1 som PR #536, `41aebf4b`), men **intet er anvendt eller aktiveret i produktionen**. Denne runbook er en procedure, **ikke en godkendelse**. Hvert trin kræver ejerens særskilte GO (CLAUDE.md regel 48; `docs/migration-workflow-policy.md`, D-110). `supabase db push` er forbudt.
+**Status 2026-11-06:** A1–A3 er anvendt i produktionen (`20261104095423`, `20261104140659`, `20261104163310`). K1 (A4) er **ikke** anvendt, og intet er aktiveret. Readiness-kontrollen samme dag gav 33 rækker og `GATE-A4` = true; `question_attempts` er tom. Se §1.2. Afsnittene nedenfor beskriver tilstanden 2026-11-04, hvor intet var anvendt. Denne runbook er en procedure, **ikke en godkendelse**. Hvert trin kræver ejerens særskilte GO (CLAUDE.md regel 48; `docs/migration-workflow-policy.md`, D-110). `supabase db push` er forbudt.
 
 **Formål:** Gøre den append-only svarlog (`public.question_attempts`, D-266/D-273) med forsøgskontekst (K1, D-334) til den eneste vej for automatisk rettede svar. Fra cutover (M2) kan første forsøg, gentagelser og indholdsversion dokumenteres pålideligt. Alt, hvad der skal bruges for at udføre aktiveringen, står i denne runbook. Den bygger på en audit af læringsfundamentet (2026-11-04), som ikke er en del af repositoryet. Beslutningerne fra auditten er gengivet i §1.1.
 
@@ -35,6 +35,24 @@ Beslutningerne blev formuleret i en audit af læringsfundamentet den 2026-11-04 
 | B2 | P0-D02 | Hvordan deployes `get-next-question` og `process-event`? | Trinvis: `get-next-question` (A5) og `process-event` (A6) efter A4, hver efter en forklaret diff mod den deployede kode | A5, A6 |
 | B3 | P0-D03 | Hvornår udføres M2? | Først efter ≥ 48 timers observation med reel elevtrafik og en M2-PR, der registrerer cutover-tidspunktet T (§9) | A10 |
 | B4 | P0-D14 | Er den lave elevtrafik siden 2026-11-02 forventet (fx ferie eller testpause)? | Ejeren bekræfter. Indtil da er en observationsperiode uden elevsvar ikke bevis for noget (§8) | A9 |
+
+### 1.2 B1–B4 som ejerbeslutninger og resterende krav (2026-11-06, kun forslag)
+
+| # | Beslutning, ejeren skal træffe nu | Forslag | Grundlag |
+|---|---|---|---|
+| B1 | Må K1 (A4) anvendes, når kravene nedenfor er opfyldt? A1–A3 er allerede anvendt med egne GO'er | Ja, efter SEC-KEY-01 R-01 | `GATE-A4` = true; migrationsfilens SHA-256 er uændret (`f3d2f616…`) |
+| B2 | Skal `process-event` deployes alene efter K1 (A6)? | Ja, efter en forklaret diff mod deployet kode. `get-next-question` har allerede K1-koden slået fra, så A5 skal kun bekræftes | Deployet `process-event` har `ezbr` `9efa541c…` og kender ikke `p_mode`/`p_hints_used` |
+| B3 | Bekræft: M2 først efter mindst 48 timers observation med reel elevtrafik | Ja, og M2 skal desuden registrere cutover-tidspunktet T | §9 |
+| B4 | Er den lave trafik forventet? Instanser pr. dag 2.–6. november: 75, 0, 9, 34, 76, fra 1–6 elever (26. oktober: 538 fra 10 elever). Og hvad tæller som reel trafik i A9? | Ejeren bekræfter årsagen. Forslag til gulv: mindst 5 elever på mindst 2 skoledage | Uden et gulv beviser observationen intet (§8) |
+
+Resterende krav før A4, ud over B1–B4 registreret som D-numre (F10):
+
+1. Friskt, verificeret dump lige før A4. Dumpet fra 2026-11-06 10:00Z er allerede bagud: produktionens ledger har 171 poster og 2 migrationer, som er nyere.
+2. PR #608 (K1 sammen med niveaumotoren) skal have grønt `isolated-e2e`. Den røde kørsel er fra Playwright-cachefejlen, som nu er rettet på main.
+3. Nyt preflight: `pg_stat_activity`, ledger og readiness-SQL samme dag (`LED-01`, `GATE-A4`).
+4. Aftalt tidsvindue uden for undervisningstid (F9).
+
+`SEC-01` er false (separat spor, blokerer ikke).
 
 ## 2. Kontrol af repository, deployede funktioner og schema
 
