@@ -38,23 +38,23 @@ const mapAnswerFormat = (() => {
 })();
 
 // ── 1. Interaction kinds ─────────────────────────────────────────────────────────────────────────
-test("registry: exactly one base kind (choice); Match par, Sandt/falsk, Rækkefølge and Kategorisering have renderers but are NOT servable", () => {
+test("registry: exactly one base kind (choice); Rækkefølge and Kategorisering are servable (D-362), Match par and Sandt/falsk have renderers but are NOT", () => {
   assert.equal(BASE_KIND, "choice");
   assert.deepEqual(KIND_ORDER, ["choice", "short_text", "long_text", "number", "force_text", "match_pairs", "true_false", "order_items", "categorize"]);
   assert.equal(INTERACTION_KINDS.match_pairs.servable, false);
   assert.equal(INTERACTION_KINDS.match_pairs.renderer, "match_pairs");
   assert.equal(INTERACTION_KINDS.true_false.servable, false);
   assert.equal(INTERACTION_KINDS.true_false.renderer, "true_false");
-  assert.equal(INTERACTION_KINDS.order_items.servable, false);
+  assert.equal(INTERACTION_KINDS.order_items.servable, true);
   assert.equal(INTERACTION_KINDS.order_items.renderer, "order_items");
-  assert.equal(INTERACTION_KINDS.categorize.servable, false);
+  assert.equal(INTERACTION_KINDS.categorize.servable, true);
   assert.equal(INTERACTION_KINDS.categorize.renderer, "categorize");
-  const builtNotServable = ["match_pairs", "true_false", "order_items", "categorize"];
+  const builtNotServable = ["match_pairs", "true_false"];
   for (const k of KIND_ORDER.filter((k) => !builtNotServable.includes(k))) assert.equal(INTERACTION_KINDS[k].servable, true, k);
   assert.equal(isServableKind("match_pairs"), false);
   assert.equal(isServableKind("true_false"), false);
-  assert.equal(isServableKind("order_items"), false);
-  assert.equal(isServableKind("categorize"), false);
+  assert.equal(isServableKind("order_items"), true);
+  assert.equal(isServableKind("categorize"), true);
   assert.equal(isServableKind(null), false);
 });
 
@@ -97,7 +97,8 @@ test("classifyQuestion: anything the layers would disagree on is null — never 
 });
 
 test("classifyQuestion agrees with the browser renderer AND the server's mapAnswerFormat for every kind it names", () => {
-  const formats = ["mc", "mc_single", "number", "text", "match", "match_pairs", "true_false", "MC", "Text", "longtext", "mc_number", "foo", "", null];
+  const formats = ["mc", "mc_single", "number", "text", "match", "match_pairs", "true_false", "order", "categorize", "MC", "Text",
+    "longtext", "mc_number", "foo", "", null];
   const types = ["short", "long", "Long", "", null, "medium"];
   let named = 0;
   for (const answer_format of formats) for (const answer_type of types) for (const force_text of [false, true]) {
@@ -109,10 +110,11 @@ test("classifyQuestion agrees with the browser renderer AND the server's mapAnsw
     if (spec.renderer !== null) assert.equal(resolveAnswerRenderer(row), spec.renderer, JSON.stringify(row));
     else assert.equal(resolveAnswerRenderer(row), "unsupported", JSON.stringify(row));
     // Match par and Sandt/falsk: v1's mapAnswerFormat says "mc" (the row has no options and is skipped);
-    // only the registry's own wire format is ever sent for them.
+    // only the registry's own wire format is ever sent for them. Rækkefølge and Kategorisering: v1 maps
+    // "order" and "categorize" to themselves since D-362 and agrees with the registry.
     if (kind !== "match_pairs" && kind !== "true_false") assert.equal(mapAnswerFormat(answer_format), spec.wireFormat, JSON.stringify(row));
   }
-  assert.ok(named >= 7, "the matrix must exercise every named kind");
+  assert.ok(named >= 9, "the matrix must exercise every named kind");
 });
 
 test("the mix engine holds no kind names of its own: a new kind is added in the registry only", () => {
@@ -291,6 +293,19 @@ test("mix: only servable kinds are ever ordered — Match par and unclassifiable
   assert.equal(only.decision.reason, "empty");
 });
 
+test("mix: Rækkefølge and Kategorisering are servable (D-362) — ordered like any other non-base kind, never dropped", () => {
+  const ord = (i) => ({ id: `or-${i}`, answer_format: "order", answer_type: "short", content: { question: `o${i}` },
+    difficulty_band: 1, learning_objective: "vikings", metadata: null });
+  const cat = (i) => ({ id: `ca-${i}`, answer_format: "categorize", answer_type: "short", content: { question: `c${i}` },
+    difficulty_band: 1, learning_objective: "vikings", metadata: null });
+  const p = plan([mc(0), ord(0), cat(0)], hist(...Array(20).fill("choice")));
+  assert.equal(p.decision.dropped, 0);
+  assert.ok(["order_items", "categorize"].includes(p.decision.kind), String(p.decision.kind));
+  assert.deepEqual(p.ordered.map((q) => q.id).sort(), ["ca-0", "mc-0", "or-0"]);
+  assert.deepEqual(plan([ord(0)], []).ordered.map((q) => q.id), ["or-0"]);
+  assert.deepEqual(plan([cat(0)], []).ordered.map((q) => q.id), ["ca-0"]);
+});
+
 test("mix: long answers are never chosen by quota, only when nothing else is left", () => {
   const cands = [mc(0), long(0)];
   assert.equal(plan(cands, hist(...Array(20).fill("choice"))).decision.kind, "choice");
@@ -425,7 +440,12 @@ test("servableWireFormat: the registry's wire format — null, never \"mc\", for
   assert.equal(servableWireFormat({ answer_format: "text", answer_type: "long" }), "text");
   assert.equal(servableWireFormat({ answer_format: "number" }), "number");
   assert.equal(servableWireFormat({ answer_format: "mc", content: { force_text: true } }), "mc");
-  for (const f of ["match", "matching", "drag_drop", "MC", "", null]) {
+  // Rækkefølge and Kategorisering (D-362): the same wire format in v2 (registry) and v1 (exact match).
+  for (const f of ["order", "categorize"]) {
+    assert.equal(servableWireFormat({ answer_format: f }), f, f);
+    assert.equal(mapAnswerFormat(f), f, `v1 maps ${f} to itself (D-362)`);
+  }
+  for (const f of ["match", "matching", "drag_drop", "MC", "Order", " order", "orders", "categorise", "", null]) {
     assert.equal(servableWireFormat({ answer_format: f }), null, String(f));
     assert.equal(mapAnswerFormat(f), "mc", `v1's mapAnswerFormat still says "mc" for ${f} — the debt v2 removes`);
   }
