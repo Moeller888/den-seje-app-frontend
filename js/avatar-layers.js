@@ -981,12 +981,45 @@ export const NORTHSTAR_TANK_COMBOS = Object.freeze(Object.values(NORTHSTAR_TANKS
 // The opt-in's top choice (one stored value, avatar_northstar_sweater): the 6 sweaters and the 6 tank tops, each checked against its own
 // approved list; at most one replaces the outfit's own tee.
 export const NORTHSTAR_TOP_CHOICES = Object.freeze({ ...NORTHSTAR_LS2_SWEATERS, ...NORTHSTAR_TANKS });
+// D-355: D-354's 33 owner-approved candidates (production-trial-owner-approval-d354.json; R01–R11 on tee-hip-v2, sweater-long-v3 and
+// tank-v5 — never the planet R12) as top choices on the same stored choice. The owner approved the 55 layer files, the 1441 combinations
+// and the tees' D-349 split on 2026-11-06 (kit-tops-owner-approval-d355.json; manifest extension D-355). Each joins its cut's family and reuses its published shared
+// files: the tee the cream tee's skin shadow (its layers split as the tees' since D-349), the sweater the LS2 shadow and hip seam, the
+// tank the tank's shadow and hem junction. Each is offered over its cut's current pairs only, no bottom or shoe added: the tee the 43 the
+// cream and print tees are shown with, the sweater the sweaters' 45 without the one no outfit can show (olive trousers with the beige
+// sneakers: the approved sweaters' list keeps it, this proposal does not), the tank the tank tops' 44 — 11 x (43 + 44 + 44) = 1441, all
+// selectable in the panel.
+const _KIT_DESIGNS = Object.freeze({ "forest-melange": "skovgrøn melange", "burgundy-pique": "bordeaux piqué", "mustard-slub": "sennep slub", "denim-twill": "denimblå twill",
+  "breton-stripe": "bretonsk stribe", "block-stripes": "blokstriber", "green-check": "grøn tern", "mustard-dots": "sennepsprikker",
+  "mint-teapot": "mint · tekande", "lightdenim-shield": "lys denim · skjold", "sand-fox": "sand · ræv" });
+const _KIT_FAMILIES = Object.freeze([["TEE", "top-tee-hip", "T-shirt"], ["LS2", NORTHSTAR_LS2_BASE, "Sweater"], ["TK", NORTHSTAR_TANK_BASE, "Tanktop"]]);
+export const NORTHSTAR_KIT_TOPS = Object.freeze(Object.fromEntries(_KIT_FAMILIES.flatMap(([p, base, kind]) => Object.entries(_KIT_DESIGNS).map(([slug, name]) =>
+  [p + "-" + slug.toUpperCase(), Object.freeze({ item: base + "-" + slug, label: kind + " · " + name, family: base })]))));
+const _KIT_TEE_FIVE = ["skirt-sand", "shorts-navy", "capri-lightblue", "trousers-square-navy", "trousers-square-sand"];
+const _KIT_TEE_SHOES = Object.freeze({
+  "shoes-sneakers-beige": _KIT_TEE_FIVE, "shoes-ankleboots-ab1-lightsand": _KIT_TEE_FIVE, "shoes-ankleboots-ab1-original": _KIT_TEE_FIVE, "shoes-boots-laceup-black": _KIT_TEE_FIVE,
+  "shoes-sneakers-low-sv1-burgundygum": _KIT_TEE_FIVE, "shoes-sneakers-low-sv1-chalk": _KIT_TEE_FIVE, "shoes-sneakers-low-sv1-navywhite": _KIT_TEE_FIVE,
+  "shoes-sneakers-low-sv1-charcoal": ["skirt-sand", "shorts-navy", "capri-lightblue"], "shoes-sneakers-white": _KIT_TEE_FIVE,
+});
+const _KIT_LS2_SHOES = Object.freeze({ ..._LS2_SHOES, "shoes-sneakers-beige": _LS2_FIVE.filter((b) => b !== "trousers-square-olive") });
+const _KIT_PAIRS = Object.freeze({ "top-tee-hip": _KIT_TEE_SHOES, [NORTHSTAR_LS2_BASE]: _KIT_LS2_SHOES, [NORTHSTAR_TANK_BASE]: _TANK_SHOES });
+export const NORTHSTAR_KIT_TOP_COMBOS = Object.freeze(Object.values(NORTHSTAR_KIT_TOPS).flatMap((t) =>
+  Object.entries(_KIT_PAIRS[t.family]).flatMap(([shoes, bottoms]) => bottoms.map((b) => t.item + "+bottom-" + b + "+" + shoes))));
+// Every top the stored choice can name: the approved sweaters and tank tops and (D-355) the 33.
+export const NORTHSTAR_SELECTABLE_TOPS = Object.freeze({ ...NORTHSTAR_TOP_CHOICES, ...NORTHSTAR_KIT_TOPS });
 function _nsTopList(top) {
   if (typeof top !== "string") return null;
   if (Object.prototype.hasOwnProperty.call(NORTHSTAR_LS2_SWEATERS, top)) return NORTHSTAR_LS2_COMBOS;
   if (Object.prototype.hasOwnProperty.call(NORTHSTAR_TANKS, top)) return NORTHSTAR_TANK_COMBOS;
+  if (Object.prototype.hasOwnProperty.call(NORTHSTAR_KIT_TOPS, top)) return NORTHSTAR_KIT_TOP_COMBOS;
   return null;
 }
+// D-355: a top of the 33 is an item of its cut's family (the same layers, shadows and hip seam or hem junction as that family's tops).
+const _KIT_ITEM = Object.freeze({
+  "top-tee-hip": Object.freeze({ category: "top", layers: ["top-body", "sleeves"], shadows: ["body", "arms"], shadowsOf: NORTHSTAR_PRINT_TEE_BASE }),
+  [NORTHSTAR_LS2_BASE]: Object.freeze({ category: "top", layers: ["top-body", "sleeves"], shadows: ["body", "arms"], shadowsOf: NORTHSTAR_LS2_BASE, hipSeam: NORTHSTAR_LS2_HIP_SEAM }),
+  [NORTHSTAR_TANK_BASE]: Object.freeze({ category: "top", layers: ["top-body"], shadows: ["body"], shadowsOf: NORTHSTAR_TANK_BASE, hipSeam: NORTHSTAR_TANK_HEM_JUNCTION }),
+});
 // The ten items: their layers and their skin-shadow parts (multiply; on C's body, on C's arms); then the print tees, the trousers,
 // the SV1-V5 shoes, the AB-1 boots and the sweaters (with their hip seam). layerRev 2 on the tees: D-349's layer files (U-343-1).
 export const NORTHSTAR_ITEMS = Object.freeze({
@@ -1006,6 +1039,7 @@ export const NORTHSTAR_ITEMS = Object.freeze({
   ...Object.fromEntries(Object.values(NORTHSTAR_AB1_BOOTS).map((b) => [b.item, Object.freeze({ category: "shoes", layers: ["shoes"], shadows: ["body"], closed: true, shadowsOf: NORTHSTAR_AB1_BOOT_BASE })])),
   ...Object.fromEntries(Object.values(NORTHSTAR_LS2_SWEATERS).map((sw) => [sw.item, Object.freeze({ category: "top", layers: ["top-body", "sleeves"], shadows: ["body", "arms"], shadowsOf: NORTHSTAR_LS2_BASE, hipSeam: NORTHSTAR_LS2_HIP_SEAM })])),
   ...Object.fromEntries(Object.values(NORTHSTAR_TANKS).map((tk) => [tk.item, Object.freeze({ category: "top", layers: ["top-body"], shadows: ["body"], shadowsOf: NORTHSTAR_TANK_BASE, hipSeam: NORTHSTAR_TANK_HEM_JUNCTION })])),
+  ...Object.fromEntries(Object.values(NORTHSTAR_KIT_TOPS).map((t) => [t.item, _KIT_ITEM[t.family]])),
 });
 // The 19 ready outfits (technically OK, no open finding; the assistant's review found them fit as a
 // visual prototype and the owner approved the prototype's overall look — not production).
@@ -1098,7 +1132,7 @@ function _nsWithTee(key, tee) {
 export function northstarOutfitFor(key, tee, pants, shoe, sweater) {
   const o = _nsWithShoe(key, tee, pants, shoe);
   if (!o) return null;
-  if (_nsSweaterFits(o, sweater)) return Object.freeze({ ...o, top: NORTHSTAR_TOP_CHOICES[sweater].item });
+  if (_nsSweaterFits(o, sweater)) return Object.freeze({ ...o, top: NORTHSTAR_SELECTABLE_TOPS[sweater].item });
   return o;
 }
 function _nsWithShoe(key, tee, pants, shoe) {
@@ -1110,13 +1144,14 @@ function _nsWithShoe(key, tee, pants, shoe) {
 function _nsSweaterFits(o, sweater) {
   const list = _nsTopList(sweater);
   if (!o || !list) return false;
-  return list.indexOf(NORTHSTAR_TOP_CHOICES[sweater].item + "+" + o.bottom + "+" + o.shoes) !== -1;
+  return list.indexOf(NORTHSTAR_SELECTABLE_TOPS[sweater].item + "+" + o.bottom + "+" + o.shoes) !== -1;
 }
-// D-337: the sweater stored in this browser — one of the 6 approved IDs or (D-348) the 6 approved tank top IDs, or null.
+// D-337: the sweater stored in this browser — one of the 6 approved IDs or (D-348) the 6 approved tank top IDs or (D-355) one of the 33,
+// or null.
 export const NORTHSTAR_SWEATER_KEY = "avatar_northstar_sweater";
 export function northstarSelectedSweater() {
   const s = _nsStorage(NORTHSTAR_SWEATER_KEY);
-  return typeof s === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_TOP_CHOICES, s) ? s : null;
+  return typeof s === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_SELECTABLE_TOPS, s) ? s : null;
 }
 // A sweater (or a tank top) replaces the top only where the WHOLE effective outfit — the K outfit after an allowed print tee, allowed
 // trousers and an allowed shoe, with this top — is one of its approved combinations (NORTHSTAR_LS2_COMBOS or NORTHSTAR_TANK_COMBOS).
@@ -1221,7 +1256,7 @@ export function northstarApprovedOutfits() {
   if (_nsApproved) return _nsApproved;
   const map = new Map();
   const tees = [null, ...Object.keys(NORTHSTAR_PRINT_TEES)], pants = [null, ...Object.keys(NORTHSTAR_SOLID_PANTS)];
-  const shoes = [null, ...Object.keys(NORTHSTAR_SHOE_CHOICES)], tops = [null, ...Object.keys(NORTHSTAR_TOP_CHOICES)];
+  const shoes = [null, ...Object.keys(NORTHSTAR_SHOE_CHOICES)], tops = [null, ...Object.keys(NORTHSTAR_SELECTABLE_TOPS)];   // D-355: and the 33
   for (const k of Object.keys(NORTHSTAR_OUTFITS)) for (const t of tees) {
     if (t && !northstarTeeAllowed(k)) continue;
     for (const p of pants) {
