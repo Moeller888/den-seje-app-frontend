@@ -286,6 +286,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     logEvent('WAVE_PHASE', { phase: sessionWavePhase, cc: sessionConsecutiveCorrect, ci: sessionConsecutiveIncorrect });
   }
 
+  // Sandt/falsk is a comprehension check, never evidence of mastery (owner principle 2026-11-05): a
+  // guess is right half the time, so its answer steers neither the session's wave nor the difficulty
+  // band that is persisted to profiles.current_band. Sounds, streaks, XP and coins are unchanged. The
+  // server side is migration 20261105115000_true_false_mastery_exclusion.
+  function answerSteersDifficulty() {
+    return currentRenderer !== ANSWER_RENDERERS.TRUE_FALSE;
+  }
+
   function adjustDifficultyBand(wasCorrect) {
     if (wasCorrect) {
       diffConsecutiveIncorrect = 0;
@@ -1328,8 +1336,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Hidden achievement: perfect_five — track consecutive correct per session
       sessionCorrectStreak++;
       sessionConsecutiveReflections = 0;
-      updateWavePhase(true);
-      adjustDifficultyBand(true);
+      if (answerSteersDifficulty()) {
+        updateWavePhase(true);
+        adjustDifficultyBand(true);
+      }
       if (sessionCorrectStreak >= 5 && sessionCorrectStreak > bestSessionStreak) {
         bestSessionStreak = sessionCorrectStreak;
         // supabase.rpc() returns a PostgrestFilterBuilder — a thenable WITHOUT .catch().
@@ -1375,8 +1385,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       sessionCorrectStreak = 0;
       lastMisconceptionType = data.misconception_type ?? null;
-      updateWavePhase(false);
-      adjustDifficultyBand(false);
+      if (answerSteersDifficulty()) {
+        updateWavePhase(false);
+        adjustDifficultyBand(false);
+      }
 
       await fetchProgress();
 
