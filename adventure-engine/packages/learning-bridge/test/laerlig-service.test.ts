@@ -1,0 +1,264 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { DEFAULT_FLAGS, LaerligTaskService, createLaerligTaskService, type EdgeCaller } from "../src/laerlig-service.ts";
+import { ServiceError, type TaskQuery } from "../src/service.ts";
+import { FakeTaskService } from "../src/test-service.ts";
+import { ITEMS, flush, pair } from "./harness.ts";
+
+/**
+ * MOCK HTTP — these tests pin the adapter's mapping of the EXISTING Edge Function contracts (D-309).
+ * They prove nothing about the server; tests/isolated/laerligverse-backend.isolated.spec.mjs runs the
+ * same adapter against the real Edge Functions and PostgreSQL.
+ */
+const Q: TaskQuery = { objectiveId: "hist.besaettelsen.h4", purpose: "check", surface: "world", kinds: ["choice", "short_text"], contextKey: "arkivskab" };
+const ID = "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b";
+const MC = {
+  question_instance_id: ID, round_no: 1, answer_format: "mc", answer_type: "short", wave_phase: "challenge", metadata: null,
+  content: { question: "Hvornår blev Danmark besat?", options: ["9. april 1940", "29. august 1943", "4. maj 1945"] },
+};
+
+function scripted(...replies: Array<{ status: number; body: unknown } | Error>) {
+  const calls: Array<{ fn: string; body: Record<string, unknown> }> = [];
+  const call: EdgeCaller = async (fn, body) => {
+    calls.push({ fn, body: { ...body } });
+    const r = replies.shift();
+    if (r === undefined) throw new Error("no scripted reply left");
+    if (r instanceof Error) throw r;
+    return r;
+  };
+  return { call, calls };
+}
+
+describe("LaerligTaskService — feature flag", () => {
+  it("is off by default and cannot be created without the flag", () => {
+    expect(DEFAULT_FLAGS.laerligverseBackend).toBe(false);
+    expect(() => createLaerligTaskService(DEFAULT_FLAGS, { call: async () => ({ status: 200, body: {} }), subject: "historie" })).toThrow(/disabled/);
+    expect(createLaerligTaskService({ laerligverseBackend: true }, { call: async () => ({ status: 200, body: {} }), subject: "historie" })).toBeInstanceOf(LaerligTaskService);
+  });
+});
+
+describe("LaerligTaskService — get-next-question mapping (mock HTTP)", () => {
+  it("maps an MC question to a choice task with opaque option ids, subject only, no hints", async () => {
+    const s = scripted({ status: 200, body: MC });
+    const svc = new LaerligTaskService({ call: s.call, subject: "historie" });
+    const t = await svc.fetchTask(Q);
+    expect(s.calls).toEqual([{ fn: "get-next-question", body: { subject: "historie" } }]);
+    expect(t).toMatchObject({ instanceId: ID, kind: "choice", mode: "quiz_v1", hintsAvailable: 0, roundNo: 1, contextKey: "arkivskab" });
+    expect(t.options).toEqual([{ id: "o1", label: "9. april 1940" }, { id: "o2", label: "29. august 1943" }, { id: "o3", label: "4. maj 1945" }]);
+    expect(svc.targeting).toBe("subject-only");
+    expect(await svc.openTask()).toEqual(t);
+  });
+
+  it("maps typed questions (text, and MC with force_text) to short_text", async () => {
+    const s = scripted(
+      { status: 200, body: { ...MC, answer_format: "text", content: { question: "Stav ordet" } } },
+      { status: 200, body: { ...MC, question_instance_id: ID.replace("6f", "7f"), content: { ...MC.content, force_text: true } } },
+    );
+    const svc = new LaerligTaskService({ call: s.call, subject: "dansk" });
+    expect((await svc.fetchTask(Q)).kind).toBe("short_text");
+    expect((await svc.fetchTask(Q)).kind).toBe("short_text");
+  });
+
+  it("refuses formats the bridge cannot render, and kinds the world did not offer", async () => {
+    for (const body of [{ ...MC, answer_format: "number" }, { ...MC, answer_format: "match" }, { ...MC, answer_format: "text", answer_type: "long" }]) {
+      const svc = new LaerligTaskService({ call: scripted({ status: 200, body }).call, subject: "historie" });
+      await expect(svc.fetchTask(Q)).rejects.toMatchObject({ code: "unavailable" });
+    }
+    const svc = new LaerligTaskService({ call: scripted({ status: 200, body: MC }).call, subject: "historie" });
+    await expect(svc.fetchTask({ ...Q, kinds: ["short_text"] })).rejects.toMatchObject({ code: "unavailable" });
+  });
+
+  it("maps no_questions, the 500 'Unauthorized', 5xx, network failure and malformed bodies", async () => {
+    const cases: Array<[{ status: number; body: unknown } | Error, string, boolean]> = [
+      [{ status: 200, body: { step: "no_questions" } }, "unavailable", false],
+      [{ status: 500, body: { error: "Unauthorized" } }, "unauthorized", false],
+      [{ status: 401, body: {} }, "unauthorized", false],
+      [{ status: 503, body: {} }, "server", true],
+      [new TypeError("Failed to fetch"), "network", true],
+      [{ status: 200, body: { ...MC, question_instance_id: "not-a-uuid" } }, "server", false],
+      [{ status: 200, body: { ...MC, content: { question: "x", options: ["only one"] } } }, "server", false],
+      [{ status: 200, body: "html" }, "server", false],
+    ];
+    for (const [reply, code, transient] of cases) {
+      const svc = new LaerligTaskService({ call: scripted(reply).call, subject: "historie" });
+      const err = await svc.fetchTask(Q).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ServiceError);
+      expect(err).toMatchObject({ code, transient });
+    }
+  });
+});
+
+describe("LaerligTaskService — process-event mapping (mock HTTP)", () => {
+  async function served(...after: Array<{ status: number; body: unknown } | Error>) {
+    const s = scripted({ status: 200, body: MC }, ...after);
+    const svc = new LaerligTaskService({ call: s.call, subject: "historie", now: () => 1_793_600_000_000 });
+    const t = await svc.fetchTask(Q);
+    return { s, svc, t };
+  }
+  const sub = (optionId: string) => ({ instanceId: ID, roundNo: 1, submissionId: "sub-1", action: { kind: "choice" as const, payload: { optionId } } });
+
+  it("sends the option TEXT on the legacy path — no round_no, no submission_id (H5 is not applied)", async () => {
+    const { s, svc } = await served({ status: 200, body: { status: "correct", correct_answer: "9. april 1940", review_text: null } });
+    const r = await svc.submit(sub("o1"));
+    expect(s.calls[1]).toEqual({ fn: "process-event", body: { question_instance_id: ID, answer: "9. april 1940", question_shown_at: 1_793_600_000_000 } });
+    expect(r).toEqual({ outcome: "correct", feedbackText: null, correctAnswer: "9. april 1940", evidence: "none", replay: false });
+    expect(await svc.openTask()).toBeNull();
+  });
+
+  it("an incorrect verdict carries the review text and the key, only now", async () => {
+    const { svc } = await served({ status: 200, body: { status: "incorrect", correct_answer: "9. april 1940", review_text: "Besættelsen skete 9. april 1940." } });
+    expect(await svc.submit(sub("o3"))).toMatchObject({ outcome: "incorrect", feedbackText: "Besættelsen skete 9. april 1940.", correctAnswer: "9. april 1940" });
+  });
+
+  it("a manipulated option id or kind never reaches the server", async () => {
+    const { s, svc } = await served();
+    await expect(svc.submit(sub("o9"))).rejects.toMatchObject({ code: "invalid" });
+    await expect(svc.submit({ ...sub("o1"), action: { kind: "short_text", payload: { text: "9. april 1940" } } })).rejects.toMatchObject({ code: "invalid" });
+    await expect(svc.submit({ ...sub("o1"), instanceId: "00000000-0000-4000-8000-000000000000" })).rejects.toMatchObject({ code: "not_found" });
+    expect(s.calls).toHaveLength(1);
+  });
+
+  it("maps 401/403/404/426/400/5xx/network and refuses an unexpected body", async () => {
+    const cases: Array<[{ status: number; body: unknown } | Error, string, boolean]> = [
+      [{ status: 401, body: { error: "Unauthorized" } }, "unauthorized", false],
+      [{ status: 403, body: { error: "Forbidden" } }, "forbidden", false],
+      [{ status: 404, body: {} }, "not_found", false],
+      [{ status: 426, body: { outcome: "client_outdated" } }, "outdated", false],
+      [{ status: 400, body: {} }, "invalid", false],
+      [{ status: 500, body: { error: "x" } }, "server", true],
+      [new Error("socket hang up"), "network", true],
+      [{ status: 200, body: { status: "mastered" } }, "server", true],
+      [{ status: 302, body: {} }, "invalid", false],
+    ];
+    for (const [reply, code, transient] of cases) {
+      const { svc } = await served(reply);
+      await expect(svc.submit(sub("o1"))).rejects.toMatchObject({ code, transient });
+    }
+  });
+
+  it("declares per-instance server idempotency and refuses hints honestly", async () => {
+    const { svc } = await served();
+    expect(svc.submitRetry).toBe("server-idempotent");
+    await expect(svc.hint()).rejects.toMatchObject({ code: "unavailable" });
+  });
+});
+
+describe("bridge host — retry safety and backend data it cannot carry", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+  const CHECK = { objectiveId: "hist.besaettelsen.h4", purpose: "check", surface: "world", contextKey: "arkivskab" } as const;
+
+  it("without server idempotency an ambiguous failure is NOT resent: explicit unresolved state, one attempt", async () => {
+    const service = new FakeTaskService(ITEMS);
+    service.submitRetry = "none";
+    const spy = vi.spyOn(service, "submit");
+    const p = pair({ service });
+    const c = p.client.connect();
+    await flush();
+    await c;
+    const t = p.client.requestTask(CHECK);
+    await flush();
+    const task = await t;
+    service.injectFailures("network");
+    const r = p.client.act(task.instanceToken, { kind: "choice", payload: { optionId: "opt_a" } });
+    await flush();
+    expect(await r).toMatchObject({ outcome: "aborted", retryable: false });
+    expect(spy).toHaveBeenCalledTimes(1);
+    // A second commit gets the same unresolved state — never a fresh submission.
+    const again = p.client.act(task.instanceToken, { kind: "choice", payload: { optionId: "opt_a" } });
+    await flush();
+    expect(await again).toMatchObject({ outcome: "aborted", retryable: false });
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(p.store.map.size).toBe(1);
+  });
+
+  it("backend data the protocol cannot carry becomes an explicit error, not a hanging request", async () => {
+    const big = { ...ITEMS[0]!, prompt: "x".repeat(1001) };
+    const errors: unknown[] = [];
+    const p = pair({ service: new FakeTaskService([big]), host: { onServiceError: (e) => errors.push(e) } });
+    const c = p.client.connect();
+    await flush();
+    await c;
+    const t = p.client.requestTask(CHECK);
+    await flush();
+    await expect(t).rejects.toMatchObject({ code: "server_error" });
+    expect(errors).toHaveLength(1);
+  });
+
+  it("an expired session reaches the game as session_expired", async () => {
+    const service = new FakeTaskService(ITEMS);
+    vi.spyOn(service, "fetchTask").mockRejectedValue(new ServiceError("unauthorized", false));
+    const p = pair({ service });
+    const c = p.client.connect();
+    await flush();
+    await c;
+    const t = p.client.requestTask(CHECK);
+    await flush();
+    await expect(t).rejects.toMatchObject({ code: "session_expired" });
+  });
+
+  it("a failing openTask during the handshake is reported and the game still connects (no resumption)", async () => {
+    const service = new FakeTaskService(ITEMS);
+    vi.spyOn(service, "openTask").mockRejectedValue(new ServiceError("network", true));
+    const errors: unknown[] = [];
+    const p = pair({ service, host: { onServiceError: (e) => errors.push(e) } });
+    const c = p.client.connect();
+    await flush();
+    expect(await c).toBeNull();
+    expect(errors).toHaveLength(1);
+  });
+
+  it("a failing hint call becomes hint_unavailable; a service that throws synchronously is still a reply", async () => {
+    const service = new FakeTaskService(ITEMS);
+    const p = pair({ service });
+    const c = p.client.connect();
+    await flush();
+    await c;
+    const t = p.client.requestTask(CHECK);
+    await flush();
+    const task = await t;
+    vi.spyOn(service, "hint").mockImplementation(() => {
+      throw new ServiceError("invalid", false);
+    });
+    const h = p.client.hint(task.instanceToken, 1);
+    await flush();
+    await expect(h).rejects.toMatchObject({ code: "invalid_message" });
+  });
+
+  it("a corrupt pending entry in storage is dropped, and a fresh submission is made", async () => {
+    const service = new FakeTaskService(ITEMS);
+    const p = pair({ service });
+    const c = p.client.connect();
+    await flush();
+    await c;
+    const t = p.client.requestTask(CHECK);
+    await flush();
+    const task = await t;
+    p.store.setItem("lvb2:pending:inst-1", "{not json");
+    const r = p.client.act(task.instanceToken, { kind: "choice", payload: { optionId: "opt_a" } });
+    await flush();
+    expect((await r).outcome).toBe("correct");
+    expect(p.store.map.size).toBe(0);
+  });
+
+  it("the duplicate log is bounded: a remembered request is answered from memory, a forgotten one is handled again", async () => {
+    const p = pair();
+    const c = p.client.connect();
+    await flush();
+    await c;
+    const nonce = p.host.sessionNonce as string;
+    const req = (requestId: string) => ({ protocol: "laerligverse.bridge/2", type: "task.request", nonce, requestId, ...CHECK });
+    await p.rawToHost(req("first"));
+    await flush();
+    const fetches = () => p.service.calls.filter((x) => x === "fetchTask").length;
+    expect(fetches()).toBe(1);
+    await p.rawToHost(req("first"));
+    expect(fetches()).toBe(1); // remembered: replayed, not fetched again
+    for (let i = 0; i < 500; i++) {
+      await p.rawToHost({ protocol: "laerligverse.bridge/2", type: "hint.request", nonce, requestId: `f${i}`, instanceToken: "none", level: 1 });
+    }
+    await p.rawToHost(req("first"));
+    await flush();
+    expect(fetches()).toBe(2); // forgotten after 500 newer ids: handled again (the server serves the same open instance)
+  });
+});
+

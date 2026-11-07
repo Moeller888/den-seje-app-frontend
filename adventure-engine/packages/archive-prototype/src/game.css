@@ -1,0 +1,24 @@
+.lv-connection { position: fixed; right: 8px; top: 8px; margin: 0; padding: 3px 8px; border-radius: 10px; background: rgba(0, 0, 0, 0.55); color: #fff; font: 13px system-ui, sans-serif; z-index: 20; }
+.lv-task { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(12, 14, 18, 0.55); z-index: 30; font-family: "Atkinson Hyperlegible", system-ui, sans-serif; }
+.lv-task[hidden] { display: none; }
+.lv-sheet { width: min(760px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; padding: 20px 22px; border-radius: 10px; background: #f3ead6; color: #1f1a12; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); }
+.lv-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.lv-head h2 { margin: 0; font-size: 20px; }
+.lv-mode { font-size: 13px; padding: 2px 8px; border-radius: 10px; background: #e1d4b4; }
+.lv-prompt { font-size: 18px; margin: 12px 0; }
+.lv-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.lv-cards[hidden] { display: none; }
+/* Symmetric: every card looks the same; only the pupil's own choice is marked. */
+.lv-card { min-height: 72px; padding: 10px 12px; text-align: left; font: inherit; border: 2px solid #b9a77c; border-radius: 6px; background: #fffaf0; color: inherit; cursor: pointer; }
+.lv-card[aria-pressed="true"] { border-color: #2f4f7a; outline: 3px solid #2f4f7a; outline-offset: 1px; }
+.lv-card:focus-visible, .lv-sheet button:focus-visible, #lv-text:focus-visible { outline: 3px solid #1d5fd1; outline-offset: 2px; }
+#lv-text { width: 100%; padding: 10px; font: inherit; font-size: 18px; }
+#lv-text[hidden] { display: none; }
+.lv-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.lv-sheet button:not(.lv-card) { padding: 9px 14px; font: inherit; border-radius: 6px; border: 1px solid #6d5d3b; background: #fff; color: inherit; cursor: pointer; }
+.lv-sheet button.lv-primary { background: #2f4f7a; border-color: #2f4f7a; color: #fff; }
+.lv-sheet button:disabled { opacity: 0.55; cursor: default; }
+.lv-sheet button[hidden] { display: none; }
+.lv-hints { margin: 10px 0 0; padding-left: 20px; }
+.lv-status { min-height: 1.4em; margin: 10px 0 0; font-weight: 600; }
+.lv-feedback p { margin: 6px 0; }

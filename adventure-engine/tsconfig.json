@@ -24,6 +24,7 @@
     "packages/media/src/**/*.ts",
     "packages/audio/src/**/*.ts",
     "packages/save/src/**/*.ts",
+    "packages/learning-bridge/src/**/*.ts",
     "packages/content-tools/src/**/*.ts",
     "packages/content-tools/fixtures/**/*.ts",
     "packages/scenario-runner/src/**/*.ts",
