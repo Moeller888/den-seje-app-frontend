@@ -366,6 +366,11 @@ const REVIEWED_LATER_READERS = {
     "get_concept_states with their exact live bodies plus ONE predicate that drops true_false answers from " +
     "what they read. Same callers, same gates, same grants (CREATE OR REPLACE), fewer rows read; " +
     "tests/unit/true-false-mastery-exclusion-run.test.mjs proves each body is the live body plus that line.",
+  "20261107090000_course_items_never_move_level.sql":
+    "re-creates advance_student_level and advance_student_band with #623's exact bodies plus ONE predicate that " +
+    "drops course items (questions.metadata has learning_step) from what they fold. Same callers, same gates, same " +
+    "grants (CREATE OR REPLACE), fewer rows read; tests/unit/course-items-never-move-level-run.test.mjs proves each " +
+    "body is #623's body plus that predicate and that signature, security, owner and ACL are unchanged.",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -507,7 +512,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261101190100_question_attempts_v2_align_grading.sql",
      "20261103110000_l1_k1_attempt_context.sql",
      "20261105090000_minigame_breaks.sql",
-     "20261105115000_true_false_mastery_exclusion.sql"],
+     "20261105115000_true_false_mastery_exclusion.sql",
+     "20261107090000_course_items_never_move_level.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
