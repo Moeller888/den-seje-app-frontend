@@ -586,8 +586,9 @@ after the previous one committed. `server-band.ts` is the TS specification of th
 to the SQL in PGlite. The band is one level across subjects, like the client's today; a per-subject
 level is a separate product decision. `profiles.current_band`,
 `profiles.placement_band` (both client-writable) and the request body are not inputs. Since D-356
-the client no longer starts placement, so a new pupil always seeds from the grade's start band;
-`start_placement`, `submit_placement` and existing `placement_sessions` rows are unchanged.
+pupils no longer take placement, and since D-360 the client code is gone, so a new pupil always seeds
+from the grade's start band. `placement_sessions` stays: the seed reads it for pupils who took the
+test. `start_placement` and `submit_placement` still exist in the database but have no caller.
 
 **Adding a new kind:** (1) registry entry with `servable: false`; (2) renderer in
 `js/answer-input.js`, evaluator/award path in `process-event`, deliberate extension of

@@ -25,7 +25,8 @@ _Last reviewed: 2026-07-01._
   `reset-password.html?forced=1` (som efter skiftet sender tilbage til login og dermed til Hub'en).
 - **Ejerbeslutning 2026-11-06 (D-356):** nye elever tager ikke længere de 10 spørgsmål. De går
   direkte til quizzen og starter på klassetrinnets startbånd, hvorefter niveauet følger deres svar.
-  Et bånd fra en tidligere placeringstest gælder stadig. Det afgør B9.
+  Et bånd fra en tidligere placeringstest gælder stadig. Det afgør B9. Klientkoden er fjernet
+  (D-360); `start_placement` og `submit_placement` findes stadig i databasen uden kaldere.
 - Næste skridt (ikke bygget, og ikke besluttet efter D-356): måle-spørgsmål i **alle** fag. Et
   designforslag kommer før kode og skal passe med sværhedsskalaen 1–10.000 (niveau pr. fag, B1).
 
