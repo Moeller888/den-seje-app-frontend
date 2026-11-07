@@ -376,7 +376,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (F-04 Rækkefølge, oven på F-02 og F-07) — **ikke deployet** | dette repository | 18 | `06a6ccb9a2e5640abaa71a69581f3f42b5192c7dc91d865580099bf6004b3c4e` |
+| Kandidat (F-05 Kategorisering, oven på F-04) — **ikke deployet** | dette repository | 19 | `467f9582454a8d36f6d5f6010c6736b9911bee2ac1e3c8c42edd36d55f14d5c6` |
+| Forrige kandidat (F-04 Rækkefølge, oven på F-02 og F-07, PR #624) — ikke deployet | #624 | 18 | `06a6ccb9a2e5640abaa71a69581f3f42b5192c7dc91d865580099bf6004b3c4e` |
 | Forrige kandidat (F-02 Sandt/falsk #607 + F-07 stimulus, PR #618) — ikke deployet | #618 | 17 | `1df4cb344dfe97bde6f14b8e34adb9db26a44e948b6d197d01f2b9baa3104c8d` |
 | Forrige kandidat (F-02 Sandt/falsk, PR #607, merget uden stimulus) | main `3a2d2f37` | 16 | `00ddba65243d69fffeb9ea8f7b01714d5745cf7bfe0945330123919b3237f1ca` |
 | Forrige kandidat (F-07 stimulus alene) | `c1bfdcba` | 16 | `44ee77a4233f8699f1a342e2584f7b69ef1be1175415866e335854175856b29c` |
@@ -388,6 +389,13 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 | Version 180, som deployet 2026-10-31 — **rollback-mål før H5-aktivering** | `1aee47a` (main, merge af #487), uændret | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
 | Historisk rollback til version 179 (det, `materialize-rollback` skriver) | `21ec9ff` med låsningen (kun linje 2 i `index.ts` er ændret) | 11 | `ca21b993839e48ff4e5baf3189306860d6b349fdcc7eea12f65ab78a73e418c6` |
 | Version 179, som deployet | `21ec9ff` uændret | 11 | `c4414671f3a5aff1e8d5bc3cb57ec4e92bb0d70ef8008a7ade39a75730c81985` |
+
+**F-05 Kategorisering ændrer grafen fra 18 til 19 filer** (oven på F-04). `_shared/categorize.ts` er
+ny (kontrakt, instansnøgle og layout; hvert elements kategori er forfattet, kun præsentationen blandes),
+og `index.ts`, `_shared/question-dto.ts` og `_shared/interaction-kinds.ts` ændres: `index.ts` trækker
+nøglen for `categorize` ved oprettelse og læser den for åbne og gentagne runder præcis som for `match` og
+`order` (`KEYED_FORMATS`). Formatet er ikke servable; for alle andre formater er læsningerne uændrede.
+Kandidaten er **ikke** deployet.
 
 **F-04 Rækkefølge ændrer grafen fra 17 til 18 filer** (oven på F-02 og F-07). `_shared/order-items.ts` er ny (kontrakt,
 instansnøgle og layout; facit er den forfattede rækkefølge, kun præsentationen blandes), og

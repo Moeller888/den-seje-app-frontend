@@ -16,6 +16,7 @@ import { prepareChoiceOptions } from "./js/answer-options.js";
 import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer, shortTextCorrection } from "./js/answer-input.js";
 import { buildMatchPairsAnswer, matchCorrectionText, readMatchLayout } from "./js/match-pairs.js";
 import { buildOrderAnswer, orderCorrectionText, readOrderLayout } from "./js/order-items.js";
+import { buildCategorizeAnswer, categorizeCorrectionText, readCategorizeLayout } from "./js/categorize.js";
 import { readStimulus, buildStimulus } from "./js/stimulus.js";
 import { buildTrueFalseAnswer, readTrueFalseContent, trueFalseCorrection } from "./js/true-false.js";
 import { buildNumberAnswer } from "./js/number-answer.js";
@@ -234,6 +235,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   let currentMatchControl = null;
   // Rækkefølge: the control on screen, so a wrong answer can be explained in the shown texts.
   let currentOrderControl = null;
+  // Kategorisering: the control on screen, so a wrong answer can be explained in the shown texts.
+  let currentCategorizeControl = null;
 
   // Session rhythm tracking — Section 55.
   // sessionQuestionCount: total answered this session, passed to get-next-question.
@@ -1395,7 +1398,9 @@ document.addEventListener("DOMContentLoaded", async () => {
               ? trueFalseCorrection(data.correct_answer)
               : currentRenderer === ANSWER_RENDERERS.ORDER_ITEMS && currentOrderControl
                 ? orderCorrectionText(currentOrderControl.layout, data.correct_answer)
-                : null;
+                : currentRenderer === ANSWER_RENDERERS.CATEGORIZE && currentCategorizeControl
+                  ? categorizeCorrectionText(currentCategorizeControl.layout, data.correct_answer)
+                  : null;
         setTimeout(() => enterReflectionState(reviewText, correction), 400);
         return;
       }
@@ -1424,6 +1429,19 @@ document.addEventListener("DOMContentLoaded", async () => {
           feedback.className = "feedback-error";
           setUIState(UI_STATES.TRANSITIONING);
           setTimeout(() => { loadAndRenderQuestion(); }, 5000);
+          return;
+        }
+      }
+
+      // Kategorisering: the key is item and category indexes, not words — state the correct placement in
+      // the shown texts and leave a little longer to read it.
+      if (currentRenderer === ANSWER_RENDERERS.CATEGORIZE && currentCategorizeControl) {
+        const correctPlacement = categorizeCorrectionText(currentCategorizeControl.layout, data.correct_answer);
+        if (correctPlacement) {
+          feedback.textContent = "Ikke helt. " + correctPlacement;
+          feedback.className = "feedback-error";
+          setUIState(UI_STATES.TRANSITIONING);
+          setTimeout(() => { loadAndRenderQuestion(); }, 6000);
           return;
         }
       }
@@ -1507,6 +1525,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     currentRenderer = renderer;
     currentMatchControl = null;
     currentOrderControl = null;
+    currentCategorizeControl = null;
 
     // 157E: analytics — question shown (format only, no content). No-op unless active.
     track("question_shown", { format });
@@ -1627,6 +1646,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       logError("INVALID_ORDER_LAYOUT", { format });
     }
 
+    if (renderer === ANSWER_RENDERERS.CATEGORIZE) {
+      // Kategorisering (js/categorize.js): the server sent the category labels and the item texts in a
+      // shuffled order; no item's category is in the payload. A payload that is not a valid layout falls
+      // through to the visible "unsupported" error below.
+      const layout = readCategorizeLayout(content);
+      if (layout) {
+        const control = buildCategorizeAnswer(document, {
+          layout,
+          onSubmit: submitAnswer,
+          describedBy: questionElement.id,
+          attachReadAloud: attachOptionReadAloudControl,
+          readAloudContext: { subject: currentSubject, question: content.question, options: layout.items },
+        });
+        currentCategorizeControl = { ...control, layout };
+        optionsContainer.appendChild(control.root);
+        return true;
+      }
+      logError("INVALID_CATEGORIZE_LAYOUT", { format });
+    }
+
     if (renderer === ANSWER_RENDERERS.LONG_TEXT) {
       const textarea = document.createElement("textarea");
 
@@ -1654,7 +1693,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (renderer === ANSWER_RENDERERS.UNSUPPORTED || renderer === ANSWER_RENDERERS.MATCH_PAIRS
       || renderer === ANSWER_RENDERERS.TRUE_FALSE
-      || renderer === ANSWER_RENDERERS.ORDER_ITEMS) {
+      || renderer === ANSWER_RENDERERS.ORDER_ITEMS
+      || renderer === ANSWER_RENDERERS.CATEGORIZE) {
       // An interaction type this client has no renderer for must fail loud — never fall through
       // to option buttons (ARCHITECTURE.md → Question Interaction model, rule 2).
       logError("UNSUPPORTED_ANSWER_FORMAT", { format, answer_type: question.answer_type ?? null });

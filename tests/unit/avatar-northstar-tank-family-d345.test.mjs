@@ -25,8 +25,10 @@ test("D-345 the family: 44 tee-approved pairs x 6 designs = 264; olive with beig
   assert.deepEqual([...new Set(C.filter((c) => c.shoes === "shoes-sneakers-low-sv1-charcoal").map((c) => c.bottom))].sort(), ["bottom-capri-lightblue", "bottom-skirt-sand"]);
   assert.equal(C.filter((c) => c.reviewedInD343).length, 24);
   // D-348 integrated the six after the owner's approval: the runtime's tank items are exactly the staged item table, nothing else
-  assert.deepEqual(Object.keys(AL.NORTHSTAR_ITEMS).filter((k) => k.startsWith(TF.CUT_ITEM)), Object.keys(TF.DESIGNS).map(TF.itemOf), "the runtime's tank items are the six");
-  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, true);
+  // D-355: the 11 prepared tank tops of D-354 join the cut's family; exactly those, after the six
+  assert.deepEqual(Object.keys(AL.NORTHSTAR_ITEMS).filter((k) => k.startsWith(TF.CUT_ITEM)), [...Object.keys(TF.DESIGNS).map(TF.itemOf), ...Object.values(AL.NORTHSTAR_KIT_TOPS).filter((t) => t.family === TF.CUT_ITEM).map((t) => t.item)], "the runtime's tank items are the six and D-355's eleven");
+  assert.equal(Object.values(AL.NORTHSTAR_KIT_TOPS).filter((t) => t.family === TF.CUT_ITEM).length, 11);
+  assert.equal(AL.AVATAR_NORTHSTAR_WARDROBE, true);   // D-357
 });
 
 test("D-345 the runtime item shape: the hem junction after the shoes and before the bottom, a body layer, no sleeves, the cut's shadow", () => {
