@@ -63,11 +63,20 @@ jobs:
   # (tests/unit-ci-exclusions.mjs). Those still run, and still fail loudly, locally.
   #
   # SHARDED (A2, 2026-10-23). The suite grew from 4.0 to 7.2 min in one week and the job has a
-  # 10-minute timeout. `unit-shard` runs it as 3 jobs; tests/run-unit-ci.mjs plans one deterministic
+  # 10-minute timeout. `unit-shard` runs it as N jobs (3 until D-361, now 4); tests/run-unit-ci.mjs plans one deterministic
   # partition (every file exactly once, balanced by tests/unit-ci-weights.json) and each shard runs
   # its own part. `unit` is the one check that reports: it passes only if EVERY shard succeeded, so
-  # a failing, cancelled or skipped shard fails `unit`. 3 shards keeps 9 parallel PRs within the
-  # account's concurrent-job budget (each shard runs ~2 min).
+  # a failing, cancelled or skipped shard fails `unit`. (A2: 3 shards kept 9 parallel PRs within the
+  # account's concurrent-job budget, each shard ~2 min then; see D-361 for 4.)
+  #
+  # FOUR SHARDS (D-361, 2026-11-07). By 2026-11-06 a 3-shard job took a median 452 s of its 600 s, and
+  # 10 shards in a week were cancelled at ~617 s with 0 failed tests. 203 job logs show the variance is
+  # the RUNNER, not the plan: shards stay balanced (wall = 1.03 × file time / concurrency), but a whole
+  # runner runs 0.63–1.49× the median speed. 3 shards fit only up to ~1.2×; 4 fit the slowest seen.
+  # The shard count is the matrix length and nothing else: UNIT_SHARD and the job name read
+  # strategy.job-total, and tests/unit/ci-timing-metrics.test.mjs requires the matrix to be exactly 1..N.
+  # UNIT_SHARD_BUDGET_S (450 s of tests ≈ 480 s job with ~30 s setup) is the design target: passing it is reported (a warning and the files
+  # still running / not started), never a failure — the 10-minute timeout is unchanged.
   #
   # The one exception to "no backend": a throwaway PostgreSQL 17 service container, local to each
   # shard, for the level engine's real-concurrency test (tests/unit/difficulty-scale-b-concurrency.test.mjs) —
@@ -76,13 +85,13 @@ jobs:
   # secret (trust auth) and is discarded with the job; it is not Supabase.
   # LEVEL_ENGINE_PG_REQUIRED makes that test FAIL instead of skipping if the server is missing.
   unit-shard:
-    name: unit (shard ${{ matrix.shard }}/3)
+    name: unit (shard ${{ matrix.shard }}/${{ strategy.job-total }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4]
     services:
       postgres:
         image: postgres:17.6
@@ -104,7 +113,8 @@ jobs:
         run: npm ci
       - name: Run unit suite (shard)
         env:
-          UNIT_SHARD: ${{ matrix.shard }}/3
+          UNIT_SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
+          UNIT_SHARD_BUDGET_S: "450"
           LEVEL_ENGINE_PG_URL: postgres://postgres@localhost:5432/postgres
           LEVEL_ENGINE_PG_REQUIRED: "1"
         run: npm run test:unit:ci
