@@ -351,4 +351,12 @@ test("hints change no XP, coins, streak, quest, attempt, instance or teacher dat
   const readers = (await db.query(`SELECT p.proname FROM pg_proc p JOIN pg_namespace s ON s.oid = p.pronamespace
     WHERE s.nspname = 'public' AND p.prosrc ILIKE '%question_hint_requests%' ORDER BY 1`)).rows.map((r) => r.proname);
   assert.deepEqual(readers, ["request_question_hint"]);
+  // And the count itself (question_attempts.hints_used) is read by no function at all: only K1's two _v2 functions
+  // name it, and only to validate and store it — no reward, mastery, level or teacher function uses it.
+  const hintsUsed = (await db.query(`SELECT p.proname FROM pg_proc p JOIN pg_namespace s ON s.oid = p.pronamespace
+    WHERE s.nspname = 'public' AND p.prosrc ILIKE '%hints_used%' ORDER BY 1`)).rows.map((r) => r.proname);
+  assert.deepEqual(hintsUsed, ["process_question_attempt_v2", "process_text_answer_v2"]);
+  const views = (await db.query(`SELECT c.relname FROM pg_class c JOIN pg_namespace s ON s.oid = c.relnamespace
+    WHERE s.nspname = 'public' AND c.relkind IN ('v', 'm') AND (pg_get_viewdef(c.oid) ILIKE '%hints_used%' OR pg_get_viewdef(c.oid) ILIKE '%question_hint_requests%')`)).rows;
+  assert.deepEqual(views, [], "no view (teacher statistics included) reads hints");
 });
