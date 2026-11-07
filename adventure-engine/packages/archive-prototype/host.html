@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lærlig · Arkivskabet (lokal testvært)</title>
+  </head>
+  <body>
+    <header class="host-head">
+      <h1>Lærlig · Arkivskabet</h1>
+      <p id="test-banner" class="test-banner">TESTVÆRT MED TESTADAPTER — intet her rammer Lærligs server, og der bruges ingen elevdata.</p>
+    </header>
+    <main class="host-main">
+      <iframe id="lv-game" title="Lærligverse: Arkivskabet" referrerpolicy="no-referrer"></iframe>
+      <aside class="host-panel" aria-labelledby="ledger-title">
+        <h2 id="ledger-title">Serverens bog (testadapter)</h2>
+        <dl>
+          <dt>XP udbetalt</dt><dd id="ledger-xp">0</dd>
+          <dt>Coins udbetalt</dt><dd id="ledger-coins">0</dd>
+          <dt>Bedømte svar</dt><dd id="ledger-graded">0</dd>
+          <dt>Belønninger</dt><dd id="ledger-entries">0</dd>
+          <dt>Spilsession</dt><dd id="host-session">ingen</dd>
+        </dl>
+        <h3>Afviste beskeder</h3>
+        <ol id="ledger-rejects" class="rejects"></ol>
+        <h3>Testværktøjer</h3>
+        <button id="inject-network" type="button">Simulér netværksfejl (næste 4 kald)</button>
+        <button id="reload-game" type="button">Genindlæs spillet</button>
+      </aside>
+    </main>
+    <script type="module" src="./src/host-main.ts"></script>
+  </body>
+</html>
