@@ -118,6 +118,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
   "20261105115000_true_false_mastery_exclusion.sql":
     "F-02 Sandt/falsk, not applied in production and to be applied BEFORE 20261105120000: it keeps true_false answers out of the level and band folds and the teacher progression functions (owner principle 2026-11-05)",
+  "20261107090000_course_items_never_move_level.sql":
+    "Lærligverse (F10-B2), not applied in production and to be applied AFTER 20261105115000 and BEFORE any course item is seeded: it keeps questions whose metadata has learning_step (D-338 course steps) out of the level and band folds",
   "20261105120000_true_false_activation.sql":
     "F-02 Sandt/falsk activation, not applied in production and not to be applied before the get-next-question deploy that makes true_false servable: it admits true_false rows in questions and flips question_is_servable for them",
   "20261020130001_english_level_pilot_1.sql":
