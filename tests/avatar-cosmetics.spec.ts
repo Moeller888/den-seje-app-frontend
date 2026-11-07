@@ -8,7 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { PROD, serveCheckoutLogin, PUBLIC_API_KEY } from "./helpers.js";
+import { PROD, serveCheckoutLogin, PUBLIC_API_KEY, openItemCategory } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -169,6 +169,7 @@ test("2. pirate-hat appears in inventory and renders in avatar-preview", async (
   await setEquipped({ headwear: "pirate-hat" });
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await openItemCategory(page, "headwear");   // D-363: the card is under its category
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
 
   // Inventory check
@@ -190,6 +191,7 @@ test("3. pirate-hat unequips — image removed from avatar-preview", async ({
   await setEquipped({ headwear: "pirate-hat" });
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await openItemCategory(page, "headwear");   // D-363: the card is under its category
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
 
   // Verify equipped first
@@ -214,6 +216,7 @@ test("4. ninja-mask equips — image rendered in avatar-preview", async ({
   await setEquipped({ face: "ninja-mask" });
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await openItemCategory(page, "face");   // D-363: the card is under its category
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
 
   await expect(
@@ -229,6 +232,7 @@ test("5. hero-mask equips — image rendered in avatar-preview", async ({
   await setEquipped({ face: "hero-mask" });
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await openItemCategory(page, "face");   // D-363: the card is under its category
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
 
   await expect(
@@ -244,6 +248,7 @@ test("6. panda-mask equips — image rendered in avatar-preview", async ({
   await setEquipped({ face: "panda-mask" });
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await openItemCategory(page, "face");   // D-363: the card is under its category
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
 
   await expect(
@@ -281,10 +286,12 @@ test("8. equipped pirate-hat persists after page reload", async ({
   await setEquipped({ headwear: "pirate-hat" });
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await openItemCategory(page, "headwear");   // D-363: the card is under its category
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
 
   // Reload
   await page.reload({ waitUntil: "domcontentloaded" });
+  await openItemCategory(page, "headwear");   // D-363: the card is under its category
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
 
   await expect(
@@ -326,6 +333,7 @@ test("golden: avatar page pirate-hat matches baseline", async ({
   await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
 
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await openItemCategory(page, "headwear");   // D-363: the card is under its category
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
@@ -366,6 +374,7 @@ test("golden: avatar page ninja-mask matches baseline", async ({
   await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
 
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await openItemCategory(page, "face");   // D-363: the card is under its category
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
@@ -386,6 +395,7 @@ test("golden: avatar page hero-mask matches baseline", async ({
   await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
 
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await openItemCategory(page, "face");   // D-363: the card is under its category
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
@@ -406,6 +416,7 @@ test("golden: avatar page panda-mask matches baseline", async ({
   await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
 
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await openItemCategory(page, "face");   // D-363: the card is under its category
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 

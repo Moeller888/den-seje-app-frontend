@@ -8,7 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail, PROD, serveCheckoutLogin } from "./helpers.js";
+import { findAuthUserByEmail, PROD, serveCheckoutLogin, openItemCategory } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -26,6 +26,7 @@ let lowerItemId: string;        // common (fallback: uncommon) equipable item
 let lowerItemSlot: string;      // its slot_type (drives the unequip button selector)
 let lowerReaction: string;      // "equip-common" | "equip-uncommon"
 let legendaryItemId: string;    // legendary equipable item
+let legendaryItemSlot: string;  // its slot_type (D-363: the category its card is under)
 
 test.beforeAll(async () => {
   adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -55,6 +56,7 @@ test.beforeAll(async () => {
   if (!lower) throw new Error("No common/uncommon equipable item found in shop_items");
 
   legendaryItemId = legendary.id;
+  legendaryItemSlot = legendary.slot_type;
   lowerItemId     = lower.id;
   lowerItemSlot   = lower.slot_type;
   lowerReaction   = "equip-" + lower.rarity;
@@ -162,6 +164,7 @@ test("4. Equip triggers proud reaction, unequip triggers curious", async ({
 
   await loginAsStudent(page);
   await openAvatarPage(page);
+  await openItemCategory(page, lowerItemSlot);   // D-363: the card is under its category
 
   // Equip the low-rarity item.
   await page.locator(`.equip-btn[data-item-id="${lowerItemId}"]`).click();
@@ -205,6 +208,7 @@ test("5. Legendary equip triggers the critical reaction path", async ({
 
   await loginAsStudent(page);
   await openAvatarPage(page);
+  await openItemCategory(page, legendaryItemSlot);   // D-363: the card is under its category
 
   await page.locator(`.equip-btn[data-item-id="${legendaryItemId}"]`).click();
 
@@ -254,6 +258,7 @@ test.describe("reduced motion", () => {
     expect(animationName).toBe("none");
 
     // Equip still works and reaction state is preserved (usability intact).
+    await openItemCategory(page, lowerItemSlot);   // D-363: the card is under its category
     await page.locator(`.equip-btn[data-item-id="${lowerItemId}"]`).click();
 
     await expect(page.locator("#avatarWrap")).toHaveAttribute(
