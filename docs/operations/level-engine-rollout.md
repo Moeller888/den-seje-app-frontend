@@ -161,7 +161,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat | dette repository | 16 | `d5d8fad4f86a5299b8c1d3be71f5ec0d5ee08a07e9483b8813731a413e900edb` |
+| Kandidat | dette repository | 17 | `5e54ee7bad34da3837ed26057da5d08f76aeaeb4e4e2c9d122d9ffc0efd4ab7d` |
+| Forrige kandidat (D-332 efter L1 K1, før D-338's sekvens) | `feat/laerligverse-f5-kildekritik` | 16 | `d5d8fad4f86a5299b8c1d3be71f5ec0d5ee08a07e9483b8813731a413e900edb` |
 | Forrige kandidat (D-329 efter L1 K1, før D-332's `option_details`) | `feat/laerligverse-f4-objective` | 16 | `f53e2c064ae50f1afe70415c4a0ae169fe4d5ef3e3ea3bd7d385b394b5d21182` |
 | Forrige kandidat (L1 K1 `served-snapshot.ts`, før D-329 `objective-target.ts`) | main efter #536 | 15 | `4a89e9e6e33b363c9e8360bb81b19077dcb26c4791c3a086a66c73386b718f8d` |
 | Forrige kandidat (før L1 K1 og D-329) | main før K1 | 14 | `95952bdc942827ecef9a4a25a2376951f0b82c4d2d89594133d168b40e98dbb7` |
@@ -195,6 +196,11 @@ D-332 udvider den offentlige spørgsmåls-DTO (`_shared/question-dto.ts`) med de
 `content.option_details`: én beskrivelse pr. svarmulighed (»bagsiden« af en kilde), kun for MC, højst 400
 tegn. Intet eksisterende spørgsmål har feltet, så svarene og slukket-pariteten er uændrede. Et misdannet felt
 afviser spørgsmålet som dårligt indhold.
+D-338 tilføjer `_shared/learning-sequence.ts`: en serverstyret læringssekvens for ét mål. Den kører kun,
+når Edge-secret'en `LAERLIGVERSE_SEQUENCE` er præcis `on`, målretningen (D-329) er tændt, og anmodningen
+indeholder `sequence: true`. Så læser funktionen elevens egen historik i målet (svar, dom, tid og
+spørgsmålets trin-mærke; intet indhold og ingen nøgle) og udleverer kun spørgsmål med det aktuelle trin.
+Slukket er kaldene uændrede.
 Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
 kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten
@@ -285,7 +291,7 @@ reference.
 - `entrypoint_path` `functions/get-next-question/index.ts`;
 - `import_map_path` `functions/get-next-question/deno.json`;
 - `verify_jwt` `false`, ellers fejler browserens OPTIONS-preflight;
-- præcis de 16 filer i kandidatmanifestet, med stierne som i manifestet.
+- præcis de 17 filer i kandidatmanifestet, med stierne som i manifestet.
 
 Ingen secret ændres.
 
