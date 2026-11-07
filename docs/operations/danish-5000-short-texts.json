@@ -1,0 +1,1613 @@
+[
+ {
+  "q": "Læs: 'Da Amina kom hjem med karakteren, sagde hendes far ingenting. Han tog bare papiret, læste det to gange og hængte det på køleskabet, helt øverst, hvor alle gæster ville se det.' Hvad viser farens handling?",
+  "skill": "slutning",
+  "goal": "Eleven øver at slutte sig til farens stolthed ud fra, hvor han hænger papiret, selv om han intet siger.",
+  "verdict": "lower",
+  "level_before": 5892,
+  "level": 3300,
+  "reason": "God 'vis, ikke fortæl'-opgave, men ét enkelt slutningsskridt med lette ord. Hører til i 5. klasse."
+ },
+ {
+  "q": "Læs: 'Fiskerne på kysten kalder fyrtårnet Vandreren, fordi det er flyttet to gange, begge gange længere ind i land. Havet tog nemlig klinten under det.' Hvad er årsagen til, at fyrtårnet er flyttet?",
+  "skill": "informationssøgning",
+  "goal": "Eleven øver at finde årsagen til, at fyrtårnet er flyttet, og forstå billedet 'havet tog klinten'.",
+  "verdict": "lower",
+  "level_before": 6024,
+  "level": 3600,
+  "reason": "Årsagen står næsten ordret efter 'nemlig'. Lille billedsprogsgevinst, men ikke mere end 5. klasse."
+ },
+ {
+  "q": "Læs: 'Lars havde fået en ny cykel. Han lod den stå midt på skolegården, hvor alle kunne se den, også da det begyndte at regne.' Hvad er Lars især optaget af?",
+  "skill": "slutning",
+  "goal": "Eleven øver at slutte af, at cyklen står fremme i regnen, at Lars især vil ses med den.",
+  "verdict": "lower",
+  "level_before": 8423,
+  "level": 3700,
+  "reason": "Tydelig personslutning med lette ord. Passer i 5. klasse."
+ },
+ {
+  "q": "Læs: 'Skolens nye regel: Alle skal aflevere deres mobil i et skab om morgenen. Reglen gælder også i frikvartererne.' Hvad svarer teksten ikke på?",
+  "skill": "informationssøgning",
+  "goal": "Eleven øver at gennemgå en kort regel punkt for punkt og finde den oplysning, der mangler om mobilen.",
+  "verdict": "lower",
+  "level_before": 5936,
+  "level": 3900,
+  "reason": "Negativ søgning er en reel færdighed, men kræver kun systematik. Emne og ord passer til 5. klasse."
+ },
+ {
+  "q": "Læs: 'Lyset fra et lyn når os næsten med det samme, mens lyden kun bevæger sig cirka en kilometer på tre sekunder. Derfor kan man tælle sekunderne mellem lyn og torden.' Hvad kan man slutte, hvis der går ni sekunder fra lyn til torden?",
+  "skill": "slutning",
+  "goal": "Eleven øver at omregne 'en kilometer på tre sekunder' til ni sekunder og slutte, hvor langt væk lynet er.",
+  "verdict": "lower",
+  "level_before": 5903,
+  "level": 4200,
+  "reason": "Enkel forholdsregning med alt givet i teksten. Reel slutning, men ikke 7.-klasses-tænkning."
+ },
+ {
+  "q": "Læs: 'Kokosnødder kan flyde på havet i uger og alligevel spire på en fjern strand. Det er en af grundene til, at kokospalmer vokser på så mange afsides øer.' Hvilket spørgsmål besvarer teksten?",
+  "skill": "informationssøgning",
+  "goal": "Eleven øver at afgøre, hvilket spørgsmål teksten faktisk svarer på, ved at holde hvert svar op mod teksten.",
+  "verdict": "lower",
+  "level_before": 6739,
+  "level": 4400,
+  "reason": "God læsestrategi, men de tre andre svar nævnes slet ikke i teksten. Passer i 6. klasse."
+ },
+ {
+  "q": "Læs: 'Mads fortalte Emil, at han havde vundet lodtrækningen.' Hvilket ord gør sætningen tvetydig?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at finde det stedord, der kan pege på to personer, så man ikke ved, hvem der vandt.",
+  "verdict": "lower",
+  "level_before": 6266,
+  "level": 4500,
+  "reason": "Reel sproglig opmærksomhed, men ordklassen afslører svaret hurtigt. Passer, når stedord er kendt stof."
+ },
+ {
+  "q": "Læs: 'Klassens løbetest: Ida løb 3 km på 15 minutter i august og på 14 minutter i oktober. Anton løb på 20 minutter i august og på 16 minutter i oktober.' Hvilken slutning er rigtig?",
+  "skill": "slutning",
+  "goal": "Eleven øver at sammenligne to løberes tider og skelne mellem størst fremgang og hurtigste tid.",
+  "verdict": "lower",
+  "level_before": 6453,
+  "level": 4600,
+  "reason": "Reel totrinsslutning, men regningen er enkel, og sproget er let. Passer i 6. klasse."
+ },
+ {
+  "q": "Læs: 'Min far kalder det at lave morgenmad. Han har sat mælken på bordet.' Hvad er det humoristiske i teksten?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå humoren i afstanden mellem 'at lave morgenmad' og at sætte mælken på bordet.",
+  "verdict": "lower",
+  "level_before": 6651,
+  "level": 4600,
+  "reason": "Sjov og tydelig pointe i hverdagssprog. Reel, men klart lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Glas kan smeltes om og blive til nyt glas igen og igen uden at miste kvalitet. Papirfibrene bliver derimod kortere for hver runde, og efter et antal gange kan de ikke bruges mere.' Hvad kan man slutte?",
+  "skill": "slutning",
+  "goal": "Eleven øver at slutte ud fra 'derimod', at glas kan genbruges flere gange end papir.",
+  "verdict": "lower",
+  "level_before": 6838,
+  "level": 4600,
+  "reason": "Facit er en næsten direkte omskrivning af teksten. Fagligt godt emne, men enkel tænkning."
+ },
+ {
+  "q": "Læs: 'Nadia havde øvet sig på talen i tre uger. Da hun stod på scenen, kunne hun høre sit eget hjerte, og papiret i hånden raslede som en fugl, der ville væk.' Hvad fortæller sammenligningen med fuglen?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at forstå, at papiret, der rasler som en fugl, viser den rystende hånd og nervøsiteten.",
+  "verdict": "lower",
+  "level_before": 6288,
+  "level": 4700,
+  "reason": "Tydelig sammenligning, og det bankende hjerte hjælper på vej. Reel tolkning, men lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Hunden lagde sig ved døren klokken fem, som den plejede. Ingen havde kunnet forklare den, at Thomas var flyttet hjemmefra.' Hvad får teksten læseren til at føle?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at finde den følelse, teksten vil vække, ud fra hunden, der venter på en, som ikke kommer.",
+  "verdict": "lower",
+  "level_before": 6332,
+  "level": 4700,
+  "reason": "Let at føle med hunden. Reel øvelse i læservirkning, og ordene i svarene passer til 6. klasse."
+ },
+ {
+  "q": "Læs: 'Jeg er ikke bange for mørke. Jeg har bare altid en lampe tændt, en dør på klem og en radio, der hvisker.' Hvad skal læseren forstå?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at se, at lampen, døren og radioen afslører, at fortælleren er bange for mørke.",
+  "verdict": "lower",
+  "level_before": 7898,
+  "level": 4700,
+  "reason": "Benægtelsen er gennemskuelig og børnenær. Reel, men hører til i 6. klasse."
+ },
+ {
+  "q": "Læs: 'Tak til busselskabet for den spændende morgenoplevelse. Det er altid hyggeligt at stå 40 minutter i regnen og gætte, om bussen kommer i dag.' Hvilken tone har indlægget?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at genkende ironi ved at opdage, at 'tak' og 'hyggeligt' ikke passer til 40 minutter i regnen.",
+  "verdict": "lower",
+  "level_before": 5782,
+  "level": 4800,
+  "reason": "Reel ironi, men signalet er tydeligt og ordene enkle. Passer til 6. klasse, hvor ironi bliver et begreb."
+ },
+ {
+  "q": "Læs: 'Vand udvider sig, når det fryser, og derfor flyder is. Hvis isen sank, ville søer fryse fra bunden, og fisk ville ikke have et sted at overvintre.' Hvad er tekstens forklaring på, at fisk klarer vinteren?",
+  "skill": "informationssøgning",
+  "goal": "Eleven øver at finde tekstens årsagskæde fra is, der flyder, til vand under isen.",
+  "verdict": "lower",
+  "level_before": 7260,
+  "level": 4800,
+  "reason": "Forklaringen står i teksten. God fagtekstlæsning, men kun en genfortælling. Passer i 6. klasse."
+ },
+ {
+  "q": "Læs: 'De fleste tror, at guldfisk har en hukommelse på tre sekunder. Forsøg viser dog, at de kan lære at finde mad bag en bestemt farve og huske det i ugevis.' Hvad vil teksten især?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at genkende mønsteret 'de fleste tror … dog' som en måde at rette en myte på.",
+  "verdict": "lower",
+  "level_before": 6189,
+  "level": 4900,
+  "reason": "Signalordene viser hensigten tydeligt, og de andre svar passer dårligt. Hører til i 6. klasse."
+ },
+ {
+  "q": "Læs: 'Mormor siger, at alt var bedre i gamle dage. Bagefter beder hun mig finde en video om strikning på sin telefon.' Hvad er det, teksten lægger mærke til?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at se, at mormors ord om gamle dage ikke passer med, at hun bruger telefonen.",
+  "verdict": "lower",
+  "level_before": 6695,
+  "level": 5000,
+  "reason": "Modsætning mellem ord og handling, som ligger lige til. Passer i 6. klasse."
+ },
+ {
+  "q": "Læs: 'Skolen forbyder fodbold i frikvarteret, fordi man kan komme til skade. Skal vi så også forbyde trapper?' Hvad mener skribenten?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå, at spørgsmålet om trapper skal vise, at forbuddet går for vidt.",
+  "verdict": "lower",
+  "level_before": 7036,
+  "level": 5000,
+  "reason": "Retorisk overdrivelse i hverdagssprog med korte svar. Passer i 6. klasse."
+ },
+ {
+  "q": "Læs: 'Skilt ved kiosken: Vi sælger is til børn med chokolade.' Hvorfor kan skiltet læses på to måder?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at se, at 'med chokolade' kan høre til både 'is' og 'børn', og at ordstillingen skaber misforståelsen.",
+  "verdict": "lower",
+  "level_before": 6717,
+  "level": 5100,
+  "reason": "Sjovt og reelt, men facit er det eneste svar, der handler om ordstilling. Hører til i 6. klasse."
+ },
+ {
+  "q": "Læs: 'Træneren står ved bussen, da en forælder spørger: Hvorfor er holdet stadig så dårligt, selv om det har fået ny træner?' Hvad tager forælderen for givet?",
+  "skill": "forudsætning",
+  "goal": "Eleven øver at se, at spørgsmålet 'Hvorfor er holdet stadig så dårligt?' tager det dårlige hold for givet.",
+  "verdict": "lower",
+  "level_before": 6376,
+  "level": 5300,
+  "reason": "Godt begreb, men facit står næsten ordret, og distraktorerne er uden forbindelse til spørgsmålet."
+ },
+ {
+  "q": "Læs: 'Min storebror er den slags menneske, der kan finde alt, undtagen opvaskemaskinen.' Hvad siger skribenten egentlig om sin bror?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at 'alt, undtagen opvaskemaskinen' er en spøg om at undgå arbejde.",
+  "verdict": "lower",
+  "level_before": 6475,
+  "level": 5300,
+  "reason": "Reel implicit humor, men hverdagsnær og uden svære ord. Lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Lokalavisen skriver: Modige elever redder kat ned fra tag. Nederst i artiklen står der, at katten sad på et cykelskur på to meter, og at eleverne brugte en stol.' Hvad er det, der ikke passer sammen i teksten?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at opdage kontrasten mellem den dramatiske overskrift og den hverdagsagtige hændelse med stol og skur.",
+  "verdict": "lower",
+  "level_before": 6585,
+  "level": 5300,
+  "reason": "Komisk og tydelig kontrast. Reel medieforståelse, men lettere end 7. klasse."
+ },
+ {
+  "q": "Læs: 'Nogle vil sige, at jeg er for ung til at mene noget om trafikken ved skolen. Men det er mig, der krydser vejen hver morgen.' Hvad bruger skribenten som grund til at mene noget om trafikken?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at finde det, skribenten støtter sin ret til at mene noget på, nemlig den daglige tur over vejen.",
+  "verdict": "lower",
+  "level_before": 6915,
+  "level": 5300,
+  "reason": "Belægget står direkte i sidste sætning. Reel, men enkel øvelse i belæg."
+ },
+ {
+  "q": "Læs: 'Cecilie: Vi bør have færre prøver, for de stresser eleverne. Hassan: Prøverne skal blive, men eleverne skal forberedes bedre på dem.' Hvad er forskellen på de to forslag?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at skelne mellem to forslag, hvor det ene ændrer prøverne og det andet ændrer forberedelsen.",
+  "verdict": "lower",
+  "level_before": 7477,
+  "level": 5300,
+  "reason": "Forskellen er sagt direkte, og to distraktorer er oplagt forkerte. Reel, men enkel."
+ },
+ {
+  "q": "Læs: 'Hver sommer målte far os mod dørkarmen med en blyant. Da huset var solgt og flyttebilen ventede, gik jeg tilbage og tog et billede af stregerne.' Hvad står blyantstregerne for?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at blyantstregerne på dørkarmen står for minderne om barndommen.",
+  "verdict": "lower",
+  "level_before": 8081,
+  "level": 5300,
+  "reason": "Fin tekst, men symbolet er tydeligt, og distraktorerne er svage. Passer i 6. klasse."
+ },
+ {
+  "q": "Læs: 'Min klasse er en flok stære. Når den ene vender, vender alle, og ingen ved, hvem der begyndte.' Hvad mener skribenten?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at tolke metaforen om stære som en klasse, der følger flokken uden at tænke selv.",
+  "verdict": "lower",
+  "level_before": 6607,
+  "level": 5400,
+  "reason": "Teksten forklarer selv billedet i anden sætning. God metaforøvelse til 6. klasse."
+ },
+ {
+  "q": "Læs: 'Lærer Bak havde altid en bog i lommen og et halstørklæde, der var for langt. Han sagde aldrig en hård sætning, men når han sænkede stemmen, blev der så stille, at man kunne høre radiatoren.' Hvad fortæller teksten om lærer Bak?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at slutte ud fra den stille klasse, at lærer Bak har respekt uden at råbe.",
+  "verdict": "lower",
+  "level_before": 6937,
+  "level": 5400,
+  "reason": "Tydelig personkarakteristik med lette ord. Reel slutning til 6. klasse."
+ },
+ {
+  "q": "Læs: 'Fire ud af fem elever på Søndervangskolen er glade for at gå i skole, viser en ny undersøgelse. Skolen sendte spørgeskemaet ud til alle 420 elever, og 40 svarede.' Hvad bør få læseren til at tvivle på resultatet?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at vurdere et resultat ud fra, at kun 40 af 420 elever svarede.",
+  "verdict": "lower",
+  "level_before": 6277,
+  "level": 5500,
+  "reason": "Vigtig tanke om svarprocent, men tallene står side om side, og distraktorerne er svage."
+ },
+ {
+  "q": "Læs: 'Filmen varer tre timer. Jeg har set kortere vintre.' Hvad er anmelderens vurdering?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at læse 'Jeg har set kortere vintre' som en overdrivelse, der siger, at filmen føles for lang.",
+  "verdict": "lower",
+  "level_before": 7739,
+  "level": 5600,
+  "reason": "Sjov og kort, men tænkningen er ét skridt. Passer i 6. klasse."
+ },
+ {
+  "q": "Læs: 'Den 14-årige sejler Ida Krogh vandt i weekenden, selv om hendes båd var ti år gammel, og selv om hun havde trænet alene hele vinteren. Klubbens formand kalder sejren en triumf for klubbens arbejde.' Hvad kan virke skævt ved formandens udtalelse?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at opdage, at formanden giver klubben æren, selv om teksten har fremhævet, at Ida trænede alene.",
+  "verdict": "lower",
+  "level_before": 6860,
+  "level": 5800,
+  "reason": "Teksten stiller selv modsætningen op. Reel, men lidt lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Han sagde, at han var ligeglad. Han sagde det til sin taske, til sine sko og til væggen bag læreren.' Hvad viser sætningen?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at læse opremsningen af taske, sko og væg som tegn på, at han undgår lærerens blik.",
+  "verdict": "lower",
+  "level_before": 7124,
+  "level": 5800,
+  "reason": "Godt billede, men distraktorerne er svage. Lidt under niveauet."
+ },
+ {
+  "q": "Læs: 'Min søster siger, at lektier er spild af tid, fordi hun aldrig har brugt dem til noget. Hun er 13 år.' Hvad vil skribenten antyde med den sidste sætning?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, hvad den korte sætning 'Hun er 13 år' gør ved søsterens påstand.",
+  "verdict": "keep",
+  "level_before": 5826,
+  "level": 5826,
+  "reason": "Eleven skal selv koble alder og livserfaring, teksten siger det ikke. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Ejendomsmægleren skrev i annoncen: Charmerende hus med sjæl og muligheder. Da vi kom, manglede der et stykke af taget.' Hvad afslører teksten om annoncens ord?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at gennemskue, at 'sjæl og muligheder' er annoncesprog for et hus i dårlig stand.",
+  "verdict": "lower",
+  "level_before": 6805,
+  "level": 5900,
+  "reason": "Pointen leveres tydeligt af det manglende tag. Reel, men en smule lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Pressemeddelelse: Busrute 12 optimeres fra næste måned. Med færre afgange skabes en mere enkel og overskuelig køreplan.' Hvad betyder det i praksis for passagererne?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at oversætte 'optimeres' og 'enkel køreplan' til det, passagererne reelt oplever.",
+  "verdict": "lower",
+  "level_before": 7047,
+  "level": 5900,
+  "reason": "Facit står næsten som 'færre afgange'. Reel øvelse, men 'pressemeddelelse' og 'optimeres' holder den i 7. klasse."
+ },
+ {
+  "q": "Læs: 'Ifølge uofficielle kilder har bestyrelsen muligvis drøftet et salg af hallen.' Hvilke ord gør oplysningen særligt usikker?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at udpege ordene 'uofficielle' og 'muligvis' som forbehold, der gør en oplysning usikker.",
+  "verdict": "lower",
+  "level_before": 7283,
+  "level": 5900,
+  "reason": "Kun ét svarpar indeholder forbeholdsord, så tænkningen er let. Ordforrådet holder den i 7. klasse."
+ },
+ {
+  "q": "Læs: 'Overskrift i skolebladet: Elever fra 8. klasse underviser ældre i at bruge tablet.' Hvorfor er overskriften tvetydig?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at opdage, at 'ældre' i overskriften både kan være seniorer og elever, der er ældre end 8. klasse.",
+  "verdict": "keep",
+  "level_before": 5947,
+  "level": 5947,
+  "reason": "Eleven skal selv se den anden læsning, som man normalt overser. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Mange store opfindere klarede sig dårligt i skolen. Derfor behøver du ikke lave dine lektier.' Hvad er fejlen i slutningen?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at se, at det ikke følger af, at nogle opfindere klarede sig dårligt, at man kan droppe lektier.",
+  "verdict": "lower",
+  "level_before": 6981,
+  "level": 6000,
+  "reason": "Fejlen er synlig for de fleste, og tre svar er absurde. Reel, men lidt under niveauet."
+ },
+ {
+  "q": "Læs: 'Hun så manden med kikkerten.' Hvilke to meninger kan sætningen have?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at se, at 'med kikkerten' både kan høre til 'så' og 'manden'.",
+  "verdict": "lower",
+  "level_before": 7294,
+  "level": 6000,
+  "reason": "Klassisk tvetydighed, men kun facit handler om kikkerten på en meningsfuld måde."
+ },
+ {
+  "q": "Læs: 'Museets skilt: Sværdet blev fundet i 1902. Det stammer sandsynligvis fra vikingetiden, men nyere undersøgelser tyder på, at det kan være yngre.' Hvad er sikkert ifølge skiltet?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at skelne mellem det sikre fundår og det usikre i 'sandsynligvis', 'tyder på' og 'kan'.",
+  "verdict": "lower",
+  "level_before": 7864,
+  "level": 6000,
+  "reason": "Reel læsning af forbehold, men to af svarene nævnes slet ikke. Lidt lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Tillykke til skolen med det nye cykelskur. Det ser ud til at ville holde helt til den første vind.' Hvad er skribentens vurdering?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at læse lykønskningen til skolen som ironi, fordi skuret kun holder 'til den første vind'.",
+  "verdict": "lower",
+  "level_before": 8275,
+  "level": 6000,
+  "reason": "Ironien er tydelig og afsløres i anden sætning. Hører til i 7. klasse."
+ },
+ {
+  "q": "Læs: 'Hvorfor læser vi stadig gamle romaner? Fordi de viser, at mennesker for 100 år siden også var ensomme, forelskede og flove.' Hvilket svar giver teksten?",
+  "skill": "informationssøgning",
+  "goal": "Eleven øver at finde tekstens svar og opsummere 'ensomme, forelskede og flove' som grundlæggende følelser.",
+  "verdict": "lower",
+  "level_before": 8503,
+  "level": 6000,
+  "reason": "Spørgsmålet besvares i teksten, og kun opsummeringen kræver noget. Lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Nogle siger, at ordblinde elever snyder, når de får bøgerne læst op. Men ingen ville sige, at en elev med briller snyder, fordi glassene hjælper med at se.' Hvad er skribentens pointe?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå, hvordan sammenligningen med briller skal vise, at oplæsning er et hjælpemiddel og ikke snyd.",
+  "verdict": "keep",
+  "level_before": 6002,
+  "level": 6002,
+  "reason": "Argument ved analogi, hvor eleven selv skal overføre pointen fra briller til oplæsning."
+ },
+ {
+  "q": "Læs: 'Freja: Skolefesten bør holdes fredag, for så kan alle sove længe dagen efter. Oskar: Skolefesten bør holdes torsdag, for fredag har mange af os håndboldkamp.' Hvad er Freja og Oskar enige om?",
+  "skill": "forudsætning",
+  "goal": "Eleven øver at finde det, Freja og Oskar begge tager for givet, selv om de er uenige om dagen.",
+  "verdict": "keep",
+  "level_before": 6035,
+  "level": 6035,
+  "reason": "God øvelse i fælles forudsætning: Svaret står ingen steder og skal udledes af uenigheden."
+ },
+ {
+  "q": "Læs: 'Skolen har fået et gratis hæfte om sund morgenmad. Hæftet anbefaler havregryn, frugt og to glas mælk hver morgen, og tallene om kalk og protein er rigtige nok. Der står intet om, at man også kan få kalk fra andre fødevarer. På bagsiden står der med småt, at hæftet er betalt af en stor mælkevirksomhed.' Hvorfor kan hæftet give et skævt billede, selv om tallene er rigtige?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at vurdere, hvordan en afsender kan vinkle sande oplysninger, så de gavner afsenderen selv.",
+  "verdict": "rework",
+  "level_before": 6068,
+  "level": 6068,
+  "reason": "Spørgsmålet kan besvares uden at læse teksten: 'kritisk læser' peger direkte på standardsvaret, og de tre andre svar er absurde."
+ },
+ {
+  "q": "Læs: 'Noah til sin mor: Alle mine venner har længere sengetid end mig. Hvis du giver mig lov til at blive oppe, får jeg bedre karakterer, for så bliver jeg mindre stresset over at være udenfor.' Hvad er svagest ved Noahs argument?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at finde det svageste led i Noahs kæde fra sengetid over stress til karakterer.",
+  "verdict": "keep",
+  "level_before": 6079,
+  "level": 6079,
+  "reason": "Eleven skal skille argumentets led ad og vurdere belægget. Gode, nærliggende distraktorer."
+ },
+ {
+  "q": "Læs: 'Sælgeren sagde, at tilbuddet kun gælder i dag. Det sagde han også i går.' Hvad antyder teksten?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at se, at 'kun i dag' er kunstigt tidspres, når sælgeren også sagde det i går.",
+  "verdict": "lower",
+  "level_before": 7579,
+  "level": 6100,
+  "reason": "Tanken er enkel, kun facits ord er voksne. Lidt under niveauet."
+ },
+ {
+  "q": "Læs: 'Som sygeplejerske gennem 25 år har jeg set, hvad søvnmangel gør ved unge mennesker. Derfor beder jeg skolerne om at flytte første time til klokken ni.' Hvordan søger skribenten at gøre sit krav troværdigt?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at se, at sygeplejersken bruger sine 25 år i faget til at gøre sit krav troværdigt.",
+  "verdict": "lower",
+  "level_before": 7955,
+  "level": 6100,
+  "reason": "Spørgsmålet kræver ikke begrebet etos, og svaret står i første sætning. Lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Jorden omkring vulkaner er ofte meget frugtbar. Derfor bor millioner af mennesker tæt på dem, selv om et udbrud kan ødelægge alt.' Hvad vælger folk ifølge teksten?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at se, at folk bor ved vulkaner, fordi jorden er god, selv om de kender faren.",
+  "verdict": "lower",
+  "level_before": 8058,
+  "level": 6100,
+  "reason": "'Selv om' siger det hele, og facit kan næsten læses af spørgsmålet. Lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Graf over bymuseets besøg: I 2019 kom 8.000 gæster, i 2020 kom 4.000, og i 2021 kom 7.500. Museets leder skriver: Vores nye udstilling har næsten fordoblet besøgstallet.' Hvad er problemet med lederens påstand?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at opdage, at lederen vælger et svagt år som sammenligning, så udviklingen ser bedre ud.",
+  "verdict": "keep",
+  "level_before": 6134,
+  "level": 6134,
+  "reason": "Kræver at holde tre tal op mod en påstand. Stærk opgave med gode distraktorer."
+ },
+ {
+  "q": "Læs: 'Jeg forstår ikke, at folk klager over støjen fra byfesten. Den varer kun tre dage, og selv mærker jeg intet til den, for jeg bor 30 kilometer væk.' Hvad svækker skribentens argument?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at se, at skribentens 30 kilometer undergraver dommen over støjen.",
+  "verdict": "lower",
+  "level_before": 7602,
+  "level": 6200,
+  "reason": "Teksten leverer selv svagheden. Reel, men lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Nye tilflyttere klager over lugten fra havnen. Jeg har boet her i 40 år, og det sjoveste, jeg har hørt, er folk, der flytter til en fiskerby og undrer sig over fisk.' Hvad mener skribenten?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå skribentens spot over folk, der flytter til en fiskerby og undrer sig over fisk.",
+  "verdict": "lower",
+  "level_before": 7716,
+  "level": 6200,
+  "reason": "Holdningen er tydelig ud fra 'det sjoveste'. Lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Skemaet viser, at skolens solceller gav 200 kWh i januar og 1.600 kWh i juli. Skolens eget elforbrug var størst i januar og mindst i juli, hvor skolen er lukket.' Hvad er ulempen, som skemaet afslører?",
+  "skill": "slutning",
+  "goal": "Eleven øver at sammenholde produktion og forbrug og se, at solcellerne giver mest, når skolen bruger mindst.",
+  "verdict": "lower",
+  "level_before": 7887,
+  "level": 6200,
+  "reason": "Tallene er nemme at sammenholde, og tre svar modsiges direkte. Passer i 7. klasse."
+ },
+ {
+  "q": "Læs: 'Naboen var en venlig mand, som hver eneste dag kom over for at fortælle os, hvor vi havde parkeret forkert, klippet hækken skævt eller stillet skraldespanden uheldigt.' Hvordan skal ordet 'venlig' læses?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at læse ordet 'venlig' ironisk ud fra opremsningen af naboens indblandinger.",
+  "verdict": "lower",
+  "level_before": 8332,
+  "level": 6200,
+  "reason": "Eksemplerne gør det tydeligt, og svarene nævner selv læsemåden. Passer i 7. klasse."
+ },
+ {
+  "q": "Læs: 'Skemaet viser fravær på skolen: januar 4 procent, februar 12 procent, marts 5 procent. Under skemaet står der: I februar var mange elever ramt af influenza.' Hvad tilføjer teksten under skemaet?",
+  "skill": "informationssøgning",
+  "goal": "Eleven øver at skelne mellem det, tallene viser, og den forklaring, teksten under skemaet tilføjer.",
+  "verdict": "lower",
+  "level_before": 8366,
+  "level": 6200,
+  "reason": "God skelnen mellem tal og tolkning, men distraktorerne er lette at afvise."
+ },
+ {
+  "q": "Læs: 'Mor siger altid, at det ikke er farligt at tabe. Hun sagde det også, da vi kørte hjem fra stævnet, og hun sagde det to gange, med blikket stift på vejen.' Hvad antyder sidste del af teksten?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at læse morens gentagelse og stive blik som tegn på, at hun ikke selv tror på sine ord.",
+  "verdict": "keep",
+  "level_before": 6233,
+  "level": 6233,
+  "reason": "Fin undertekst, hvor kropssprog modsiger replikken. Fortjener sit niveau."
+ },
+ {
+  "q": "Læs: 'Man siger, at unge ikke læser længere. Men hvad kalder man så de timer, vi bruger på opslag, beskeder og lange tråde?' Hvad vil skribenten sige med spørgsmålet?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå, at det retoriske spørgsmål om opslag og beskeder er et modargument mod påstanden om unge.",
+  "verdict": "keep",
+  "level_before": 6299,
+  "level": 6299,
+  "reason": "Eleven skal selv besvare spørgsmålet og se, at det er en indvending. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Gratis musikskole er en fin tanke, for alle børn skal have samme muligheder. Men musikskolen ligger i byen, og der kører ingen bus fra Sønderby efter klokken 15.' Hvad er skribentens indvending?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå, hvordan oplysningen om bussen fungerer som indvending mod gratis musikskole.",
+  "verdict": "lower",
+  "level_before": 7091,
+  "level": 6300,
+  "reason": "Reel indvending, men distraktorerne kræver ingen afvejning. Lidt lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Skolens søjlediagram sammenligner to klassers læsescorer: 102 og 104. Diagrammets lodrette akse begynder ved 100, så den ene søjle ser dobbelt så høj ud som den anden.' Hvilken virkning har valget af akse?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at forstå, at en afskåret akse får en lille forskel til at se stor ud.",
+  "verdict": "lower",
+  "level_before": 7180,
+  "level": 6300,
+  "reason": "Teksten siger selv, at søjlen ser dobbelt så høj ud. Vigtigt begreb, men facit er næsten givet."
+ },
+ {
+  "q": "Læs: 'Min gade sover. / Kun en cykel ligger vågen / med forhjulet snurrende.' Hvad kan læseren slutte?",
+  "skill": "slutning",
+  "goal": "Eleven øver at slutte af det snurrende forhjul, at nogen netop har forladt cyklen.",
+  "verdict": "lower",
+  "level_before": 7568,
+  "level": 6300,
+  "reason": "Fint digt, men kun ét fysisk slutningsskridt. Passer i 7. klasse."
+ },
+ {
+  "q": "Læs: 'Årets skolefest har altid været i gymnastiksalen, og sådan skal det selvfølgelig blive ved med at være. Vi behøver ikke at diskutere det.' Hvad bygger skribenten sit argument på?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at se, at 'altid' og 'selvfølgelig' står i stedet for en reel begrundelse.",
+  "verdict": "lower",
+  "level_before": 8149,
+  "level": 6300,
+  "reason": "Svaghederne står i teksten, og sidste sætning hjælper. Reel på lavere niveau."
+ },
+ {
+  "q": "Læs: 'Min bedstefar cyklede uden hjelm hele sit liv og blev 92 år. Så snak om, at hjelme er nødvendige.' Hvad er svagheden i argumentet?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at se, at én bedstefars lange liv ikke siger noget om risikoen for andre.",
+  "verdict": "lower",
+  "level_before": 8297,
+  "level": 6300,
+  "reason": "Velkendt fejl i hverdagssprog. Reel, men lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Da jeg var barn, troede jeg, at voksne vidste, hvad de lavede. Nu er jeg 15, og jeg har set dem samle et skab.' Hvad er pointen?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå humoren i, at barnets tro på voksne falder, da de skal samle et skab.",
+  "verdict": "lower",
+  "level_before": 8389,
+  "level": 6300,
+  "reason": "Sjov og ligetil. Passer i 7. klasse."
+ },
+ {
+  "q": "Læs: 'Hvis vi først tillader kasketter i klassen, så kommer der snart også hættetrøjer, høretelefoner og snacks, og til sidst gør eleverne bare, hvad de vil.' Hvad er svagheden i denne tankegang?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at genkende glidebaneargumentet, hvor kasketter påstås at føre til, at alle gør, hvad de vil.",
+  "verdict": "keep",
+  "level_before": 6321,
+  "level": 6321,
+  "reason": "Vigtig argumentationsfejl, indført med forklaring. Hører til i 7. klasse."
+ },
+ {
+  "q": "Læs: 'Jeg elsker mine forældre. Men når de spørger: Hvordan gik det i skolen?, og jeg svarer: Fint, så ved vi alle tre, at samtalen er forbi.' Hvad mener skribenten om spørgsmålet?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at 'Fint' er et fast ritual, der lukker samtalen, uden at det er en anklage mod forældrene.",
+  "verdict": "keep",
+  "level_before": 6409,
+  "level": 6409,
+  "reason": "Fin balance mellem varme og kritik. Distraktorerne kræver præcis læsning af tonen."
+ },
+ {
+  "q": "Læs: 'Lydbølger kan ikke bevæge sig i tomt rum, fordi der intet stof er til at føre dem videre. I film om rumfart brummer rumskibenes motorer alligevel tydeligt.' Hvad er underforstået om filmene?",
+  "skill": "slutning",
+  "goal": "Eleven øver at slutte fra 'alligevel' og fysikken, at filmene bevidst vælger stemning frem for det korrekte.",
+  "verdict": "keep",
+  "level_before": 6486,
+  "level": 6486,
+  "reason": "Kobler fagtekst og medieforståelse. Kræver to skridt og har rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Forslaget om et nyt cykelskur kan vi roligt se bort fra. Hende, der stiller det, kommer jo altid for sent til møderne.' Hvad er der galt med argumentet?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at genkende et personangreb, hvor forslaget afvises på grund af forslagsstillerens forsinkelser.",
+  "verdict": "lower",
+  "level_before": 7306,
+  "level": 6500,
+  "reason": "Reelt begreb, men fejlen er tydelig, og to distraktorer er uden bid. Passer i 7. klasse."
+ },
+ {
+  "q": "Læs: 'Vi har haft tre skoleledere på to år. Den nyeste skriver i sit velkomstbrev, at hun vil skabe ro og kontinuitet.' Hvad kan man slutte om skolen?",
+  "skill": "slutning",
+  "goal": "Eleven øver at slutte af tre ledere på to år og ønsket om 'kontinuitet', at der har manglet stabilitet.",
+  "verdict": "lower",
+  "level_before": 7363,
+  "level": 6500,
+  "reason": "Enkel slutning, hvor ordet 'kontinuitet' er det sværeste. Passer i 7. klasse."
+ },
+ {
+  "q": "Læs: 'Enten stemmer I for den nye hal, eller også er I ligeglade med børnene.' Hvad er fejlen i udsagnet?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at genkende et falsk dilemma i 'Enten stemmer I for …, eller også er I ligeglade'.",
+  "verdict": "lower",
+  "level_before": 7682,
+  "level": 6500,
+  "reason": "Enten-eller står i teksten, og tre svar er irrelevante. Reelt begreb på lavere niveau."
+ },
+ {
+  "q": "Læs: 'På Emils skolepapir står der: Emil har fine evner, når han vælger at bruge dem.' Hvad siger læreren egentlig?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at 'når han vælger at bruge dem' er en høflig kritik af Emils indsats.",
+  "verdict": "lower",
+  "level_before": 8354,
+  "level": 6500,
+  "reason": "Typisk læreromskrivning, men ét skridt. Lettere end 8. klasse."
+ },
+ {
+  "q": "Læs: 'Regel A: Ingen elev må forlade skolen i frikvarteret. Regel B: Elever må ikke forlade skolen i frikvarteret uden tilladelse.' Hvad er den afgørende forskel?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at se, at 'uden tilladelse' åbner for undtagelser, som den første regel ikke har.",
+  "verdict": "lower",
+  "level_before": 8683,
+  "level": 6500,
+  "reason": "Forskellen er ét tydeligt led i sætningen. Lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Sportsklubben skriver til naboerne: Vi beklager, hvis nogen skulle have følt sig generet af støjen fra vores fest.' Hvordan virker denne undskyldning?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at opdage, hvordan 'hvis nogen skulle have følt sig generet' flytter fokus fra klubbens støj til naboernes følelser.",
+  "verdict": "keep",
+  "level_before": 6541,
+  "level": 6541,
+  "reason": "Stærk øvelse i uægte undskyldninger. Præcis tekstlæsning på ordniveau."
+ },
+ {
+  "q": "Læs: 'En kurve fra Nordskolen viser, at elever, der sover meget, også svarer, at de trives. Kurven viser altså, skriver skolebladet, at god søvn giver god trivsel.' Hvad overser skolebladet?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at se, at sammenhængen mellem søvn og trivsel også kan gå den modsatte vej.",
+  "verdict": "keep",
+  "level_before": 6563,
+  "level": 6563,
+  "reason": "Omvendt årsag er et centralt kritisk begreb. Klar opgave på rigtigt niveau."
+ },
+ {
+  "q": "Læs: 'Jeg bor på en gade, hvor alle hilser, og ingen ved noget.' Hvad siger jeg-personen om sine naboer?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at tolke modsætningen 'alle hilser, og ingen ved noget' som venlighed uden nærhed.",
+  "verdict": "keep",
+  "level_before": 6574,
+  "level": 6574,
+  "reason": "Meget kort, men fortættet: Eleven skal selv pakke modsætningen ud. Længden er ikke et problem her."
+ },
+ {
+  "q": "Læs: 'To hjemmesider skriver om, hvor meget søvn unge har brug for. Den ene er fra et sygehus og er skrevet af en læge med henvisninger til undersøgelser, men den er ti år gammel. Den anden er fra i år og har 5.000 likes, men den er skrevet af en bruger, der kalder sig Søvnkongen og sælger puder på samme side. Mikkel vælger den nye side, fordi den er opdateret.' Hvad overser Mikkel?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at vurdere to kilder mod hinanden og se, at ny ikke betyder troværdig.",
+  "verdict": "rework",
+  "level_before": 6596,
+  "level": 6596,
+  "reason": "Svaret kan vælges uden teksten: Kun facit handler overhovedet om kilder, de andre tre er irrelevante."
+ },
+ {
+  "q": "Læs: 'Vikingerne efterlod kun få skriftlige kilder om sig selv. Meget af det, vi læser om deres togter, er skrevet af munke og andre, der blev udsat for dem.' Hvad bør man derfor huske, når man læser kilderne?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at tænke over, at kilder skrevet af vikingernes ofre kan give et ensidigt billede.",
+  "verdict": "keep",
+  "level_before": 6618,
+  "level": 6618,
+  "reason": "Historisk kildekritik, hvor eleven selv skal udlede konsekvensen. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Lærer A: Seks ugers sommerferie er for meget, for eleverne glemmer det lærte. Lærer B: Ferie er ikke tabt tid, for børn lærer også af at lege, rejse og kede sig.' Hvad er den grundlæggende forskel på de to syn?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at finde den grundlæggende forskel på de to læreres syn på, hvad læring er.",
+  "verdict": "keep",
+  "level_before": 6640,
+  "level": 6640,
+  "reason": "Skal abstrahere fra konkrete eksempler til to syn på læring. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Efter 6-0-nederlaget konstaterede træneren, at holdet nok ikke havde haft sin bedste dag.' Hvilket sprogligt virkemiddel bruger træneren?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at genkende underdrivelse, når en træner omtaler et 6-0-nederlag mildt.",
+  "verdict": "keep",
+  "level_before": 6673,
+  "level": 6673,
+  "reason": "Begrebet og skellet til de andre virkemidler passer til 7. klasse, selv om eksemplet er tydeligt."
+ },
+ {
+  "q": "Læs: 'En kendt skuespiller fortæller på tv, at hendes nye madras har fjernet hendes rygsmerter. Så må det jo være rigtigt, skriver bloggeren.' Hvad er svagheden i bloggerens slutning?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at se, at berømmelse ikke gør en skuespiller sagkyndig i rygsmerter.",
+  "verdict": "lower",
+  "level_before": 7648,
+  "level": 6700,
+  "reason": "Autoritet på forkert område er reelt, men facit ligger lige til, og resten er uden bid."
+ },
+ {
+  "q": "Læs: 'Vi kalder det skærmtid, som om alt foran en skærm var det samme. Men tre timer med en strikkevideo og tre timer med tomt scrolleri er ikke det samme.' Hvad er skribentens kritik af ordet?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at se, at ordet 'skærmtid' behandler vidt forskelligt indhold, som om det var det samme.",
+  "verdict": "lower",
+  "level_before": 8206,
+  "level": 6700,
+  "reason": "Teksten siger pointen næsten selv. Reel øvelse, og vendingen 'over én kam' passer i 7. klasse."
+ },
+ {
+  "q": "Læs: 'Hun skrev til ham hver dag. / Postkassen var en mund, / der aldrig svarede.' Hvad udtrykker digtets billede?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at tolke postkassen som en mund, der aldrig svarer, og se, at kontakten er ensidig.",
+  "verdict": "lower",
+  "level_before": 8731,
+  "level": 6700,
+  "reason": "Billedet forklares nærmest af 'aldrig svarede'. Fint digt, men lettere end 9. klasse."
+ },
+ {
+  "q": "Læs: 'Da vi nu alle er enige om, at skolens toiletter er en skandale, må spørgsmålet være, hvem der skal betale.' Hvad gør skribenten med sætningens første del?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at opdage, at 'Da vi nu alle er enige' behandler en påstand som afgjort, før den er bevist.",
+  "verdict": "keep",
+  "level_before": 6706,
+  "level": 6706,
+  "reason": "Skjult forudsætning i en bisætning er svært at se. Lille fejl: 'Hun' om en skribent uden køn i teksten."
+ },
+ {
+  "q": "Læs: 'Skolefotografen skriver i brevet hjem: De allerfleste forældre vælger den store pakke, for skoletiden kommer aldrig igen.' Hvad vil sætningen få forældrene til at føle?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at gennemskue, at 'de allerfleste' og 'kommer aldrig igen' spiller på forældres dårlige samvittighed.",
+  "verdict": "keep",
+  "level_before": 6750,
+  "level": 6750,
+  "reason": "Salgsgreb gemt i høflig tekst. Stærk opgave på rigtigt niveau."
+ },
+ {
+  "q": "Læs: 'Elevrådsformanden sluttede sin tale: Vi vil gerne takke ledelsen for at lytte. Og vi ser frem til, at den også begynder at svare.' Hvordan skal den sidste sætning forstås?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at læse den sidste sætning i talen som en høflig stikpille til ledelsen.",
+  "verdict": "keep",
+  "level_before": 6761,
+  "level": 6761,
+  "reason": "Eleven skal se, at en tak vendes til kritik. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Vores skole er den bedste i kommunen, for ingen anden skole er lige så god.' Hvad er der galt med begrundelsen?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at genkende en cirkelslutning, hvor begrundelsen bare gentager påstanden.",
+  "verdict": "keep",
+  "level_before": 6783,
+  "level": 6783,
+  "reason": "Begrebet er nyt for mange på dette trin, selv om eksemplet er enkelt. Beholdes."
+ },
+ {
+  "q": "Læs: 'Tabellen viser, hvor ofte eleverne på Skovbyskolen spiser morgenmad: hver dag 60 procent, nogle dage 30 procent, aldrig 10 procent. Skolebladet skriver: Næsten halvdelen af eleverne får ingen morgenmad!' Hvorfor er bladets sætning misvisende?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at se, at bladet regner elever med, der spiser morgenmad nogle dage, når det skriver 'næsten halvdelen'.",
+  "verdict": "keep",
+  "level_before": 6794,
+  "level": 6794,
+  "reason": "Kræver at spore, hvordan tallet er fremkommet. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Mange produkter reklamerer med ordet naturlig, som om det betød sundt. Men slangegift og brændenælder er også naturlige.' Hvad vil teksten vise?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå, at slangegift og brændenælder er modeksempler på, at naturligt er det samme som sundt.",
+  "verdict": "lower",
+  "level_before": 8138,
+  "level": 6800,
+  "reason": "Teksten siger næsten pointen selv med 'som om'. Reel, men lettere end 8. klasse."
+ },
+ {
+  "q": "Læs: 'Skilt ved svømmehallen: Drenge og piger over 12 år skal gå i det store bassin.' Hvad er uklart ved skiltet?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at se, at 'over 12 år' enten kan gælde begge køn eller kun pigerne.",
+  "verdict": "lower",
+  "level_before": 8468,
+  "level": 6800,
+  "reason": "Samme type som kikkerten, lidt sværere. Reel, men distraktorerne er svage. Hører ikke til sent i 8. klasse."
+ },
+ {
+  "q": "Læs: 'Spørgeskema til eleverne, spørgsmål 3: Er du ikke også enig i, at de alt for korte frikvarterer burde forlænges?' Hvad er problemet med spørgsmålet?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at genkende et ledende spørgsmål i et spørgeskema ud fra 'ikke også' og 'alt for korte'.",
+  "verdict": "lower",
+  "level_before": 8537,
+  "level": 6800,
+  "reason": "Nyttigt begreb, men de tre andre svar er åbenlyst forkerte. Lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Forskeren sagde til avisen: Det kunne tænkes, at kost spiller en rolle. Avisens overskrift lød: Forsker: Det er bevist, at kost afgør det hele.' Hvad er der sket?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at sammenholde forskerens forsigtige sætning med overskriften og se, at usikkert er blevet sikkert.",
+  "verdict": "lower",
+  "level_before": 9421,
+  "level": 6800,
+  "reason": "Fejlen ligger lige for, og tre svar er modsætninger. Klart lettere end 9. klasse."
+ },
+ {
+  "q": "Læs: 'Elever siger, at mobilen er nødvendig for at holde kontakt med forældrene. Men skolen har en telefon på kontoret, og for 30 år siden kunne man fint finde sine børn uden.' Hvilken slags argument bruger skribenten til sidst?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at genkende, at skribenten bruger fortiden som bevis for, at mobilen ikke er nødvendig.",
+  "verdict": "keep",
+  "level_before": 6849,
+  "level": 6849,
+  "reason": "Eleven skal navngive argumentets type og ikke blot dets indhold. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Når isalget stiger, stiger antallet af solskoldede også. Skal vi så forbyde is for at beskytte huden?' Hvad vil skribenten vise med sit spørgsmål?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå, at det absurde forslag om at forbyde is skal vise forskellen på sammenhæng og årsag.",
+  "verdict": "keep",
+  "level_before": 6882,
+  "level": 6882,
+  "reason": "Klassisk eksempel, hvor eleven selv skal finde den fælles årsag. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Vi er mange, der mener, at den nye skolegård er en fejltagelse. Det hører jeg overalt.' Hvad mangler for at overbevise en kritisk læser?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at se, at 'mange' og 'overalt' lyder af meget, men hverken giver tal eller grunde.",
+  "verdict": "lower",
+  "level_before": 8229,
+  "level": 6900,
+  "reason": "Reel opgave om belæg, men kun facit handler om belæg. Lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Skolen er blevet en fabrik, hvor eleverne kører ned ad samlebåndet og bliver sorteret efter karakter, før de sendes videre til næste station.' Hvad kritiserer skribenten med billedet?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at tolke metaforen om skolen som fabrik og se, at eleverne behandles som varer.",
+  "verdict": "lower",
+  "level_before": 8576,
+  "level": 6900,
+  "reason": "Billedet er udfoldet og tydeligt. Hører til i slutningen af 7. klasse, ikke i 9."
+ },
+ {
+  "q": "Læs: 'Det er bare en vase, sagde mor og fejede skårene sammen. Hun fejede meget længe, også dér, hvor der ikke var nogen skår.' Hvad afslører hendes handling?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at læse den overflødige fejning som tegn på, at vasen betød mere, end mor siger.",
+  "verdict": "keep",
+  "level_before": 6904,
+  "level": 6904,
+  "reason": "Fin undertekst med en troværdig distraktor om skår. Fortjener sit niveau."
+ },
+ {
+  "q": "Læs: 'Alle elever i 7.a bor i Lindby. Nogle elever i 7.a spiller skak.' Hvilket udsagn må være rigtigt, hvis begge sætninger passer?",
+  "skill": "slutning",
+  "goal": "Eleven øver at drage en logisk slutning ud fra to udsagn om, hvem der bor i Lindby og spiller skak.",
+  "verdict": "keep",
+  "level_before": 6926,
+  "level": 6926,
+  "reason": "Ægte logik, hvor 'nogle' og 'alle' skal holdes adskilt. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Sommerens lyd er ikke fuglene. Det er den fjerne plæneklipper, der minder en om, at nogen et sted arbejder, mens man selv ligger ned med en bog.' Hvilken tone har teksten?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at bestemme tonen i en tekst, der nyder at ligge ned, mens andre arbejder.",
+  "verdict": "keep",
+  "level_before": 6970,
+  "level": 6970,
+  "reason": "Tonen skal aflæses af en lille drilsk pointe. Sværhed og ordforråd passer."
+ },
+ {
+  "q": "Læs: 'Nu skal du høre, sagde min mor, og hendes stemme fik det lille knæk, den altid fik, inden hun gjorde tingene pænere, end de var.' Hvad kan fortælleren forvente?",
+  "skill": "slutning",
+  "goal": "Eleven øver at bruge 'den altid fik' til at slutte, hvad fortælleren kan forvente af moren.",
+  "verdict": "lower",
+  "level_before": 8588,
+  "level": 7000,
+  "reason": "Facit er tæt på tekstens egne ord 'pænere, end de var'. Lettere end 9. klasse."
+ },
+ {
+  "q": "Læs: 'Jeg er ikke imod unge. Jeg siger bare, at de larmer, ødelægger bænkene og bør være indendørs efter klokken 20.' Hvad er problemet med den første sætning?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at se, at første sætning modsiges af alt det, skribenten siger bagefter.",
+  "verdict": "lower",
+  "level_before": 8624,
+  "level": 7000,
+  "reason": "Fint mønster ('jeg er ikke imod … men'), men distraktorerne er absurde. Lettere end niveauet."
+ },
+ {
+  "q": "Læs: 'Når vi får en ny idrætshal, holder 7.c endelig op med at tabe.' Hvad er forudsætningen for påstanden?",
+  "skill": "forudsætning",
+  "goal": "Eleven øver at finde den skjulte forudsætning om, at hallen er årsag til 7.c's nederlag.",
+  "verdict": "keep",
+  "level_before": 7014,
+  "level": 7014,
+  "reason": "Uudtalt forudsætning skal formuleres mentalt. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Et kort over byen viser cykeluheld som røde prikker. Der er flest prikker på Storegade, som også er den vej, hvor flest mennesker cykler.' Hvad kan kortet ikke fortælle?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at forstå, at flest uheld på Storegade ikke viser, at den er farligst for den enkelte cyklist.",
+  "verdict": "keep",
+  "level_before": 7058,
+  "level": 7058,
+  "reason": "Basisrate er svært. Stærk opgave på rigtigt niveau."
+ },
+ {
+  "q": "Læs: 'Før i tiden rettede hver by sig efter solen, og klokken var derfor ikke helt den samme i København og Esbjerg. Da jernbanen bredte sig, blev det et problem.' Hvorfor blev det sandsynligvis et problem?",
+  "skill": "slutning",
+  "goal": "Eleven øver at slutte selv, hvorfor forskellige klokkeslæt bliver et problem, da togene kommer.",
+  "verdict": "keep",
+  "level_before": 7080,
+  "level": 7080,
+  "reason": "Teksten lader slutningen stå åben, og eleven skal kombinere to oplysninger. God."
+ },
+ {
+  "q": "Læs: 'Lærerne har klaget over lugten fra skolens kantine. Kantinelederen svarer, at ingen elever nogensinde har sagt noget om den.' Hvad er svagheden i kantinelederens svar?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at se, at kantinelederens svar om eleverne slet ikke rammer lærernes klage.",
+  "verdict": "keep",
+  "level_before": 7102,
+  "level": 7102,
+  "reason": "Irrelevant modsvar er svært at opdage. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Klassen stemte om rejsemålet: 12 stemte på Paris, 8 på Rom og 7 på Berlin. Læreren sagde: Flertallet vil til Paris.' Hvad er upræcist ved lærerens udsagn?",
+  "skill": "slutning",
+  "goal": "Eleven øver at skelne mellem flest stemmer og flertal ved at regne på 12 af 27.",
+  "verdict": "keep",
+  "level_before": 7113,
+  "level": 7113,
+  "reason": "Præcis begrebsbrug og lidt regning. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Vi er glade for at kunne meddele, at vi opgraderer ejendommen med nye dørskilte. I den forbindelse stiger huslejen med 18 procent.' Hvordan er brevet bygget op?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at genkende opbygningen, hvor en dårlig nyhed pakkes ind i en god.",
+  "verdict": "lower",
+  "level_before": 8647,
+  "level": 7200,
+  "reason": "Dørskiltene gør det komisk tydeligt. Reel, men hører til i starten af 8. klasse."
+ },
+ {
+  "q": "Læs: 'Modstanderne af fælles skolekørsel vil åbenbart have, at børn skal gå ti kilometer i snestorm.' Hvad gør skribenten med modstandernes synspunkt?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at genkende en stråmand, hvor modstandernes synspunkt forvrænges til noget ekstremt.",
+  "verdict": "keep",
+  "level_before": 7226,
+  "level": 7226,
+  "reason": "Eleven skal se, at noget mangler, nemlig det reelle synspunkt. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'En kommune betalte en dusør for hver rotte, der blev fanget. Snart begyndte nogle borgere at opdrætte rotter for at få dusøren.' Hvad viser eksemplet?",
+  "skill": "slutning",
+  "goal": "Eleven øver at forstå, at dusøren fik folk til at opdrætte rotter, og at belønninger kan virke modsat.",
+  "verdict": "lower",
+  "level_before": 9100,
+  "level": 7300,
+  "reason": "Pointen ligger lige for i historien. Ordene 'dusør' og 'opdrætte' holder den i 8. klasse."
+ },
+ {
+  "q": "Læs: 'Hun rettede aldrig nogen, der sagde, at hun var stille. Det var lettere end at forklare, at der i hendes hoved var så meget støj, at hun ikke kunne finde en sætning.' Hvad er uddragets pointe?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå kontrasten mellem den stille pige, andre ser, og støjen i hendes hoved.",
+  "verdict": "lower",
+  "level_before": 9135,
+  "level": 7300,
+  "reason": "Teksten siger kontrasten ligeud. Reel, men lettere end 9. klasse."
+ },
+ {
+  "q": "Læs: 'Antallet af stjålne cykler ved Vestskolen er steget med 50 procent, skriver avisen. I sidste uge blev tre cykler meldt stjålet mod to ugen før.' Hvorfor kan procenttallet virke misvisende?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at forstå, at 50 procent lyder af meget, når det kun drejer sig om én cykel mere.",
+  "verdict": "keep",
+  "level_before": 7317,
+  "level": 7317,
+  "reason": "Tal og procenter skal holdes sammen. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Hele natten bankede regnen på ruden, som om den ville ind og fortælle noget, hun ikke ville vide.' Hvordan virker regnen i teksten?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at forklare, hvordan personificeringen af regnen skaber uro og viser pigens indre tilstand.",
+  "verdict": "keep",
+  "level_before": 7328,
+  "level": 7328,
+  "reason": "Eleven skal se virkningen og ikke blot navnet. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Fåreavlere frygter for deres dyr, mens naturvenner glæder sig over, at ulven er tilbage. En forsker peger på, at hegn kan mindske skaderne, men at de er dyre at sætte op.' Hvilken rolle har forskeren i teksten?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at bestemme forskerens rolle som en, der lægger løsning og pris frem uden at vælge side.",
+  "verdict": "keep",
+  "level_before": 7340,
+  "level": 7340,
+  "reason": "Læser en afsenders position i en debat. God. 'Hun' om forskeren står ikke i teksten, men er harmløst."
+ },
+ {
+  "q": "Læs: 'Vi siger til unge, at de skal være sig selv. Så giver vi dem karakter for det.' Hvad er det, der ikke passer sammen?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at se modstriden mellem at sige 'vær dig selv' og at give karakter for det.",
+  "verdict": "keep",
+  "level_before": 7397,
+  "level": 7397,
+  "reason": "Abstrakt modsætning i få ord, hvor eleven selv skal formulere problemet. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Undersøgelsen konkluderer, at 80 procent af danskerne dyrker motion flere gange om ugen. Spørgeskemaerne blev delt ud i kommunens idrætshaller.' Hvad er problemet med konklusionen?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at se, at svar indsamlet i idrætshaller ikke er repræsentative for alle danskere.",
+  "verdict": "lower",
+  "level_before": 8814,
+  "level": 7400,
+  "reason": "Vigtigt begreb, men opgaven er åbenlys, og to distraktorer er uden bid."
+ },
+ {
+  "q": "Læs: 'Sagen er ikke, at unge ikke kan koncentrere sig. De kan sidde i fire timer med et spil og i fire minutter med en lærebog.' Hvad er skribentens forklaring?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå, at de fire timer og de fire minutter peger på engagement frem for manglende evne.",
+  "verdict": "lower",
+  "level_before": 9028,
+  "level": 7400,
+  "reason": "Kontrasten er meget tydelig. Reel, men lettere end 9. klasse."
+ },
+ {
+  "q": "Læs: 'Vi sælger ikke sko. Vi sælger følelsen af at være på vej.' Hvad gør reklamen?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at forstå, at reklamen sælger en følelse i stedet for varens egenskaber.",
+  "verdict": "keep",
+  "level_before": 7420,
+  "level": 7420,
+  "reason": "Reklameanalyse med en sproglig afvisning, der ikke må tages bogstaveligt. God."
+ },
+ {
+  "q": "Læs: 'Hvor længe skal vi finde os i, at vores skolemad er dårligere end nabokommunens?' Hvad tager spørgsmålet for givet?",
+  "skill": "forudsætning",
+  "goal": "Eleven øver at finde den påstand, der er pakket ind i spørgsmålet 'Hvor længe skal vi finde os i …?'.",
+  "verdict": "keep",
+  "level_before": 7454,
+  "level": 7454,
+  "reason": "Ladet spørgsmål i debatsprog. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Vi er en skole, hvor alle må sige deres mening, siger skolelederen. Tre elever, der har kritiseret det nye skema, er i denne uge blevet kaldt til samtale på kontoret, én ad gangen.' Hvad antyder journalisten ved at sætte de to sætninger sammen?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at se, hvordan journalisten rejser tvivl alene ved at sætte to oplysninger efter hinanden.",
+  "verdict": "keep",
+  "level_before": 7488,
+  "level": 7488,
+  "reason": "Antydning gennem komposition er svært. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Bag huset løb en å, som mine forældre kaldte vores. Den havde været på vej forbi længe før dem og ville blive ved, længe efter.' Hvad vil uddraget sige?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at tolke modsætningen mellem 'vores' og åens lange tid som en tanke om menneskets ejerskab.",
+  "verdict": "keep",
+  "level_before": 7499,
+  "level": 7499,
+  "reason": "Abstrakt tolkning af en konkret detalje. Stærk opgave på rigtigt niveau."
+ },
+ {
+  "q": "Læs: 'Journalisten skriver: Forfatteren vil ikke kommentere sagen. I forfatterens svarmail stod der: Jeg er på ferie og svarer på mandag.' Hvad har journalisten gjort?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at sammenholde journalistens sætning med mailen og se, at en udsættelse er gjort til et afslag.",
+  "verdict": "lower",
+  "level_before": 8981,
+  "level": 7500,
+  "reason": "Kilden ligger ved siden af, så fejlen er let at se. Hører til i 8. klasse."
+ },
+ {
+  "q": "Læs: 'Selv min lillebror kunne finde ud af det nye system.' Hvad antyder ordet 'selv' om lillebroren?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at forstå, at 'selv' her betyder 'endda' og siger, at man ikke forventer meget af lillebroren.",
+  "verdict": "lower",
+  "level_before": 9361,
+  "level": 7500,
+  "reason": "Fin sproglig detalje, men ikke 9. klasses tænkning, når distraktorerne er så lette at afvise."
+ },
+ {
+  "q": "Læs: 'Det, der rammer, er sjældent tallet. 10.000 berørte er statistik; én navngiven pige ved et hegn er en historie.' Hvad siger teksten om, hvad der bevæger læsere?",
+  "skill": "informationssøgning",
+  "goal": "Eleven øver at forstå tekstens beskrivelse af, at enkeltskæbner rører os mere end store tal.",
+  "verdict": "lower",
+  "level_before": 9861,
+  "level": 7500,
+  "reason": "Facit er en omskrivning af teksten. Reel, men hører til i 8. klasse."
+ },
+ {
+  "q": "Læs: 'En undersøgelse viser, at elever, der spiller et instrument, får højere karakterer. Derfor bør alle elever tvinges til at spille violin.' Hvilken mulig forklaring svækker slutningen mest?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at finde den tredje forklaring, der svækker slutningen fra musik til højere karakterer.",
+  "verdict": "keep",
+  "level_before": 7556,
+  "level": 7556,
+  "reason": "Eleven skal selv se en mulig bagvedliggende årsag. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'I sit nytårsbrev skriver rektor, at året har budt på udfordringer, som vi sammen har vendt til læring. Lærerne husker året som det, hvor halvdelen af dem sagde op.' Hvad er forholdet mellem de to beskrivelser?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at se, at rektors ord om 'udfordringer' og 'læring' dækker over en hård virkelighed.",
+  "verdict": "lower",
+  "level_before": 9278,
+  "level": 7600,
+  "reason": "Tekstens to halvdele stiller kontrasten op. Reel, men hører til i 8. klasse."
+ },
+ {
+  "q": "Læs: 'Flagermus er ikke blinde. De fleste arter ser fint, men mange bruger også ekko til at finde insekter i mørke.' Hvilken slutning går længere, end teksten giver lov til?",
+  "skill": "slutning",
+  "goal": "Eleven øver at skelne mellem 'mange bruger ekko' og 'kan ikke undvære ekko' og finde den slutning, der går for langt.",
+  "verdict": "keep",
+  "level_before": 7693,
+  "level": 7693,
+  "reason": "Eleven skal afprøve fire udsagn mod teksten. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Fra 1. august overgår vi til et nyt og mere fleksibelt vagtsystem, hvor medarbejderne i højere grad selv får ansvar for at finde afløsere.' Hvad sker der reelt for medarbejderne?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at gennemskue, at 'fleksibelt' og 'ansvar' dækker over en ekstra opgave for medarbejderne.",
+  "verdict": "keep",
+  "level_before": 7784,
+  "level": 7784,
+  "reason": "Forretningssprog skal oversættes til praksis. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Da politikeren blev spurgt, om skolerne får flere penge næste år, svarede hun, at folkeskolen er kernen i vores samfund.' Hvad gør hun med spørgsmålet?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at opdage, at politikeren undviger spørgsmålet om penge med en sandhed, ingen er uenig i.",
+  "verdict": "keep",
+  "level_before": 7796,
+  "level": 7796,
+  "reason": "Eleven skal se, at svaret ikke er et svar. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Jeg har aldrig været misundelig på min bror. Jeg har blot ført regnskab over, hvad han har fået hver jul siden 1998, og det er rent af interesse.' Skal læseren tro på fortælleren?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at gennemskue en upålidelig fortæller, hvis regnskab siden 1998 modsiger påstanden.",
+  "verdict": "lower",
+  "level_before": 9314,
+  "level": 7800,
+  "reason": "Godt begreb, men pointen er tydelig og humoristisk. Hører til i 8. klasse."
+ },
+ {
+  "q": "Læs: 'Kongen forbød ordet sult. Året efter meldte alle landets embedsmænd, at ingen længere sultede.' Hvad går fortællingen ud på?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at forbuddet mod ordet sult kun ændrer sproget og ikke virkeligheden.",
+  "verdict": "lower",
+  "level_before": 9516,
+  "level": 7800,
+  "reason": "Satiren er tydelig, når pointen først ses. Hører til i 8. klasse."
+ },
+ {
+  "q": "Læs: 'På opslagstavlen står der: Alle elever må ikke bruge mobil i timen.' Hvorfor er sætningen tvetydig?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at se, at 'Alle … ikke' kan betyde både 'ingen' og 'ikke alle'.",
+  "verdict": "keep",
+  "level_before": 7841,
+  "level": 7841,
+  "reason": "Nægtelsens rækkevidde er svært og sjældent trænet. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Når en bog bliver filmatiseret, mister man noget, ingen taler om: Heltinden har ikke længere det ansigt, man selv gav hende. Hun har skuespillerens.' Hvad er det, skribenten beklager?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at filmen fortrænger læserens egne indre billeder af heltinden.",
+  "verdict": "lower",
+  "level_before": 9956,
+  "level": 7900,
+  "reason": "Teksten siger det med konkrete ord, og eleven skal blot abstrahere. Hører til i 8. klasse."
+ },
+ {
+  "q": "Læs: 'Det er blevet moderne at kalde alle børn særligt begavede. Hvis alle er særlige, er der ikke mange tilbage at være særlig i forhold til.' Hvad er skribentens pointe?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå den logiske pointe, at 'særlig' forudsætter, at nogen ikke er det.",
+  "verdict": "keep",
+  "level_before": 7910,
+  "level": 7910,
+  "reason": "Sprogligt argument på abstrakt niveau. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Skolen bør tilbyde morgenmad, fordi sultne elever ikke kan koncentrere sig i timerne.' Hvad tager skribenten for givet uden at sige det?",
+  "skill": "forudsætning",
+  "goal": "Eleven øver at finde den uudtalte antagelse om skolens ansvar, der binder sult og 'skolen bør' sammen.",
+  "verdict": "keep",
+  "level_before": 7967,
+  "level": 7967,
+  "reason": "Hjemmel i et argument er svært, og distraktorerne er troværdige. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'I forbindelse med sagen om de forsvundne elevlister skriver kommunen: Der er desværre blevet begået fejl.' Hvad opnår kommunen med denne formulering?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at forstå, at passiv form i 'er blevet begået fejl' skjuler, hvem der har handlet.",
+  "verdict": "keep",
+  "level_before": 8012,
+  "level": 8012,
+  "reason": "Grammatik brugt som tekstanalyse. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Vi søger en lærer, der trives med stor frihed, kan arbejde selvstændigt og ikke har brug for tæt opfølgning. Vi er et lille team, hvor alle har travlt.' Hvad antyder jobopslaget mellem linjerne?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at læse 'stor frihed' og 'alle har travlt' i jobopslaget som manglende støtte.",
+  "verdict": "keep",
+  "level_before": 8024,
+  "level": 8024,
+  "reason": "Mellem linjerne i voksen genre. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Om samme hændelse skriver skolebladet: Elever samledes roligt foran kontoret for at fremføre deres ønsker. Skolens nyhedsbrev skriver: En gruppe råbende elever blokerede indgangen til kontoret.' Hvad viser de to tekster?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at sammenligne to beskrivelser af samme hændelse og se, hvordan ordvalget farver dem.",
+  "verdict": "keep",
+  "level_before": 8069,
+  "level": 8069,
+  "reason": "Eleven skal holde to tekster op mod hinanden og undgå at dømme. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Kommunens nye strategi: Vi sætter borgeren i centrum, tænker på tværs og skaber værdi i fællesskab.' Hvad er problemet med teksten for en kritisk læser?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at genkende floskler, der lyder fint, men ikke forpligter til noget.",
+  "verdict": "lower",
+  "level_before": 9409,
+  "level": 8100,
+  "reason": "Reel, men distraktorerne er lette. Facits 'almindeligt' bør rettes til 'alment'."
+ },
+ {
+  "q": "Læs: 'Man bør nok overveje, om det måske kunne være en idé at se nærmere på sagen på et tidspunkt.' Hvordan virker sætningen?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at se, hvordan mange forbehold i én sætning gør, at afsenderen intet lover.",
+  "verdict": "keep",
+  "level_before": 8104,
+  "level": 8104,
+  "reason": "Ordene 'nok', 'måske' og 'kunne' skal ses samlet. Passer, selv om distraktorerne kunne være stærkere."
+ },
+ {
+  "q": "Læs: 'Forskere fulgte 200 elever i 8. klasse på én skole i et halvt år. Elever, der læste på papir, huskede mere af teksterne end elever, der læste på skærm. Alle teksterne var fagtekster om naturfag. Forskerne skriver, at resultatet ikke uden videre kan overføres til andre tekster og andre elever.' Hvilken konklusion holder sig inden for forskernes forbehold?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at afgøre, hvor langt en konklusion må gå, når forskere selv sætter grænser for deres resultat.",
+  "verdict": "rework",
+  "level_before": 8183,
+  "level": 8183,
+  "reason": "Ingen tankegang: Facit gentager forbeholdet, som står i teksten, og de andre svar er modsætninger eller absurde."
+ },
+ {
+  "q": "Læs: 'Om tredive år ville hun huske denne dag som den, hvor det hele begyndte. Men nu stod hun bare ved bussen og frøs.' Hvilken virkning har den første sætning?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at forstå, hvordan springet tredive år frem skaber forventning, fordi fortælleren ved mere end personen.",
+  "verdict": "keep",
+  "level_before": 8195,
+  "level": 8195,
+  "reason": "Fortællerteknik uden fagord i spørgsmålet. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Lad mig gengive modpartens bedste argument, så retfærdigt jeg kan, før jeg siger, hvorfor jeg er uenig.' Hvad kan debattøren vinde ved den fremgangsmåde?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå, hvorfor det giver troværdighed at gengive modpartens bedste argument retfærdigt.",
+  "verdict": "lower",
+  "level_before": 9659,
+  "level": 8200,
+  "reason": "Modsat stråmand, men distraktorerne er lette at afvise. Lidt under niveauet."
+ },
+ {
+  "q": "Læs: 'I en gruppe på ti elever får ni 100 kroner om måneden i lommepenge, og én får 1.100 kroner. Gennemsnittet er 200 kroner.' Hvorfor er gennemsnittet misvisende her?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at forstå, at ét højt beløb gør gennemsnittet misvisende, selv om det er rigtigt regnet.",
+  "verdict": "keep",
+  "level_before": 8218,
+  "level": 8218,
+  "reason": "Statistisk læsning, hvor eleven skal se forskellen på rigtigt og typisk. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Kæmpepandaer spiser næsten kun bambus, som giver meget lidt energi. De bruger derfor det meste af dagen på at spise og bevæger sig kun lidt.' Hvad støtter teksten bedst?",
+  "skill": "slutning",
+  "goal": "Eleven øver at afgøre, hvilken slutning teksten støtter bedst, og undgå den fristende 'pandaer er dovne'.",
+  "verdict": "keep",
+  "level_before": 8263,
+  "level": 8263,
+  "reason": "Eleven skal selv tage skridtet fra 'næsten kun bambus' til sårbarhed. God."
+ },
+ {
+  "q": "Læs: 'Da læreren havde rettet stilen, spurgte hun: Er du holdt op med at skrive af fra nettet?' Hvorfor er spørgsmålet svært for eleven at svare på?",
+  "skill": "forudsætning",
+  "goal": "Eleven øver at forstå, at 'Er du holdt op med …?' forudsætter skyld, så både ja og nej indrømmer.",
+  "verdict": "keep",
+  "level_before": 8309,
+  "level": 8309,
+  "reason": "Ladet spørgsmål kræver, at man afprøver begge svar. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Elever skal have indflydelse, står der i skolens værdier. Derfor er vi blevet spurgt, om væggen skal være blå eller lyseblå.' Hvad vil skribenten sige?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at valget mellem blå og lyseblå gør de store ord om indflydelse til noget symbolsk.",
+  "verdict": "keep",
+  "level_before": 8400,
+  "level": 8400,
+  "reason": "Satirisk kontrast mellem princip og praksis. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Selv om klubben har mistet tre ud af fire sponsorer, siger formanden, at økonomien er sund.' Hvad gør ordene 'selv om' ved sætningen?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at forklare, hvordan 'selv om' får læseren til at tvivle på formandens ord.",
+  "verdict": "keep",
+  "level_before": 8411,
+  "level": 8411,
+  "reason": "Eleven skal se, hvad et lille bindeord gør ved budskabet. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Det ville være nemt at sige, at det hele var Sebastians skyld. Det gjorde vi også.' Hvad ligger der i den sidste sætning?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at 'Det gjorde vi også' er en stille indrømmelse af en uretfærdig forklaring.",
+  "verdict": "keep",
+  "level_before": 8434,
+  "level": 8434,
+  "reason": "Fortættet undertekst, hvor 'nemt' skal læses bagud. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Bageren på torvet havde i årevis tre slags rugbrød: et billigt, et mellemdyrt og et dyrt. Sidste forår fjernede han det dyre, fordi det solgte dårligst. To måneder senere var salget af det mellemste faldet, mens det billige solgte mere end nogensinde. Bageren forstod det ikke, for han havde hverken ændret pris eller opskrift på de to andre.' Hvad er den bedste forklaring på, at salget ændrede sig?",
+  "skill": "slutning",
+  "goal": "Eleven øver at slutte en skjult årsag ud fra flere oplysninger, der tilsammen peger på noget, teksten ikke siger.",
+  "verdict": "rework",
+  "level_before": 8446,
+  "level": 8446,
+  "reason": "Kan besvares uden teksten: Alle ved, at der er mest lys midt på dagen, og to distraktorer er bare forkerte."
+ },
+ {
+  "q": "Læs: 'Skolelederen indrømmede, at eleverne havde fået for lidt undervisning.' Hvad antyder ordet 'indrømmede', som ordet 'sagde' ikke gør?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at forstå, hvad 'indrømmede' antyder, som 'sagde' ikke gør.",
+  "verdict": "keep",
+  "level_before": 8457,
+  "level": 8457,
+  "reason": "Journalistisk ordvalg på verbumsniveau. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Det var ikke den slags hus, man vendte tilbage til. Alligevel stod hun der, med det samme hul i hækken og den samme nøgle, som hun havde svoret at kaste i havet.' Hvad fortæller uddraget om hende?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at hullet i hækken og den gemte nøgle viser en binding, hun ikke vil være ved.",
+  "verdict": "keep",
+  "level_before": 8548,
+  "level": 8548,
+  "reason": "Modsætning mellem løfte og handling, fortalt med antydninger. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Jeg står her ikke for at takke. Jeg står her, fordi jeg blev bedt om det.' Hvad viser taleren med de ord?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at forstå, at taleren markerer afstand ved at afvise den forventede tak.",
+  "verdict": "keep",
+  "level_before": 8612,
+  "level": 8612,
+  "reason": "Tonen aflæses af det, der ikke siges. Abstrakt facit og rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Ikke alle elever i 9.b har afleveret deres opgave.' Hvad følger med sikkerhed af sætningen?",
+  "skill": "slutning",
+  "goal": "Eleven øver at forstå præcis, hvad 'ikke alle' medfører, og undgå det fristende 'mindst én har afleveret'.",
+  "verdict": "keep",
+  "level_before": 8659,
+  "level": 8659,
+  "reason": "Logisk præcision, som mange voksne fejler. Stærk opgave, trods kort tekst."
+ },
+ {
+  "q": "Læs: 'Påstand A: Alle elever på skolen læser mere end to timer om ugen. Påstand B: De fleste elever på skolen læser mere end en time om ugen.' Hvorfor er påstand A lettest at afkræfte?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå, at én undtagelse vælter en 'alle'-påstand, mens 'de fleste' tåler undtagelser.",
+  "verdict": "keep",
+  "level_before": 8671,
+  "level": 8671,
+  "reason": "Logisk tanke om afkræftelse. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Alle elsker tanken om en stille landsby, ikke mindst dem, der ikke bor der.' Hvad antydes?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at 'ikke mindst dem, der ikke bor der' vender ros til spot.",
+  "verdict": "keep",
+  "level_before": 8695,
+  "level": 8695,
+  "reason": "Bitter pointe gemt i en bisætning. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Instruktøren har store ambitioner. Det har en høne, der vil flyve over Atlanten, også.' Hvad mener anmelderen?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at forstå anmelderens ondskabsfulde sammenligning af ambitioner med en, der vil flyve fra et tag.",
+  "verdict": "keep",
+  "level_before": 8719,
+  "level": 8719,
+  "reason": "Sværhed passer. Bør dog overvejes: Billedet af at springe ud fra et tag er uheldigt for børn."
+ },
+ {
+  "q": "Læs: 'Hvis Sara har fået brevet, har hun ringet. Sara har ikke ringet.' Hvad følger logisk, hvis begge sætninger er sande?",
+  "skill": "slutning",
+  "goal": "Eleven øver at bruge en logisk regel til at slutte, at Sara ikke har fået brevet.",
+  "verdict": "keep",
+  "level_before": 8743,
+  "level": 8743,
+  "reason": "Slutning fra negeret følge er svært og sjældent trænet. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Gamle huse holder bedre end nye, siger mange og peger på de flotte bindingsværkshuse i byens gamle kvarter. Men de huse, der blev dårligt bygget for 300 år siden, står der ikke længere.' Hvilken fejl vil skribenten afsløre?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at opdage, at man kun ser de huse, der har overlevet, og at sammenligningen derfor er skæv.",
+  "verdict": "keep",
+  "level_before": 8778,
+  "level": 8778,
+  "reason": "Overlevelsesskævhed er svært. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'En skole er som en virksomhed: Eleverne er kunder, og kunden har altid ret. Derfor bør eleverne selv bestemme, hvad der står på skemaet.' Hvor halter sammenligningen mest?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at finde det punkt, hvor sammenligningen mellem elever og kunder halter mest.",
+  "verdict": "keep",
+  "level_before": 8838,
+  "level": 8838,
+  "reason": "Eleven skal afprøve en analogi på dens bærende punkt. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Vi byggede en mur af høflighed, / sten for sten, goddag for goddag, / og nu kan ingen af os se over den.' Hvad siger digtet?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at tolke muren 'sten for sten, goddag for goddag' som høflighed, der skaber afstand.",
+  "verdict": "keep",
+  "level_before": 8862,
+  "level": 8862,
+  "reason": "Paradoksal pointe med en nærliggende distraktor. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'En ordbog registrerer sproget, som det bruges; den bestemmer det ikke. Når et nyt ord optages, er det ikke, fordi redaktørerne kan lide det, men fordi mange bruger det.' Hvad har en læser misforstået, hvis hun skriver: Ordbogen burde ikke godkende det grimme ord?",
+  "skill": "slutning",
+  "goal": "Eleven øver at bruge tekstens skelnen mellem at registrere og bestemme til at finde læserens misforståelse.",
+  "verdict": "keep",
+  "level_before": 8874,
+  "level": 8874,
+  "reason": "Eleven skal overføre tekstens tanke til et nyt tilfælde. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Jeg husker, at jeg var glad den sommer. Det vil sige, jeg husker, at jeg har sagt det.' Hvad sår den anden sætning tvivl om?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at fortællerens rettelse sår tvivl om, hvorvidt erindringen er pålidelig.",
+  "verdict": "keep",
+  "level_before": 8897,
+  "level": 8897,
+  "reason": "Subtil selvrettelse. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Antallet af cykeluheld pr. 1.000 cyklister i Holmby er faldet med 20 procent, mens det samlede antal cykeluheld er steget.' Hvordan kan begge dele være sandt?",
+  "skill": "slutning",
+  "goal": "Eleven øver at forklare, hvordan antal uheld kan stige, mens uheld pr. 1.000 cyklister falder.",
+  "verdict": "keep",
+  "level_before": 8921,
+  "level": 8921,
+  "reason": "Skelnen mellem antal og andel. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Overskrift: Chokolade gør dig klogere. I artiklen står der, at lande med et højt forbrug af chokolade også har flest prismodtagere inden for forskning.' Hvad er særligt problematisk ved overskriftens konklusion?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at se, at overskriften slutter fra tal om hele lande til enkelte menneskers evner.",
+  "verdict": "keep",
+  "level_before": 8957,
+  "level": 8957,
+  "reason": "Fejlslutning fra gruppe til individ er svær. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Det er bemærkelsesværdigt, hvor mange år det tog ledelsen at opdage, at eleverne også har en mening. Man må håbe, at opdagelsen ikke giver dem for travlt.' Hvilken slags ironi er der tale om?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at skelne bidende ros fra andre former for ironi i en tekst om ledelsen.",
+  "verdict": "keep",
+  "level_before": 8969,
+  "level": 8969,
+  "reason": "Kræver at kende flere ironityper fra hinanden. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Ingen kan være imod tryghed. Derfor kan ingen være imod kameraer på gangene.' Hvad springer argumentet over?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at opdage, at argumentet glider fra enighed om målet til enighed om midlet.",
+  "verdict": "keep",
+  "level_before": 9004,
+  "level": 9004,
+  "reason": "Skelnen mellem mål og middel. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Søjlediagrammet viser antal elever i lektiehjælp: 100 i 2021, 120 i 2022 og 125 i 2023. Pjecen skriver: Stigningen fortsætter.' Hvad skjuler formuleringen?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at se, at 'Stigningen fortsætter' er sandt, men skjuler, at stigningen næsten er stoppet.",
+  "verdict": "keep",
+  "level_before": 9052,
+  "level": 9052,
+  "reason": "Ændring i ændringen er svært. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Overskrift i Bybladet: Borgmester afviser, at sagen om kantinen er en skandale.' Hvilken virkning kan overskriften have, selv om borgmesteren afviser?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at forstå, at et afvist ord alligevel kan sætte sig fast hos læseren.",
+  "verdict": "keep",
+  "level_before": 9112,
+  "level": 9112,
+  "reason": "Mediepsykologi i én overskrift. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Vi bør tilbyde alle elever latin, for det styrker logikken. Elever, der selv har valgt latin, klarer sig nemlig bedre i de andre fag.' Hvad er svagheden i belægget?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at se, at de dygtigste selv kan vælge latin, så faget ikke er årsagen.",
+  "verdict": "keep",
+  "level_before": 9123,
+  "level": 9123,
+  "reason": "Selektion er svært at gennemskue. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Om en brand i en lille by findes to kilder: en rapport, som blev skrevet dagen efter af byens vagtmester, og en erindringsbog, som en købmand skrev 40 år senere. Købmanden skriver, at branden var vagtmesterens skyld.' Hvad bør en historiker være særligt opmærksom på?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at vurdere to kilder og se, at både vagtmester og købmand kan have grund til at farve hændelsen.",
+  "verdict": "keep",
+  "level_before": 9159,
+  "level": 9159,
+  "reason": "Motiv og afstand i tid skal vurderes samtidig. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Ingen skrev noget mindeord, da skolen i Vesterby lukkede. Nøglerne blev lagt i en skuffe på rådhuset, hvor der allerede lå nøgler fra tre andre landsbyskoler.' Hvad vil den sidste oplysning sige?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at de andre skolers nøgler i skuffen viser en større, stille udvikling.",
+  "verdict": "keep",
+  "level_before": 9242,
+  "level": 9242,
+  "reason": "Pointen ligger i en sidebemærkning. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Forord: Alle personer i denne bog er opdigtede, og enhver lighed med min mor er tilfældig.' Hvad gør forfatteren?",
+  "skill": "tone og hensigt",
+  "goal": "Eleven øver at forstå, at det sædvanlige forbehold i et forord her bruges til at antyde det modsatte.",
+  "verdict": "keep",
+  "level_before": 9373,
+  "level": 9373,
+  "reason": "Kræver genreviden og sans for humor. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Jeg ringede ikke, fordi jeg var sur.' Hvilke to meninger kan sætningen have?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at se, at 'ikke' kan høre til 'ringede' eller til grunden, og at sætningen derfor har to meninger.",
+  "verdict": "keep",
+  "level_before": 9469,
+  "level": 9469,
+  "reason": "Nægtelsens rækkevidde i en årsagssætning er svær. Stærk opgave, trods kort tekst."
+ },
+ {
+  "q": "Læs: 'Romanen er velskrevet på samme måde, som en hotelreception er venlig: korrekt, tandløs og uden interesse for, hvem man er.' Hvad er anmelderens dom?",
+  "skill": "sproglig virkning",
+  "goal": "Eleven øver at læse sammenligningen med en hotelreception som en ros, der næsten tages tilbage.",
+  "verdict": "keep",
+  "level_before": 9564,
+  "level": 9564,
+  "reason": "Eleven skal skelne håndværk fra nærvær. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Der var en tid, hvor vi talte om fremtiden, som var den et sted, man kunne rejse til. Nu taler vi mest om vejret.' Hvad fortæller forskellen på dengang og nu om forholdet?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at kontrasten mellem fremtiden og vejret viser et forhold, der er gået i stå.",
+  "verdict": "keep",
+  "level_before": 9576,
+  "level": 9576,
+  "reason": "Forholdet nævnes ikke før spørgsmålet, og tolkningen er voksen. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Spørgsmålet: Hvad vil du være, når du bliver stor? forudsætter, at man ikke er noget endnu.' Hvad kritiserer skribenten?",
+  "skill": "forudsætning",
+  "goal": "Eleven øver at forstå, at spørgsmålet til børn forudsætter, at barnet ikke er noget endnu.",
+  "verdict": "keep",
+  "level_before": 9588,
+  "level": 9588,
+  "reason": "Eleven skal se et hverdagsspørgsmål udefra. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'En politiker bliver citeret for: Jeg har aldrig sagt, at skolen skal lukke. Af hele interviewet fremgår det, at hun sagde: Jeg har aldrig sagt, at skolen skal lukke i år.' Hvad ændrer udeladelsen?",
+  "skill": "kildekritik",
+  "goal": "Eleven øver at forstå, hvordan udeladelsen af 'i år' ændrer citatets betydning.",
+  "verdict": "keep",
+  "level_before": 9635,
+  "level": 9635,
+  "reason": "Eleven skal sammenligne to næsten ens sætninger præcist. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Det hævdes ofte, at ordet hygge ikke kan oversættes. Men at et ord mangler på et andet sprog, betyder ikke, at oplevelsen mangler hos dem, der taler det.' Hvilken tanke afviser skribenten?",
+  "skill": "forudsætning",
+  "goal": "Eleven øver at finde den tanke, skribenten afviser: at man kun kan opleve det, man har et ord for.",
+  "verdict": "keep",
+  "level_before": 9647,
+  "level": 9647,
+  "reason": "Abstrakt skelnen mellem ord og oplevelse. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Hvis en regel kun følges, når nogen kigger, er det så reglen, man respekterer, eller kameraet?' Hvad får spørgsmålet læseren til at overveje?",
+  "skill": "implicit budskab",
+  "goal": "Eleven øver at forstå, at spørgsmålet skelner mellem at følge en regel af overbevisning og af frygt for kontrol.",
+  "verdict": "keep",
+  "level_before": 9683,
+  "level": 9683,
+  "reason": "Filosofisk spørgsmål, hvor eleven selv skal finde begreberne. Passer."
+ },
+ {
+  "q": "Læs: 'Hvis vi giver én elev ekstra tid til prøven, må vi give alle ekstra tid. Og hvis alle får ekstra tid, er det ingen hjælp.' Hvad tager skribenten for givet, som man kan være uenig i?",
+  "skill": "forudsætning",
+  "goal": "Eleven øver at finde antagelsen om, at retfærdighed betyder ens behandling af alle.",
+  "verdict": "keep",
+  "level_before": 9814,
+  "level": 9814,
+  "reason": "Skjult forudsætning, hvor skelnen mellem lig og ens er krævende. Stærk opgave."
+ },
+ {
+  "q": "Læs: 'Den, der ikke kender sin historie, er dømt til at gentage den, siger man. Min erfaring er, at de, der kender den, også gentager den, nu blot med bedre argumenter.' Hvad tilføjer skribenten til det kendte ord?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå, hvordan skribenten vender talemåden og udtrykker skepsis over for viden som beskyttelse.",
+  "verdict": "keep",
+  "level_before": 9849,
+  "level": 9849,
+  "reason": "Kræver at kende talemåden og se, hvad vendingen tilføjer. Rigtig sværhed."
+ },
+ {
+  "q": "Læs: 'Der findes ingen sandheder, der gælder for alle, skrev Mikael i sin stil. Læreren satte et spørgsmålstegn i margenen og skrev: Gælder det også for alle?' Hvad er lærerens kritik?",
+  "skill": "argumentanalyse",
+  "goal": "Eleven øver at forstå, at påstanden 'ingen sandheder gælder for alle' rammer sig selv.",
+  "verdict": "keep",
+  "level_before": 9885,
+  "level": 9885,
+  "reason": "Selvmodsigelse er abstrakt og svær. Stærk opgave."
+ }
+]
