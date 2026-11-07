@@ -1,5 +1,7 @@
 // Lærligverse (F10-B2): an answer to a course item (questions.metadata has 'learning_step', D-338) never
-// moves the pupil's ordinary level (advance_student_level) or band (advance_student_band).
+// moves the pupil's ordinary level (advance_student_level) or band (advance_student_band), and never enters
+// the teacher's ordinary mastery figures (get_teacher_visibility, get_student_overview, get_concept_states)
+// — owner decision 6 (2026-11-07). The reward path (XP, coins, streak, total_correct_answers) is untouched.
 //
 // Runs migration 20261107090000_course_items_never_move_level.sql UNMODIFIED on PGlite over the FULL
 // isolated replay of the repository (tests/isolated/schema), on top of #623's
@@ -129,8 +131,22 @@ async function figures(db) {
   const logged = (await one(db, "SELECT count(*)::int AS n FROM public.student_level_fold_log")).n;
   const courseAnswers = (await one(db, `SELECT count(*)::int AS n FROM public.question_instances qi
     JOIN public.questions q ON q.id = qi.question_id WHERE q.metadata ? 'learning_step'`)).n;
-  return { history, english, band, foldedCourse, logged, courseAnswers };
+  // The teacher's ordinary mastery figures (as #623's test reads them): class view, pupil overview
+  // (numerator AND denominator), concept states.
+  await db.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [TEACHER]);
+  const visibility = await rows(db, "SELECT current_band, total_attempts, recent_correct_pct, trend FROM public.get_teacher_visibility($1)", [TEACHER]);
+  const overview = await rows(db, "SELECT correct_ratio::text, total_attempts FROM public.get_student_overview($1)", [PUPIL]);
+  await db.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [PUPIL]);
+  const concepts = (await one(db, "SELECT public.get_concept_states($1) AS v", [PUPIL])).v;
+  return { history, english, band, foldedCourse, logged, courseAnswers, visibility, overview, concepts };
 }
+
+// The reward path (XP, coins, streak, total_correct_answers) and placement: never touched by this
+// migration — their bodies are compared before/after.
+const REWARD_AND_PLACEMENT = ["process_question_attempt", "process_question_attempt_v2", "process_text_answer",
+  "process_text_answer_v2", "start_placement", "submit_placement", "evaluate_achievements", "claim_daily_reward"];
+const bodiesOf = async (db, names) => Object.fromEntries((await rows(db, `SELECT proname || '(' || pg_get_function_identity_arguments(oid) || ')' AS k,
+  md5(prosrc) AS v FROM pg_proc WHERE pronamespace = 'public'::regnamespace AND proname = ANY($1) ORDER BY 1`, [names])).map((r) => [r.k, r.v]));
 
 const R = {};
 before(async () => {
@@ -164,7 +180,9 @@ before(async () => {
   await FIX.exec(PREDECESSOR_SQL);
   R.attrsBefore = {}; R.predMd5 = {};
   for (const g of GUARD) { R.attrsBefore[g.sig] = await attrs(FIX, g.sig); R.predMd5[g.sig] = await md5Of(FIX, g.sig); }
+  R.rewardBefore = await bodiesOf(FIX, REWARD_AND_PLACEMENT);
   await FIX.exec(MIGRATION);
+  R.rewardAfter = await bodiesOf(FIX, REWARD_AND_PLACEMENT);
   R.afterMd5 = {}; R.attrsAfter = {}; R.src = {};
   for (const g of GUARD) {
     R.afterMd5[g.sig] = await md5Of(FIX, g.sig);
@@ -181,8 +199,9 @@ before(async () => {
 });
 
 // ── 1. Guard and attributes ─────────────────────────────────────────────────────────────────────────
-test("guard: the two targets, each requiring #623's post-migration body", () => {
-  assert.deepEqual(GUARD.map((g) => g.sig).sort(), ["public.advance_student_band(uuid,smallint)", "public.advance_student_level(uuid,text,smallint)"]);
+test("guard: exactly #623's five targets, each requiring #623's post-migration body", () => {
+  assert.deepEqual(GUARD.map((g) => g.sig).sort(), PRED_GUARD.map((g) => g.sig).sort());
+  assert.equal(GUARD.length, 5);
   for (const g of GUARD) {
     const pred = PRED_GUARD.find((p) => p.sig === g.sig);
     assert.ok(pred, `${g.sig} is one of #623's targets`);
@@ -241,6 +260,31 @@ test("ordinary quiz: history (incl. a question with metadata NULL) and English f
   assert.equal(R.fix.english.newly_folded, ENGLISH.length);
   assert.equal(R.fixAgain.history.newly_folded, 0);
   assert.equal(R.fixAgain.history.level, R.fix.history.level);
+});
+
+test("teacher figures, negative control: WITHOUT the fix, course answers enter the class view, pupil overview and concept states", () => {
+  assert.notDeepEqual(R.ctrl.visibility, R.base.visibility, "class view differs");
+  assert.notDeepEqual(R.ctrl.overview, R.base.overview, "pupil overview differs");
+  assert.ok(Object.hasOwn(R.ctrl.concepts ?? {}, "kildekritik"), "the course concept appears");
+});
+
+test("teacher figures with the fix: class view, pupil overview (numerator AND denominator) and concept states equal ordinary answers alone", () => {
+  assert.deepEqual(R.fix.visibility, R.base.visibility);
+  assert.deepEqual(R.fix.overview, R.base.overview);
+  assert.deepEqual(R.fix.concepts, R.base.concepts);
+  assert.ok(!Object.hasOwn(R.fix.concepts ?? {}, "kildekritik"));
+});
+
+test("reward path and placement are untouched: XP, coins, streak, total_correct_answers, achievements, placement bodies identical", () => {
+  assert.ok(Object.keys(R.rewardBefore).length >= 6, `found ${Object.keys(R.rewardBefore).join(", ")}`);
+  assert.deepEqual(R.rewardAfter, R.rewardBefore);
+  // The migration (re)defines exactly the five guarded functions and nothing else: no other CREATE,
+  // ALTER, UPDATE, INSERT, DELETE, GRANT or REVOKE.
+  const sql = MIGRATION.replace(/^--.*$/gm, "");
+  const created = [...sql.matchAll(/CREATE OR REPLACE FUNCTION public\.([a-z_]+)\(/g)].map((m) => m[1]).sort();
+  assert.deepEqual(created, GUARD.map((g) => g.sig.replace(/^public\.|\(.*$/g, "")).sort());
+  assert.ok(!/\b(ALTER|GRANT|REVOKE|TRUNCATE|DROP)\b/.test(sql), "no ALTER/GRANT/REVOKE/TRUNCATE/DROP");
+  assert.ok(!/^\s*(INSERT|UPDATE|DELETE)\b/m.test(sql.replace(/\$function\$[\s\S]*?\$function\$/g, "")), "no data change outside the function bodies");
 });
 
 // ── 6. Inactive and ordered ─────────────────────────────────────────────────────────────────────────

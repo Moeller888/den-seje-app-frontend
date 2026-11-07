@@ -367,8 +367,9 @@ const REVIEWED_LATER_READERS = {
     "what they read. Same callers, same gates, same grants (CREATE OR REPLACE), fewer rows read; " +
     "tests/unit/true-false-mastery-exclusion-run.test.mjs proves each body is the live body plus that line.",
   "20261107090000_course_items_never_move_level.sql":
-    "re-creates advance_student_level and advance_student_band with #623's exact bodies plus ONE predicate that " +
-    "drops course items (questions.metadata has learning_step) from what they fold. Same callers, same gates, same " +
+    "re-creates advance_student_level, advance_student_band, get_teacher_visibility, get_student_overview and " +
+    "get_concept_states with #623's exact bodies plus ONE predicate that drops course items (questions.metadata has " +
+    "learning_step) from what they read. Same callers, same gates, same " +
     "grants (CREATE OR REPLACE), fewer rows read; tests/unit/course-items-never-move-level-run.test.mjs proves each " +
     "body is #623's body plus that predicate and that signature, security, owner and ACL are unchanged.",
 };
