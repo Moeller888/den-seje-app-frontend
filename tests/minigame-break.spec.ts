@@ -10,7 +10,7 @@
 // What SERVER models is the CONTRACT the browser relies on (reply shapes, one open offer, single-use
 // pass, idempotent choices). The real SQL — time credit, caps, locking, RLS, randomness — is proven
 // against PostgreSQL in tests/unit/minigame-breaks-migration-run.test.mjs. Time is not waited for:
-// SERVER credits `creditPerAnswer` seconds per registered answer (400 → the third answer reaches 1,200).
+// SERVER credits `creditPerAnswer` seconds per registered answer (200 → the third answer reaches 600, D-364).
 import { test, expect, type Page } from "@playwright/test";
 import * as http from "http";
 import * as fs from "fs";
@@ -55,8 +55,8 @@ type Offer = { id: string; student: string; game: string; status: string; outcom
 
 class Server {
   student = "00000000-0000-4000-8000-0000000000a1";
-  creditPerAnswer = 400;
-  interval = 1200;
+  creditPerAnswer = 200;
+  interval = 600;
   pool = ["brud"];
   seconds = 0;
   offers: Offer[] = [];
@@ -212,7 +212,7 @@ const blocked = (offHost: string[]) => offHost.filter((u) => !/fonts\.(googleapi
 
 // ── Forløb 1: eleven afslår ─────────────────────────────────────────────────────────────────────────
 
-test("forløb 1: no offer before 20 minutes; at 20 the next answer offers one game; 'Nej, ellers tak' continues the quiz", async ({ page }) => {
+test("forløb 1: no offer before 10 minutes; at 10 the next answer offers one game; 'Nej, ellers tak' continues the quiz", async ({ page }) => {
   // A whole journey: several real quiz rounds with the app’s own feedback delays (0.6–2 s each) plus, as the
   // first test of a browser project, the cold start. Measured 2026-11-04: 19 s warm, > 30 s cold in Firefox
   // and WebKit. Not a wait for the app: every step still has its own assertion and timeout.
@@ -221,14 +221,14 @@ test("forløb 1: no offer before 20 minutes; at 20 the next answer offers one ga
   const { offHost, errors } = await setup(page, srv);
   await page.goto(baseUrl + "/index.html");
 
-  await answer(page, srv);                                   // 400 s
+  await answer(page, srv);                                   // 200 s
   await expect(page.locator("#question")).toContainText("Spørgsmål 2", { timeout: 10000 });
   await expect(dialog(page)).toHaveCount(0);
-  await answer(page, srv, "Aarhus");                         // 800 s — a wrong answer counts the same
+  await answer(page, srv, "Aarhus");                         // 400 s — a wrong answer counts the same
   await expect(page.locator("#question")).toContainText("Spørgsmål 3", { timeout: 10000 });
   await expect(dialog(page)).toHaveCount(0);
 
-  await answer(page, srv);                                   // 1200 s → offer
+  await answer(page, srv);                                   // 600 s → offer
   await expect(dialog(page)).toBeVisible();
   const servedBefore = srv.served;
   await expect(dialog(page).getByRole("heading")).toHaveText("Har du lyst til et spil Brud?");
@@ -256,7 +256,7 @@ test("forløb 1: no offer before 20 minutes; at 20 the next answer offers one ga
   expect(srv.calls.filter((c) => c.fn === "minigame_break_respond").map((c) => c.args.p_accept)).toEqual([false]);
   expect(srv.seconds).toBe(0);
 
-  // A new period: the next answers give no offer until 1,200 seconds again.
+  // A new period: the next answers give no offer until 600 seconds again.
   await answer(page, srv);
   await expect(page.locator("#question")).toContainText("Spørgsmål 5", { timeout: 10000 });
   await expect(dialog(page)).toHaveCount(0);
@@ -275,7 +275,7 @@ test("forløb 2: 'Ja tak' opens the offered game for exactly one round, then bac
   test.setTimeout(60_000);
   const srv = new Server();
   srv.pool = ["kloeft"];
-  srv.seconds = 800;
+  srv.seconds = 400;
   const { offHost, errors } = await setup(page, srv);
   await page.goto(baseUrl + "/index.html?fag=dansk");
 
@@ -315,7 +315,7 @@ test("forløb 2: 'Ja tak' opens the offered game for exactly one round, then bac
 test("a Stabel break plays one full round and pays nothing: no reward RPC, no coin text (D-347)", async ({ page }) => {
   const srv = new Server();
   srv.pool = ["stabel"];
-  srv.seconds = 800;
+  srv.seconds = 400;
   const { offHost, errors } = await setup(page, srv);
   await page.goto(baseUrl + "/index.html");
   await answer(page, srv);
@@ -350,7 +350,7 @@ test("a Stabel break plays one full round and pays nothing: no reward RPC, no co
 test("the back button from a game lands on a working quiz, and the pass cannot be used again", async ({ page }) => {
   const srv = new Server();
   srv.pool = ["husk"];
-  srv.seconds = 800;
+  srv.seconds = 400;
   const { errors } = await setup(page, srv);
   await page.goto(baseUrl + "/index.html");
   await answer(page, srv);
@@ -426,7 +426,7 @@ test("reloading a game page after the round started gives no second round", asyn
 
 test("reloading the quiz while an offer waits shows the SAME offer after the next answer — never a second one", async ({ page }) => {
   const srv = new Server();
-  srv.seconds = 800;
+  srv.seconds = 400;
   const { errors } = await setup(page, srv);
   await page.goto(baseUrl + "/index.html");
   await answer(page, srv);
@@ -455,7 +455,7 @@ test("the menu has no game cards any more; the subjects are all still there", as
 test("a failing break service never blocks the quiz; a failed 'Ja tak' says so and continues", async ({ page }) => {
   const srv = new Server();
   srv.failRpc.add("minigame_break_after_answer");
-  srv.seconds = 800;
+  srv.seconds = 400;
   const { errors } = await setup(page, srv);
   await page.goto(baseUrl + "/index.html");
   await answer(page, srv);
@@ -476,7 +476,7 @@ test("a failing break service never blocks the quiz; a failed 'Ja tak' says so a
 test("an empty game pool gives no dialog at all", async ({ page }) => {
   const srv = new Server();
   srv.pool = [];
-  srv.seconds = 1100;
+  srv.seconds = 550;
   const { errors } = await setup(page, srv);
   await page.goto(baseUrl + "/index.html");
   await answer(page, srv);

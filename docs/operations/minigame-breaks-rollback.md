@@ -16,7 +16,7 @@ UPDATE public.minigame_break_games SET enabled = false;
 ```
 
 Effekt: `minigame_break_after_answer` svarer `no_games`, der vises ingen dialog, quizzen kører som før.
-Den optjente tid bliver stående på 1.200 og venter. Allerede accepterede pas kan stadig indløses (højst 15
+Den optjente tid bliver stående på intervallet (600 efter D-364, 1.200 før) og venter. Allerede accepterede pas kan stadig indløses (højst 15
 minutter). Et enkelt spil tages ud med `WHERE game_key = '<key>'`.
 
 Genåbning: `UPDATE public.minigame_break_games SET enabled = true;`
@@ -48,6 +48,22 @@ DROP TABLE IF EXISTS public.minigame_break_offers;
 DROP TABLE IF EXISTS public.minigame_break_progress;
 DROP TABLE IF EXISTS public.minigame_break_games;
 COMMIT;
+```
+
+## D-364 — intervallet tilbage til 20 minutter
+
+D-364 (`20261107090000_minigame_break_interval_10min.sql`) ændrer kun konstanten `c_interval` i
+`minigame_break_after_answer` fra 1200 til 600. Tilbagerulning = en ny migration med D-347's definition af
+netop den funktion (samme `CREATE OR REPLACE`-blok som i `20261105090000_minigame_breaks.sql`, dvs.
+`c_interval := 1200`) plus de samme to linjer `REVOKE … FROM PUBLIC, anon` / `GRANT EXECUTE … TO
+authenticated`. Kræver ejerens GO. Ingen data ændres; teksterne i `js/minigame-pass.js` og `spil.html`
+skal tilbage til "20 minutter" i samme omgang (revert af D-364's merge-commit).
+
+Kontrol (read-only):
+
+```sql
+SELECT (regexp_match(prosrc, 'c_interval\s+CONSTANT integer\s+:=\s*(\d+)'))[1] AS interval_seconds
+FROM pg_proc WHERE proname = 'minigame_break_after_answer';
 ```
 
 ## Stabels mønter — kun ved en ny ejerbeslutning

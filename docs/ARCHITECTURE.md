@@ -160,7 +160,8 @@ Schema and most content are managed as **versioned SQL migrations** in `supabase
   (`minigame_break_after_answer` / `_respond` / `_start` / `_finish`). Active quiz time is derived on the
   server from `question_instances.created_at/answered_at`; the minigame pages only run with a pass the
   server redeems once. The quiz calls it after each registered answer, fail-soft. Source of truth:
-  [`decisions/D-347.md`](decisions/D-347.md).
+  [`decisions/D-347.md`](decisions/D-347.md); the interval (one constant in `minigame_break_after_answer`)
+  becomes 10 minutes with [`decisions/D-364.md`](decisions/D-364.md) (migration `20261107090000`).
 - **Progression & retention:** themes system, streak system, retention loops, weekly quests,
   achievements (+ hidden/wave2/progress/rewards), titles, leaderboard, social.
 - **Avatar:** avatar slot system (`equipped_slots`), slot/wings/aura items, and the avatar asset
