@@ -1,6 +1,9 @@
 # Lærligverse: datakontrakten for serverautoritativ evidens (K1 + L3 + L5)
 
-**Status: UDKAST (F10-B2, 2026-11-07). Intet i dette dokument er aktiveret eller anvendt i produktionen.**
+**Status: UDKAST (F10-B2, 2026-11-07; L3/L5-kode 2026-11-08). Intet i dette dokument er aktiveret eller anvendt i produktionen.**
+
+L5 og L3 findes nu som kode bag fire slukkede Edge-flag og én migration, der ikke er anvendt (§2, §3, §8). Det
+er udviklet med ejerens GO til udvikling bag slukkede flag; ejeren har givet NO-GO til aktivering i produktionen.
 
 Dokumentet samler de eksisterende beslutninger og koder, som de faktisk ser ud. Det overtager ikke andre spors ejerskab:
 - K1/H5 hører til H5/K1-sporet, som er parkeret.
@@ -42,23 +45,46 @@ Konsekvens: ingen klient, hverken spil, bro eller vært, kan få et svar registr
 
 Mapningen findes allerede som kode i `_shared/learning-sequence.ts` (`STEPS`: `id → mode`, `mayBecomeEvidence`).
 
-**Hvor `mode` fastlægges (forslag til L5's ejer):**
+**Hvor `mode` fastlægges:**
 - **Udgangspunkt (besluttet i l1-contracts l. 51):** "L5: tilstanden, opgaven blev serveret i, registreres på instansen af `get-next-question`."
-- **Forslag:** K1 fryser allerede `served_snapshot.metadata` ved serveringen. `process-event` kan derfor aflede `mode` som `stepDef(stepOf(served_snapshot.metadata)).mode ?? 'quiz_v1'` uden en ny kolonne og uden at stole på requesten.
-  - Trinnet, ikke kun tilstanden, kan altid genfindes: forsøg → instans → snapshot → `learning_step`. Det skelner vejledt øvelse fra revision, som begge har `mode = practice`.
-  - En egen kolonne `question_instances.served_mode` er alternativet, hvis L5 ønsker den eksplicit.
-- **I dag:** `process-event` sender konstanten `quiz_v1` (`text-answer-rpc.ts` `L1_ATTEMPT_CONTEXT`, "indtil L3/L5"). Med K1 alene ville alle Arkivskab-forsøg derfor stå som `quiz_v1`. Det er korrekt "ukendt", men aldrig evidens.
+- **Implementeret (2026-11-08), bag slukkede flag, migrationen er ikke anvendt:** den eksplicitte kolonne `question_instances.served_mode` (migration `20261108043500`, kræver K1). Forslaget om at aflede tilstanden af `served_snapshot.metadata` blev fravalgt, fordi:
+  - et snapshot kun findes med `K1_SERVED_SNAPSHOT=on`, og det beskriver opgavens indhold, ikke den konkrete servering;
+  - kolonnen registrerer det trin, serveren faktisk valgte for netop denne anmodning, og den kan valideres og fryses pr. runde.
+- **Sådan virker det:**
+  - **`get-next-question`** (`LAERLIGVERSE_SERVED_MODE`, præcis `on`): når sekvensen (D-338) har valgt et trin for anmodningen, skrives trinnets tilstand (`STEPS`) på den instans, serveren opretter.
+  - **Databasen** (trigger `question_instances_served_mode`):
+    - afviser en tilstand, der ikke er tilstanden for spørgsmålets `learning_step`;
+    - fryser værdien inden for runden, også over for `service_role`;
+    - sætter den til `NULL`, når en runde genåbnes.
+  - **Rettigheder:** `anon` og `authenticated` kan hverken læse, indsætte eller ændre kolonnen. Deres rettigheder på alle andre kolonner er uændrede.
+  - **`process-event`** (`LAERLIGVERSE_ATTEMPT_CONTEXT`, præcis `on`, kun H5-vejen): sender `p_mode = served_mode`, eller `quiz_v1` når den er `NULL`. Body-felter ignoreres. En ukendt værdi giver 500, og intet registreres.
+- **Trinnet** kan stadig genfindes via forsøg → instans → spørgsmål eller snapshot → `learning_step`. Det skelner vejledt øvelse fra revision, som begge har `mode = practice`.
+- **Slukket (i dag og i produktionen):** `process-event` sender konstanten `quiz_v1` (`text-answer-rpc.ts` `L1_ATTEMPT_CONTEXT`). Med K1 alene står alle Arkivskab-forsøg derfor som `quiz_v1`. Det er korrekt "ukendt", men aldrig evidens.
+- **Bemærk:** en åben runde, der blev serveret, mens flaget var slukket, beholder `served_mode = NULL`, også når `get-next-question` senere genoptager den i et trin. Svaret tæller derfor som `quiz_v1`.
 
 ## 3. Hints
 
-- **Protokollen er klar:** spillet beder om hjælp via `hint.request` (bro → vært → service). Spillet har ingen lokal hjælp. Den rigtige backend afviser i dag (`laerlig-service.ts`: "the backend has no hint log yet", `hintsAvailable: 0`).
+- **Protokollen er klar:** spillet beder om hjælp via `hint.request` (bro → vært → service). Spillet har ingen lokal hjælp.
 - **Besluttet retning (l1-contracts l. 52):** "L3: tælles fra en serverlog over hint-anmodninger".
-- **Forslag til L3's ejer:** en append-only serverlog `hint_requests(instance_id, round_no, level, requested_at)`, skrevet af en Edge Function med elevens JWT. Hjælpeteksten leveres kun derfra og indgår aldrig i den offentlige DTO.
-  - `process-event` sætter `p_hints_used = count(log for instans+runde med requested_at < svarets tidspunkt)`, begrænset til 0–3.
-  - **Hvilken hjælp:** `level`.
-  - **Hvornår:** `requested_at`.
-  - **Før eller efter svaret:** sammenlignes med `answered_at`.
-  - Feedback efter svaret registreres allerede som `review_text_shown` og `correct_answer_shown` og er ikke hjælp.
+- **Implementeret (2026-11-08), bag slukkede flag, migrationen er ikke anvendt:**
+  - **Loggen:** tabellen `question_hint_requests` (migration `20261108043500`). Den er append-only og har én række pr. niveau pr. runde: elev, instans, `round_no`, `hint_level` 1–3, `request_id` (UUID) og `requested_at`.
+    - `UNIQUE(student_id, request_id)`: et genforsøg giver den samme række.
+    - `UNIQUE(instans, runde, niveau)`: et niveau tælles kun én gang.
+    - RLS er slået til. `anon` og `authenticated` har ingen rettigheder. `service_role` må kun læse og indsætte.
+  - **Skrivningen:** kun gennem `request_question_hint` (`SECURITY INVOKER`, kun `service_role` må kalde den). Funktionen låser instansen og kontrollerer:
+    - at instansen tilhører eleven (ellers `not_found`);
+    - at runden er den aktuelle og stadig åben (ellers `stale_round` eller `round_closed`);
+    - at niveauet er det næste i rækkefølgen (ellers `level_out_of_order`);
+    - at indholdet har hjælp på det niveau (ellers `hint_unavailable`, og intet logges).
+  - **Edge Function `request-hint`** (`LAERLIGVERSE_HINTS`, præcis `on`): kræver JWT og kalder funktionen med den verificerede elevs id. Slukket svarer den 404 `hints_disabled` uden at læse eller skrive noget. Hint-teksten logges aldrig.
+  - **`process-event`** (`LAERLIGVERSE_ATTEMPT_CONTEXT`, præcis `on`, kun H5-vejen): `p_hints_used` er antallet af forskellige niveauer i loggen for instans, elev og svarets runde, læst lige før `_v2`, højst 3.
+  - **Broen:** `laerlig-service.ts` kalder `request-hint` kun med den nye indstilling `serverHints` (standard: fra). Antallet af niveauer er serverens `hints_available` fra et sekvenssvar (`get-next-question`, `LAERLIGVERSE_HINTS`). Ét `request_id` genbruges pr. instans, runde og niveau. Uden indstillingen afviser broen som før.
+- **Hjælpeteksten:** den kommer fra rundens udleverede indhold (K1-snapshot, ellers spørgsmålsrækken), `content.hints`: de forreste ikke-tomme tekster, højst 3. Den indgår aldrig i den offentlige DTO; kun antallet serveres med opgaven.
+- **Indholdet mangler:** pr. 2026-11-08 har intet spørgsmål i repositoryet `content.hints`. F9-fixturen `kildekritik-questions.json` har ingen. Arkivskabets hints findes kun i testadapterens `host-items.ts`. Indtil indholdet leverer dem, er hver anmodning `hint_unavailable`.
+- **Hvilken hjælp:** `hint_level`. **Hvornår:** `requested_at`. **Før svaret:** en lukket runde afviser nye anmodninger, så loggen kan aldrig få en række efter svaret.
+- **Kendt begrænsning:** antallet læses i sin egen sætning lige før `_v2`. En anmodning, der lander i de millisekunder imellem, logges, men tælles ikke med i forsøget. Hullet kan kun lukkes helt ved at tælle inde i `_v2`'s transaktion, og det er en ændring i K1-ejerens funktioner. Loggen er fuldstændig, så en lærervisning kan altid tælle igen.
+- Feedback efter svaret registreres allerede som `review_text_shown` og `correct_answer_shown` og er ikke hjælp.
+- Hjælp ændrer ikke XP, mønter, streak, quests, mestring, niveau eller lærerstatistik. Ingen af dem læser loggen eller `hints_used` (testet i `tests/unit/laerligverse-l3-l5-migration-run.test.mjs`).
 - Eleven kan ikke få hjælp uden en loglinje, så klienten kan ikke skjule brugt hjælp.
 
 ## 4. Forsøgsidentitet
@@ -105,8 +131,15 @@ Skiftet er én indstilling og ikke en omskrivning. De 10 H5-tests i den isolered
 ## 8. Hvad der mangler, før en digital pilot kan give evidens
 
 1. K1 anvendt i produktionen (runbook A4) og `process-event` deployet (A6). Separate GO'er.
-2. **L5:** `mode` afledt serverside, se §2.
-3. **L3:** hint-log + `p_hints_used` afledt serverside, se §3.
+2. **L5:** `mode` afledt serverside, se §2. *Kode findes bag slukkede flag.* Det kræver:
+   - at migration `20261108043500` anvendes efter K1 (særskilt GO);
+   - deploy af `get-next-question` og `process-event`;
+   - `LAERLIGVERSE_SERVED_MODE` og `LAERLIGVERSE_ATTEMPT_CONTEXT` sat til `on` (særskilte GO'er).
+3. **L3:** hint-log + `p_hints_used` afledt serverside, se §3. *Kode findes bag slukkede flag.* Det kræver:
+   - den samme migration;
+   - deploy af den nye funktion `request-hint`;
+   - `LAERLIGVERSE_HINTS` sat til `on` og `serverHints` i værten;
+   - hints i indholdet (`content.hints`), før en elev kan få hjælp.
 4. #623 → #647 anvendt, før Arkivskabets spørgsmål seedes.
 5. K1 i den isolerede stak, så H5-testene kører som almindelige tests (D-341). Eksperimentet i #648 viser effekten.
 6. Seed-migration med de godkendte F9-opgaver. Ejeren skal godkende det endelige `learning_objective`-id (LP-2/LP-13).
