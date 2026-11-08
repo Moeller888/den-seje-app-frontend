@@ -113,6 +113,8 @@ export function extractSchemaPart(file, sql) {
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
 export const NOT_IN_PRODUCTION = Object.freeze({
+  "20261107090000_minigame_break_interval_10min.sql":
+    "D-364, not applied in production: minigame_break_after_answer there still has D-347's interval of 1200 s (20 minutes); this re-creates it with 600 s",
   "20261031230000_claim_daily_reward_exactly_once.sql":
     "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
   "20261101120000_night_owl_stop_new_awards.sql":
