@@ -317,9 +317,12 @@ test("app.js: storage is verified before every send, an incompatible backend blo
   assert.match(APP, /if \(record\.blocked\) \{[\s\S]{0,200}?showIncompatible\(\);\s*return false;\s*\}/);
   assert.doesNotMatch(APP, /graded_unprotected|outcome\.kind === "pending"/);
   // settleSubmission (which drops the stored submission) follows only a confirmed outcome or a pupil switch.
+  // quiz_cooldown (anti-gætte-pause, docs/quiz-anti-guess-cooldown.md) is a confirmed refusal: the
+  // database refused the answer before anything was registered (classifyResponse needs the exact 429 +
+  // outcome), so the question is answered again after the pause as a new submission.
   const contexts = [...APP.matchAll(/settleSubmission\(\);/g)].map((m) => APP.slice(Math.max(0, m.index - 260), m.index));
   assert.ok(contexts.length >= 6);
   for (const ctx of contexts) {
-    assert.match(ctx, /outcome\.kind === "(graded|refused|invalid_answer|client_outdated)"|owner === "other"/, ctx.slice(-140));
+    assert.match(ctx, /outcome\.kind === "(graded|refused|invalid_answer|client_outdated|quiz_cooldown)"|owner === "other"/, ctx.slice(-140));
   }
 });

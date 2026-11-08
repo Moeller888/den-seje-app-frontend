@@ -1,4 +1,4 @@
-// Spillepauser (D-347): minigames are offered as a voluntary break after 20 minutes of active quiz time.
+// Spillepauser (D-347, D-364): minigames are offered as a voluntary break after 10 minutes of active quiz time.
 //
 // THE SERVER DECIDES. Active time, eligibility, the random draw, the single-use pass and the new
 // period all live in supabase/migrations/20261105090000_minigame_breaks.sql. This module only:
@@ -10,7 +10,7 @@
 // FAIL-SOFT, ALWAYS. Every network or rendering failure here returns "no break" and the quiz carries on
 // exactly as before. Nothing here touches the answer, XP, coins, mastery or the next question.
 //
-// The 20-minute interval (MINIGAME_INTERVAL_SECONDS = 1200) is a constant of the SQL function and is
+// The 10-minute interval (MINIGAME_INTERVAL_SECONDS = 600, D-364) is a constant of the SQL function and is
 // reported back as `interval_seconds`; it is deliberately NOT repeated here.
 
 export const MINIGAME_CATALOG = Object.freeze([
