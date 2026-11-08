@@ -119,3 +119,21 @@ test("the pure contract: parseHintRequest and replyForHint", () => {
   const req = { instanceId: INST, roundNo: 2, level: 3, requestId: REQ };
   assert.equal(replyForHint(row({ round_no: 2, hint_level: 3, hints_available: 3 }), req).body.hints_remaining, 0);
 });
+
+test("JWT: without an Authorization header the user client gets no token, auth fails, 401 — and no RPC is made", async () => {
+  // Like process-event and get-next-question (verify_jwt = false in config.toml), the function itself verifies the
+  // session with auth.getUser() on a client that carries ONLY the request's own Authorization header.
+  globalThis.Deno.env.set("LAERLIGVERSE_HINTS", "on");
+  globalThis.__peTrace = [];
+  globalThis.__peUser = () => ({ data: { user: null }, error: { message: "missing or forged JWT" } });
+  globalThis.__peBackend = rpcReturns(row());
+  try {
+    const res = await handler(new Request("http://stub/", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(BODY) }));
+    assert.equal(res.status, 401);
+    assert.deepEqual(JSON.parse(await res.text()), { error: "Unauthorized" });
+    assert.deepEqual(globalThis.__peTrace.filter((c) => c.createClient), [{ createClient: "user", auth: "none" }]);
+    assert.equal(globalThis.__peTrace.some((c) => c.kind === "rpc"), false);
+  } finally {
+    globalThis.Deno.env.delete("LAERLIGVERSE_HINTS");
+  }
+});
