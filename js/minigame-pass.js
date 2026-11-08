@@ -24,7 +24,7 @@
 import { gameByKey, isOfferId, quizUrl } from "./minigame-break.js";
 
 export const LOCKED_TITLE = "Spillepausen er ikke åben";
-export const LOCKED_TEXT = "Minispil kan kun spilles som en spillepause i quizzen. Når du har arbejdet med dine opgaver i 20 minutter, får du tilbudt et spil.";
+export const LOCKED_TEXT = "Minispil kan kun spilles som en spillepause i quizzen. Når du har arbejdet med dine opgaver i 10 minutter, får du tilbudt et spil.";
 export const BACK_TO_QUIZ = "Tilbage til quizzen";
 const SUBJECTS = ["engelsk", "dansk"];
 

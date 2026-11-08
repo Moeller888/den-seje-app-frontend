@@ -113,6 +113,8 @@ export function extractSchemaPart(file, sql) {
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
 export const NOT_IN_PRODUCTION = Object.freeze({
+  "20261107090000_minigame_break_interval_10min.sql":
+    "D-364, not applied in production: minigame_break_after_answer there still has D-347's interval of 1200 s (20 minutes); this re-creates it with 600 s",
   "20261031230000_claim_daily_reward_exactly_once.sql":
     "D-284, not applied in production: it re-creates claim_daily_reward, whose production body is still the one before it",
   "20261101120000_night_owl_stop_new_awards.sql":
@@ -121,6 +123,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
   "20261108043500_laerligverse_served_mode_hint_log.sql":
     "Lærligverse L5 + L3, not applied in production: it needs L1 K1 (not applied either) and adds question_instances.served_mode, the hint log question_hint_requests and request_question_hint; every reader is behind an Edge flag that is off",
+  "20261105130000_quiz_anti_guess_cooldown.sql":
+    "anti-gætte-pause, not applied in production: it adds quiz_cooldown_* and two triggers on question_instances; not replayed in the isolated stack, where shared synthetic pupils answer many questions wrong in a row (the frontend treats the missing get_my_quiz_cooldown as no pause)",
   "20261105120000_true_false_activation.sql":
     "F-02 Sandt/falsk activation, not applied in production and not to be applied before the get-next-question deploy that makes true_false servable: it admits true_false rows in questions and flips question_is_servable for them",
   "20261020140001_english_level_batch2_1.sql":
