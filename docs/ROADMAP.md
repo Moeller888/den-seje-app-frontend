@@ -26,7 +26,8 @@ _Last reviewed: 2026-07-01._
 - **Ejerbeslutning 2026-11-06 (D-356):** nye elever tager ikke længere de 10 spørgsmål. De går
   direkte til quizzen og starter på klassetrinnets startbånd, hvorefter niveauet følger deres svar.
   Et bånd fra en tidligere placeringstest gælder stadig. Det afgør B9. Klientkoden er fjernet
-  (D-360); `start_placement` og `submit_placement` findes stadig i databasen uden kaldere.
+  (D-360); `start_placement` og `submit_placement` findes stadig i databasen uden kaldere. Migrationen,
+  der fjerner dem (D-365), er skrevet, men ikke kørt i produktion.
 - Næste skridt (ikke bygget, og ikke besluttet efter D-356): måle-spørgsmål i **alle** fag. Et
   designforslag kommer før kode og skal passe med sværhedsskalaen 1–10.000 (niveau pr. fag, B1).
 
