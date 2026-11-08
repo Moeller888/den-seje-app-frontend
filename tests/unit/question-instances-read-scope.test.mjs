@@ -457,6 +457,59 @@ test("reviewed SELECT-narrowing migrations only swap table SELECT for a key-less
   assert.ok(selectNarrowingViolations("REVOKE SELECT ON public.question_instances FROM authenticated; GRANT SELECT (id, secret_col) ON public.question_instances TO authenticated;").length > 0);
 });
 
+// A later migration that NARROWS table-level UPDATE to column-level UPDATE and reads single instances in functions.
+// UPDATE never widens who READS rows (an UPDATE's WHERE still needs SELECT, and RLS has no UPDATE policy), so the
+// read scope cannot widen — provided the file changes no policy or RLS, its only privilege statements are the
+// reviewed REVOKE UPDATE / GRANT UPDATE (columns) pair, and every read is one instance by id AND student_id.
+const REVIEWED_LATER_UPDATE_NARROWING = {
+  "20261108043500_laerligverse_served_mode_hint_log.sql":
+    "Lærligverse L5 + L3 (not applied): for anon and authenticated it swaps table-level UPDATE for column-level " +
+    "UPDATE on every column except the new served_mode (their effective privileges on the existing columns are " +
+    "unchanged; RLS still has no UPDATE policy). Its three functions (request_question_hint and the two attempt " +
+    "wrappers, SECURITY INVOKER, service_role only) read one instance by id AND student_id FOR UPDATE. No policy, " +
+    "RLS or SELECT privilege on question_instances is touched (laerligverse-l3-l5-migration-run and " +
+    "laerligverse-l3-l5-attempt-wrapper-run prove the privileges and the reads as the roles themselves).",
+};
+const UPDATE_NARROWING_STATEMENTS = [
+  "format('REVOKE UPDATE ON public.question_instances FROM %I', v_role)",
+  "format('GRANT UPDATE (%s) ON public.question_instances TO %I', v_cols, v_role)",
+];
+function updateNarrowingViolations(body) {
+  const violations = [];
+  let sqlText = executableSql(body);
+  for (const re of READ_SCOPE_PATTERNS.slice(0, 2)) if (re.test(sqlText)) violations.push(`changes a policy or RLS: ${re}`);
+  for (const s of UPDATE_NARROWING_STATEMENTS) {
+    if (sqlText.split(s).length !== 2) violations.push(`the reviewed statement must occur exactly once: ${s}`);
+    sqlText = sqlText.replace(s, "");
+  }
+  if (READ_SCOPE_PATTERNS[2].test(sqlText)) violations.push("another GRANT/REVOKE on question_instances");
+  if (!/a\.attname <> 'served_mode'/.test(sqlText)) violations.push("the column grant must exclude served_mode");
+  const reads = sqlText.split(";").map((s) => s.replace(/\s+/g, " ").trim())
+    .filter((s) => READ_SCOPE_PATTERNS[3].test(s) || READ_SCOPE_PATTERNS[4].test(s));
+  for (const s of reads) {
+    if (!/FROM public\.question_instances qi WHERE qi\.id = \w+ AND qi\.student_id = \w+ FOR UPDATE$/.test(s)) violations.push(`read is not one own instance: ${s.slice(0, 160)}`);
+  }
+  if (reads.length === 0) violations.push("no read found — remove the stale exception");
+  return violations;
+}
+
+test("reviewed UPDATE-narrowing migrations only swap table UPDATE for a column grant and read one own instance", () => {
+  const dir = join(REPO, "supabase", "migrations");
+  assert.deepEqual(Object.keys(REVIEWED_LATER_UPDATE_NARROWING), ["20261108043500_laerligverse_served_mode_hint_log.sql"],
+    "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
+  for (const [name, reason] of Object.entries(REVIEWED_LATER_UPDATE_NARROWING)) {
+    assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
+    assert.deepEqual(updateNarrowingViolations(readFileSync(join(dir, name), "utf8")), [], name);
+  }
+  // Negative controls: the checker rejects the shapes that would widen or leak.
+  const ok = UPDATE_NARROWING_STATEMENTS.join(";\n") + ";\n a.attname <> 'served_mode';\nSELECT 1 FROM public.question_instances qi WHERE qi.id = p_id AND qi.student_id = p_s FOR UPDATE;";
+  assert.deepEqual(updateNarrowingViolations(ok), []);
+  assert.ok(updateNarrowingViolations(ok + "\nGRANT SELECT ON public.question_instances TO anon;").length > 0);
+  assert.ok(updateNarrowingViolations(ok + "\nCREATE POLICY \"x\" ON public.question_instances FOR SELECT TO authenticated USING (true);").length > 0);
+  assert.ok(updateNarrowingViolations(ok + "\nSELECT * FROM public.question_instances;").length > 0);
+  assert.ok(updateNarrowingViolations(ok.replace("a.attname <> 'served_mode'", "true")).length > 0);
+});
+
 test("the migration sorts after every migration that touches question_instances", () => {
   // Originally "sorts after every migration already in the tree", compared against the last file
   // in the whole directory. That encoded "nothing has been added since" rather than the property
@@ -476,6 +529,7 @@ test("the migration sorts after every migration that touches question_instances"
     .filter((n) => !Object.hasOwn(REVIEWED_LATER_READERS, n))
     .filter((n) => !Object.hasOwn(REVIEWED_LATER_INSERT_NARROWING, n))
     .filter((n) => !Object.hasOwn(REVIEWED_LATER_SELECT_NARROWING, n))
+    .filter((n) => !Object.hasOwn(REVIEWED_LATER_UPDATE_NARROWING, n))
     .sort();
   assert.ok(touching.includes("20260923000000_question_instances_teacher_read_scope.sql"),
     "this migration must be present in the tree");
