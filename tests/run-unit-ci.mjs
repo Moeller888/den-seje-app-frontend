@@ -17,7 +17,7 @@ import { availableParallelism } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { BINARY_DEPENDENT } from "./unit-ci-exclusions.mjs";
-import { parseCounts, timingTable, resolveConcurrency, parseShard, planShards } from "./support/unit-timing.mjs";
+import { parseCounts, timingTable, resolveConcurrency, parseShard, planShards, parseBudget, budgetReport, driftReport } from "./support/unit-timing.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const UNIT = join(HERE, "unit");
@@ -41,12 +41,14 @@ console.log(`unit suite in CI: ${suite.length} of ${all.length} files ` +
 // SHARDING (UNIT_SHARD=i/n). Every shard plans the SAME deterministic partition of the whole suite
 // (planShards self-checks that it is one: every file exactly once) and runs only its own part, so
 // the n shard jobs together run every file exactly once. Weights only balance the shards.
+const weights = JSON.parse(readFileSync(join(HERE, "unit-ci-weights.json"), "utf8")).weights ?? {};
+const budgetS = parseBudget(process.env.UNIT_SHARD_BUDGET_S);
 const shard = parseShard(process.env.UNIT_SHARD);
 let run = suite;
 if (shard) {
-  const weights = JSON.parse(readFileSync(join(HERE, "unit-ci-weights.json"), "utf8")).weights ?? {};
   const plan = planShards(suite, shard.count, weights);
-  run = plan[shard.index - 1].files;
+  // Heaviest first (D-361): plan.order is the shard's own files, checked by planShards.
+  run = plan[shard.index - 1].order;
   console.log(`shard ${shard.index}/${shard.count}: ${run.length} of ${suite.length} files ` +
     `(planned weights ${plan.map((p) => p.weight).join(" / ")})`);
   if (run.length === 0) {
@@ -92,14 +94,36 @@ process.on("SIGINT", () => reportRunning("SIGINT"));
 process.on("SIGTERM", () => reportRunning("SIGTERM"));
 
 const queue = [...run];
+
+// Time budget (D-361): reporting only — it never fails or stops the shard.
+const annotate = (msg) => { if (process.env.GITHUB_ACTIONS === "true") console.log(`::warning title=unit shard over its time budget::${msg}`); };
+let budgetTimer = null;
+if (budgetS !== null) {
+  budgetTimer = setTimeout(() => {
+    const now = Date.now();
+    console.log("\n" + budgetReport({
+      budgetS, elapsedMs: now - started, finished: results.length, failed: results.filter((r) => !r.ok).length,
+      running: [...running].map(([f, t0]) => [f, now - t0]), pending: [...queue],
+    }));
+    annotate(`${shard ? `shard ${shard.index}/${shard.count} ` : ""}passed ${budgetS} s with ${running.size} file(s) running and ${queue.length} not started — see the log`);
+  }, budgetS * 1000);
+  budgetTimer.unref();
+}
+
 await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
   while (queue.length > 0) await runFile(queue.shift());
 }));
+if (budgetTimer) clearTimeout(budgetTimer);
 
 const wallMs = Date.now() - started;
 const table = timingTable(results, wallMs, concurrency);
 console.log("\n" + table.text);
-if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, table.markdown + "\n");
+const drift = driftReport(results, weights);
+console.log("\n" + drift.text);
+if (budgetS !== null && wallMs > budgetS * 1000) {
+  annotate(`${shard ? `shard ${shard.index}/${shard.count} ` : ""}took ${(wallMs / 1000).toFixed(0)} s against a budget of ${budgetS} s (runner speed ${drift.speed === null ? "n/a" : drift.speed.toFixed(2) + "×"})`);
+}
+if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, table.markdown + "\n\n" + drift.markdown + "\n");
 
 const failed = results.filter((r) => !r.ok);
 if (failed.length > 0 || results.length !== run.length) {

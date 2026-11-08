@@ -172,7 +172,7 @@ test("the baseline tool is read-only", () => {
 });
 
 // ── sharding (A2) ───────────────────────────────────────────────────────────────────────────
-import { parseShard, planShards } from "../support/unit-timing.mjs";
+import { parseShard, planShards, parseBudget, budgetReport, driftReport } from "../support/unit-timing.mjs";
 import { readdirSync } from "node:fs";
 import { BINARY_DEPENDENT } from "../unit-ci-exclusions.mjs";
 
@@ -197,20 +197,136 @@ test("planShards is a deterministic partition whatever the weights", () => {
   assert.throws(() => planShards(["a", "a"], 2));
 });
 
-test("the real suite: 3 shards cover every CI file exactly once and are balanced", () => {
+// The shard count lives in ONE place: the unit-shard matrix. It must be exactly 1..N, and the job
+// name and UNIT_SHARD must read strategy.job-total — a hard-coded "/3" next to a 4-entry matrix
+// would run shard 4 as "4/3" (parseShard throws) or silently skip a quarter of the plan (D-361).
+function unitShardMatrix() {
+  const wf = read(".github/workflows/playwright.yml");
+  const job = wf.split(/\n {2}unit-shard:\n/)[1]?.split(/\n {2}[a-z][\w-]*:\n/)[0] ?? "";
+  assert.ok(job.length > 0, "unit-shard job not found");
+  const m = /\n {8}shard: \[([\d, ]+)\]\n/.exec(job);
+  assert.ok(m, "unit-shard matrix not found");
+  return { job, shards: m[1].split(",").map((x) => Number(x.trim())) };
+}
+
+test("the unit-shard matrix is exactly 1..N and the job reads N from strategy.job-total", () => {
+  const { job, shards } = unitShardMatrix();
+  assert.ok(shards.length >= 1 && shards.length <= 16);
+  assert.deepEqual(shards, shards.map((_, i) => i + 1), "matrix must be 1, 2, …, N with no gaps or repeats");
+  assert.ok(job.includes("name: unit (shard ${{ matrix.shard }}/${{ strategy.job-total }})"));
+  assert.ok(job.includes("UNIT_SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}"));
+  assert.ok(!/UNIT_SHARD: \$\{\{ matrix\.shard \}\}\/\d/.test(job), "no hard-coded shard count");
+  assert.ok(job.includes("timeout-minutes: 10"), "the job timeout is unchanged (D-361 adds shards, not time)");
+  const budget = /UNIT_SHARD_BUDGET_S: "(\d+)"/.exec(job);
+  assert.ok(budget && parseBudget(budget[1]) < 600, "the budget is set and below the job timeout");
+});
+
+test("the real suite: the workflow's shards cover every CI file exactly once and are balanced", () => {
   const unitDir = new URL("./", import.meta.url);
   const suite = readdirSync(unitDir).filter((f) => f.endsWith(".test.mjs") && !BINARY_DEPENDENT.includes(f)).sort();
   const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
-  const plan = planShards(suite, 3, weights);
+  const n = unitShardMatrix().shards.length;
+  const plan = planShards(suite, n, weights);
+  assert.equal(plan.length, n);
   assert.deepEqual(plan.flatMap((s) => s.files).sort(), suite);
+  assert.deepEqual(plan.flatMap((s) => s.order).sort(), suite, "the run orders together are the suite too");
   assert.ok(plan.every((s) => s.files.length > 0));
   const ws = plan.map((s) => s.weight);
   assert.ok(Math.max(...ws) <= 1.25 * Math.min(...ws), "shards drifted apart — refresh tests/unit-ci-weights.json from a CI timing table");
+});
+
+test("planShards: each shard's run order is its own files, heaviest first, ties by name", () => {
+  const files = ["a", "b", "c", "d", "e", "f", "g"];
+  const weights = { a: 1, b: 9, c: 9, d: 3, e: 50 }; // f, g unknown → median of the known (9)
+  for (const n of [1, 2, 3]) {
+    for (const s of planShards(files, n, weights)) {
+      assert.deepEqual([...s.order].sort(), s.files);
+      const w = (f) => weights[f] ?? 9;
+      for (let i = 1; i < s.order.length; i++) {
+        const [p, q] = [s.order[i - 1], s.order[i]];
+        assert.ok(w(p) > w(q) || (w(p) === w(q) && p < q), `${p} before ${q}`);
+      }
+    }
+  }
+  assert.deepEqual(planShards(files, 1, weights)[0].order, ["e", "b", "c", "f", "g", "d", "a"]);
+});
+
+test("parseBudget: unset = no budget; anything but an integer 60..3600 throws", () => {
+  assert.equal(parseBudget(undefined), null);
+  assert.equal(parseBudget(""), null);
+  assert.equal(parseBudget("450"), 450);
+  for (const bad of ["59", "3601", "x", "4.5", "-1", "0"]) assert.throws(() => parseBudget(bad), bad);
+});
+
+test("budgetReport names the running and the not-started files and says it is not a failure", () => {
+  const t = budgetReport({ budgetS: 450, elapsedMs: 450100, finished: 100, failed: 0,
+    running: [["slow.test.mjs", 133000]], pending: ["later.test.mjs"] });
+  assert.match(t, /passed its time budget of 450 s/);
+  assert.match(t, /NOT a test failure/);
+  assert.match(t, /running +133\.0 s  slow\.test\.mjs/);
+  assert.match(t, /not started +later\.test\.mjs/);
+});
+
+test("driftReport: runner speed, files over 2× their weight, heavy files without a weight", () => {
+  const r = (file, s) => ({ file, ms: s * 1000, ok: true });
+  const d = driftReport([r("a", 150), r("b", 60), r("c", 0.4), r("new", 25), r("tiny-new", 2)],
+    { a: 100, b: 20, c: 0.3 });
+  assert.equal(d.speed, (150 + 60) / (100 + 20), "only weights ≥ 1 s count toward the speed");
+  assert.deepEqual(d.slower.map((x) => x.file), ["b"], "60 > 2 × 20 + 10; 150 is not > 2 × 100 + 10");
+  assert.deepEqual(d.unweighted.map((x) => x.file), ["new"]);
+  assert.match(d.text, /runner speed 1\.75× the weights/);
+  assert.match(d.markdown, /`new`/);
+  assert.equal(driftReport([], {}).speed, null);
 });
 
 test("the runner shards only through planShards and keeps the whole-suite default", () => {
   const src = read("tests/run-unit-ci.mjs");
   assert.ok(src.includes("const shard = parseShard(process.env.UNIT_SHARD);"));
   assert.ok(src.includes("let run = suite;"), "no UNIT_SHARD = the whole suite");
-  assert.ok(src.includes("run = plan[shard.index - 1].files;"));
+  assert.ok(src.includes("run = plan[shard.index - 1].order;"), "a shard runs its own files, heaviest first");
+});
+
+test("the time budget only reports: it never exits, kills or skips", () => {
+  const src = read("tests/run-unit-ci.mjs");
+  const at = src.indexOf("budgetTimer = setTimeout(");
+  assert.ok(at > 0, "the budget timer exists");
+  const body = src.slice(at, src.indexOf("budgetTimer.unref();", at));
+  for (const forbidden of ["process.exit", ".kill(", "queue.length = 0", "queue.splice", "queue.shift"]) {
+    assert.ok(!body.includes(forbidden), `the budget callback must not ${forbidden}`);
+  }
+  assert.ok(src.includes("budgetTimer.unref();"), "the timer never keeps the runner alive");
+  assert.ok(src.includes("if (failed.length > 0 || results.length !== run.length) {"), "the pass/fail rule is unchanged");
+});
+
+// ── weight refresh tool (D-361) ─────────────────────────────────────────────────────────────
+import { parseFileTimes, medianWeights, projection, projectJobSeconds, SETUP_S } from "../../tools/ci/unit-weights-refresh.mjs";
+
+test("unit-weights-refresh: reads only passed files' times and takes the median", () => {
+  const log = "2026Z ── a.test.mjs (12.5 s, ok) ──\n2026Z ── b.test.mjs (3.0 s, FAILED) ──\nnoise ── c.test.mjs (0.4 s, ok) ──\n";
+  assert.deepEqual(parseFileTimes(log), { "a.test.mjs": 12.5, "c.test.mjs": 0.4 });
+  assert.deepEqual(parseFileTimes(undefined), {});
+  assert.deepEqual(medianWeights([{ a: 10, b: 1 }, { a: 30 }, { a: 20, b: 3 }]), { a: 20, b: 2 });
+});
+
+test("unit-weights-refresh: projection plans like CI and gets lighter with more shards", () => {
+  const suite = ["a", "b", "c", "d", "e", "f"];
+  const rows = projection(suite, { a: 900, b: 800, c: 700, d: 600, e: 500, f: 400 }, 1, 4);
+  assert.deepEqual(rows.map((r) => r.shards), [1, 2, 3, 4]);
+  for (let i = 1; i < rows.length; i++) assert.ok(rows[i].heaviest <= rows[i - 1].heaviest);
+  assert.equal(rows[0].heaviest, 3900);
+  assert.equal(projectJobSeconds(0, 1), SETUP_S);
+  assert.ok(rows.every((r) => r.job.normal < r.job.p90 && r.job.p90 < r.job.slowest));
+});
+
+test("unit-weights-refresh is read-only towards GitHub and writes only the weights file", () => {
+  const src = read("tools/ci/unit-weights-refresh.mjs");
+  for (const verb of ["--method", "-X ", "POST", "PATCH", "DELETE", "rerun", "/cancel", "-f ", "--field", "--input"]) {
+    assert.ok(!src.includes(verb), "refresh tool must not use " + verb);
+  }
+  const calls = [...src.matchAll(/gh\(\[\s*"([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(calls.length >= 3);
+  assert.deepEqual([...new Set(calls)], ["api"]);
+  assert.equal(src.match(/writeFileSync\(/g).length, 1, "one write");
+  assert.ok(src.includes('const file = join(REPO_ROOT, "tests", "unit-ci-weights.json");'));
+  assert.ok(src.includes('if (process.argv.includes("--write")) {'), "writes only on --write");
 });
