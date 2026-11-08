@@ -221,6 +221,8 @@ const isCount = (v) => typeof v === "number" && Number.isInteger(v) && v >= 0;
  *                        incomplete Match par) before any RPC: change the answer
  *   client_outdated      426 { outcome: "client_outdated" }: the legacy answer path is closed (M2)
  *   unauthorized         401: the session is gone (nothing was processed)
+ *   quiz_cooldown        429 { outcome: "quiz_cooldown", cooldown_until, server_now }: the anti-gætte-pause
+ *                        refused the answer in the database before anything was written (js/quiz-cooldown.js)
  *   uncertain            everything else — no reply, 5xx, a gateway or unknown 4xx without H5's outcome,
  *                        an unreadable body: keep the submission and resend the SAME one by hand
  */
@@ -236,6 +238,13 @@ export async function classifyResponse(result, record) {
     if (status >= 500) return { kind: "uncertain", reason: `http_${status}` };
     if (status === 426 && body && body.outcome === "client_outdated") return { kind: "client_outdated" };
     if (status === 401) return { kind: "unauthorized" };
+    if (status === 429 && body && body.outcome === "quiz_cooldown") {
+      return {
+        kind: "quiz_cooldown",
+        endsAt: typeof body.cooldown_until === "string" ? body.cooldown_until : null,
+        serverNow: typeof body.server_now === "string" ? body.server_now : null,
+      };
+    }
     if (body && REFUSED_OUTCOMES.includes(body.outcome)) {
       if (REFUSAL_STATUS[body.outcome] !== status) return { kind: "uncertain", reason: `http_${status}_${body.outcome}` };
       return { kind: "refused", outcome: body.outcome, reason: typeof body.reason === "string" ? body.reason : null };
