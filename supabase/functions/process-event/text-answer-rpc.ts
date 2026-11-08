@@ -113,18 +113,24 @@ export type V2Submission ={ roundNo: number; submissionId: string; reviewText: s
 // with these names is ignored, because nothing in this module takes them as arguments.
 export const L1_ATTEMPT_CONTEXT = Object.freeze({ mode: "quiz_v1", hintsUsed: 0 });
 
-// Lærligverse L5 + L3 (./attempt-context.ts): with LAERLIGVERSE_ATTEMPT_CONTEXT=on, process-event passes the
-// server-derived mode and hints as `context`; otherwise the argument is omitted and the constants above are sent,
-// exactly as before. Neither value ever comes from the request body.
-export type AttemptContextArg = { readonly mode: string; readonly hintsUsed: number };
+// Lærligverse L5 + L3 (migration 20261108043500, ./attempt-context.ts): with LAERLIGVERSE_ATTEMPT_CONTEXT=on,
+// process-event passes serverContext = true and the call goes to the WRAPPER (process_question_attempt_with_context /
+// process_text_answer_with_context). The wrapper locks the round, derives mode (served_mode) and hints (the server's
+// hint log) in the SAME transaction and calls the _v2 function above unchanged — so no p_mode or p_hints_used is
+// sent at all. Off (the default): exactly the call above, with the L1 constants. Neither value ever comes from the
+// request body.
+export const ATTEMPT_CONTEXT_RPCS = Object.freeze({
+  mc: "process_question_attempt_with_context",
+  text: "process_text_answer_with_context",
+});
 
 export async function callProcessQuestionAttemptV2(
   makeAdminClient: () => RpcClient,
   attempt: Omit<QuestionAttempt, "questionShownAt"> & V2Submission,
-  context: AttemptContextArg = L1_ATTEMPT_CONTEXT,
+  serverContext = false,
 ): Promise<RpcResult> {
   const admin = makeAdminClient();
-  return await admin.rpc("process_question_attempt_v2", {
+  const args = {
     p_student_id: attempt.studentId,
     p_question_instance_id: attempt.instanceId,
     p_answer: attempt.answer,
@@ -132,18 +138,22 @@ export async function callProcessQuestionAttemptV2(
     p_submission_id: attempt.submissionId,
     p_review_text: attempt.reviewText,
     p_misconception_type: attempt.misconceptionType,
-    p_mode: context.mode,
-    p_hints_used: context.hintsUsed,
+  };
+  if (serverContext === true) return await admin.rpc(ATTEMPT_CONTEXT_RPCS.mc, args);
+  return await admin.rpc("process_question_attempt_v2", {
+    ...args,
+    p_mode: L1_ATTEMPT_CONTEXT.mode,
+    p_hints_used: L1_ATTEMPT_CONTEXT.hintsUsed,
   });
 }
 
 export async function callProcessTextAnswerV2(
   makeAdminClient: () => RpcClient,
   award: TextAnswerAward & V2Submission,
-  context: AttemptContextArg = L1_ATTEMPT_CONTEXT,
+  serverContext = false,
 ): Promise<RpcResult> {
   const admin = makeAdminClient();
-  return await admin.rpc("process_text_answer_v2", {
+  const args = {
     p_instance_id: award.instanceId,
     p_user_id: award.userId,
     p_user_answer: award.answer,
@@ -152,7 +162,11 @@ export async function callProcessTextAnswerV2(
     p_submission_id: award.submissionId,
     p_review_text: award.reviewText,
     p_misconception_type: award.misconceptionType,
-    p_mode: context.mode,
-    p_hints_used: context.hintsUsed,
+  };
+  if (serverContext === true) return await admin.rpc(ATTEMPT_CONTEXT_RPCS.text, args);
+  return await admin.rpc("process_text_answer_v2", {
+    ...args,
+    p_mode: L1_ATTEMPT_CONTEXT.mode,
+    p_hints_used: L1_ATTEMPT_CONTEXT.hintsUsed,
   });
 }

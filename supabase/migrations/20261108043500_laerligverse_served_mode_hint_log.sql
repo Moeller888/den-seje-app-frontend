@@ -12,7 +12,18 @@
 --
 -- DEPENDS ON: L1 K1 (20261103110000, NOT applied in production) — the hint text is read from the round's
 -- delivered snapshot (question_instances.served_snapshot) when there is one, and the mode/hints this file
--- makes derivable are only recorded by K1's _v2 functions. Order: K1 → THIS FILE. Nothing else unapplied.
+-- makes derivable are only recorded by K1's _v2 functions, which the two wrappers below call UNCHANGED. The
+-- guard pins K1's two _v2 bodies (md5 439186fa… / 809675f9…, signatures with p_mode text, p_hints_used
+-- integer): a K1 change must be reviewed here first. Order: K1 → THIS FILE. Nothing else unapplied.
+-- Compatible with the anti-guess cooldown (20261105130000, #610, not applied either), in either order: it only
+-- adds triggers on question_instances and changes none of its privileges or policies; its trigger fires
+-- inside _v2, i.e. inside the wrappers' transaction, and its refusal (LQ429) propagates unchanged.
+--
+-- PRIVILEGE PRE-STATE (verified, fails loud otherwise): on question_instances anon and authenticated hold
+-- exactly the table-level privileges UPDATE, DELETE, REFERENCES, TRIGGER (catalog "wdxt": no INSERT since
+-- 20261015120000, no SELECT since 20261018170000, no TRUNCATE/MAINTAIN since 20261027160000), PUBLIC holds
+-- nothing, and the only column-level privilege of either role is SELECT. Before applying in production a
+-- read-only catalog check must confirm the same (relacl and attacl of public.question_instances).
 --
 -- WHAT CHANGES (and nothing else)
 --   1. question_instances.served_mode text NULL, CHECK in (quiz_v1, practice, check, review, application).
@@ -63,6 +74,20 @@
 --      repository has content.hints yet (2026-11-08): until content supplies them, every request is
 --      hint_unavailable. The text is never stored in the log and never part of the public DTO
 --      (_shared/question-dto.ts PUBLIC_CONTENT_KEYS).
+--   4. ATOMIC ATTEMPT CONTEXT: public.process_question_attempt_with_context(…7 args…) and
+--      public.process_text_answer_with_context(…8 args…) → jsonb, SECURITY INVOKER, EXECUTE for service_role
+--      only. process-event (LAERLIGVERSE_ATTEMPT_CONTEXT=on, H5 path) calls them INSTEAD of K1's _v2 and sends
+--      no mode or hints at all. In ONE transaction each wrapper
+--        a. locks the pupil's question_instances row FOR UPDATE — the same row lock request_question_hint
+--           takes, so a hint request and an answer for one instance are strictly ordered;
+--        b. derives p_mode = served_mode (NULL → quiz_v1) and p_hints_used = the number of distinct
+--           hint_level rows logged for (instance, pupil, p_round_no), at most 3, read AFTER the lock;
+--        c. calls K1's _v2 unchanged with those two values and returns its jsonb verbatim (every outcome,
+--           replay included: a replay returns the attempt row's ORIGINAL values, never re-counted).
+--      Order under contention: a hint committed before the answer's lock is counted; a hint that waits on
+--      the lock re-reads the row after the answer committed, sees answered = true and is refused
+--      (round_closed). The attempt row is append-only (H5's trigger question_attempts_append_only; no API
+--      role may write question_attempts), so hints_used can never be changed after registration.
 --   Hints change no XP, coins, streak, quest, mastery, level or teacher statistic: nothing here touches
 --   those tables, and none of them reads question_hint_requests.
 --   No row is written by this file. No backfill.
@@ -73,6 +98,8 @@
 -- result is verified at the end (privileges, RLS, trigger) or the whole file rolls back.
 --
 -- ROLLBACK (no row may have been written to question_hint_requests; served_mode is dropped with its data):
+--   DROP FUNCTION public.process_question_attempt_with_context(uuid,uuid,text,integer,uuid,text,text);
+--   DROP FUNCTION public.process_text_answer_with_context(uuid,uuid,text,boolean,integer,uuid,text,text);
 --   DROP FUNCTION public.request_question_hint(uuid,uuid,integer,integer,uuid);
 --   DROP TABLE public.question_hint_requests;
 --   DROP TRIGGER question_instances_served_mode ON public.question_instances;
@@ -98,10 +125,18 @@ BEGIN
     RAISE EXCEPTION 'L3/L5: L1 K1 (20261103110000) er ikke anvendt — anvend K1 først; intet ændret';
   END IF;
 
+  -- The wrappers call K1's _v2 unchanged: their bodies must be the reviewed K1 bodies.
+  IF (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text,text,integer)')) IS DISTINCT FROM '439186fa94119fec02b8f282eb75dbbd'
+     OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)')) IS DISTINCT FROM '809675f9071eb2a62d1c9a9b2628bc84' THEN
+    RAISE EXCEPTION 'L3/L5: K1''s _v2-funktioner har ikke de gennemgåede kroppe; intet ændret';
+  END IF;
+
   IF EXISTS (SELECT 1 FROM pg_catalog.pg_attribute WHERE attrelid = 'public.question_instances'::regclass
              AND attname = 'served_mode' AND NOT attisdropped) THEN
     IF (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.question_instances_served_mode()')) IS DISTINCT FROM 'af725afa35dcae57ff14a20be9b754ab'
        OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.request_question_hint(uuid,uuid,integer,integer,uuid)')) IS DISTINCT FROM 'f02402e6a546ad3b3c3351182b32148b'
+       OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_question_attempt_with_context(uuid,uuid,text,integer,uuid,text,text)')) IS DISTINCT FROM '05ce60912618d33bb29790289c8984f9'
+       OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_text_answer_with_context(uuid,uuid,text,boolean,integer,uuid,text,text)')) IS DISTINCT FROM 'fdd851a11f5418e7652310e269b3fb2a'
        OR to_regclass('public.question_hint_requests') IS NULL THEN
       RAISE EXCEPTION 'L3/L5: kolonnen served_mode findes, men funktionerne eller hint-loggen er ukendte; intet ændret';
     END IF;
@@ -111,8 +146,24 @@ BEGIN
 
   IF to_regclass('public.question_hint_requests') IS NOT NULL
      OR to_regprocedure('public.request_question_hint(uuid,uuid,integer,integer,uuid)') IS NOT NULL
-     OR to_regprocedure('public.question_instances_served_mode()') IS NOT NULL THEN
+     OR to_regprocedure('public.question_instances_served_mode()') IS NOT NULL
+     OR to_regprocedure('public.process_question_attempt_with_context(uuid,uuid,text,integer,uuid,text,text)') IS NOT NULL
+     OR to_regprocedure('public.process_text_answer_with_context(uuid,uuid,text,boolean,integer,uuid,text,text)') IS NOT NULL THEN
     RAISE EXCEPTION 'L3/L5: hint-loggen eller en funktion findes allerede uden served_mode; intet ændret';
+  END IF;
+
+  -- Privilege pre-state (see the header): the column-level rework below is derived from exactly this.
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_class c, LATERAL aclexplode(c.relacl) x
+             WHERE c.oid = 'public.question_instances'::regclass AND x.grantee = 0)
+     OR EXISTS (SELECT 1 FROM pg_catalog.pg_attribute a, LATERAL aclexplode(a.attacl) x
+                WHERE a.attrelid = 'public.question_instances'::regclass AND a.attnum > 0 AND NOT a.attisdropped
+                  AND (x.grantee = 0 OR (x.grantee IN (SELECT oid FROM pg_catalog.pg_roles WHERE rolname IN ('anon', 'authenticated'))
+                                         AND x.privilege_type <> 'SELECT')))
+     OR (SELECT string_agg(r.rolname || ':' || x.privilege_type, ',' ORDER BY r.rolname, x.privilege_type)
+         FROM pg_catalog.pg_class c CROSS JOIN LATERAL aclexplode(c.relacl) x JOIN pg_catalog.pg_roles r ON r.oid = x.grantee
+         WHERE c.oid = 'public.question_instances'::regclass AND r.rolname IN ('anon', 'authenticated'))
+        IS DISTINCT FROM 'anon:DELETE,anon:REFERENCES,anon:TRIGGER,anon:UPDATE,authenticated:DELETE,authenticated:REFERENCES,authenticated:TRIGGER,authenticated:UPDATE' THEN
+    RAISE EXCEPTION 'L3/L5: rettighederne på question_instances er ikke de forventede (anon/authenticated: UPDATE, DELETE, REFERENCES, TRIGGER; kolonner kun SELECT); intet ændret';
   END IF;
 
   -- ── 1. L5: served_mode ─────────────────────────────────────────────────────
@@ -326,6 +377,84 @@ $function$$l35_ddl$;
   EXECUTE $l35_ddl$REVOKE ALL ON FUNCTION public.request_question_hint(uuid,uuid,integer,integer,uuid) FROM PUBLIC, anon, authenticated, service_role$l35_ddl$;
   EXECUTE $l35_ddl$GRANT EXECUTE ON FUNCTION public.request_question_hint(uuid,uuid,integer,integer,uuid) TO service_role$l35_ddl$;
 
+  -- ── 4. Atomic attempt context: lock, derive, call K1's _v2 unchanged ───────
+  EXECUTE $l35_ddl$CREATE FUNCTION public.process_question_attempt_with_context(
+  p_student_id           uuid,
+  p_question_instance_id uuid,
+  p_answer               text,
+  p_round_no             integer,
+  p_submission_id        uuid,
+  p_review_text          text,
+  p_misconception_type   text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_mode  text;
+  v_hints integer;
+BEGIN
+  -- The pupil's round, locked: request_question_hint takes the same row lock, so no hint can be logged
+  -- between the count below and the answer _v2 registers in this transaction.
+  SELECT qi.served_mode INTO v_mode
+  FROM public.question_instances qi
+  WHERE qi.id = p_question_instance_id AND qi.student_id = p_student_id
+  FOR UPDATE;
+  v_mode := coalesce(v_mode, 'quiz_v1');
+
+  SELECT least(3, count(DISTINCT h.hint_level))::integer INTO v_hints
+  FROM public.question_hint_requests h
+  WHERE h.question_instance_id = p_question_instance_id AND h.student_id = p_student_id
+    AND h.round_no = p_round_no;
+
+  RETURN public.process_question_attempt_v2(p_student_id, p_question_instance_id, p_answer, p_round_no,
+    p_submission_id, p_review_text, p_misconception_type, v_mode, v_hints);
+END;
+$function$$l35_ddl$;
+
+  EXECUTE $l35_ddl$CREATE FUNCTION public.process_text_answer_with_context(
+  p_instance_id        uuid,
+  p_user_id            uuid,
+  p_user_answer        text,
+  p_is_correct         boolean,
+  p_round_no           integer,
+  p_submission_id      uuid,
+  p_review_text        text,
+  p_misconception_type text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_mode  text;
+  v_hints integer;
+BEGIN
+  -- As process_question_attempt_with_context: lock the round, derive mode and hints, then K1's _v2.
+  SELECT qi.served_mode INTO v_mode
+  FROM public.question_instances qi
+  WHERE qi.id = p_instance_id AND qi.student_id = p_user_id
+  FOR UPDATE;
+  v_mode := coalesce(v_mode, 'quiz_v1');
+
+  SELECT least(3, count(DISTINCT h.hint_level))::integer INTO v_hints
+  FROM public.question_hint_requests h
+  WHERE h.question_instance_id = p_instance_id AND h.student_id = p_user_id
+    AND h.round_no = p_round_no;
+
+  RETURN public.process_text_answer_v2(p_instance_id, p_user_id, p_user_answer, p_is_correct, p_round_no,
+    p_submission_id, p_review_text, p_misconception_type, v_mode, v_hints);
+END;
+$function$$l35_ddl$;
+
+  EXECUTE $l35_ddl$REVOKE ALL ON FUNCTION public.process_question_attempt_with_context(uuid,uuid,text,integer,uuid,text,text) FROM PUBLIC, anon, authenticated, service_role$l35_ddl$;
+  EXECUTE $l35_ddl$GRANT EXECUTE ON FUNCTION public.process_question_attempt_with_context(uuid,uuid,text,integer,uuid,text,text) TO service_role$l35_ddl$;
+  EXECUTE $l35_ddl$REVOKE ALL ON FUNCTION public.process_text_answer_with_context(uuid,uuid,text,boolean,integer,uuid,text,text) FROM PUBLIC, anon, authenticated, service_role$l35_ddl$;
+  EXECUTE $l35_ddl$GRANT EXECUTE ON FUNCTION public.process_text_answer_with_context(uuid,uuid,text,boolean,integer,uuid,text,text) TO service_role$l35_ddl$;
+
   -- ── Verification: the result is exactly as intended, or nothing is changed ──
   IF (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.question_instances_served_mode()')) IS DISTINCT FROM 'af725afa35dcae57ff14a20be9b754ab'
      OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.request_question_hint(uuid,uuid,integer,integer,uuid)')) IS DISTINCT FROM 'f02402e6a546ad3b3c3351182b32148b'
@@ -344,7 +473,17 @@ $function$$l35_ddl$;
      OR has_function_privilege('authenticated', 'public.request_question_hint(uuid,uuid,integer,integer,uuid)', 'EXECUTE')
      OR NOT has_function_privilege('service_role', 'public.request_question_hint(uuid,uuid,integer,integer,uuid)', 'EXECUTE')
      OR (SELECT prosecdef FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.request_question_hint(uuid,uuid,integer,integer,uuid)'))
-     OR (SELECT prosecdef FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.question_instances_served_mode()')) THEN
+     OR (SELECT prosecdef FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.question_instances_served_mode()'))
+     OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_question_attempt_with_context(uuid,uuid,text,integer,uuid,text,text)')) IS DISTINCT FROM '05ce60912618d33bb29790289c8984f9'
+     OR (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_text_answer_with_context(uuid,uuid,text,boolean,integer,uuid,text,text)')) IS DISTINCT FROM 'fdd851a11f5418e7652310e269b3fb2a'
+     OR (SELECT prosecdef FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_question_attempt_with_context(uuid,uuid,text,integer,uuid,text,text)'))
+     OR (SELECT prosecdef FROM pg_catalog.pg_proc WHERE oid = to_regprocedure('public.process_text_answer_with_context(uuid,uuid,text,boolean,integer,uuid,text,text)'))
+     OR has_function_privilege('anon', 'public.process_question_attempt_with_context(uuid,uuid,text,integer,uuid,text,text)', 'EXECUTE')
+     OR has_function_privilege('authenticated', 'public.process_question_attempt_with_context(uuid,uuid,text,integer,uuid,text,text)', 'EXECUTE')
+     OR NOT has_function_privilege('service_role', 'public.process_question_attempt_with_context(uuid,uuid,text,integer,uuid,text,text)', 'EXECUTE')
+     OR has_function_privilege('anon', 'public.process_text_answer_with_context(uuid,uuid,text,boolean,integer,uuid,text,text)', 'EXECUTE')
+     OR has_function_privilege('authenticated', 'public.process_text_answer_with_context(uuid,uuid,text,boolean,integer,uuid,text,text)', 'EXECUTE')
+     OR NOT has_function_privilege('service_role', 'public.process_text_answer_with_context(uuid,uuid,text,boolean,integer,uuid,text,text)', 'EXECUTE') THEN
     RAISE EXCEPTION 'L3/L5: resultatet blev ikke som forventet; intet ændret';
   END IF;
 END

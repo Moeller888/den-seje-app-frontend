@@ -46,7 +46,9 @@ const FILE = "20261108043500_laerligverse_served_mode_hint_log.sql";
 const SQL = () => readMigration(FILE);
 const HINT_FN = "public.request_question_hint(uuid,uuid,integer,integer,uuid)";
 const MODE_FN = "public.question_instances_served_mode()";
-const MD5 = { hint: "f02402e6a546ad3b3c3351182b32148b", mode: "af725afa35dcae57ff14a20be9b754ab" };
+const MD5 = { hint: "f02402e6a546ad3b3c3351182b32148b", mode: "af725afa35dcae57ff14a20be9b754ab", mcw: "05ce60912618d33bb29790289c8984f9", txw: "fdd851a11f5418e7652310e269b3fb2a" };
+const MC_WRAP = "public.process_question_attempt_with_context(uuid,uuid,text,integer,uuid,text,text)";
+const TXT_WRAP = "public.process_text_answer_with_context(uuid,uuid,text,boolean,integer,uuid,text,text)";
 
 const code = async (p) => { try { await p; return null; } catch (e) { return e.code ?? String(e.message); } };
 const one = async (db, sql, params = []) => (await db.query(sql, params)).rows[0];
@@ -69,6 +71,8 @@ let noK1Error;
 let privsBefore;
 let tablePrivsBefore;
 let rerunSame;
+let grantRefusals;
+let k1BodyRefusal;
 before(async () => {
   db = new PGlite();
   await db.exec(PLATFORM);
@@ -78,11 +82,33 @@ before(async () => {
   noK1Error = await code(db.exec(SQL()));
   noK1Error = { code: noK1Error, column: (await one(db, `SELECT count(*)::int n FROM pg_attribute WHERE attrelid = 'public.question_instances'::regclass AND attname = 'served_mode'`)).n };
   await db.exec(readMigration(K1));
+  // Fail loud on an unexpected privilege pre-state: each deviation stops the file and changes nothing.
+  const deviations = [
+    ["GRANT INSERT ON public.question_instances TO authenticated", "REVOKE INSERT ON public.question_instances FROM authenticated"],
+    ["GRANT SELECT ON public.question_instances TO anon", "REVOKE SELECT ON public.question_instances FROM anon"],
+    ["GRANT UPDATE (next_review_at) ON public.question_instances TO authenticated", "REVOKE UPDATE (next_review_at) ON public.question_instances FROM authenticated"],
+    ["GRANT UPDATE ON public.question_instances TO PUBLIC", "REVOKE UPDATE ON public.question_instances FROM PUBLIC"],
+    ["REVOKE TRIGGER ON public.question_instances FROM anon", "GRANT TRIGGER ON public.question_instances TO anon"],
+  ];
+  grantRefusals = [];
+  for (const [deviate, restore] of deviations) {
+    await db.exec(deviate);
+    const err = await code(db.exec(SQL()));
+    const col = (await one(db, `SELECT count(*)::int n FROM pg_attribute WHERE attrelid = 'public.question_instances'::regclass AND attname = 'served_mode'`)).n;
+    grantRefusals.push({ deviate, err, col });
+    await db.exec(restore);
+  }
+  // K1's _v2 bodies are pinned: a different body stops the file.
+  await db.exec(`ALTER FUNCTION public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer) RENAME TO process_text_answer_v2_saved`);
+  await db.exec(`CREATE FUNCTION public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer) RETURNS jsonb LANGUAGE sql AS $f$ SELECT '{}'::jsonb $f$`);
+  k1BodyRefusal = await code(db.exec(SQL()));
+  await db.exec(`DROP FUNCTION public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)`);
+  await db.exec(`ALTER FUNCTION public.process_text_answer_v2_saved(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer) RENAME TO process_text_answer_v2`);
   privsBefore = (await db.query(COLUMN_PRIVS)).rows;
   tablePrivsBefore = (await db.query(TABLE_PRIVS)).rows;
   await db.exec(SQL());
   const snap = async () => JSON.stringify([(await db.query(COLUMN_PRIVS)).rows, (await db.query(TABLE_PRIVS)).rows,
-    (await db.query(`SELECT proname, md5(prosrc) m, proacl::text a FROM pg_proc WHERE proname IN ('request_question_hint','question_instances_served_mode') ORDER BY 1`)).rows,
+    (await db.query(`SELECT proname, md5(prosrc) m, proacl::text a FROM pg_proc WHERE proname IN ('request_question_hint','question_instances_served_mode','process_question_attempt_with_context','process_text_answer_with_context') ORDER BY 1`)).rows,
     (await db.query(`SELECT relacl::text a, relrowsecurity r FROM pg_class WHERE oid = 'public.question_hint_requests'::regclass`)).rows]);
   const s1 = await snap();
   await db.exec(SQL());
@@ -146,10 +172,25 @@ test("guard: without K1 the file aborts and changes nothing; a second run change
   assert.equal(rerunSame, true, "a re-run leaves functions, privileges and RLS identical");
 });
 
+test("guard: an unexpected question_instances privilege pre-state, or a K1 _v2 body other than the reviewed one, stops the file", () => {
+  assert.equal(grantRefusals.length, 5);
+  for (const r of grantRefusals) {
+    assert.equal(r.err, "P0001", `${r.deviate}: refused by the guard`);
+    assert.equal(r.col, 0, `${r.deviate}: nothing changed`);
+  }
+  assert.equal(k1BodyRefusal, "P0001");
+});
+
 test("objects: bodies as pinned, SECURITY INVOKER both, EXECUTE service_role only, trigger enabled", async () => {
   const f = async (sig) => one(db, `SELECT md5(prosrc) m, prosecdef d, proconfig c FROM pg_proc WHERE oid = to_regprocedure($1)`, [sig]);
   assert.deepEqual(await f(HINT_FN), { m: MD5.hint, d: false, c: ['search_path=""'] });
   assert.deepEqual(await f(MODE_FN), { m: MD5.mode, d: false, c: ['search_path=""'] });
+  assert.deepEqual(await f(MC_WRAP), { m: MD5.mcw, d: false, c: ['search_path=""'] });
+  assert.deepEqual(await f(TXT_WRAP), { m: MD5.txw, d: false, c: ['search_path=""'] });
+  for (const role of ["anon", "authenticated", "service_role"]) {
+    const w = await one(db, `SELECT has_function_privilege($1, $2, 'EXECUTE') m, has_function_privilege($1, $3, 'EXECUTE') t`, [role, MC_WRAP, TXT_WRAP]);
+    assert.deepEqual(w, { m: role === "service_role", t: role === "service_role" }, `${role} wrappers`);
+  }
   for (const role of ["anon", "authenticated", "service_role"]) {
     const r = await one(db, `SELECT has_function_privilege($1, $2, 'EXECUTE') h, has_function_privilege($1, $3, 'EXECUTE') t`, [role, HINT_FN, MODE_FN]);
     assert.deepEqual(r, { h: role === "service_role", t: false }, role);
@@ -332,7 +373,7 @@ test("the SQL count rule equals _shared/hints.ts on a matrix of contents", async
   }
 });
 
-test("hints change no XP, coins, streak, quest, attempt, instance or teacher data; only request_question_hint names the log", async () => {
+test("hints change no XP, coins, streak, quest, attempt, instance or teacher data; only the hint function and the two wrappers name the log", async () => {
   const pupil = await addPupil();
   await db.query(`INSERT INTO public.student_progress (student_id, xp, coins) VALUES ($1, 100, 50) ON CONFLICT DO NOTHING`, [pupil]);
   const qi = await serve(pupil, await addQuestion({ step: "guided_practice", hints: HINTS }), { mode: "practice" });
@@ -350,7 +391,8 @@ test("hints change no XP, coins, streak, quest, attempt, instance or teacher dat
   assert.ok(tables.includes("student_progress") && tables.includes("question_attempts") && tables.includes("question_instances"));
   const readers = (await db.query(`SELECT p.proname FROM pg_proc p JOIN pg_namespace s ON s.oid = p.pronamespace
     WHERE s.nspname = 'public' AND p.prosrc ILIKE '%question_hint_requests%' ORDER BY 1`)).rows.map((r) => r.proname);
-  assert.deepEqual(readers, ["request_question_hint"]);
+  // The log is written only by request_question_hint and read only by the two attempt wrappers (L3's count).
+  assert.deepEqual(readers, ["process_question_attempt_with_context", "process_text_answer_with_context", "request_question_hint"]);
   // And the count itself (question_attempts.hints_used) is read by no function at all: only K1's two _v2 functions
   // name it, and only to validate and store it — no reward, mastery, level or teacher function uses it.
   const hintsUsed = (await db.query(`SELECT p.proname FROM pg_proc p JOIN pg_namespace s ON s.oid = p.pronamespace
