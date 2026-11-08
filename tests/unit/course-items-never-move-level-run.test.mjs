@@ -3,7 +3,7 @@
 // the teacher's ordinary mastery figures (get_teacher_visibility, get_student_overview, get_concept_states)
 // — owner decision 6 (2026-11-07). The reward path (XP, coins, streak, total_correct_answers) is untouched.
 //
-// Runs migration 20261107090000_course_items_never_move_level.sql UNMODIFIED on PGlite over the FULL
+// Runs migration 20261108150000_course_items_never_move_level.sql UNMODIFIED on PGlite over the FULL
 // isolated replay of the repository (tests/isolated/schema), on top of #623's
 // 20261105115000_true_false_mastery_exclusion.sql (the migration's required predecessor).
 //
@@ -39,7 +39,7 @@ import { bootstrapMarkerSql } from "../isolated/seed/seed-guard.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
-const FILE = "20261107090000_course_items_never_move_level.sql";
+const FILE = "20261108150000_course_items_never_move_level.sql";
 const PREDECESSOR = "20261105115000_true_false_mastery_exclusion.sql";
 const MIGRATION = read(`supabase/migrations/${FILE}`);
 const PREDECESSOR_SQL = read(`supabase/migrations/${PREDECESSOR}`);

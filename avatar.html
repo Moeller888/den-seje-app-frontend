@@ -672,6 +672,11 @@
     #avatarWrap[data-gender="girl"] { --avatar-inner: #f8b8d4; --avatar-outer: #5a0d2a; }
     /* D-242: the local Northstar wardrobe opt-in panel (shown only in an opted-in browser) */
     .northstar-panel { margin-top: 12px; }
+    .northstar-wardrobe { margin-top: 20px; }
+    .northstar-wardrobe .northstar-subtitle { font-size: 14px; margin: 16px 0 8px; }
+    .northstar-wardrobe .northstar-outfit { margin-top: 8px; }
+    .northstar-thumb { position: relative; width: 88px; height: 88px; margin: 0 auto 8px; overflow: hidden; border-radius: 8px; background: #c9d2e3; }
+    .northstar-thumb img { position: absolute; max-width: none; height: auto; }
     .northstar-outfits { display: flex; flex-wrap: wrap; gap: 6px; }
     .northstar-outfit { font: inherit; font-size: 13px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--border-btn); background: var(--btn-bg); color: var(--text-dim); cursor: pointer; }
     .northstar-outfit:hover { background: var(--btn-bg-hover); }
@@ -680,10 +685,46 @@
     .northstar-subtitle { font-size: 13px; color: var(--text-dim); margin: 10px 0 6px; }
     .northstar-note { font-size: 12px; color: var(--text-dim); margin: 6px 0 0; }
     .northstar-outfit:disabled { opacity: .45; cursor: default; }
+
+    /* ── The avatar stands still; only the right-hand column scrolls ── */
+
+    body { overflow: hidden; }
+
+    .page-shell {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 32px);
+      height: calc(100dvh - 32px);
+    }
+
+    .topbar { flex: none; }
+
+    .layout {
+      flex: 1;
+      min-height: 0;
+      grid-template-rows: minmax(0, 1fr);
+      align-items: stretch;
+    }
+
+    .avatar-panel { min-height: 0; }
+
+    .slot-list { flex: 1; min-height: 0; overflow-y: auto; }
+
+    .right-column { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+
+    @media (max-width: 580px) {
+      .topbar { margin-bottom: 10px; }
+      .layout { grid-template-rows: auto minmax(0, 1fr); gap: 10px; }
+      .avatar-panel { flex-direction: row; align-items: flex-start; padding: 10px; gap: 10px; }
+      .avatar-panel > .panel-title { display: none; }
+      #avatar-preview { width: 120px; height: 180px; }
+      .slot-list { height: 180px; flex: 1; }
+    }
   </style>
 </head>
 <body>
 
+<div class="page-shell">
 <div class="topbar">
   <button class="back-btn" onclick="window.location.href='hub.html'">&#8592; Tilbage</button>
   <h1>Min Avatar</h1>
@@ -702,14 +743,15 @@
       <div id="avatar-preview"><!-- layers injected by JS --></div>
     </div>
 
-    <!-- D-242/D-357: the Northstar wardrobe (js/avatar-northstar-panel.js); stays hidden if the module cannot load -->
+    <!-- D-242: the local opt-in panel, only while the flag is off (js/avatar-northstar-panel.js) -->
     <div class="northstar-panel" id="northstarPanel" hidden></div>
 
     <div class="slot-list" id="slotList"><!-- slot rows injected by JS --></div>
     <div class="synergy-active-badge" id="synergyBadge" style="display:none"></div>
   </div>
 
-  <!-- Right: inventory -->
+  <!-- Right: the only part of the page that scrolls -->
+  <div class="right-column">
   <div class="inventory-panel">
     <div class="panel-title">Dine items</div>
     <div class="inventory-grid" id="inventoryGrid"></div>
@@ -717,9 +759,9 @@
       Du ejer ingen items endnu.<br>
       <a href="shop.html">Gå i butikken</a> for at købe noget!
     </p>
+    <!-- D-359: the Northstar wardrobe, single parts (js/avatar-northstar-panel.js); stays hidden if the module cannot load -->
+    <div class="northstar-wardrobe" id="northstarWardrobe" hidden></div>
   </div>
-
-</div>
 
 <!-- Titles panel -->
 <div class="titles-panel" id="titlesPanel">
@@ -739,6 +781,10 @@
   <div class="identity-buttons" id="hairColorButtons"></div>
   <div class="identity-section-label">Hudtone</div>
   <div class="identity-buttons" id="skinToneButtons"></div>
+</div>
+  </div>
+
+</div>
 </div>
 
 <script type="module">
@@ -1650,13 +1696,18 @@ try {
   const layers = await import("./js/avatar-layers.js");
   ns.applyNorthstarUrlOptIn(location.search);
   layers.northstarUseAccount(avatarIdentity);
-  ns.mountNorthstarPanel(document.getElementById("northstarPanel"), document.getElementById("avatar-preview"), {
-    saveChoice: async (choice) => {
-      const { error } = await supabase.rpc("set_avatar_northstar", { p_choice: choice });
-      if (error) console.error("set_avatar_northstar failed:", error.message);
-      return !error;
-    },
-  });
+  const preview = document.getElementById("avatar-preview");
+  if (layers.AVATAR_NORTHSTAR_WARDROBE) {
+    ns.mountNorthstarWardrobe(document.getElementById("northstarWardrobe"), preview, {
+      saveChoice: async (choice) => {
+        const { error } = await supabase.rpc("set_avatar_northstar", { p_choice: choice });
+        if (error) console.error("set_avatar_northstar failed:", error.message);
+        return !error;
+      },
+    });
+  } else {
+    ns.mountNorthstarPanel(document.getElementById("northstarPanel"), preview);
+  }
 } catch (_e) { /* no panel */ }
 // Fallback: renderAvatarC2() now inits the engines once its layers are appended
 // (the atomic R2 preload can delay that past this point). Guard against a double

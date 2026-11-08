@@ -118,6 +118,13 @@ Transitions are validated; invalid transitions are blocked and logged via `logEr
 (`app.js:26`). The machine guarantees there is **no dead UI state**: every error path re-enables
 input and returns to a valid state. Never bypass this machine.
 
+`COOLDOWN` (anti-gætte-pause, D-350, [quiz-anti-guess-cooldown.md](./quiz-anti-guess-cooldown.md)):
+entered from `SUBMITTING_ANSWER` (the server refused the answer), `TRANSITIONING` (the wrong answer
+just shown started a pause — asked once, BEFORE D-347's break offer, which is then held until the
+pause is over; owner decision 2026-11-05), `IDLE` (a reload / new tab during a
+pause) or `AWAITING_ANSWER` (another tab reported a pause); left only to `LOADING_QUESTION` via
+"Fortsæt quizzen", which unlocks at 00:00. The server enforces the pause; the state only shows it.
+
 ## 4. Database (Postgres + RLS)
 
 Schema and most content are managed as **versioned SQL migrations** in `supabase/migrations/`
@@ -160,7 +167,8 @@ Schema and most content are managed as **versioned SQL migrations** in `supabase
   (`minigame_break_after_answer` / `_respond` / `_start` / `_finish`). Active quiz time is derived on the
   server from `question_instances.created_at/answered_at`; the minigame pages only run with a pass the
   server redeems once. The quiz calls it after each registered answer, fail-soft. Source of truth:
-  [`decisions/D-347.md`](decisions/D-347.md).
+  [`decisions/D-347.md`](decisions/D-347.md); the interval (one constant in `minigame_break_after_answer`)
+  becomes 10 minutes with [`decisions/D-364.md`](decisions/D-364.md) (migration `20261107090000`).
 - **Progression & retention:** themes system, streak system, retention loops, weekly quests,
   achievements (+ hidden/wave2/progress/rewards), titles, leaderboard, social.
 - **Avatar:** avatar slot system (`equipped_slots`), slot/wings/aura items, and the avatar asset
@@ -260,6 +268,14 @@ submitAnswer() [app.js]
              └─ else (MC / number)         → PATH 3: process_question_attempt RPC
         → response: { status, correct_answer, review_text?, misconception_type? }
 ```
+**Anti-gætte-pause (D-350, NOT applied in production):** triggers on `question_instances`
+(`quiz_cooldown_guard` BEFORE / `quiz_cooldown_register` AFTER the `answered` false → true update that
+every grading RPC makes) refuse a graded answer during a pause with SQLSTATE `LQ429` and start a pause
+after 10 auto-graded wrong answers within 60 s (values in `public.quiz_cooldown_config`). `process-event`
+maps the refusal to `429 { outcome: "quiz_cooldown", cooldown_until, server_now }`
+(`process-event/quiz-cooldown.ts`); the grading RPCs themselves are unchanged. Full design:
+[quiz-anti-guess-cooldown.md](./quiz-anti-guess-cooldown.md).
+
 This is the single most important integration boundary in the system: **AI grading, OCR, and
 speech-to-text all attach here** (PATH 1 / pre-submit), and must preserve this response shape
 (see §13 and [AI_GUIDELINES.md](./AI_GUIDELINES.md)).
@@ -294,6 +310,36 @@ Rules (binding):
    (server-evaluated, `p_is_correct` computed by the evaluator), or teacher review (`answer_type = "long"`).
    Scoring is binary (correct/incorrect) — no partial credit — so XP/coins, spaced repetition and
    the response shape `{ status, correct_answer, review_text?, misconception_type? }` stay unchanged.
+
+**Kategorisering (`categorize`, F-05, 2026-11-05 — built, NOT servable, not deployed).**
+Contract, key, guess chance and answer shape in `supabase/functions/_shared/categorize.ts`; browser control
+`js/categorize.js`. The pupil places 4–8 items in 2–3 categories (cause / effect, before / after an event,
+democracy / dictatorship, renewable / not, supports / contradicts a claim); categories may hold different
+numbers of items, none is empty. **Each item's category is authored and never randomised — only the
+presentation of the items is shuffled**, once per instance: `question_instances.correct_answer` holds one
+`item:category` pair per shown position. The payload carries `content.categorize = { categories, items
+(shown order) }` only — never an item's category, and never a count per category (a shown 3 + 3 split
+would raise a pure guess on 6 items from 1 in 62 to 1 in 20). The control is one labelled group per item
+with a button per category (`aria-pressed`; mouse, touch, keyboard and screen reader alike, nothing
+dragged), every placement announced; Svar sends only a complete placement — an incomplete one is refused
+visibly ("… 2 mangler") with nothing sent. `process-event` accepts only one category per shown item
+(`canonicalCategorizeAnswer`) and `process_question_attempt` grades it like MC — **all or nothing, one
+reward path** (tested on the replayed production function: `tests/unit/categorize-grading.test.mjs`, all
+15 wrong placements of 4 items in 2 categories earn 0). *Guess chance* is computed for the task, never
+assumed: 1/kⁿ for a pure guess, 1/S(n,k) for a pupil who knows no category is empty (2 × 4: 1/14; 2 × 6:
+1/62; 3 × 6: 1/540) — floors for a pupil who knows nothing; partial knowledge raises it steeply (sure of 4
+of 6 in 2 categories → the last 2 are 1 in 4). The authoring check flags tasks above 1 in 20 as practice
+(2 × 4), matching Rækkefølge's 4-item evidence size. *Why all or nothing:* partial credit is undecided
+(D-277 LP-7), and per-item credit would pay ~50 % for a random 2-category placement; the feedback still
+states the whole correct placement, grouped by category. *Pedagogy:* the kind trains concept use —
+applying a concept to cases the pupil has not seen word for word — so it belongs after the introduction
+and comprehension check, as application (`tools/stimulus/examples/grundloven-1849-kategorisering.json`).
+*Adaptive engine:* a correct first answer folds like MC (its guess floor is far below MC's 1/4 from 4
+items up), so no exclusion like Sandt/falsk's is needed; `guessFloor` is null because it depends on the
+task. **Before pupils can get it:** a reviewed activation migration (`questions_answer_format_check` and
+`content_valid_check` refuse `categorize` today; `question_is_servable` flips in the same PR as the
+registry), deploys of `get-next-question` (manifest in the rollout runbook) and `process-event`, and
+content — each its own owner GO.
 
 **Rækkefølge / tidslinje (`order_items`, F-04, 2026-11-05 — built, NOT servable, not deployed).**
 Contract, key and answer shape in `supabase/functions/_shared/order-items.ts`; browser control

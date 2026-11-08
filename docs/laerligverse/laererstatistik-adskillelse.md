@@ -1,7 +1,7 @@
 # Lærerstatistik: almindelig mestring adskilt fra kursusprogression
 
 **Status:** F10-B2, 2026-11-07, efter ejerbeslutning 6 ("Adskil almindelig faglig mestring fra kursusresultater. Arkivskabets undervisningsopgaver må ikke forvride elevens almindelige mestringsprocent").
-- **Del A** er implementeret i migration `20261107090000` (PR #647), men er **ikke anvendt**.
+- **Del A** er implementeret i migration `20261108150000` (PR #647), men er **ikke anvendt**.
 - **Del B** er et kontraktforslag. Det ændrer lærerens brugerflade og kræver derfor en særskilt produktbeslutning.
 
 ## Kursusmarkøren

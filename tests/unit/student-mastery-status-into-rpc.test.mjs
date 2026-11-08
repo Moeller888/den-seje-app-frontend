@@ -207,11 +207,11 @@ test("the migration sorts after every migration that touches either object", () 
   // The second documented successor, 20261105115000_true_false_mastery_exclusion.sql (not applied), keeps
   // get_student_overview's gate, shape and grants and only drops true_false answers from the first-answer
   // ratio; true-false-mastery-exclusion-run proves the body is the live body plus that predicate.
-  // The third documented successor, 20261107090000_course_items_never_move_level.sql (not applied, F10-B2),
+  // The third documented successor, 20261108150000_course_items_never_move_level.sql (not applied, F10-B2),
   // keeps the gate, shape and grants and only drops course items (metadata.learning_step) from the
   // first-answer ratio — numerator and denominator; course-items-never-move-level-run proves it.
   assert.deepEqual(after, ["20261029150000_teacher_stats_from_answers.sql", "20261105115000_true_false_mastery_exclusion.sql",
-    "20261107090000_course_items_never_move_level.sql"],
+    "20261108150000_course_items_never_move_level.sql"],
     "it must apply last among them, followed only by the documented successors");
   assert.ok(touching.includes("20260926000000_teacher_student_overview_to_rpc.sql"),
     "the prior migration also touches the function and must sort before this one");

@@ -1,6 +1,6 @@
 // Spil-menu: the entrance to the quizzes. Auth guard only.
 // D-347: the minigames are no longer listed here. They are offered as a spillepause inside the quiz
-// after 20 minutes of active quiz time (js/minigame-break.js); an old ?fane=minigames address simply
+// after 10 minutes of active quiz time (D-364) (js/minigame-break.js); an old ?fane=minigames address simply
 // shows the subjects.
 
 import { supabase } from "../supabaseClient.js";

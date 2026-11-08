@@ -280,12 +280,12 @@ test("the migration sorts after the newest live migration and its version is uni
   // The second documented successor, 20261105115000_true_false_mastery_exclusion (not applied), adds one
   // predicate (true_false is not counted) and nothing else; its suite (true-false-mastery-exclusion-run)
   // proves the body is the live body plus that line, with grants, owner and attributes unchanged.
-  // The third documented successor, 20261107090000_course_items_never_move_level (not applied, F10-B2),
+  // The third documented successor, 20261108150000_course_items_never_move_level (not applied, F10-B2),
   // is #623's body plus one predicate (course items, metadata.learning_step, are not counted) and nothing
   // else; its suite (course-items-never-move-level-run) proves body = #623's body plus that predicate, with
   // grants, owner and attributes unchanged.
   assert.deepEqual(later, ["20261029150000_teacher_stats_from_answers.sql", "20261105115000_true_false_mastery_exclusion.sql",
-    "20261107090000_course_items_never_move_level.sql"],
+    "20261108150000_course_items_never_move_level.sql"],
     "the only later migrations touching get_teacher_visibility are the documented successors");
 });
 

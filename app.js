@@ -16,6 +16,7 @@ import { prepareChoiceOptions } from "./js/answer-options.js";
 import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer, shortTextCorrection } from "./js/answer-input.js";
 import { buildMatchPairsAnswer, matchCorrectionText, readMatchLayout } from "./js/match-pairs.js";
 import { buildOrderAnswer, orderCorrectionText, readOrderLayout } from "./js/order-items.js";
+import { buildCategorizeAnswer, categorizeCorrectionText, readCategorizeLayout } from "./js/categorize.js";
 import { readStimulus, buildStimulus } from "./js/stimulus.js";
 import { buildTrueFalseAnswer, readTrueFalseContent, trueFalseCorrection } from "./js/true-false.js";
 import { buildNumberAnswer } from "./js/number-answer.js";
@@ -29,6 +30,11 @@ import {
   blockRecord, h5RequestBody, classifyResponse, isClientOutdatedError,
   REFUSAL_TEXT, UNCERTAIN_TEXT, CLIENT_OUTDATED_TEXT, MISSING_ROUND_TEXT, STORAGE_TEXT, INCOMPATIBLE_TEXT,
 } from "./js/answer-submission.js";
+// Anti-gætte-pause: the server enforces it; this only shows it (js/quiz-cooldown.js).
+import {
+  COOLDOWN_TEXT, cooldownFromServer, createCountdown, formatRemaining, cooldownFromInvokeError, fetchCooldownStatus,
+  openCooldownChannel, announceCooldown,
+} from "./js/quiz-cooldown.js";
 
 window.__sb = supabase;
 
@@ -73,17 +79,21 @@ const UI_STATES = {
   AWAITING_ANSWER: "AWAITING_ANSWER",
   SUBMITTING_ANSWER: "SUBMITTING_ANSWER",
   REFLECTING: "REFLECTING",
-  TRANSITIONING: "TRANSITIONING"
+  TRANSITIONING: "TRANSITIONING",
+  // Anti-gætte-pause: the server refused answers for a while. Left only by "Fortsæt quizzen"
+  // (→ LOADING_QUESTION), which is enabled when the countdown reaches 00:00.
+  COOLDOWN: "COOLDOWN"
 };
 
 function setState(newState) {
   const allowed = {
-    IDLE: ["LOADING_QUESTION"],
+    IDLE: ["LOADING_QUESTION", "COOLDOWN"],
     LOADING_QUESTION: ["AWAITING_ANSWER"],
-    AWAITING_ANSWER: ["SUBMITTING_ANSWER"],
-    SUBMITTING_ANSWER: ["TRANSITIONING", "AWAITING_ANSWER", "REFLECTING"],
+    AWAITING_ANSWER: ["SUBMITTING_ANSWER", "COOLDOWN"],
+    SUBMITTING_ANSWER: ["TRANSITIONING", "AWAITING_ANSWER", "REFLECTING", "COOLDOWN"],
     REFLECTING: ["TRANSITIONING"],
-    TRANSITIONING: ["LOADING_QUESTION"]
+    TRANSITIONING: ["LOADING_QUESTION", "COOLDOWN"],
+    COOLDOWN: ["LOADING_QUESTION"]
   };
 
   if (!allowed[uiState]?.includes(newState)) {
@@ -106,7 +116,8 @@ function setUIState(newState) {
     AWAITING_ANSWER: "ready",
     TRANSITIONING: "loading",
     SUBMITTING_ANSWER: "loading",
-    REFLECTING: "reflecting"
+    REFLECTING: "reflecting",
+    COOLDOWN: "cooldown"
   };
 
   const domState = map[newState];
@@ -234,6 +245,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   let currentMatchControl = null;
   // Rækkefølge: the control on screen, so a wrong answer can be explained in the shown texts.
   let currentOrderControl = null;
+  // Kategorisering: the control on screen, so a wrong answer can be explained in the shown texts.
+  let currentCategorizeControl = null;
 
   // Session rhythm tracking — Section 55.
   // sessionQuestionCount: total answered this session, passed to get-next-question.
@@ -885,12 +898,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     breakCheck = Promise.race([check, timeout]);
   }
 
-  // Returns true when the pupil left for the game (the quiz must load nothing more).
-  async function offerBreakIfDue() {
-    if (!breakCheck) return false;
+  // An offer earned by the answer that also started an anti-gætte-pause (D-350) is held here until the
+  // pause is over, then shown by offerBreakIfDue() exactly as it would have been (owner 2026-11-05:
+  // the pause comes first, the offer is kept). Only this page's memory: after a reload the server
+  // shows the same open offer again at the next registered answer (minigame_break_after_answer).
+  let heldBreakOffer = null;
+
+  // The server's answer for the last registered answer (null: no offer, or none asked for).
+  async function takeBreakOffer() {
+    if (!breakCheck) return null;
     const pending = breakCheck;
     breakCheck = null;
-    const offer = await pending;
+    return await pending;
+  }
+
+  // Returns true when the pupil left for the game (the quiz must load nothing more).
+  async function offerBreakIfDue() {
+    const offer = heldBreakOffer ?? await takeBreakOffer();
+    heldBreakOffer = null;
     if (!offer) return false;
     const m = await loadMinigameBreak();
     if (!m) return false;
@@ -963,6 +988,155 @@ document.addEventListener("DOMContentLoaded", async () => {
     optionsContainer.appendChild(retryBtn);
     if (uiState === UI_STATES.SUBMITTING_ANSWER) setUIState(UI_STATES.AWAITING_ANSWER);
   }
+
+  // ── Anti-gætte-pause (docs/quiz-anti-guess-cooldown.md) ──────────────────────────────────────────
+  // The database refuses answers during a pause; this shows the approved text and a countdown built on
+  // the server's own end time, measured with performance.now() (js/quiz-cooldown.js). The pupil is never
+  // told why in numbers. Other tabs learn of it over BroadcastChannel and ask the server themselves.
+  let cooldownTimer = null;
+  let cooldownCountdown = null;
+  let lastAnswerWasWrong = false;
+  const monoNow = () => (typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now());
+  const cooldownChannel = openCooldownChannel(() => { syncCooldownFromServer(); });
+
+  function cooldownPanel() {
+    let panel = document.getElementById("quiz-cooldown");
+    if (panel) return panel;
+    panel = document.createElement("section");
+    panel.id = "quiz-cooldown";
+    panel.setAttribute("aria-labelledby", "quiz-cooldown-title");
+    panel.setAttribute("aria-describedby", "quiz-cooldown-body quiz-cooldown-note");
+    const title = document.createElement("h2");
+    title.id = "quiz-cooldown-title";
+    title.tabIndex = -1;
+    title.textContent = COOLDOWN_TEXT.title;
+    const body = document.createElement("p");
+    body.id = "quiz-cooldown-body";
+    body.textContent = COOLDOWN_TEXT.body;
+    const timer = document.createElement("div");
+    timer.id = "quiz-cooldown-timer";
+    timer.setAttribute("role", "timer");
+    timer.setAttribute("aria-live", "off");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.id = "quiz-cooldown-continue";
+    btn.className = "submit-btn";
+    btn.textContent = COOLDOWN_TEXT.button;
+    btn.onclick = () => { exitCooldown(); };
+    const note = document.createElement("p");
+    note.id = "quiz-cooldown-note";
+    note.textContent = COOLDOWN_TEXT.note;
+    panel.append(title, body, timer, btn, note);
+    document.getElementById("game-card")?.appendChild(panel);
+    return panel;
+  }
+
+  function renderCooldownTick() {
+    const panel = document.getElementById("quiz-cooldown");
+    if (!panel || !cooldownCountdown) return;
+    const remaining = cooldownCountdown.remainingMs();
+    const timer = panel.querySelector("#quiz-cooldown-timer");
+    const text = formatRemaining(remaining);
+    if (timer && timer.textContent !== text) timer.textContent = text;
+    const btn = panel.querySelector("#quiz-cooldown-continue");
+    if (remaining > 0) {
+      btn.disabled = true;
+      btn.setAttribute("aria-disabled", "true");
+      return;
+    }
+    clearInterval(cooldownTimer);
+    cooldownTimer = null;
+    // At 00:00 ask the server once (it is the authority; this tab's clock may have drifted or slept).
+    fetchCooldownStatus(supabase, { force: true }).then((s) => {
+      if (uiState !== UI_STATES.COOLDOWN) return;
+      if (s && s.active) { startCooldownCountdown(cooldownFromServer(s.endsAt, s.serverNow)); return; }
+      btn.disabled = false;
+      btn.removeAttribute("aria-disabled");
+      btn.focus();
+    });
+  }
+
+  function startCooldownCountdown(info) {
+    cooldownCountdown = createCountdown(info.remainingMs, monoNow);
+    if (cooldownTimer) clearInterval(cooldownTimer);
+    cooldownTimer = setInterval(renderCooldownTick, 250);
+    renderCooldownTick();
+  }
+
+  // Shows the pause. info = { endsAt, serverNow } from the server (either may be null: then the server
+  // is asked, and only if that fails too is the presentational fallback used).
+  async function enterCooldown(info, { announce = true } = {}) {
+    let timing = cooldownFromServer(info?.endsAt ?? null, info?.serverNow ?? null);
+    if (!timing.verified) {
+      const s = await fetchCooldownStatus(supabase, { force: true });
+      if (s && s.active) timing = cooldownFromServer(s.endsAt, s.serverNow);
+      else if (s && !s.active) timing = { remainingMs: 0, verified: true };
+    }
+    logEvent("QUIZ_COOLDOWN", { verified: timing.verified });
+    stopReadAloud();
+    if (uiState !== UI_STATES.COOLDOWN) setUIState(UI_STATES.COOLDOWN);
+    if (uiState !== UI_STATES.COOLDOWN) {
+      // Not reachable from REFLECTING / TRANSITIONING / LOADING_QUESTION: the next answer is refused by the
+      // server and enters the pause from SUBMITTING_ANSWER instead.
+      return;
+    }
+    questionElement.style.display = "none";
+    optionsContainer.style.display = "none";
+    clearStimulus();   // F-07: a source, image or audio clip belongs to the question; it comes back with it
+    reviewFeedback.classList.remove("visible");
+    reflectionContinue.style.display = "none";
+    feedback.textContent = `${COOLDOWN_TEXT.title} ${COOLDOWN_TEXT.body}`;
+    feedback.className = "feedback-pending sr-only-cooldown";
+    const panel = cooldownPanel();
+    panel.hidden = false;
+    startCooldownCountdown(timing);
+    panel.querySelector("#quiz-cooldown-title")?.focus({ preventScroll: true });
+    if (announce) announceCooldown(cooldownChannel);
+  }
+
+  // "Fortsæt quizzen": loadAndRenderQuestion asks the server once more (COOLDOWN start) and either keeps
+  // the pause (with the server's remaining time) or leaves it through leaveCooldownView().
+  let cooldownExiting = false;
+  async function exitCooldown() {
+    if (uiState !== UI_STATES.COOLDOWN || cooldownExiting) return;
+    if (cooldownCountdown && cooldownCountdown.remainingMs() > 0) return;
+    cooldownExiting = true;
+    const btn = document.getElementById("quiz-cooldown-continue");
+    if (btn) btn.disabled = true;
+    try { await loadAndRenderQuestion(); } finally { cooldownExiting = false; }
+  }
+
+  function leaveCooldownView() {
+    if (cooldownTimer) clearInterval(cooldownTimer);
+    cooldownTimer = null;
+    cooldownCountdown = null;
+    const panel = document.getElementById("quiz-cooldown");
+    if (panel) panel.hidden = true;
+    questionElement.style.display = "";
+    optionsContainer.style.display = "";
+    feedback.textContent = "";
+    feedback.className = "";
+  }
+
+  // Asks the server whether a pause is running: another tab reported one, this page starts, the pupil
+  // returns to the tab, or — afterWrongAnswer — this tab's last answer was wrong and may have been the one
+  // that started the pause (the answer itself is shown normally first; the pause follows at the transition).
+  async function syncCooldownFromServer({ afterWrongAnswer = false } = {}) {
+    const from = [UI_STATES.AWAITING_ANSWER, UI_STATES.IDLE, UI_STATES.COOLDOWN];
+    if (afterWrongAnswer) from.push(UI_STATES.TRANSITIONING);
+    if (!from.includes(uiState)) return false;
+    const s = await fetchCooldownStatus(supabase);
+    if (!s || !s.active) return false;
+    if (uiState === UI_STATES.COOLDOWN) { startCooldownCountdown(cooldownFromServer(s.endsAt, s.serverNow)); return true; }
+    if (!from.includes(uiState)) return false;
+    await enterCooldown({ endsAt: s.endsAt, serverNow: s.serverNow }, { announce: afterWrongAnswer });
+    return true;
+  }
+
+  // Back on a tab that shows a pause (the monotonic clock may have stood still while the device slept).
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && uiState === UI_STATES.COOLDOWN) syncCooldownFromServer();
+  });
 
   // A backend that answered outside H5's contract (classifyResponse "incompatible_backend"): the
   // submission is kept, marked blocked in storage, and never sent again from this tab — not by a retry
@@ -1122,6 +1296,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       return { handled: true };
     }
 
+    if (outcome.kind === "quiz_cooldown") {
+      // Refused in the database before anything was registered: not graded, not paid. The question stays
+      // open and is answered again after the pause, as a new submission.
+      settleSubmission();
+      await enterCooldown({ endsAt: outcome.endsAt, serverNow: outcome.serverNow });
+      return { handled: true };
+    }
+
     if (outcome.kind === "unauthorized") {
       // Nothing was processed. Kept until the login page clears it.
       window.location.replace("login.html");
@@ -1268,6 +1450,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
+      // Anti-gætte-pause: refused in the database before anything was registered (429 from process-event,
+      // or version 34's 500 carrying the database's exact message).
+      const cooldown = await cooldownFromInvokeError(error);
+      if (cooldown) {
+        await enterCooldown(cooldown);
+        return;
+      }
+
       feedback.textContent = "⚠️ Fejl ved svar – prøv igen";
       feedback.className = "feedback-error";
 
@@ -1372,6 +1562,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (data.status === "incorrect") {
       const reviewText = data.review_text ?? null;
+      lastAnswerWasWrong = true;   // anti-gætte-pause: checked at the next transition (loadAndRenderQuestion)
 
       playSound("error");
       exprEngine?.onGameEvent("INCORRECT");
@@ -1407,7 +1598,9 @@ document.addEventListener("DOMContentLoaded", async () => {
               ? trueFalseCorrection(data.correct_answer)
               : currentRenderer === ANSWER_RENDERERS.ORDER_ITEMS && currentOrderControl
                 ? orderCorrectionText(currentOrderControl.layout, data.correct_answer)
-                : null;
+                : currentRenderer === ANSWER_RENDERERS.CATEGORIZE && currentCategorizeControl
+                  ? categorizeCorrectionText(currentCategorizeControl.layout, data.correct_answer)
+                  : null;
         setTimeout(() => enterReflectionState(reviewText, correction), 400);
         return;
       }
@@ -1436,6 +1629,19 @@ document.addEventListener("DOMContentLoaded", async () => {
           feedback.className = "feedback-error";
           setUIState(UI_STATES.TRANSITIONING);
           setTimeout(() => { loadAndRenderQuestion(); }, 5000);
+          return;
+        }
+      }
+
+      // Kategorisering: the key is item and category indexes, not words — state the correct placement in
+      // the shown texts and leave a little longer to read it.
+      if (currentRenderer === ANSWER_RENDERERS.CATEGORIZE && currentCategorizeControl) {
+        const correctPlacement = categorizeCorrectionText(currentCategorizeControl.layout, data.correct_answer);
+        if (correctPlacement) {
+          feedback.textContent = "Ikke helt. " + correctPlacement;
+          feedback.className = "feedback-error";
+          setUIState(UI_STATES.TRANSITIONING);
+          setTimeout(() => { loadAndRenderQuestion(); }, 6000);
           return;
         }
       }
@@ -1519,6 +1725,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     currentRenderer = renderer;
     currentMatchControl = null;
     currentOrderControl = null;
+    currentCategorizeControl = null;
 
     // 157E: analytics — question shown (format only, no content). No-op unless active.
     track("question_shown", { format });
@@ -1639,6 +1846,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       logError("INVALID_ORDER_LAYOUT", { format });
     }
 
+    if (renderer === ANSWER_RENDERERS.CATEGORIZE) {
+      // Kategorisering (js/categorize.js): the server sent the category labels and the item texts in a
+      // shuffled order; no item's category is in the payload. A payload that is not a valid layout falls
+      // through to the visible "unsupported" error below.
+      const layout = readCategorizeLayout(content);
+      if (layout) {
+        const control = buildCategorizeAnswer(document, {
+          layout,
+          onSubmit: submitAnswer,
+          describedBy: questionElement.id,
+          attachReadAloud: attachOptionReadAloudControl,
+          readAloudContext: { subject: currentSubject, question: content.question, options: layout.items },
+        });
+        currentCategorizeControl = { ...control, layout };
+        optionsContainer.appendChild(control.root);
+        return true;
+      }
+      logError("INVALID_CATEGORIZE_LAYOUT", { format });
+    }
+
     if (renderer === ANSWER_RENDERERS.LONG_TEXT) {
       const textarea = document.createElement("textarea");
 
@@ -1666,7 +1893,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (renderer === ANSWER_RENDERERS.UNSUPPORTED || renderer === ANSWER_RENDERERS.MATCH_PAIRS
       || renderer === ANSWER_RENDERERS.TRUE_FALSE
-      || renderer === ANSWER_RENDERERS.ORDER_ITEMS) {
+      || renderer === ANSWER_RENDERERS.ORDER_ITEMS
+      || renderer === ANSWER_RENDERERS.CATEGORIZE) {
       // An interaction type this client has no renderer for must fail loud — never fall through
       // to option buttons (ARCHITECTURE.md → Question Interaction model, rule 2).
       logError("UNSUPPORTED_ANSWER_FORMAT", { format, answer_type: question.answer_type ?? null });
@@ -1735,6 +1963,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function loadAndRenderQuestion() {
+    // Anti-gætte-pause: at start-up (IDLE — a reload, a new tab or another device) and on leaving a pause
+    // (COOLDOWN), ask the server first. From TRANSITIONING (the normal flow) nothing is asked.
+    if (uiState === UI_STATES.IDLE || uiState === UI_STATES.COOLDOWN) {
+      if (await syncCooldownFromServer()) return;
+    }
+    if (uiState === UI_STATES.COOLDOWN) leaveCooldownView();
+
     // Clean up reflection state if active from previous question
     stopReadAloud();
     clearStimulus();
@@ -1743,7 +1978,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     reviewFeedback.classList.remove("visible");
     reflectionContinue.style.display = "none";
 
-    // D-347: a spillepause due after the answer just registered is offered here, at the transition.
+    // Anti-gætte-pause FIRST (owner 2026-11-05): after a wrong answer, ask once whether it started a
+    // pause. If it did, the pupil takes the whole pause, and a spillepause earned by the same answer is
+    // held (heldBreakOffer) and offered when the pause is over — never lost, never shown during it.
+    if (lastAnswerWasWrong) {
+      lastAnswerWasWrong = false;
+      if (await syncCooldownFromServer({ afterWrongAnswer: true })) {
+        const earned = await takeBreakOffer();
+        if (earned) heldBreakOffer = earned;
+        return;
+      }
+    }
+
+    // D-347: a spillepause due after the answer just registered (or held through a pause) is offered
+    // here, at the transition, before the next question is fetched.
     if (await offerBreakIfDue()) return;
 
     const question = await getNextQuestion();
