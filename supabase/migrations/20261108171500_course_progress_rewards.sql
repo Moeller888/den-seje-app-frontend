@@ -1,0 +1,227 @@
+-- Lærligverse: afgrænset belønning for meningsfuld progression i Arkivskabet — IKKE ANVENDT I PRODUKTION.
+--
+-- EJERBESLUTNING (bindende): "Eleverne skal kunne modtage XP og coins for meningsfuld progression i
+-- Arkivskabet, men kursusopgaver må ikke forvride deres almindelige faglige mestring."
+-- Modellen, satserne og begrundelsen står i docs/laerligverse/belonningsmodel.md.
+--
+-- HVAD MIGRATIONEN GØR (og intet andet)
+--   1. Ny tabel public.course_progress_rewards: en append-only bog over kursusmilepæle, én række pr.
+--      (student_id, milestone_key) — UNIQUE, så en milepæl højst kan udbetales én gang.
+--      RLS er slået til. Eleven må LÆSE sine egne rækker (én SELECT-politik, auth.uid() = student_id) og
+--      intet andet; ingen API-rolle må INSERT/UPDATE/DELETE/TRUNCATE. Kun service_role må INSERT (og SELECT).
+--   2. Ny funktion public.award_course_milestones(p_student_id uuid, p_objective text) RETURNS jsonb.
+--      SECURITY INVOKER, search_path '' (alle navne er skemakvalificerede), EXECUTE KUN for service_role
+--      (Edge-funktionen course-progress kalder den med den verificerede user.id). Den GENBEREGNER
+--      berettigelsen ud fra serverens egne data (question_instances + questions.metadata.learning_step)
+--      — aldrig ud fra noget, kalderen påstår — indsætter nyoptjente milepæle med ON CONFLICT DO NOTHING
+--      og krediterer XP og coins i student_progress (samme kolonner som den almindelige belønningsvej)
+--      KUN for de rækker, der faktisk blev indsat, i samme transaktion.
+--
+-- KURSUSMARKØREN: et spørgsmål er en kursusopgave, når questions.metadata->>'learning_step' er et af de
+-- fem trin i supabase/functions/_shared/learning-sequence.ts (STEP_IDS). Markøren ligger på det forfattede
+-- spørgsmål, aldrig i requesten.
+--
+-- MILEPÆLE (nøgle → betingelse, alt læst fra serverdata for eleven og målet):
+--   step:<mål>:<trin>     første registrerede svar i trinnet (guided_practice, independent_application,
+--                         transfer, revisit). revision belønnes IKKE (0): ellers kunne et bevidst forkert
+--                         svar i vejledt øvelse betale sig.
+--   check:<mål>:<trin>    første rigtige svar (was_correct = true) i et vurderingstrin
+--                         (independent_application, transfer, revisit).
+--   sequence:<mål>        hele forløbet er gennemført efter testpolitikken laerligverse-test-policy-v0
+--                         (samme regel som nextStep → 'complete').
+--   milestone:sequences:3 / milestone:sequences:10   antal gennemførte forløb (læst fra bogen selv).
+--
+-- HVAD DEN IKKE RØRER: total_correct_answers, correct_answers, level, mastery_*, streak, quests,
+-- student_subject_level, student_band_state, student_level_fold_log, question_instances, questions og
+-- alle belønnings-RPC'er (process_question_attempt / _v2 / process_text_answer / _v2) er uændrede.
+--
+-- SAMTIDIGHED: funktionen tager først rækkelåsen på elevens student_progress-række (FOR UPDATE), så to
+-- samtidige kald for samme elev serialiseres; den anden ser den førstes rækker og indsætter intet.
+-- Uafhængigt af låsen gør UNIQUE + ON CONFLICT DO NOTHING det umuligt at indsætte en milepæl to gange,
+-- og der krediteres kun for indsatte rækker. Fejler noget midtvejs, ruller hele transaktionen tilbage
+-- (både bog og kredit), så et nyt forsøg betaler præcis én gang.
+--
+-- FLAG: Edge-funktionen course-progress er slukket, medmindre LAERLIGVERSE_COURSE_REWARDS er præcis "on".
+-- Uden kald af funktionen sker der intet — tabellen forbliver tom.
+--
+-- TILBAGERULNING (særskilt ejerautorisation; kun mens ingen milepæl er udbetalt, ellers skal udbetalte
+-- XP/coins først vurderes af ejeren):
+--   DROP FUNCTION public.award_course_milestones(uuid, text);
+--   DROP TABLE public.course_progress_rewards;
+--
+-- Må KUN anvendes via apply_migration med særskilt ejerautorisation (D-110), aldrig via CLI-push.
+
+CREATE TABLE public.course_progress_rewards (
+  id                 bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  student_id         uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  milestone_key      text NOT NULL CHECK (char_length(milestone_key) BETWEEN 1 AND 300),
+  kind               text NOT NULL CHECK (kind IN ('step_completed', 'check_passed', 'sequence_completed', 'course_milestone')),
+  learning_objective text,
+  learning_step      text CHECK (learning_step IS NULL OR learning_step IN
+                       ('guided_practice', 'revision', 'independent_application', 'transfer', 'revisit')),
+  xp_awarded         integer NOT NULL CHECK (xp_awarded >= 0),
+  coins_awarded      integer NOT NULL CHECK (coins_awarded >= 0),
+  policy             text NOT NULL,
+  rates_version      text NOT NULL,
+  created_at         timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT course_progress_rewards_once UNIQUE (student_id, milestone_key)
+);
+
+ALTER TABLE public.course_progress_rewards ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY course_progress_rewards_select_own ON public.course_progress_rewards
+  FOR SELECT TO authenticated USING ((SELECT auth.uid()) = student_id);
+
+-- Produktionens standardrettigheder giver nye tabeller ALL til anon, authenticated og service_role:
+-- alt fjernes eksplicit, og kun det nødvendige gives tilbage.
+REVOKE ALL ON TABLE public.course_progress_rewards FROM PUBLIC, anon, authenticated, service_role;
+GRANT SELECT ON TABLE public.course_progress_rewards TO authenticated;
+GRANT SELECT, INSERT ON TABLE public.course_progress_rewards TO service_role;
+
+CREATE FUNCTION public.award_course_milestones(p_student_id uuid, p_objective text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+DECLARE
+  c_policy  constant text := 'laerligverse-test-policy-v0';
+  c_rates   constant text := 'course-rewards-v0-proposal';
+  v_role    text;
+  v_locked  uuid;
+  v_awarded jsonb := '[]'::jsonb;
+  v_xp      integer := 0;
+  v_coins   integer := 0;
+  v_seq     integer;
+  r         record;
+BEGIN
+  IF p_student_id IS NULL THEN
+    RETURN jsonb_build_object('outcome', 'invalid_request', 'reason', 'missing_student', 'awarded', '[]'::jsonb,
+                              'xp_awarded', 0, 'coins_awarded', 0);
+  END IF;
+  IF p_objective IS NULL OR char_length(btrim(p_objective)) = 0 OR char_length(p_objective) > 200 THEN
+    RETURN jsonb_build_object('outcome', 'invalid_request', 'reason', 'invalid_objective', 'awarded', '[]'::jsonb,
+                              'xp_awarded', 0, 'coins_awarded', 0);
+  END IF;
+
+  SELECT p.role INTO v_role FROM public.profiles p WHERE p.id = p_student_id;
+  IF v_role IS DISTINCT FROM 'student' THEN
+    RETURN jsonb_build_object('outcome', 'not_a_student', 'awarded', '[]'::jsonb, 'xp_awarded', 0, 'coins_awarded', 0);
+  END IF;
+
+  -- Serialiserer samtidige kald for samme elev (se hovedet).
+  SELECT sp.student_id INTO v_locked FROM public.student_progress sp WHERE sp.student_id = p_student_id FOR UPDATE;
+  IF v_locked IS NULL THEN
+    RETURN jsonb_build_object('outcome', 'no_progress_row', 'awarded', '[]'::jsonb, 'xp_awarded', 0, 'coins_awarded', 0);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.questions q
+    WHERE q.learning_objective = p_objective
+      AND q.metadata->>'learning_step' IN ('guided_practice', 'revision', 'independent_application', 'transfer', 'revisit')
+  ) THEN
+    RETURN jsonb_build_object('outcome', 'not_a_course_objective', 'awarded', '[]'::jsonb, 'xp_awarded', 0, 'coins_awarded', 0);
+  END IF;
+
+  FOR r IN
+    WITH hist AS (
+      SELECT q.metadata->>'learning_step' AS step, qi.was_correct, qi.answered_at, qi.id
+      FROM public.question_instances qi
+      JOIN public.questions q ON q.id = qi.question_id
+      WHERE qi.student_id = p_student_id
+        AND qi.answered = true
+        AND q.learning_objective = p_objective
+        AND q.metadata->>'learning_step' IN ('guided_practice', 'revision', 'independent_application', 'transfer', 'revisit')
+    ),
+    done AS (
+      SELECT
+        EXISTS (SELECT 1 FROM hist WHERE step = 'guided_practice')         AS practice,
+        EXISTS (SELECT 1 FROM hist WHERE step = 'revision')                AS revision,
+        EXISTS (SELECT 1 FROM hist WHERE step = 'independent_application') AS application,
+        EXISTS (SELECT 1 FROM hist WHERE step = 'transfer')                AS transfer,
+        EXISTS (SELECT 1 FROM hist WHERE step = 'revisit')                 AS revisit,
+        (SELECT h.was_correct FROM hist h WHERE h.step = 'guided_practice'
+          ORDER BY h.answered_at DESC NULLS LAST, h.id DESC LIMIT 1)       AS latest_practice_correct
+    ),
+    earned AS (
+      -- Første registrerede svar i et trin (revision giver 0 og står derfor ikke her).
+      SELECT 'step:' || p_objective || ':' || s.step AS milestone_key, 'step_completed' AS kind, s.step AS learning_step,
+             s.xp, s.coins, s.ord
+      FROM (VALUES ('guided_practice', 3, 1, 10), ('independent_application', 3, 1, 20),
+                   ('transfer', 3, 1, 30), ('revisit', 3, 1, 40)) AS s(step, xp, coins, ord)
+      WHERE EXISTS (SELECT 1 FROM hist h WHERE h.step = s.step)
+      UNION ALL
+      -- Første rigtige svar i et vurderingstrin.
+      SELECT 'check:' || p_objective || ':' || c.step, 'check_passed', c.step, c.xp, c.coins, c.ord
+      FROM (VALUES ('independent_application', 8, 4, 21), ('transfer', 8, 4, 31), ('revisit', 8, 4, 41)) AS c(step, xp, coins, ord)
+      WHERE EXISTS (SELECT 1 FROM hist h WHERE h.step = c.step AND h.was_correct = true)
+      UNION ALL
+      -- Hele forløbet efter testpolitikken (samme regel som nextStep → 'complete').
+      SELECT 'sequence:' || p_objective, 'sequence_completed', NULL, 25, 10, 50
+      FROM done d
+      WHERE d.practice
+        AND (d.latest_practice_correct IS DISTINCT FROM false OR d.revision)
+        AND d.application AND d.transfer AND d.revisit
+    )
+    SELECT * FROM earned ORDER BY ord
+  LOOP
+    WITH ins AS (
+      INSERT INTO public.course_progress_rewards
+        (student_id, milestone_key, kind, learning_objective, learning_step, xp_awarded, coins_awarded, policy, rates_version)
+      VALUES (p_student_id, r.milestone_key, r.kind, p_objective, r.learning_step, r.xp, r.coins, c_policy, c_rates)
+      ON CONFLICT (student_id, milestone_key) DO NOTHING
+      RETURNING milestone_key, kind, learning_step, xp_awarded, coins_awarded
+    )
+    SELECT v_awarded || coalesce(jsonb_agg(jsonb_build_object('milestone_key', ins.milestone_key, 'kind', ins.kind,
+             'learning_step', ins.learning_step, 'xp', ins.xp_awarded, 'coins', ins.coins_awarded)), '[]'::jsonb),
+           v_xp + coalesce(sum(ins.xp_awarded), 0), v_coins + coalesce(sum(ins.coins_awarded), 0)
+      INTO v_awarded, v_xp, v_coins
+    FROM ins;
+  END LOOP;
+
+  -- Kursusmilepæle: antal gennemførte forløb, læst fra bogen selv (kun denne funktion skriver den).
+  SELECT count(*)::int INTO v_seq FROM public.course_progress_rewards
+  WHERE student_id = p_student_id AND kind = 'sequence_completed';
+
+  FOR r IN
+    SELECT 'milestone:sequences:' || m.n AS milestone_key, m.xp, m.coins
+    FROM (VALUES (3, 30, 15), (10, 75, 40)) AS m(n, xp, coins)
+    WHERE v_seq >= m.n
+    ORDER BY m.n
+  LOOP
+    WITH ins AS (
+      INSERT INTO public.course_progress_rewards
+        (student_id, milestone_key, kind, learning_objective, learning_step, xp_awarded, coins_awarded, policy, rates_version)
+      VALUES (p_student_id, r.milestone_key, 'course_milestone', NULL, NULL, r.xp, r.coins, c_policy, c_rates)
+      ON CONFLICT (student_id, milestone_key) DO NOTHING
+      RETURNING milestone_key, kind, xp_awarded, coins_awarded
+    )
+    SELECT v_awarded || coalesce(jsonb_agg(jsonb_build_object('milestone_key', ins.milestone_key, 'kind', ins.kind,
+             'learning_step', NULL, 'xp', ins.xp_awarded, 'coins', ins.coins_awarded)), '[]'::jsonb),
+           v_xp + coalesce(sum(ins.xp_awarded), 0), v_coins + coalesce(sum(ins.coins_awarded), 0)
+      INTO v_awarded, v_xp, v_coins
+    FROM ins;
+  END LOOP;
+
+  -- Kredit kun for indsatte rækker, samme kolonner som den almindelige belønningsvej, samme transaktion.
+  IF v_xp > 0 OR v_coins > 0 THEN
+    UPDATE public.student_progress
+    SET xp    = COALESCE(xp, 0) + v_xp,
+        coins = COALESCE(coins, 0) + v_coins
+    WHERE student_id = p_student_id;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'outcome',       CASE WHEN jsonb_array_length(v_awarded) > 0 THEN 'awarded' ELSE 'nothing_new' END,
+    'learning_objective', p_objective,
+    'policy',        c_policy,
+    'rates_version', c_rates,
+    'awarded',       v_awarded,
+    'xp_awarded',    v_xp,
+    'coins_awarded', v_coins
+  );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.award_course_milestones(uuid, text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.award_course_milestones(uuid, text) TO service_role;
