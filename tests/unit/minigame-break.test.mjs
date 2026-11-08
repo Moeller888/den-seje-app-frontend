@@ -3,7 +3,7 @@
 // minigame-breaks-migration-run.test.mjs; the browser journey by tests/minigame-break.spec.ts.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -33,11 +33,30 @@ test("the catalog is the seven existing games, each with its own page, and the s
   assert.equal(Object.isFrozen(MINIGAME_CATALOG), true);
 });
 
-test("the 20-minute interval is defined once, in the SQL function, and not repeated on the client", () => {
-  const sql = read("supabase/migrations/20261105090000_minigame_breaks.sql");
-  assert.match(sql, /c_interval\s+CONSTANT integer\s+:= 1200;\s+-- MINIGAME_INTERVAL_SECONDS/);
+test("the 10-minute interval (D-364) is defined once, in the SQL function, and not repeated on the client", () => {
+  // The effective definition is the LAST migration (in timestamp order) that (re)creates the function.
+  const files = readdirSync(join(REPO, "supabase/migrations")).filter((f) => /^\d{14}_.*\.sql$/.test(f)).sort();
+  const defining = files.filter((f) =>
+    /CREATE OR REPLACE FUNCTION public\.minigame_break_after_answer\(/.test(read("supabase/migrations/" + f)));
+  assert.deepEqual(defining, ["20261105090000_minigame_breaks.sql", "20261107090000_minigame_break_interval_10min.sql"]);
+  const last = read("supabase/migrations/" + defining.at(-1));
+  assert.match(last, /c_interval\s+CONSTANT integer\s+:= 600;\s+-- MINIGAME_INTERVAL_SECONDS: 10 minutes/);
+  assert.equal((last.match(/c_interval\s+CONSTANT/g) || []).length, 1);
   for (const f of ["js/minigame-break.js", "js/minigame-pass.js", "app.js"]) {
     assert.equal(/\b1200\b/.test(read(f).replace(/\/\/.*$/gm, "")), false, f);
+  }
+  for (const f of ["js/minigame-break.js", "js/minigame-pass.js"]) {
+    assert.equal(/\b600\b/.test(read(f).replace(/\/\/.*$/gm, "")), false, f);
+  }
+});
+
+test("the pupil-facing texts say 10 minutes, never 20 (D-364)", () => {
+  const pass = read("js/minigame-pass.js");
+  const spil = read("spil.html");
+  assert.ok(pass.includes("Når du har arbejdet med dine opgaver i 10 minutter, får du tilbudt et spil."));
+  assert.ok(spil.includes("Når du har arbejdet med dine opgaver i 10 minutter, får du tilbudt en lille spillepause med et minispil."));
+  for (const [name, s] of [["minigame-pass.js", pass], ["spil.html", spil], ["minigame-break.js", read("js/minigame-break.js")]]) {
+    assert.equal(/20 minutter/.test(s), false, name);
   }
 });
 
@@ -203,8 +222,16 @@ test("app.js: a break is considered only after a registered answer, and offered 
   const load = app.slice(app.indexOf("async function loadAndRenderQuestion("));
   const offer = load.indexOf("if (await offerBreakIfDue()) return;");
   assert.ok(offer > 0 && offer < load.indexOf("await getNextQuestion()"), "offered before the next question is fetched");
-  // The quiz state machine is untouched: no new states, no new transitions.
-  assert.match(app, /TRANSITIONING: \["LOADING_QUESTION"\]/);
+  // D-350 × D-347 (owner 2026-11-05): an anti-gætte-pause comes FIRST; an offer earned by the same answer
+  // is held (heldBreakOffer) and offered when the pause is over — never during it, never dropped.
+  const pause = load.indexOf("syncCooldownFromServer({ afterWrongAnswer: true })");
+  assert.ok(pause > 0 && pause < offer, "the pause check precedes the offer");
+  assert.match(load, /if \(await syncCooldownFromServer\(\{ afterWrongAnswer: true \}\)\) \{\s+const earned = await takeBreakOffer\(\);\s+if \(earned\) heldBreakOffer = earned;\s+return;\s+\}/);
+  assert.match(app, /const offer = heldBreakOffer \?\? await takeBreakOffer\(\);\s+heldBreakOffer = null;/);
+  // D-347 adds no states and no transitions to the quiz state machine. The one later transition out of
+  // TRANSITIONING is the anti-gætte-pause's COOLDOWN (D-350, docs/quiz-anti-guess-cooldown.md) — nothing
+  // of the break's.
+  assert.match(app, /TRANSITIONING: \["LOADING_QUESTION", "COOLDOWN"\]/);
   assert.equal((app.match(/UI_STATES\.[A-Z_]+/g) || []).some((s) => /BREAK|MINIGAME/.test(s)), false);
   // A page restored from the back/forward cache after leaving for a game is reloaded.
   assert.match(app, /if \(event\.persisted && leftForBreak\) window\.location\.reload\(\);/);
