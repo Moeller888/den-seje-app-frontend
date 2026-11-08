@@ -133,7 +133,7 @@ test('1. New pupil goes straight to the quiz at the grade start band', async ({ 
   await loginStudent(page);
   await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
 
-  await expect(page.locator('#placement-overlay')).not.toBeVisible();
+  await expect(page.locator('#placement-overlay')).toHaveCount(0);
   expect(seen.placementStarted, 'the start test must not be started').toBe(false);
   // GRADE_START_BAND[7] in app.js.
   expect(seen.firstBand, 'grade 7 starts at band 1').toBe(1);
@@ -157,7 +157,7 @@ test('2. A band from the old start test is still honoured', async ({ page }) => 
   await loginStudent(page);
   await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
 
-  await expect(page.locator('#placement-overlay')).not.toBeVisible();
+  await expect(page.locator('#placement-overlay')).toHaveCount(0);
   expect(seen.placementStarted, 'the start test must not be started').toBe(false);
   expect(seen.firstBand, 'the quiz starts at the placement band').toBe(3);
 });
@@ -199,7 +199,7 @@ test('4. Next login uses current_band', async ({ page }) => {
   const seen = watchQuizStart(page);
   await loginStudent(page);
   await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
-  await expect(page.locator('#placement-overlay')).not.toBeVisible();
+  await expect(page.locator('#placement-overlay')).toHaveCount(0);
   expect(seen.placementStarted, 'the start test must not be started').toBe(false);
 
   // DB check: verify both bands persisted by this point
