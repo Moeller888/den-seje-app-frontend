@@ -154,7 +154,8 @@ test("1. all 4 items visible in shop", async ({ page, browserName }) => {
 
   await loginAsStudent(page);
   await page.goto(`${PROD}/shop.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector(".item-name", { timeout: 15000 });
+  await openItemCategory(page, "headwear");   // D-363: the shop shows one category at a time
+  await page.waitForSelector(".item-name:visible", { timeout: 15000 });
 
   for (const { name } of Object.values(ITEMS)) {
     await expect(page.locator(".item-name", { hasText: name }).first()).toBeAttached();
@@ -170,7 +171,7 @@ test("2. pirate-hat appears in inventory and renders in avatar-preview", async (
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await openItemCategory(page, "headwear");   // D-363: the card is under its category
-  await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
+  await page.waitForSelector("#inventoryGrid .item-card:visible", { timeout: 15000 });
 
   // Inventory check
   await expect(
@@ -192,7 +193,7 @@ test("3. pirate-hat unequips — image removed from avatar-preview", async ({
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await openItemCategory(page, "headwear");   // D-363: the card is under its category
-  await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
+  await page.waitForSelector("#inventoryGrid .item-card:visible", { timeout: 15000 });
 
   // Verify equipped first
   await expect(
@@ -217,7 +218,7 @@ test("4. ninja-mask equips — image rendered in avatar-preview", async ({
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await openItemCategory(page, "face");   // D-363: the card is under its category
-  await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
+  await page.waitForSelector("#inventoryGrid .item-card:visible", { timeout: 15000 });
 
   await expect(
     page.locator(`#avatar-preview img[src*="${ITEMS["ninja-mask"].src}"]`)
@@ -233,7 +234,7 @@ test("5. hero-mask equips — image rendered in avatar-preview", async ({
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await openItemCategory(page, "face");   // D-363: the card is under its category
-  await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
+  await page.waitForSelector("#inventoryGrid .item-card:visible", { timeout: 15000 });
 
   await expect(
     page.locator(`#avatar-preview img[src*="${ITEMS["hero-mask"].src}"]`)
@@ -249,7 +250,7 @@ test("6. panda-mask equips — image rendered in avatar-preview", async ({
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await openItemCategory(page, "face");   // D-363: the card is under its category
-  await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
+  await page.waitForSelector("#inventoryGrid .item-card:visible", { timeout: 15000 });
 
   await expect(
     page.locator(`#avatar-preview img[src*="${ITEMS["panda-mask"].src}"]`)
@@ -287,12 +288,12 @@ test("8. equipped pirate-hat persists after page reload", async ({
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await openItemCategory(page, "headwear");   // D-363: the card is under its category
-  await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
+  await page.waitForSelector("#inventoryGrid .item-card:visible", { timeout: 15000 });
 
   // Reload
   await page.reload({ waitUntil: "domcontentloaded" });
   await openItemCategory(page, "headwear");   // D-363: the card is under its category
-  await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
+  await page.waitForSelector("#inventoryGrid .item-card:visible", { timeout: 15000 });
 
   await expect(
     page.locator(`#avatar-preview img[src*="${ITEMS["pirate-hat"].src}"]`)
@@ -334,7 +335,7 @@ test("golden: avatar page pirate-hat matches baseline", async ({
 
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await openItemCategory(page, "headwear");   // D-363: the card is under its category
-  await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
+  await page.waitForSelector("#inventoryGrid .item-card:visible", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
   await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-pirate-hat.png", { maxDiffPixels: 200, animations: "disabled" });
@@ -375,7 +376,7 @@ test("golden: avatar page ninja-mask matches baseline", async ({
 
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await openItemCategory(page, "face");   // D-363: the card is under its category
-  await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
+  await page.waitForSelector("#inventoryGrid .item-card:visible", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
   await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-ninja-mask.png", { maxDiffPixels: 200, animations: "disabled" });
@@ -396,7 +397,7 @@ test("golden: avatar page hero-mask matches baseline", async ({
 
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await openItemCategory(page, "face");   // D-363: the card is under its category
-  await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
+  await page.waitForSelector("#inventoryGrid .item-card:visible", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
   await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-hero-mask.png", { maxDiffPixels: 200, animations: "disabled" });
@@ -417,7 +418,7 @@ test("golden: avatar page panda-mask matches baseline", async ({
 
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await openItemCategory(page, "face");   // D-363: the card is under its category
-  await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
+  await page.waitForSelector("#inventoryGrid .item-card:visible", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
   await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-panda-mask.png", { maxDiffPixels: 200, animations: "disabled" });

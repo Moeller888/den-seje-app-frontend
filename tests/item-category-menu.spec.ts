@@ -76,7 +76,8 @@ function routeFor(pupil: Pupil) {
     if (p.startsWith("/auth/v1/user")) return j(USER);
     if (p.startsWith("/auth/v1/token")) return j(SESSION);
     if (p.startsWith("/auth/v1/logout")) return r.fulfill({ status: 204, headers: CORS });
-    if (p === "/functions/v1/buy-item") {
+    // the shop's only Edge Function call is the purchase: a POST carrying item_id (answered here, never sent anywhere)
+    if (p.startsWith("/functions/v1/") && req.method() === "POST" && body().item_id) {
       const id = body().item_id; pupil.calls.push("buy:" + id);
       const it = SHOP_ITEMS.find((x) => x.id === id);
       if (!it || pupil.owned.has(id) || pupil.coins < it.price) return r.fulfill({ status: 400, headers: { ...CORS, "content-type": "application/json" }, body: JSON.stringify({ error: "refused" }) });

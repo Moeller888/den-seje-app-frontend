@@ -97,6 +97,11 @@ export async function openItemCategory(page: any, slotType: string): Promise<voi
   await page.getByRole("tab", { name: label, exact: true }).click();
 }
 
+/** D-363: open the category of Butik's first card (the shop sorts it first), so checks of "the first preview" see that same card. */
+export async function openFirstShopCardCategory(page: any): Promise<void> {
+  await openItemCategory(page, (await page.locator(".shop-card").first().getAttribute("data-slot-type")) ?? "");
+}
+
 /**
  * Log in as the test teacher and wait for teacher.html to load.
  */
