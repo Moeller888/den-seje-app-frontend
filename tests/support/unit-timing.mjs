@@ -49,6 +49,10 @@ export function parseShard(raw) {
 // Deterministic longest-processing-time partition: heaviest file first onto the lightest shard,
 // ties broken by file name and then shard number. Weights only steer balance; every file lands in
 // exactly one shard whatever the weights say (unknown files weigh the median of the known ones).
+//
+// Each shard has `files` (sorted by name) and `order` (the same files, heaviest first, ties by
+// name) — the order the runner STARTS them in. Starting the heaviest files first keeps one long
+// file from starting last and running alone at the end of the shard (D-361).
 export function planShards(files, count, weights = {}) {
   if (!Array.isArray(files) || files.length === 0) throw new Error("planShards: no files");
   if (!Number.isInteger(count) || count < 1) throw new Error("planShards: invalid shard count");
@@ -57,11 +61,12 @@ export function planShards(files, count, weights = {}) {
   const fallback = known.length ? known[Math.floor(known.length / 2)] : 1;
   const weightOf = (f) => (Number.isFinite(weights[f]) && weights[f] > 0 ? weights[f] : fallback);
   const order = [...files].sort((a, b) => weightOf(b) - weightOf(a) || a.localeCompare(b));
-  const shards = Array.from({ length: count }, () => ({ files: [], weight: 0 }));
+  const shards = Array.from({ length: count }, () => ({ files: [], order: [], weight: 0 }));
   for (const f of order) {
     let best = 0;
     for (let i = 1; i < count; i++) if (shards[i].weight < shards[best].weight) best = i;
     shards[best].files.push(f);
+    shards[best].order.push(f);
     shards[best].weight += weightOf(f);
   }
   for (const s of shards) s.files.sort();
@@ -70,7 +75,62 @@ export function planShards(files, count, weights = {}) {
   if (flat.length !== files.length || new Set(flat).size !== files.length || !files.every((f) => flat.includes(f))) {
     throw new Error("planShards: partition check failed");
   }
+  for (const s of shards) {
+    if (s.order.length !== s.files.length || [...s.order].sort().some((f, i) => f !== s.files[i])) {
+      throw new Error("planShards: run order is not the shard's own files");
+    }
+  }
   return shards;
+}
+
+// UNIT_SHARD_BUDGET_S = the seconds a shard is DESIGNED to finish within (D-361). Unset or empty =
+// no budget (local runs). The budget never fails or stops anything: when it passes, the runner
+// prints which files are still running and which have not started, so a shard that is then
+// cancelled by the job timeout still leaves a diagnosis in its log.
+export function parseBudget(raw) {
+  if (raw === undefined || raw === "") return null;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 60 || n > 3600) throw new Error(`UNIT_SHARD_BUDGET_S must be an integer 60..3600 (got ${JSON.stringify(raw)})`);
+  return n;
+}
+
+// The snapshot printed when the budget passes. Files and numbers only.
+export function budgetReport({ budgetS, elapsedMs, finished, failed, running, pending }) {
+  const lines = [
+    `⚠ unit shard passed its time budget of ${budgetS} s (elapsed ${sec(elapsedMs)} s) — still running, NOT a test failure.`,
+    `  finished ${finished} file(s), ${failed} failed so far; ${running.length} running; ${pending.length} not started.`,
+    "  If this job is cancelled by its timeout, these files are why:",
+    ...running.map(([f, ms]) => `    running ${sec(ms).padStart(7)} s  ${f}`),
+    ...pending.map((f) => `    not started         ${f}`),
+  ];
+  return lines.join("\n");
+}
+
+// Measured file times against tests/unit-ci-weights.json. `speed` = measured / planned seconds
+// over the files that have a weight of at least 1 s: ~1.0 is a normal runner, 1.5 a runner half
+// again as slow as the one the weights came from. `slower` = files more than twice their weight
+// (+10 s), which a slow runner alone does not explain; `unweighted` = files of 10 s or more with
+// no weight (they are planned at the median, so the shards drift until the weights are refreshed).
+// Reporting only: it never changes the result.
+export function driftReport(results, weights = {}) {
+  const w = (f) => (Number.isFinite(weights[f]) && weights[f] > 0 ? weights[f] : null);
+  let measured = 0, planned = 0;
+  for (const r of results) if (w(r.file) !== null && w(r.file) >= 1) { measured += r.ms / 1000; planned += w(r.file); }
+  const speed = planned > 0 ? measured / planned : null;
+  const slower = results.filter((r) => w(r.file) !== null && r.ms / 1000 > 2 * w(r.file) + 10)
+    .map((r) => ({ file: r.file, s: r.ms / 1000, weight: w(r.file) })).sort((a, b) => b.s - a.s);
+  const unweighted = results.filter((r) => w(r.file) === null && r.ms / 1000 >= 10)
+    .map((r) => ({ file: r.file, s: r.ms / 1000 })).sort((a, b) => b.s - a.s);
+  const head = `unit drift: runner speed ${speed === null ? "n/a" : speed.toFixed(2) + "× the weights"}; ` +
+    `${slower.length} file(s) over 2× their weight; ${unweighted.length} file(s) ≥ 10 s without a weight`;
+  const text = [head,
+    ...slower.map((x) => `  over 2× weight  ${x.s.toFixed(1).padStart(7)} s (weight ${x.weight})  ${x.file}`),
+    ...unweighted.map((x) => `  no weight       ${x.s.toFixed(1).padStart(7)} s  ${x.file}`)].join("\n");
+  const markdown = ["### Unit timing drift", "", head, "",
+    ...(slower.length + unweighted.length > 0 ? ["| seconds | weight | file |", "|---:|---:|---|",
+      ...slower.map((x) => `| ${x.s.toFixed(1)} | ${x.weight} | \`${x.file}\` |`),
+      ...unweighted.map((x) => `| ${x.s.toFixed(1)} | — | \`${x.file}\` |`)] : [])].join("\n");
+  return { speed, slower, unweighted, text, markdown };
 }
 
 const sec = (ms) => (ms / 1000).toFixed(1);

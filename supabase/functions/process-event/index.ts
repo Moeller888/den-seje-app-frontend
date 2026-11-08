@@ -10,6 +10,7 @@ import { callProcessTextAnswerV2, callProcessQuestionAttemptV2, LEGACY_ANSWER_RP
 import { updateOwnInstance, recordMisconceptionSignal, type InstanceWriteResult } from "./instance-writes.ts";
 import { readInstanceForGrading } from "./instance-read.ts";
 import { answerMode, replyForV2, isRevokedLegacyRpc, errorCodeOf, CLIENT_OUTDATED, UNEXPECTED_RESULT } from "./answer-v2.ts";
+import { isQuizCooldownError, cooldownReply } from "./quiz-cooldown.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -250,6 +251,13 @@ serve(async (req) => {
           })
         }
 
+        // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+        if (v2Error && isQuizCooldownError(v2Error)) {
+          console.log("FLOW: QUIZ COOLDOWN (text v2)")
+          const r = cooldownReply(v2Error, Date.now())
+          return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+        }
+
         if (v2Error) {
           // No fallback to process_text_answer, and no database detail in the response.
           console.error("PROCESS TEXT ANSWER V2 ERROR:", JSON.stringify({ instance_id: question_instance_id, code: errorCodeOf(v2Error) }))
@@ -292,6 +300,13 @@ serve(async (req) => {
 
       // M2: once EXECUTE is revoked, a request without H5 fields comes from an outdated client.
       // The privilege check ran before the function body, so nothing was registered.
+      // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+      if (rpcError && isQuizCooldownError(rpcError)) {
+        console.log("FLOW: QUIZ COOLDOWN (text)")
+        const r = cooldownReply(rpcError, Date.now())
+        return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+      }
+
       if (rpcError && isRevokedLegacyRpc(rpcError, LEGACY_ANSWER_RPCS.text)) {
         console.error("LEGACY ANSWER PATH CLOSED:", JSON.stringify({ fn: LEGACY_ANSWER_RPCS.text }))
         return new Response(JSON.stringify(CLIENT_OUTDATED), { status: 426, headers: corsHeaders })
@@ -414,6 +429,13 @@ serve(async (req) => {
         })
       }
 
+      // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+      if (v2Error && isQuizCooldownError(v2Error)) {
+        console.log("FLOW: QUIZ COOLDOWN (mc v2)")
+        const r = cooldownReply(v2Error, Date.now())
+        return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+      }
+
       if (v2Error) {
         // No fallback to process_question_attempt, and no database detail in the response.
         console.error("RPC V2 ERROR:", JSON.stringify({ instance_id: question_instance_id, code: errorCodeOf(v2Error) }))
@@ -456,6 +478,13 @@ serve(async (req) => {
     }
 
     // M2: see the short-text path above.
+    // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+    if (rpcError && isQuizCooldownError(rpcError)) {
+      console.log("FLOW: QUIZ COOLDOWN (mc)")
+      const r = cooldownReply(rpcError, Date.now())
+      return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+    }
+
     if (rpcError && isRevokedLegacyRpc(rpcError, LEGACY_ANSWER_RPCS.mc)) {
       console.error("LEGACY ANSWER PATH CLOSED:", JSON.stringify({ fn: LEGACY_ANSWER_RPCS.mc }))
       return new Response(JSON.stringify(CLIENT_OUTDATED), { status: 426, headers: corsHeaders })
