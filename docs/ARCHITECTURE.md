@@ -118,6 +118,13 @@ Transitions are validated; invalid transitions are blocked and logged via `logEr
 (`app.js:26`). The machine guarantees there is **no dead UI state**: every error path re-enables
 input and returns to a valid state. Never bypass this machine.
 
+`COOLDOWN` (anti-gætte-pause, D-350, [quiz-anti-guess-cooldown.md](./quiz-anti-guess-cooldown.md)):
+entered from `SUBMITTING_ANSWER` (the server refused the answer), `TRANSITIONING` (the wrong answer
+just shown started a pause — asked once, BEFORE D-347's break offer, which is then held until the
+pause is over; owner decision 2026-11-05), `IDLE` (a reload / new tab during a
+pause) or `AWAITING_ANSWER` (another tab reported a pause); left only to `LOADING_QUESTION` via
+"Fortsæt quizzen", which unlocks at 00:00. The server enforces the pause; the state only shows it.
+
 ## 4. Database (Postgres + RLS)
 
 Schema and most content are managed as **versioned SQL migrations** in `supabase/migrations/`
@@ -160,7 +167,8 @@ Schema and most content are managed as **versioned SQL migrations** in `supabase
   (`minigame_break_after_answer` / `_respond` / `_start` / `_finish`). Active quiz time is derived on the
   server from `question_instances.created_at/answered_at`; the minigame pages only run with a pass the
   server redeems once. The quiz calls it after each registered answer, fail-soft. Source of truth:
-  [`decisions/D-347.md`](decisions/D-347.md).
+  [`decisions/D-347.md`](decisions/D-347.md); the interval (one constant in `minigame_break_after_answer`)
+  becomes 10 minutes with [`decisions/D-364.md`](decisions/D-364.md) (migration `20261107090000`).
 - **Progression & retention:** themes system, streak system, retention loops, weekly quests,
   achievements (+ hidden/wave2/progress/rewards), titles, leaderboard, social.
 - **Avatar:** avatar slot system (`equipped_slots`), slot/wings/aura items, and the avatar asset
@@ -260,6 +268,14 @@ submitAnswer() [app.js]
              └─ else (MC / number)         → PATH 3: process_question_attempt RPC
         → response: { status, correct_answer, review_text?, misconception_type? }
 ```
+**Anti-gætte-pause (D-350, NOT applied in production):** triggers on `question_instances`
+(`quiz_cooldown_guard` BEFORE / `quiz_cooldown_register` AFTER the `answered` false → true update that
+every grading RPC makes) refuse a graded answer during a pause with SQLSTATE `LQ429` and start a pause
+after 10 auto-graded wrong answers within 60 s (values in `public.quiz_cooldown_config`). `process-event`
+maps the refusal to `429 { outcome: "quiz_cooldown", cooldown_until, server_now }`
+(`process-event/quiz-cooldown.ts`); the grading RPCs themselves are unchanged. Full design:
+[quiz-anti-guess-cooldown.md](./quiz-anti-guess-cooldown.md).
+
 This is the single most important integration boundary in the system: **AI grading, OCR, and
 speech-to-text all attach here** (PATH 1 / pre-submit), and must preserve this response shape
 (see §13 and [AI_GUIDELINES.md](./AI_GUIDELINES.md)).
