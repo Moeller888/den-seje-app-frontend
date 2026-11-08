@@ -53,6 +53,9 @@ export const CONTENT_ONLY = Object.freeze({
   "20261020130001_english_level_pilot_1.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and OWNER in a question",
   "20261020130002_english_level_pilot_2.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role)",
   "20261020130003_english_level_pilot_3.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and POLICY in a question",
+  "20261020140001_english_level_batch2_1.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role)",
+  "20261020140002_english_level_batch2_2.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role)",
+  "20261020140003_english_level_batch2_3.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and DROP in a question",
 });
 
 export const DATA_PRECONDITION = Object.freeze({});
@@ -123,12 +126,6 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "anti-gætte-pause, not applied in production: it adds quiz_cooldown_* and two triggers on question_instances; not replayed in the isolated stack, where shared synthetic pupils answer many questions wrong in a row (the frontend treats the missing get_my_quiz_cooldown as no pause)",
   "20261105120000_true_false_activation.sql":
     "F-02 Sandt/falsk activation, not applied in production and not to be applied before the get-next-question deploy that makes true_false servable: it admits true_false rows in questions and flips question_is_servable for them",
-  "20261020140001_english_level_batch2_1.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
-  "20261020140002_english_level_batch2_2.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
-  "20261020140003_english_level_batch2_3.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020150001_english_level_batch3_1.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020150002_english_level_batch3_2.sql":
@@ -205,6 +202,9 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261020130001_english_level_pilot_1.sql": "20261106192437",
   "20261020130002_english_level_pilot_2.sql": "20261106193242",
   "20261020130003_english_level_pilot_3.sql": "20261106194452",
+  "20261020140001_english_level_batch2_1.sql": "20261107161010",
+  "20261020140002_english_level_batch2_2.sql": "20261107162331",
+  "20261020140003_english_level_batch2_3.sql": "20261108102751",
   "20261022120000_fix_mc_correct_answer_not_in_options.sql": "20261029141201",
   "20261025120000_student_rpc_caller_scope.sql": "20261025172041",
   "20261026110000_leaderboard_execute_containment.sql": "20261026113548",
