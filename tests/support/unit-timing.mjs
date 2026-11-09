@@ -159,3 +159,103 @@ export function timingTable(results, wallMs, concurrency, top = 20) {
   ].join("\n");
   return { text, markdown, sumMs, totals, failedFiles };
 }
+
+// ── PostgreSQL lane (D-369) ──────────────────────────────────────────────────────────────────
+// Each unit shard has ONE throwaway PostgreSQL service (max_connections 100). The files that use it
+// open many sessions at once (minigame-breaks-concurrency: 64), so two of them side by side can hit
+// "sorry, too many clients already". They therefore run ONE AT A TIME, while every other file keeps
+// the normal concurrency.
+//
+// A file is a PG file when its source mentions PG_ENV — the only way a unit file reaches that
+// server. Detection reads the file text, so a new PG test joins the lane without a list to maintain;
+// ci-timing-metrics.test.mjs pins the result against `git grep` of the repository.
+export const PG_ENV = "LEVEL_ENGINE_PG_URL";
+
+export function detectPgFiles(files, readText) {
+  if (!Array.isArray(files)) throw new Error("detectPgFiles: files must be an array");
+  return files.filter((f) => {
+    const text = readText(f);
+    if (typeof text !== "string") throw new Error(`detectPgFiles: could not read ${f}`);
+    return text.includes(PG_ENV);
+  });
+}
+
+// The runner's scheduler. `order` is the start order (heaviest first). take() returns the files to
+// start now, marking them running: the first queued files that fit in the free slots, skipping a PG
+// file while another PG file runs — the skipped file keeps its place and is the first one taken when
+// the lane frees. finish(file) frees its slot (and the lane).
+//
+// No deadlock: a worker never WAITS for the lane — it takes the next non-PG file instead. take()
+// returns nothing only when every slot is busy, the queue is empty, or only PG files are queued while
+// a PG file runs; in each case a running file will finish and the caller calls take() again. With
+// nothing running, the lane is free, so the first queued file is always eligible.
+export function pgLaneScheduler(order, concurrency, isPg) {
+  if (!Array.isArray(order)) throw new Error("pgLaneScheduler: order must be an array");
+  if (!Number.isInteger(concurrency) || concurrency < 1) throw new Error("pgLaneScheduler: invalid concurrency");
+  if (new Set(order).size !== order.length) throw new Error("pgLaneScheduler: duplicate file names");
+  const queue = [...order];
+  const running = new Set();
+  let pgRunning = null;
+  return {
+    queue,
+    running,
+    get pgRunning() { return pgRunning; },
+    take() {
+      const started = [];
+      while (running.size < concurrency) {
+        const i = queue.findIndex((f) => !(pgRunning !== null && isPg(f)));
+        if (i < 0) break;
+        const [f] = queue.splice(i, 1);
+        running.add(f);
+        if (isPg(f)) pgRunning = f;
+        started.push(f);
+      }
+      if (started.length === 0 && running.size === 0 && queue.length > 0) {
+        throw new Error("pgLaneScheduler: stalled with nothing running"); // unreachable by the argument above
+      }
+      return started;
+    },
+    finish(f) {
+      if (!running.delete(f)) throw new Error(`pgLaneScheduler: ${f} was not running`);
+      if (pgRunning === f) pgRunning = null;
+    },
+    get done() { return queue.length === 0 && running.size === 0; },
+  };
+}
+
+// Discrete-event run of a scheduler with fake durations (seconds): which file ran when. Used by the
+// tests and to estimate the CI-time cost; `isPg = () => false` reproduces the pre-D-369 runner (each
+// free slot takes the next file in order).
+export function simulateSchedule(order, durationOf, concurrency, isPg) {
+  const s = pgLaneScheduler(order, concurrency, isPg);
+  const runs = [];
+  const active = []; // { file, end }
+  let now = 0;
+  for (;;) {
+    for (const f of s.take()) {
+      const d = durationOf(f);
+      if (!Number.isFinite(d) || d < 0) throw new Error(`simulateSchedule: bad duration for ${f}`);
+      runs.push({ file: f, start: now, end: now + d });
+      active.push({ file: f, end: now + d });
+    }
+    if (s.done) break;
+    // Finish the earliest-ending file (ties by order of start).
+    let k = 0;
+    for (let i = 1; i < active.length; i++) if (active[i].end < active[k].end) k = i;
+    const [next] = active.splice(k, 1);
+    now = next.end;
+    s.finish(next.file);
+  }
+  const wall = runs.reduce((m, r) => Math.max(m, r.end), 0);
+  return { runs, wall };
+}
+
+// The most files of a kind that ran at the same time (intervals are half-open [start, end)).
+export function maxOverlap(runs, pick = () => true) {
+  const ev = [];
+  for (const r of runs) if (pick(r.file) && r.end > r.start) ev.push([r.start, 1], [r.end, -1]);
+  ev.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  let cur = 0, max = 0;
+  for (const [, d] of ev) { cur += d; max = Math.max(max, cur); }
+  return max;
+}
