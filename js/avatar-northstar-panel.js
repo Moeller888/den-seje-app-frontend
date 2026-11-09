@@ -186,15 +186,18 @@ function thumb(item, category, name) {
   return box;
 }
 
-export function mountNorthstarWardrobe(root, preview, { saveChoice } = {}) {
+// D-363: with `cardsRoot`, the three card grids go there (one per category, marked data-wardrobe-category, without headings) so the
+// page's category menu can show one at a time directly over the cards; without it they stay under their headings in root (D-359).
+export function mountNorthstarWardrobe(root, preview, { saveChoice, cardsRoot = null } = {}) {
   if (!root || typeof saveChoice !== "function") return false;
   const pieces = northstarPieces(), now = northstarOutfitNow();
   root.textContent = "";
+  if (cardsRoot) cardsRoot.textContent = "";
   const status = document.createElement("p");
   status.className = "northstar-status";
   status.setAttribute("role", "status");
   const save = async (choice, note) => {
-    const buttons = Array.from(root.querySelectorAll("button"));
+    const buttons = [...root.querySelectorAll("button"), ...(cardsRoot ? cardsRoot.querySelectorAll("button") : [])];
     buttons.forEach((b) => { b.disabled = true; });
     status.textContent = "Gemmer …";
     let ok = false;
@@ -230,6 +233,7 @@ export function mountNorthstarWardrobe(root, preview, { saveChoice } = {}) {
     subtitle.textContent = heading;
     const grid = document.createElement("div");
     grid.className = "inventory-grid";
+    grid.dataset.wardrobeCategory = category;
     for (const p of pieces) {
       if (p.category !== category) continue;
       const name = northstarPieceLabel(p.item), worn = !!now && now[category] === p.item;
@@ -254,6 +258,7 @@ export function mountNorthstarWardrobe(root, preview, { saveChoice } = {}) {
       }
       grid.appendChild(card);
     }
+    if (cardsRoot) { cardsRoot.appendChild(grid); continue; }
     root.appendChild(subtitle);
     root.appendChild(grid);
   }

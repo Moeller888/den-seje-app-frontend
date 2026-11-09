@@ -11,6 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Min Avatar – DEN SEJE APP</title>
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/item-category-menu.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -673,6 +674,8 @@
     /* D-242: the local Northstar wardrobe opt-in panel (shown only in an opted-in browser) */
     .northstar-panel { margin-top: 12px; }
     .northstar-wardrobe { margin-top: 20px; }
+    /* D-363: the category menu under the wardrobe's status line, directly over the cards */
+    .inventory-panel .category-tabs { margin-top: 12px; }
     .northstar-wardrobe .northstar-subtitle { font-size: 14px; margin: 16px 0 8px; }
     .northstar-wardrobe .northstar-outfit { margin-top: 8px; }
     .northstar-thumb { position: relative; width: 88px; height: 88px; margin: 0 auto 8px; overflow: hidden; border-radius: 8px; background: #c9d2e3; }
@@ -754,13 +757,14 @@
   <div class="right-column">
   <div class="inventory-panel">
     <div class="panel-title">Dine items</div>
-    <div class="inventory-grid" id="inventoryGrid"></div>
-    <p class="empty-state" id="emptyState" style="display:none">
-      Du ejer ingen items endnu.<br>
-      <a href="shop.html">Gå i butikken</a> for at købe noget!
-    </p>
-    <!-- D-359: the Northstar wardrobe, single parts (js/avatar-northstar-panel.js); stays hidden if the module cannot load -->
+    <!-- D-359: the Northstar wardrobe, single parts (js/avatar-northstar-panel.js); stays hidden if the module cannot load.
+         Since D-363 it holds the heading, the status line and "Brug min nuværende avatar"; its cards go in #northstarWardrobeCards. -->
     <div class="northstar-wardrobe" id="northstarWardrobe" hidden></div>
+    <!-- D-363: the shared category menu (js/item-category-menu.js), directly over the cards -->
+    <div class="category-tabs" id="categoryTabs"></div>
+    <div id="northstarWardrobeCards"></div>
+    <div class="inventory-grid" id="inventoryGrid"></div>
+    <p class="category-empty" id="categoryEmpty" role="status" hidden></p>
   </div>
 
 <!-- Titles panel -->
@@ -797,8 +801,9 @@ import { loadTheme }   from "./js/themeManager.js";
 import {
   ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, baseLayersFor,
   RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER, isAvatarV2, isAvatarR2ActiveFor, r2ExpressionOverlayAllowedFor, blinkConfigFor,
-  HAIR_COLORS, HAIR_COLOR_TOKENS, hairColorFor,
+  HAIR_COLORS, HAIR_COLOR_TOKENS, hairColorFor, ITEM_CATEGORIES, itemCategoryForSlot,
 } from "./js/avatar-layers.js";
+import { mountItemCategoryMenu, itemCategoryFromHash, itemCategoryHash } from "./js/item-category-menu.js";
 import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine }   from "./js/avatar-presence-engine.js";
@@ -1133,16 +1138,8 @@ function renderSlotList() {
 
 function renderInventory() {
   const grid       = document.getElementById("inventoryGrid");
-  const emptyState = document.getElementById("emptyState");
 
   grid.innerHTML = "";
-
-  if (ownedItems.length === 0) {
-    emptyState.style.display = "block";
-    return;
-  }
-
-  emptyState.style.display = "none";
 
   ownedItems.forEach(item => {
     const equippedIdForSlot = item.slot_type ? (equippedSlots[item.slot_type] ?? null) : null;
@@ -1182,6 +1179,7 @@ function renderInventory() {
     const card = document.createElement("div");
     card.className = "item-card" + (isEquipped ? " equipped" : "");
     card.dataset.rarity = item.rarity ?? "common";  // used by rarity CSS (P2)
+    card.dataset.slotType = item.slot_type ?? "";   // D-363: the category menu
     card.innerHTML = `
       ${badgeHtml}
       ${thumbHtml}
@@ -1193,6 +1191,38 @@ function renderInventory() {
     `;
     grid.appendChild(card);
   });
+
+  applyItemCategory();
+}
+
+// ── Category menu (D-363) ─────────────────────────────────────────────────────
+// Only decides which cards are shown: the pupil's items (by slot) and the wardrobe's cards (by its category). What the pupil wears,
+// the approved outfits and equipping are untouched. The category survives the re-render after equipping and the reload after a
+// wardrobe choice (#kategori=<key>).
+
+let activeItemCategory = itemCategoryFromHash(location.hash);
+
+function applyItemCategory() {
+  const cat = ITEM_CATEGORIES.find(c => c.key === activeItemCategory) ?? ITEM_CATEGORIES[0];
+  let shown = 0;
+  document.querySelectorAll("#inventoryGrid .item-card").forEach(card => {
+    const on = itemCategoryForSlot(card.dataset.slotType ?? "") === cat.key;
+    card.style.display = on ? "" : "none";
+    if (on) shown++;
+  });
+  document.querySelectorAll("#northstarWardrobeCards [data-wardrobe-category]").forEach(grid => {
+    const on = grid.dataset.wardrobeCategory === cat.wardrobe;
+    grid.style.display = on ? "" : "none";
+    if (on) shown += grid.children.length;
+  });
+  const empty = document.getElementById("categoryEmpty");
+  if (!empty) return;
+  empty.hidden = shown > 0;
+  if (shown > 0) return;
+  // The labels are the fixed names in ITEM_CATEGORIES, never data.
+  empty.innerHTML = cat.slots.length > 0
+    ? `Du har ingen ting under ${cat.label} endnu.<br><a href="shop.html${itemCategoryHash(cat.key)}">Gå i butikken</a> for at finde noget!`
+    : `Du har ingen ting under ${cat.label} endnu.`;
 }
 
 function renderTitles() {
@@ -1687,6 +1717,10 @@ async function handleEquipTitle(titleId) {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 initBadges("avatar");
+mountItemCategoryMenu(document.getElementById("categoryTabs"), {
+  active: activeItemCategory,
+  onSelect: (key) => { activeItemCategory = key; applyItemCategory(); },
+});
 await loadAll();
 
 // D-242/D-357: the Northstar wardrobe. Mounted after loadAll, because the choice is read from the pupil's account. Loaded dynamically
@@ -1704,7 +1738,9 @@ try {
         if (error) console.error("set_avatar_northstar failed:", error.message);
         return !error;
       },
+      cardsRoot: document.getElementById("northstarWardrobeCards"),   // D-363: under the category menu
     });
+    applyItemCategory();
   } else {
     ns.mountNorthstarPanel(document.getElementById("northstarPanel"), preview);
   }
