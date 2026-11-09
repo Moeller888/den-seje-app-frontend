@@ -22,15 +22,24 @@ export const SLOT_Z      = Object.fromEntries(ALL_SLOTS.map(k => [k, SLOTS[k].z]
 export const SLOT_LABELS = Object.fromEntries(ALL_SLOTS.map(k => [k, SLOTS[k].label]));
 export const SLOT_EMOJIS = Object.fromEntries(ALL_SLOTS.map(k => [k, SLOTS[k].emoji]));
 
-// Category definitions for shop tab UI — null slots means "show all"
-export const SHOP_CATEGORIES = [
-  { key: "alle",     label: "Alle",     slots: null },
-  { key: "hoved",    label: "Hoved",    slots: ["hair", "headwear"] },
-  { key: "ansigt",   label: "Ansigt",   slots: ["face", "eyes"] },
-  { key: "ryg",      label: "Ryg",      slots: ["back"] },
-  { key: "krop",     label: "Krop",     slots: ["body", "torso", "neck"] },
-  { key: "effekter", label: "Effekter", slots: ["aura"] },
-];
+// D-363: the category menu over the item cards on Avatar and in Butik — one list, same names and order on both pages. `slots` are the
+// shop item slots shown in the category; `wardrobe` is the Northstar wardrobe category (D-359) shown in it on Avatar, or null.
+// Every slot in ALL_SLOTS belongs to exactly one category (the former "Krop" slots are under Overdele).
+export const ITEM_CATEGORIES = Object.freeze([
+  Object.freeze({ key: "overdele",  label: "Overdele",  slots: Object.freeze(["torso", "body", "neck"]), wardrobe: "top" }),
+  Object.freeze({ key: "underdele", label: "Underdele", slots: Object.freeze([]),                         wardrobe: "bottom" }),
+  Object.freeze({ key: "sko",       label: "Sko",       slots: Object.freeze([]),                         wardrobe: "shoes" }),
+  Object.freeze({ key: "hoved",     label: "Hoved",     slots: Object.freeze(["hair", "headwear"]),       wardrobe: null }),
+  Object.freeze({ key: "ansigt",    label: "Ansigt",    slots: Object.freeze(["face", "eyes"]),           wardrobe: null }),
+  Object.freeze({ key: "ryg",       label: "Ryg",       slots: Object.freeze(["back"]),                   wardrobe: null }),
+  Object.freeze({ key: "effekter",  label: "Effekter",  slots: Object.freeze(["aura"]),                   wardrobe: null }),
+]);
+export const DEFAULT_ITEM_CATEGORY = "overdele";
+// The category key of an item slot. An item without a known slot is shown under Effekter, so no owned item can disappear from the menu.
+export function itemCategoryForSlot(slot) {
+  const c = ITEM_CATEGORIES.find((x) => x.slots.includes(slot));
+  return c ? c.key : "effekter";
+}
 
 // Rarity system — fixed across all themes (never change per-theme)
 export const RARITY_COLORS = {
@@ -1082,6 +1091,11 @@ export function northstarUseAccount(identity) {
   const c = identity && typeof identity === "object" ? identity.northstar : null;
   _nsAccount = c && typeof c === "object" && !Array.isArray(c) ? c : {};
 }
+// D-366: a copy of the named account's stored choice ({} when none, or before an account is named), so the wardrobe can show the last
+// saved outfit again when a later save fails.
+export function northstarAccountChoice() {
+  return _nsAccount && typeof _nsAccount === "object" ? { ..._nsAccount } : {};
+}
 function _nsStorage(key) {
   if (AVATAR_NORTHSTAR_WARDROBE && _nsAccount !== undefined && Object.prototype.hasOwnProperty.call(_NS_ACCOUNT_FIELDS, key)) {
     const v = _nsAccount[_NS_ACCOUNT_FIELDS[key]];
@@ -1291,12 +1305,23 @@ export function northstarOutfitNow() {
   const k = northstarSelectedOutfit();
   return k ? northstarOutfitFor(k, northstarSelectedTee(), northstarSelectedPants(), northstarSelectedShoe(), northstarSelectedSweater()) : null;
 }
-// Puts one part on. The part always goes on; when it is not approved with the rest, as little as possible changes: fewest other parts,
-// shoes before the bottom before the top, then the part approved with most outfits, then catalogue order. Deterministic. Null for an unknown part.
+// Puts one part on. D-367: while the pupil wears an outfit, ONLY the chosen part changes: the part with the two parts the pupil already
+// wears, when that exact outfit is approved ({ top, bottom, shoes, choice, changed: [] }); otherwise the part is refused and nothing
+// changes ({ refused: true, category }), so the pupil can change another part first. On today's avatar (no outfit worn yet) the pupil
+// wears none of these parts, so D-359's rule still starts the figure: the approved outfit with the part that changes the start outfit
+// least — fewest other parts, shoes before the bottom before the top, then the part approved with most outfits, then catalogue order.
+// Deterministic. Null for an unknown part.
 export function northstarFitPiece(item) {
   const it = typeof item === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_ITEMS, item) ? NORTHSTAR_ITEMS[item] : null;
   if (!it) return null;
-  const all = northstarApprovedOutfits(), now = northstarOutfitNow() ?? NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT], cats = ["top", "bottom", "shoes"];
+  const worn = northstarOutfitNow();
+  if (worn) {
+    const want = { top: worn.top, bottom: worn.bottom, shoes: worn.shoes, [it.category]: item };
+    const o = northstarApprovedOutfits().get(want.top + "+" + want.bottom + "+" + want.shoes);
+    return o ? Object.freeze({ top: o.top, bottom: o.bottom, shoes: o.shoes, choice: o.choice, changed: Object.freeze([]) })
+      : Object.freeze({ refused: true, category: it.category });
+  }
+  const all = northstarApprovedOutfits(), now = NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT], cats = ["top", "bottom", "shoes"];
   const count = new Map();
   for (const o of all.values()) for (const c of cats) count.set(o[c], (count.get(o[c]) ?? 0) + 1);
   let best = null, bestRank = null;

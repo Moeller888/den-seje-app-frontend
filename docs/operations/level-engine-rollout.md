@@ -220,11 +220,27 @@ Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokume
 
   Efterkontrollen viste 500 pilotrækker, 0 aktive og 0 uden niveau eller CEFR. Niveauerne ligger i 3.001–10.000, og
   fordelingen er A2 63, B1 162, B2 148 og C1 127. Indholdet er identisk med repoet, og banken har nu 2.763 rækker.
-- **Åbent punkt før aktivering af piloten (trin 2d):** opgaven "She has a ___ memory. She never forgets anything."
-  (pilot_2, niveau 7.856, B2) har det rigtige facit, `sharp`. Forklaringsteksten siger dog kun "Man siger 'a strong
-  (or good) memory'." og nævner ikke `sharp`. Den skal rettes både i repoet og i den levende række, med eget GO,
-  før piloten aktiveres.
-- Trin 1c–1d og hele fase 2 er ikke udført.
+- **Trin 1c er delvist udført: batch 2 er anvendt 2026-11-07/08.** De tre filer er anvendt hver for sig med hvert
+  sit GO:
+
+  | Fil | Ledger-version | Rækker | Log |
+  |---|---|---|---|
+  | `20261020140001_english_level_batch2_1` | `20261107161010` | 167 | [1610Z](production-actions/2026-11-07T1610Z-english-batch2-1-applied.md) |
+  | `20261020140002_english_level_batch2_2` | `20261107162331` | 167 | [1623Z](production-actions/2026-11-07T1623Z-english-batch2-2-applied.md) |
+  | `20261020140003_english_level_batch2_3` | `20261108102751` | 166 | [1027Z](production-actions/2026-11-08T1027Z-english-batch2-3-applied.md) |
+
+  Efterkontrollen viste 500 rækker i `batch2`, 0 aktive og 0 uden niveau eller CEFR. Niveauerne ligger i
+  2.200–10.000, fordelingen er A1 2, A2 82, B1 156, B2 137 og C1 123, og intet niveau ligger uden for sit
+  CEFR-interval. Indholdet er identisk med repoet, og banken har nu 3.263 rækker. Antallet af aktive er uændret,
+  2.099.
+- **Åbne punkter før aktivering.** Hvert punkt skal rettes både i repoet og i den levende række, med eget GO, før
+  den pågældende portion aktiveres:
+
+  | Portion | Opgave | Fejl |
+  |---|---|---|
+  | `pilot` (trin 2d) | "She has a ___ memory. She never forgets anything." (pilot_2, niveau 7.856, B2) | Facit `sharp` er rigtigt, men forklaringen siger kun "Man siger 'a strong (or good) memory'." og nævner ikke `sharp` |
+  | `batch2` | "Hvad betyder 'suppose' i 'I suppose you're right'?" (batch2_2, niveau 6.948, B1, række-id `3cf224e8-b08a-4ab3-b4d8-de4d72f09e6e`) | Facit "formoder" er rigtigt, men forklaringen handler om et andet ord: "'Guess' betyder gætte. Gæst hedder 'guest'." |
+- Resten af trin 1c (batch3–batch6, 12 filer), trin 1d og hele fase 2 er ikke udført.
 
 **Godkendelser:**
 - Hvert trin herunder kræver sit eget GO fra ejeren (E2, D-110). Det gælder også hver `apply_migration`, hver
@@ -376,11 +392,17 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (Lærligverse L5 + L3 oven på lag 4: `served_mode` ved indsættelsen og antal hints i et sekvenssvar, begge slukket) — **ikke deployet** | dette repository | 22 | `ac5bef7dba2ee43ed25818b703107ec4f573fa5ce55287cfc26fb34612a81029` |
-| Forrige kandidat (Lærligverse-integration lag 3 oven på main med F-05 Kategorisering; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | lag 4 `b6d65cdd` | 21 | `ae22cf64a930cb91351d1e2dfbb8bf4d7678e9019d544b278ddba69d4da792cf` |
+| Kandidat (Lærligverse L5 + L3 oven på lag 4 `1df8cd79`: `served_mode` ved indsættelsen og antal hints i et sekvenssvar, begge slukket) — **ikke deployet** | dette repository | 22 | `5854770231cf0f7440963969ca1c8eeee512b5647bfc77f485fa330298e73c0b` |
+| Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `b6d65cdd`, før D-362) — ikke deployet | #653 `9296ac7f` | 22 | `ac5bef7dba2ee43ed25818b703107ec4f573fa5ce55287cfc26fb34612a81029` |
+| Forrige kandidat (Lærligverse-integration lag 3 oven på main med D-362; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | lag 4 `1df8cd79` | 21 | `ea8072da934530fbf3dc39a29599f6026f3b8ed995a157eeb424023aed61ca8b` |
+| Forrige kandidat (Lærligverse-integration lag 3 oven på main med F-05 Kategorisering, før D-362; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | `9f904b3c` | 21 | `ae22cf64a930cb91351d1e2dfbb8bf4d7678e9019d544b278ddba69d4da792cf` |
 | Forrige kandidat (lag 3 plus F10-B-rettelsen, før F-05) — ikke deployet | `6bca478a` | 20 | `e20c056b935880c72a87e7875a797c4070ad1fe54d4d8035bcfb834fe6daefe6` |
 | Forrige kandidat (Lærligverse-integration lag 3: F-04/F-02/F-07, D-329 `objective-target.ts`, D-332 `option_details`, D-338 `learning-sequence.ts`) — ikke deployet | `0a6d7b6d` | 20 | `cf71236f4e54cf6aeb719d83bd7e94754c9ae279dd2c17c0c24f06f3bec3bda2` |
 | Forrige kandidat (lag 2 oven på F-05: F-05 plus D-329) — ikke deployet | `09a9ad37` | 20 | `a0688ada4117ac2f2d58ef9e7fd4badfc714417f8cad80fa183e2990b9a6196f` |
+| Forrige kandidat (D-362 Rækkefølge og Kategorisering servable, plus D-329 `objective-target.ts`, Lærligverse-integration lag 2) — ikke deployet | `cf7cf7a3` | 20 | `3072e189b7b9acea4c870f8e29444be11667e036fa73652163b537a90f1b2c34` |
+| Forrige kandidat (D-362: Rækkefølge og Kategorisering servable, oven på F-05, før D-329) — ikke deployet | main `32f0cb3d` | 19 | `04039767dfcdec861abcaef69c333977d0145fc482df9cbc58bc3860b907d6b2` |
+| Forrige kandidat (F-05 Kategorisering, oven på F-04) — ikke deployet | main `1b8b7e80` | 19 | `467f9582454a8d36f6d5f6010c6736b9911bee2ac1e3c8c42edd36d55f14d5c6` |
+| Forrige kandidat (F-05 Kategorisering oven på F-04, plus D-329 `objective-target.ts`, Lærligverse-integration lag 2 før D-362) — ikke deployet | `09a9ad37` | 20 | `a0688ada4117ac2f2d58ef9e7fd4badfc714417f8cad80fa183e2990b9a6196f` |
 | Forrige kandidat (F-04 + D-329, Lærligverse-integration lag 2 før F-05) — ikke deployet | `223a5bd9` | 19 | `7438c77f914aa458cef9ce4b0118bfc8d61f3871eedb3a55eecbd4e2d2d7355b` |
 | Forrige kandidat (F-05 Kategorisering, oven på F-04, før D-329) — ikke deployet | main `479bb193` | 19 | `467f9582454a8d36f6d5f6010c6736b9911bee2ac1e3c8c42edd36d55f14d5c6` |
 | Forrige kandidat (F-04 Rækkefølge, oven på F-02 og F-07, PR #624) — ikke deployet | #624 | 18 | `06a6ccb9a2e5640abaa71a69581f3f42b5192c7dc91d865580099bf6004b3c4e` |
@@ -395,6 +417,18 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 | Version 180, som deployet 2026-10-31 — **rollback-mål før H5-aktivering** | `1aee47a` (main, merge af #487), uændret | 12 | `a6a874b7c4b01a4654679bf5d9c472cb683844f7c6ac3fe69ccf6b19d4f54603` |
 | Historisk rollback til version 179 (det, `materialize-rollback` skriver) | `21ec9ff` med låsningen (kun linje 2 i `index.ts` er ændret) | 11 | `ca21b993839e48ff4e5baf3189306860d6b349fdcc7eea12f65ab78a73e418c6` |
 | Version 179, som deployet | `21ec9ff` uændret | 11 | `c4414671f3a5aff1e8d5bc3cb57ec4e92bb0d70ef8008a7ade39a75730c81985` |
+
+**D-362 (Rækkefølge og Kategorisering klar til aktivering) ændrer ikke grafen (stadig 19 filer), kun to
+af filerne.** `_shared/interaction-kinds.ts` gør `order_items` og `categorize` servable, og `index.ts`'s
+v1-`mapAnswerFormat` oversætter `"order"` til `"order"` og `"categorize"` til `"categorize"` (præcis
+sammenligning, før faldbagud-linjen til `"mc"`). De øvrige 17 filer er byte-identiske med F-05-kandidaten.
+Kandidaten er **ikke** deployet, og den må **først** deployes, når produktionstrin Q-21
+(process-event-deployet i H5/K1-kæden) er live og verificeret: den deployede process-event (v34-kode) har
+ingen formkontrol for `order` og `categorize` og ville rette svaret som MC. Rækkefølgen er Q-21 → dette
+deploy → migration `20261108090000_order_categorize_activation.sql` → indhold
+(`20261108090200_order_categorize_pilot_content.sql`), hvert trin med sit eget GO fra ejeren. Deployet
+alene er ufarligt: produktionens constraints afviser enhver `order`- og `categorize`-række, indtil
+migrationen er anvendt. Slukket-pariteten ovenfor er grøn med den nye graf.
 
 **F-05 Kategorisering ændrer grafen fra 18 til 19 filer** (oven på F-04). `_shared/categorize.ts` er
 ny (kontrakt, instansnøgle og layout; hvert elements kategori er forfattet, kun præsentationen blandes),

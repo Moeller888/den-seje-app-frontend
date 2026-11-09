@@ -123,15 +123,15 @@ test("payload: content.order holds the shown texts and the sequence kind — nev
   assert.throws(() => toPublicQuestion({ ...CONTENT, items: ["a"] }, "order", null, key));
 });
 
-// ── Registry: built, NOT servable ──────────────────────────────────────────────────────────────
-test("registry: order is classified, has its own wire format and renderer, and is NOT servable", () => {
+// ── Registry: servable since D-362 (activation migration 20261108090000, NOT applied) ─────────────
+test("registry: order is classified, has its own wire format and renderer, and is servable (D-362)", () => {
   const row = { answer_format: "order", answer_type: "short", content: CONTENT };
   assert.equal(classifyQuestion(row), "order_items");
-  assert.deepEqual({ ...INTERACTION_KINDS.order_items }, { wireFormat: "order", renderer: "order_items", servable: false, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null });
+  assert.deepEqual({ ...INTERACTION_KINDS.order_items }, { wireFormat: "order", renderer: "order_items", servable: true, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null });
   // guessFloor null: the chance of a random order depends on the item count (1/(n! − 1) with the identity
   // excluded from the shown order), so it is not a fixed property of the kind (interaction-kinds.ts).
-  assert.equal(isServableKind("order_items"), false);
-  assert.equal(servableWireFormat(row), null, "the v2 mix never serves it");
+  assert.equal(isServableKind("order_items"), true);
+  assert.equal(servableWireFormat(row), "order", "the v2 mix serves it with its own wire format, never \"mc\"");
   assert.equal(classifyQuestion({ ...row, content: { ...CONTENT, force_text: true } }), null);
   assert.equal(classifyQuestion({ ...row, answer_type: "long" }), null);
   assert.equal(resolveAnswerRenderer({ answer_format: "order", content: {} }), ANSWER_RENDERERS.ORDER_ITEMS);
@@ -142,8 +142,8 @@ test("get-next-question: the key is drawn once at instance creation; open and re
   const index = code(read("supabase/functions/get-next-question/index.ts"));
   assert.match(index, /if \(answer_format === "order"\) \{\s*return \{ question, correct: createOrderKey\(parseOrderContent\(raw\)\.items\.length\) \};\s*\}/);
   assert.match(index, /const KEYED_FORMATS: ReadonlySet<string> = new Set\(\["match", "order", "categorize"\]\);/);
-  // v1 maps "order" to "mc" (unknown format) and the row, having no options, is skipped — never shown as MC.
-  assert.match(index, /function mapAnswerFormat\(format: string \| null\) \{[\s\S]*?return "mc";\s*\}/);
+  // v1 maps "order" to "order" by exact match (D-362) — never to "mc".
+  assert.match(index, /function mapAnswerFormat\(format: string \| null\) \{[\s\S]*?if \(format === "order"\) return "order";[\s\S]*?return "mc";\s*\}/);
 });
 
 test("process-event: an order is shape-checked before the RPC and then graded by process_question_attempt like MC", () => {

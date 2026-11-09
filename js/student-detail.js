@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { describeReviewItem } from "./teacher-answer-display.js";
 
 // ========================
 // AUTH CHECK
@@ -401,6 +402,7 @@ async function fetchQuestionInstances() {
     .select(`
       id,
       user_answer,
+      was_correct,
       teacher_score,
       teacher_feedback,
       created_at,
@@ -424,6 +426,7 @@ async function fetchQuestionInstances() {
     .select(`
       id,
       user_answer,
+      was_correct,
       teacher_score,
       teacher_feedback,
       created_at,
@@ -449,25 +452,32 @@ async function fetchQuestionInstances() {
   ];
 
   const { data: questionsData } = allIds.length
-    ? await supabase.from("questions").select("id, content").in("id", allIds)
+    ? await supabase.from("questions").select("id, content, answer_format").in("id", allIds)
     : { data: [] };
 
   const questionMap = Object.fromEntries(
     (questionsData || []).map(q => [q.id, q.content])
   );
 
+  // answer_format decides how a Rækkefølge / Kategorisering answer is shown (js/teacher-answer-display.js).
+  const formatMap = Object.fromEntries(
+    (questionsData || []).map(q => [q.id, q.answer_format ?? null])
+  );
+
   const pending = (pendingRaw || [])
     .filter(item => item.user_answer && item.user_answer.trim() !== "")
     .map(item => ({
       ...item,
-      content: questionMap[item.question_id] || {}
+      content: questionMap[item.question_id] || {},
+      answer_format: formatMap[item.question_id] ?? null
     }));
 
   const reviewed = (reviewedRaw || [])
     .filter(item => item.user_answer && item.user_answer.trim() !== "")
     .map(item => ({
       ...item,
-      content: questionMap[item.question_id] || {}
+      content: questionMap[item.question_id] || {},
+      answer_format: formatMap[item.question_id] ?? null
     }));
 
   renderReview(pending, reviewed);
@@ -672,16 +682,13 @@ function renderReview(pending, reviewed) {
     } catch {
       console.warn("Invalid content JSON", raw);
     }
-    const question =
-      content.question ??
-      content.text ??
-      "(mangler spørgsmål)";
-    const answer = item.user_answer ?? "(intet svar)";
-    const facit =
-      content.answer ??
-      content.correct ??
-      content.correct_answer ??
-      "(intet facit)";
+    // Rækkefølge / Kategorisering: the authored facit and right/wrong — never the raw position list.
+    const { question, answer, facit } = describeReviewItem({
+      content,
+      answerFormat: item.answer_format,
+      userAnswer: item.user_answer,
+      wasCorrect: item.was_correct
+    });
 
     const box = document.createElement("div");
     box.className = "box";
@@ -725,11 +732,12 @@ function renderReview(pending, reviewed) {
     } catch {
       console.warn("Invalid content JSON", raw);
     }
-    const question =
-      content.question ??
-      content.text ??
-      "(mangler spørgsmål)";
-    const answer = item.user_answer ?? "(intet svar)";
+    const { question, answer } = describeReviewItem({
+      content,
+      answerFormat: item.answer_format,
+      userAnswer: item.user_answer,
+      wasCorrect: item.was_correct
+    });
 
     const box = document.createElement("div");
     box.className = "box";

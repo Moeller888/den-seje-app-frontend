@@ -144,19 +144,24 @@ const answer = (instanceId, correct, at) => q1(
 const advance = async (student, grade = 7) => (await q1("SELECT * FROM public.advance_student_band($1::uuid, $2::smallint)", [student, grade]))[0];
 
 // ── 1. One servable rule in SQL and TS ───────────────────────────────────────────────────────────
-test("question_is_servable agrees with the TS registry (classifyQuestion + servable) on the whole matrix", async () => {
-  const formats = ["mc", "mc_single", "number", "numbers", "text", "match", "match_pairs", "true_false", "MC", "Text", " mc",
-    "longtext", "mc_number", "drag_drop", "", null];
+// This file's question_is_servable predates the activation of Rækkefølge and Kategorisering (D-362,
+// migration 20261108090000, which inserts exactly their two lines): here the registry is compared with
+// order_items and categorize as they were then — not servable. Full parity of the registry with the
+// activated SQL twin is proven in tests/unit/order-categorize-activation-migration-run.test.mjs.
+test("question_is_servable agrees with the TS registry (classifyQuestion + servable; Rækkefølge and Kategorisering before D-362) on the whole matrix", async () => {
+  const formats = ["mc", "mc_single", "number", "numbers", "text", "match", "match_pairs", "true_false", "order", "categorize",
+    "MC", "Text", " mc", "longtext", "mc_number", "drag_drop", "", null];
   const types = ["short", "long", "Long", "", null, "medium", " short"];
   let checked = 0;
   for (const f of formats) for (const t of types) for (const force of [false, true]) {
     const content = force ? { question: "?", force_text: true } : { question: "?" };
     const [{ ok }] = await q1("SELECT public.question_is_servable($1::text, $2::text, $3::jsonb) AS ok", [f, t, JSON.stringify(content)]);
-    const ts = isServableKind(classifyQuestion({ answer_format: f, answer_type: t, content }));
+    const kind = classifyQuestion({ answer_format: f, answer_type: t, content });
+    const ts = kind === "order_items" || kind === "categorize" ? false : isServableKind(kind);
     assert.equal(ok, ts, JSON.stringify({ f, t, force }));
     checked++;
   }
-  assert.equal(checked, 16 * 7 * 2);
+  assert.equal(checked, 18 * 7 * 2);
 });
 
 // ── 2. Candidates ────────────────────────────────────────────────────────────────────────────────

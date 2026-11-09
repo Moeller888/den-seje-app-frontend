@@ -52,7 +52,8 @@ test("D-359: 46 single parts and D-355's 33 tops (79), each with a label and exi
   }
 });
 
-test("D-359: from every starting outfit, every part goes on and the result is approved, changing as little as can be", () => {
+test("D-359/D-367: from every starting outfit, only the chosen part changes — the exact approved outfit, or a refusal", () => {
+  // D-367 (owner, 2026-11-09) replaced D-359's "fewest other parts change": a part goes on only with the two parts already worn.
   const all = L.northstarApprovedOutfits(), pieces = L.northstarPieces();
   const starts = [...all.values()].filter((_o, i) => i % 37 === 0);
   L.northstarUseAccount({});
@@ -61,28 +62,64 @@ test("D-359: from every starting outfit, every part goes on and the result is ap
     wear(s.choice);
     for (const p of pieces) {
       const f = L.northstarFitPiece(p.item);
-      assert.ok(f, p.item);
-      assert.equal(f[p.category], p.item, "the chosen part is what goes on");
-      assert.ok(all.has(f.top + "+" + f.bottom + "+" + f.shoes), "always an approved outfit");
-      const others = ["top", "bottom", "shoes"].filter((c) => c !== p.category);
-      const keepsAll = all.has(others.reduce((o, c) => ({ ...o, [c]: s[c] }), { [p.category]: p.item }).top + "+" + others.reduce((o, c) => ({ ...o, [c]: s[c] }), { [p.category]: p.item }).bottom + "+" + others.reduce((o, c) => ({ ...o, [c]: s[c] }), { [p.category]: p.item }).shoes);
-      if (keepsAll) assert.equal(f.changed.length, 0, "nothing else changes when the outfit is approved as it is");
+      const want = { top: s.top, bottom: s.bottom, shoes: s.shoes, [p.category]: p.item };
+      const exact = all.get(want.top + "+" + want.bottom + "+" + want.shoes);
+      if (exact) {
+        assert.deepEqual([f.top, f.bottom, f.shoes], [want.top, want.bottom, want.shoes], "exactly the chosen part changes: " + p.item);
+        assert.deepEqual(f.changed, []);
+        assert.equal(f.choice, exact.choice, "the approved outfit's own stored choice");
+      } else {
+        assert.deepEqual(f, { refused: true, category: p.category }, "refused, nothing else offered: " + p.item);
+      }
       assert.deepEqual(L.northstarFitPiece(p.item), f, "deterministic");
     }
   }
 });
 
-test("D-359: a sweater over shorts keeps the shoes where it can, picks the most approved bottom and says so", () => {
-  const start = [...L.northstarApprovedOutfits().values()].find((o) => o.top === "top-tee-hip-blue" && o.bottom === "bottom-shorts-navy" && o.shoes === "shoes-sneakers-beige");
+test("D-367: every refusal is a combination that is not approved, and every accepted choice draws exactly what was asked", () => {
+  const all = L.northstarApprovedOutfits(), pieces = L.northstarPieces();
+  let accepted = 0, refused = 0;
+  for (const s of [...all.values()].filter((_o, i) => i % 11 === 0)) {
+    wear(s.choice);
+    for (const p of pieces) {
+      if (s[p.category] === p.item) continue;
+      const f = L.northstarFitPiece(p.item);
+      if (f.refused) { refused++; continue; }
+      accepted++;
+      wear(f.choice);
+      const o = L.northstarOutfitNow();
+      assert.deepEqual([o.top, o.bottom, o.shoes], [f.top, f.bottom, f.shoes], "the saved choice draws exactly the outfit shown");
+      for (const c of ["top", "bottom", "shoes"]) if (c !== p.category) assert.equal(o[c], s[c], "the other parts stay: " + c);
+      wear(s.choice);
+    }
+  }
+  assert.ok(accepted > 0 && refused > 0, "both cases are covered");
+});
+
+test("D-367: a sweater over the navy shorts is refused with a short reason; over the light blue capris it goes on", () => {
+  const all = [...L.northstarApprovedOutfits().values()];
+  const start = all.find((o) => o.top === "top-tee-hip-blue" && o.bottom === "bottom-shorts-navy" && o.shoes === "shoes-sneakers-beige");
   wear(start.choice);
-  const sweater = L.northstarPieces().find((p) => /sweater/.test(p.item));
-  const f = L.northstarFitPiece(sweater.item);
-  assert.equal(f.shoes, "shoes-sneakers-beige");
-  assert.equal(f.bottom, "bottom-capri-lightblue");
-  assert.deepEqual(f.changed.map((c) => c.category), ["bottom"]);
-  const note = P.northstarFitNote(sweater.item, f.changed);
-  assert.match(note, /^Shorts · marineblå passer ikke til .+, så du har fået capribukser · lyseblå på\.$/);
-  assert.equal(P.northstarFitNote(sweater.item, []), "");
+  const f = L.northstarFitPiece("top-sweater-ls2-green-check");
+  assert.deepEqual(f, { refused: true, category: "top" });
+  assert.equal(P.northstarRefusalNote("top"), "Den overdel passer ikke til dit nuværende outfit.");
+  assert.equal(P.northstarRefusalNote("bottom"), "Den underdel passer ikke til dit nuværende outfit.");
+  assert.equal(P.northstarRefusalNote("shoes"), "De sko passer ikke til dit nuværende outfit.");
+  const capri = all.find((o) => o.top === "top-tee-hip-blue" && o.bottom === "bottom-capri-lightblue" && o.shoes === "shoes-sneakers-beige");
+  wear(capri.choice);
+  const g = L.northstarFitPiece("top-sweater-ls2-green-check");
+  assert.deepEqual([g.top, g.bottom, g.shoes], ["top-sweater-ls2-green-check", "bottom-capri-lightblue", "shoes-sneakers-beige"]);
+  assert.equal(P.northstarFitNote("top-sweater-ls2-green-check", g.changed), "", "nothing else changed, so nothing to explain");
+});
+
+test("D-367: the owner's case — a shoe that does not go with the worn top and bottom no longer changes them", () => {
+  const all = [...L.northstarApprovedOutfits().values()];
+  const start = all.find((o) => o.top === "top-tee-hip-cream" && o.bottom === "bottom-skirt-sand" && o.shoes === "shoes-sneakers-beige");
+  wear(start.choice);
+  assert.deepEqual(L.northstarFitPiece("shoes-ankleboots-brown"), { refused: true, category: "shoes" });
+  const ok = L.northstarPieces().filter((p) => p.category === "shoes" && p.item !== start.shoes).map((p) => L.northstarFitPiece(p.item)).filter((f) => !f.refused);
+  assert.ok(ok.length > 0, "some shoes go with it");
+  for (const f of ok) assert.deepEqual([f.top, f.bottom], [start.top, start.bottom], "a fitting shoe keeps exactly the same top and bottom");
 });
 
 test("D-359: an unknown part is refused, and a pupil on today's avatar starts from the start outfit", () => {
