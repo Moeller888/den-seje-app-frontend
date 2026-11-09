@@ -20,8 +20,12 @@
 //      are used, and the evidence equals evidence.ts's `independent` state for the same facts.
 //   6. NOTHING ELSE CHANGES: get_student_overview / get_teacher_visibility bodies and results are
 //      identical before and after; with question_attempts absent the RPC still answers (instance facts).
-// HONEST LIMITS: PGlite runs as superuser, so the EXECUTE grants are checked in the catalog
-// (has_function_privilege), not by switching roles; auth.uid() is the platform stub (request.jwt.claim.sub).
+//   7. AS THE REAL ROLES (SET LOCAL ROLE, rolled back): the gate matrix for authenticated pupils, teachers
+//      and super_admin; anon and service_role get 42501; role claims in the JWT are ignored; a pupil or a
+//      profile-less user cannot write profiles.role / teacher_id or insert a profile (42501), so the gate's
+//      only input (profiles.role and teacher_id for auth.uid()) is not client-writable.
+// HONEST LIMITS: the replay's profiles grants stand in for production's; auth.uid() is the platform stub
+// (request.jwt.claim.sub), PostgreSQL 18.x (production 17.6).
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
@@ -200,6 +204,96 @@ test("gate: the pupil's teacher, super_admin and the pupil get it; everyone else
   const own = await progress(A, OTHER_TEACHER, OTHER_PUPIL);
   assert.equal(own.objectives.length, 1);
   assert.equal(own.objectives[0].steps.length, 1);
+});
+
+// The same gate as the REAL API roles (SET LOCAL ROLE, so EXECUTE grants and RLS apply), inside a
+// transaction that is always rolled back. A disabled frontend flag is not a security measure: this is.
+async function asRole(db, role, uid, run, claims = null) {
+  await db.exec("BEGIN");
+  try {
+    await db.query("SELECT set_config('request.jwt.claim.sub', $1, true)", [uid ?? ""]);
+    if (claims) {
+      await db.query("SELECT set_config('request.jwt.claims', $1, true), set_config('request.jwt.claim.role', $2, true)",
+        [JSON.stringify(claims), String(claims.role ?? "")]);
+    }
+    await db.exec(`SET LOCAL ROLE ${role}`);
+    return await run();
+  } finally {
+    await db.exec("ROLLBACK");
+  }
+}
+const callRpc = async (db, target) => {
+  try { return { v: (await one(db, "SELECT public.get_course_progress($1) AS v", [target])).v }; }
+  catch (e) { return { code: e.code }; }
+};
+// One write attempt inside a savepoint: its error code, or how many rows it changed.
+async function tryWrite(db, sql, params = []) {
+  await db.exec("SAVEPOINT w");
+  try {
+    const r = await db.query(sql, params);
+    await db.exec("RELEASE SAVEPOINT w");
+    return { rows: r.affectedRows ?? 0 };
+  } catch (e) {
+    await db.exec("ROLLBACK TO SAVEPOINT w");
+    return { code: e.code };
+  }
+}
+
+test("gate as the real roles: authenticated pupil/teacher/super_admin matrix, anon and service_role refused", async () => {
+  const full = await progress(A, TEACHER, PUPIL);
+  const matrix = [
+    ["authenticated", PUPIL, PUPIL, "data", "pupil A → own data"],
+    ["authenticated", OTHER_PUPIL, PUPIL, "null", "pupil B → pupil A"],
+    ["authenticated", PUPIL, OTHER_PUPIL, "null", "pupil A → pupil B"],
+    ["authenticated", TEACHER, PUPIL, "data", "teacher of A → A"],
+    ["authenticated", OTHER_TEACHER, PUPIL, "null", "other teacher → A"],
+    ["authenticated", TEACHER, OTHER_PUPIL, "null", "teacher of A → B (not theirs)"],
+    ["authenticated", ADMIN, PUPIL, "data", "super_admin → A"],
+    ["authenticated", NO_PROFILE, PUPIL, "null", "signed in, no profile"],
+    ["authenticated", null, PUPIL, "null", "authenticated role without a subject"],
+    ["anon", null, PUPIL, "42501", "anon"],
+    ["anon", PUPIL, PUPIL, "42501", "anon carrying a pupil's subject"],
+    ["service_role", null, PUPIL, "42501", "service_role (no EXECUTE)"],
+  ];
+  const results = [];
+  for (const [role, uid, target, want, why] of matrix) {
+    const r = await asRole(A, role, uid, () => callRpc(A, target));
+    const got = r.code ?? (r.v === null ? "null" : "data");
+    results.push([why, got]);
+    assert.equal(got, want, why);
+    if (got === "data") assert.deepEqual(r.v, full, `${why}: the same result as the owner-side call`);
+  }
+  assert.equal(results.length, 12);
+});
+
+test("the function trusts no client-supplied role: JWT claims and profile writes cannot open the gate", async () => {
+  // Role claims in the JWT are ignored: only profiles.role for auth.uid() counts.
+  for (const claims of [{ role: "super_admin" }, { role: "service_role" }, { role: "authenticated", app_metadata: { role: "teacher" }, user_metadata: { role: "super_admin" } }]) {
+    const r = await asRole(A, "authenticated", OTHER_PUPIL, () => callRpc(A, PUPIL), claims);
+    assert.deepEqual(r, { v: null }, JSON.stringify(claims));
+  }
+  // A pupil cannot make themself a teacher, re-point their teacher_id, or create a teacher profile —
+  // and even within the same transaction the RPC stays closed.
+  const attempts = [
+    ["pupil B sets own role = teacher", OTHER_PUPIL, "UPDATE public.profiles SET role = 'teacher' WHERE id = $1", [OTHER_PUPIL]],
+    ["pupil B sets own role = super_admin", OTHER_PUPIL, "UPDATE public.profiles SET role = 'super_admin' WHERE id = $1", [OTHER_PUPIL]],
+    ["pupil B re-points teacher_id to A's teacher", OTHER_PUPIL, "UPDATE public.profiles SET teacher_id = $2 WHERE id = $1", [OTHER_PUPIL, TEACHER]],
+    ["other teacher claims pupil A", OTHER_TEACHER, "UPDATE public.profiles SET teacher_id = $2 WHERE id = $1", [PUPIL, OTHER_TEACHER]],
+    ["a user without profile inserts a teacher profile", NO_PROFILE, "INSERT INTO public.profiles (id, role) VALUES ($1, 'teacher')", [NO_PROFILE]],
+    ["a user without profile inserts a super_admin profile", NO_PROFILE, "INSERT INTO public.profiles (id, role) VALUES ($1, 'super_admin')", [NO_PROFILE]],
+  ];
+  for (const [why, uid, sql, params] of attempts) {
+    const out = await asRole(A, "authenticated", uid, async () => {
+      const w = await tryWrite(A, sql, params);
+      return { w, after: await callRpc(A, PUPIL) };
+    });
+    // The replayed profiles grants (20261010102416 column privileges) refuse each one outright.
+    assert.deepEqual(out.w, { code: "42501" }, `${why}: refused with insufficient_privilege`);
+    assert.deepEqual(out.after, { v: null }, `${why}: the RPC stays closed`);
+  }
+  // Nothing changed (every attempt ran in a rolled-back transaction, and was refused anyway).
+  const p = await rows(A, "SELECT id, role, teacher_id FROM public.profiles WHERE id IN ($1, $2) ORDER BY id", [PUPIL, OTHER_PUPIL]);
+  assert.deepEqual(p.map((r) => [r.role, r.teacher_id]), [["student", TEACHER], ["student", OTHER_TEACHER]]);
 });
 
 // ── 3./4. Shape, first answers, no double count ──────────────────────────────────────────────────────
