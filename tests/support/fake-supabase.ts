@@ -18,6 +18,7 @@
 //   overview       the get_student_overview row for student-detail.html (absent: no rows)
 //   detailPending / detailReviewed  student-detail.html's pending / reviewed question_instances
 //   questionContent  { [question id]: content } returned by the questions lookup
+//   courseProgress / courseProgressError  what get_course_progress answers (absent: null = refused)
 //   createResponse  "ok" | { status, code } — what create-student answers
 //   signInError    when set, signInWithPassword fails with it
 //   updateUserError  when set, auth.updateUser fails with it
@@ -153,6 +154,10 @@ export function createClient() {
       }
       if (fn === "get_student_overview") {
         return { data: f.overview ? [{ ...f.overview }] : [], error: null };
+      }
+      if (fn === "get_course_progress") {
+        if (f.courseProgressError) return { data: null, error: { message: f.courseProgressError } };
+        return { data: "courseProgress" in f ? f.courseProgress : null, error: null };
       }
       return { data: null, error: null };
     },
