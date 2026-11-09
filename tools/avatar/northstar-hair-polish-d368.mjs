@@ -6,6 +6,9 @@
 //   outlineHair       — an ink edge for a hair layer without one ("Kort"): the layer's own boundary band darkened toward ink.
 //   earOpening        — the afro opened at each ear, so the whole ear shows inside the curls instead of loose lobes peeking out; the
 //                       curls along the opening shaded darker.
+//   flapByReference   — (D-371) the flap in front of each ear that Northstar's own hair covers: head skin next to the ear under its hair,
+//                       and the face's contour line through it (the "double line" when a hairstyle leaves it bare). Used as a zone of
+//                       the hair template that every new hairstyle must cover; nothing is drawn from it.
 import * as NL from "./r3-northstar-layers.mjs";
 
 const W = 1024, H = 1536, N = W * H;
@@ -108,4 +111,17 @@ export function earOpening(afro, ears, { grow = 2, rim = 5, shade = 0.55, bald =
   for (let i = 0; i < N; i++) { if (!o[i * 4 + 3] || near[i] > rim || near[i] === 0) continue; const k = near[i], f = shade + (1 - shade) * (k - 1) / rim;
     for (let c = 0; c < 3; c++) o[i * 4 + c] = Math.round(o[i * 4 + c] * f); if (k === 1) o[i * 4 + 3] = Math.round(o[i * 4 + 3] * 0.6); }
   return { px: o, cut };
+}
+
+/** The flap in front of each ear (D-371): opaque head pixels next to the ear (within `near` px in the row, from `above` px over the ear's
+ *  top down to its bottom) that Northstar's hair covers (alpha ≥ 128), plus the face's dark contour line that continues from there under
+ *  Northstar's hair (alpha > 0) in the same rows and reach — never the ear itself. */
+export function flapByReference(bald, ears, nsHair, { near = 40, above = 40, lineLum = 135 } = {}) {
+  let ey0 = H, ey1 = 0; for (let i = 0; i < N; i++) if (ears[i]) { const y = (i / W) | 0; ey0 = Math.min(ey0, y); ey1 = Math.max(ey1, y); }
+  const y0 = Math.max(0, ey0 - above), m = new Uint8Array(N);
+  const nearEar = (x, y) => { for (let dx = -near; dx <= near; dx += 2) { const X = x + dx; if (X >= 0 && X < W && ears[y * W + X]) return true; } return false; };
+  for (let y = y0; y <= ey1; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (ears[i] || bald[i * 4 + 3] < 128 || nsHair[i * 4 + 3] < 128) continue; if (nearEar(x, y)) m[i] = 1; }
+  const darkAt = (i) => bald[i * 4 + 3] >= 128 && lum(bald, i) < lineLum && nsHair[i * 4 + 3] > 0 && !ears[i], st = []; for (let i = 0; i < N; i++) if (m[i]) st.push(i);
+  while (st.length) { const i = st.pop(), x = i % W, y = (i / W) | 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const X = x + dx, Y = y + dy; if (X < 0 || X >= W || Y < y0 || Y > ey1) continue; const k = Y * W + X; if (m[k] || !darkAt(k) || !nearEar(X, Y)) continue; m[k] = 1; st.push(k); } }
+  return m;
 }
