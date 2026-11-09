@@ -41,6 +41,12 @@
 -- og der krediteres kun for indsatte rækker. Fejler noget midtvejs, ruller hele transaktionen tilbage
 -- (både bog og kredit), så et nyt forsøg betaler præcis én gang.
 --
+-- DOBBELTBETALINGSVAGT: i dag betaler belønnings-RPC'erne også kursussvar (10 XP + 5 coins, tællere, quests).
+-- Funktionen LÆSER derfor kun katalogets md5(prosrc) af de fire belønningsfunktioner og udbetaler intet
+-- (outcome 'reward_path_not_ready', ingen skrivning), medmindre hver af dem har en af EFTER-kroppene fra
+-- forslaget til H5/K1-sporet (docs/laerligverse/forslag-k1-belonning-kursussvar.sql). Migrationen ændrer
+-- ikke selv nogen belønningsfunktion.
+--
 -- FLAG: Edge-funktionen course-progress er slukket, medmindre LAERLIGVERSE_COURSE_REWARDS er præcis "on".
 -- Uden kald af funktionen sker der intet — tabellen forbliver tom.
 --
@@ -102,6 +108,22 @@ BEGIN
   IF p_objective IS NULL OR char_length(btrim(p_objective)) = 0 OR char_length(p_objective) > 200 THEN
     RETURN jsonb_build_object('outcome', 'invalid_request', 'reason', 'invalid_objective', 'awarded', '[]'::jsonb,
                               'xp_awarded', 0, 'coins_awarded', 0);
+  END IF;
+
+  -- Dobbeltbetalingsvagt: så længe belønnings-RPC'erne stadig betaler kursussvar pr. svar, udbetales intet.
+  -- Hver overload af de fire funktioner skal have en af de reviewede EFTER-kroppe fra
+  -- docs/laerligverse/forslag-k1-belonning-kursussvar.sql (og process_question_attempt skal findes).
+  IF NOT EXISTS (
+       SELECT 1 FROM pg_catalog.pg_proc p
+       WHERE p.oid = to_regprocedure('public.process_question_attempt(uuid,uuid,text,bigint)')
+         AND md5(p.prosrc) = 'a91a651c32b8f0d4a8efad588f2f78dd')
+     OR EXISTS (
+       SELECT 1 FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+       WHERE n.nspname = 'public'
+         AND p.proname IN ('process_question_attempt', 'process_question_attempt_v2', 'process_text_answer', 'process_text_answer_v2')
+         AND md5(p.prosrc) NOT IN ('a91a651c32b8f0d4a8efad588f2f78dd', 'f241c2115ec48441efc9e695b028d2d2',
+                                   '62589388dae732ad79ca8f893027785d', '098969e41b5c85a00e21a733093d7ecb')) THEN
+    RETURN jsonb_build_object('outcome', 'reward_path_not_ready', 'awarded', '[]'::jsonb, 'xp_awarded', 0, 'coins_awarded', 0);
   END IF;
 
   SELECT p.role INTO v_role FROM public.profiles p WHERE p.id = p_student_id;

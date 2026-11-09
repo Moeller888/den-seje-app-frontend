@@ -1,6 +1,9 @@
 // RUNTIME proof for migration 20261108171500_course_progress_rewards (Lærligverse, Arkivskabet), in PGlite
 // over the FULL isolated replay of the repository (tests/isolated/schema), with the migration applied on top
 // exactly as written (it is NOT_IN_PRODUCTION, so the replay itself skips it). Synthetic pupils only.
+// The award pays only once the reward RPCs no longer pay course answers (its double-pay guard), so this file also
+// loads the H5/K1-track PROPOSAL docs/laerligverse/forslag-k1-belonning-kursussvar.sql (not a migration) into
+// its test database; the combination and the guard are proven in course-progress-rewards-k1-proposal-run.test.mjs.
 //
 // Course answers are given through production's OWN reward RPC (process_question_attempt), so the history the
 // award function reads is the one the live answer path writes. Proven:
@@ -41,12 +44,15 @@ const uid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const TEACHER = uid(9001);
 
 let db;
+let originalPqa;
 before(async () => {
   db = new PGlite();
   await db.exec(read("tests/isolated/schema/pglite-platform.sql"));
   await db.exec(bootstrapMarkerSql("0123456789abcdef0123456789abcdef"));
   const r = await replaySchema({ exec: (s) => db.exec(s), query: async (s) => (await db.query(s)).rows });
   assert.deepEqual(r.failures, []);
+  originalPqa = (await db.query("SELECT pg_get_functiondef('public.process_question_attempt(uuid,uuid,text,bigint)'::regprocedure) AS d")).rows[0].d;
+  await db.exec(read("docs/laerligverse/forslag-k1-belonning-kursussvar.sql"));
   await db.exec(read(FILE));
   await db.exec(`INSERT INTO auth.users (id, email) VALUES ('${TEACHER}', 'laerer@example.test');
                  INSERT INTO public.profiles (id, role) VALUES ('${TEACHER}', 'teacher');`);
@@ -148,12 +154,18 @@ async function untouched(p) {
 
 // ── 0. Today's legacy path ──────────────────────────────────────────────────────────────────────────────
 
-test("0. today: a first correct course answer pays 10 XP + 5 coins and +1 total_correct_answers (the reward RPCs are not changed here)", async () => {
+test("0. today (production's body): a first correct course answer pays 10 XP + 5 coins and +1 total_correct_answers", async () => {
   const p = await addPupil();
   const before = await q1("SELECT xp, coins, total_correct_answers FROM public.student_progress WHERE student_id = $1", [p]);
-  await step(p, "lv_today", "guided_practice", true);
-  const after = await q1("SELECT xp, coins, total_correct_answers FROM public.student_progress WHERE student_id = $1", [p]);
-  assert.deepEqual([after.xp - before.xp, after.coins - before.coins, after.total_correct_answers - before.total_correct_answers], [10, 5, 1]);
+  await db.exec("BEGIN");
+  try {
+    await db.exec(originalPqa); // production's body, inside a transaction that is rolled back
+    await step(p, "lv_today", "guided_practice", true);
+    const after = await q1("SELECT xp, coins, total_correct_answers FROM public.student_progress WHERE student_id = $1", [p]);
+    assert.deepEqual([after.xp - before.xp, after.coins - before.coins, after.total_correct_answers - before.total_correct_answers], [10, 5, 1]);
+  } finally {
+    await db.exec("ROLLBACK");
+  }
 });
 
 // ── 1. The file ─────────────────────────────────────────────────────────────────────────────────────────
@@ -168,7 +180,10 @@ test("1. the file: unique version, listed NOT_IN_PRODUCTION and skipped by the r
   assert.match(sql, /IKKE ANVENDT I PRODUKTION/);
   assert.match(sql, /apply_migration med særskilt ejerautorisation \(D-110\)/);
   // It does not redefine any reward RPC or touch the answer path.
-  assert.doesNotMatch(sql.replace(/--.*$/gm, ""), /process_question_attempt|process_text_answer|question_attempts|total_correct_answers|repeat_count/);
+  const code = sql.replace(/--.*$/gm, "");
+  assert.doesNotMatch(code, /FUNCTION\s+public\.(process_question_attempt|process_text_answer)|question_attempts|total_correct_answers|repeat_count/);
+  // The reward functions are only NAMED in the double-pay guard, which reads md5(prosrc) from the catalog.
+  assert.equal((code.match(/process_question_attempt|process_text_answer/g) ?? []).length, 5);
 });
 
 test("1. the function: SECURITY INVOKER, search_path '', EXECUTE for service_role only; the ledger: RLS, one own-rows SELECT policy, no API write", async () => {

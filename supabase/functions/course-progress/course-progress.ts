@@ -27,6 +27,9 @@
 //   not_a_course_objective     404 { outcome, error }
 //   not_a_student              403 { outcome, error }
 //   no_progress_row            409 { outcome, error }
+//   reward_path_not_ready      503 { outcome, error } — the double-pay guard: the reward RPCs still pay course
+//                              answers per answer (docs/laerligverse/forslag-k1-belonning-kursussvar.md); nothing
+//                              is written
 //   invalid_request            400 { outcome, error, reason? }
 // Anything else — an unknown outcome, a malformed result, a database error — is a 500 that names no database
 // detail. A reply is validated before it leaves: amounts are non-negative integers and add up.
@@ -113,6 +116,8 @@ export function replyForAward(data: unknown, objective: string): Reply {
       return { status: 403, body: { outcome: d.outcome, error: "Only pupils earn course rewards" } };
     case "no_progress_row":
       return { status: 409, body: { outcome: d.outcome, error: "No progress record" } };
+    case "reward_path_not_ready":
+      return { status: 503, body: { outcome: d.outcome, error: "Course rewards are blocked until course answers are no longer paid per answer" } };
     case "invalid_request":
       return {
         status: 400,

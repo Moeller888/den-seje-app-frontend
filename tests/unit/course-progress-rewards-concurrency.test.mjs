@@ -5,7 +5,10 @@
 // at a disposable PostgreSQL server where the user may create databases and roles, and the `pg` client can be
 // resolved. Otherwise every test is SKIPPED with the reason — unless LEVEL_ENGINE_PG_REQUIRED=1 (CI's unit job,
 // PostgreSQL 17 service), where a missing server FAILS. It creates its own database and drops it afterwards.
-// The fixture holds only the columns the award function reads; the migration file runs UNMODIFIED.
+// The fixture holds only the columns the award function reads; the migration file runs UNMODIFIED. The award's
+// double-pay guard requires the reward functions' bodies from the H5/K1-track PROPOSAL
+// (docs/laerligverse/forslag-k1-belonning-kursussvar.sql, not a migration): the fixture creates exactly those four
+// bodies (byte for byte, so their md5 is the reviewed one) with check_function_bodies off — they are never called.
 //
 // How simultaneity is forced: a blocker session holds the pupil's student_progress row lock; every call is
 // started; the test waits until pg_stat_activity shows all of them waiting on a lock; only then is the blocker
@@ -42,6 +45,14 @@ test("a real PostgreSQL server is present where it is required (CI)", { skip: !R
 });
 
 const MIGRATION = "supabase/migrations/20261108171500_course_progress_rewards.sql";
+// The proposal's four CREATE OR REPLACE statements (everything after its md5 guard block).
+const proposalBodies = () => {
+  const sql = read("docs/laerligverse/forslag-k1-belonning-kursussvar.sql");
+  const marker = "$guard$;\n";
+  const at = sql.indexOf(marker);
+  assert.ok(at > 0, "the proposal has its guard block");
+  return `SET check_function_bodies = off;\n${sql.slice(at + marker.length)}\nRESET check_function_bodies;`;
+};
 const uid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
 // Roles are cluster-wide; create them only if absent (other suites may share the server).
@@ -88,6 +99,7 @@ async function setup() {
   dbUrl = u.toString();
   const c = await connect();
   await c.query(SCHEMA);
+  await c.query(proposalBodies());
   await c.query(read(MIGRATION));
   return c;
 }
