@@ -1,5 +1,6 @@
 // D-366 — a wardrobe choice on Avatar is changed in place and SAVED ON THE TEST PUPIL'S ACCOUNT: kept after a manual reload and a new
-// login. Runs against the suite's environment (the isolated stack in CI) with the slot's test pupil, through the UI only (the cards and
+// login. D-367: only the chosen part changes; a part that does not go with the worn parts is refused and saves nothing.
+// Runs against the suite's environment (the isolated stack in CI) with the slot's test pupil, through the UI only (the cards and
 // "Brug min nuværende avatar"; no direct RPC). The pupil's wardrobe choice is cleared again at the end, also when a step fails.
 
 import { test, expect, Page } from "@playwright/test";
@@ -40,7 +41,7 @@ async function clearChoice(page: Page) {
   }
 }
 
-test("D-366: a wardrobe choice is saved on the account — in place, kept after a reload and a new login", async ({ browser, browserName }) => {
+test("D-366/D-367: a wardrobe choice is saved on the account — only the chosen part, in place, kept after a reload and a new login", async ({ browser, browserName }) => {
   test.skip(browserName !== "chromium", "UI dedup");
   let ctx = await browser.newContext({ reducedMotion: "reduce" });
   let page = await ctx.newPage();
@@ -51,19 +52,37 @@ test("D-366: a wardrobe choice is saved on the account — in place, kept after 
     let loads = 0;
     page.on("load", () => { loads++; });
 
-    // the navy shorts, then a sweater: the bottom is swapped off the shorts, both shown at once
+    let saves = 0;
+    page.on("request", (r) => { if (r.url().includes("/rest/v1/rpc/set_avatar_northstar")) saves++; });
+    const status = page.locator("#northstarWardrobe .northstar-status");
+
+    // the navy shorts (the first choice starts the figure), then a sweater: it does not go with the shorts, so it is refused —
+    // the outfit and the account stay (D-367); the pupil chooses the light blue capris first, then the sweater goes on
     await page.getByRole("tab", { name: "Underdele", exact: true }).click();
     await card(page, "bottom-shorts-navy").locator(".equip-btn").click();
     await expect(card(page, "bottom-shorts-navy")).toHaveClass(/equipped/);
+    await expect.poll(() => saves).toBe(1);
+    const withShorts = (await outfitNow(page))!;
+    await page.getByRole("tab", { name: "Overdele", exact: true }).click();
+    await card(page, "top-sweater-ls2-green-check").locator(".equip-btn").click();
+    await expect(status).toContainText("Den overdel passer ikke til dit nuværende outfit.");
+    await expect(card(page, "top-sweater-ls2-green-check")).not.toHaveClass(/equipped/);
+    expect(await outfitNow(page), "a refused part changes nothing").toBe(withShorts);
+    await page.waitForTimeout(500);
+    expect(saves, "a refused part saves nothing").toBe(1);
+    await page.getByRole("tab", { name: "Underdele", exact: true }).click();
+    await card(page, "bottom-capri-lightblue").locator(".equip-btn").click();
+    await expect(card(page, "bottom-capri-lightblue")).toHaveClass(/equipped/);
     await page.getByRole("tab", { name: "Overdele", exact: true }).click();
     await card(page, "top-sweater-ls2-green-check").locator(".equip-btn").click();
     await expect(card(page, "top-sweater-ls2-green-check")).toHaveClass(/equipped/);
     const chosen = (await outfitNow(page))!;
-    expect(chosen.startsWith("top-sweater-ls2-green-check+")).toBe(true);
-    expect(chosen).not.toContain("bottom-shorts-navy");
-    await expect(page.locator("#northstarWardrobe .northstar-status")).toContainText("passer ikke til");
+    const [, b0, s0] = withShorts.split("+");
+    expect(chosen).toBe("top-sweater-ls2-green-check+bottom-capri-lightblue+" + s0);   // only the chosen parts changed
+    expect(b0).toBe("bottom-shorts-navy");
+    await expect.poll(() => saves).toBe(3);
     expect(loads, "no reload").toBe(0);
-    await expect(page.locator("#northstarWardrobe .northstar-status")).not.toContainText("kunne ikke gemmes", { timeout: 5000 });
+    await expect(status).not.toContainText("kunne ikke gemmes", { timeout: 5000 });
 
     // a manual reload: the account holds the outfit
     await expect.poll(async () => {

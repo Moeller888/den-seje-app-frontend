@@ -163,6 +163,11 @@ export function northstarFitNote(item, changed) {
   const from = changed.map((c) => northstarPieceLabel(c.from)).join(" og "), to = changed.map((c) => lower(northstarPieceLabel(c.to))).join(" og ");
   return from + " passer ikke til " + lower(northstarPieceLabel(item)) + ", så du har fået " + to + " på.";
 }
+// D-367: what the pupil is told when a part does not go with the two parts already worn; nothing changes and nothing is saved.
+const REFUSALS = Object.freeze({ top: "Den overdel passer ikke til dit nuværende outfit.", bottom: "Den underdel passer ikke til dit nuværende outfit.", shoes: "De sko passer ikke til dit nuværende outfit." });
+export function northstarRefusalNote(category) {
+  return Object.prototype.hasOwnProperty.call(REFUSALS, category) ? REFUSALS[category] : "Delen passer ikke til dit nuværende outfit.";
+}
 function session(key, value) {
   try {
     if (value === undefined) { const v = sessionStorage.getItem(key); sessionStorage.removeItem(key); return v; }
@@ -278,6 +283,14 @@ export function mountNorthstarWardrobe(root, preview, { saveChoice, cardsRoot = 
   };
   const put = (item) => {
     const fit = northstarFitPiece(item);
+    for (const old of root.ownerDocument.querySelectorAll(".northstar-refusal")) old.remove();
+    if (fit && fit.refused) {   // D-367: the outfit stays, nothing is saved; the reason shows on the card too, where the pupil is looking
+      note = northstarRefusalNote(fit.category);
+      describe();
+      const at = cards.find((c) => c.item === item);
+      if (at) { const why = document.createElement("div"); why.className = "northstar-refusal"; why.textContent = note; at.card.appendChild(why); }
+      return;
+    }
     if (fit) save(fit.choice, now ? northstarFitNote(item, fit.changed) : null);
     else status.textContent = "Delen kunne ikke tages på.";
   };
