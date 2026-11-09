@@ -128,6 +128,12 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "anti-gætte-pause, not applied in production: it adds quiz_cooldown_* and two triggers on question_instances; not replayed in the isolated stack, where shared synthetic pupils answer many questions wrong in a row (the frontend treats the missing get_my_quiz_cooldown as no pause)",
   "20261105120000_true_false_activation.sql":
     "F-02 Sandt/falsk activation, not applied in production and not to be applied before the get-next-question deploy that makes true_false servable: it admits true_false rows in questions and flips question_is_servable for them",
+  "20261108090000_order_categorize_activation.sql":
+    "F-04 Rækkefølge + F-05 Kategorisering activation (D-362), not applied in production and not to be applied before the process-event deploy (Q-21) and the get-next-question deploy that make order/categorize servable: it admits order and categorize rows in questions and flips question_is_servable for them",
+  "20261108090100_stimulus_pilot_content.sql":
+    "F-07 stimulus pilot content (D-362), not applied in production: data only, inserts INACTIVE pilot questions that carry content.stimulus",
+  "20261108090200_order_categorize_pilot_content.sql":
+    "F-04/F-05 pilot content (D-362), not applied in production and not applicable before 20261108090000: data only, inserts INACTIVE order and categorize pilot questions",
   "20261020150001_english_level_batch3_1.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020150002_english_level_batch3_2.sql":
