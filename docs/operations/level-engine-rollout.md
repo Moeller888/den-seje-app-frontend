@@ -392,7 +392,7 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (K9-prototype oven på L5 + L3: `learning-sequence.ts` får et introduktionstrin bag et flag) — **ikke deployet** | dette repository | 22 | `a7ca32634adb7ee3fcc26ffe49fc7dae2d0887220171f6d42a66d4fb53717ac1` |
+| Kandidat (LP-13/K9-prototype oven på L5 + L3: introduktionen som særskilt serverrunde bag `LAERLIGVERSE_INTRODUCTION`, ny `_shared/introduction.ts`) — **ikke deployet** | dette repository | 23 | `00e180368681fa5571a74aa7b7d0b4c2e0dd38847322668196c559000ef1ce6f` |
 | Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `1df8cd79`: `served_mode` ved indsættelsen og antal hints i et sekvenssvar, begge slukket) — ikke deployet | #653 `807a9e10` | 22 | `5854770231cf0f7440963969ca1c8eeee512b5647bfc77f485fa330298e73c0b` |
 | Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `b6d65cdd`, før D-362) — ikke deployet | #653 `9296ac7f` | 22 | `ac5bef7dba2ee43ed25818b703107ec4f573fa5ce55287cfc26fb34612a81029` |
 | Forrige kandidat (Lærligverse-integration lag 3 oven på main med D-362; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | lag 4 `1df8cd79` | 21 | `ea8072da934530fbf3dc39a29599f6026f3b8ed995a157eeb424023aed61ca8b` |
@@ -500,6 +500,10 @@ aldrig teksten) i et sekvenssvar. Slukket, eller uden et sekvenstrin, er indsæt
 præcis som før (`tests/unit/laerligverse-served-mode-gnq.test.mjs`). `LAERLIGVERSE_SERVED_MODE` må først
 slås til, når migration `20261108043500` (og før den K1) er anvendt. Ingen af dem sættes i produktionen
 uden ejerens særskilte GO.
+LP-13/K9-prototypen ændrer grafen fra 22 til 23 filer: `_shared/introduction.ts` er ny (det offentlige
+introduktionsindhold, kun kort med titel og tekst), og `index.ts` kalder `serve_introduction`, når Edge-secret'en
+`LAERLIGVERSE_INTRODUCTION` er præcis `on` og en serverstyret sekvens er i gang. Slukket er kaldene præcis som før
+(`tests/unit/laerligverse-introduction-gnq.test.mjs`). Kræver migration `20261110043500` (ikke anvendt).
 Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
 kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten

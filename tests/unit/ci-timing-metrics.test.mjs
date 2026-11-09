@@ -423,7 +423,8 @@ test("negative control: the old pool ran ≥ 2 PG files at once on PR #674's sha
   // reproduces exactly the plan that failed (Lærligverse L3/L5, #653).
   const LATER = new Set(["laerligverse-attempt-context-process-event.test.mjs", "laerligverse-l3-l5-attempt-wrapper-run.test.mjs",
     "laerligverse-l3-l5-concurrency.test.mjs", "laerligverse-l3-l5-migration-run.test.mjs", "laerligverse-request-hint.test.mjs",
-    "laerligverse-served-mode-gnq.test.mjs", "laerligverse-k9-presented-migration-run.test.mjs", "learning-sequence-introduction.test.mjs"]);
+    "laerligverse-served-mode-gnq.test.mjs", "laerligverse-k9-presented-migration-run.test.mjs",
+    "laerligverse-introductions-migration-run.test.mjs", "laerligverse-introduction-gnq.test.mjs", "laerligverse-introduction-progress.test.mjs"]);
   const suite = [...new Set([...ciSuite().filter((f) => !LATER.has(f)), "isolated-stimulus-chain-seed.test.mjs"])].sort();
   const pg = new Set(realPg());
   const isPg = (f) => pg.has(f);
