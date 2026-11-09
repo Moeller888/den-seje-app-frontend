@@ -1091,6 +1091,11 @@ export function northstarUseAccount(identity) {
   const c = identity && typeof identity === "object" ? identity.northstar : null;
   _nsAccount = c && typeof c === "object" && !Array.isArray(c) ? c : {};
 }
+// D-366: a copy of the named account's stored choice ({} when none, or before an account is named), so the wardrobe can show the last
+// saved outfit again when a later save fails.
+export function northstarAccountChoice() {
+  return _nsAccount && typeof _nsAccount === "object" ? { ..._nsAccount } : {};
+}
 function _nsStorage(key) {
   if (AVATAR_NORTHSTAR_WARDROBE && _nsAccount !== undefined && Object.prototype.hasOwnProperty.call(_NS_ACCOUNT_FIELDS, key)) {
     const v = _nsAccount[_NS_ACCOUNT_FIELDS[key]];
