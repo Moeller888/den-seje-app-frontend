@@ -45,6 +45,9 @@ function mapAnswerFormat(format: string | null) {
   if (format.startsWith("mc")) return "mc";
   if (format.includes("number")) return "number";
   if (format.includes("text")) return "text";
+  // Rækkefølge and Kategorisering (D-362): exact matches only, servable in the registry since D-362.
+  if (format === "order") return "order";
+  if (format === "categorize") return "categorize";
   return "mc";
 }
 

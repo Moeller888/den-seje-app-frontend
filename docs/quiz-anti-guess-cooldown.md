@@ -254,14 +254,18 @@ Hvis migrationen anvendes **før** merge, kan den gamle frontend ikke vise pause
 
 ### Rollback
 
-- **Slå mekanismen fra med det samme** uden at miste data:
-  `DROP TRIGGER quiz_cooldown_guard ON public.question_instances; DROP TRIGGER quiz_cooldown_register ON public.question_instances;`.
-  Svarfunktionerne er uændrede og kører derefter præcis som før.
-- **Ophæv en igangværende pause:**
-  `UPDATE public.quiz_cooldown_state SET cooldown_started_at = NULL, cooldown_until = NULL WHERE cooldown_until > now();`.
-  CHECK-reglen kræver, at begge sættes til NULL.
-- **Fuld fjernelse:** fjern derefter de tre funktioner og tre tabeller. `quiz_cooldown_events` er
-  observability-data og bør eksporteres først.
+Den fulde procedure står i [`operations/quiz-anti-guess-cooldown-rollback.md`](operations/quiz-anti-guess-cooldown-rollback.md),
+og scriptet er [`operations/quiz-anti-guess-cooldown-rollback.sql`](operations/quiz-anti-guess-cooldown-rollback.sql).
+Begge er testet i PGlite og på PostgreSQL 17 (`tests/unit/quiz-anti-guess-cooldown-rollback.test.mjs` og
+deltest 5–6 i `tests/unit/quiz-anti-guess-cooldown-concurrency.test.mjs`).
+
+- **Niveau 1, nødstop:** de to triggere fjernes, og igangværende pauser ophæves. Tabellerne og
+  hændelsesloggen bevares.
+- **Niveau 2, fuld tilbagerulning:** hændelsesloggen eksporteres først, derefter fjerner scriptet alle
+  D-350's objekter i en sikker rækkefølge og bekræfter, at elevdata og rettigheder er uændrede.
+
+Ingen elevbesvarelser, XP, mønter eller mastery berøres. Kun D-350's egne data går tabt; tabellen over hvad
+står i proceduren.
 
 ## 10. Kendte begrænsninger
 

@@ -18,7 +18,7 @@
 // the same store, so at most one sweater or tank top is chosen; the same rule and fallback.
 // D-359: with the flag on pupils get mountNorthstarWardrobe below: single parts in the right-hand column, no sets. The K panel is what
 // the local opt-in shows while the flag is off, and what the verifiers drive.
-import { northstarPieces, northstarPieceLayers, northstarFitPiece, northstarOutfitNow, NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_TOP_CHOICES, NORTHSTAR_SELECTABLE_TOPS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor } from "./avatar-layers.js";
+import { northstarPieces, northstarPieceLayers, northstarFitPiece, northstarOutfitNow, NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_TOP_CHOICES, NORTHSTAR_SELECTABLE_TOPS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor, northstarUseAccount, northstarAccountChoice } from "./avatar-layers.js";
 
 function store(key, value) {
   try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch (_e) { return false; }
@@ -163,6 +163,11 @@ export function northstarFitNote(item, changed) {
   const from = changed.map((c) => northstarPieceLabel(c.from)).join(" og "), to = changed.map((c) => lower(northstarPieceLabel(c.to))).join(" og ");
   return from + " passer ikke til " + lower(northstarPieceLabel(item)) + ", så du har fået " + to + " på.";
 }
+// D-367: what the pupil is told when a part does not go with the two parts already worn; nothing changes and nothing is saved.
+const REFUSALS = Object.freeze({ top: "Den overdel passer ikke til dit nuværende outfit.", bottom: "Den underdel passer ikke til dit nuværende outfit.", shoes: "De sko passer ikke til dit nuværende outfit." });
+export function northstarRefusalNote(category) {
+  return Object.prototype.hasOwnProperty.call(REFUSALS, category) ? REFUSALS[category] : "Delen passer ikke til dit nuværende outfit.";
+}
 function session(key, value) {
   try {
     if (value === undefined) { const v = sessionStorage.getItem(key); sessionStorage.removeItem(key); return v; }
@@ -186,24 +191,23 @@ function thumb(item, category, name) {
   return box;
 }
 
-export function mountNorthstarWardrobe(root, preview, { saveChoice } = {}) {
+// D-363: with `cardsRoot`, the three card grids go there (one per category, marked data-wardrobe-category, without headings) so the
+// page's category menu can show one at a time directly over the cards; without it they stay under their headings in root (D-359).
+// D-366: with `onChoice`, "Tag på" changes the outfit in place: the choice is shown at once (the renderer reads it from the account
+// choice, and onChoice(choice) lets the page draw the preview with its own renderer), only the cards' "På" marks and the status line
+// change, and the save runs behind it. One save at a time; a newer choice made meanwhile waits and only the newest is sent, so a late
+// answer can never overwrite a newer choice. When the newest save fails, the last saved outfit is shown again with a short message.
+// Without onChoice the page reloads after a save, as before.
+export function mountNorthstarWardrobe(root, preview, { saveChoice, cardsRoot = null, onChoice = null } = {}) {
   if (!root || typeof saveChoice !== "function") return false;
-  const pieces = northstarPieces(), now = northstarOutfitNow();
+  const pieces = northstarPieces(), inPlace = typeof onChoice === "function";
+  let now = northstarOutfitNow();
   root.textContent = "";
+  if (cardsRoot) cardsRoot.textContent = "";
   const status = document.createElement("p");
   status.className = "northstar-status";
   status.setAttribute("role", "status");
-  const save = async (choice, note) => {
-    const buttons = Array.from(root.querySelectorAll("button"));
-    buttons.forEach((b) => { b.disabled = true; });
-    status.textContent = "Gemmer …";
-    let ok = false;
-    try { ok = (await saveChoice(choice)) === true; } catch (_e) { ok = false; }
-    if (ok) { if (note) session(NOTE_KEY, note); location.reload(); return; }
-    buttons.forEach((b) => { b.disabled = false; });
-    status.textContent = "Valget kunne ikke gemmes. Prøv igen.";
-  };
-  const note = session(NOTE_KEY);
+  let note = session(NOTE_KEY);
   const describe = () => {
     const path = preview && preview.dataset ? preview.dataset.avatarRenderPath : null;
     const base = !now ? "Vælg en del for at prøve den nye figur. Valget gemmes på din konto, og du kan altid skifte tilbage."
@@ -211,52 +215,117 @@ export function mountNorthstarWardrobe(root, preview, { saveChoice } = {}) {
       : "Den nye figur blinker ikke endnu og har et neutralt udtryk.";
     status.textContent = (note ? note + " " : "") + base;
   };
-  describe();
+  const cards = [];
+  const back = document.createElement("button");
+  back.type = "button"; back.className = "northstar-outfit"; back.textContent = "Brug min nuværende avatar";
+  // The cards' marks follow the outfit shown: "✓ På" on the worn parts, "Tag på" on the rest; "Brug min nuværende avatar" only while
+  // an outfit is chosen. Keyboard focus on a card whose button turns into "På" stays on that card.
+  const mark = () => {
+    const had = document.activeElement;
+    for (const { card, item, category } of cards) {
+      const worn = !!now && now[category] === item;
+      if (card.classList.contains("equipped") === worn && card.lastElementChild && card.lastElementChild.dataset.mark) continue;
+      const focused = !!had && card.contains(had);
+      card.classList.toggle("equipped", worn);
+      const old = card.querySelector("[data-mark]");
+      if (old) old.remove();
+      let el;
+      if (worn) {
+        el = document.createElement("span"); el.className = "equipped-label"; el.textContent = "✓ På";
+      } else {
+        el = document.createElement("button");
+        el.type = "button"; el.className = "equip-btn"; el.textContent = "Tag på";
+        el.addEventListener("click", () => put(item));
+      }
+      el.dataset.mark = "1";
+      card.appendChild(el);
+      if (focused) { if (worn) { card.tabIndex = -1; card.focus({ preventScroll: true }); } else el.focus({ preventScroll: true }); }
+    }
+    back.hidden = !now;
+    describe();
+  };
+  // In place (D-366): show a choice through the account choice and the page's renderer.
+  const show = (choice) => {
+    northstarUseAccount({ northstar: choice });
+    now = northstarOutfitNow();
+    try { onChoice(choice); } catch (_e) { /* the cards and status still follow the choice */ }
+    mark();
+  };
+  let saved = northstarAccountChoice(), sending = false, pending = null;
+  const send = async () => {
+    if (sending || !pending) return;
+    sending = true;
+    const choice = pending;
+    pending = null;
+    let ok = false;
+    try { ok = (await saveChoice(choice)) === true; } catch (_e) { ok = false; }
+    sending = false;
+    if (ok) saved = choice;
+    if (pending) { send(); return; }   // a newer choice was made meanwhile: it is the one that counts
+    if (!ok) { note = "Valget kunne ikke gemmes. Prøv igen. Du har dit sidst gemte tøj på igen."; show(saved); }
+  };
+  const save = async (choice, nextNote) => {
+    if (inPlace) {
+      note = nextNote || null;
+      show(choice);
+      pending = choice;
+      send();
+      return;
+    }
+    const buttons = [...root.querySelectorAll("button"), ...(cardsRoot ? cardsRoot.querySelectorAll("button") : [])];
+    buttons.forEach((b) => { b.disabled = true; });
+    status.textContent = "Gemmer …";
+    let ok = false;
+    try { ok = (await saveChoice(choice)) === true; } catch (_e) { ok = false; }
+    if (ok) { if (nextNote) session(NOTE_KEY, nextNote); location.reload(); return; }
+    buttons.forEach((b) => { b.disabled = false; });
+    status.textContent = "Valget kunne ikke gemmes. Prøv igen.";
+  };
+  const put = (item) => {
+    const fit = northstarFitPiece(item);
+    for (const old of root.ownerDocument.querySelectorAll(".northstar-refusal")) old.remove();
+    if (fit && fit.refused) {   // D-367: the outfit stays, nothing is saved; the reason shows on the card too, where the pupil is looking
+      note = northstarRefusalNote(fit.category);
+      describe();
+      const at = cards.find((c) => c.item === item);
+      if (at) { const why = document.createElement("div"); why.className = "northstar-refusal"; why.textContent = note; at.card.appendChild(why); }
+      return;
+    }
+    if (fit) save(fit.choice, now ? northstarFitNote(item, fit.changed) : null);
+    else status.textContent = "Delen kunne ikke tages på.";
+  };
+  back.addEventListener("click", () => save({}, null));
   if (preview && typeof MutationObserver !== "undefined") new MutationObserver(describe).observe(preview, { attributes: true, attributeFilter: ["data-avatar-render-path"] });
   const title = document.createElement("div");
   title.className = "panel-title";
   title.textContent = "Tøj";
   root.appendChild(title);
   root.appendChild(status);
-  if (now) {
-    const back = document.createElement("button");
-    back.type = "button"; back.className = "northstar-outfit"; back.textContent = "Brug min nuværende avatar";
-    back.addEventListener("click", () => save({}, null));
-    root.appendChild(back);
-  }
+  root.appendChild(back);
   for (const [category, heading, one] of CATEGORIES) {
     const subtitle = document.createElement("div");
     subtitle.className = "northstar-subtitle";
     subtitle.textContent = heading;
     const grid = document.createElement("div");
     grid.className = "inventory-grid";
+    grid.dataset.wardrobeCategory = category;
     for (const p of pieces) {
       if (p.category !== category) continue;
-      const name = northstarPieceLabel(p.item), worn = !!now && now[category] === p.item;
+      const name = northstarPieceLabel(p.item);
       const card = document.createElement("div");
-      card.className = "item-card" + (worn ? " equipped" : "");
+      card.className = "item-card";
       card.dataset.rarity = "common"; card.dataset.piece = p.item;
       const label = document.createElement("div"); label.className = "item-name"; label.textContent = name;
       const slot = document.createElement("div"); slot.className = "slot-label"; slot.textContent = one;
       card.append(thumb(p.item, category, name), label, slot);
-      if (worn) {
-        const on = document.createElement("span"); on.className = "equipped-label"; on.textContent = "✓ På";
-        card.appendChild(on);
-      } else {
-        const b = document.createElement("button");
-        b.type = "button"; b.className = "equip-btn"; b.textContent = "Tag på";
-        b.addEventListener("click", () => {
-          const fit = northstarFitPiece(p.item);
-          if (fit) save(fit.choice, now ? northstarFitNote(p.item, fit.changed) : null);
-          else status.textContent = "Delen kunne ikke tages på.";
-        });
-        card.appendChild(b);
-      }
+      cards.push({ card, item: p.item, category });
       grid.appendChild(card);
     }
+    if (cardsRoot) { cardsRoot.appendChild(grid); continue; }
     root.appendChild(subtitle);
     root.appendChild(grid);
   }
+  mark();
   root.hidden = false;
   return true;
 }
