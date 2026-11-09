@@ -419,7 +419,12 @@ test("the real suite: every shard plan, run with its weights as durations, keeps
 test("negative control: the old pool ran ≥ 2 PG files at once on PR #674's shard-1 plan", () => {
   // PR #674 = this suite + one unweighted file; its shard 1 is the plan that failed (run 42611228361).
   // The file is added only when absent, so the control holds both before and after #674 is merged.
-  const suite = [...new Set([...ciSuite(), "isolated-stimulus-chain-seed.test.mjs"])].sort();
+  // Files added after #674 on branches not yet merged were not in #674's plan: leave them out, so the control
+  // reproduces exactly the plan that failed (Lærligverse L3/L5, #653).
+  const LATER = new Set(["laerligverse-attempt-context-process-event.test.mjs", "laerligverse-l3-l5-attempt-wrapper-run.test.mjs",
+    "laerligverse-l3-l5-concurrency.test.mjs", "laerligverse-l3-l5-migration-run.test.mjs", "laerligverse-request-hint.test.mjs",
+    "laerligverse-served-mode-gnq.test.mjs"]);
+  const suite = [...new Set([...ciSuite().filter((f) => !LATER.has(f)), "isolated-stimulus-chain-seed.test.mjs"])].sort();
   const pg = new Set(realPg());
   const isPg = (f) => pg.has(f);
   const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));

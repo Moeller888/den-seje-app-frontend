@@ -108,7 +108,11 @@ const H5_SURFACE = /\bFUNCTION\s+public\.(process_question_attempt|process_text_
 // question_attempts and question_instances, and re-creates only the two _v2 functions (l1-k1-attempt-context-migration-run).
 const REVIEWED_H5_SURFACE_AFTER_D280 = Object.freeze([G1, BOOTSTRAP, ALIGN, "20261102100000_release_open_rounds_on_inactive_questions.sql",
   "20261103100000_question_attempts_history_no_action.sql",
-  "20261103110000_l1_k1_attempt_context.sql"]);
+  "20261103110000_l1_k1_attempt_context.sql",
+  // Lærligverse L5 + L3 (20261108043500, not applied) was reviewed: it requires K1 (and pins K1's two _v2 bodies by
+  // md5), names question_attempts only in that guard, and adds two SECURITY INVOKER wrappers that CALL the _v2
+  // functions unchanged; it redefines no H5 function and writes no attempt itself (laerligverse-l3-l5-attempt-wrapper-run).
+  "20261108043500_laerligverse_served_mode_hint_log.sql"]);
 
 test("the two files: unique versions, after their prerequisites, adjacent; later H5-surface changes need review", () => {
   const files = readdirSync(join(ROOT, "supabase", "migrations")).filter((f) => /^\d{14}_.+\.sql$/.test(f)).sort();

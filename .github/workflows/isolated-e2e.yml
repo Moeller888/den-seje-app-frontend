@@ -98,13 +98,21 @@ jobs:
 
   isolated-e2e:
     needs: plan
-    name: isolated-e2e (run ${{ matrix.run }})
+    # The production-mirror entries keep their exact check name "isolated-e2e (run N)". The K1 lane
+    # (owner GO 2026-11-07, F10-B2) is ONE extra entry with replay profile k1: the same isolated stack
+    # plus L1 K1 (NOT applied in production), running only the isolated specs (tests/isolated), where
+    # the H5 tests live. tests/isolated/schema/replay-plan.mjs TEST_PROFILES documents the rules.
+    name: isolated-e2e (run ${{ matrix.run }}${{ matrix.profile == 'k1' && ', K1-testprofil' || '' }})
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         run: ${{ fromJSON(needs.plan.outputs.runs) }}
+        profile: [production]
+        include:
+          - run: 1
+            profile: k1
     steps:
       - uses: actions/checkout@v4
       # Pinned to 24 (CI-01): lts/* moved to Node 26, and Playwright 1.59.1's zip extraction never
@@ -240,7 +248,26 @@ jobs:
 
       - name: Schema — CI baseline, CI stubs and the replay plan (fails on any error)
         if: needs.plan.outputs.scope != 'docs-md'
-        run: node tests/isolated/schema/replay.mjs --db-url "$ISOLATED_DB_URL" --summary "$GITHUB_STEP_SUMMARY"
+        env:
+          REPLAY_PROFILE: ${{ matrix.profile }}
+        run: node tests/isolated/schema/replay.mjs --db-url "$ISOLATED_DB_URL" --summary "$GITHUB_STEP_SUMMARY" --profile "$REPLAY_PROFILE"
+
+      # Fail loud if the lane does not have the schema it claims: K1's columns must exist in the k1
+      # lane and must NOT exist in the production mirror (which would mean K1 leaked into it).
+      - name: Schema — verify the replay profile (K1 present only in the K1 lane)
+        if: needs.plan.outputs.scope != 'docs-md'
+        env:
+          REPLAY_PROFILE: ${{ matrix.profile }}
+        run: |
+          n=$(psql "$ISOLATED_DB_URL" -X -A -t -c "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'question_attempts' AND column_name IN ('mode', 'hints_used')")
+          echo "replay profile $REPLAY_PROFILE: K1 columns on question_attempts = $n"
+          if [ "$REPLAY_PROFILE" = "k1" ]; then [ "$n" = "2" ] || { echo "K1 lane without K1" >&2; exit 1; }
+          else [ "$n" = "0" ] || { echo "K1 leaked into the production-mirror lane" >&2; exit 1; }; fi
+          # EXPERIMENT BRANCH ONLY: L3/L5 (served_mode + the hint log) likewise only in the K1 lane.
+          m=$(psql "$ISOLATED_DB_URL" -X -A -t -c "SELECT (SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'question_instances' AND column_name = 'served_mode') + (SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'question_hint_requests')")
+          echo "replay profile $REPLAY_PROFILE: L3/L5 objects (served_mode, question_hint_requests) = $m"
+          if [ "$REPLAY_PROFILE" = "k1" ]; then [ "$m" = "2" ] || { echo "K1 lane without L3/L5" >&2; exit 1; }
+          else [ "$m" = "0" ] || { echo "L3/L5 leaked into the production-mirror lane" >&2; exit 1; }; fi
 
       - name: Seed — synthetic questions (INSERT-only, behind the target check)
         if: needs.plan.outputs.scope != 'docs-md'
@@ -253,9 +280,22 @@ jobs:
           # The edge-runtime container can die while booting (SIGBUS, "Bus error (core dumped)", exit 135:
           # 2 of 9 jobs in run 40650983690). Like the stack start, ONLY the server start is retried, at
           # most 3 times and logged; no test is ever retried, and a runtime that never serves fails here.
+          # D-329: objective targeting is ON in the isolated stack only (the secret is unset — off — everywhere
+          # else). No existing client sends learning_objective, so the frontend suite still runs today's path.
+          echo 'LAERLIGVERSE_OBJECTIVE_TARGETING=on' > "$RUNNER_TEMP/functions.env"
+          # D-338: the server-directed sequence, likewise ON only in the isolated stack.
+          echo 'LAERLIGVERSE_SEQUENCE=on' >> "$RUNNER_TEMP/functions.env"
+          # EXPERIMENT BRANCH ONLY (not for merge): Lærligverse L5 + L3 ON in the K1 lane alone, where the replay
+          # profile also has migration 20261108043500. The production-mirror entries keep every flag off.
+          if [ "${{ matrix.profile }}" = "k1" ]; then
+            echo 'LAERLIGVERSE_SERVED_MODE=on' >> "$RUNNER_TEMP/functions.env"
+            echo 'LAERLIGVERSE_ATTEMPT_CONTEXT=on' >> "$RUNNER_TEMP/functions.env"
+            echo 'LAERLIGVERSE_HINTS=on' >> "$RUNNER_TEMP/functions.env"
+          fi
+          echo "functions.env for profile ${{ matrix.profile }}: $(cut -d= -f1 "$RUNNER_TEMP/functions.env" | tr '\n' ' ')"
           ready=no
           for attempt in 1 2 3; do
-            nohup supabase functions serve >> "$RUNNER_TEMP/functions.log" 2>&1 &
+            nohup supabase functions serve --env-file "$RUNNER_TEMP/functions.env" >> "$RUNNER_TEMP/functions.log" 2>&1 &
             pid=$!
             for i in $(seq 1 60); do
               # Ready = the function's OWN code answered: get-next-question's preflight handler returns
@@ -361,7 +401,7 @@ jobs:
           sg "$ISOLATED_GROUP" -c "npx playwright test -c tests/isolated/playwright.isolated.config.mjs"
 
       - name: Existing Playwright suite against the isolated stack
-        if: needs.plan.outputs.scope != 'docs-md'
+        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile != 'k1'
         id: suite
         run: |
           sg "$ISOLATED_GROUP" -c "node tests/isolated/run-suite.mjs"
@@ -377,7 +417,7 @@ jobs:
         if: always() && needs.plan.outputs.scope != 'docs-md'
         uses: actions/upload-artifact@v4
         with:
-          name: isolated-report-run-${{ matrix.run }}
+          name: isolated-report-run-${{ matrix.run }}${{ matrix.profile == 'k1' && '-k1' || '' }}
           path: |
             playwright-report-isolated/
             test-results-isolated/

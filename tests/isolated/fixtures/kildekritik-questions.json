@@ -1,0 +1,149 @@
+[
+  {
+    "tag": "h4-kilde",
+    "step": "arkivskab",
+    "learning_step": "guided_practice",
+    "learning_objective": "test_kildekritik_ophav",
+    "answer_format": "mc",
+    "content": {
+      "question": "Påstand: »Regeringen ønskede, at befolkningen skulle holde sig i ro den 9. april 1940.« Hvilken kilde er bedst til at undersøge påstanden?",
+      "options": [
+        "Erindring",
+        "Dagbog",
+        "Proklamation",
+        "Illegalt blad"
+      ],
+      "option_details": [
+        "Afsender: en kvinde, der var 12 år i 1940|Tid: skrevet i 1985|Modtager: et lokalhistorisk arkiv|Formål: at bevare hendes minder|Kontekst: skrevet 45 år efter, fra hukommelsen (konstrueret eksempel)",
+        "Afsender: en menig tysk soldat|Tid: april 1940|Modtager: ham selv|Formål: at huske, hvad han oplevede|Kontekst: skrevet af en soldat i den besættende hær (konstrueret eksempel)",
+        "Afsender: kongen og regeringen|Tid: 9. april 1940|Modtager: hele befolkningen|Formål: at fortælle befolkningen, hvordan den skulle forholde sig|Kontekst: skrevet samme dag, som Danmark blev besat",
+        "Afsender: en modstandsgruppe|Tid: 1944|Modtager: danske læsere|Formål: at få flere til at gøre modstand|Kontekst: udgivet ulovligt fire år inde i besættelsen (konstrueret eksempel)"
+      ],
+      "correct": "Proklamation",
+      "accepted_answers": [
+        "Proklamation"
+      ],
+      "review_text": "Ja. Se på afsenderen og tiden: proklamationen er lavet af regeringen selv, på selve dagen, til hele befolkningen. Derfor viser den direkte, hvad regeringen ønskede: at befolkningen skulle bevare ro og orden. Det kan den IKKE vise: hvad befolkningen faktisk gjorde eller følte.",
+      "hints": [
+        "Læs påstanden igen: hvis ønske handler den om?",
+        "Se på afsenderen på hvert dokument. Hvilke kilder er ikke lavet af regeringen?",
+        "Kun én kilde er lavet af regeringen selv, på selve dagen."
+      ]
+    }
+  },
+  {
+    "tag": "h4-kilde-revision",
+    "step": "arkivskab-revision",
+    "learning_step": "revision",
+    "learning_objective": "test_kildekritik_ophav",
+    "answer_format": "mc",
+    "content": {
+      "question": "Revidér din vurdering med en ny påstand. Påstand: »Om morgenen den 9. april 1940 gav den danske hærledelse tropperne ordre om at stoppe kampene.« Hvilken kilde er bedst til at undersøge påstanden?",
+      "options": [
+        "Erindring",
+        "Ordre",
+        "Avisartikel",
+        "Lærebog"
+      ],
+      "option_details": [
+        "Afsender: en dansk soldat, der var med den morgen|Tid: skrevet i 1990|Modtager: hans børnebørn|Formål: at fortælle sin historie videre|Kontekst: skrevet 50 år efter, fra hukommelsen (konstrueret eksempel)",
+        "Afsender: den danske hærledelse|Tid: morgenen den 9. april 1940|Modtager: de danske tropper|Formål: at give tropperne besked om, hvad de skulle gøre|Kontekst: sendt samme morgen, mens kampene stod på (konstrueret eksempel på en kildetype)",
+        "Afsender: en dansk journalist|Tid: 10. april 1940|Modtager: avisens læsere|Formål: at fortælle nyheden om gårsdagen|Kontekst: skrevet dagen efter, ud fra hvad journalisten havde hørt (konstrueret eksempel)",
+        "Afsender: en historiker|Tid: 2010|Modtager: skoleelever|Formål: at forklare besættelsen|Kontekst: en fremstilling bygget på andre kilder, ikke et spor fra 1940 (konstrueret eksempel)"
+      ],
+      "correct": "Ordre",
+      "accepted_answers": [
+        "Ordre"
+      ],
+      "review_text": "Ja. Samme princip som før: påstanden handler om, hvad hærledelsen beordrede, og ordren er lavet af hærledelsen selv, samme morgen, til tropperne. Det kan den IKKE vise: hvad hærledelsen selv mente om beslutningen, om alle soldater nåede at få ordren, eller hvad de tænkte om den.",
+      "hints": [
+        "Hvem handler påstanden om?",
+        "Hvilken kilde er lavet af dem, påstanden handler om, mens det skete?"
+      ]
+    }
+  },
+  {
+    "tag": "h4-overfoersel",
+    "step": "skuffe",
+    "learning_step": "independent_application",
+    "learning_objective": "test_kildekritik_ophav",
+    "answer_format": "mc",
+    "content": {
+      "question": "Påstand: »En almindelig dansker i København blev overrasket og bange om morgenen den 9. april 1940.« Hvilken kilde er bedst til at undersøge påstanden?",
+      "options": [
+        "Proklamation",
+        "Lærebog",
+        "Ordre",
+        "Dagbog"
+      ],
+      "option_details": [
+        "Afsender: kongen og regeringen|Tid: 9. april 1940|Modtager: hele befolkningen|Formål: at fortælle befolkningen, hvordan den skulle forholde sig|Kontekst: skrevet samme dag, som Danmark blev besat",
+        "Afsender: en historiker|Tid: 2010|Modtager: skoleelever|Formål: at forklare besættelsen|Kontekst: en fremstilling bygget på andre kilder, ikke et spor fra 1940 (konstrueret eksempel)",
+        "Afsender: den tyske hærledelse|Tid: april 1940|Modtager: tyske officerer|Formål: at styre besættelsen|Kontekst: en militær ordre (konstrueret eksempel)",
+        "Afsender: en dansk kvinde i København|Tid: aftenen den 9. april 1940|Modtager: hende selv|Formål: at skrive ned, hvad hun oplevede og følte|Kontekst: skrevet samme dag, privat (konstrueret eksempel)"
+      ],
+      "correct": "Dagbog",
+      "accepted_answers": [
+        "Dagbog"
+      ],
+      "review_text": "Ja. Se på afsenderen, tiden og modtageren: dagbogen er skrevet af en almindelig københavner samme dag, kun til hende selv. Den kan vise, hvordan dagen føltes for hende. Det kan den IKKE vise: hvad alle danskere følte.",
+      "hints": []
+    }
+  },
+  {
+    "tag": "t1864",
+    "step": "overfoersel",
+    "learning_step": "transfer",
+    "learning_objective": "test_kildekritik_ophav",
+    "answer_format": "mc",
+    "content": {
+      "question": "Baggrund: I 1864 førte Danmark krig mod Preussen og Østrig. Ved Dybbøl i Sønderjylland lå danske soldater i skanser (forsvarsanlæg) og blev beskudt, indtil prøjsiske soldater stormede skanserne den 18. april 1864. Påstand: »De danske soldater i skanserne oplevede beskydningen som udmattende og skræmmende.« Hvilken kilde er bedst til at undersøge påstanden?",
+      "options": [
+        "Brev",
+        "Mindetale",
+        "Prøjsisk avis",
+        "Tv-serie"
+      ],
+      "option_details": [
+        "Afsender: en dansk soldat i skanserne|Tid: april 1864, før stormen|Modtager: hans familie|Formål: at fortælle familien, hvordan han havde det|Kontekst: skrevet midt i beskydningen (konstrueret eksempel)",
+        "Afsender: en politiker|Tid: 1914, 50 år efter|Modtager: folk ved en mindehøjtidelighed|Formål: at hædre de faldne soldater|Kontekst: holdt ved et jubilæum (konstrueret eksempel)",
+        "Afsender: en prøjsisk avis|Tid: april 1864|Modtager: prøjsiske læsere|Formål: at fortælle om den prøjsiske hærs fremgang|Kontekst: skrevet af modparten i krigen (konstrueret eksempel)",
+        "Afsender: et tv-selskab|Tid: 2014|Modtager: tv-seere|Formål: at fortælle en historie, der fanger seerne|Kontekst: en fortolkning lavet 150 år senere (konstrueret eksempel)"
+      ],
+      "correct": "Brev",
+      "accepted_answers": [
+        "Brev"
+      ],
+      "review_text": "Ja. Samme metode i en ny periode: brevet er skrevet af en af de soldater, påstanden handler om, mens det skete. Det kan vise, hvordan HAN oplevede det. Det kan IKKE alene vise, hvordan alle soldaterne oplevede det, og han kan have skånet sin familie for det værste.",
+      "hints": []
+    }
+  },
+  {
+    "tag": "h4-genbesoeg",
+    "step": "genbesoeg",
+    "learning_step": "revisit",
+    "learning_objective": "test_kildekritik_ophav",
+    "answer_format": "mc",
+    "content": {
+      "question": "Påstand: »Der blev kæmpet nogle steder i Danmark om morgenen den 9. april 1940.« Hvilken kilde er bedst til at undersøge påstanden?",
+      "options": [
+        "Avisartikel",
+        "Rapport",
+        "Spillefilm",
+        "Proklamation"
+      ],
+      "option_details": [
+        "Afsender: en tysk avis under nazistisk kontrol|Tid: april 1940|Modtager: tyske læsere|Formål: at fremstille besættelsen som fredelig|Kontekst: propaganda (konstrueret eksempel)",
+        "Afsender: en dansk officer|Tid: 10. april 1940|Modtager: hærens ledelse|Formål: at gøre rede for kampene ved hans enhed|Kontekst: skrevet dagen efter af en, der var med (konstrueret eksempel)",
+        "Afsender: et filmselskab|Tid: 2015|Modtager: biografpublikum|Formål: at underholde og fortælle en historie|Kontekst: en fortolkning lavet 75 år senere (konstrueret eksempel)",
+        "Afsender: kongen og regeringen|Tid: 9. april 1940|Modtager: hele befolkningen|Formål: at fortælle befolkningen, hvordan den skulle forholde sig|Kontekst: skrevet samme dag, som Danmark blev besat"
+      ],
+      "correct": "Rapport",
+      "accepted_answers": [
+        "Rapport"
+      ],
+      "review_text": "Ja. Rapporten er skrevet dagen efter af en, der selv var med, til hærens ledelse, for at gøre rede for kampene. Den er tæt på begivenheden. Det kan den IKKE vise alene: hvor der ellers blev kæmpet, og en officer kan have grunde til at fremstille noget på en bestemt måde.",
+      "hints": []
+    }
+  }
+]
