@@ -16,7 +16,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail, PROD, serveCheckoutLogin } from "./helpers.js";
+import { findAuthUserByEmail, PROD, serveCheckoutLogin, openFirstShopCardCategory } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -232,6 +232,7 @@ test("golden: shop first item preview matches baseline", async ({
   await gotoLoginReduced(page);
   await loginAsStudent(page);
   await page.goto(`${PROD}/shop.html`, { waitUntil: "domcontentloaded" });
+  await openFirstShopCardCategory(page);   // D-363: the shop shows one category at a time
   await page.waitForSelector(".shop-preview img", { timeout: 15000 });
   await waitForImages(page, ".shop-preview");
 
@@ -277,6 +278,7 @@ test("structure: hair layer renders on all four surfaces", async ({
 
   // Shop (mini paper-doll previews)
   await page.goto(`${PROD}/shop.html`, { waitUntil: "domcontentloaded" });
+  await openFirstShopCardCategory(page);   // D-363: the shop shows one category at a time
   await page.waitForSelector(".shop-preview img", { timeout: 15000 });
   await expect(
     page.locator('.shop-preview [data-c2-layer="hair"] svg').first()
