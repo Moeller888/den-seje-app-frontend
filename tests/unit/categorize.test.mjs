@@ -142,14 +142,14 @@ test("payload: content.categorize holds labels and shown texts only — never it
   assert.throws(() => toPublicQuestion(CONTENT, "categorize", null, undefined), "no key → row skipped");
 });
 
-// ── Registry: built, NOT servable ──────────────────────────────────────────────────────────────
-test("registry: categorize is classified, has its own wire format and renderer, is appended last and NOT servable", () => {
+// ── Registry: servable since D-362 (activation migration 20261108090000, NOT applied) ─────────────
+test("registry: categorize is classified, has its own wire format and renderer, is appended last and servable (D-362)", () => {
   const row = { answer_format: "categorize", answer_type: "short", content: CONTENT };
   assert.equal(classifyQuestion(row), "categorize");
-  assert.deepEqual({ ...INTERACTION_KINDS.categorize }, { wireFormat: "categorize", renderer: "categorize", servable: false, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null });
+  assert.deepEqual({ ...INTERACTION_KINDS.categorize }, { wireFormat: "categorize", renderer: "categorize", servable: true, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null });
   assert.equal(KIND_ORDER[KIND_ORDER.length - 1], "categorize", "appended: existing tie-breaks unchanged");
-  assert.equal(isServableKind("categorize"), false);
-  assert.equal(servableWireFormat(row), null, "the v2 mix never serves it");
+  assert.equal(isServableKind("categorize"), true);
+  assert.equal(servableWireFormat(row), "categorize", "the v2 mix serves it with its own wire format, never \"mc\"");
   assert.equal(classifyQuestion({ ...row, content: { ...CONTENT, force_text: true } }), null);
   assert.equal(classifyQuestion({ ...row, answer_type: "long" }), null);
   assert.equal(resolveAnswerRenderer({ answer_format: "categorize", content: {} }), ANSWER_RENDERERS.CATEGORIZE);
@@ -160,6 +160,8 @@ test("get-next-question: the key is drawn once at instance creation; open and re
   const index = code(read("supabase/functions/get-next-question/index.ts"));
   assert.match(index, /if \(answer_format === "categorize"\) \{\s*return \{ question, correct: createCategorizeKey\(parseCategorizeContent\(raw\)\) \};\s*\}/);
   assert.match(index, /const KEYED_FORMATS: ReadonlySet<string> = new Set\(\["match", "order", "categorize"\]\);/);
+  // v1 maps "categorize" to "categorize" by exact match (D-362) — never to "mc".
+  assert.match(index, /function mapAnswerFormat\(format: string \| null\) \{[\s\S]*?if \(format === "categorize"\) return "categorize";[\s\S]*?\}/);
 });
 
 test("process-event: a placement is shape-checked before the RPC and then graded by process_question_attempt like MC", () => {

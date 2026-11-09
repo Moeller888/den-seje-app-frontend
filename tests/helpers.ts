@@ -84,6 +84,25 @@ export async function serveCheckoutLogin(page: any): Promise<void> {
 }
 
 /**
+ * D-363: on Avatar and in Butik the item cards sit behind the shared category menu, and only the chosen category's cards are
+ * shown. Open the category of an item slot the way a pupil does: by its tab. The category is looked up in the page's own
+ * js/avatar-layers.js, so the test follows the page's mapping.
+ */
+export async function openItemCategory(page: any, slotType: string): Promise<void> {
+  const label = await page.evaluate(async (slot: string) => {
+    const L: any = await import("/js/avatar-layers.js");
+    const key = L.itemCategoryForSlot(slot);
+    return L.ITEM_CATEGORIES.find((c: any) => c.key === key).label;
+  }, slotType);
+  await page.getByRole("tab", { name: label, exact: true }).click();
+}
+
+/** D-363: open the category of Butik's first card (the shop sorts it first), so checks of "the first preview" see that same card. */
+export async function openFirstShopCardCategory(page: any): Promise<void> {
+  await openItemCategory(page, (await page.locator(".shop-card").first().getAttribute("data-slot-type")) ?? "");
+}
+
+/**
  * Log in as the test teacher and wait for teacher.html to load.
  */
 export async function loginAsTeacher(page: any): Promise<void> {
