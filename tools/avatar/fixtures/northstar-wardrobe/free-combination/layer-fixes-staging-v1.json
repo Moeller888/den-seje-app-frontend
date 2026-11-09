@@ -1,0 +1,31 @@
+{
+  "decision": "D-370",
+  "what": "De fire rettede lagfiler. De ligger i privat staging, til ejeren har godkendt publicering.",
+  "files": [
+    {
+      "file": "top-tee-hip-blue-top-body-v3.webp",
+      "sha256": "ec2daa95bf6ab90323f982a19a693571f43981f02ce9853231f632731e16ee22",
+      "bytes": 55050,
+      "replaces": "top-tee-hip-blue-top-body-v2.webp",
+      "replacesSha256": "07729e64240a7f5ec6fa1d5eb0653e4e7a117d7ec8c87f116a2a3e15f88b4870"
+    },
+    {
+      "file": "top-tee-hip-blue-hip-cover-v1.webp",
+      "sha256": "cf76d9b2475759ef8956a62db3526735b7b83e9592a69906303c950c0394a020",
+      "bytes": 670
+    },
+    {
+      "file": "shoes-sneakers-white-under-long-hem-v1.webp",
+      "sha256": "5eec49280352b9a37ea78421070244d7aa7d7986e070ba9eb1ab267223693a07",
+      "bytes": 158
+    },
+    {
+      "file": "top-tee-hip-blue-sleeves-v3.webp",
+      "sha256": "8ba67643fd23db865c9d47f223237a996ab88484c71baea988a35920c197f292",
+      "bytes": 11088,
+      "replaces": "top-tee-hip-blue-sleeves-v2.webp",
+      "replacesSha256": "8ba67643fd23db865c9d47f223237a996ab88484c71baea988a35920c197f292",
+      "sameBytesAs": "top-tee-hip-blue-sleeves-v2.webp"
+    }
+  ]
+}
