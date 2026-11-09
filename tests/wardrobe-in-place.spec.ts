@@ -124,6 +124,7 @@ for (const width of [1100, 390]) {
     const pupil = newPupil();
     pupil.northstar = { outfit: "K01" };
     const { ctx, page, errs } = await openAvatar(browser, pupil, width);
+    await page.waitForLoadState("load");   // the page's own first load event (it can come late, e.g. on a slower host) is not a reload
     let loads = 0, navigations = 0;
     page.on("load", () => { loads++; });
     // the category menu writes #kategori=<key> (D-363) — a same-document change; anything else would be a navigation
