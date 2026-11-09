@@ -8,9 +8,12 @@
 //                     two patches drawn only for its own hairstyle, and the tool proves it still composes pixel for pixel;
 //   "short"         — an ink edge like Northstar's line;
 //   afro            — opened at each ear, so the whole ear shows inside the curls.
+// Follow-up (round 3, afro only): the temples' hairline rebuilt with D-192's own shift but smoothed radii (no regular teeth, same fit),
+// and the ear opening kept inside the head's contour (no blue-grey line, no notch). For the afro "before" is round 2 and "after" the
+// follow-up; "Kort" and the reference are compared with round 2's result (--compare) and must be the same pixels.
 // Every figure is outfit K01 through the runtime's own plan (northstarPlanFor/northstarCompose); only the head layer is replaced.
 // Colours: the source colour, and black and blonde through the tone curve (mapTint).
-// Usage: node tools/avatar/northstar-hair-trial-d368.mjs --dwebp <dwebp.exe> --out <dir outside the repository>
+// Usage: node tools/avatar/northstar-hair-trial-d368.mjs --dwebp <dwebp.exe> --out <dir outside the repository> [--compare <round 2 result.json>]
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join, resolve, dirname } from "node:path";
@@ -88,6 +91,13 @@ export function lightFringe(hair) {
 const crop = (P, r) => { const o = new Uint8ClampedArray(r.w * r.h * 4); for (let y = 0; y < r.h; y++) o.set(P.subarray(((r.y + y) * W + r.x) * 4, ((r.y + y) * W + r.x + r.w) * 4), y * r.w * 4); return o; };
 const overlay = (P, m, rgb) => { const o = new Uint8ClampedArray(P); for (let i = 0; i < N; i++) if (m[i]) { o[i * 4] = rgb[0]; o[i * 4 + 1] = rgb[1]; o[i * 4 + 2] = rgb[2]; o[i * 4 + 3] = 255; } return o; };
 
+export const AFRO_RSMOOTH = 20;
+/** Hair edge pixels that are half transparent over the background (outside the head) near the ears — what showed as a blue-grey line. */
+export function rimOverBackground(hair, ears, bald) {
+  const near = new Uint8Array(N); for (let i = 0; i < N; i++) if (ears[i]) { const x = i % W, y = (i / W) | 0; for (let dy = -6; dy <= 6; dy++) for (let dx = -6; dx <= 6; dx++) { const X = x + dx, Y = y + dy; if (X >= 0 && Y >= 0 && X < W && Y < H) near[Y * W + X] = 1; } }
+  let n = 0; for (let i = 0; i < N; i++) if (near[i] && !ears[i] && bald[i * 4 + 3] < 128) { const a = hair[i * 4 + 3]; if (a > 0 && a < 200) n++; }
+  return n;
+}
 /** The ears as the pupil sees them: the share of the ear mask not under hair, and the separate visible pieces (fragments). */
 export function earCheck(ears, hair) {
   let tot = 0, vis = 0; const v = new Uint8Array(N);
@@ -121,12 +131,13 @@ async function main() {
   if (refDiff) throw new Error("the Northstar reference changed (" + refDiff + " values)");
 
   // 3. the hair layers (grey, for colouring), before and after
-  const ears = PO.earMask(bald1), afro0 = EF.loadD192Afro().afro, opened = PO.earOpening(afro0, ears, { bald: bald1 });
-  const grey = { short: { before: build.head.styles.short, after: PO.outlineHair(build.head.styles.short) }, afro: { before: afro0, after: opened.px }, northstar: { before: toGrey(L0.hair), after: toGrey(L1.hair) } };
+  const ears = PO.earMask(bald1), afro0 = EF.loadD192Afro().afro, round2 = PO.earOpening(afro0, ears, { bald: bald1 }).px;
+  const followUp = PO.earOpening(PO.afroSmoothHairline({ rSmooth: AFRO_RSMOOTH }), ears, { bald: bald1, insideHead: true, rimAlpha: 1 }).px;
+  const grey = { short: { before: build.head.styles.short, after: PO.outlineHair(build.head.styles.short) }, afro: { before: round2, after: followUp }, northstar: { before: toGrey(L0.hair), after: toGrey(L1.hair) } };
   const colourOf = (g, colour) => { const c = COLOURS[colour]; return c ? mapTint(g, TOKENS[c.token]) : HS.tint(g, HS.HAIR_TOKEN_BROWN); };
   const headFor = (cand, variant, colour) => {
     if (cand === "northstar") return colour === "source" ? ref : seam(PO.headStack({ ...L1, hair: colourOf(grey.northstar.after, colour) }, HD.COMPOSITE_ORDER, patches));
-    return seam(NL.overStack([variant === "before" ? bald0 : bald1, colourOf(grey[cand][variant], colour)]));
+    return seam(NL.overStack([variant === "before" && cand === "short" ? bald0 : bald1, colourOf(grey[cand][variant], colour)]));   // the afro's "before" is round 2
   };
   const hairFor = (cand, variant) => (cand === "northstar" ? L0.hair : grey[cand][variant]);
 
@@ -160,9 +171,10 @@ async function main() {
   for (const cand of CANDIDATES) {
     const c = { variants: {} };
     for (const variant of cand === "northstar" ? ["after"] : VARIANTS) {
-      const hair = hairFor(cand, variant), Lv = variant === "before" ? L0 : L1, v = { checks: {}, colours: {} };
+      const hair = hairFor(cand, variant), Lv = variant === "before" && cand === "short" ? L0 : L1, v = { checks: {}, colours: {} };
       v.checks.browL = browCheck(Lv.browL, hair); v.checks.browR = browCheck(Lv.browR, hair); v.checks.lightFringe = lightFringe(hair).px;
       v.checks.ears = earCheck(ears, hair);
+      v.checks.rimOverBackground = rimOverBackground(hair, ears, bald1);
       for (const colour of Object.keys(COLOURS)) {
         const head = headFor(cand, variant, colour), fig = figure(head), name = `${cand}-${variant}-${colour}`;
         writeFileSync(join(OUT, "fig", name + ".png"), encodePng(W, H, fig));
@@ -174,8 +186,13 @@ async function main() {
     result.candidates[cand] = c;
     console.log(cand, JSON.stringify(Object.fromEntries(Object.entries(c.variants).map(([k, v]) => [k, v.checks]))));
   }
+  // Kort and the reference must be exactly round 2's pixels
+  const cmp = at("--compare");
+  if (cmp) { const r2 = JSON.parse(readFileSync(cmp, "utf8")), same = {};
+    for (const [cand, variant] of [["northstar", "after"], ["short", "after"], ["short", "before"]]) for (const colour of Object.keys(COLOURS)) same[`${cand}-${variant}-${colour}`] = r2.candidates[cand].variants[variant].colours[colour] === result.candidates[cand].variants[variant].colours[colour];
+    result.sameAsRound2 = same; if (!Object.values(same).every(Boolean)) throw new Error("Kort or the reference differs from round 2: " + JSON.stringify(same)); }
   writeFileSync(join(OUT, "result.json"), JSON.stringify(result, null, 2) + "\n");
-  console.log(JSON.stringify({ referenceIdentical: result.referenceIdentical, repairs: result.repairs }));
+  console.log(JSON.stringify({ referenceIdentical: result.referenceIdentical, repairs: result.repairs, sameAsRound2: result.sameAsRound2 ?? "not compared" }));
 }
 const invokedDirectly = typeof process.argv[1] === "string" && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (invokedDirectly) main().catch((e) => { console.error(e); process.exit(1); });

@@ -14,14 +14,14 @@ export const COLOUR_NAMES = Object.freeze({ source: "Kildefarve", black: "Sort (
 export const RECOMMENDATION = Object.freeze({
   northstar: { verdict: "Reference — uændret", text: "Gengives pixel for pixel som i appen i dag: brynspidsen og hudpletterne, som er rettet i det fælles hovedlag, bevares for Northstars egen frisure gennem to små lapper i hovedets egen lagrækkefølge." },
   short: { verdict: "Anbefalet til næste skridt", text: "Med det rensede hovedlag og en mørk kant i Northstars streg ligner 'Kort' nu resten af figuren: venstre bryn er ét rent stykke, panden er glat, og håret slutter rent ved begge tindinger. Rest: en svag lys plet øverst i panden (få pixels) og venstre bryns ujævne overkant, som er brynets egen tegning." },
-  afro: { verdict: "Anbefalet til næste skridt", text: "Krøllerne er åbnet ved ørerne, så hele øret ses inde i håret i stedet for løse øreflipper, med skygge langs krøllerne. Volumen og krøllestruktur er bevaret. Rest: tegnestilen er mere maleragtig end Northstars (ingen sort kontur på krøllerne), og under en hat stikker volumen ud — hattevisningen er en særskilt opgave." },
+  afro: { verdict: "Anbefalet til næste skridt", text: "Opfølgningen (\"efter\"; \"før\" er runde 2): hårgrænsen ved begge tindinger er igen en naturlig, krøllet bølge — D-192's forskydning er bevaret, kun dens radier er glattet, så de regelmæssige tænder er væk og pasformen er den samme (silhuet 99,8 % ens). Øreåbningen slutter ved hovedets kontur: den blågrå linje og hakket ved højre øre er væk (halvgennemsigtige kantpixels over baggrunden ved ørerne: fra 226 til 0). Hele øret ses stadig. Rest: tegnestilen er mere maleragtig end Northstars (ingen sort kontur på krøllerne), og hatte er en særskilt opgave." },
 });
 
 export function page(result) {
   const R = result.regions, crops = ["forehead", "templeL", "templeR", "earL", "earR"];
   const cropName = { forehead: "Pande og bryn", templeL: "Tinding venstre", templeR: "Tinding højre", earL: "Øre venstre", earR: "Øre højre" };
   const rep = result.repairs, ri = result.referenceIdentical;
-  const check = (v) => { const c = v.checks, b = (x) => `${x.visiblePieces} stykke${x.visiblePieces === 1 ? "" : "r"}`; return `venstre bryn ${b(c.browL)}, højre bryn ${b(c.browR)}; ører ${Math.round(c.ears.visibleShare * 100)} % synlige i ${c.ears.visiblePieces} stykker; lyse kantpixels ${c.lightFringe}`; };
+  const check = (v) => { const c = v.checks, b = (x) => `${x.visiblePieces} stykke${x.visiblePieces === 1 ? "" : "r"}`; return `venstre bryn ${b(c.browL)}, højre bryn ${b(c.browR)}; ører ${Math.round(c.ears.visibleShare * 100)} % synlige i ${c.ears.visiblePieces} stykker; lyse kantpixels ${c.lightFringe}${c.rimOverBackground !== undefined ? `; halvgennemsigtig kant over baggrunden ved ørerne ${c.rimOverBackground} px` : ""}`; };
   const rows = Object.keys(result.candidates).map((cand) => { const v = result.candidates[cand].variants;
     return `<tr><th>${NAMES[cand]}</th><td>${RECOMMENDATION[cand].verdict}</td><td>${v.before ? check(v.before) : "—"}</td><td>${check(v.after)}</td><td>${RECOMMENDATION[cand].text}</td></tr>`; }).join("\n");
   const sizes = [["Avatar", 180, 270], ["Hub", 110, 165], ["Quiz", 52, 78]];
@@ -44,9 +44,10 @@ h1{font-size:22px;margin:8px 0}h2{font-size:17px;margin:24px 0 8px}.note{color:v
 table{border-collapse:collapse;width:100%;font-size:14px}th,td{border-top:1px solid var(--line);padding:8px;vertical-align:top;text-align:left}.wrap{overflow-x:auto}
 .ok{font-weight:600}
 </style></head><body><main>
-<h1>Northstar-frisurer — privat prøve, runde 2 (D-368)</h1>
+<h1>Northstar-frisurer — privat prøve, runde 2 med Afro-opfølgning (D-368)</h1>
 <p class="note">Privat forhåndsvisning. Intet er godkendt, publiceret eller aktiveret, og der er ingen nye billedkald: alt er lavet af eksisterende kilder. Samme figur og outfit (K01) hele vejen; kun hovedet skifter. Hybrid er taget ud af første udvalg.</p>
-<p class="ok">Northstar-referencen gengives pixel for pixel: hovedet ${ri.head ? "identisk" : "AFVIGER"} med appens, helfiguren ${ri.figure ? "identisk" : "AFVIGER"}.</p>
+<p class="ok">Northstar-referencen gengives pixel for pixel: hovedet ${ri.head ? "identisk" : "AFVIGER"} med appens, helfiguren ${ri.figure ? "identisk" : "AFVIGER"}.${result.sameAsRound2 ? ` Kort og referencen er ${Object.values(result.sameAsRound2).every(Boolean) ? "præcis de samme pixels som i runde 2" : "IKKE de samme som i runde 2"} (alle farver).` : ""}</p>
+<p class="note">For Afro er "før" runde 2 og "efter" opfølgningen. For Kort er "før" kilden og "efter" runde 2.</p>
 <div class="bar" id="cands" role="group" aria-label="Frisure">${Object.keys(result.candidates).map((c, i) => `<button type="button" data-c="${c}" aria-pressed="${i === 1}">${NAMES[c]}</button>`).join("")}</div>
 <div class="bar" id="cols" role="group" aria-label="Hårfarve">${Object.keys(COLOUR_NAMES).map((c, i) => `<button type="button" data-k="${c}" aria-pressed="${i === 0}">${COLOUR_NAMES[c]}</button>`).join("")}</div>
 <h2>I appens størrelser — før og efter</h2>

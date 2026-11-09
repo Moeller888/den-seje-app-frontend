@@ -7,6 +7,7 @@
 //   earOpening        — the afro opened at each ear, so the whole ear shows inside the curls instead of loose lobes peeking out; the
 //                       curls along the opening shaded darker.
 import * as NL from "./r3-northstar-layers.mjs";
+import * as AF from "./r3-northstar-afro.mjs";
 
 const W = 1024, H = 1536, N = W * H;
 const lum = (P, i) => 0.299 * P[i * 4] + 0.587 * P[i * 4 + 1] + 0.114 * P[i * 4 + 2];
@@ -99,13 +100,49 @@ export function earMask(bald, { y0 = 250, y1 = 460, R = 36, faceHalf = 120, reac
 }
 
 /** The afro opened at the ears (mask grown by `grow`), with an antialiased cut and the curls along it shaded toward `shade`. */
-export function earOpening(afro, ears, { grow = 2, rim = 5, shade = 0.55, bald = null, bridge = 14 } = {}) {
+export function earOpening(afro, ears, { grow = 2, rim = 5, shade = 0.55, bald = null, bridge = 14, insideHead = false, rimAlpha = 0.6 } = {}) {
   const cut = morph(ears, grow, "dilate"), o = new Uint8ClampedArray(afro), near = new Float32Array(N).fill(99);
   // the curl strands left lying over the head right next to the ear (between the ear's top and the cheek) go too
   if (bald) { const zone = morph(ears, bridge, "dilate"); for (let i = 0; i < N; i++) if (zone[i] && bald[i * 4 + 3] >= 128 && afro[i * 4 + 3]) cut[i] = 1; }
+  // D-368 follow-up: the opening ends at the head's own contour — curls outside the head stay, so no hair is taken off the background
+  if (insideHead && bald) for (let i = 0; i < N; i++) if (cut[i] && bald[i * 4 + 3] < 128) cut[i] = 0;
   let ring = []; for (let i = 0; i < N; i++) if (cut[i]) { o[i * 4 + 3] = 0; near[i] = 0; ring.push(i); }
   for (let k = 1; k <= rim; k++) { const next = []; for (const i of ring) for (const j of [i - 1, i + 1, i - W, i + W]) if (j >= 0 && j < N && near[j] > k) { near[j] = k; next.push(j); } ring = next; }
   for (let i = 0; i < N; i++) { if (!o[i * 4 + 3] || near[i] > rim || near[i] === 0) continue; const k = near[i], f = shade + (1 - shade) * (k - 1) / rim;
-    for (let c = 0; c < 3; c++) o[i * 4 + c] = Math.round(o[i * 4 + c] * f); if (k === 1) o[i * 4 + 3] = Math.round(o[i * 4 + 3] * 0.6); }
+    for (let c = 0; c < 3; c++) o[i * 4 + c] = Math.round(o[i * 4 + c] * f); if (k === 1 && rimAlpha < 1) o[i * 4 + 3] = Math.round(o[i * 4 + 3] * rimAlpha); }
   return { px: o, cut };
+}
+
+/** D-192's afro rebuilt with its own placement and its own radial hairline shift (spec.hairline), except that the inner and outer radii
+ *  the shift fades between are smoothed over the angle (Gaussian, +-2*rSmooth samples): the raw per-angle radii jump from scallop to
+ *  scallop and left regular teeth at the temples. The shift itself (where the hairline goes) is D-192's, unchanged; rSmooth = 0 gives
+ *  D-192's layer exactly. Returns grey + alpha. */
+export function afroSmoothHairline({ spec = AF.loadSpec(), rSmooth = 6 } = {}) {
+  const p = spec.placement, h = spec.hairline, P = AF.place(AF.loadSource(spec), p.s, p.axisX - p.s * p.sourceCentreX, p.topMarginPx - p.s * p.sourceTopY);
+  const A = h.angularSamples, c = h.centre, [rx, ry] = h.radii, n = h.exponent, rc = new Float32Array(A), ro = new Float32Array(A), d = new Float32Array(A);
+  for (let k = 0; k < A; k++) { const th = (k / A) * 2 * Math.PI, dx = Math.cos(th), dy = Math.sin(th); let first = -1, last = -1;
+    for (let q = 0; q < 700; q += 0.5) { const x = Math.round(c[0] + q * dx), y = Math.round(c[1] + q * dy); if (x < 0 || y < 0 || x >= W || y >= H) break; if (P[(y * W + x) * 4 + 3] >= 128) { if (first < 0) first = q; last = q; } }
+    rc[k] = first; ro[k] = last; }
+  for (let k = 0; k < A; k++) {
+    if (rc[k] < 0) continue; const th = (k / A) * 2 * Math.PI, dx = Math.cos(th), dy = Math.sin(th), rt = 1 / Math.pow(Math.abs(dx / rx) ** n + Math.abs(dy / ry) ** n, 1 / n), ty = c[1] + rt * dy;
+    const w = ty <= h.fadeY[0] ? 1 : ty >= h.fadeY[1] ? 0 : (h.fadeY[1] - ty) / (h.fadeY[1] - h.fadeY[0]);
+    let mn = Infinity; for (let j = -h.scallopWindowSamples; j <= h.scallopWindowSamples; j++) { const v = rc[(k + j + A) % A]; if (v >= 0) mn = Math.min(mn, v); }
+    d[k] = Math.max(0, rt - mn) * w;
+  }
+  const sm = h.smoothSamples, ds = new Float32Array(A);
+  for (let k = 0; k < A; k++) { let s2 = 0, m = 0; for (let j = -2 * sm; j <= 2 * sm; j++) { const w = Math.exp(-(j * j) / (2 * sm * sm)); s2 += d[(k + j + A) % A] * w; m += w; } ds[k] = Math.max(d[k], s2 / m); }
+  const smooth = (r) => { if (!rSmooth) return r; const o = new Float32Array(A); for (let k = 0; k < A; k++) { let s2 = 0, m = 0; for (let j = -2 * rSmooth; j <= 2 * rSmooth; j++) { const v = r[(k + j + A) % A]; if (v < 0) continue; const w = Math.exp(-(j * j) / (2 * rSmooth * rSmooth)); s2 += v * w; m += w; } o[k] = m ? s2 / m : -1; } return o; };
+  const rcs = smooth(rc), ros = smooth(ro), o = new Uint8ClampedArray(N * 4);
+  const sample = (sx, sy) => { const fx = sx - 0.5, fy = sy - 0.5, x0 = Math.floor(fx), y0 = Math.floor(fy), ax = fx - x0, ay = fy - y0; let l = 0, a = 0;
+    for (const [ddx, ddy, w] of [[0, 0, (1 - ax) * (1 - ay)], [1, 0, ax * (1 - ay)], [0, 1, (1 - ax) * ay], [1, 1, ax * ay]]) { const xx = x0 + ddx, yy = y0 + ddy; if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; const j = (yy * W + xx) * 4, aa = P[j + 3] / 255; l += P[j] * aa * w; a += aa * w; }
+    return a > 0 ? [Math.round(l / a), Math.round(a * 255)] : null; };
+  for (let y = 0; y < 700; y++) for (let x = 0; x < W; x++) {
+    const vx = x + 0.5 - c[0], vy = y + 0.5 - c[1], rr = Math.hypot(vx, vy), th = Math.atan2(vy, vx), kf = ((th < 0 ? th + 2 * Math.PI : th) / (2 * Math.PI)) * A, k0 = Math.floor(kf) % A, k1 = (k0 + 1) % A, f = kf - Math.floor(kf);
+    const dd = ds[k0] * (1 - f) + ds[k1] * f; let sx = x + 0.5, sy = y + 0.5;
+    if (dd > 0.01) { const r0 = Math.min(rcs[k0] < 0 ? Infinity : rcs[k0], rcs[k1] < 0 ? Infinity : rcs[k1]), r1 = Math.max(ros[k0], ros[k1]);
+      const g = rr <= r0 + dd ? 1 : rr >= r1 ? 0 : 1 - (rr - r0 - dd) / Math.max(1, r1 - r0 - dd), rs = rr - dd * g;
+      sx = c[0] + rs * Math.cos(th); sy = c[1] + rs * Math.sin(th); }
+    const v = sample(sx, sy); if (!v) continue; const i = (y * W + x) * 4; o[i] = o[i + 1] = o[i + 2] = v[0]; o[i + 3] = v[1];
+  }
+  return o;
 }

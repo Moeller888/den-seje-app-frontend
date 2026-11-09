@@ -100,3 +100,24 @@ test("the preview is private and Danish, says the reference is identical, and ma
     assert.ok(!/openai|images\/edits|fetch\(/.test(src), f + ": no image call");
   }
 });
+
+test("Afro follow-up: without smoothing the rebuilt afro is D-192's tracked layer byte for byte; with it the silhouette stays the same", async () => {
+  const EF = await import(pathToFileURL(join(ROOT, "tools", "avatar", "r3-northstar-earfix.mjs")).href);
+  const tracked = EF.loadD192Afro().afro, raw = PO.afroSmoothHairline({ rSmooth: 0 });
+  let differ = 0; for (let i = 0; i < N * 4; i++) if (raw[i] !== tracked[i]) differ++;
+  assert.equal(differ, 0, "rSmooth 0 reproduces D-192 exactly");
+  const smooth = PO.afroSmoothHairline({ rSmooth: T.AFRO_RSMOOTH }); let both = 0, any = 0;
+  for (let i = 0; i < N; i++) { const a = tracked[i * 4 + 3] >= 128, b = smooth[i * 4 + 3] >= 128; if (a && b) both++; if (a || b) any++; }
+  assert.ok(both / any > 0.995, "the fit is kept (silhouette IoU " + (both / any).toFixed(4) + ")");
+});
+
+test("Afro follow-up: the ear opening stays inside the head's contour and leaves no half-transparent rim over the background", () => {
+  const hair = layer((o) => { for (let x = 100; x < 160; x++) for (let y = 100; y < 160; y++) put(o, x, y, [200, 200, 200, 255]); });
+  const bald = layer((o) => { for (let x = 100; x < 130; x++) for (let y = 100; y < 160; y++) put(o, x, y, [240, 190, 150, 255]); });   // the head ends at x 130
+  const ears = new Uint8Array(N); for (let x = 115; x < 128; x++) for (let y = 120; y < 140; y++) ears[y * W + x] = 1;
+  const op = PO.earOpening(hair, ears, { bald, insideHead: true, rimAlpha: 1 });
+  assert.equal(at(op.px, 120, 130)[3], 0, "the ear is open");
+  assert.equal(at(op.px, 132, 130)[3], 255, "curls outside the head stay");
+  for (let x = 128; x < 160; x++) assert.ok([0, 255].includes(at(op.px, x, 130)[3]), "no half-transparent rim at x " + x);
+  assert.equal(T.rimOverBackground(op.px, ears, bald), 0);
+});
