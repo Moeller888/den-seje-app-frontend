@@ -127,6 +127,9 @@ for (const width of [1100, 390]) {
     pupil.northstar = { outfit: "K01" };   // creme T-shirt, sand skirt, beige sneakers
     const { ctx, page, errs } = await openAvatar(browser, pupil, width);
     await page.waitForLoadState("load");   // the page's own first load event (it can come late, e.g. on a slower host) is not a reload
+    // the first figure must be drawn before any baseline is taken: on a slower host it can still be loading here, and its arrival
+    // would look like a redraw caused by the first (refused) choice
+    await expect.poll(async () => { const f = await figure(page); return f.rendered && f.path === "northstar" && !!f.src; }, { timeout: 30000 }).toBe(true);
     let loads = 0, navigations = 0;
     // the category menu writes #kategori=<key> (D-363) — a same-document change; anything else would be a navigation
     const start = page.url().split("#")[0];
@@ -137,6 +140,7 @@ for (const width of [1100, 390]) {
     /** A refused part: the figure, the worn parts and the account stay exactly as they were, and the pupil is told why. */
     const refused = async (piece: string, reason: string) => {
       const before = { outfit: await outfitNow(page), worn: await worn(page), fig: (await figure(page)).src, sent: pupil.sent.length };
+      expect(before.fig, "the baseline is a drawn figure").not.toBeNull();
       await card(page, piece).locator(".equip-btn").click();
       await expect(status).toContainText(reason);
       await expect(card(page, piece).locator(".northstar-refusal"), "the reason shows on the card the pupil pressed").toHaveText(reason);
