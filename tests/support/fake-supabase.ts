@@ -18,6 +18,8 @@
 //   overview       the get_student_overview row for student-detail.html (absent: no rows)
 //   detailPending / detailReviewed  student-detail.html's pending / reviewed question_instances
 //   questionContent  { [question id]: content } returned by the questions lookup
+//   questionFormat   { [question id]: answer_format } added to that lookup's rows (absent: no
+//                    answer_format field, as a row without the column would come back)
 //   createResponse  "ok" | { status, code } — what create-student answers
 //   signInError    when set, signInWithPassword fails with it
 //   updateUserError  when set, auth.updateUser fails with it
@@ -83,8 +85,13 @@ function resolveQuery(table, ops, mode) {
     const isLongFilter = ops.some(o => o.op === "eq" && o.args[0] === "answer_type" && o.args[1] === "long");
     const longIds = f.longQuestionIds || [];
     const content = f.questionContent || {};
+    const formats = f.questionFormat || {};
     return { data: ids.filter(id => !isLongFilter || longIds.includes(id))
-      .map(id => (id in content ? { id, content: content[id] } : { id })), error: null };
+      .map(id => {
+        const row = id in content ? { id, content: content[id] } : { id };
+        if (id in formats) row.answer_format = formats[id];
+        return row;
+      }), error: null };
   }
 
   return { data: mode === "single" ? null : [], error: null };
