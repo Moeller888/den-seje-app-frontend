@@ -286,6 +286,33 @@ test("5. a pupil still cannot UPDATE its own active_domains nor call set_student
   await setDomainsAsOwner(PUPIL, null);
 });
 
+// anon keeps EXECUTE on set_student_domains (production ACL, unchanged by the lock), so the only thing
+// standing between an anonymous caller and a pupil's domains is the ownership check: with no JWT subject,
+// auth.uid() is NULL and no teacher_id can equal it. Proven here for a regular list, a pilot domain, NULL
+// and a forged-looking call on a pilot pupil — nothing is written in any case.
+test("5b. an anonymous caller (role anon, no JWT subject) cannot change any pupil's domains", async () => {
+  await setDomainsAsOwner(PUPIL, [PILOT, "vikings"]);
+  const acl = (await db.query(`SELECT has_function_privilege('anon', 'public.set_student_domains(uuid,text[])', 'EXECUTE') AS x`)).rows[0].x;
+  assert.equal(acl, true, "anon has EXECUTE today (production ACL); the ownership check is the barrier");
+  await db.exec("SELECT set_config('request.jwt.claim.sub', '', false)");
+  await db.exec("SET ROLE anon");
+  try {
+    for (const domains of [["vikings"], [PILOT], null, []]) {
+      await assert.rejects(db.query("SELECT public.set_student_domains($1::uuid, $2::text[])", [PUPIL, domains]), NOT_TEACHER,
+        `anon with ${JSON.stringify(domains)}`);
+      await assert.rejects(db.query("SELECT public.set_student_domains($1::uuid, $2::text[])", [PUPIL_REGULAR, domains]), NOT_TEACHER,
+        `anon on a regular pupil with ${JSON.stringify(domains)}`);
+    }
+    await assert.rejects(db.query("UPDATE public.profiles SET active_domains = ARRAY['pilot_d362'] WHERE id = $1", [PUPIL_REGULAR]),
+      /permission denied/);
+  } finally {
+    await db.exec("RESET ROLE");
+  }
+  assert.deepEqual(await activeDomainsOf(PUPIL), [PILOT, "vikings"]);
+  assert.equal(await activeDomainsOf(PUPIL_REGULAR), null);
+  await setDomainsAsOwner(PUPIL, null);
+});
+
 // ── 6. guard, re-run, rollback ─────────────────────────────────────────────────────────────────────
 
 async function inRolledBackTx(fn) {
