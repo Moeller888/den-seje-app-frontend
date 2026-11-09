@@ -292,6 +292,9 @@ export const TEST_PROFILES = Object.freeze({
   k1: Object.freeze({
     "20261103110000_l1_k1_attempt_context.sql":
       "TEST PROFILE k1: L1 K1 is NOT applied in production; replayed only in the isolated K1 lane so H5 submissions (p_mode/p_hints_used → 9/10-parameter _v2) can be tested (D-341)",
+    // EXPERIMENT BRANCH ONLY (experiment/laerligverse-integration-k1, not for merge): Lærligverse L5 + L3 on top of K1.
+    "20261108043500_laerligverse_served_mode_hint_log.sql":
+      "TEST PROFILE k1 (experiment only): Lærligverse L5 + L3 is NOT applied in production; replayed only in the isolated K1 lane, after K1, so served_mode, the hint log and the atomic attempt wrappers can be tested end to end",
   }),
 });
 

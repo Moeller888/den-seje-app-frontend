@@ -263,6 +263,11 @@ jobs:
           echo "replay profile $REPLAY_PROFILE: K1 columns on question_attempts = $n"
           if [ "$REPLAY_PROFILE" = "k1" ]; then [ "$n" = "2" ] || { echo "K1 lane without K1" >&2; exit 1; }
           else [ "$n" = "0" ] || { echo "K1 leaked into the production-mirror lane" >&2; exit 1; }; fi
+          # EXPERIMENT BRANCH ONLY: L3/L5 (served_mode + the hint log) likewise only in the K1 lane.
+          m=$(psql "$ISOLATED_DB_URL" -X -A -t -c "SELECT (SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'question_instances' AND column_name = 'served_mode') + (SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'question_hint_requests')")
+          echo "replay profile $REPLAY_PROFILE: L3/L5 objects (served_mode, question_hint_requests) = $m"
+          if [ "$REPLAY_PROFILE" = "k1" ]; then [ "$m" = "2" ] || { echo "K1 lane without L3/L5" >&2; exit 1; }
+          else [ "$m" = "0" ] || { echo "L3/L5 leaked into the production-mirror lane" >&2; exit 1; }; fi
 
       - name: Seed — synthetic questions (INSERT-only, behind the target check)
         if: needs.plan.outputs.scope != 'docs-md'
@@ -280,6 +285,14 @@ jobs:
           echo 'LAERLIGVERSE_OBJECTIVE_TARGETING=on' > "$RUNNER_TEMP/functions.env"
           # D-338: the server-directed sequence, likewise ON only in the isolated stack.
           echo 'LAERLIGVERSE_SEQUENCE=on' >> "$RUNNER_TEMP/functions.env"
+          # EXPERIMENT BRANCH ONLY (not for merge): Lærligverse L5 + L3 ON in the K1 lane alone, where the replay
+          # profile also has migration 20261108043500. The production-mirror entries keep every flag off.
+          if [ "${{ matrix.profile }}" = "k1" ]; then
+            echo 'LAERLIGVERSE_SERVED_MODE=on' >> "$RUNNER_TEMP/functions.env"
+            echo 'LAERLIGVERSE_ATTEMPT_CONTEXT=on' >> "$RUNNER_TEMP/functions.env"
+            echo 'LAERLIGVERSE_HINTS=on' >> "$RUNNER_TEMP/functions.env"
+          fi
+          echo "functions.env for profile ${{ matrix.profile }}: $(cut -d= -f1 "$RUNNER_TEMP/functions.env" | tr '\n' ' ')"
           ready=no
           for attempt in 1 2 3; do
             nohup supabase functions serve --env-file "$RUNNER_TEMP/functions.env" >> "$RUNNER_TEMP/functions.log" 2>&1 &

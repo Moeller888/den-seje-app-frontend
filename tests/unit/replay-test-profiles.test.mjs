@@ -33,6 +33,8 @@ import { bootstrapMarkerSql } from "../isolated/seed/seed-guard.mjs";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
 const K1 = "20261103110000_l1_k1_attempt_context.sql";
+// EXPERIMENT BRANCH ONLY (experiment/laerligverse-integration-k1, not for merge): the k1 lane also replays L3/L5.
+const L35 = "20261108043500_laerligverse_served_mode_hint_log.sql";
 const files = migrationFiles();
 
 test("1. default = production mirror: no profile, 'production' and the old call give the same plan; K1 skipped", () => {
@@ -46,21 +48,22 @@ test("1. default = production mirror: no profile, 'production' and the old call 
   assert.ok(old.plan.every((p) => p.profile === undefined), "no decision carries a profile by default");
 });
 
-test("2. the k1 profile changes exactly one decision: K1 skip → apply", () => {
+test("2. the k1 profile changes exactly two decisions on this experiment branch: K1 and L3/L5 skip → apply", () => {
   const base = planReplay(files, readMigration).plan;
   const k1 = planReplay(files, readMigration, { profile: "k1" }).plan;
   assert.deepEqual(k1.map((p) => p.file), base.map((p) => p.file), "same files, same order");
   const changed = k1.filter((p, i) => JSON.stringify(p) !== JSON.stringify(base[i]));
-  assert.equal(changed.length, 1);
-  assert.equal(changed[0].file, K1);
-  assert.equal(changed[0].action, "apply");
-  assert.equal(changed[0].profile, "k1");
-  assert.match(changed[0].reason, /NOT applied in production/);
+  assert.deepEqual(changed.map((p) => p.file), [K1, L35], "K1 first, L3/L5 after it");
+  for (const c of changed) {
+    assert.equal(c.action, "apply");
+    assert.equal(c.profile, "k1");
+    assert.match(c.reason, /NOT applied in production/);
+  }
 });
 
 test("3. a profile can only add test-only replays; unknown or production-naming profiles fail loud", () => {
   assert.deepEqual(Object.keys(TEST_PROFILES), ["k1"]);
-  assert.deepEqual(Object.keys(TEST_PROFILES.k1), [K1]);
+  assert.deepEqual(Object.keys(TEST_PROFILES.k1), [K1, L35]);
   for (const [name, list] of Object.entries(TEST_PROFILES)) {
     assert.ok(Object.isFrozen(list), `${name} is frozen`);
     for (const f of Object.keys(list)) {
@@ -107,6 +110,7 @@ test("4. on the full replay: the k1 profile yields K1's schema, the default none
   assert.deepEqual(k.columns, ["hints_used", "mode"]);
   assert.ok(k.v2.includes(9), "the 9-parameter _v2 exists in the K1 lane");
   assert.ok(lane.r.steps.some((s) => s.name === K1 && s.ok), "K1 itself was applied");
+  assert.ok(lane.r.steps.some((s) => s.name === L35 && s.ok), "L3/L5 was applied after K1 (experiment branch)");
 });
 
 test("5. only the isolated workflow uses a profile, and it is fenced", () => {
