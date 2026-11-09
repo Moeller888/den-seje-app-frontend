@@ -376,7 +376,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (Lærligverse L5 + L3 oven på lag 4: `served_mode` ved indsættelsen og antal hints i et sekvenssvar, begge slukket) — **ikke deployet** | dette repository | 22 | `ac5bef7dba2ee43ed25818b703107ec4f573fa5ce55287cfc26fb34612a81029` |
+| Kandidat (K9-prototype oven på L5 + L3: `learning-sequence.ts` får et introduktionstrin, som intet i get-next-question kalder) — **ikke deployet** | dette repository | 22 | `fa5edaedd764fad75b38a5b98a593cb74d9e6e4e8201d2f5027190166b0fe724` |
+| Forrige kandidat (Lærligverse L5 + L3 oven på lag 4: `served_mode` ved indsættelsen og antal hints i et sekvenssvar, begge slukket) — ikke deployet | #653 `39065ce0` | 22 | `ac5bef7dba2ee43ed25818b703107ec4f573fa5ce55287cfc26fb34612a81029` |
 | Forrige kandidat (Lærligverse-integration lag 3 oven på main med F-05 Kategorisering; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | lag 4 `b6d65cdd` | 21 | `ae22cf64a930cb91351d1e2dfbb8bf4d7678e9019d544b278ddba69d4da792cf` |
 | Forrige kandidat (lag 3 plus F10-B-rettelsen, før F-05) — ikke deployet | `6bca478a` | 20 | `e20c056b935880c72a87e7875a797c4070ad1fe54d4d8035bcfb834fe6daefe6` |
 | Forrige kandidat (Lærligverse-integration lag 3: F-04/F-02/F-07, D-329 `objective-target.ts`, D-332 `option_details`, D-338 `learning-sequence.ts`) — ikke deployet | `0a6d7b6d` | 20 | `cf71236f4e54cf6aeb719d83bd7e94754c9ae279dd2c17c0c24f06f3bec3bda2` |
