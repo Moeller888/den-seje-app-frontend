@@ -1,76 +1,95 @@
-# Lærligverse: datakontrakt for eksponering (introduktion som servertrin + K9 "præsenteret")
+# Lærligverse: datakontrakt for eksponering, gennemførelse og evidens
 
-**Status: UDKAST og prototype (2026-11-09).** Intet er anvendt i produktionen, og intet er slået til:
-- **Migrationen** `20261109043500_laerligverse_presented_at.sql` er et udkast og står i `NOT_IN_PRODUCTION`.
-- **Introduktionstrinnet** i `_shared/learning-sequence.ts` er slukket, medmindre en kalder beder om det. Det gør `get-next-question` ikke.
+**Status: prototype bag slukkede flag (2026-11-10).** Intet er anvendt i produktionen, og intet er slået til.
 
-**Udgangspunkt:**
-- [eksponering-og-hints.md](eksponering-og-hints.md) (#656): kortlægningen.
-- `docs/learning-progression-l1-contracts.md` §K9: reglerne for `mark_presented`.
-- [evidens-datakontrakt.md](evidens-datakontrakt.md): evidensen.
+| Del | Hvad | Status |
+|---|---|---|
+| Migrationer | `20261109043500_laerligverse_presented_at.sql` (K9 for opgaverunder) og `20261110043500_laerligverse_introductions.sql` (introduktionen som servertrin) | Udkast, i `NOT_IN_PRODUCTION` |
+| Edge-flag | `LAERLIGVERSE_INTRODUCTION` og `LAERLIGVERSE_PRESENTED` | Begge slukket |
+| Ejerens GO | Fortsætte som eget kontrolleret spor | Givet 2026-11-10. **Intet** GO til aktivering |
+| LP-13 | Det endelige introduktionstrin | Ejerbeslutning |
 
-LP-13 (introduktionen som servertrin) er en ejerbeslutning. Her er den forberedt, ikke besluttet.
+Udgangspunkt: `eksponering-og-hints.md` (#656), `docs/learning-progression-l1-contracts.md` §K9 og [evidens-datakontrakt.md](evidens-datakontrakt.md).
 
-## 1. Fire tilstande med præcis betydning
+## 1. Syv tilstande med præcis betydning og kilde
 
-| Tilstand | Betyder præcis | Kilde | Idempotens | Hvem må skrive | Indholdsversion | Tidsstempel |
+| Tilstand | Betyder præcis | Kilde (server) | Idempotens | Hvem må skrive | Version | Tid |
 |---|---|---|---|---|---|---|
-| **Serveret** | Serveren har oprettet rundens instans og udleveret indholdet | `get-next-question`; `question_instances` (K1: `served_snapshot`, `served_content_sha256`, `served_at`) | Én instans pr. elev og spørgsmål (`idx_student_question_instance`); én åben runde pr. elev | Kun backend (INSERT er fjernet fra klientroller siden 20261015120000) | `served_content_sha256` (K1) | `served_at`, serverens tid ved INSERT |
-| **Præsenteret** | Serveren har **modtaget en melding** om, at rundens indhold var på skærmen | `mark_presented(student, instance, round)`, kun `service_role`; `question_instances.presented_at` | Sættes **én gang pr. runde**. Et nyt kald giver `replay` med samme tid. En genåbning nulstiller | Kun funktionen. Ingen klientrolle kan læse eller skrive kolonnen | Samme runde og dermed samme `served_content_sha256` | `presented_at` = serverens `now()`, kun mellem serveringen og svaret |
-| **Gennemført** | Eleven har afsluttet trinnet: et svar er registreret, eller, for en introduktion, en eksplicit afslutning | Opgavetrin: `question_attempts` (H5/K1). Introduktion: **ikke bygget** (§6) | Opgavetrin: `submission_id` (H5) | Opgavetrin: `_v2`/wrapperen (`service_role`) | Forsøgets `question_content_sha256` | `answered_at` (serveren) |
-| **Påvist** | Et senere **selvstændigt** svar viser kompetencen | Klassifikationen (`evidence.ts`, D-330) over serverens forsøg: vurderingstrin, 0 hints og registreret eksponering | Afledt, ikke gemt | Ingen. Den beregnes | Forsøgets version | Forsøgets `answered_at` |
+| **Serveret** | Serveren har udleveret indholdet til eleven | Opgave: `question_instances` (K1: `served_snapshot`, `served_content_sha256`, `served_at`). Introduktion: `introduction_rounds.served_at` | Én instans pr. elev og spørgsmål; én introduktionsrunde pr. elev og introduktion. En genindlæsning genoptager samme runde | Kun backend | `served_content_sha256` / `introduction_rounds.content_sha256` | Serverens `now()` |
+| **Præsenteret** | Serveren har **modtaget en melding** om, at indholdet var på skærmen | `question_instances.presented_at` (via `mark_presented`) / `introduction_rounds.presented_at` (via `mark_introduction_presented`) | Sættes én gang pr. runde. Samme `request_id` giver `replay`; et andet id giver `already_recorded` og flytter intet | Kun funktionerne (`service_role`), kaldt af `introduction-progress` med den verificerede elev | Rundens version | Serverens `now()`, aldrig før serveringen og aldrig efter svaret |
+| **Gennemført** | Opgave: et svar er registreret. Introduktion: eleven har trykket "gennemført", og serveren har registreret det | Opgave: `question_attempts` (H5/K1). Introduktion: `introduction_rounds.completed_at` (via `complete_introduction`) | Opgave: `submission_id`. Introduktion: sættes én gang; samme `request_id` giver `replay`, et andet giver `already_completed` | `_v2`/wrapperen; `complete_introduction` (`service_role`) | Forsøgets `question_content_sha256` / rundens version | `answered_at` / `completed_at`, serverens tid |
+| **Besvaret** | Der findes et registreret forsøg med elevens svar (kun opgaver; en introduktion besvares aldrig) | `question_attempts` | `submission_id` | `_v2`/wrapperen | Forsøgets version | `answered_at` |
+| **Korrekt** | Serveren bedømte svaret som rigtigt med rundens nøgle | `question_attempts.was_correct`, bedømt fra K1-snapshottet | Frosset i forsøget | Kun serverens bedømmelse | Forsøgets version | `answered_at` |
+| **Selvstændigt korrekt** | Korrekt i et vurderingstrin (`check`, `review` eller `application`) med `hints_used = 0` registreret af serveren | `question_attempts.mode` og `.hints_used` (L5/L3, #653), klassificeret af `evidence.ts` | Afledt | Ingen; beregnes | Forsøgets version | `answered_at` |
+| **Progression over tid** | Selvstændigt korrekt igen ved et senere genbesøg (≥ 20 t; forslag i `evidence.ts`, LP-13) i samme mål | Flere forsøg over tid, klassificeret af `evidence.ts` | Afledt | Ingen | De enkelte forsøgs versioner | Forsøgenes `answered_at` |
 
-**Hovedregel:**
-- **En klients `mark_presented` beviser aldrig, at eleven har læst, set eller forstået noget.** Den beviser kun, at serveren fik en melding på et bestemt tidspunkt.
-- Klienten kan højst melde for sent, for tidligt (tidligst ved serveringen) eller slet ikke. Ingen af delene kan gøre et svar stærkere (§K9's tabel).
-- "Præsenteret" bruges kun som **forudsætning**: trinnet kan gå videre, og et senere svar kan regnes som eksponeret i K4/K7. Det er **aldrig evidens i sig selv**.
+**Hovedregler:**
+- **Serveret, præsenteret og gennemført er hverken læst, forstået eller lært.**
+- En klients `mark_presented` beviser aldrig, at eleven har læst eller forstået noget. Klienten kan højst melde for sent eller lade være, og ingen af delene kan gøre et svar stærkere (§K9).
+- En introduktions "gennemført" betyder kun, at eleven trykkede videre. Den lader sekvensen gå videre og er **aldrig evidens** (D-330).
+- Kun **selvstændigt korrekt** kan blive evidens, og kun med registreret tilstand, hints og eksponering. Det afgør `evidence.ts`.
 
-## 2. Session og kobling til senere svar
+**Session og kobling til senere svar:**
+- Der er ingen klientsession i kontrakten. Alt knyttes til den verificerede elev (JWT → `auth.getUser()`), rundens id og målet (`learning_objective`).
+- En ny login eller en anden enhed genoptager samme runde.
+- Et senere svar i samme mål kan regnes som "efter introduktion", når introduktionens `completed_at` ligger før svarets `answered_at`.
 
-- **Session:** der er ingen klientsession i kontrakten. Alt knyttes til elevens verificerede id (JWT → `auth.getUser()` → `p_student_id`), instansen og runden.
-  - En ny login eller en anden enhed fortsætter samme runde (gnq genoptager den åbne instans).
-  - "Præsenteret" sættes kun én gang, uanset hvor mange skærme der melder.
-- **Kobling til senere svar:**
-  - For et opgavetrin hører `presented_at` til samme instans og runde som svaret. `presented_interval_ms = answered_at − presented_at` kan beregnes på serveren (K9). Det er ikke bygget: det kræver K1-ejerens `_v2` eller wrapperen fra #653.
-  - For en introduktion er koblingen målet (`learning_objective`). Senere svar i samme mål kan regnes som "efter introduktion", hvis introduktionens `presented_at` ligger før svarets `answered_at`.
+## 2. Introduktionen som servertrin uden facit (prototype, migration `20261110043500`)
 
-## 3. Introduktion som servertrin (prototype)
+**Hvorfor egne tabeller:**
+- `question_instances.correct_answer` er NOT NULL.
+- Alle bedømmelsesveje læser `question_instances`.
+- `idx_one_open_question` tillader én åben runde pr. elev.
 
-`learning-sequence.ts` har nu:
-- **`INTRODUCTION_STEP = "introduction"`.**
-- **`introductionPresented(rows)`:** sand, når en række for målet er mærket `learning_step = "introduction"` og har en `presented_at` fra serveren.
-- **`nextStepWithIntroduction(rows, nowMs, { introduction })`:**
-  - **Uden indstillingen** er resultatet præcis `nextStep(historyFromRows(rows), nowMs)`. Det er testet på en række historikker.
-  - **Med indstillingen** kommer introduktionen først, indtil serveren har registreret præsentationen. Derefter er sekvensen som før.
-  - **Ingen anden vej frem:** hverken et svar, et andet trin eller et klientfelt kan få introduktionen til at tælle som præsenteret.
+En introduktion har ingen nøgle, bedømmes aldrig og må aldrig blokere quizzen. Derfor har den to egne tabeller, som ingen bedømmelsesvej, ingen offentlig spørgsmåls-DTO og ingen belønning læser (testet: kun de tre funktioner og de to triggere nævner dem).
 
-`STEPS`, `stepOf`, `nextStep` og `historyFromRows` er uændrede. En introduktionsrække er usynlig for den eksisterende politik. `get-next-question` kalder ikke den nye funktion, så sekvensen er byte-identisk. Kandidatmanifestet er opdateret, fordi filen er i grafen.
+- **`learning_introductions`:** indholdet er `{ "cards": [ { title, text } ] }`, 1–10 kort.
+  - En CHECK afviser enhver svarlignende nøgle: `correct`, `correct_answer`, `accepted_answers`, `options`, `option_details`, `hints`, `review_text`, `pairs`, `items` og `categories`.
+  - En version er uforanderlig: kun `is_active` må ændres. En ny tekst er en ny version.
+  - `content_sha256` sættes af serveren.
+  - Der er højst én aktiv introduktion pr. mål.
+- **`introduction_rounds`:** én række pr. elev og introduktion med `served_at`, `presented_at` og `completed_at` (og `request_id` for de to sidste).
+  - En trigger fryser resten og gør presented og completed til set-once i serverens tid, aldrig før serveringen.
+  - En INSERT starter altid som "kun serveret".
+- **Rettigheder:** RLS er slået til. `anon` og `authenticated` har ingen rettigheder og kan ikke kalde funktionerne. Alle tre funktioner er SECURITY INVOKER, og kun `service_role` må kalde dem.
+- **Indholdet:** de lærergodkendte introkort fra `adventure-engine/packages/archive-prototype/src/intro-content.ts` (`INTRO_CARDS`), ordret. Testfixturen er `tests/isolated/fixtures/kildekritik-introduction.json`, og en test kræver ordret lighed.
+  - `INTRO_CHECK` (forståelsestjekket) er **ikke** med. Det har svarmuligheder og hører til en senere afklaring.
+  - Ordret flytning kræver ingen ny lærergodkendelse (`eksponering-og-hints.md`). Ændres teksten, kræves den.
+  - **Afslører ingen svar:** introduktionens offentlige payload indeholder ingen af sekvensens `correct`, `accepted_answers`, `option_details`, `review_text` eller `hints` (testet).
+  - Kortene nævner kildetyper generelt med småt, fx "en dagbog". Det er den godkendte undervisningstekst og ikke et svar på en bestemt opgave.
 
-## 4. `mark_presented` (prototype, migration `20261109043500`)
+## 3. get-next-question (`LAERLIGVERSE_INTRODUCTION`)
 
-- **Kolonnen:** `question_instances.presented_at timestamptz NULL`, ejet af triggeren `question_instances_presented_at`:
-  - INSERT giver `NULL`;
-  - en genåbning giver `NULL`;
-  - værdien sættes én gang og fryses, også over for `service_role`;
-  - den afvises på en besvaret runde, i samme sætning som svaret, før serveringen og ud i fremtiden.
-- **Funktionen:** `mark_presented(p_student_id, p_question_instance_id, p_round_no)` → jsonb.
-  - SECURITY INVOKER, EXECUTE kun for `service_role`.
-  - Låser elevens række (samme lås som hint og svar).
-  - Udfald: `recorded`, `replay`, `round_closed`, `stale_round`, `not_found` (også for en fremmed instans) og `invalid_request`.
-- **Rettigheder:** `anon` og `authenticated` har ingen rettighed til kolonnen. L3/L5 har flyttet deres UPDATE til kolonneniveau, så en ny kolonne er lukket uden flere sætninger. Guarden kræver K1 og L3/L5.
-- **Tests:** `tests/unit/laerligverse-k9-presented-migration-run.test.mjs` kører på PGlite med fuld replay + K1 + L3/L5. Den dækker udfaldene, triggerens afvisninger, rettighederne, og at intet andet ændres.
+Kun i en serverstyret sekvens (D-338) og kun med flaget præcis `on`:
+1. **Kaldet:** gnq kalder `serve_introduction(verificeret elev, mål)` gennem admin-klienten.
+2. **`served` eller `resumed`:** svaret er `{ step: "introduction", learning_objective, learning_step: "introduction", introduction_round_id, content_sha256, content: { cards } }`. Der oprettes ingen spørgsmålsinstans, og en genindlæsning giver samme runde.
+3. **`completed` eller `none`:** sekvensen kører præcis som med flaget slukket (plus det ene kald).
+4. **Fejl eller misdannet svar:** 500, aldrig et spørgsmål.
 
-## 5. Indholdsversion og tid
+Slukket er kald, svar og logs byte-identiske (`tests/unit/laerligverse-introduction-gnq.test.mjs`). Kandidatmanifestet er opdateret (23 filer).
 
-- **Al tid er serverens:** `served_at`, `presented_at` og `answered_at`. Klientens ur bruges aldrig.
-- **Versionen af det præsenterede indhold** er rundens `served_content_sha256` (K1). En introduktion uden K1-snapshot har en ukendt version og må ikke bruges som forudsætning for evidens.
+## 4. Edge Function `introduction-progress`
 
-## 6. Ikke bygget (afgrænsning)
+JWT er påkrævet via `auth.getUser()` (`verify_jwt = false` som i get-next-question og request-hint). Funktionen bruger aldrig et elev-id fra body'en. Uden begge flag svarer den 404 uden at bygge en klient.
 
-- **Edge Function til `mark_presented`.** Den skal følge `request-hint`: JWT påkrævet, verificeret id og et slukket flag.
-- **Introduktionsindhold som serverrække.** En introduktion har intet facit, men `question_instances.correct_answer` er NOT NULL, så den kræver en indholdsform uden svar.
-- **En eksplicit "gennemført"-handling for introduktionen**, som lukker runden uden forsøg og belønning. Ellers blokerer den åbne introduktionsinstans næste trin (én åben runde pr. elev).
-- **`presented_interval_ms`** i forsøget.
-- **Kobling i `get-next-question`** bag et flag. Kræver de tre punkter ovenfor.
+| Handling | Body | RPC | Flag |
+|---|---|---|---|
+| Introduktion gennemført | `{ action: "completed", round_id, request_id }` | `complete_introduction` | `LAERLIGVERSE_INTRODUCTION` |
+| Introduktion præsenteret (valgfri) | `{ action: "presented", round_id, request_id }` | `mark_introduction_presented` | begge |
+| Opgaverunde præsenteret (valgfri) | `{ action: "presented", question_instance_id, round_no }` | `mark_presented` (K9) | `LAERLIGVERSE_PRESENTED` |
 
-Hvert punkt kræver ejerens GO (LP-13). Indholdet kræver lærergodkendelse, hvis teksten ændres.
+Svarkoder:
+- `recorded`, `replay`, `already_recorded` og `already_completed` giver 200.
+- En fremmed runde giver `not_found` (404).
+- `stale_round` og `round_closed` giver 409.
+- En ugyldig body giver 400.
+- Alt andet giver 500 uden detaljer.
+
+## 5. Ikke bygget
+
+- Værtens og spillets brug: broen kender ikke `step: "introduction"` endnu.
+- Forståelsestjekket som servertrin.
+- `presented_interval_ms` i forsøget.
+- Produktionsseed af introduktionen. Den venter på LP-2 (det endelige `learning_objective`).
+
+Hvert punkt kræver ejerens GO.
