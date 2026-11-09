@@ -367,6 +367,12 @@ const REVIEWED_LATER_READERS = {
     "D-347's (one instance by id AND student_id = auth.uid(), no instance column returned, no write). EXECUTE " +
     "stays revoked from PUBLIC and anon. No policy, RLS or table privilege on question_instances is touched " +
     "(proven in minigame-break-interval-10min-migration-run.test.mjs, tests 1 and 4).",
+  "20261109043500_laerligverse_presented_at.sql":
+    "Lærligverse K9 prototype (not applied): mark_presented (SECURITY INVOKER, EXECUTE for service_role only) " +
+    "reads ONE instance matched on id AND student_id FOR UPDATE and returns only an outcome, the round and the " +
+    "server time it stored; another pupil's instance answers exactly like a missing one. The new column " +
+    "presented_at carries no client privilege (L3/L5 moved UPDATE to column level). No policy, RLS or table " +
+    "privilege on question_instances is touched (proven in laerligverse-k9-presented-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -562,7 +568,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261101190100_question_attempts_v2_align_grading.sql",
      "20261103110000_l1_k1_attempt_context.sql",
      "20261105090000_minigame_breaks.sql",
-     "20261107090000_minigame_break_interval_10min.sql"],
+     "20261107090000_minigame_break_interval_10min.sql",
+     "20261109043500_laerligverse_presented_at.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
