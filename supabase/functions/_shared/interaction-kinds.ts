@@ -32,14 +32,18 @@
 //                (not "mc"): the browser pads answer_format "mc" to four options with legacy years
 //                (js/answer-options.js), which a two-choice task must never get. maxShare 0 until the
 //                owner decides its share (it is a forståelsestjek, docs/learning-progression-design.md).
-//   order_items  answer_format "order" (ROADMAP #12)      auto-graded   renderer "order_items" — BUILT, NOT
-//                servable: contract, key and answer shape in _shared/order-items.ts (the facit is the
-//                authored order; only the presentation is shuffled); graded by process_question_attempt
-//                like Match par (process-event checks the answer's shape first)
-//   categorize   answer_format "categorize" (F-05)       auto-graded   renderer "categorize" — BUILT, NOT
-//                servable: contract, key and answer shape in _shared/categorize.ts (each item's category is
-//                authored; only the presentation of the items is shuffled); graded by
-//                process_question_attempt like Match par and Rækkefølge (process-event checks the shape first)
+//   order_items  answer_format "order" (ROADMAP #12)      auto-graded   renderer "order_items" — SERVABLE
+//                (F-04, step 3 below, D-362): contract, key and answer shape in _shared/order-items.ts (the
+//                facit is the authored order; only the presentation is shuffled); graded by
+//                process_question_attempt like Match par (process-event checks the answer's shape first —
+//                only the repository's process-event does; production needs step Q-21 first, see
+//                migration 20261108090000)
+//   categorize   answer_format "categorize" (F-05)       auto-graded   renderer "categorize" — SERVABLE
+//                (F-05, step 3 below, D-362): contract, key and answer shape in _shared/categorize.ts (each
+//                item's category is authored; only the presentation of the items is shuffled); graded by
+//                process_question_attempt like Match par and Rækkefølge (process-event checks the shape
+//                first — only the repository's process-event does; production needs step Q-21 first, see
+//                migration 20261108090000)
 //
 // GUESS FLOOR (guessFloor)
 // The chance that a pure random answer is right, where that is a FIXED property of the kind. Future
@@ -49,8 +53,8 @@
 // none of them is modelled yet, so a reader must treat null as "unknown", never as 0. Nothing on the
 // serving or grading path reads this field today.
 //
-// ADDING A KIND (Match par and Sandt/falsk have done steps 1 and 2) — the order matters, each step is its own reviewed
-// change:
+// ADDING A KIND (Match par and Sandt/falsk have done steps 1 and 2; Rækkefølge and Kategorisering all
+// three, D-362) — the order matters, each step is its own reviewed change:
 //   1. add the entry below with servable: false (content may then be authored, inactive or not,
 //      and is never served);
 //   2. ship the renderer (js/answer-input.js) and the grading path (process-event /
@@ -67,6 +71,9 @@
 // Both also need a reviewed migration before a row can even be STORED: production's questions table
 // checks answer_format (questions_answer_format_check: mc, number, text) and content
 // (content_valid_check: content.type mc/text/number), and neither admits "match" or "true_false".
+// Rækkefølge and Kategorisering, step 3 (D-362): v1's mapAnswerFormat maps "order" and "categorize" to
+// themselves (exact match), and migration 20261108090000 (NOT applied) lets the questions table store
+// both and flips question_is_servable for them.
 //
 // Pure TypeScript with no Deno or network imports, so the Node unit suite tests exactly what the
 // Edge Functions run.
@@ -109,8 +116,8 @@ export const INTERACTION_KINDS: Readonly<Record<InteractionKind, Readonly<Intera
   force_text:  Object.freeze({ wireFormat: "mc",          renderer: "force_text", servable: true,  base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
   match_pairs: Object.freeze({ wireFormat: "match",       renderer: "match_pairs", servable: false, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
   true_false:  Object.freeze({ wireFormat: "true_false",  renderer: "true_false", servable: false, base: false, maxShare: 0,    teacherGraded: false, guessFloor: 0.5 }),
-  order_items: Object.freeze({ wireFormat: "order",       renderer: "order_items", servable: false, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
-  categorize:  Object.freeze({ wireFormat: "categorize",  renderer: "categorize",  servable: false, base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
+  order_items: Object.freeze({ wireFormat: "order",       renderer: "order_items", servable: true,  base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
+  categorize:  Object.freeze({ wireFormat: "categorize",  renderer: "categorize",  servable: true,  base: false, maxShare: 0.15, teacherGraded: false, guessFloor: null }),
 });
 
 // Registry order is the deterministic tie-break wherever two kinds score the same.
