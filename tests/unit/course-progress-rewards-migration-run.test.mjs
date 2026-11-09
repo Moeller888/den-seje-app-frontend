@@ -397,3 +397,37 @@ test("7. pupils read only their own rows and cannot write the ledger or call the
   assert.equal(await code(as("anon", null, "SELECT public.award_course_milestones($1, 'lv_rls')", [a])), "42501");
   assert.equal(await code(as("anon", null, "SELECT count(*) FROM public.course_progress_rewards")), "42501");
 });
+
+// ── 8. The worked examples in docs/laerligverse/belonningsmodel.md §5 ─────────────────────────────────
+
+test("8. economy: short (4 answers) and medium (practice wrong + revision, 5 answers) both pay 61+26; all checks wrong pays 37+14; a long variant still 61+26", async () => {
+  const total = async (p, o) => { const r = await award(p, o); return [r.xp_awarded, r.coins_awarded]; };
+  let p = await addPupil();
+  await fullSequence(p, "lv_short");
+  assert.deepEqual(await total(p, "lv_short"), [61, 26], "short");
+  p = await addPupil();
+  await step(p, "lv_medium", "guided_practice", false);
+  await step(p, "lv_medium", "revision", true);
+  for (const s of ["independent_application", "transfer", "revisit"]) await step(p, "lv_medium", s, true);
+  assert.deepEqual(await total(p, "lv_medium"), [61, 26], "medium: revision pays 0");
+  p = await addPupil();
+  await step(p, "lv_wrong", "guided_practice", true);
+  for (const s of ["independent_application", "transfer", "revisit"]) await step(p, "lv_wrong", s, false);
+  assert.deepEqual(await total(p, "lv_wrong"), [4 * 3 + 25, 4 * 1 + 10], "4 steps + sequence, no check");
+  p = await addPupil();
+  for (const [s, n] of [["guided_practice", 3], ["revision", 2], ["independent_application", 2], ["transfer", 2], ["revisit", 1]]) {
+    for (let i = 0; i < n; i++) await step(p, "lv_long", s, true);
+  }
+  assert.deepEqual(await total(p, "lv_long"), [61, 26], "long (10 answers): each milestone still once");
+});
+
+test("8. economy: ten sequences pay 10 × 61 + 30 + 75 = 715 XP and 10 × 26 + 15 + 40 = 315 coins; a repeat completion pays 0", async () => {
+  const p = await addPupil();
+  const m0 = await money(p);
+  for (let i = 1; i <= 10; i++) { await fullSequence(p, `lv_ten_${i}`); await award(p, `lv_ten_${i}`); }
+  const m1 = await money(p);
+  assert.deepEqual([m1.xp - m0.xp, m1.coins - m0.coins], [715, 315]);
+  await fullSequence(p, "lv_ten_1");        // the same objective completed again with new items
+  assert.equal((await award(p, "lv_ten_1")).xp_awarded, 0);
+  assert.deepEqual(await money(p), m1);
+});
