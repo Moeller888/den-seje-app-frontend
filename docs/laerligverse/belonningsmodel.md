@@ -78,6 +78,7 @@ RLS til; eleven kan kun **læse** egne rækker; ingen API-rolle kan opdatere, sl
 1. afviser ugyldig input, ikke-elever og manglende `student_progress` eksplicit (ingen skrivning) — og svarer
    `reward_path_not_ready` uden at skrive, så længe belønnings-RPC'erne stadig betaler kursussvar (afsnit 7);
 2. låser elevens `student_progress`-række (`FOR UPDATE`), så samtidige kald serialiseres;
+   (et kursusmål med lange svar giver midlertidigt `long_answer_items_blocked`, se afsnit 6);
 3. afviser et mål uden kursusopgaver (`not_a_course_objective`);
 4. **genberegner** berettigelsen fra elevens egne besvarede instanser i målet — aldrig fra noget kalderen påstår;
 5. indsætter nyoptjente milepæle med `ON CONFLICT DO NOTHING` og krediterer `xp`/`coins` **kun** for de rækker,
@@ -90,37 +91,49 @@ belønnings-RPC.
 ### Satser (godkendt som foreløbigt grundlag)
 
 Ejeren har godkendt satserne som **foreløbigt grundlag for videre udvikling og test — ikke til produktion**
-(2026-11-08).
+(2026-11-08). Tallene er uændrede; fra 2026-11-10 gælder ejerprincippet nedenfor for forløbsbonus og
+kursusmilepæle (`rates_version` = `course-rewards-v0.1-provisional`).
 
 | Milepæl | Nøgle | Betingelse (serverdata) | XP | Coins |
 |---|---|---|---:|---:|
 | Trin gennemført (første gang) | `step:<mål>:<trin>` | første registrerede svar i `guided_practice`, `independent_application`, `transfer` eller `revisit` | 3 | 1 |
 | Revision gennemført | — | (belønnes ikke) | 0 | 0 |
-| Kontrol bestået (første gang) | `check:<mål>:<trin>` | første rigtige svar i `independent_application`, `transfer` eller `revisit` | 8 | 4 |
-| Forløb gennemført | `sequence:<mål>` | `nextStep` ville sige "complete" | 25 | 10 |
-| Kursusmilepæl | `milestone:sequences:3` | 3 gennemførte forløb (læst fra bogen) | 30 | 15 |
-| Kursusmilepæl | `milestone:sequences:10` | 10 gennemførte forløb | 75 | 40 |
+| Kontrol bestået (første gang) | `check:<mål>:<trin>` | et rigtigt svar i `independent_application`, `transfer` eller `revisit` | 8 | 4 |
+| Forløb gennemført — **registrering** | `sequence:<mål>` | `nextStep` ville sige "complete" | 0 | 0 |
+| Forløbsbonus | `sequence_bonus:<mål>` | gennemført **og** mindst én bestået relevant kontrol i forløbet | 25 | 10 |
+| Kursusmilepæl | `milestone:sequences:3` | 3 forløb **med bonus** (læst fra bogen) | 30 | 15 |
+| Kursusmilepæl | `milestone:sequences:10` | 10 forløb **med bonus** | 75 | 40 |
 
-**Begrundelse:**
-- **Trin lille (3 + 1):** at møde op og svare skal kunne ses, men et forkert svar må ikke være en genvej.
-- **Bestået kontrol større (8 + 4):** selvstændig anvendelse, transfer og genbesøg er der, hvor eleven viser
-  noget selv; tæt på et almindeligt førstesvar, men kun én gang pr. trin og mål.
-- **Forløb størst (25 + 10):** belønner det, ejeren kalder meningsfuld progression — at gennemføre helheden,
-  inklusive genbesøget efter ≥ 20 timer.
-- **Revision 0:** revision indsættes kun efter et forkert svar i vejledt øvelse. Gav den belønning, kunne et
-  bevidst forkert svar betale sig.
+### Ejerprincippet: gennemført er ikke det samme som bestået
+
+> "En elev skal have bestået mindst én relevant kontrolopgave, før en kursusmilepælsbonus kan udbetales."
+> (ejerbeslutning 2026-11-10)
+
+- **Aktivitet og præstation holdes adskilt.** Trinbelønningen (3 + 1) er aktivitet og betales som før.
+  Forløbsbonussen og kursusmilepælene er præstation og kræver mindst én bestået relevant kontrol.
+- **Gennemførelsen registreres altid** (`sequence:<mål>`, 0 XP, 0 coins, `kind = sequence_completed`) — også når
+  alle kontroller var forkerte. Det er et faktum i bogen, ikke en udbetaling.
+- **Relevant kontrol** = et svar i et vurderingstrin — `independent_application` (aktivitetstilstand `check`),
+  `transfer` (`application`) eller `revisit` (`review`) — som serveren har registreret som rigtigt
+  (`was_correct = true`). Vejledt øvelse og revision er ikke kontroller.
+- **Kan strammes senere:** kravet står ét sted (CTE'en `passed` i `award_course_milestones`). På den gamle vej kan
+  serveren hverken se, om svaret var første forsøg (en gentagelse genåbner instansen), eller om eleven brugte
+  hjælp. Når K1 (`question_attempts.attempt_no`) og L3 (registrerede hints) er anvendt, kan "bestået" ændres til
+  "rigtigt i første forsøg uden registreret hjælp" i én ændring; allerede udbetalte rækker røres ikke.
+- **Senere beståelse:** består eleven en kontrol senere (en gentagelsesrunde), betales kontrollen og bonussen da —
+  én gang (test 9).
+- **Kursusmilepæle** tæller kun forløb med bonus; et gennemført, ikke-bestået forløb tæller ikke (test 9).
 
 ### Anti-farming
 
 - **Én gang pr. milepæl** (UNIQUE + ON CONFLICT + kredit kun for indsatte rækker). Gentagne kald, dobbeltklik,
   genindlæsning og samtidige faner betaler 0 (PGlite-test 3 og 5; rigtig PostgreSQL i
-  `tests/unit/course-progress-rewards-concurrency.test.mjs`).
+  `tests/unit/course-progress-rewards-concurrency.test.mjs`, også for "gennemført uden bestået kontrol").
 - **Endeligt udbud:** antallet af milepæle er bundet af de forfattede kursusmål. Gentagelser af samme opgave
   giver ingen ny milepæl og — med forslaget i afsnit 7 — heller intet pr. svar.
 - **Ingen klientpåstande:** requesten bærer kun `learning_objective`; elev-id er den verificerede bruger,
-  og hvad der er optjent, genberegnes fra serverens egne instanser, som kun backend kan oprette
-  (`question_instances` er server-owned siden 2026-10-16).
-- **Ingen forkert-svar-incitamenter:** revision 0; kontrol kræver `was_correct = true`.
+  og hvad der er optjent, genberegnes fra serverens egne instanser, som kun backend kan oprette.
+- **Ingen forkert-svar-incitamenter:** revision 0; kontrol og bonus kræver `was_correct = true`.
 - **Milepæle læses fra bogen**, som kun funktionen skriver.
 
 ## 5. Økonomi
@@ -130,21 +143,26 @@ Ejeren har godkendt satserne som **foreløbigt grundlag for videre udvikling og 
 Forløbet efter testpolitik v0 (`learning-sequence.ts:83-96`): vejledt øvelse → (revision, kun hvis seneste
 vejledte øvelse var forkert) → selvstændig anvendelse → transfer → [≥ 20 timer] → genbesøg → gennemført.
 
-| Trin i regnestykket | XP | Coins |
-|---|---:|---:|
-| 1. Trinmilepæle: 4 belønnede trin (vejledt øvelse, selvstændig anvendelse, transfer, genbesøg) × (3 + 1) | 4 × 3 = 12 | 4 × 1 = 4 |
-| 2. Revision (hvis den forekommer) | 0 | 0 |
-| 3. Kontrolmilepæle: 3 vurderingstrin (selvstændig anvendelse, transfer, genbesøg) × (8 + 4), kun ved rigtigt svar | 3 × 8 = 24 | 3 × 4 = 12 |
-| 4. Forløbsmilepæl | 25 | 10 |
-| **Højst pr. forløb** (1 + 3 + 4) | **61** | **26** |
-| Mindst for et gennemført forløb (alle tre kontroller forkerte: 1 + 4) | 37 | 14 |
+| Trin i regnestykket | XP | Coins | Art |
+|---|---:|---:|---|
+| 1. Trinmilepæle: 4 belønnede trin × (3 + 1) | 4 × 3 = 12 | 4 × 1 = 4 | aktivitet |
+| 2. Revision (hvis den forekommer) | 0 | 0 | — |
+| 3. Kontrolmilepæle: k beståede af 3 vurderingstrin × (8 + 4) | k × 8 | k × 4 | præstation |
+| 4. Registrering af gennemførelsen | 0 | 0 | faktum |
+| 5. Forløbsbonus, kun hvis k ≥ 1 | 25 | 10 | præstation |
+| **Gennemført forløb i alt** | 12 + 8k + (k ≥ 1 ? 25 : 0) | 4 + 4k + (k ≥ 1 ? 10 : 0) | |
+
+| k (beståede kontroller) | 0 | 1 | 2 | 3 |
+|---|---:|---:|---:|---:|
+| XP | 12 | 45 | 53 | **61** |
+| Coins | 4 | 18 | 22 | **26** |
 
 De tre niveauer holdes adskilt:
-- **pr. trin:** 3 + 1 for at gennemføre; 8 + 4 for at bestå en kontrol;
-- **pr. forløb:** 25 + 10 (oveni trinnene: højst 61 + 26);
-- **på tværs af forløb:** 30 + 15 ved 3 gennemførte forløb og 75 + 40 ved 10 — hver kun én gang pr. elev.
+- **pr. trin:** 3 + 1 for at gennemføre (aktivitet); 8 + 4 for at bestå en kontrol (præstation);
+- **pr. forløb:** registrering (0) og bonus 25 + 10, som kræver k ≥ 1;
+- **på tværs af forløb:** 30 + 15 ved 3 og 75 + 40 ved 10 forløb **med bonus** — hver kun én gang pr. elev.
 
-### 5.2 Regneeksempler (kort, mellem, svag, lang, gentaget og 10 forløb bevist i `tests/unit/course-progress-rewards-migration-run.test.mjs`, test 8; delvise forløb i test 4)
+### 5.2 Regneeksempler (bevist i `tests/unit/course-progress-rewards-migration-run.test.mjs`, test 8 og 9; delvise forløb i test 4)
 
 "Kort", "mellem" og "lang" er defineret ud fra de faktiske trin i `learning-sequence.ts`; "lang" er en
 **tænkt fremtidig variant** med flere opgaver pr. trin (v0 går videre efter ét svar pr. trin).
@@ -153,21 +171,26 @@ De tre niveauer holdes adskilt:
 |---|---:|---:|---:|---|
 | Kort: vejledt øvelse, selvstændig anvendelse, transfer, genbesøg — alt rigtigt | 4 | 61 | 26 | 12 + 24 + 25 / 4 + 12 + 10 |
 | Mellem: vejledt øvelse forkert → revision → de tre vurderingstrin rigtigt | 5 | 61 | 26 | revision giver 0; resten som kort |
-| Mellem, svag: alt besvaret, alle tre kontroller forkerte | 4 | 37 | 14 | 12 + 25 / 4 + 10 |
+| Én kontrol bestået (hvilken som helst af de tre) | 4 | 45 | 18 | 12 + 8 + 25 / 4 + 4 + 10 |
+| **Alle tre kontroller forkerte** (tidligere 37 + 14) | 4 | **12** | **4** | kun trinnene; gennemførelsen registreres med 0; ingen bonus |
+| Rigtig øvelse og revision, alle kontroller forkerte | 5 | 12 | 4 | øvelse og revision er ikke relevante kontroller |
 | Lang (fremtidig): 3 × øvelse, 2 × revision, 2 × anvendelse, 2 × transfer, 1 × genbesøg | 10 | 61 | 26 | hver milepæl betales én gang pr. mål |
-| Afbrudt før genbesøget (alt rigtigt) | 3 | 25 | 11 | 3 trin (9 + 3) + 2 kontroller (16 + 8) |
+| Afbrudt før genbesøget (alt rigtigt) | 3 | 25 | 11 | 3 trin (9 + 3) + 2 kontroller (16 + 8); ikke gennemført |
 | Første gennemførelse | — | som ovenfor | | nøglerne indsættes |
-| Gentaget gennemførelse af samme mål (nye eller genåbnede opgaver) | ≥ 4 | **0** | **0** | alle nøgler findes allerede (`UNIQUE (student_id, milestone_key)`, `ON CONFLICT DO NOTHING`, kredit kun for indsatte rækker); med forslaget i afsnit 7 giver svarene heller intet |
-| Det 3. gennemførte forløb | 4 | 61 + 30 = 91 | 26 + 15 = 41 | forløb + kursusmilepæl 3 |
-| 10 forløb i alt | 40 | 10 × 61 + 30 + 75 = **715** | 10 × 26 + 15 + 40 = **315** | inkl. begge kursusmilepæle |
+| Gentaget gennemførelse af samme mål | ≥ 4 | **0** | **0** | alle nøgler findes allerede (`UNIQUE`, `ON CONFLICT DO NOTHING`, kredit kun for indsatte rækker) |
+| Senere beståelse efter "alle forkerte" | 1 | 33 | 14 | kontrollen (8 + 4) + bonussen (25 + 10), én gang |
+| Det 3. forløb med bonus | 4 | 61 + 30 = 91 | 26 + 15 = 41 | forløb + kursusmilepæl 3 |
+| 3 forløb, hvoraf ét uden bestået kontrol | 12 | 61 + 61 + 12 = 134 | 26 + 26 + 4 = 56 | ingen kursusmilepæl 3 endnu |
+| 10 forløb med bonus | 40 | 10 × 61 + 30 + 75 = **715** | 10 × 26 + 15 + 40 = **315** | inkl. begge kursusmilepæle |
 
 ### 5.3 Sammenligning med den almindelige quiz
 
 | | Almindelig quiz | Arkivskabet |
 |---|---|---|
 | Pr. svar | 10 + 5 første rigtige svar; 2 + 1 rigtig MC-gentagelse; 0 forkert | 0 pr. svar (med forslaget i afsnit 7); alt kommer fra milepæle |
-| Pr. svar i snit | højst 10 + 5 | 61 / 4 ≈ 15 XP + 6,5 coins (kort), 61 / 10 ≈ 6 XP + 2,6 coins (lang) |
-| Tællere | `correct_answers` / `total_correct_answers` + 1 | ingen (egne tællere i bogen) |
+| Pr. svar i snit (alt rigtigt) | højst 10 + 5 | 61 / 4 ≈ 15 XP + 6,5 coins (kort), 61 / 10 ≈ 6 XP + 2,6 coins (lang) |
+| Forkerte svar | 0 | 3 + 1 pr. trin (aktivitet), aldrig bonus |
+| Tællere | `correct_answers` / `total_correct_answers` + 1 | ingen (egne rækker i bogen) |
 
 ### 5.4 Tidsforbrug — hvad er målt, og hvad er antaget
 
@@ -178,61 +201,86 @@ De tre niveauer holdes adskilt:
 - Pilotplanen sætter Arkivskabet trin 3–8 (uden genbesøg) til **15–20 min** (`docs/laerligverse/kildekritik-pilot.md:241`).
 - Spillepauser: hver 10. minut aktiv tid (D-364), og aktiv tid krediteres højst 5 min pr. opgave (D-347).
 
-**Antaget (ikke målt):** et almindeligt MC-svar tager 20–40 s, og 75 % er rigtige; genbesøget tager ca. 3 min.
+**Antaget (ikke målt):** et almindeligt MC-svar tager 20–40 s, og 75 % er rigtige; genbesøget tager ca. 3 min;
+et forløb klikket igennem tager 5–8 min.
 
 | | XP pr. minut | Coins pr. minut |
 |---|---:|---:|
 | Almindelig quiz, nye spørgsmål (1,5–3 svar/min × 0,75 × (10 + 5)) | ca. 11–22 | ca. 6–11 |
 | Almindelig quiz, kun gentagelser (2 + 1) | ca. 2–4,5 | ca. 1–2 |
 | Arkivskabet, kort forløb alt rigtigt (61 + 26 på 18–23 min) | ca. 2,7–3,4 | ca. 1,1–1,4 |
-| Arkivskabet, hastet igennem med forkerte svar (37 + 14 på antaget 5–8 min) | ca. 4,6–7,4 | ca. 1,8–2,8 |
+| Arkivskabet, hastet igennem, alle kontroller forkerte (12 + 4 på 5–8 min) | ca. 1,5–2,4 | ca. 0,5–0,8 |
+| Arkivskabet, hastet igennem, én kontrol "gættet" rigtigt (45 + 18 på 5–8 min) | ca. 5,6–9 | ca. 2,3–3,6 |
 
 Andre målestokke: et almindeligt butiksemne koster 80–110 coins (`20260511000300_shop_inventory.sql`) ≈ 3–4 forløb
 (≈ 1–1½ time) mod 16–22 rigtige quizsvar; dagens login-belønning er 25–150 coins
 (`20261031230000_claim_daily_reward_exactly_once.sql:87`); XP-niveau n kræver 50 + (n − 1) · 25 XP
 (`calculate_level_from_xp`), så et forløb svarer til omtrent ét tidligt niveau.
 
-### 5.5 Vurdering og forslag til justering
+### 5.5 Vurdering: bør én bestået kontrol give HELE bonussen?
 
-- **Ikke utilsigtet hurtigt:** udbuddet er endeligt (højst 61 + 26 pr. mål, én gang), genbesøget kræver ≥ 20 timer,
-  og gentagelser giver 0. Der er ingen måde at "male" kursus-XP på.
-- **Langsomt i forhold til nye quizspørgsmål** (ca. 3 mod 11–22 XP/min) og på niveau med gentagelser. Det er i
-  tråd med ejerens anti-farming-mål, men kan få Arkivskabet til at føles dårligt betalt. **Forslag:** behold de
-  godkendte satser i piloten og mål den faktiske tid (K1's `server_interval_ms`, D-347's aktive tid). Viser piloten
-  et motivationsproblem, hæves **kun forløbsmilepælen** til 50 + 20 (86 + 36 pr. forløb ≈ 4–5 XP/min): den kan
-  ikke farmes og kræver genbesøget. Trinsatserne hæves ikke — det ville belønne hastværk.
-- **Hastværk betaler sig pr. minut:** at klikke sig igennem med forkerte svar giver 37 + 14 hurtigere end et
-  omhyggeligt forløb giver 61 + 26 (antaget 4,6–7,4 mod 2,7–3,4 XP/min). Det samlede udbud er stadig bundet pr.
-  mål, men signalet er skævt. **Forslag (ejerbeslutning, ikke implementeret):** forløbsmilepælen kræver mindst én
-  bestået kontrol; ellers betales kun trinnene (12 + 4). Så giver det hastede forløb 12 + 4 i stedet for 37 + 14.
+Med ejerprincippet er det rene hastværk (alle kontroller forkerte) ikke længere lønsomt: 12 + 4 i stedet for
+37 + 14. Men én bestået kontrol udløser stadig hele bonussen på 25 + 10 — og ved MC kan den gættes: med tre
+vurderingstrin og en gættesandsynlighed på 1/3 består en ren gætter mindst én kontrol i ca. 70 % af forløbene
+(1 − (2/3)³). Hastværk med gæt giver derfor stadig mere pr. minut (ca. 5,6–9 XP) end et omhyggeligt forløb
+(ca. 2,7–3,4).
 
-## 6. Hvad ændres — og hvad ikke
-
-| Område | Med kladden + forslaget i afsnit 7 (flag tændt) | Bemærkning |
+| Hensyn | Fuld bonus ved ≥ 1 bestået (implementeret) | Trappet bonus (anbefales) |
 |---|---|---|
-| `xp`, `coins` | stiger kun med milepælene | samme kolonner som den almindelige vej |
-| XP-niveau (`calculate_level_from_xp`) | kan stige, fordi XP stiger | gamification-niveau, ikke fagligt niveau; achievements `level_10`/`fast_learner` kan nås hurtigere |
-| Rangliste | `xp` er sekundær sortering | `prestige_score` (achievements) er uændret |
-| `total_correct_answers`, `correct_answers` | **uændret** af kursussvar | forslaget fjerner +1 pr. kursussvar |
-| Achievements (`correct_answers`-tærskler) | uændret af kursussvar | |
-| Quests | kursussvar rykker dem ikke | forslaget |
-| Streak | rykker stadig ved et kursussvar | fremmøde (forslaget beholder `update_streak`) |
-| Fagligt niveau, bånd, fold-log, mestring, lærertal | **uændret** (bevist før/efter i test 2) | lærertallene adskilles i #647 |
+| Motivation | Enkelt at forstå; én succes "låser op" | Hver bestået kontrol kan ses; stadig belønning ved 1 |
+| Misbrugsmodstand | Gæt udløser ofte hele bonussen | Gæt udløser kun en del; fuld bonus kræver tre rigtige |
+| Proportionalitet | 1 og 3 beståede giver samme bonus | Bonus følger dokumenteret forståelse |
+| Indsats mod forståelse | Indsats belønnes allerede af trinnene; bonussen skelner dårligt | Trin = indsats, bonus = forståelse |
+| Sammenhæng med quizzen | Quizzen betaler pr. rigtigt svar — her betales 25 for 1 rigtigt | Tættere på quizzens "pr. rigtigt svar" |
+| Risiko for XP-styrede valg | Elever kan vælge forløb for den hurtige bonus | Mindre gevinst ved overfladisk gennemløb |
+
+**Anbefaling (ejerbeslutning; ikke implementeret, tallene er uændrede):**
+1. **Behold ≥ 1 bestået kontrol som port** (implementeret) — det er ejerprincippet og fjerner det rene hastværk.
+2. **Trap forløbsbonussen efter antal beståede relevante kontroller:** 1 → 10 + 4, 2 → 18 + 7, 3 → 25 + 10.
+   Gennemført forløb giver så 12 + 8k + bonus(k): k = 1 → 30 + 12, k = 2 → 46 + 19, k = 3 → 61 + 26 (uændret
+   maksimum). Gætteren får i snit væsentligt mindre, og den omhyggelige elev mister intet.
+3. **Kursusmilepælene** (3 og 10 forløb) bør tælle forløb med **mindst 2 beståede** kontroller, så de belønner
+   vedvarende forståelse, ikke gennemløb med ét heldigt gæt.
+4. **Når K1/L3 er anvendt:** "bestået" = rigtigt i første forsøg uden registreret hjælp (ændres i CTE'en `passed`).
+5. Behold satserne i piloten og mål tiden; viser piloten et motivationsproblem, hæves kun bonussen for k = 3.
+
+## 6. Alle betalingsveje — gennemgået for dobbeltbetaling
+
+Søgt i hele repoet efter skrivninger til `student_progress.xp`/`coins` (migrationer, replayens katalog og
+Edge-funktioner).
+
+| Vej | Hvor | Kursusopgave i dag | Med kladden + forslaget (afsnit 7) |
+|---|---|---|---|
+| MC/tal, første svar | `process_question_attempt` / `_v2` (process-event) | 10 + 5, `correct_answers`/`total_correct_answers` + 1, quests | 0, tællere og quests urørt |
+| MC-gentagelse | samme | 2 + 1 | 0 |
+| Kort tekst | `process_text_answer` / `_v2` (process-event afgør rigtigt) | 10 + 5 (+ tællere, quests; `_v2` også ved gentagelse) | 0 |
+| Kontrolopgaver | samme som MC/tekst | som ovenfor | 0 pr. svar; kun milepæle |
+| Langt svar (lærerbedømt) | process-event gemmer kun svaret (`answered` forbliver `false`); Edge `review-answer` → `review_answer` + Edge'ens egen XP-skrivning (`scoreToXP`: 0/10/25/50) | XP pr. bedømmelse — også ved en ny bedømmelse — uden for transaktionen | forslag: XP flyttes ind i `review_answer` (samme transaktion, 0 for kursusopgaver); **midlertidigt:** et kursusmål med lange svar giver ingen kursusbelønning (`long_answer_items_blocked`) |
+| Lærerbedømmelse af en MC-/kort instans | `review-answer` accepterer enhver instans hos lærerens egne elever | `scoreToXP` | 0 for kursusopgaver (forslaget); vagten kræver forslagets `review_answer` |
+| Forløb og kursusmilepæle | `award_course_milestones` | — | én gang pr. milepæl; bonus kræver ≥ 1 bestået kontrol |
+| Streak | `update_streak` (fra svarfunktionerne) | rykker | uændret: fremmøde, ikke en betaling pr. opgave |
+| Quest-belønninger | `claim_quest_reward`, `claim_weekly_quest_reward` | kursussvar rykker quests → kan udløse coins | kursussvar rykker ikke quests |
+| Achievements | `grant_achievement_rewards` (coins) | `correct_answers`-tærskler | tællerne rykkes ikke af kursussvar; XP-niveau kan (gamification) |
+| Daglig belønning, Stabel, butik | `claim_daily_reward`, `claim_stabel_reward`, `purchase_item`/`purchase_theme` | uafhængigt af opgaver | uændret |
+| `review_answer` (3 argumenter) | ingen kalder i repoet; stubben giver ingen XP | — | uændret (produktionens krop skal bekræftes read-only) |
+
+**Lange og korte svar er lige sikre:** korte svar går gennem de fire svarfunktioner (vagten kræver forslagets
+kroppe); lange svar giver midlertidigt ingen kursusbelønning, og lærerbedømmelsens XP-vej er dækket af forslaget og
+vagten. Lange svar er ikke udelukket permanent: begrænsningen ophæves med en ny migration, når review-answer er
+beskyttet og en lærerbedømt lang besvarelse kan tælle (se forslaget).
 
 ## 7. Dobbeltbetaling: forslag til H5/K1-sporet og vagten
 
-I dag betaler belønnings-RPC'erne et kursussvar som et quizsvar (10 + 5, tællere, quests; bevist i test 0). Med
-kursusbelønningen oveni ville et kort forløb betale 40 + 20 og 61 + 26. **Status: blokeret på H5/K1-sporet.**
+I dag betaler belønnings-RPC'erne et kursussvar som et quizsvar (10 + 5, tællere, quests; bevist i test 0), og
+lærerbedømmelsen giver XP pr. bedømmelse. Med kursusbelønningen oveni ville et kort forløb betale 40 + 20 og
+61 + 26. **Status: blokeret på H5/K1-sporet; vagten forhindrer for tidlig aktivering.**
 
 - **Forslaget** står i [`forslag-k1-belonning-kursussvar.md`](forslag-k1-belonning-kursussvar.md) og
-  [`forslag-k1-belonning-kursussvar.sql`](forslag-k1-belonning-kursussvar.sql) — **ikke en migration**. Prædikatet
-  `coalesce(metadata, '{}') ? 'learning_step'` gør i alle fire belønningsfunktioner XP og coins 0 for et
-  kursussvar, øger ikke `correct_answers`/`total_correct_answers` og rykker ikke quests; rettelse, streak,
-  forsøgsrække og idempotens er uændrede. md5 før/efter, præcise linjer og rækkefølge i forhold til K1, L3 og
-  #623/#647 står i dokumentet.
+  [`forslag-k1-belonning-kursussvar.sql`](forslag-k1-belonning-kursussvar.sql) — **ikke en migration**.
 - **Vagten:** `award_course_milestones` udbetaler intet (`reward_path_not_ready`, Edge 503, intet skrevet), så
-  længe én af de fire funktioner har en anden krop end forslagets efter-krop. Flaget kan altså ikke give
-  dobbeltbetaling, heller ikke hvis det tændes for tidligt.
+  længe én af de fire svarfunktioner eller `review_answer` (4 argumenter) har en anden krop end forslagets
+  efter-krop. Den fail-closed vagt fjernes aldrig; nye kroppe (K1, L3) kræver en bevidst opdatering af listen.
+- **Midlertidig begrænsning:** kursusmål med lange svar → `long_answer_items_blocked` (Edge 409).
 - **Bevis:** `tests/unit/course-progress-rewards-k1-proposal-run.test.mjs` (afsnit 9).
 
 ## 8. Hvad kræver K1
@@ -240,38 +288,42 @@ kursusbelønningen oveni ville et kort forløb betale 40 + 20 og 61 + 26. **Stat
 Kladden virker på den gamle vej (kun `question_instances`). K1 (`question_attempts` med `mode`, `hints_used`,
 `round_no`) ville gøre det muligt at:
 - skelne "bestået i første forsøg" fra "bestået efter genforsøg" (i dag nulstiller en gentagelse instansen);
-- kræve "bestået **uden** hjælp" for en kontrol (L3-hints), hvis ejeren vil det;
+- kræve "bestået **uden** hjælp" for en kontrol (L3-hints);
 - måle tidsforbruget (afsnit 5.4) via `server_interval_ms`.
 
 Anvendes K1 før forslaget, skal forslaget flyttes ind i K1's kroppe, og vagtlisten opdateres (se forslaget).
 
 ## 9. Implementering og tests
 
-- `supabase/migrations/20261108171500_course_progress_rewards.sql` — bog, funktion og dobbeltbetalingsvagt (ikke anvendt).
+- `supabase/migrations/20261108171500_course_progress_rewards.sql` — bog, funktion, ejerprincippet,
+  dobbeltbetalingsvagt og den midlertidige begrænsning for lange svar (ikke anvendt).
 - `supabase/functions/course-progress/` — `index.ts`, `course-progress.ts` (flag, kontrakt, ét RPC-kald, validering),
   `deno.json`; registreret i `supabase/config.toml`. Slukket: 404 `course_rewards_disabled` før noget opslag.
 - `tests/unit/course-progress-rewards-migration-run.test.mjs` — PGlite på den fulde replay med forslaget indlæst:
-  dagens adfærd (produktionens krop i en tilbagerullet transaktion), rettigheder, et fuldt forløb, idempotens,
-  fejl midtvejs, berettigelse fra data, lås, milepæle, RLS og regneeksemplerne i afsnit 5.2.
-- `tests/unit/course-progress-rewards-k1-proposal-run.test.mjs` — kombinationen forslag + migration mod
-  produktionens kroppe: almindelige svar identiske på alle fire veje, kursussvar 0, et forløb præcis 61 + 26,
-  replay, gentagelser og fejl uden dobbeltbetaling, vagten på begge sider.
-- `tests/unit/course-progress-rewards-concurrency.test.mjs` — rigtig PostgreSQL i CI (samtidige kald).
-- `tests/unit/laerligverse-course-progress.test.mjs` — Edge-funktionen (flag-slukket-paritet, 503 ved vagten).
+  dagens adfærd, rettigheder, fuldt forløb uden bivirkninger, idempotens, fejl midtvejs, berettigelse fra data,
+  lås, milepæle, RLS, regneeksempler (test 8), ejerprincippet (test 9), lange svar (test 10).
+- `tests/unit/course-progress-rewards-k1-proposal-run.test.mjs` — forslag + migration mod produktionens kroppe:
+  almindelige svar identiske på alle fire veje, kursussvar 0, et forløb præcis 61 + 26, replay/gentagelser/fejl
+  uden dobbeltbetaling, lærerbedømmelsen (G), vagten på begge sider (F).
+- `tests/unit/course-progress-rewards-concurrency.test.mjs` — rigtig PostgreSQL i CI (samtidige kald, også for
+  "gennemført uden bestået kontrol").
+- `tests/unit/laerligverse-course-progress.test.mjs` — Edge-funktionen (flag-slukket-paritet, 409/503).
 
-**Rækkefølge ved aktivering (hver med særskilt ejerautorisation):** (1) forslaget i afsnit 7 som migration i
-H5/K1-sporet; (2) denne migration via `apply_migration`; (3) deploy af `course-progress`; (4) klienten kalder
-funktionen efter hvert kursussvar; (5) `LAERLIGVERSE_COURSE_REWARDS=on`.
+**Rækkefølge ved aktivering (hver med særskilt ejerautorisation):** (1) forslaget i afsnit 7 i H5/K1-sporet,
+inklusive Edge-ændringen i review-answer; (2) denne migration via `apply_migration`; (3) deploy af
+`course-progress`; (4) klienten kalder funktionen efter hvert kursussvar; (5) `LAERLIGVERSE_COURSE_REWARDS=on`.
 
 ## 10. Åbent / ejerbeslutninger
 
-- **Satserne** er foreløbige (godkendt til udvikling og test, ikke produktion). Se forslagene i afsnit 5.5.
+- **Satserne** er foreløbige. Anbefalingerne i afsnit 5.5 (trappet bonus, milepæle ved ≥ 2 beståede) afventer ejeren.
 - **Afsnit 7** skal laves og anvendes i H5/K1-sporet før aktivering; #657 er NO-GO indtil da.
-- **review-answer** (lange svar) giver XP uden om belønnings-RPC'erne; en kursusopgave må ikke være et langt svar.
+- **review_answer's produktionskrop** findes ikke i repoet og skal læses read-only, før forslaget anvendes.
+- **Lange svar** er midlertidigt uden kursusbelønning; ophævelsen kræver en ny migration (se afsnit 6).
+- **Genbedømmelse** giver i dag XP igen også for almindelige svar (særskilt fund i
+  `docs/question-attempts-design.md` §1.3) — ikke ændret her.
 - **Klienten** kalder endnu ikke `course-progress`.
-- **Tekstsvar:** et tekstsvar tæller som gennemført trin ved indsendelse; en kontrol betales først, når læreren
-  har godkendt (`was_correct = true`) og funktionen kaldes igen.
-- **Nulstilling af elev** (`reset-student`) rydder ikke bogen; milepæle kan ikke genoptjenes efter en nulstilling.
+- **Tekstsvar:** et kort tekstsvar tæller som gennemført trin ved indsendelse.
+- **Nulstilling af elev** (`reset-student`) rydder ikke bogen.
 - **Testpolitikken v0** er foreløbig (LP-13). `policy` og `rates_version` i hver række viser, hvilken regel der betalte.
 - **Genbesøgets tidsregel** (≥ 20 timer) håndhæves af get-next-question, ikke af belønningsfunktionen.
 - **Lærervisning** af kursusprogression er ikke bygget.

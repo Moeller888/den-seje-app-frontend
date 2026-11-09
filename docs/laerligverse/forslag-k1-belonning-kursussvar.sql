@@ -23,8 +23,13 @@
 --   process_question_attempt_v2   f241c2115ec48441efc9e695b028d2d2
 --   process_text_answer           62589388dae732ad79ca8f893027785d
 --   process_text_answer_v2        098969e41b5c85a00e21a733093d7ecb
+--   review_answer(uuid,integer,text,uuid)  d3e08630604112b593c218cc07ad496b   (afsnit 5: lærerbedømmelse)
 -- award_course_milestones nægter at udbetale (outcome 'reward_path_not_ready'), så længe en af de fire
--- funktioner har en anden krop end EFTER-kroppene ovenfor.
+-- svarfunktioner eller review_answer (4 argumenter) har en anden krop end EFTER-kroppene ovenfor.
+--
+-- review_answer's produktionskrop findes IKKE i repoet (kun dens rettigheder, 20260919000000); den isolerede
+-- replay har en stub (md5 228aca24e326a57663d761b78eba1e12). H5/K1-sporet skal læse produktionens md5
+-- read-only og føje den til vagtrækken nedenfor, før forslaget anvendes — ellers stopper vagten (fail-closed).
 --
 -- RÆKKEFØLGE: hvis K1 (20261103110000) eller L3's hint-log (20261108043500) anvendes FØRST, skal de samme
 -- fire ændringer laves i DERES kroppe af _v2-funktionerne (nye signaturer), og vagtlisten i
@@ -40,7 +45,8 @@ BEGIN
     ('public.process_question_attempt(uuid,uuid,text,bigint)', '2e05e769a102f61ffef0ea4dd550c55b', 'a91a651c32b8f0d4a8efad588f2f78dd'),
     ('public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)', '8a7696147df978e250918b2c93e20577', 'f241c2115ec48441efc9e695b028d2d2'),
     ('public.process_text_answer(uuid,uuid,text,boolean)', 'e80727ea87ffdc64988e5a09dcb20356', '62589388dae732ad79ca8f893027785d'),
-    ('public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)', 'f880984680d52b20d07c628a9dfae474', '098969e41b5c85a00e21a733093d7ecb')
+    ('public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)', 'f880984680d52b20d07c628a9dfae474', '098969e41b5c85a00e21a733093d7ecb'),
+    ('public.review_answer(uuid,integer,text,uuid)', '228aca24e326a57663d761b78eba1e12', 'd3e08630604112b593c218cc07ad496b')
   ) AS t(sig, before_md5, after_md5)
   LOOP
     SELECT md5(prosrc) INTO v FROM pg_proc WHERE oid = to_regprocedure(r.sig);
@@ -636,3 +642,59 @@ BEGIN
     'round_no',           v_attempt.attempt_no);
 END;
 $function$;
+
+-- ── 5. Lærerbedømmelse (lange svar): review_answer(uuid,integer,text,uuid) ──────────────────────────────────
+-- I dag gemmer RPC'en kun bedømmelsen, og Edge-funktionen review-answer lægger bagefter selv
+-- scoreToXP(score) (1→0, 2→10, 3→25, 4→50) til student_progress.xp — uden for transaktionen, som
+-- læs-og-skriv, ved HVER bedømmelse, og for enhver instans læreren må bedømme (også en kursusopgave).
+-- FORSLAG: XP flyttes ind i RPC'en (samme transaktion som bedømmelsen, rækkelås på instansen), og en
+-- kursusopgave får 0. RPC'en returnerer den tildelte XP, så Edge-funktionen kan svare som før uden selv
+-- at skrive (Edge-ændringen står i forslag-k1-belonning-kursussvar.md). Almindelige svar betales som i dag:
+-- samme beløb, også ved en ny bedømmelse (den eksisterende genbedømmelsesadfærd er en særskilt sag).
+-- Returtypen ændres (void → integer), derfor DROP + CREATE med de samme rettigheder som lockdown'en
+-- 20260919000000 (kun service_role) og samme search_path.
+DROP FUNCTION public.review_answer(uuid, integer, text, uuid);
+
+CREATE FUNCTION public.review_answer(p_instance_id uuid, p_score integer, p_feedback text, p_teacher_id uuid)
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+DECLARE
+  v_student   uuid;
+  v_is_course boolean;
+  v_xp        integer := 0;
+BEGIN
+  SELECT qi.student_id, coalesce(q.metadata, '{}'::jsonb) ? 'learning_step'
+    INTO v_student, v_is_course
+  FROM public.question_instances qi
+  JOIN public.questions q ON q.id = qi.question_id
+  WHERE qi.id = p_instance_id
+  FOR UPDATE OF qi;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Instance not found';
+  END IF;
+
+  UPDATE public.question_instances
+     SET teacher_score = p_score,
+         teacher_feedback = p_feedback,
+         reviewed_at = now(),
+         reviewed_by = p_teacher_id
+   WHERE id = p_instance_id;
+
+  -- Lærligverse (FORSLAG): en kursusopgave giver ingen XP pr. bedømmelse; ellers som Edge-funktionen i dag.
+  IF NOT v_is_course THEN
+    v_xp := CASE p_score WHEN 2 THEN 10 WHEN 3 THEN 25 WHEN 4 THEN 50 ELSE 0 END;
+    IF v_xp > 0 THEN
+      UPDATE public.student_progress SET xp = COALESCE(xp, 0) + v_xp WHERE student_id = v_student;
+    END IF;
+  END IF;
+
+  RETURN v_xp;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.review_answer(uuid, integer, text, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.review_answer(uuid, integer, text, uuid) TO service_role;

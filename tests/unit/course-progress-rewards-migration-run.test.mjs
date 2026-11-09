@@ -224,7 +224,8 @@ test("2. a full sequence pays exactly 61 XP + 26 coins, and nothing else moves (
   assert.equal(r.outcome, "awarded");
   assert.deepEqual(keys(r), [
     "step:lv_full:guided_practice", "step:lv_full:independent_application", "check:lv_full:independent_application",
-    "step:lv_full:transfer", "check:lv_full:transfer", "step:lv_full:revisit", "check:lv_full:revisit", "sequence:lv_full"]);
+    "step:lv_full:transfer", "check:lv_full:transfer", "step:lv_full:revisit", "check:lv_full:revisit", "sequence:lv_full",
+    "sequence_bonus:lv_full"]);
   assert.deepEqual([r.xp_awarded, r.coins_awarded], [61, 26]);
   const m1 = await money(p);
   assert.deepEqual([m1.xp - m0.xp, m1.coins - m0.coins], [61, 26], "credited exactly what the ledger holds");
@@ -297,7 +298,7 @@ test("4. after a wrong latest practice the sequence needs the revision; revision
   assert.equal(keys(r).includes("sequence:lv_rev"), false, "no sequence: revision is due");
   await step(p, "lv_rev", "revision", true);
   r = await award(p, "lv_rev");
-  assert.deepEqual(keys(r), ["sequence:lv_rev"], "the revision completes the sequence and pays no step reward of its own");
+  assert.deepEqual(keys(r), ["sequence:lv_rev", "sequence_bonus:lv_rev"], "the revision completes the sequence and pays no step reward of its own");
   assert.deepEqual([r.xp_awarded, r.coins_awarded], [25, 10]);
 });
 
@@ -353,15 +354,15 @@ test("5. a milestone a concurrent call already inserted is never credited again 
   // The winner of a race committed these two rows (and its own credit) first.
   await db.query(`INSERT INTO public.course_progress_rewards (student_id, milestone_key, kind, learning_objective, learning_step,
       xp_awarded, coins_awarded, policy, rates_version) VALUES
-      ($1, 'sequence:lv_race', 'sequence_completed', 'lv_race', NULL, 25, 10, 'laerligverse-test-policy-v0', 'course-rewards-v0-proposal'),
-      ($1, 'check:lv_race:transfer', 'check_passed', 'lv_race', 'transfer', 8, 4, 'laerligverse-test-policy-v0', 'course-rewards-v0-proposal')`, [p]);
+      ($1, 'sequence_bonus:lv_race', 'sequence_bonus', 'lv_race', NULL, 25, 10, 'laerligverse-test-policy-v0', 'course-rewards-v0.1-provisional'),
+      ($1, 'check:lv_race:transfer', 'check_passed', 'lv_race', 'transfer', 8, 4, 'laerligverse-test-policy-v0', 'course-rewards-v0.1-provisional')`, [p]);
   const m0 = await money(p);
   const r = await award(p, "lv_race");
-  assert.equal(keys(r).includes("sequence:lv_race") || keys(r).includes("check:lv_race:transfer"), false);
+  assert.equal(keys(r).includes("sequence_bonus:lv_race") || keys(r).includes("check:lv_race:transfer"), false);
   assert.deepEqual([r.xp_awarded, r.coins_awarded], [61 - 25 - 8, 26 - 10 - 4]);
   const m1 = await money(p);
   assert.deepEqual([m1.xp - m0.xp, m1.coins - m0.coins], [28, 12]);
-  assert.equal((await ledger(p)).length, 8, "each milestone exactly once");
+  assert.equal((await ledger(p)).length, 9, "each milestone exactly once (8 paying + the completion registration)");
 });
 
 // ── 6. Milestones ───────────────────────────────────────────────────────────────────────────────────────
@@ -400,7 +401,7 @@ test("7. pupils read only their own rows and cannot write the ledger or call the
 
 // ── 8. The worked examples in docs/laerligverse/belonningsmodel.md §5 ─────────────────────────────────
 
-test("8. economy: short (4 answers) and medium (practice wrong + revision, 5 answers) both pay 61+26; all checks wrong pays 37+14; a long variant still 61+26", async () => {
+test("8. economy: short (4 answers) and medium (practice wrong + revision, 5 answers) both pay 61+26; all checks wrong pays only 12+4 (completion registered, no bonus); a long variant still 61+26", async () => {
   const total = async (p, o) => { const r = await award(p, o); return [r.xp_awarded, r.coins_awarded]; };
   let p = await addPupil();
   await fullSequence(p, "lv_short");
@@ -413,7 +414,7 @@ test("8. economy: short (4 answers) and medium (practice wrong + revision, 5 ans
   p = await addPupil();
   await step(p, "lv_wrong", "guided_practice", true);
   for (const s of ["independent_application", "transfer", "revisit"]) await step(p, "lv_wrong", s, false);
-  assert.deepEqual(await total(p, "lv_wrong"), [4 * 3 + 25, 4 * 1 + 10], "4 steps + sequence, no check");
+  assert.deepEqual(await total(p, "lv_wrong"), [4 * 3, 4 * 1], "4 steps only: completed, but no passed check → no sequence bonus");
   p = await addPupil();
   for (const [s, n] of [["guided_practice", 3], ["revision", 2], ["independent_application", 2], ["transfer", 2], ["revisit", 1]]) {
     for (let i = 0; i < n; i++) await step(p, "lv_long", s, true);
@@ -430,4 +431,86 @@ test("8. economy: ten sequences pay 10 × 61 + 30 + 75 = 715 XP and 10 × 26 + 1
   await fullSequence(p, "lv_ten_1");        // the same objective completed again with new items
   assert.equal((await award(p, "lv_ten_1")).xp_awarded, 0);
   assert.deepEqual(await money(p), m1);
+});
+
+// ── 9. The owner principle: no milestone bonus without at least one passed relevant check ─────────────
+
+test("9. completed with ALL checks wrong: completion registered (0/0), no sequence bonus; a later passed check pays the bonus once", async () => {
+  const p = await addPupil();
+  await step(p, "lv_np", "guided_practice", true);
+  const insts = {};
+  for (const s of ["independent_application", "transfer", "revisit"]) insts[s] = await step(p, "lv_np", s, false);
+  let r = await award(p, "lv_np");
+  assert.ok(keys(r).includes("sequence:lv_np"), "completion is registered");
+  assert.equal(keys(r).includes("sequence_bonus:lv_np"), false, "no bonus without a passed check");
+  assert.deepEqual([r.xp_awarded, r.coins_awarded], [12, 4]);
+  const reg = (await ledger(p)).find((x) => x.milestone_key === "sequence:lv_np");
+  assert.deepEqual([reg.kind, reg.xp_awarded, reg.coins_awarded], ["sequence_completed", 0, 0]);
+  // The transfer is reopened (a repeat round) and now answered right: the check AND the bonus are earned, once.
+  await db.query(`UPDATE public.question_instances SET answered = false, was_correct = NULL, answered_at = NULL,
+    user_answer = NULL, repeat_count = repeat_count + 1 WHERE id = $1`, [insts.transfer]);
+  const inst = await q1("SELECT correct_answer FROM public.question_instances WHERE id = $1", [insts.transfer]);
+  const graded = (await q1("SELECT public.process_question_attempt($1, $2, $3, $4) AS r", [p, insts.transfer, inst.correct_answer, Date.now()])).r;
+  assert.equal(graded.status, "correct");
+  r = await award(p, "lv_np");
+  assert.deepEqual(keys(r), ["check:lv_np:transfer", "sequence_bonus:lv_np"]);
+  assert.deepEqual([r.xp_awarded, r.coins_awarded], [8 + 25, 4 + 10]);
+  assert.equal((await award(p, "lv_np")).xp_awarded, 0);
+});
+
+test("9. one passed relevant check suffices for the bonus (each of the three assessed steps); correct practice/revision does not", async () => {
+  for (const passedStep of ["independent_application", "transfer", "revisit"]) {
+    const p = await addPupil();
+    const o = `lv_one_${passedStep}`;
+    await step(p, o, "guided_practice", true);
+    for (const s of ["independent_application", "transfer", "revisit"]) await step(p, o, s, s === passedStep);
+    const r = await award(p, o);
+    assert.ok(keys(r).includes(`sequence_bonus:${o}`), passedStep);
+    assert.deepEqual([r.xp_awarded, r.coins_awarded], [12 + 8 + 25, 4 + 4 + 10], passedStep);
+  }
+  const p = await addPupil();
+  await step(p, "lv_practice_only", "guided_practice", false);
+  await step(p, "lv_practice_only", "revision", true);
+  for (const s of ["independent_application", "transfer", "revisit"]) await step(p, "lv_practice_only", s, false);
+  const r = await award(p, "lv_practice_only");
+  assert.ok(keys(r).includes("sequence:lv_practice_only"), "completed");
+  assert.equal(keys(r).includes("sequence_bonus:lv_practice_only"), false, "guided practice and revision are not relevant checks");
+});
+
+test("9. cross-sequence milestones count only sequences WITH a passed check", async () => {
+  const p = await addPupil();
+  for (const o of ["lv_x1", "lv_x2"]) { await fullSequence(p, o); await award(p, o); }
+  await step(p, "lv_x3", "guided_practice", true);
+  for (const s of ["independent_application", "transfer", "revisit"]) await step(p, "lv_x3", s, false);
+  let r = await award(p, "lv_x3");
+  assert.equal(keys(r).includes("milestone:sequences:3"), false, "a completed-but-not-passed sequence does not count");
+  await fullSequence(p, "lv_x4");
+  r = await award(p, "lv_x4");
+  assert.ok(keys(r).includes("milestone:sequences:3"), "the third PASSED sequence pays milestone 3");
+  const l = await ledger(p);
+  assert.deepEqual([l.filter((x) => x.kind === "sequence_completed").length, l.filter((x) => x.kind === "sequence_bonus").length], [4, 3]);
+});
+
+// ── 10. Temporary limitation: long-answer course items ─────────────────────────────────────────────────
+
+test("10. an objective with a long-answer course item pays nothing (long_answer_items_blocked) until review-answer is protected", async () => {
+  const p = await addPupil();
+  await fullSequence(p, "lv_long_item");
+  const content = { type: "text", question: "Forklar kildens troværdighed.", correct: "-" };
+  await db.query(`INSERT INTO public.questions (type, content, difficulty, difficulty_band, is_active, question_type,
+      learning_objective, answer_format, answer_type, target_grade, metadata)
+    VALUES ('text_input', $1::jsonb, 2, 2, true, 'auto', 'lv_long_item', 'text', 'long', 7, '{"learning_step":"transfer"}')`,
+    [JSON.stringify(content)]);
+  const m = await money(p);
+  const r = await award(p, "lv_long_item");
+  assert.deepEqual([r.outcome, r.awarded, r.xp_awarded, r.coins_awarded], ["long_answer_items_blocked", [], 0, 0]);
+  assert.deepEqual(await money(p), m);
+  assert.deepEqual(await ledger(p), []);
+  // A long-answer question that is NOT a course item does not block a course objective.
+  await db.query(`INSERT INTO public.questions (type, content, difficulty, difficulty_band, is_active, question_type,
+      learning_objective, answer_format, answer_type, target_grade, metadata)
+    VALUES ('text_input', $1::jsonb, 2, 2, true, 'auto', 'lv_long_other', 'text', 'long', 7, '{"domain":"historie"}')`,
+    [JSON.stringify({ ...content, question: "Andet langt svar" })]);
+  await fullSequence(p, "lv_long_other");
+  assert.equal((await award(p, "lv_long_other")).xp_awarded, 61);
 });

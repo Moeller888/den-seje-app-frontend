@@ -27,9 +27,30 @@
 --                         svar i vejledt øvelse betale sig.
 --   check:<mål>:<trin>    første rigtige svar (was_correct = true) i et vurderingstrin
 --                         (independent_application, transfer, revisit).
---   sequence:<mål>        hele forløbet er gennemført efter testpolitikken laerligverse-test-policy-v0
---                         (samme regel som nextStep → 'complete').
---   milestone:sequences:3 / milestone:sequences:10   antal gennemførte forløb (læst fra bogen selv).
+--   sequence:<mål>        REGISTRERING (0 XP, 0 coins): hele forløbet er gennemført efter testpolitikken
+--                         laerligverse-test-policy-v0 (samme regel som nextStep → 'complete'). Gennemført er
+--                         ikke det samme som bestået: registreringen sker også, når alle kontroller var forkerte.
+--   sequence_bonus:<mål>  FORLØBSBONUS: forløbet er gennemført OG eleven har bestået mindst én relevant kontrol
+--                         i det (ejerprincip 2026-11-10: "En elev skal have bestået mindst én relevant
+--                         kontrolopgave, før en kursusmilepælsbonus kan udbetales").
+--   milestone:sequences:3 / milestone:sequences:10   antal forløb MED bonus (læst fra bogen selv) — altså
+--                         kun forløb, hvor mindst én relevant kontrol er bestået.
+--
+-- RELEVANT KONTROL (ét sted i koden, CTE'en "passed"): et svar i et vurderingstrin (independent_application
+-- = check, transfer = application, revisit = review), som serveren har registreret som rigtigt
+-- (was_correct = true). På den gamle vej kan serveren ikke se, om det var FØRSTE forsøg (en gentagelse
+-- genåbner instansen), eller om der blev brugt hjælp. Når K1 (question_attempts.attempt_no) og L3
+-- (registrerede hints) er anvendt, kan "passed" strammes til første forsøg uden registreret hjælp i én
+-- ændring af netop den CTE; allerede udbetalte rækker røres ikke.
+--
+-- MIDLERTIDIG BEGRÆNSNING — LANGE SVAR: lange svar (questions.answer_type = 'long') bedømmes af læreren via
+-- Edge-funktionen review-answer, som lægger XP direkte i student_progress pr. bedømmelse (og igen ved en ny
+-- bedømmelse). Den vej er ikke beskyttet mod kursusopgaver endnu. Indtil den er det, nægter funktionen at
+-- udbetale for et kursusmål, der indeholder en kursusopgave med lange svar ('long_answer_items_blocked',
+-- intet skrives). Det er en bevidst, midlertidig begrænsning, ikke en udelukkelse af lange svar fra
+-- Arkivskabet; den ophæves med en ny migration, når review-answer er beskyttet (se
+-- docs/laerligverse/forslag-k1-belonning-kursussvar.md) — den migration skal også lade en lærerbedømt lang
+-- besvarelse tælle (et langt svar forbliver answered = false; teacher_score sættes ved bedømmelsen).
 --
 -- HVAD DEN IKKE RØRER: total_correct_answers, correct_answers, level, mastery_*, streak, quests,
 -- student_subject_level, student_band_state, student_level_fold_log, question_instances, questions og
@@ -42,7 +63,8 @@
 -- (både bog og kredit), så et nyt forsøg betaler præcis én gang.
 --
 -- DOBBELTBETALINGSVAGT: i dag betaler belønnings-RPC'erne også kursussvar (10 XP + 5 coins, tællere, quests).
--- Funktionen LÆSER derfor kun katalogets md5(prosrc) af de fire belønningsfunktioner og udbetaler intet
+-- Funktionen LÆSER derfor kun katalogets md5(prosrc) af de fire svarfunktioner og review_answer (4 argumenter,
+-- lærerbedømmelsens XP-vej) og udbetaler intet
 -- (outcome 'reward_path_not_ready', ingen skrivning), medmindre hver af dem har en af EFTER-kroppene fra
 -- forslaget til H5/K1-sporet (docs/laerligverse/forslag-k1-belonning-kursussvar.sql). Migrationen ændrer
 -- ikke selv nogen belønningsfunktion.
@@ -61,7 +83,7 @@ CREATE TABLE public.course_progress_rewards (
   id                 bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   student_id         uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   milestone_key      text NOT NULL CHECK (char_length(milestone_key) BETWEEN 1 AND 300),
-  kind               text NOT NULL CHECK (kind IN ('step_completed', 'check_passed', 'sequence_completed', 'course_milestone')),
+  kind               text NOT NULL CHECK (kind IN ('step_completed', 'check_passed', 'sequence_completed', 'sequence_bonus', 'course_milestone')),
   learning_objective text,
   learning_step      text CHECK (learning_step IS NULL OR learning_step IN
                        ('guided_practice', 'revision', 'independent_application', 'transfer', 'revisit')),
@@ -92,7 +114,7 @@ SET search_path = ''
 AS $$
 DECLARE
   c_policy  constant text := 'laerligverse-test-policy-v0';
-  c_rates   constant text := 'course-rewards-v0-proposal';
+  c_rates   constant text := 'course-rewards-v0.1-provisional';
   v_role    text;
   v_locked  uuid;
   v_awarded jsonb := '[]'::jsonb;
@@ -110,13 +132,18 @@ BEGIN
                               'xp_awarded', 0, 'coins_awarded', 0);
   END IF;
 
-  -- Dobbeltbetalingsvagt: så længe belønnings-RPC'erne stadig betaler kursussvar pr. svar, udbetales intet.
-  -- Hver overload af de fire funktioner skal have en af de reviewede EFTER-kroppe fra
-  -- docs/laerligverse/forslag-k1-belonning-kursussvar.sql (og process_question_attempt skal findes).
+  -- Dobbeltbetalingsvagt: så længe en betalende vej stadig betaler kursusopgaver pr. svar/bedømmelse, udbetales
+  -- intet. Hver overload af de fire svarfunktioner skal have en af de reviewede EFTER-kroppe fra
+  -- docs/laerligverse/forslag-k1-belonning-kursussvar.sql, process_question_attempt skal findes, og
+  -- review_answer (4 argumenter, lærerbedømmelse) skal have forslagets krop, der giver kursusopgaver 0 XP.
   IF NOT EXISTS (
        SELECT 1 FROM pg_catalog.pg_proc p
        WHERE p.oid = to_regprocedure('public.process_question_attempt(uuid,uuid,text,bigint)')
          AND md5(p.prosrc) = 'a91a651c32b8f0d4a8efad588f2f78dd')
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_catalog.pg_proc p
+       WHERE p.oid = to_regprocedure('public.review_answer(uuid,integer,text,uuid)')
+         AND md5(p.prosrc) = 'd3e08630604112b593c218cc07ad496b')
      OR EXISTS (
        SELECT 1 FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
        WHERE n.nspname = 'public'
@@ -145,6 +172,16 @@ BEGIN
     RETURN jsonb_build_object('outcome', 'not_a_course_objective', 'awarded', '[]'::jsonb, 'xp_awarded', 0, 'coins_awarded', 0);
   END IF;
 
+  -- Midlertidig begrænsning (se hovedet): et kursusmål med lange svar udbetaler intet, før review-answer er beskyttet.
+  IF EXISTS (
+    SELECT 1 FROM public.questions q
+    WHERE q.learning_objective = p_objective
+      AND q.metadata->>'learning_step' IN ('guided_practice', 'revision', 'independent_application', 'transfer', 'revisit')
+      AND q.answer_type = 'long'
+  ) THEN
+    RETURN jsonb_build_object('outcome', 'long_answer_items_blocked', 'awarded', '[]'::jsonb, 'xp_awarded', 0, 'coins_awarded', 0);
+  END IF;
+
   FOR r IN
     WITH hist AS (
       SELECT q.metadata->>'learning_step' AS step, qi.was_correct, qi.answered_at, qi.id
@@ -155,6 +192,11 @@ BEGIN
         AND q.learning_objective = p_objective
         AND q.metadata->>'learning_step' IN ('guided_practice', 'revision', 'independent_application', 'transfer', 'revisit')
     ),
+    -- Relevante beståede kontroller: ét sted, så kravet kan strammes (første forsøg, uden hjælp) med K1/L3.
+    passed AS (
+      SELECT h.step FROM hist h
+      WHERE h.step IN ('independent_application', 'transfer', 'revisit') AND h.was_correct = true
+    ),
     done AS (
       SELECT
         EXISTS (SELECT 1 FROM hist WHERE step = 'guided_practice')         AS practice,
@@ -163,7 +205,14 @@ BEGIN
         EXISTS (SELECT 1 FROM hist WHERE step = 'transfer')                AS transfer,
         EXISTS (SELECT 1 FROM hist WHERE step = 'revisit')                 AS revisit,
         (SELECT h.was_correct FROM hist h WHERE h.step = 'guided_practice'
-          ORDER BY h.answered_at DESC NULLS LAST, h.id DESC LIMIT 1)       AS latest_practice_correct
+          ORDER BY h.answered_at DESC NULLS LAST, h.id DESC LIMIT 1)       AS latest_practice_correct,
+        EXISTS (SELECT 1 FROM passed)                                     AS any_check_passed
+    ),
+    complete AS (
+      SELECT d.* FROM done d
+      WHERE d.practice
+        AND (d.latest_practice_correct IS DISTINCT FROM false OR d.revision)
+        AND d.application AND d.transfer AND d.revisit
     ),
     earned AS (
       -- Første registrerede svar i et trin (revision giver 0 og står derfor ikke her).
@@ -176,14 +225,16 @@ BEGIN
       -- Første rigtige svar i et vurderingstrin.
       SELECT 'check:' || p_objective || ':' || c.step, 'check_passed', c.step, c.xp, c.coins, c.ord
       FROM (VALUES ('independent_application', 8, 4, 21), ('transfer', 8, 4, 31), ('revisit', 8, 4, 41)) AS c(step, xp, coins, ord)
-      WHERE EXISTS (SELECT 1 FROM hist h WHERE h.step = c.step AND h.was_correct = true)
+      WHERE EXISTS (SELECT 1 FROM passed p WHERE p.step = c.step)
       UNION ALL
-      -- Hele forløbet efter testpolitikken (samme regel som nextStep → 'complete').
-      SELECT 'sequence:' || p_objective, 'sequence_completed', NULL, 25, 10, 50
-      FROM done d
-      WHERE d.practice
-        AND (d.latest_practice_correct IS DISTINCT FROM false OR d.revision)
-        AND d.application AND d.transfer AND d.revisit
+      -- Registrering: hele forløbet er gennemført efter testpolitikken (nextStep → 'complete'). 0 XP, 0 coins.
+      SELECT 'sequence:' || p_objective, 'sequence_completed', NULL, 0, 0, 50
+      FROM complete
+      UNION ALL
+      -- Forløbsbonus: gennemført OG mindst én relevant kontrol bestået.
+      SELECT 'sequence_bonus:' || p_objective, 'sequence_bonus', NULL, 25, 10, 51
+      FROM complete c
+      WHERE c.any_check_passed
     )
     SELECT * FROM earned ORDER BY ord
   LOOP
@@ -201,9 +252,9 @@ BEGIN
     FROM ins;
   END LOOP;
 
-  -- Kursusmilepæle: antal gennemførte forløb, læst fra bogen selv (kun denne funktion skriver den).
+  -- Kursusmilepæle: antal forløb MED bonus (mindst én bestået relevant kontrol), læst fra bogen selv.
   SELECT count(*)::int INTO v_seq FROM public.course_progress_rewards
-  WHERE student_id = p_student_id AND kind = 'sequence_completed';
+  WHERE student_id = p_student_id AND kind = 'sequence_bonus';
 
   FOR r IN
     SELECT 'milestone:sequences:' || m.n AS milestone_key, m.xp, m.coins

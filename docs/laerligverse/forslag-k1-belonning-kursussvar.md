@@ -1,4 +1,4 @@
-# Forslag til H5/K1-sporet: kursussvar betales ikke pr. svar
+# Forslag til H5/K1-sporet: kursusopgaver betales ikke pr. svar eller pr. bedømmelse
 
 **Status:** FORSLAG, ikke en migration. SQL'en står i
 [`forslag-k1-belonning-kursussvar.sql`](forslag-k1-belonning-kursussvar.sql) — bevidst uden for
@@ -32,6 +32,7 @@ skifter side**.
 | `process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)` | `20261101190100_question_attempts_v2_align_grading.sql:90` | `8a7696147df978e250918b2c93e20577` | `f241c2115ec48441efc9e695b028d2d2` |
 | `process_text_answer(uuid,uuid,text,boolean)` | `20260524000000_weekly_quests.sql:203` | `e80727ea87ffdc64988e5a09dcb20356` | `62589388dae732ad79ca8f893027785d` |
 | `process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)` | `20261030211428_question_attempts_v2.sql:438` (via `20261101190000:496`) | `f880984680d52b20d07c628a9dfae474` | `098969e41b5c85a00e21a733093d7ecb` |
+| `review_answer(uuid,integer,text,uuid)` (lærerbedømmelse) | ikke i repoet — produktionens krop læses read-only; replayens stub i `tests/isolated/schema/ci-function-stubs.sql` | stub: `228aca24e326a57663d761b78eba1e12` | `d3e08630604112b593c218cc07ad496b` |
 
 "Før" er produktionens kroppe uden K1, læst som `md5(prosrc)` i den isolerede replay (for
 `process_question_attempt` er replayen bekræftet lig produktionen i `isolated-schema-replay.test.mjs`).
@@ -172,38 +173,112 @@ præcis som før.
 +    END IF;
 ```
 
+## Lærerbedømmelsen (lange svar): `review_answer` + Edge-funktionen `review-answer`
+
+**I dag:** `review-answer` (`supabase/functions/review-answer/index.ts:168-200`) kalder `review_answer` (4 argumenter;
+gemmer kun bedømmelsen) og lægger derefter selv `scoreToXP(score)` (1 → 0, 2 → 10, 3 → 25, 4 → 50) til
+`student_progress.xp` — som læs-og-skriv uden for transaktionen, ved **hver** bedømmelse (også en ny
+bedømmelse af samme svar) og for **enhver** instans hos lærerens egne elever, altså også en kursusopgave og en
+MC-instans. `review_answer`'s produktionskrop findes ikke i repoet (kun dens rettigheder i
+`20260919000000_review_answer_execute_lockdown.sql`); den isolerede replay har en stub (md5
+`228aca24e326a57663d761b78eba1e12`). `docs/question-attempts-design.md` §1.3 nævner, at produktionens RPC muligvis
+også selv giver XP — det skal bekræftes read-only.
+
+**Forslag (afsnit 5 i SQL-filen):** XP flyttes ind i `review_answer` (4 argumenter): samme transaktion som
+bedømmelsen, rækkelås på instansen, `scoreToXP` som i dag for almindelige svar (også ved en ny bedømmelse — den
+eksisterende adfærd er en særskilt sag), **0 for en kursusopgave** (samme prædikat). RPC'en returnerer den tildelte
+XP (`void` → `integer`, derfor DROP + CREATE med samme SECURITY DEFINER, `search_path` og kun `service_role`).
+md5 efter: `d3e08630604112b593c218cc07ad496b`.
+
+**Edge-ændringen (samme udrulning, ikke i denne PR):**
+
+```diff
+-    const { error: rpcError } = await supabase.rpc("review_answer", {
++    const { data: xpAwarded, error: rpcError } = await supabase.rpc("review_answer", {
+       p_instance_id: instance_id,
+       p_score: score,
+       p_feedback: feedback ?? null,
+       p_teacher_id: user.id
+     });
+ ...
+-    // 🔥 XP BONUS
+-    const xpToAdd = scoreToXP(score);
+-
+-    if (xpToAdd > 0) {
+-      ... select xp ... update({ xp: currentXP + xpToAdd }) ...
+-    }
+-
+-    return new Response(JSON.stringify({ ok: true, xp_awarded: xpToAdd }), {
++    // XP is given by review_answer itself, in the same transaction (0 for a course item).
++    return new Response(JSON.stringify({ ok: true, xp_awarded: typeof xpAwarded === "number" ? xpAwarded : 0 }), {
+```
+
+Udrulningsrækkefølge for netop dette par: **Edge først, så SQL** i samme vindue. Med ny Edge og gammel RPC
+(`void`) gives ingen XP for en bedømmelse i den korte mellemperiode (intet dobbelt); med ny RPC og gammel Edge
+ville almindelige bedømmelser give XP to gange.
+
+**Midlertidig begrænsning, håndhævet på serveren:** indtil denne vej er beskyttet, giver
+`award_course_milestones` ingen kursusbelønning for et kursusmål, der indeholder en kursusopgave med lange svar
+(`long_answer_items_blocked`, intet skrives; test 10). Lange svar er ikke udelukket permanent: begrænsningen ophæves
+med en ny migration, når Edge-ændringen er udrullet, og som samtidig lader en lærerbedømt lang besvarelse tælle
+(et langt svar forbliver `answered = false`; `teacher_score` sættes ved bedømmelsen).
+
 ## Vagter
 
-- **Forslagets egen md5-vagt:** hver af de fire funktioner skal have "før"- eller "efter"-kroppen; ellers stopper
-  filen, før noget ændres (en genkørsel accepteres). Mangler en signatur (K1 er anvendt), stopper den også.
+- **Forslagets egen md5-vagt:** hver af de fem funktioner skal have "før"- eller "efter"-kroppen; ellers stopper
+  filen, før noget ændres (en genkørsel accepteres). Mangler en signatur (K1 er anvendt), stopper den også. For
+  `review_answer` står kun replayens stub som "før" — produktionens md5 skal tilføjes efter en read-only læsning.
 - **Dobbeltbetalingsvagten i `award_course_milestones`** (migration `20261108171500`): funktionen udbetaler intet
-  og svarer `reward_path_not_ready`, medmindre `process_question_attempt` findes med efter-kroppen, og **hver**
-  overload af de fire funktionsnavne har en af de fire efter-kroppe. Flaget kan derfor ikke give dobbeltbetaling,
-  selv hvis det tændes for tidligt. Edge-funktionen svarer 503 `{ outcome: "reward_path_not_ready" }`.
+  og svarer `reward_path_not_ready`, medmindre `process_question_attempt` og `review_answer` (4 argumenter) findes
+  med efter-kroppene, og **hver** overload af de fire svarfunktioner har en af deres efter-kroppe. Flaget kan
+  derfor ikke give dobbeltbetaling, selv hvis det tændes for tidligt. Edge-funktionen svarer 503.
+- **Begrænsningen for lange svar** (ovenfor) fanger den del, databasen ikke kan se: Edge-funktionens egen
+  XP-skrivning. En test (`course-progress-rewards-k1-proposal-run`, G) holder fast i, at begrænsningen står, så
+  længe `review-answer/index.ts` selv skriver til `student_progress`.
 
 ## Rækkefølge
 
 1. **Nu (produktion uden K1):** forslaget kan anvendes som sin egen migration (ny unik version, særskilt
-   ejerautorisation, `apply_migration`) — før migration `20261108171500` og før flaget tændes.
+   ejerautorisation, `apply_migration`) — med Edge-ændringen i review-answer i samme vindue (Edge først) — før
+   migration `20261108171500` og før flaget tændes.
 2. **Hvis K1 (`20261103110000`) og/eller L3's hint-log (`20261108043500`) anvendes FØRST:** de genskaber
-   `_v2`-funktionerne med nye signaturer. Så skal de samme fire ændringer laves i deres kroppe (samme prædikat,
-   samme tre steder), forslagets vagt opdateres til deres md5, og vagtlisten i `award_course_milestones` udvides
-   med de nye efter-md5'er i samme ændring. Indtil da refererer vagten fail-closed: intet udbetales.
+   `_v2`-funktionerne med nye signaturer. Så skal de samme ændringer laves i deres kroppe (samme prædikat, samme
+   steder), forslagets vagt opdateres til deres md5, og vagtlisten i `award_course_milestones` udvides med de nye
+   efter-md5'er i samme ændring. Indtil da er vagten fail-closed: intet udbetales.
 3. **#623 / #647** rører ikke belønningsfunktionerne (de afgrænser niveau, bånd og lærertal) og kan anvendes
    før eller efter. #647 bør være anvendt, før Arkivskabets spørgsmål seedes.
 4. Derefter: migration `20261108171500`, deploy af `course-progress`, klientkald, og til sidst flaget.
 
 ## Ikke omfattet
 
-- **review-answer** (Edge, lange svar): læreren giver XP direkte i `student_progress` (`scoreToXP`, 0/10/25/50).
-  En kursusopgave må derfor ikke være et langt svar, eller review-answer skal have samme prædikat.
 - `process_text_answer_v2` har ingen gentagelsessats i dag: et rigtigt genåbnet tekstsvar betaler 10 + 5 og
   tæller igen. Det er produktionens adfærd og ændres ikke her for almindelige opgaver (testen viser det).
+- Ny bedømmelse af et almindeligt langt svar giver XP igen (eksisterende adfærd, særskilt fund).
+- `review_answer` med 3 argumenter har ingen kalder i repoet; stubben giver ingen XP. Produktionens krop skal
+  bekræftes read-only sammen med 4-argument-udgaven.
 
 ## Bevis
 
 `tests/unit/course-progress-rewards-k1-proposal-run.test.mjs` (PGlite, to databaser over den fulde replay):
-almindelige svar giver identiske tal med og uden forslaget på alle fire veje (første svar, forkert, gentagelse,
+almindelige svar giver identiske tal med og uden forslaget på alle fire svarveje (første svar, forkert, gentagelse,
 replay; tællere, quests, streak, forsøgsrækker); kursussvar betaler 0 og rører hverken tællere eller quests; et
 helt forløb betaler præcis 61 XP + 26 coins; replay, gentagelser og "farming" betaler 0; en fejl inde i
-udbetalingen efterlader intet; uden forslaget (eller med blot én betalende krop) nægter udbetalingen.
+udbetalingen efterlader intet; `review_answer` giver almindelige svar dagens beløb og kursusopgaver 0; uden
+forslaget (eller med blot én betalende krop, review_answer inklusive) nægter udbetalingen.
+
+## Til H5/K1-sporet (kort besked)
+
+Lærligverse-kursusbelønningerne (#657) er NO-GO, indtil kursusopgaver ikke længere betales pr. svar eller pr.
+bedømmelse. Det kræver, at I anvender `docs/laerligverse/forslag-k1-belonning-kursussvar.sql` (som egen migration
+med ny version og ejerens særskilte autorisation):
+
+1. Læs read-only produktionens `md5(prosrc)` for `review_answer(uuid,integer,text,uuid)` og føj den til vagtrækken.
+2. Kontrollér, at produktionens fire svarfunktioner stadig har "før"-md5: `process_question_attempt`
+   `2e05e769…`, `process_question_attempt_v2` `8a769614…`, `process_text_answer` `e80727ea…`,
+   `process_text_answer_v2` `f8809846…`.
+3. Udrul Edge-ændringen i `review-answer` (diff ovenfor), og anvend straks derefter forslaget.
+4. Kontrollér efter-md5: `a91a651c…`, `f241c211…`, `62589388…`, `098969e4…`, `d3e08630…`.
+5. Lander K1 eller L3's hint-log først, skal ændringerne flyttes ind i deres `_v2`-kroppe, og vagtlisten i
+   `award_course_milestones` opdateres i samme ændring.
+
+Først derefter: migration `20261108171500`, deploy af `course-progress`, klientkald og flaget.

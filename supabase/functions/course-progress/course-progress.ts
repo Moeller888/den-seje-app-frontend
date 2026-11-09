@@ -27,6 +27,8 @@
 //   not_a_course_objective     404 { outcome, error }
 //   not_a_student              403 { outcome, error }
 //   no_progress_row            409 { outcome, error }
+//   long_answer_items_blocked  409 { outcome, error } — temporary: the objective has long-answer course items, whose
+//                              teacher-review path (review-answer) still pays XP itself; nothing is written
 //   reward_path_not_ready      503 { outcome, error } — the double-pay guard: the reward RPCs still pay course
 //                              answers per answer (docs/laerligverse/forslag-k1-belonning-kursussvar.md); nothing
 //                              is written
@@ -44,7 +46,7 @@ export const COURSE_REWARDS_DISABLED = Object.freeze({ outcome: "course_rewards_
 export const UNEXPECTED_RESULT = Object.freeze({ error: "Could not process course progress" });
 
 const MAX_OBJECTIVE = 200;
-const KINDS: ReadonlySet<string> = new Set(["step_completed", "check_passed", "sequence_completed", "course_milestone"]);
+const KINDS: ReadonlySet<string> = new Set(["step_completed", "check_passed", "sequence_completed", "sequence_bonus", "course_milestone"]);
 
 export function parseCourseProgressRequest(body: unknown):
   | { ok: true; objective: string }
@@ -116,6 +118,8 @@ export function replyForAward(data: unknown, objective: string): Reply {
       return { status: 403, body: { outcome: d.outcome, error: "Only pupils earn course rewards" } };
     case "no_progress_row":
       return { status: 409, body: { outcome: d.outcome, error: "No progress record" } };
+    case "long_answer_items_blocked":
+      return { status: 409, body: { outcome: d.outcome, error: "Course objectives with long answers are temporarily not rewarded" } };
     case "reward_path_not_ready":
       return { status: 503, body: { outcome: d.outcome, error: "Course rewards are blocked until course answers are no longer paid per answer" } };
     case "invalid_request":

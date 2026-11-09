@@ -37,9 +37,11 @@ const SIGS = {
   v2: "public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text)",
   text: "public.process_text_answer(uuid,uuid,text,boolean)",
   textV2: "public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)",
+  review: "public.review_answer(uuid,integer,text,uuid)",
 };
-const BEFORE = { pqa: "2e05e769a102f61ffef0ea4dd550c55b", v2: "8a7696147df978e250918b2c93e20577", text: "e80727ea87ffdc64988e5a09dcb20356", textV2: "f880984680d52b20d07c628a9dfae474" };
-const AFTER = { pqa: "a91a651c32b8f0d4a8efad588f2f78dd", v2: "f241c2115ec48441efc9e695b028d2d2", text: "62589388dae732ad79ca8f893027785d", textV2: "098969e41b5c85a00e21a733093d7ecb" };
+// review: BEFORE is the isolated replay's STUB (production's body is not in the repository; see the proposal).
+const BEFORE = { pqa: "2e05e769a102f61ffef0ea4dd550c55b", v2: "8a7696147df978e250918b2c93e20577", text: "e80727ea87ffdc64988e5a09dcb20356", textV2: "f880984680d52b20d07c628a9dfae474", review: "228aca24e326a57663d761b78eba1e12" };
+const AFTER = { pqa: "a91a651c32b8f0d4a8efad588f2f78dd", v2: "f241c2115ec48441efc9e695b028d2d2", text: "62589388dae732ad79ca8f893027785d", textV2: "098969e41b5c85a00e21a733093d7ecb", review: "d3e08630604112b593c218cc07ad496b" };
 const uid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
 async function replayed() {
@@ -156,7 +158,10 @@ test("A. its guard pins the replay's (= production's) bodies; applying it change
   for (const k of Object.keys(SIGS)) {
     assert.equal(factsBefore[k].m, BEFORE[k], `${k} before`);
     assert.equal(factsAfter[k].m, AFTER[k], `${k} after`);
-    for (const f of ["prosecdef", "cfg", "owner", "acl", "res"]) assert.equal(factsAfter[k][f], factsBefore[k][f], `${k} ${f} unchanged`);
+    for (const f of ["prosecdef", "cfg", "owner", "acl", "res"]) {
+      if (k === "review" && f === "res") continue; // review_answer: void → integer (the XP it awarded), by design
+      assert.equal(factsAfter[k][f], factsBefore[k][f], `${k} ${f} unchanged`);
+    }
     const sql = read(PROPOSAL);
     assert.ok(sql.includes(`'${BEFORE[k]}', '${AFTER[k]}')`), `${k}: guard row pins before and after`);
   }
@@ -284,13 +289,13 @@ test("E. a failure inside the award transaction leaves no partial payment; the r
   const m0 = await money(PROP, p);
   await PROP.exec(`CREATE FUNCTION public.zz_fail() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'injected'; END $$;
     CREATE TRIGGER zz_fail AFTER INSERT ON public.course_progress_rewards FOR EACH ROW
-      WHEN (NEW.milestone_key = 'sequence:lv_fail') EXECUTE FUNCTION public.zz_fail();`);
+      WHEN (NEW.milestone_key = 'sequence_bonus:lv_fail') EXECUTE FUNCTION public.zz_fail();`);
   try {
     await assert.rejects(award(PROP, p, "lv_fail"), /injected/);
   } finally {
     await PROP.exec("DROP TRIGGER zz_fail ON public.course_progress_rewards; DROP FUNCTION public.zz_fail();");
   }
-  assert.deepEqual(await money(PROP, p), m0, "the six rows inserted before the failure were rolled back with it");
+  assert.deepEqual(await money(PROP, p), m0, "the eight rows inserted before the failure were rolled back with it");
   assert.equal((await effects(PROP, p)).ledger.length, 0);
   assert.equal((await award(PROP, p, "lv_fail")).xp_awarded, 61);
   assert.equal((await award(PROP, p, "lv_fail")).xp_awarded, 0);
@@ -320,6 +325,7 @@ for (const k of Object.keys(SIGS)) {
     await answerVia(PROP, "pqa", p, await open(PROP, p, q), q, true);
     await PROP.exec("BEGIN");
     try {
+      if (k === "review") await PROP.exec("DROP FUNCTION public.review_answer(uuid, integer, text, uuid)");
       await PROP.exec(originalDefs[k]);
       const m = await money(PROP, p);
       assert.equal((await award(PROP, p, `lv_f_${k}`)).outcome, "reward_path_not_ready");
@@ -343,4 +349,40 @@ test("F. an extra, unreviewed overload of a reward function also blocks the awar
   } finally {
     await PROP.exec("ROLLBACK");
   }
+});
+
+
+// ── G. The teacher-review path (review_answer, long answers) ──────────────────────────────────────────
+async function review(db, inst, score) {
+  return asService(db, "SELECT public.review_answer($1, $2, NULL, $3) AS r", [inst, score, uid(9999)]);
+}
+
+test("G. review_answer (proposal): an ordinary answer gets scoreToXP per review as the Edge function gives today; a course item gets 0", async () => {
+  const p = await pupilIn(PROP);
+  const plain = await question(PROP, { ...ordinary(), format: "text" });
+  const iPlain = await open(PROP, p, plain);
+  const m0 = await money(PROP, p);
+  assert.deepEqual([await review(PROP, iPlain, 1), await review(PROP, iPlain, 2), await review(PROP, iPlain, 3), await review(PROP, iPlain, 4)], [0, 10, 25, 50]);
+  const m1 = await money(PROP, p);
+  assert.equal(m1.xp - m0.xp, 85, "today's amounts, also on a re-review (unchanged behaviour for ordinary answers)");
+  assert.deepEqual([m1.coins, m1.correct_answers, m1.total_correct_answers], [m0.coins, m0.correct_answers, m0.total_correct_answers]);
+  const crs = await question(PROP, { ...course("transfer", "lv_g_review"), format: "text" });
+  await PROP.query("UPDATE public.question_instances SET answered = true WHERE id = $1", [iPlain]); // one open round at a time
+  const iCourse = await open(PROP, p, crs);
+  assert.deepEqual([await review(PROP, iCourse, 4), await review(PROP, iCourse, 4)], [0, 0]);
+  assert.deepEqual(await money(PROP, p), m1, "a course item pays nothing on review, however often");
+  const row = (await PROP.query("SELECT teacher_score FROM public.question_instances WHERE id = $1", [iCourse])).rows[0];
+  assert.equal(row.teacher_score, 4, "the review itself is still stored");
+  await assert.rejects(review(PROP, uid(424242), 3), /Instance not found/);
+});
+
+test("G. while review-answer/index.ts still writes student_progress itself, the award keeps both safeguards (review guard + long-answer block)", () => {
+  const edge = read("supabase/functions/review-answer/index.ts");
+  const edgeWrites = /from\("student_progress"\)[\s\S]{0,200}\.update\(/.test(edge);
+  const mig = read(MIGRATION);
+  if (edgeWrites) {
+    assert.match(mig, /to_regprocedure\('public\.review_answer\(uuid,integer,text,uuid\)'\)/, "the award requires the proposal's review_answer");
+    assert.match(mig, /'long_answer_items_blocked'/, "the temporary long-answer block is in place");
+  }
+  assert.ok(edgeWrites, "today the Edge function writes XP itself; when that changes, revisit the long-answer block deliberately");
 });

@@ -7,17 +7,20 @@
 // PostgreSQL 17 service), where a missing server FAILS. It creates its own database and drops it afterwards.
 // The fixture holds only the columns the award function reads; the migration file runs UNMODIFIED. The award's
 // double-pay guard requires the reward functions' bodies from the H5/K1-track PROPOSAL
-// (docs/laerligverse/forslag-k1-belonning-kursussvar.sql, not a migration): the fixture creates exactly those four
-// bodies (byte for byte, so their md5 is the reviewed one) with check_function_bodies off — they are never called.
+// (docs/laerligverse/forslag-k1-belonning-kursussvar.sql, not a migration): the fixture creates exactly those
+// bodies, review_answer included (byte for byte, so their md5 is the reviewed one), with check_function_bodies off —
+// they are never called.
 //
 // How simultaneity is forced: a blocker session holds the pupil's student_progress row lock; every call is
 // started; the test waits until pg_stat_activity shows all of them waiting on a lock; only then is the blocker
 // released.
 //
 // What this proves:
-//   1. One pupil with a complete sequence, 8 simultaneous calls: exactly one call reports the 8 milestones,
+//   1. One pupil with a complete sequence, 8 simultaneous calls: exactly one call reports the 9 ledger rows,
 //      XP/coins are credited exactly once (+61 XP, +26 coins), the ledger holds each milestone once, no error.
 //   2. 12 pupils × 4 simultaneous calls each: every pupil paid exactly once, no error, no deadlock.
+//   3. The ≥1-passed-check rule under contention: completed with all checks wrong → steps once, the completion
+//      registered once, never a sequence bonus.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -45,13 +48,15 @@ test("a real PostgreSQL server is present where it is required (CI)", { skip: !R
 });
 
 const MIGRATION = "supabase/migrations/20261108171500_course_progress_rewards.sql";
-// The proposal's four CREATE OR REPLACE statements (everything after its md5 guard block).
+// The proposal's statements after its md5 guard block: four CREATE OR REPLACE and the DROP + CREATE of
+// review_answer (4 arguments), for which the fixture provides a placeholder to drop.
 const proposalBodies = () => {
   const sql = read("docs/laerligverse/forslag-k1-belonning-kursussvar.sql");
   const marker = "$guard$;\n";
   const at = sql.indexOf(marker);
   assert.ok(at > 0, "the proposal has its guard block");
-  return `SET check_function_bodies = off;\n${sql.slice(at + marker.length)}\nRESET check_function_bodies;`;
+  const placeholder = "CREATE FUNCTION public.review_answer(uuid, integer, text, uuid) RETURNS void LANGUAGE sql AS 'SELECT NULL';";
+  return `SET check_function_bodies = off;\n${placeholder}\n${sql.slice(at + marker.length)}\nRESET check_function_bodies;`;
 };
 const uid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
@@ -73,7 +78,8 @@ const SCHEMA = `
   CREATE TABLE public.profiles (id uuid PRIMARY KEY REFERENCES auth.users(id), role text NOT NULL);
   CREATE TABLE public.student_progress (student_id uuid PRIMARY KEY, xp integer NOT NULL DEFAULT 0, coins integer NOT NULL DEFAULT 0);
   ALTER TABLE public.student_progress ENABLE ROW LEVEL SECURITY;
-  CREATE TABLE public.questions (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), learning_objective text, metadata jsonb);
+  CREATE TABLE public.questions (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), learning_objective text, metadata jsonb,
+    answer_type text DEFAULT 'short');
   CREATE TABLE public.question_instances (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), student_id uuid NOT NULL,
     question_id uuid NOT NULL REFERENCES public.questions(id), answered boolean NOT NULL DEFAULT false,
     was_correct boolean, answered_at timestamptz);
@@ -147,13 +153,14 @@ test("real PostgreSQL: award_course_milestones pays each milestone exactly once 
   t.after(teardown);
   const su = await setup();
   let n = 7000;
-  const pupil = async () => {
+  // checksPassed = false: every assessed step answered wrong (guided practice right) — completed, not passed.
+  const pupil = async (checksPassed = true) => {
     const id = uid(n++);
     await su.query("INSERT INTO auth.users VALUES ($1)", [id]);
     await su.query("INSERT INTO public.profiles VALUES ($1, 'student')", [id]);
     await su.query("INSERT INTO public.student_progress VALUES ($1, 100, 50)", [id]);
     await su.query(`INSERT INTO public.question_instances (student_id, question_id, answered, was_correct, answered_at)
-      SELECT $1, q.id, true, true, now() FROM public.questions q`, [id]);
+      SELECT $1, q.id, true, ($2 OR q.metadata->>'learning_step' = 'guided_practice'), now() FROM public.questions q`, [id, checksPassed]);
     return id;
   };
   const state = async (id) => (await su.query(`SELECT sp.xp, sp.coins,
@@ -161,7 +168,7 @@ test("real PostgreSQL: award_course_milestones pays each milestone exactly once 
     FROM public.student_progress sp WHERE sp.student_id = $1`, [id])).rows[0];
   const awardedCount = (results) => results.reduce((s, r) => s + r.rows[0].r.awarded.length, 0);
 
-  await t.test("1. 8 simultaneous calls for one pupil → one payout of 8 milestones, +61 XP, +26 coins", async () => {
+  await t.test("1. 8 simultaneous calls for one pupil → one payout (9 ledger rows), +61 XP, +26 coins", async () => {
     const id = await pupil();
     const blocker = await connect();
     await blocker.query("BEGIN");
@@ -171,9 +178,9 @@ test("real PostgreSQL: award_course_milestones pays each milestone exactly once 
     await waitForLockWaiters(su, 8);
     await blocker.query("COMMIT");
     const results = await Promise.all(calls);
-    assert.equal(awardedCount(results), 8, "8 milestones reported in total");
+    assert.equal(awardedCount(results), 9, "9 ledger rows reported in total (8 paying + the 0-valued completion registration)");
     assert.equal(results.filter((r) => r.rows[0].r.outcome === "awarded").length, 1, "by exactly one call");
-    assert.deepEqual(await state(id), { xp: 161, coins: 76, rows: 8 });
+    assert.deepEqual(await state(id), { xp: 161, coins: 76, rows: 9 });
     await done(blocker, ...sessions);
   });
 
@@ -188,8 +195,26 @@ test("real PostgreSQL: award_course_milestones pays each milestone exactly once 
     await waitForLockWaiters(su, 48);
     await blocker.query("COMMIT");
     const results = await Promise.all(calls);
-    assert.equal(awardedCount(results), 12 * 8);
-    for (const id of ids) assert.deepEqual(await state(id), { xp: 161, coins: 76, rows: 8 }, id);
+    assert.equal(awardedCount(results), 12 * 9);
+    for (const id of ids) assert.deepEqual(await state(id), { xp: 161, coins: 76, rows: 9 }, id);
+    await done(blocker, ...sessions);
+  });
+
+  await t.test("3. completed with all checks wrong, 8 simultaneous calls → steps paid once (+12 XP, +4 coins), completion registered once, no bonus", async () => {
+    const id = await pupil(false);
+    const blocker = await connect();
+    await blocker.query("BEGIN");
+    await blocker.query("SELECT 1 FROM public.student_progress WHERE student_id = $1 FOR UPDATE", [id]);
+    const sessions = await Promise.all(Array.from({ length: 8 }, () => serviceSession()));
+    const calls = sessions.map((c) => c.query(CALL, [id]));
+    await waitForLockWaiters(su, 8);
+    await blocker.query("COMMIT");
+    const results = await Promise.all(calls);
+    assert.equal(awardedCount(results), 5, "4 step rows + the completion registration");
+    assert.deepEqual(await state(id), { xp: 112, coins: 54, rows: 5 });
+    const kinds = (await su.query("SELECT kind FROM public.course_progress_rewards WHERE student_id = $1 ORDER BY kind", [id])).rows.map((r) => r.kind);
+    assert.equal(kinds.includes("sequence_bonus"), false);
+    assert.equal(kinds.filter((k) => k === "sequence_completed").length, 1);
     await done(blocker, ...sessions);
   });
 });

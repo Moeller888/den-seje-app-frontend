@@ -41,7 +41,7 @@ function harness(opts = {}) {
 const request = (body, method = "POST") => ({ method, authorization: "Bearer pupil-jwt", json: async () => body });
 const awarded = (objective, items) => ({
   outcome: items.length ? "awarded" : "nothing_new", learning_objective: objective, policy: "laerligverse-test-policy-v0",
-  rates_version: "course-rewards-v0-proposal", awarded: items,
+  rates_version: "course-rewards-v0.1-provisional", awarded: items,
   xp_awarded: items.reduce((s, a) => s + a.xp, 0), coins_awarded: items.reduce((s, a) => s + a.coins, 0),
 });
 
@@ -102,6 +102,8 @@ test("outcomes map to statuses; nothing_new is a 200 with no awards", async () =
     [{ outcome: "not_a_course_objective" }, 404, { outcome: "not_a_course_objective", error: "Not a course objective" }],
     [{ outcome: "not_a_student" }, 403, { outcome: "not_a_student", error: "Only pupils earn course rewards" }],
     [{ outcome: "no_progress_row" }, 409, { outcome: "no_progress_row", error: "No progress record" }],
+    [{ outcome: "long_answer_items_blocked", awarded: [], xp_awarded: 0, coins_awarded: 0 }, 409,
+      { outcome: "long_answer_items_blocked", error: "Course objectives with long answers are temporarily not rewarded" }],
     [{ outcome: "reward_path_not_ready", awarded: [], xp_awarded: 0, coins_awarded: 0 }, 503,
       { outcome: "reward_path_not_ready", error: "Course rewards are blocked until course answers are no longer paid per answer" }],
     [{ outcome: "invalid_request", reason: "invalid_objective" }, 400, { outcome: "invalid_request", error: "Invalid request", reason: "invalid_objective" }],
