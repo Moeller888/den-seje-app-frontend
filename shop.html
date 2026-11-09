@@ -11,6 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Butik – DEN SEJE APP</title>
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/item-category-menu.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -67,46 +68,6 @@
       margin-bottom: 16px;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--border);
-    }
-
-    /* ── Category tabs ───────────────────────────────────── */
-
-    .category-tabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-
-    .cat-tab {
-      padding: 6px 16px;
-      border-radius: 20px;
-      border: 1px solid var(--border-btn);
-      background: var(--btn-bg);
-      color: var(--text-dim);
-      font-size: 13px;
-      font-weight: bold;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background 0.1s, color 0.1s, border-color 0.1s;
-      white-space: nowrap;
-    }
-
-    .cat-tab:hover {
-      background: var(--btn-bg-hover);
-      color: var(--text-main);
-    }
-
-    .cat-tab--active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
-
-    .cat-tab--active:hover {
-      background: var(--accent);
-      color: #fff;
-      opacity: 0.9;
     }
 
     /* ── Shop grid ───────────────────────────────────────── */
@@ -413,15 +374,10 @@
 </div>
 
 <div class="section-header">Tilgængelige items</div>
-<div class="category-tabs" id="categoryTabs">
-  <button class="cat-tab cat-tab--active" data-cat="alle">Alle</button>
-  <button class="cat-tab" data-cat="hoved">Hoved</button>
-  <button class="cat-tab" data-cat="ansigt">Ansigt</button>
-  <button class="cat-tab" data-cat="ryg">Ryg</button>
-  <button class="cat-tab" data-cat="krop">Krop</button>
-  <button class="cat-tab" data-cat="effekter">Effekter</button>
-</div>
+<!-- D-363: the shared category menu (js/item-category-menu.js), directly over the cards -->
+<div class="category-tabs" id="categoryTabs"></div>
 <div class="shop-grid" id="shopGrid"></div>
+<p class="category-empty" id="categoryEmpty" role="status" hidden></p>
 
 <script type="module">
 import { supabase }   from "./supabaseClient.js";
@@ -433,9 +389,10 @@ import { emit }       from "./js/events.js";
 import { initBadges, addBadge, hasBadge } from "./js/newBadges.js";
 import { loadTheme }  from "./js/themeManager.js";
 import {
-  baseLayersFor, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES, isAvatarV2, shopPreviewModeFor,
+  baseLayersFor, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, ITEM_CATEGORIES, itemCategoryForSlot, isAvatarV2, shopPreviewModeFor,
 } from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
+import { mountItemCategoryMenu, itemCategoryFromHash, itemCategoryHash } from "./js/item-category-menu.js";
 
 // Analytics (157D/157E). No-op unless enabled + consented; banner only when configured. Fail-soft.
 initAnalytics();
@@ -461,7 +418,7 @@ window.addEventListener("pageshow", async (event) => {
 });
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-// BASE_SRC, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES — from avatar-layers.js
+// BASE_SRC, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, ITEM_CATEGORIES — from avatar-layers.js
 
 const SUPABASE_ANON_KEY = "sb_publishable_tktBmM5vnUD2qW98EVQOeA_MyZJfF-C";
 
@@ -648,7 +605,7 @@ async function loadShop() {
 
 document.getElementById("shopGrid").addEventListener("click", async (e) => {
   const cta = e.target.closest("[data-action='goto-avatar']");
-  if (cta) { window.location.href = "avatar.html"; return; }
+  if (cta) { window.location.href = "avatar.html" + itemCategoryHash(activeCategory); return; }
 
   const equipNowBtn = e.target.closest("[data-action='equip-now']");
   if (equipNowBtn && !equipNowBtn.disabled) {
@@ -665,7 +622,7 @@ document.getElementById("shopGrid").addEventListener("click", async (e) => {
       if (statusEl) { statusEl.textContent = "⚠️ Fejl – prøv igen"; statusEl.style.color = "#ef5350"; }
       return;
     }
-    window.location.href = "avatar.html";
+    window.location.href = "avatar.html" + itemCategoryHash(activeCategory);
     return;
   }
 
@@ -761,25 +718,35 @@ document.getElementById("shopGrid").addEventListener("click", async (e) => {
   }
 });
 
-// ── Category tab filtering ────────────────────────────────────────────────────
+// ── Category menu (D-363) ─────────────────────────────────────────────────────
+// Only decides which cards are shown; prices, ownership and buying are untouched. The category survives the re-render after a
+// purchase (loadShop calls filterShopGrid) and a reload (#kategori=<key>).
 
-let activeCategory = "alle";
+let activeCategory = itemCategoryFromHash(location.hash);
 
 function filterShopGrid() {
-  const catDef = SHOP_CATEGORIES.find(c => c.key === activeCategory);
-  document.querySelectorAll(".shop-card").forEach(card => {
-    const slotType = card.dataset.slotType ?? "";
-    const visible  = !catDef?.slots || catDef.slots.includes(slotType);
+  const cards = Array.from(document.querySelectorAll(".shop-card"));
+  let shown = 0;
+  cards.forEach(card => {
+    const visible = itemCategoryForSlot(card.dataset.slotType ?? "") === activeCategory;
     card.style.display = visible ? "" : "none";
+    if (visible) shown++;
   });
+  const empty = document.getElementById("categoryEmpty");
+  const cat   = ITEM_CATEGORIES.find(c => c.key === activeCategory);
+  // Only when the shop has items at all; an empty or failed shop keeps its own message in the grid.
+  if (empty && cat) {
+    empty.hidden = !(cards.length > 0 && shown === 0);
+    // The labels are the fixed names in ITEM_CATEGORIES, never data.
+    empty.innerHTML = cat.wardrobe
+      ? `Butikken har ingen ting under ${cat.label}. Tøj vælger du gratis <a href="avatar.html${itemCategoryHash(cat.key)}">på din avatar</a>.`
+      : `Butikken har ingen ting under ${cat.label} endnu.`;
+  }
 }
 
-document.getElementById("categoryTabs").addEventListener("click", (e) => {
-  const btn = e.target.closest(".cat-tab[data-cat]");
-  if (!btn) return;
-  activeCategory = btn.dataset.cat;
-  document.querySelectorAll(".cat-tab").forEach(b => b.classList.toggle("cat-tab--active", b === btn));
-  filterShopGrid();
+mountItemCategoryMenu(document.getElementById("categoryTabs"), {
+  active: activeCategory,
+  onSelect: (key) => { activeCategory = key; filterShopGrid(); },
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
