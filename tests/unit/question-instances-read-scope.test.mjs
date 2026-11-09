@@ -361,6 +361,12 @@ const REVIEWED_LATER_READERS = {
     "instance column (only a reason, earned seconds and an offer id/game); another pupil's instance answers " +
     "exactly like a missing one. It never writes question_instances. No policy, RLS or table privilege on " +
     "question_instances is touched (proven in minigame-breaks-migration-run.test.mjs, B2 and E1–E3).",
+  "20261107090000_minigame_break_interval_10min.sql":
+    "D-364 spillepauser every 10 minutes: re-creates minigame_break_after_answer with c_interval 600 instead " +
+    "of 1200; the body is otherwise byte-identical to D-347's, so its read of question_instances is exactly " +
+    "D-347's (one instance by id AND student_id = auth.uid(), no instance column returned, no write). EXECUTE " +
+    "stays revoked from PUBLIC and anon. No policy, RLS or table privilege on question_instances is touched " +
+    "(proven in minigame-break-interval-10min-migration-run.test.mjs, tests 1 and 4).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -501,7 +507,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261101190000_question_attempts_v2_bootstrap.sql",
      "20261101190100_question_attempts_v2_align_grading.sql",
      "20261103110000_l1_k1_attempt_context.sql",
-     "20261105090000_minigame_breaks.sql"],
+     "20261105090000_minigame_breaks.sql",
+     "20261107090000_minigame_break_interval_10min.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

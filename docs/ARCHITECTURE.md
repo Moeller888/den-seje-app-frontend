@@ -167,7 +167,8 @@ Schema and most content are managed as **versioned SQL migrations** in `supabase
   (`minigame_break_after_answer` / `_respond` / `_start` / `_finish`). Active quiz time is derived on the
   server from `question_instances.created_at/answered_at`; the minigame pages only run with a pass the
   server redeems once. The quiz calls it after each registered answer, fail-soft. Source of truth:
-  [`decisions/D-347.md`](decisions/D-347.md).
+  [`decisions/D-347.md`](decisions/D-347.md); the interval (one constant in `minigame_break_after_answer`)
+  becomes 10 minutes with [`decisions/D-364.md`](decisions/D-364.md) (migration `20261107090000`).
 - **Progression & retention:** themes system, streak system, retention loops, weekly quests,
   achievements (+ hidden/wave2/progress/rewards), titles, leaderboard, social.
 - **Avatar:** avatar slot system (`equipped_slots`), slot/wings/aura items, and the avatar asset
@@ -601,8 +602,9 @@ after the previous one committed. `server-band.ts` is the TS specification of th
 to the SQL in PGlite. The band is one level across subjects, like the client's today; a per-subject
 level is a separate product decision. `profiles.current_band`,
 `profiles.placement_band` (both client-writable) and the request body are not inputs. Since D-356
-the client no longer starts placement, so a new pupil always seeds from the grade's start band;
-`start_placement`, `submit_placement` and existing `placement_sessions` rows are unchanged.
+pupils no longer take placement, and since D-360 the client code is gone, so a new pupil always seeds
+from the grade's start band. `placement_sessions` stays: the seed reads it for pupils who took the
+test. `start_placement` and `submit_placement` still exist in the database but have no caller.
 
 **Adding a new kind:** (1) registry entry with `servable: false`; (2) renderer in
 `js/answer-input.js`, evaluator/award path in `process-event`, deliberate extension of
