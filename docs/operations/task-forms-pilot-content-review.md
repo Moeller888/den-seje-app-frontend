@@ -12,13 +12,13 @@ kun en elev, hvis `active_domains` indeholder `pilot_d362`, kan få rækkerne (s
 
 | # | Form | Niveau (bånd) | Træner | Facit | Tvivl |
 |---|---|---|---|---|---|
-| S1 | Billede (tidslinje) + MC | 5.800 (1) | Introduktion: styreformen før 1849 | Enevælde | – |
+| S1 | Billede (tidslinje) + MC | 5.800 (1) | Introduktion: styreformen før 1849 | Enevælde | Rettet 2026-11-09: feedbacken forklarer 1849 som begyndelsen på overgangen til folkestyre, med begrænset valgret og kvinders valgret først i 1915. Billedets grønne bjælke hedder stadig "Folkestyre". |
 | S2 | Kilde (fortælling) + MC | 5.900 (1) | Introduktion: hvem fik ikke valgret | Kvinden på 40 år | Fortællingen er lydklippets tekst, vist som tekst, da lydfilen mangler. |
 | S3 | Kilde (§ 35) + tal | 6.100 (2) | Forståelsestjek: finde alderskravet i kilden | 30 | – |
-| S4 | Kilde (§ 35) + MC | 6.200 (2) | Forståelsestjek: finde ordet, der begrænser valgretten til mænd | Mand | Rettet 2026-11-09: spørgsmålet er nu positivt ("viser, at kun mænd kunne få valgret"). Review-teksten nævner også de øvrige betingelser i § 35. |
+| S4 | Kilde (§ 35) + MC | 6.200 (2) | Forståelsestjek: finde ordet, der begrænser valgretten til mænd | Mand | Rettet 2026-11-09: spørgsmålet er nu positivt ("viser, at kun mænd kunne få valgret"). Rettet igen 2026-11-09: review-teksten følger nu § 35 i betydning. Det generelle krav er indfødsret og 30 år. Undtagelserne a–d gælder tjeneste uden egen husstand, fattighjælp, der hverken er betalt tilbage eller eftergivet, manglende rådighed over boet og under et års fast bopæl. Der er intet generelt krav om egen husstand. |
 | S5 | Billede (tidslinje) + tal | 6.250 (2) | Forståelsestjek: enevældens varighed | 189 (1849 − 1660) | – |
-| S6 | Kilde (§ 35) + MC | 6.450 (3) | Anvendelse: § 35 på fire personer | Hans | – |
-| S7 | Kilde (§ 2) + MC | 6.700 (4) | Anvendelse: hvem vedtager lovene | Kongen og Rigsdagen | Verificeret 2026-11-09 mod flere udgaver af 1849-teksten: "Den lovgivende Magt er hos Kongen og Rigsdagen i Forening …". Titlen siger nu "(gengivet med nutidig retskrivning)". |
+| S6 | Kilde (§ 35) + MC | 6.450 (3) | Anvendelse: § 35 på fire personer | Hans | Rettet 2026-11-09: spørgsmålet siger nu, at alle råder over deres bo, og at ingen har fået fattighjælp, medmindre det står. Review-teksten gennemgår a–d for Hans, så han tydeligt opfylder alle krav. |
+| S7 | Kilde (§ 2) + MC | 6.700 (4) | Anvendelse: § 2 på et tilfælde (Rigsdagen vedtager en lov, kongen vil ikke skrive under) | "Nej, for kongen og Rigsdagen skal være enige" | Rettet 2026-11-09: opgaven kræver nu, at eleven bruger § 2 på et tilfælde og ikke bare finder ordene. Kongens underskrift var nødvendig efter 1849. Verificeret 2026-11-09 mod flere udgaver af 1849-teksten: "Den lovgivende Magt er hos Kongen og Rigsdagen i Forening …". Titlen siger nu "(gengivet med nutidig retskrivning)". |
 
 ## F-04 Rækkefølge og F-05 Kategorisering — `20261108090200_order_categorize_pilot_content.sql` (8 rækker)
 
