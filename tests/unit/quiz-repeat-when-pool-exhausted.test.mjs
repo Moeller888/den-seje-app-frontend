@@ -357,6 +357,12 @@ const REVIEWED_LATER_REPEAT_USERS = {
     "columns: it never changes answered, repeat_count, correct_answer or any other column, so every repeat " +
     "rule of this migration (reopen, award, close) is untouched (l1-k1-attempt-context-migration-run proves " +
     "the outcomes, amounts, streak and quests unchanged with and without a snapshot).",
+  "20261108150000_course_items_never_move_level.sql":
+    "Lærligverse (F10-B2, not applied): re-creates #623's five fold/teacher functions (advance_student_level, " +
+    "advance_student_band, get_teacher_visibility, get_student_overview, get_concept_states) with one added " +
+    "predicate that leaves course items out. They only READ repeat_count (first answers only), exactly as " +
+    "#623's bodies do. It defines and calls none of the repeat functions, alters no table, adds no trigger " +
+    "and writes nothing (course-items-never-move-level-run.test.mjs).",
 };
 
 // The only question_instances statements a reviewed later user may contain, each exactly once.
@@ -394,7 +400,8 @@ test("reviewed later repeat users redefine none of this migration's functions", 
     ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql",
       "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql",
       "20261030211428_question_attempts_v2.sql", "20261101190000_question_attempts_v2_bootstrap.sql",
-      "20261101190100_question_attempts_v2_align_grading.sql", "20261103110000_l1_k1_attempt_context.sql"],
+      "20261101190100_question_attempts_v2_align_grading.sql", "20261103110000_l1_k1_attempt_context.sql",
+      "20261108150000_course_items_never_move_level.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);

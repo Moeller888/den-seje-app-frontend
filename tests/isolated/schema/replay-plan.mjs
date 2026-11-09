@@ -121,6 +121,10 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
   "20261103110000_l1_k1_attempt_context.sql":
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
+  "20261105115000_true_false_mastery_exclusion.sql":
+    "F-02 Sandt/falsk, not applied in production and to be applied BEFORE 20261105120000: it keeps true_false answers out of the level and band folds and the teacher progression functions (owner principle 2026-11-05)",
+  "20261108150000_course_items_never_move_level.sql":
+    "Lærligverse (F10-B2), not applied in production and to be applied AFTER 20261105115000 and BEFORE any course item is seeded: it keeps questions whose metadata has learning_step (D-338 course steps) out of the level and band folds and the teacher's ordinary mastery functions (owner decision 6, 2026-11-07)",
   "20261105130000_quiz_anti_guess_cooldown.sql":
     "anti-gætte-pause, not applied in production: it adds quiz_cooldown_* and two triggers on question_instances; not replayed in the isolated stack, where shared synthetic pupils answer many questions wrong in a row (the frontend treats the missing get_my_quiz_cooldown as no pause)",
   "20261105120000_true_false_activation.sql":

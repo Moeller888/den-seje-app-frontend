@@ -267,5 +267,11 @@ test("the version is unique and it is the newest migration touching either funct
   assert.equal(files.filter((f) => f.startsWith("20261029150000_")).length, 1);
   const later = files.filter((f) => f > FILE).filter((f) =>
     /get_teacher_visibility|get_student_overview/i.test(readFileSync(join(MIGRATIONS, f), "utf8").replace(/--.*$/gm, "")));
-  assert.deepEqual(later, []);
+  // The one documented successor, 20261105115000_true_false_mastery_exclusion.sql (not applied), keeps both functions'
+  // gates, shapes, statistics and grants and only drops true_false answers from what they count;
+  // true-false-mastery-exclusion-run proves each body is the live body plus that predicate.
+  // The second documented successor, 20261108150000_course_items_never_move_level.sql (not applied,
+  // F10-B2), is #623's bodies plus one predicate (course items are not counted); its suite
+  // course-items-never-move-level-run proves body = #623's body plus that predicate, grants unchanged.
+  assert.deepEqual(later, ["20261105115000_true_false_mastery_exclusion.sql", "20261108150000_course_items_never_move_level.sql"]);
 });
