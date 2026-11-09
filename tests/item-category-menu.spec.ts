@@ -8,7 +8,7 @@
 //     Ridderdragt under Overdele, 6 bottoms, 10 shoes, the hat under Hoved; in Butik Ridderdragt under Overdele, the hats under Hoved;
 //   - an empty category says so (Avatar: Ryg; Butik: Underdele);
 //   - switching category changes nothing the pupil wears and saves nothing;
-//   - a wardrobe choice and an equip keep the pupil in the category, also across the reload; the outfit stays approved;
+//   - a wardrobe choice and an equip keep the pupil in the category (in place since D-366); the outfit stays approved;
 //   - Butik's purchase flow is unchanged (price, Køb, "Købt!", Senere, Ejet, Udstyr nu) and keeps the category; "Udstyr nu" opens
 //     Avatar in the same category.
 // Screenshots of each state are attached to the test (test-results), for the review.
@@ -266,10 +266,10 @@ for (const width of [1100, 390]) {
     expect(k).toEqual({ a: "Effekter", af: "Effekter", b: "Effekter", c: "Overdele", d: "Effekter" });
     expect(pupil.calls, "switching category saves nothing").toEqual([]);
 
-    // a wardrobe choice in Underdele: the reload keeps Underdele, the outfit is approved and worn
+    // a wardrobe choice in Underdele keeps Underdele (in place since D-366), the outfit is approved and worn
     await page.getByRole("tab", { name: "Underdele", exact: true }).click();
-    await Promise.all([page.waitForEvent("load"), page.locator("#northstarWardrobeCards .item-card[data-piece='bottom-shorts-navy'] .equip-btn").click()]);
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(79, { timeout: 30000 });
+    await page.locator("#northstarWardrobeCards .item-card[data-piece='bottom-shorts-navy'] .equip-btn").click();
+    await expect.poll(() => pupil.calls.length).toBe(1);
     await expect(selected(page)).toHaveText("Underdele");
     await expect(page.locator("#northstarWardrobeCards .item-card[data-piece='bottom-shorts-navy']")).toHaveClass(/equipped/);
     const worn = await now();
@@ -282,13 +282,19 @@ for (const width of [1100, 390]) {
     expect(await now()).toEqual(worn);
     expect(pupil.calls.length).toBe(1);
 
-    // a top that does not fit the shorts: the fewest other parts change (D-359), the category stays Overdele
+    // a top that does not fit the shorts is refused (D-367): nothing changes, nothing is saved, the category stays Overdele;
+    // a top that fits goes on with exactly the same bottom and shoes
     await page.getByRole("tab", { name: "Overdele", exact: true }).click();
-    await Promise.all([page.waitForEvent("load"), page.locator("#northstarWardrobeCards .item-card[data-piece='top-sweater-ls2-green-check'] .equip-btn").click()]);
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(79, { timeout: 30000 });
+    await page.locator("#northstarWardrobeCards .item-card[data-piece='top-sweater-ls2-green-check'] .equip-btn").click();
+    await expect(page.locator("#northstarWardrobe .northstar-status")).toContainText("Den overdel passer ikke til dit nuværende outfit.");
     await expect(selected(page)).toHaveText("Overdele");
-    const swapped = await now();
-    expect(swapped && swapped.approved && swapped.id.startsWith("top-sweater-ls2-green-check+") && !swapped.id.includes("bottom-shorts-navy")).toBe(true);
+    expect(await now()).toEqual(worn);
+    expect(pupil.calls.length).toBe(1);
+    await page.locator("#northstarWardrobeCards .item-card[data-piece='top-tee-hip-blue'] .equip-btn").click();
+    await expect.poll(() => pupil.calls.length).toBe(2);
+    await expect(selected(page)).toHaveText("Overdele");
+    const changedTop = await now();
+    expect(changedTop && changedTop.approved && changedTop.id === "top-tee-hip-blue+" + worn!.id.split("+").slice(1).join("+")).toBe(true);
 
     // equipping an item in Hoved keeps Hoved
     await page.getByRole("tab", { name: "Hoved", exact: true }).click();

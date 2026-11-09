@@ -1091,6 +1091,11 @@ export function northstarUseAccount(identity) {
   const c = identity && typeof identity === "object" ? identity.northstar : null;
   _nsAccount = c && typeof c === "object" && !Array.isArray(c) ? c : {};
 }
+// D-366: a copy of the named account's stored choice ({} when none, or before an account is named), so the wardrobe can show the last
+// saved outfit again when a later save fails.
+export function northstarAccountChoice() {
+  return _nsAccount && typeof _nsAccount === "object" ? { ..._nsAccount } : {};
+}
 function _nsStorage(key) {
   if (AVATAR_NORTHSTAR_WARDROBE && _nsAccount !== undefined && Object.prototype.hasOwnProperty.call(_NS_ACCOUNT_FIELDS, key)) {
     const v = _nsAccount[_NS_ACCOUNT_FIELDS[key]];
@@ -1300,12 +1305,23 @@ export function northstarOutfitNow() {
   const k = northstarSelectedOutfit();
   return k ? northstarOutfitFor(k, northstarSelectedTee(), northstarSelectedPants(), northstarSelectedShoe(), northstarSelectedSweater()) : null;
 }
-// Puts one part on. The part always goes on; when it is not approved with the rest, as little as possible changes: fewest other parts,
-// shoes before the bottom before the top, then the part approved with most outfits, then catalogue order. Deterministic. Null for an unknown part.
+// Puts one part on. D-367: while the pupil wears an outfit, ONLY the chosen part changes: the part with the two parts the pupil already
+// wears, when that exact outfit is approved ({ top, bottom, shoes, choice, changed: [] }); otherwise the part is refused and nothing
+// changes ({ refused: true, category }), so the pupil can change another part first. On today's avatar (no outfit worn yet) the pupil
+// wears none of these parts, so D-359's rule still starts the figure: the approved outfit with the part that changes the start outfit
+// least — fewest other parts, shoes before the bottom before the top, then the part approved with most outfits, then catalogue order.
+// Deterministic. Null for an unknown part.
 export function northstarFitPiece(item) {
   const it = typeof item === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_ITEMS, item) ? NORTHSTAR_ITEMS[item] : null;
   if (!it) return null;
-  const all = northstarApprovedOutfits(), now = northstarOutfitNow() ?? NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT], cats = ["top", "bottom", "shoes"];
+  const worn = northstarOutfitNow();
+  if (worn) {
+    const want = { top: worn.top, bottom: worn.bottom, shoes: worn.shoes, [it.category]: item };
+    const o = northstarApprovedOutfits().get(want.top + "+" + want.bottom + "+" + want.shoes);
+    return o ? Object.freeze({ top: o.top, bottom: o.bottom, shoes: o.shoes, choice: o.choice, changed: Object.freeze([]) })
+      : Object.freeze({ refused: true, category: it.category });
+  }
+  const all = northstarApprovedOutfits(), now = NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT], cats = ["top", "bottom", "shoes"];
   const count = new Map();
   for (const o of all.values()) for (const c of cats) count.set(o[c], (count.get(o[c]) ?? 0) + 1);
   let best = null, bestRank = null;
