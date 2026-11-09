@@ -1,0 +1,68 @@
+/* D-363: the shared category menu over the item cards (js/item-category-menu.js) on Avatar and in Butik.
+   The buttons wrap onto more rows instead of scrolling sideways, so the menu fits a phone without horizontal scrolling. */
+
+.category-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.cat-tab {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border-btn);
+  background: var(--btn-bg);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: bold;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  white-space: nowrap;
+}
+
+.cat-tab:hover {
+  background: var(--btn-bg-hover);
+  color: var(--text-main);
+}
+
+.cat-tab--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.cat-tab--active:hover {
+  background: var(--accent);
+  color: #fff;
+  opacity: 0.9;
+}
+
+.cat-tab:focus-visible {
+  outline: 2px solid var(--text-main);
+  outline-offset: 2px;
+}
+
+/* On a phone the buttons share the width evenly, several per row, and are tall enough to hit with a finger. */
+@media (max-width: 580px) {
+  .cat-tab {
+    flex: 1 1 calc(25% - 6px);
+    min-height: 40px;
+    padding: 6px 8px;
+  }
+}
+
+/* Shown in place of the cards when the chosen category has none. */
+.category-empty {
+  color: var(--text-dim);
+  font-size: 14px;
+  text-align: center;
+  padding: 24px 12px;
+}
+
+.category-empty a { color: var(--info-text, var(--accent)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cat-tab { transition: none; }
+}

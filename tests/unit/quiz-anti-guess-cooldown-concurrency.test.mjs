@@ -12,17 +12,28 @@
 //      registreres og starter pausen; det andet venter på låsen, ser pausen og afvises (LQ429) uden
 //      at noget gemmes. Deterministisk: præcis én af hver, uanset rækkefølge.
 //   4. To elever på samme tid påvirker ikke hinanden.
+//   5. Tilbagerulning (docs/operations/quiz-anti-guess-cooldown-rollback.sql), mens et svar holder en lås på
+//      question_instances: scriptet venter højst lock_timeout (5 s), giver op og ændrer intet.
+//   6. Tilbagerulning under trafik: et svar, der kommer, mens scriptet kører, venter på låsen og lykkes
+//      bagefter uden pause; alle D-350-objekter er væk, og elevens tidligere svar er uændrede.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { readFileSync } from "node:fs";
 import { withTop10, PROD_ORDER, uid, baseSql, migrationSql } from "./helpers/h5-integration-chain.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const URL = process.env.LEVEL_ENGINE_PG_URL ?? "";
 const COOLDOWN_FILE = "20261105130000_quiz_anti_guess_cooldown.sql";
+const ROLLBACK = readFileSync(join(ROOT, "docs", "operations", "quiz-anti-guess-cooldown-rollback.sql"), "utf8");
+const PLACEHOLDER = "c_events_exported CONSTANT bigint := -1;";
+const rollbackWith = (n) => {
+  if (!ROLLBACK.includes(PLACEHOLDER)) throw new Error("pladsholderen mangler i rollback-scriptet");
+  return ROLLBACK.replace(PLACEHOLDER, `c_events_exported CONSTANT bigint := ${n};`);
+};
 
 function loadPg() {
   for (const base of [process.env.LEVEL_ENGINE_PG_MODULE_DIR, ROOT].filter(Boolean)) {
@@ -233,5 +244,59 @@ test("real PostgreSQL 17: anti-gætte-pausen er atomisk og deterministisk under 
     assert.equal((await view(p1)).active, true);
     const v2 = await view(p2);
     assert.deepEqual([v2.active, v2.recent, v2.events], [false, 4, 0]);
+  });
+  // ── Tilbagerulning på rigtig PostgreSQL (skal være de sidste deltests: 6 fjerner D-350) ──
+  const d350 = async () => (await su.query(`SELECT
+      (to_regclass('public.quiz_cooldown_state') IS NOT NULL)::int + (to_regclass('public.quiz_cooldown_events') IS NOT NULL)::int
+      + (to_regclass('public.quiz_cooldown_config') IS NOT NULL)::int + (to_regprocedure('public.get_my_quiz_cooldown()') IS NOT NULL)::int
+      + (SELECT count(*)::int FROM pg_trigger WHERE tgrelid = 'public.question_instances'::regclass
+           AND tgname IN ('quiz_cooldown_guard', 'quiz_cooldown_register')) AS n`)).rows[0].n;
+  const eventsNow = async () => (await su.query("SELECT count(*)::int AS n FROM public.quiz_cooldown_events")).rows[0].n;
+
+  await t.test("5. tilbagerulning, mens et svar holder en lås: venter højst 5 s, giver op, intet ændret", async () => {
+    const p = await pupil();
+    await wrong(p, 10);
+    const qi = await serve(p);
+    const blocker = await connect(url, false);
+    await blocker.query("BEGIN");
+    await blocker.query("SELECT 1 FROM public.question_instances WHERE id = $1 FOR UPDATE", [qi]);
+    const rb = await connect(url, false);
+    const t0 = Date.now();
+    try {
+      await assert.rejects(rb.query(rollbackWith(await eventsNow())), (e) => e?.code === "55P03", "lock_timeout");
+      const waited = Date.now() - t0;
+      assert.ok(waited >= 4500 && waited < 15000, `ventede ${waited} ms`);
+    } finally {
+      await blocker.query("ROLLBACK");
+      await done(blocker, rb);
+    }
+    assert.equal(await d350(), 6, "alt står der stadig");
+    assert.equal((await view(p)).active, true, "pausen håndhæves stadig");
+  });
+
+  await t.test("6. tilbagerulning under trafik: et svar, der kommer imens, venter og lykkes bagefter uden pause", async () => {
+    const p = await pupil();
+    await wrong(p, 10);
+    const before = (await su.query(`SELECT md5(string_agg(qi::text, ',' ORDER BY qi.id)) AS h
+      FROM public.question_instances qi WHERE qi.student_id = $1`, [p])).rows[0].h;
+    const qi = await serve(p);
+    const rb = await connect(url, false);
+    const answerer = await connect(url);
+    try {
+      await rb.query("BEGIN");
+      await rb.query(rollbackWith(await eventsNow()));             // holder låsene til COMMIT
+      const pending = answerer.query(MC, [p, qi, "A"]).then((r) => ({ ok: r }), (e) => ({ err: e }));
+      await waitForLockWaiters(1);
+      await rb.query("COMMIT");
+      const r = await pending;
+      assert.equal(r.err, undefined, r.err?.message);
+      assert.equal(r.ok.rows[0].r.status, "correct", "svaret accepteres; ingen pause efter tilbagerulning");
+    } finally {
+      await done(rb, answerer);
+    }
+    assert.equal(await d350(), 0, "alle D-350-objekter er væk");
+    const after = (await su.query(`SELECT md5(string_agg(qi::text, ',' ORDER BY qi.id)) AS h
+      FROM public.question_instances qi WHERE qi.student_id = $1 AND qi.id <> $2`, [p, qi])).rows[0].h;
+    assert.equal(after, before, "elevens tidligere svar er uændrede");
   });
 });
