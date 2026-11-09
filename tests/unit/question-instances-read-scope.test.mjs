@@ -367,6 +367,15 @@ const REVIEWED_LATER_READERS = {
     "D-347's (one instance by id AND student_id = auth.uid(), no instance column returned, no write). EXECUTE " +
     "stays revoked from PUBLIC and anon. No policy, RLS or table privilege on question_instances is touched " +
     "(proven in minigame-break-interval-10min-migration-run.test.mjs, tests 1 and 4).",
+  "20261109120000_laerligverse_course_progress_read.sql":
+    "Lærligverse F10-B2 (not applied): adds get_course_progress, SECURITY DEFINER with an EMPTY search_path, " +
+    "behind get_student_overview's gate (signed in; caller's profiles.role teacher/super_admin; the target a " +
+    "pupil whose teacher_id = auth.uid(), any pupil for super_admin) plus the pupil's own row; every refusal is " +
+    "NULL. It reads question_instances only for that one admitted pupil (student_id = the gated id), only rows " +
+    "whose question carries metadata.learning_step, and returns per instance only its step tag, answered, " +
+    "was_correct, answered_at, created_at — never correct_answer, user_answer or question content. EXECUTE " +
+    "for authenticated only (revoked from PUBLIC, anon and service_role). No policy, RLS or table privilege on " +
+    "question_instances is touched (proven in course-progress-rpc-migration-run.test.mjs, tests 1–3).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -508,7 +517,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261101190100_question_attempts_v2_align_grading.sql",
      "20261103110000_l1_k1_attempt_context.sql",
      "20261105090000_minigame_breaks.sql",
-     "20261107090000_minigame_break_interval_10min.sql"],
+     "20261107090000_minigame_break_interval_10min.sql",
+     "20261109120000_laerligverse_course_progress_read.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
