@@ -13,7 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail, PROD, serveCheckoutLogin, TEACHER_EMAIL, TEACHER_PASSWORD } from "./helpers.js";
+import { findAuthUserByEmail, PROD, serveCheckoutLogin, TEACHER_EMAIL, TEACHER_PASSWORD, openFirstShopCardCategory } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -254,6 +254,7 @@ test("7. Shop previews stay identity-independent (neutral base)", async ({
   await loginAsStudent(page);
 
   await page.goto(`${PROD}/shop.html`, { waitUntil: "domcontentloaded" });
+  await openFirstShopCardCategory(page);   // D-363: the shop shows one category at a time
   await page.waitForSelector(".shop-preview img", { timeout: 15000 });
 
   await expect(
