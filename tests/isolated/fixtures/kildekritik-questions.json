@@ -23,7 +23,12 @@
       "accepted_answers": [
         "Proklamation"
       ],
-      "review_text": "Ja. Se på afsenderen og tiden: proklamationen er lavet af regeringen selv, på selve dagen, til hele befolkningen. Derfor viser den direkte, hvad regeringen ønskede: at befolkningen skulle bevare ro og orden. Det kan den IKKE vise: hvad befolkningen faktisk gjorde eller følte."
+      "review_text": "Ja. Se på afsenderen og tiden: proklamationen er lavet af regeringen selv, på selve dagen, til hele befolkningen. Derfor viser den direkte, hvad regeringen ønskede: at befolkningen skulle bevare ro og orden. Det kan den IKKE vise: hvad befolkningen faktisk gjorde eller følte.",
+      "hints": [
+        "Læs påstanden igen: hvis ønske handler den om?",
+        "Se på afsenderen på hvert dokument. Hvilke kilder er ikke lavet af regeringen?",
+        "Kun én kilde er lavet af regeringen selv, på selve dagen."
+      ]
     }
   },
   {
@@ -50,7 +55,11 @@
       "accepted_answers": [
         "Ordre"
       ],
-      "review_text": "Ja. Samme princip som før: påstanden handler om, hvad hærledelsen beordrede, og ordren er lavet af hærledelsen selv, samme morgen, til tropperne. Det kan den IKKE vise: hvad hærledelsen selv mente om beslutningen, om alle soldater nåede at få ordren, eller hvad de tænkte om den."
+      "review_text": "Ja. Samme princip som før: påstanden handler om, hvad hærledelsen beordrede, og ordren er lavet af hærledelsen selv, samme morgen, til tropperne. Det kan den IKKE vise: hvad hærledelsen selv mente om beslutningen, om alle soldater nåede at få ordren, eller hvad de tænkte om den.",
+      "hints": [
+        "Hvem handler påstanden om?",
+        "Hvilken kilde er lavet af dem, påstanden handler om, mens det skete?"
+      ]
     }
   },
   {
@@ -77,7 +86,8 @@
       "accepted_answers": [
         "Dagbog"
       ],
-      "review_text": "Ja. Se på afsenderen, tiden og modtageren: dagbogen er skrevet af en almindelig københavner samme dag, kun til hende selv. Den kan vise, hvordan dagen føltes for hende. Det kan den IKKE vise: hvad alle danskere følte."
+      "review_text": "Ja. Se på afsenderen, tiden og modtageren: dagbogen er skrevet af en almindelig københavner samme dag, kun til hende selv. Den kan vise, hvordan dagen føltes for hende. Det kan den IKKE vise: hvad alle danskere følte.",
+      "hints": []
     }
   },
   {
@@ -104,7 +114,8 @@
       "accepted_answers": [
         "Brev"
       ],
-      "review_text": "Ja. Samme metode i en ny periode: brevet er skrevet af en af de soldater, påstanden handler om, mens det skete. Det kan vise, hvordan HAN oplevede det. Det kan IKKE alene vise, hvordan alle soldaterne oplevede det, og han kan have skånet sin familie for det værste."
+      "review_text": "Ja. Samme metode i en ny periode: brevet er skrevet af en af de soldater, påstanden handler om, mens det skete. Det kan vise, hvordan HAN oplevede det. Det kan IKKE alene vise, hvordan alle soldaterne oplevede det, og han kan have skånet sin familie for det værste.",
+      "hints": []
     }
   },
   {
@@ -131,7 +142,8 @@
       "accepted_answers": [
         "Rapport"
       ],
-      "review_text": "Ja. Rapporten er skrevet dagen efter af en, der selv var med, til hærens ledelse, for at gøre rede for kampene. Den er tæt på begivenheden. Det kan den IKKE vise alene: hvor der ellers blev kæmpet, og en officer kan have grunde til at fremstille noget på en bestemt måde."
+      "review_text": "Ja. Rapporten er skrevet dagen efter af en, der selv var med, til hærens ledelse, for at gøre rede for kampene. Den er tæt på begivenheden. Det kan den IKKE vise alene: hvor der ellers blev kæmpet, og en officer kan have grunde til at fremstille noget på en bestemt måde.",
+      "hints": []
     }
   }
 ]

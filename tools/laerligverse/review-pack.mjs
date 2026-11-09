@@ -208,6 +208,11 @@ export async function fixture() {
       correct: i.correctLabel,
       accepted_answers: [i.correctLabel],
       review_text: i.feedbackCorrect,
+      // F10-B2 (L3): the SAME teacher-reviewed hint texts the game shows (host-items.ts), verbatim, so the
+      // server's hint log (request_question_hint, PR #653) can serve them. Never public: PUBLIC_CONTENT_KEYS
+      // in _shared/question-dto.ts does not include "hints". Practice steps only (LP13-3 A): check,
+      // application and revisit items carry none in host-items.ts.
+      hints: [...i.hints],
     },
   }));
 }

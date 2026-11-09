@@ -99,7 +99,7 @@ test("the precise objective serves ONLY the reviewed items, with their backs and
     // The backs come through the DTO in option order; nothing that marks the answer does.
     expect(s.content.options).toEqual(item.content.options);
     expect(s.content.option_details).toEqual(item.content.option_details);
-    for (const k of ["correct", "accepted_answers", "review_text"]) expect(k in s.content, k).toBe(false);
+    for (const k of ["correct", "accepted_answers", "review_text", "hints"]) expect(k in s.content, k).toBe(false);
     seen.push(item.tag);
     // Alternate right and wrong; the SERVER decides with the reviewed key.
     const right = i % 2 === 0;
