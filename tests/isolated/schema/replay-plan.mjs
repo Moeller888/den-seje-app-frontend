@@ -128,6 +128,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "Lærligverse L5 + L3, not applied in production: it needs L1 K1 (not applied either) and adds question_instances.served_mode, the hint log question_hint_requests and request_question_hint; every reader is behind an Edge flag that is off",
   "20261105130000_quiz_anti_guess_cooldown.sql":
     "anti-gætte-pause, not applied in production: it adds quiz_cooldown_* and two triggers on question_instances; not replayed in the isolated stack, where shared synthetic pupils answer many questions wrong in a row (the frontend treats the missing get_my_quiz_cooldown as no pause)",
+  "20261110043500_laerligverse_introductions.sql":
+    "Lærligverse LP-13/K9 prototype, not applied in production: introductions as a separate server step without an answer key (learning_introductions, introduction_rounds, serve/complete/mark functions); every reader is behind an Edge flag that is off",
   "20261109043500_laerligverse_presented_at.sql":
     "Lærligverse K9 prototype, not applied in production: it needs K1 and L3/L5 (neither applied) and adds question_instances.presented_at and mark_presented; nothing calls it",
   "20261105120000_true_false_activation.sql":
