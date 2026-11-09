@@ -22,15 +22,24 @@ export const SLOT_Z      = Object.fromEntries(ALL_SLOTS.map(k => [k, SLOTS[k].z]
 export const SLOT_LABELS = Object.fromEntries(ALL_SLOTS.map(k => [k, SLOTS[k].label]));
 export const SLOT_EMOJIS = Object.fromEntries(ALL_SLOTS.map(k => [k, SLOTS[k].emoji]));
 
-// Category definitions for shop tab UI — null slots means "show all"
-export const SHOP_CATEGORIES = [
-  { key: "alle",     label: "Alle",     slots: null },
-  { key: "hoved",    label: "Hoved",    slots: ["hair", "headwear"] },
-  { key: "ansigt",   label: "Ansigt",   slots: ["face", "eyes"] },
-  { key: "ryg",      label: "Ryg",      slots: ["back"] },
-  { key: "krop",     label: "Krop",     slots: ["body", "torso", "neck"] },
-  { key: "effekter", label: "Effekter", slots: ["aura"] },
-];
+// D-363: the category menu over the item cards on Avatar and in Butik — one list, same names and order on both pages. `slots` are the
+// shop item slots shown in the category; `wardrobe` is the Northstar wardrobe category (D-359) shown in it on Avatar, or null.
+// Every slot in ALL_SLOTS belongs to exactly one category (the former "Krop" slots are under Overdele).
+export const ITEM_CATEGORIES = Object.freeze([
+  Object.freeze({ key: "overdele",  label: "Overdele",  slots: Object.freeze(["torso", "body", "neck"]), wardrobe: "top" }),
+  Object.freeze({ key: "underdele", label: "Underdele", slots: Object.freeze([]),                         wardrobe: "bottom" }),
+  Object.freeze({ key: "sko",       label: "Sko",       slots: Object.freeze([]),                         wardrobe: "shoes" }),
+  Object.freeze({ key: "hoved",     label: "Hoved",     slots: Object.freeze(["hair", "headwear"]),       wardrobe: null }),
+  Object.freeze({ key: "ansigt",    label: "Ansigt",    slots: Object.freeze(["face", "eyes"]),           wardrobe: null }),
+  Object.freeze({ key: "ryg",       label: "Ryg",       slots: Object.freeze(["back"]),                   wardrobe: null }),
+  Object.freeze({ key: "effekter",  label: "Effekter",  slots: Object.freeze(["aura"]),                   wardrobe: null }),
+]);
+export const DEFAULT_ITEM_CATEGORY = "overdele";
+// The category key of an item slot. An item without a known slot is shown under Effekter, so no owned item can disappear from the menu.
+export function itemCategoryForSlot(slot) {
+  const c = ITEM_CATEGORIES.find((x) => x.slots.includes(slot));
+  return c ? c.key : "effekter";
+}
 
 // Rarity system — fixed across all themes (never change per-theme)
 export const RARITY_COLORS = {

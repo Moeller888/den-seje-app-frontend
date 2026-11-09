@@ -206,7 +206,8 @@ test("opt-out → C2 (mask no longer on the R2 stack)", async ({ browser }) => {
 
 test("shop stays uniform C2 preview even with R2 opt-in (D-077 unaffected)", async ({ browser }) => {
   const { ctx, page } = await open(browser, "/shop.html", {}, /* optIn */ true);
-  await page.waitForSelector('.shop-preview[data-avatar-rendered="1"]', { timeout: 20000 });
+  await page.getByRole("tab", { name: "Ansigt", exact: true }).click();   // D-363: the shop shows one category at a time
+  await page.waitForSelector('.shop-preview[data-avatar-rendered="1"]:visible', { timeout: 20000 });
   const counts = await page.evaluate(() => ({
     r2: document.querySelectorAll('.shop-preview[data-avatar-render-path="r2"]').length,
     c2: document.querySelectorAll('.shop-preview[data-avatar-render-path="c2"]').length,
