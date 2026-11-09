@@ -6,8 +6,15 @@
 -- content.stimulus (docs/ARCHITECTURE.md "Stimulus contract (F-07)", supabase/functions/_shared/stimulus.ts).
 -- Bygget på de godkendte eksempler i tools/stimulus/examples/grundloven-1849.json og
 -- grundloven-1849-forloeb.json. Forløb: introduktion → forståelsestjek → selvstændig anvendelse.
--- Emne: learning_objective 'revolutions_democracy', 7. klasse, sværhedsniveau 5.800–6.700 på skalaen
--- 1–10.000 (target_grade/difficulty_band er cellen i docs/difficulty-scale-design.md §4.1).
+-- Emne: Grundloven 1849 (fagligt revolutions_democracy, som metadata.domain angiver), 7. klasse,
+-- sværhedsniveau 5.800–6.700 på skalaen 1–10.000 (target_grade/difficulty_band er cellen i
+-- docs/difficulty-scale-design.md §4.1).
+-- ADGANG: learning_objective er 'pilot_d362', ikke 'revolutions_democracy'. Pilotens adgang: kun en elev,
+-- hvis active_domains indeholder pilot_d362. get-next-question bygger domænerne på serveren
+-- (scope.ts: profilens active_domains eller de faste HISTORY_DOMAINS), og alle udvælgelses-RPC'er
+-- filtrerer på learning_objective = ANY(p_domains). Eleven kan ikke selv skrive active_domains.
+-- Kendt rest: elevens lærer kan tildele pilot_d362 via set_student_domains, når rækkerne er aktive
+-- (docs/decisions/D-362.md). Tests: tests/unit/task-forms-pilot-scope.test.mjs.
 -- Faglig oversigt til ejerens review: docs/operations/task-forms-pilot-content-review.md.
 --
 -- Ingen lydopgave: lydfilen grundloven-1849-valgret.wav findes ikke i assets/stimulus/ (den skal
@@ -43,7 +50,7 @@ SELECT
   r->>'type', r->'content', r->>'answer_format', 'short', r->'metadata',
   (r->>'difficulty_band')::int, 'auto',
   false,
-  'revolutions_democracy', 7, (r->>'difficulty_band')::smallint, (r->>'difficulty_level')::int
+  'pilot_d362', 7, (r->>'difficulty_band')::smallint, (r->>'difficulty_level')::int
 FROM jsonb_array_elements($pilot$[
 {"type":"mc_single","answer_format":"mc","difficulty_band":1,"difficulty_level":5800,
  "metadata":{"pilot":"D-362","pilot_form":"stimulus","pilot_phase":"introduktion","domain":"revolutions_democracy","concepts":["enevælde","folkestyre","Grundloven 1849"],"cognitive_skill":"recall","difficulty_type":"factual","challenge_role":"entry_level","insight_type":"conceptual_bridge"},
@@ -78,10 +85,10 @@ FROM jsonb_array_elements($pilot$[
 {"type":"mc_single","answer_format":"mc","difficulty_band":2,"difficulty_level":6200,
  "metadata":{"pilot":"D-362","pilot_form":"stimulus","pilot_phase":"forståelsestjek","domain":"revolutions_democracy","concepts":["valgret","kvinders valgret","kildelæsning"],"cognitive_skill":"comprehension","difficulty_type":"inferential","challenge_role":"reinforcement","insight_type":"concept_clarification"},
  "content":{"type":"mc",
-  "question":"Læs kilden. Hvilket ord i § 35 viser, at kvinder ikke fik valgret?",
+  "question":"Læs kilden. Hvilket ord i § 35 viser, at kun mænd kunne få valgret?",
   "options":["Indfødsret","Huusstand","Fattigvæsenet","Mand"],
   "correct":"Mand","accepted_answers":["Mand"],
-  "review_text":"§ 35 giver valgret til \"enhver uberygtet Mand\". Kvinder er ikke nævnt, så de fik ikke valgret. Kvinder fik først valgret til Rigsdagen i 1915.",
+  "review_text":"§ 35 giver valgret til \"enhver uberygtet Mand\". Derfor kunne kun mænd få valgret, og kvinder fik den først i 1915. Men ikke alle mænd: de skulle også have indfødsret, være fyldt 30 år, have egen husstand og ikke modtage hjælp fra fattigvæsenet.",
   "stimulus":{"kind":"source","title":"Danmarks Riges Grundlov, 5. juni 1849, § 35",
    "text":"Valgret til Folkethinget har enhver uberygtet Mand, som har Indfødsret, naar han har fyldt sit 30te Aar, medmindre han:\na) uden at have egen Huusstand staaer i privat Tjenesteforhold;\nb) nyder eller har nydt Understøttelse af Fattigvæsenet, som ikke er enten eftergiven eller tilbagebetalt;\nc) er ude af Raadigheden over sit Bo;\nd) ikke har havt fast Bopæl i eet Aar i den Valgkreds eller den Stad, hvori han opholder sig paa den Tid, Valget foregaaer.\n\nOrdforklaringer: uberygtet = ikke straffet for noget vanærende · Huusstand = eget hjem · Fattigvæsenet = den offentlige hjælp til fattige · Bo = formue og ejendele.",
    "credit":{"source":"Danmarks Riges Grundlov af 5. juni 1849, § 35 (gengivet efter danmarkshistorien.lex.dk). Ordforklaringer: Lærlig","year":"1849","license":"Offentligt domæne"}}}},
@@ -112,7 +119,7 @@ FROM jsonb_array_elements($pilot$[
   "options":["Kongen og Rigsdagen","Kongen alene","Rigsdagen alene","Kongen og domstolene"],
   "correct":"Kongen og Rigsdagen","accepted_answers":["Kongen og Rigsdagen"],
   "review_text":"§ 2 siger, at den lovgivende magt er hos kongen og Rigsdagen i forening. En lov kræver altså, at begge er enige. Domstolene har den dømmende magt, ikke den lovgivende.",
-  "stimulus":{"kind":"source","title":"Danmarks Riges Grundlov, 5. juni 1849, § 2",
+  "stimulus":{"kind":"source","title":"Danmarks Riges Grundlov, 5. juni 1849, § 2 (gengivet med nutidig retskrivning)",
    "text":"Den lovgivende magt er hos kongen og Rigsdagen i forening. Den udøvende magt er hos kongen. Den dømmende magt er hos domstolene.\n\nOrdforklaringer: lovgivende = som vedtager lovene · udøvende = som sørger for, at lovene bliver ført ud i livet · dømmende = som dømmer efter lovene · i forening = sammen.",
    "credit":{"source":"Danmarks Riges Grundlov af 5. juni 1849, § 2, gengivet med nutidig retskrivning (danmarkshistorien.lex.dk). Ordforklaringer: Lærlig","year":"1849","license":"Offentligt domæne"}}}}
 ]$pilot$::jsonb) AS r;

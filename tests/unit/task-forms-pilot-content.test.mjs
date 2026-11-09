@@ -47,7 +47,7 @@ const STIMULUS_SQL = read(STIMULUS_FILE);
 const OC_SQL = read(OC_FILE);
 
 const GRADE = 7;
-const OBJECTIVE = "revolutions_democracy";
+const OBJECTIVE = "pilot_d362";
 
 // The row data exactly as the SQL hands it to jsonb_array_elements.
 function rowsOf(sql) {
@@ -97,7 +97,7 @@ test("inactive and marked: is_active is a literal false in both INSERTs; every r
   for (const [file, sql] of [[STIMULUS_FILE, STIMULUS_SQL], [OC_FILE, OC_SQL]]) {
     const inserts = sql.match(/INSERT INTO public\.questions/g) ?? [];
     assert.equal(inserts.length, 1, `${file}: exactly one INSERT`);
-    assert.match(sql, /is_active, learning_objective, target_grade, difficulty_band, difficulty_level\)\s*SELECT[\s\S]*?'auto',\s*\n\s*false,\s*\n\s*'revolutions_democracy', 7,/,
+    assert.match(sql, /is_active, learning_objective, target_grade, difficulty_band, difficulty_level\)\s*SELECT[\s\S]*?'auto',\s*\n\s*false,\s*\n\s*'pilot_d362', 7,/,
       `${file}: is_active must be the literal false, in its column position`);
     const code = sql.replace(/^--.*$/gm, "");
     assert.equal(/\b(UPDATE|DELETE|ALTER|DROP|CREATE|GRANT|REVOKE|TRUNCATE)\b/i.test(code), false, `${file}: data insert only`);
@@ -110,7 +110,7 @@ test("inactive and marked: is_active is a literal false in both INSERTs; every r
     assert.equal("is_active" in r, false, `${label(r)}: is_active must not come from the data`);
     assert.equal(r.metadata.pilot, "D-362", label(r));
     assert.ok(["stimulus", "order", "categorize"].includes(r.metadata.pilot_form), label(r));
-    assert.equal(r.metadata.domain, OBJECTIVE, label(r));
+    assert.equal(r.metadata.domain, "revolutions_democracy", label(r));
   }
   for (const r of OC_ROWS) assert.equal(r.metadata.pilot_form, r.answer_format, label(r));
 });
@@ -128,7 +128,7 @@ test("level: every row is on the 1–10,000 scale and in its §4.1 cell (grade 7
 
 test("stimulus contract: every stimulus passes publicStimulus with nothing dropped, and its file exists", () => {
   const withStimulus = ALL_ROWS.filter((r) => r.content.stimulus !== undefined);
-  assert.equal(withStimulus.length, 9, "7 stimulus rows + 1 order row + 1 categorize row");
+  assert.equal(withStimulus.length, 8, "7 stimulus rows + 1 categorize row (O1's source was removed: it gave away the last two items)");
   for (const r of STIMULUS_ROWS) assert.ok(r.content.stimulus, `${label(r)}: a stimulus row without a stimulus`);
   for (const r of withStimulus) {
     const { errors, warnings } = checkStimulus(r.content.stimulus);

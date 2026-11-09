@@ -9,14 +9,19 @@
 -- Aktiveringen har selv forudsætninger (Q-21: process-event fra main; get-next-question fra den commit,
 -- der indeholder D-362). Rækkefølge og GO'er: docs/decisions/D-362.md.
 --
--- Hvad: 4 rækkefølge-opgaver og 4 kategoriseringsopgaver, learning_objective 'revolutions_democracy',
--- 7. klasse, sværhedsniveau 5.850–6.800 på skalaen 1–10.000 (target_grade/difficulty_band er cellen i
--- docs/difficulty-scale-design.md §4.1). Kontrakterne: supabase/functions/_shared/order-items.ts og
+-- Hvad: 4 rækkefølge-opgaver og 4 kategoriseringsopgaver, learning_objective 'pilot_d362' (fagligt
+-- revolutions_democracy, som metadata.domain angiver), 7. klasse, sværhedsniveau 5.850–6.800 på skalaen
+-- 1–10.000 (target_grade/difficulty_band er cellen i docs/difficulty-scale-design.md §4.1).
+-- ADGANG: learning_objective er et eget mål, fordi pilotens adgang skal være: kun en elev, hvis
+-- active_domains indeholder pilot_d362. get-next-question bygger domænerne på serveren (scope.ts), og alle
+-- udvælgelses-RPC'er filtrerer på learning_objective = ANY(p_domains). Eleven kan ikke selv skrive
+-- active_domains. Kendt rest: elevens lærer kan tildele pilot_d362 via set_student_domains, når rækkerne er
+-- aktive (docs/decisions/D-362.md). Tests: tests/unit/task-forms-pilot-scope.test.mjs. Kontrakterne: supabase/functions/_shared/order-items.ts og
 -- categorize.ts. Facit er det FORFATTEDE: rækkefølgen af content.items (første element først) og hvert
 -- elements content.items[i].category. Kun præsentationen blandes, pr. instans, af serveren.
 -- content.correct er '-': det kræves af constraints (auto_requires_correct, content_valid_check), men
 -- læses aldrig for de to formater; nøglen trækkes pr. instans og gemmes i question_instances.correct_answer.
--- To rækker bærer også et stimulus (F-07): en kort kilde over rækkefølgen og § 35 over kategoriseringen.
+-- Én række bærer også et stimulus (F-07): § 35 over kategoriseringen.
 -- Faglig oversigt til ejerens review: docs/operations/task-forms-pilot-content-review.md.
 --
 -- INAKTIV: is_active = false er skrevet fast i SQL'en herunder (ikke i data), så ingen række kan
@@ -63,7 +68,7 @@ SELECT
   r->>'answer_format', r->'content', r->>'answer_format', 'short', r->'metadata',
   (r->>'difficulty_band')::int, 'auto',
   false,
-  'revolutions_democracy', 7, (r->>'difficulty_band')::smallint, (r->>'difficulty_level')::int
+  'pilot_d362', 7, (r->>'difficulty_band')::smallint, (r->>'difficulty_level')::int
 FROM jsonb_array_elements($pilot$[
 {"answer_format":"order","difficulty_band":2,"difficulty_level":6050,
  "metadata":{"pilot":"D-362","pilot_form":"order","pilot_phase":"forståelsestjek","domain":"revolutions_democracy","concepts":["kronologi","enevælde","Grundloven 1849","kvinders valgret"],"cognitive_skill":"comprehension","difficulty_type":"factual","challenge_role":"reinforcement","insight_type":"conceptual_bridge"},
@@ -72,10 +77,7 @@ FROM jsonb_array_elements($pilot$[
   "items":["Enevælden indføres","Stavnsbåndet ophæves","Grundloven underskrives","Kvinder får valgret til Rigsdagen"],
   "sequence":"chronological",
   "correct":"-",
-  "review_text":"Enevælden blev indført i 1660, stavnsbåndet blev ophævet i 1788, Grundloven blev underskrevet i 1849, og kvinder fik valgret til Rigsdagen i 1915. Rækkefølgen viser, hvornår tingene skete. Den siger ikke i sig selv, at den ene begivenhed var årsag til den næste.",
-  "stimulus":{"kind":"source","title":"Kvinderne måtte vente",
-   "text":"Grundloven fra 1849 gav kun mænd valgret. Først i 1915 blev grundloven ændret, så kvinder også fik valgret til Rigsdagen.",
-   "credit":{"source":"Lærlig, fortællende tekst","year":"2026"}}}},
+  "review_text":"Enevælden blev indført i 1660, stavnsbåndet blev ophævet i 1788, Grundloven blev underskrevet i 1849, og kvinder fik valgret til Rigsdagen i 1915. Rækkefølgen viser, hvornår tingene skete. Den siger ikke i sig selv, at den ene begivenhed var årsag til den næste."}},
 {"answer_format":"order","difficulty_band":3,"difficulty_level":6350,
  "metadata":{"pilot":"D-362","pilot_form":"order","pilot_phase":"selvstændig anvendelse","domain":"revolutions_democracy","concepts":["kronologi","Martsdagene","Den Grundlovgivende Rigsforsamling","Grundloven 1849"],"cognitive_skill":"recall","difficulty_type":"factual","challenge_role":"challenge","insight_type":"conceptual_bridge"},
  "content":{
@@ -84,14 +86,14 @@ FROM jsonb_array_elements($pilot$[
   "sequence":"chronological",
   "correct":"-",
   "review_text":"Frederik 7. blev konge i januar 1848. Den 21. marts 1848 gik borgere i optog til Christiansborg med krav om en ny regering (Martsdagene). I oktober 1848 trådte Den Grundlovgivende Rigsforsamling sammen for at forhandle om en grundlov. Den 5. juni 1849 underskrev Frederik 7. Grundloven."}},
-{"answer_format":"order","difficulty_band":3,"difficulty_level":6500,
+{"answer_format":"order","difficulty_band":4,"difficulty_level":6650,
  "metadata":{"pilot":"D-362","pilot_form":"order","pilot_phase":"selvstændig anvendelse","domain":"revolutions_democracy","concepts":["lovgivning","Folketinget","demokrati i Danmark"],"cognitive_skill":"comprehension","difficulty_type":"conceptual","challenge_role":"challenge","insight_type":"concept_clarification"},
  "content":{
   "question":"Sådan bliver et lovforslag til lov i Danmark i dag. Sæt trinene i den rigtige rækkefølge.",
-  "items":["Lovforslaget fremsættes i Folketinget","Folketinget debatterer forslaget første gang","Et udvalg undersøger forslaget nærmere","Folketinget stemmer om forslaget ved sidste behandling","Monarken skriver under, og loven bliver kundgjort"],
+  "items":["En minister fremsætter lovforslaget i Folketinget","Partiernes ordførere debatterer forslagets formål i salen","Et udvalg stiller spørgsmål og skriver en betænkning","Folketinget stemmer om udvalgets ændringsforslag","Folketinget stemmer om hele lovforslaget og vedtager det","Kongen underskriver loven, og den kundgøres i Lovtidende"],
   "sequence":"process",
   "correct":"-",
-  "review_text":"Et lovforslag fremsættes i Folketinget, oftest af en minister. Ved 1. behandling debatterer Folketinget forslaget. Så undersøger et udvalg det nærmere og kan stille spørgsmål til ministeren. Efter 2. behandling stemmer Folketinget om forslaget ved 3. behandling. Er det vedtaget, skal monarken skrive under, før det bliver en gældende lov, og loven kundgøres i Lovtidende."}},
+  "review_text":"Grundloven kræver, at et lovforslag behandles tre gange i Folketinget (§ 41). Oftest fremsætter en minister forslaget. Ved 1. behandling debatterer partiernes ordførere forslagets formål. Derefter undersøger et udvalg forslaget, stiller spørgsmål til ministeren og skriver en betænkning, ofte med ændringsforslag. Ved 2. behandling stemmer Folketinget om ændringsforslagene. Ved 3. behandling stemmer Folketinget om hele lovforslaget. Er det vedtaget, stadfæster kongen loven med sin underskrift sammen med en minister, og loven kundgøres i Lovtidende."}},
 {"answer_format":"order","difficulty_band":4,"difficulty_level":6750,
  "metadata":{"pilot":"D-362","pilot_form":"order","pilot_phase":"selvstændig anvendelse","domain":"revolutions_democracy","concepts":["kronologi","systemskiftet","grundlovsændringer","valgret"],"cognitive_skill":"recall","difficulty_type":"factual","challenge_role":"deep_challenge","insight_type":"conceptual_bridge"},
  "content":{
@@ -140,10 +142,10 @@ FROM jsonb_array_elements($pilot$[
    {"text":"Kongeloven fra 1665 er rigets grundlov","category":"Enevælden (1660–1849)"},
    {"text":"Ingen valgt forsamling vedtager lovene","category":"Enevælden (1660–1849)"},
    {"text":"Rigsdagen og kongen vedtager lovene sammen","category":"Efter Grundloven 1849"},
-   {"text":"Borgerne må danne foreninger uden at spørge om lov","category":"Efter Grundloven 1849"},
+   {"text":"Borgerne har ret til at danne foreninger uden at få tilladelse først","category":"Efter Grundloven 1849"},
    {"text":"Mænd over 30 med egen husstand kan stemme","category":"Efter Grundloven 1849"}],
   "correct":"-",
-  "review_text":"Under enevælden samlede kongen al magten, og Kongeloven fra 1665 gav ham den; stænderforsamlingerne fra 1830'erne kunne kun rådgive. Grundloven af 5. juni 1849 delte magten: Rigsdagen og kongen giver lovene sammen, kongen har den udøvende magt, og domstolene dømmer (§ 2). Grundloven gav også borgerne frihedsrettigheder, fx retten til at danne foreninger uden at spørge om lov. Valgretten gjaldt mænd over 30 med egen husstand (§ 35)."}},
+  "review_text":"Under enevælden samlede kongen al magten, og Kongeloven fra 1665 gav ham den; stænderforsamlingerne fra 1830'erne kunne kun rådgive. Grundloven af 5. juni 1849 delte magten: Rigsdagen og kongen giver lovene sammen, kongen har den udøvende magt, og domstolene dømmer (§ 2). Grundloven gav også borgerne frihedsrettigheder, fx retten til at danne foreninger uden at få tilladelse først (foreningsfriheden, § 92). Valgretten gjaldt mænd over 30 med egen husstand (§ 35)."}},
 {"answer_format":"categorize","difficulty_band":4,"difficulty_level":6800,
  "metadata":{"pilot":"D-362","pilot_form":"categorize","pilot_phase":"selvstændig anvendelse","domain":"revolutions_democracy","concepts":["enevælde","Grundloven 1849","grundloven 1915","valgret"],"cognitive_skill":"analysis","difficulty_type":"factual","challenge_role":"deep_challenge","insight_type":"conceptual_bridge"},
  "content":{
