@@ -14,6 +14,31 @@ Observationer om eksisterende tilstand, som migrationen ikke ændrer:
 - **`search_path` med `public`:** de ældre SECURITY DEFINER-funktioner `process_question_attempt`, `process_text_answer` og `request_repeat_question_for_student` har `search_path = public, pg_temp`, og `release_open_question_outside` har `search_path = public`. Stien er fastlåst, men ikke tom. De nye funktioner bruger alle `search_path = ''`.
 - **#610 og `question_instances`:** anti-gætte-pausen (#610) ændrer **ingen** rettigheder eller politikker på `question_instances`. Den tilføjer kun to triggere. Kolonnerettigheden og politikken i #610 ligger på `quiz_cooldown_state`. Migrationens rettighedsomlægning er derfor uændret efter #610, og guarden kontrollerer udgangspunktet.
 
+## 1a. Bekræftelse: #653 udvider ikke angrebsfladen og svækker ikke RLS
+
+**Konklusion:** ingen rolle får en databaserettighed, den ikke havde. `anon` og `authenticated` mister tabel-UPDATE (indsnævring), og RLS er enten uændret eller slået til.
+
+**Hver rettighed, migrationen tilføjer eller fjerner:**
+
+| Objekt | Rolle | Fjernet | Tilføjet | Nettoeffekt |
+|---|---|---|---|---|
+| `question_instances` (tabel) | `anon`, `authenticated` | UPDATE (tabelniveau) | UPDATE (kolonneniveau) på alle kolonner, der fandtes før filen, undtagen `served_mode` | Uændret på de eksisterende kolonner. **Ingen** rettighed til `served_mode` og fremtidige kolonner, så rettighederne er **snævrere** end før. RLS har stadig ingen UPDATE-politik, så UPDATE rammer 0 rækker |
+| `question_instances.served_mode` | `anon`, `authenticated` | — | — | Ingen SELECT, INSERT eller UPDATE |
+| `question_instances` | `service_role`, `PUBLIC` | — | — | Uændret |
+| `question_hint_requests` (ny tabel) | `PUBLIC`, `anon`, `authenticated` | ALL (også Supabases standardrettigheder for nye tabeller) | — | Ingen adgang. RLS er slået til uden politikker |
+| `question_hint_requests` | `service_role` | ALL | SELECT, INSERT | Kun læsning og tilføjelse. Ingen UPDATE, DELETE eller TRUNCATE |
+| `request_question_hint`, `process_question_attempt_with_context`, `process_text_answer_with_context` (nye) | `PUBLIC`, `anon`, `authenticated` | EXECUTE (også standardrettigheden) | — | Kan ikke kaldes. Alle tre er SECURITY INVOKER |
+| De samme tre | `service_role` | — | EXECUTE | Kun backend kan kalde dem, med den verificerede elev-id |
+| `question_instances_served_mode` (trigger, ny) | alle API-roller | EXECUTE | — | Triggeren fyrer stadig. Ingen kan kalde den direkte |
+| RLS-politikker på `question_instances` | — | — | — | Ingen ændret, oprettet eller fjernet |
+
+**HTTP-flade:**
+- **Ny funktion:** `request-hint` er en ny HTTP-funktion. Slukket svarer den 404 uden at bygge en klient.
+- **Tændt (særskilt GO):** en elev med gyldig JWT kan højst skrive 3 loglinjer pr. egen åben runde. Funktionen bruger den verificerede id og kun RPC'en ovenfor. En anden elevs instans giver `not_found`.
+- **`process-event` og `get-next-question`:** ingen nye klientindgange. Body-felter til tilstand og hints ignoreres.
+
+Alt er testet som rollerne selv (`laerligverse-l3-l5-migration-run`, `laerligverse-l3-l5-attempt-wrapper-run`, `laerligverse-request-hint`).
+
 ## 2. Rettigheder på `question_instances` (før → efter)
 
 | Rolle | Før (produktionens udgangspunkt, krævet af guarden) | Efter |

@@ -7,7 +7,8 @@
 //
 // TIMING. Each file runs as its own `node --test <file>` child — the same per-file process
 // isolation `node --test a b c` already used — with the same default concurrency
-// (availableParallelism - 1). Running them from here is what makes per-file wall time
+// (availableParallelism - 1), except that files using the shard's PostgreSQL run one at a time
+// (D-369). Running them from here is what makes per-file wall time
 // measurable: the runner prints a timing table at the end, and in GitHub Actions also writes it
 // to the job summary. A file's output is printed in one block when it finishes, so parallel
 // files never interleave; if the job is cancelled, the files still running are named.
@@ -17,7 +18,7 @@ import { availableParallelism } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { BINARY_DEPENDENT } from "./unit-ci-exclusions.mjs";
-import { parseCounts, timingTable, resolveConcurrency, parseShard, planShards, parseBudget, budgetReport, driftReport } from "./support/unit-timing.mjs";
+import { parseCounts, timingTable, resolveConcurrency, parseShard, planShards, parseBudget, budgetReport, driftReport, PG_ENV, detectPgFiles, pgLaneScheduler } from "./support/unit-timing.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const UNIT = join(HERE, "unit");
@@ -93,7 +94,14 @@ function reportRunning(sig) {
 process.on("SIGINT", () => reportRunning("SIGINT"));
 process.on("SIGTERM", () => reportRunning("SIGTERM"));
 
-const queue = [...run];
+// POSTGRESQL LANE (D-369). The files that use the shard's one PostgreSQL service run one at a time
+// (two of them side by side exhausted its 100 connections on PR #674); all other files keep the full
+// concurrency, in the same heaviest-first order. Detection reads each planned file's source.
+const pgFiles = new Set(detectPgFiles(run, (f) => readFileSync(join(UNIT, f), "utf8")));
+console.log(`PostgreSQL lane: ${pgFiles.size} file(s) referencing ${PG_ENV} run one at a time` +
+  (pgFiles.size > 0 ? ":\n  " + [...pgFiles].join("\n  ") : ""));
+const sched = pgLaneScheduler(run, concurrency, (f) => pgFiles.has(f));
+const queue = sched.queue; // not started yet (the budget report reads it)
 
 // Time budget (D-361): reporting only — it never fails or stops the shard.
 const annotate = (msg) => { if (process.env.GITHUB_ACTIONS === "true") console.log(`::warning title=unit shard over its time budget::${msg}`); };
@@ -110,9 +118,24 @@ if (budgetS !== null) {
   budgetTimer.unref();
 }
 
-await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
-  while (queue.length > 0) await runFile(queue.shift());
-}));
+// Event-driven pool: whenever a file finishes, start what fits (see pgLaneScheduler — a free slot
+// takes the next non-PG file while a PG file runs, so nothing ever waits on the lane).
+await new Promise((resolveAll, rejectAll) => {
+  const pump = () => {
+    try {
+      for (const f of sched.take()) {
+        runFile(f).then(() => {
+          try { sched.finish(f); } catch (err) { rejectAll(err); return; }
+          pump();
+        });
+      }
+      if (sched.done) resolveAll();
+    } catch (err) {
+      rejectAll(err);
+    }
+  };
+  pump();
+});
 if (budgetTimer) clearTimeout(budgetTimer);
 
 const wallMs = Date.now() - started;
