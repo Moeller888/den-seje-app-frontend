@@ -423,10 +423,10 @@ en afvigelse fra forventet `ezbr_sha256` eller et uløst problem fra fase A.
 **Aktivt misbrug:** konstateres aktivt misbrug af nøglen, må planen ikke afventes. Ejeren træffer straks beslutning om
 at trække nøglen tilbage, også selv om komponenter, der stadig bruger den, så holder op med at virke.
 
-## R-01 — deaktivér legacy API-nøgler (reversibelt)
+## R-01 — deaktivér legacy API-nøgler (genaktivering forbudt)
 
-> **Overskriftens „reversibelt” beskriver kun en teknisk mulighed i dashboardet. Den må aldrig bruges.** Genaktivering
-> gendanner den kompromitterede nøgle og er forbudt. Se [Supabases vejledning](https://supabase.com/docs/guides/security/rotate-leaked-api-keys).
+> **Genaktivering er forbudt**, selv om dashboardet teknisk tillader den, fordi den gendanner den kompromitterede nøgle.
+> Se [Supabases vejledning](https://supabase.com/docs/guides/security/rotate-leaked-api-keys).
 
 - **Hvem:** ejeren, i dashboardet (Settings → API Keys → Legacy API keys → *Disable*), kun efter udtrykkeligt GO.
 - **Forberedelse:** uden for skoletid, patchpakker kontrolleret og en testkonto, ejeren selv kontrollerer.
