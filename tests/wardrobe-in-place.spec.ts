@@ -5,7 +5,8 @@
 //   - "Tag på" redraws the figure in the existing preview without navigation or reload (a page marker survives, no load event);
 //   - the category, the list's scroll position and keyboard focus stay; "✓ På" moves to the right card;
 //   - D-370: the wardrobe is free: any top, bottom or shoes goes on, exactly the chosen part changes, saved as the three parts. Only an
-//     outfit the renderer will not draw (the three known faults, until the layer fixes are published) is refused and changes nothing;
+//     outfit the renderer will not draw is refused and changes nothing; with the layer fixes published there is none, so the three blue
+//     T-shirt and skirt outfits that were refused before now go on;
 //   - the choice is saved on the account and kept after a manual reload and in a new session;
 //   - quick choices: one save at a time, only the newest waiting choice is sent, a late answer never overwrites a newer choice;
 //   - a failed save shows the last saved outfit again with a short message.
@@ -15,19 +16,11 @@ import { test, expect, Route, Page } from "@playwright/test";
 import * as http from "http";
 import * as fs from "fs";
 import * as path from "path";
-import * as crypto from "crypto";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const REF = "tjzbehwfagiwpwodsgwg";
-// With NORTHSTAR_LAYER_FIXES_DIR (the owner's machine only: private staging, hashes checked) the page runs with the layer fixes on.
-const STAGING = process.env.NORTHSTAR_LAYER_FIXES_DIR || null;
-const STAGED = STAGING ? new Map((JSON.parse(fs.readFileSync(path.join(ROOT, "tools/avatar/fixtures/northstar-wardrobe/free-combination/layer-fixes-staging-v1.json"), "utf8")).files as Array<{ file: string; sha256: string }>).map((f) => {
-  const b = fs.readFileSync(path.join(STAGING, f.file));
-  if (crypto.createHash("sha256").update(b).digest("hex") !== f.sha256) throw new Error("not the approved staging file: " + f.file);
-  return ["/assets/avatar-northstar/" + f.file, b] as [string, Buffer];
-})) : new Map<string, Buffer>();
 const MIME: Record<string, string> = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".svg": "image/svg+xml", ".css": "text/css", ".webp": "image/webp", ".png": "image/png", ".json": "application/json", ".wav": "audio/wav" };
 
 let server: http.Server;
@@ -38,8 +31,7 @@ test.beforeAll(async () => {
       const p = decodeURIComponent((req.url || "/").split("?")[0]);
       const fp = path.normalize(path.join(ROOT, p === "/" ? "/index.html" : p));
       if (!fp.startsWith(ROOT)) { res.writeHead(403); res.end(); return; }
-      let data: Buffer = STAGED.get(p) || (undefined as unknown as Buffer);
-      if (!data) { data = fs.readFileSync(fp); if (STAGING && p === "/js/avatar-layers.js") data = Buffer.from(data.toString("utf8").replace("NORTHSTAR_LAYER_FIXES = false;", "NORTHSTAR_LAYER_FIXES = true;")); }
+      const data = fs.readFileSync(fp);
       res.writeHead(200, { "content-type": MIME[path.extname(fp).toLowerCase()] || "application/octet-stream" });
       res.end(data);
     } catch { res.writeHead(404); res.end("nf"); }
@@ -247,30 +239,35 @@ for (const width of [1100, 390]) {
   });
 }
 
-test("D-370: an outfit the renderer will not draw is refused and changes nothing; with the layer fixes it goes on", async ({ browser, browserName }) => {
-  test.skip(browserName !== "chromium", "UI dedup");
-  const pupil = newPupil();
-  pupil.northstar = { outfit: "K10" };   // blue T-shirt, navy shorts, beige sneakers
-  const { ctx, page } = await openAvatar(browser, pupil, 1100);
-  await expect.poll(async () => { const f = await figure(page); return f.rendered && f.path === "northstar" && !!f.src; }, { timeout: 30000 }).toBe(true);
-  await page.getByRole("tab", { name: "Underdele", exact: true }).click();
-  const before = await outfitNow(page), fig = (await figure(page)).src;
-  await card(page, "bottom-skirt-sand").locator(".equip-btn").click();
-  if (STAGING) {
+// The three outfits D-242 never drew (blue T-shirt and skirt with beige, black lace-up or white shoes) were refused until the layer fixes
+// were published; now each goes on in place, only the bottom changes, it is saved as the three parts, and the blue tee's fixed layers load.
+for (const shoes of ["shoes-sneakers-beige", "shoes-boots-laceup-black", "shoes-sneakers-white"]) {
+  test(`D-370: blue T-shirt and skirt with ${shoes}, refused before the layer fixes, now goes on in place`, async ({ browser, browserName }) => {
+    test.skip(browserName !== "chromium", "UI dedup");
+    const pupil = newPupil();
+    pupil.northstar = { outfit: "FRI", top: "top-tee-hip-blue", pants: "bottom-shorts-navy", shoes };
+    const { ctx, page, errs } = await openAvatar(browser, pupil, 1100);
+    let loads = 0;
+    await page.waitForLoadState("load");
+    page.on("load", () => { loads++; });
+    await expect.poll(async () => { const f = await figure(page); return f.rendered && f.path === "northstar" && !!f.src; }, { timeout: 30000 }).toBe(true);
+    await page.getByRole("tab", { name: "Underdele", exact: true }).click();
+    const fig = (await figure(page)).src;
+    await card(page, "bottom-skirt-sand").locator(".equip-btn").click();
     await expect(card(page, "bottom-skirt-sand")).toHaveClass(/equipped/);
     await redrawn(page, fig);
-    expect(await outfitNow(page)).toBe("top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-beige");
-  } else {
-    const reason = "Den underdel passer ikke til dit nuværende outfit.";
-    await expect(page.locator("#northstarWardrobe .northstar-status")).toContainText(reason);
-    await expect(card(page, "bottom-skirt-sand").locator(".northstar-refusal"), "the reason shows on the card the pupil pressed").toHaveText(reason);
-    expect(await outfitNow(page), "the outfit stays").toBe(before);
-    await page.waitForTimeout(400);
-    expect((await figure(page)).src, "the figure is not redrawn").toBe(fig);
-    expect(pupil.sent.length, "nothing is saved").toBe(0);
-  }
-  await ctx.close();
-});
+    expect(await outfitNow(page)).toBe(`top-tee-hip-blue+bottom-skirt-sand+${shoes}`);
+    await expect(page.locator("#northstarWardrobe .northstar-refusal")).toHaveCount(0);
+    await expect.poll(() => pupil.northstar).toEqual({ outfit: "FRI", top: "top-tee-hip-blue", pants: "bottom-skirt-sand", shoes });
+    const layers = await page.evaluate(async () => { const L: any = await import("/js/avatar-layers.js"); return [L.NORTHSTAR_LAYER_FIXES, L.NORTHSTAR_KNOWN_FAULTY.length]; });
+    expect(layers, "the layer fixes are on and nothing is known faulty").toEqual([true, 0]);
+    const fixed = await page.evaluate(() => performance.getEntriesByType("resource").map((e) => e.name.split("/").pop()));
+    for (const f of ["top-tee-hip-blue-top-body-v3.webp", "top-tee-hip-blue-hip-cover-v1.webp"]) expect(fixed, "the blue tee's fixed layer is drawn: " + f).toContain(f);
+    expect(loads, "no reload").toBe(0);
+    expect(errs).toEqual([]);
+    await ctx.close();
+  });
+}
 
 test("D-366: quick choices — one save at a time, only the newest waiting choice is sent, a late answer never wins", async ({ browser, browserName }) => {
   test.skip(browserName !== "chromium", "UI dedup");

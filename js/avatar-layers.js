@@ -1030,9 +1030,9 @@ const _KIT_ITEM = Object.freeze({
   [NORTHSTAR_TANK_BASE]: Object.freeze({ category: "top", layers: ["top-body"], shadows: ["body"], shadowsOf: NORTHSTAR_TANK_BASE, hipSeam: NORTHSTAR_TANK_HEM_JUNCTION }),
 });
 // D-370: the two fit repairs of the free wardrobe (the blue tee's stray hem lines, and skin above a white sneaker's collar under long
-// trousers). Their four layer files are held in private staging until the owner approves publishing them; until then this is false and
-// the app draws today's published files, and the three combinations D-242 never draws stay refused. Publishing = the four files + true.
-export const NORTHSTAR_LAYER_FIXES = false;
+// trousers). Published with the owner's approval (2026-11-09): the four layer files are in assets/avatar-northstar (hashes in
+// layer-fixes-staging-v1.json), so all 3,780 outfits are drawn and none is refused. False draws the earlier files and refuses D-242's three.
+export const NORTHSTAR_LAYER_FIXES = true;
 const _NS_BLUE_TEE_LAYERS = NORTHSTAR_LAYER_FIXES ? { layerRev: 3, hipSeam: "top-tee-hip-blue-hip-cover-v1.webp" } : { layerRev: 2 };   // the hem lines moved behind the bottom
 const _NS_UNDER_LONG_HEM = Object.freeze({ "shoes-sneakers-white": "shoes-sneakers-white-under-long-hem-v1.webp" });   // a closed collar under a long hem
 const _nsLongHem = (bottom) => typeof bottom === "string" && bottom.startsWith("bottom-trousers-square-");

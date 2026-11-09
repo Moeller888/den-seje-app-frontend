@@ -28,6 +28,11 @@ export function charcoalLaceException(findings, shoes, bottom, spec) {
 }
 /** The hip remark the owner keeps in the package: a slightly heavy hip contour, seen in close-up only. Reported, never a failure. */
 export const heavyHipContour = (top, bottom) => (top.startsWith("top-tank") && (bottom.startsWith("bottom-trousers-square-") || bottom === "bottom-shorts-navy")) || (top.startsWith("top-sweater") && (bottom.startsWith("bottom-trousers-square-") || bottom === "bottom-skirt-sand"));
+/** D-370's two layer fixes taken out of a plan's file names: what the same plan drew before they were published (the blue tee at layer
+ *  revision 2 without its hip cover; a white sneaker without its lining under long trousers). The older decisions' plan checks use it;
+ *  the D-370 test proves the fixes appear exactly where they belong. */
+export const LAYER_FIX_FILES = Object.freeze(["top-tee-hip-blue-hip-cover-v1.webp", "shoes-sneakers-white-under-long-hem-v1.webp"]);
+export const beforeLayerFixes = (names) => names.filter((f) => !LAYER_FIX_FILES.includes(f)).map((f) => f.replace(/^(top-tee-hip-blue-(?:top-body|sleeves))-v3\.webp$/, "$1-v2.webp"));
 
 const parts = (AL) => { const by = { top: [], bottom: [], shoes: [] }; for (const p of AL.northstarPieces()) by[p.category].push(p.item); return by; };
 const lines = (f) => (existsSync(f) ? readFileSync(f, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l)) : []);

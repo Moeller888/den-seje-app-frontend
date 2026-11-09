@@ -1,20 +1,23 @@
 // D-370: the free Northstar wardrobe. Any top with any bottom and any shoes, saved as the three parts in the existing account format.
 //   1. All 3,780 outfits pass the account's own rules (read from the migration) and read back as exactly the same three parts.
 //   2. Older choices with a K number read as before.
-//   3. With the layer fixes switched on, every outfit is drawn and the plans carry the two repairs.
+//   3. The layer fixes are published: the four files are in the app with the approved hashes, every outfit is drawn, and the plans
+//      differ from the earlier files' plans only by the two repairs.
 //   4. The fit check's only exception is exactly the documented charcoal lace case.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { createHash } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 import * as L from "../../js/avatar-layers.js";
 import { charcoalLaceException, heavyHipContour, exceptionSpec, stagingSpec } from "../../tools/avatar/northstar-free-matrix.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
-const FREE = async () => import("data:text/javascript;base64," + Buffer.from(read("js/avatar-layers.js").replace("export const NORTHSTAR_LAYER_FIXES = false;", "export const NORTHSTAR_LAYER_FIXES = true;")).toString("base64"));
+// the same renderer with the layer fixes off: the earlier files, and D-242's three outfits refused
+const BEFORE = async () => import("data:text/javascript;base64," + Buffer.from(read("js/avatar-layers.js").replace("export const NORTHSTAR_LAYER_FIXES = true;", "export const NORTHSTAR_LAYER_FIXES = false;")).toString("base64"));
 const by = { top: [], bottom: [], shoes: [] };
 for (const p of L.northstarPieces()) by[p.category].push(p.item);
 const all = () => by.top.flatMap((t) => by.bottom.flatMap((b) => by.shoes.map((s) => [t, b, s])));
@@ -60,25 +63,28 @@ test("D-370: a malformed or half-free choice is not an outfit", () => {
   }
 });
 
-test("D-370: the four fixed files are in private staging, not in the app, while the flag is off", () => {
-  assert.equal(L.NORTHSTAR_LAYER_FIXES, false, "publishing is the owner's separate decision");
+test("D-370: the layer fixes are published: exactly the four approved files, byte for byte, and nothing is refused", () => {
+  assert.equal(L.NORTHSTAR_LAYER_FIXES, true, "published with the owner's approval");
+  assert.deepEqual([...L.NORTHSTAR_KNOWN_FAULTY], []);
   const S = stagingSpec();
   assert.deepEqual(S.files.map((f) => f.file).sort(), ["shoes-sneakers-white-under-long-hem-v1.webp", "top-tee-hip-blue-hip-cover-v1.webp", "top-tee-hip-blue-sleeves-v3.webp", "top-tee-hip-blue-top-body-v3.webp"]);
-  for (const f of S.files) { assert.match(f.sha256, /^[0-9a-f]{64}$/); assert.equal(existsSync(join(ROOT, "assets", "avatar-northstar", f.file)), false, f.file); }
-  assert.deepEqual([...L.NORTHSTAR_KNOWN_FAULTY].length, 3);
+  for (const f of S.files) {
+    const b = readFileSync(join(ROOT, "assets", "avatar-northstar", f.file));
+    assert.deepEqual([b.length, createHash("sha256").update(b).digest("hex")], [f.bytes, f.sha256], f.file);
+  }
 });
 
-test("D-370: with the layer fixes on, all 3,780 are drawn, and only the two repairs differ from today's plans", async () => {
-  const F = await FREE();
-  assert.equal(F.NORTHSTAR_KNOWN_FAULTY.length, 0);
+test("D-370: with the layer fixes on, all 3,780 are drawn, and only the two repairs differ from the earlier files' plans", async () => {
+  const F = L, B = await BEFORE();
+  assert.deepEqual([F.NORTHSTAR_KNOWN_FAULTY.length, B.NORTHSTAR_KNOWN_FAULTY.length], [0, 3]);
   const COVER = "/assets/avatar-northstar/shoes-sneakers-white-under-long-hem-v1.webp", HIP = "/assets/avatar-northstar/top-tee-hip-blue-hip-cover-v1.webp", names = (p) => p.map((x) => x.src);
   for (const [t, b, s] of all()) {
     const p = names(F.northstarPlanFor({ top: t, bottom: b, shoes: s }));
     assert.equal(p.includes(COVER), s === "shoes-sneakers-white" && b.startsWith("bottom-trousers-square-"), "the collar cover only under long trousers");
     assert.equal(p.includes(HIP), t === "top-tee-hip-blue");
     if (t === "top-tee-hip-blue") assert.ok(p.indexOf(HIP) < p.findIndex((x) => x.includes(b + "-pants")), "the former hem lines lie behind the bottom");
-    if (L.NORTHSTAR_KNOWN_FAULTY.includes(t + "+" + b + "+" + s)) continue;
-    const today = names(L.northstarPlanFor({ top: t, bottom: b, shoes: s }));
+    if (B.NORTHSTAR_KNOWN_FAULTY.includes(t + "+" + b + "+" + s)) { assert.equal(B.northstarPlanFor({ top: t, bottom: b, shoes: s }), null); continue; }
+    const today = names(B.northstarPlanFor({ top: t, bottom: b, shoes: s }));
     assert.deepEqual(p.filter((x) => x !== COVER && x !== HIP).map((x) => x.replace("top-tee-hip-blue-top-body-v3", "top-tee-hip-blue-top-body-v2").replace("top-tee-hip-blue-sleeves-v3", "top-tee-hip-blue-sleeves-v2")), today);
   }
 });
