@@ -330,3 +330,116 @@ test("unit-weights-refresh is read-only towards GitHub and writes only the weigh
   assert.ok(src.includes('const file = join(REPO_ROOT, "tests", "unit-ci-weights.json");'));
   assert.ok(src.includes('if (process.argv.includes("--write")) {'), "writes only on --write");
 });
+
+// ── PostgreSQL lane (D-369) ─────────────────────────────────────────────────────────────────
+// Each shard has one PostgreSQL service (100 connections). On PR #674 three PG files ran side by
+// side in shard 1 and minigame-breaks-concurrency failed with "too many clients". The PG files now
+// run one at a time; everything else keeps its concurrency. This file must not spell the variable
+// name itself (it would then be detected as a PG file), so it reads PG_ENV.
+import { execFileSync } from "node:child_process";
+import { PG_ENV, detectPgFiles, pgLaneScheduler, simulateSchedule, maxOverlap } from "../support/unit-timing.mjs";
+
+const REPO = new URL("../../", import.meta.url);
+const ciSuite = () => readdirSync(new URL("./", import.meta.url))
+  .filter((f) => f.endsWith(".test.mjs") && !BINARY_DEPENDENT.includes(f)).sort();
+const realPg = () => detectPgFiles(ciSuite(), (f) => read("tests/unit/" + f));
+const gitGrep = (...args) => execFileSync("git", ["grep", "-l", "-F", PG_ENV, "--", ...args], { cwd: REPO, encoding: "utf8" })
+  .split("\n").map((l) => l.trim()).filter(Boolean);
+
+test("PG detection equals a git grep of tests/unit, and nothing reaches the server another way", () => {
+  const detected = realPg();
+  const grepped = gitGrep("tests/unit/*.test.mjs").map((p) => p.replace(/^tests\/unit\//, ""))
+    .filter((f) => !BINARY_DEPENDENT.includes(f)).sort();
+  assert.deepEqual(detected, grepped);
+  assert.ok(detected.length >= 17, `expected at least the 17 PG files of 2026-11-09, got ${detected.length}`);
+  for (const f of ["minigame-breaks-concurrency.test.mjs", "mc-length-cue-top10-concurrency.test.mjs",
+    "claim-daily-reward-concurrency.test.mjs", "difficulty-scale-b-concurrency.test.mjs",
+    "question-attempts-v2-bootstrap-rollback.test.mjs"]) assert.ok(detected.includes(f), f);
+  assert.ok(!detected.includes("ci-timing-metrics.test.mjs"), "this file reads PG_ENV and is not a PG file");
+  // A helper that read the variable on a test's behalf would hide that test from the lane.
+  const elsewhere = gitGrep(".").filter((p) => !p.startsWith("tests/unit/") && !p.startsWith("docs/"));
+  assert.deepEqual(elsewhere.sort(), [".github/workflows/playwright.yml", "tests/support/unit-timing.mjs"]);
+  assert.throws(() => detectPgFiles(["x"], () => undefined), /could not read x/);
+});
+
+const isPgName = (f) => f.startsWith("pg");
+function checkRun(order, dur, concurrency, isPg) {
+  const { runs, wall } = simulateSchedule(order, dur, concurrency, isPg);
+  assert.deepEqual(runs.map((r) => r.file).sort(), [...order].sort(), "every file runs exactly once");
+  assert.ok(maxOverlap(runs, isPg) <= 1, "never two PG files at once");
+  assert.ok(maxOverlap(runs) <= concurrency, "never more than the concurrency");
+  return { runs, wall };
+}
+
+test("pgLaneScheduler: one PG file at a time, others in parallel, every file once", () => {
+  const order = ["pg-a", "big", "pg-b", "pg-c", "mid", "s1", "pg-d", "s2", "s3", "s4"];
+  const d = { "pg-a": 5, big: 30, "pg-b": 4, "pg-c": 3, mid: 12, s1: 2, "pg-d": 6, s2: 2, s3: 1, s4: 1 };
+  const { runs } = checkRun(order, (f) => d[f], 3, isPgName);
+  assert.ok(maxOverlap(runs, (f) => !isPgName(f)) >= 2, "non-PG files still run in parallel");
+  // Heaviest-first is kept for the rest: non-PG files start in their planned order.
+  const starts = runs.filter((r) => !isPgName(r.file)).map((r) => r.file);
+  assert.deepEqual(starts, order.filter((f) => !isPgName(f)));
+  // A skipped PG file keeps its place: the lane goes to PG files in planned order.
+  assert.deepEqual(runs.filter((r) => isPgName(r.file)).map((r) => r.file), ["pg-a", "pg-b", "pg-c", "pg-d"]);
+});
+
+test("pgLaneScheduler: no deadlock when only PG files are left, and none with no PG files", () => {
+  const only = ["pg-1", "pg-2", "pg-3", "pg-4"];
+  const { wall } = checkRun(only, () => 2, 3, isPgName);
+  assert.equal(wall, 8, "they run back to back");
+  const tail = ["a", "b", "c", "pg-1", "pg-2", "pg-3"];
+  checkRun(tail, (f) => (isPgName(f) ? 1 : 10), 3, isPgName);
+  const none = ["a", "b", "c", "d"];
+  assert.equal(checkRun(none, () => 3, 2, isPgName).wall, 6, "no PG files = the old pool");
+  assert.equal(checkRun(["pg-x"], () => 1, 1, isPgName).wall, 1);
+  // Step by step: with a PG file running and only PG files queued, take() returns nothing but
+  // a file is running — finishing it frees the lane.
+  const s = pgLaneScheduler(["pg-1", "pg-2"], 3, isPgName);
+  assert.deepEqual(s.take(), ["pg-1"]);
+  assert.deepEqual(s.take(), []);
+  assert.equal(s.running.size, 1);
+  s.finish("pg-1");
+  assert.deepEqual(s.take(), ["pg-2"]);
+  s.finish("pg-2");
+  assert.ok(s.done);
+  assert.throws(() => s.finish("pg-2"), /was not running/);
+  assert.throws(() => pgLaneScheduler(["a", "a"], 1, isPgName), /duplicate/);
+  assert.throws(() => pgLaneScheduler(["a"], 0, isPgName), /concurrency/);
+});
+
+test("the real suite: every shard plan, run with its weights as durations, keeps the lane", () => {
+  const suite = ciSuite();
+  const pg = new Set(realPg());
+  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  const n = unitShardMatrix().shards.length;
+  const dur = (f) => (Number.isFinite(weights[f]) && weights[f] > 0 ? weights[f] : 1);
+  for (const s of planShards(suite, n, weights)) checkRun(s.order, dur, 3, (f) => pg.has(f));
+});
+
+test("negative control: the old pool ran ≥ 2 PG files at once on PR #674's shard-1 plan", () => {
+  // PR #674 = this suite + one unweighted file; its shard 1 is the plan that failed (run 42611228361).
+  const suite = [...ciSuite(), "isolated-stimulus-chain-seed.test.mjs"].sort();
+  const pg = new Set(realPg());
+  const isPg = (f) => pg.has(f);
+  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  const shard1 = planShards(suite, 4, weights)[0];
+  for (const f of ["minigame-breaks-concurrency.test.mjs", "mc-length-cue-top10-concurrency.test.mjs", "claim-daily-reward-concurrency.test.mjs"]) {
+    assert.ok(shard1.order.includes(f), `${f} is in #674's shard 1`);
+  }
+  const known = Object.values(weights).filter((w) => Number.isFinite(w) && w > 0).sort((a, b) => a - b);
+  const median = known[Math.floor(known.length / 2)];
+  const dur = (f) => (Number.isFinite(weights[f]) && weights[f] > 0 ? weights[f] : median);
+  const old = simulateSchedule(shard1.order, dur, 3, () => false); // the pre-D-369 pool
+  assert.ok(maxOverlap(old.runs, isPg) >= 2, "the old schedule overlaps PG files on this plan");
+  const neu = checkRun(shard1.order, dur, 3, isPg);
+  assert.ok(neu.wall <= old.wall * 1.05, `the lane costs little here (${old.wall.toFixed(1)} → ${neu.wall.toFixed(1)} s)`);
+});
+
+test("the runner schedules through pgLaneScheduler over the planned files", () => {
+  const src = read("tests/run-unit-ci.mjs");
+  assert.ok(src.includes('const pgFiles = new Set(detectPgFiles(run, (f) => readFileSync(join(UNIT, f), "utf8")));'));
+  assert.ok(src.includes("const sched = pgLaneScheduler(run, concurrency, (f) => pgFiles.has(f));"));
+  assert.ok(src.includes("for (const f of sched.take()) {"));
+  assert.ok(src.includes("try { sched.finish(f); } catch (err) { rejectAll(err); return; }"));
+  assert.ok(!src.includes("queue.shift()"), "the old worker loop is gone");
+});
