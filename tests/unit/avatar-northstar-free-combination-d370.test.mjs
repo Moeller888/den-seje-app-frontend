@@ -83,6 +83,11 @@ test("D-370: with the layer fixes on, all 3,780 are drawn, and only the two repa
     assert.equal(p.includes(COVER), s === "shoes-sneakers-white" && b.startsWith("bottom-trousers-square-"), "the collar cover only under long trousers");
     assert.equal(p.includes(HIP), t === "top-tee-hip-blue");
     if (t === "top-tee-hip-blue") assert.ok(p.indexOf(HIP) < p.findIndex((x) => x.includes(b + "-pants")), "the former hem lines lie behind the bottom");
+    // the exact place: each fix once, as a plain draw; the lining right after the shoe, the hip cover right before the bottom
+    const plan = F.northstarPlanFor({ top: t, bottom: b, shoes: s }), shoe = p.indexOf("/assets/avatar-northstar/" + s + "-shoes-v1.webp"), bottom = p.indexOf("/assets/avatar-northstar/" + b + "-pants-v1.webp");
+    for (const fix of [COVER, HIP]) if (p.includes(fix)) { assert.equal(p.filter((x) => x === fix).length, 1, fix); const st = plan[p.indexOf(fix)]; assert.deepEqual([st.op, !!st.figure, !!st.cut], ["draw", false, false], fix); }
+    if (p.includes(COVER)) assert.equal(p.indexOf(COVER), shoe + 1, "the lining directly over the white sneaker");
+    if (p.includes(HIP)) assert.equal(p.indexOf(HIP), bottom - 1, "the hip cover directly behind the bottom");
     if (B.NORTHSTAR_KNOWN_FAULTY.includes(t + "+" + b + "+" + s)) { assert.equal(B.northstarPlanFor({ top: t, bottom: b, shoes: s }), null); continue; }
     const today = names(B.northstarPlanFor({ top: t, bottom: b, shoes: s }));
     assert.deepEqual(p.filter((x) => x !== COVER && x !== HIP).map((x) => x.replace("top-tee-hip-blue-top-body-v3", "top-tee-hip-blue-top-body-v2").replace("top-tee-hip-blue-sleeves-v3", "top-tee-hip-blue-sleeves-v2")), today);
