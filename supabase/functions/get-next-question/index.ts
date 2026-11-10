@@ -4,6 +4,7 @@ import { publishableKey, serviceKey } from "../_shared/supabase-keys.ts";
 import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
 import { deriveQuestionScope } from "./scope.ts";
+import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
 import { sortByWave } from "./wave-order.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
@@ -158,6 +159,22 @@ serve(async (req) => {
     if (profileError) throw profileError;
 
     const scope = deriveQuestionScope(profileData, body?.subject);
+
+    // Objective targeting (D-329, ./objective-target.ts): OFF unless the Edge secret
+    // LAERLIGVERSE_OBJECTIVE_TARGETING is "on" AND the request names a learning_objective. It can only
+    // NARROW the server-derived scope to one of its own domains; everything below then runs unchanged
+    // on that narrower scope, except that the repeat step is skipped (E2 mini-scope, see the module).
+    const targeting = resolveObjectiveTargeting(Deno.env.get("LAERLIGVERSE_OBJECTIVE_TARGETING"), body?.learning_objective, scope.subjectDomains);
+    if (targeting.mode === "error") {
+      return new Response(JSON.stringify({ error: targeting.error }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: targeting.status,
+      });
+    }
+    if (targeting.mode === "on") {
+      scope.subjectDomains = [targeting.objective];
+      console.log("OBJECTIVE_TARGETING:", { objective: targeting.objective });
+    }
     const selectedGrade  = scope.grade;
     const subjectDomains = scope.subjectDomains;
 
@@ -250,7 +267,7 @@ serve(async (req) => {
         id,
         repeat_count,
         next_review_at,
-        questions (
+        questions (${targeting.mode === "on" ? "\n          learning_objective," : ""}
           content,
           answer_format,
           answer_type,
@@ -281,6 +298,15 @@ serve(async (req) => {
 
     for (const instance of sortedDue) {
       if (!instance.questions) continue;
+      // D-329 rule 3: an open instance of ANOTHER objective is neither served as this objective's
+      // question nor released — explicit conflict, no side effect on the ordinary quiz. The objective is
+      // the question row's (routing), whatever version K1 delivers.
+      if (!openInstanceMatches(targeting, instance.questions.learning_objective)) {
+        return new Response(JSON.stringify({ error: "open_question_other_objective" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        });
+      }
       // Outside the try: an invalid round, or a malformed delivered version, fails loud instead of being
       // skipped like bad content.
       const roundNo = roundNoOf(instance);
@@ -306,6 +332,8 @@ serve(async (req) => {
             answer_type: q.answer_type || "short",
             metadata: pub.metadata,
             wave_phase: wavePhase,
+            // D-329: echoed only when targeting, so the caller can verify it got the objective it asked for.
+            ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -468,6 +496,29 @@ serve(async (req) => {
     //
     // Same subject scope as the unserved query above: a pupil in historie must not be handed an
     // English repeat, and "the pool is empty" must mean empty for the chosen subject.
+    // D-329 rule 4: a targeted request never reaches the repeat step (E2 mini-scope).
+    if (!inserted && targeting.mode === "on") {
+      // A concurrent request may have won idx_one_open_question (one open instance per pupil): then the
+      // objective is NOT exhausted. Say so explicitly; the caller's retry gets that instance as due.
+      const { data: openRows, error: openError } = await admin()
+        .from("question_instances")
+        .select("id")
+        .eq("student_id", student_id)
+        .eq("answered", false)
+        .limit(1);
+      if (openError) throw openError;
+      if (Array.isArray(openRows) && openRows.length > 0) {
+        return new Response(JSON.stringify({ error: "open_question_exists" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        });
+      }
+      return new Response(JSON.stringify({ step: "no_questions", reason: "objective_exhausted" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     if (!inserted) {
       // v2: "exhausted" means no SERVABLE unserved question is left — the same rule the v2 candidate
       // window uses (public.question_is_servable), so a pool that holds only formats the client cannot
@@ -549,6 +600,8 @@ serve(async (req) => {
                   answer_type: src.answer_type || "short",
                   metadata: pub.metadata,
                   wave_phase: wavePhase,
+                  // D-329: echoed only when targeting, so the caller can verify it got the objective it asked for.
+                  ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
                   is_repeat: true,
                 }),
                 {
@@ -590,6 +643,8 @@ serve(async (req) => {
         answer_type: inserted.question?.answer_type || "short",
         metadata: inserted.pub.metadata,
         wave_phase: wavePhase,
+        // D-329: echoed only when targeting, so the caller can verify it got the objective it asked for.
+        ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
