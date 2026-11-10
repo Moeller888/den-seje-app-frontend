@@ -705,3 +705,100 @@ test("12b. student-detail: the pupil's e-mail and typed answers are text — the
   }
   await exec.expectNothingRan();
 });
+
+test("12c. student-detail: Rækkefølge and Kategorisering show the authored facit and right/wrong — never the raw positions", async ({ page }) => {
+  const exec = watchForExecution(page);
+  await open(page, "/student-detail.html?id=s-x1", {
+    ...TEACHER,
+    overview: { email: "elev@skole.dk", xp: 10, level: 1, correct_ratio: 50, total_correct_answers: 1, total_attempts: 2 },
+    questionContent: {
+      "q-mc": { question: "Hvad er 2 + 2?", options: ["3", "4", "5"], correct: "4" },
+      "q-num": { question: "Hvad er 3 · 4?", answer: "12" },
+      "q-order": {
+        question: "Sæt begivenhederne i den rækkefølge, de skete",
+        items: ["Grundloven", "Første Verdenskrig", "Genforeningen"],
+        sequence: "chronological",
+        correct: "-",
+      },
+      // No answer_format in the row: the content's shape decides.
+      "q-cat": {
+        question: "Hvad hører til enevælden, og hvad til demokratiet?",
+        categories: ["Enevælde", "Demokrati"],
+        items: [
+          { text: "Kongeloven", category: "Enevælde" },
+          { text: "Frie valg", category: "Demokrati" },
+          { text: "Kongen har al magt", category: "Enevælde" },
+          { text: "Grundloven", category: "Demokrati" },
+        ],
+        correct: "-",
+      },
+      // Declared categorize, but the content is malformed: no crash, the old facit lookup, no positions.
+      "q-cat-bad": { question: "Defekt opgave", correct: "-" },
+    },
+    questionFormat: { "q-mc": "mc", "q-num": "number", "q-order": "order", "q-cat-bad": "categorize" },
+    detailPending: [
+      { id: "i-1", student_id: "s-x1", question_id: "q-mc", user_answer: "4", was_correct: true, teacher_score: null, teacher_feedback: null, created_at: "2026-11-09T08:00:00Z" },
+      { id: "i-2", student_id: "s-x1", question_id: "q-num", user_answer: "12", was_correct: true, teacher_score: null, teacher_feedback: null, created_at: "2026-11-09T08:01:00Z" },
+      { id: "i-3", student_id: "s-x1", question_id: "q-order", user_answer: "2,0,1", was_correct: false, teacher_score: null, teacher_feedback: null, created_at: "2026-11-09T08:02:00Z" },
+      { id: "i-4", student_id: "s-x1", question_id: "q-cat", user_answer: "3:1,0:0,2:0,1:1", was_correct: true, teacher_score: null, teacher_feedback: null, created_at: "2026-11-09T08:03:00Z" },
+      { id: "i-5", student_id: "s-x1", question_id: "q-cat-bad", user_answer: "[1,0,1,0]", was_correct: null, teacher_score: null, teacher_feedback: null, created_at: "2026-11-09T08:04:00Z" },
+    ],
+    detailReviewed: [
+      { id: "i-6", student_id: "s-x1", question_id: "q-order", user_answer: "[2,0,1]", was_correct: true, teacher_score: 4, teacher_feedback: "Perfekt", created_at: "2026-11-08T08:00:00Z" },
+    ],
+  });
+
+  const boxes = page.locator("#reviewPanel .box");
+  await expect(boxes).toHaveCount(6);
+
+  // Multiple choice and number: exactly as before.
+  await expect(boxes.nth(0)).toContainText("SPØRGSMÅLHvad er 2 + 2?");
+  await expect(boxes.nth(0)).toContainText("SVAR4");
+  await expect(boxes.nth(0)).toContainText("FACIT4");
+  await expect(boxes.nth(1)).toContainText("SVAR12");
+  await expect(boxes.nth(1)).toContainText("FACIT12");
+
+  // Rækkefølge: the authored order, right/wrong, and a plain note that the pupil's order is not shown.
+  await expect(boxes.nth(2)).toContainText("SPØRGSMÅLSæt begivenhederne i den rækkefølge, de skete");
+  await expect(boxes.nth(2)).toContainText("SVARForkert (rettet automatisk). Elevens rækkefølge vises ikke her endnu.");
+  await expect(boxes.nth(2)).toContainText("FACIT1. Grundloven → 2. Første Verdenskrig → 3. Genforeningen");
+
+  // Kategorisering (detected from the content's shape): the items grouped by category.
+  await expect(boxes.nth(3)).toContainText("SVARRigtigt (rettet automatisk). Elevens placering af punkterne vises ikke her endnu.");
+  await expect(boxes.nth(3)).toContainText("FACITEnevælde: Kongeloven, Kongen har al magt; Demokrati: Frie valg, Grundloven");
+
+  // Malformed categorize content: the old facit, the neutral note, nothing raw.
+  await expect(boxes.nth(4)).toContainText("SVARElevens placering af punkterne vises ikke her endnu.");
+  await expect(boxes.nth(4)).toContainText("FACIT-");
+
+  // A reviewed Rækkefølge row hides the raw positions as well.
+  await expect(boxes.nth(5)).toContainText("SVARRigtigt (rettet automatisk). Elevens rækkefølge vises ikke her endnu.");
+  await expect(boxes.nth(5)).toContainText("Score: 4");
+
+  // No raw position list anywhere.
+  const review = page.locator("#reviewPanel");
+  for (const raw of ["[", "2,0,1", "3:1,0:0"]) {
+    await expect(review, `no raw answer "${raw}"`).not.toContainText(raw);
+  }
+
+  // The score buttons are still offered for every pending row.
+  for (let i = 0; i < 5; i++) {
+    await expect(boxes.nth(i).getByRole("button")).toHaveText(["1 – Afvist", "2 – OK", "3 – Godt", "4 – Perfekt"]);
+  }
+
+  // What the page asked for: answer_format and was_correct — never the per-instance key.
+  const log = await fakeLog(page);
+  const selects = (table: string) => log
+    .filter((e) => e.table === table)
+    .map((e) => String((e.ops.find((o: any) => o.op === "select") || { args: [""] }).args[0]));
+  expect(selects("questions")).toEqual(["id, content, answer_format"]);
+  const instanceSelects = selects("question_instances").filter((s) => s.includes("user_answer"));
+  expect(instanceSelects.length).toBe(2);
+  for (const s of instanceSelects) {
+    expect(s).toContain("was_correct");
+    expect(s).not.toContain("correct_answer");
+    expect(s).not.toContain("*");
+  }
+
+  await exec.expectNothingRan();
+});
