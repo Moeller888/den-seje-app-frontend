@@ -193,8 +193,8 @@ test("the admin client is used only for the instance insert and the server-only 
   // pinned in level-flow.test.mjs.
   assert.equal((INDEX_CODE.match(/await loadLevelPlan\(admin\(\) as unknown as LevelReadClient, \{\s*studentId: student_id,/g) ?? []).length, 1,
     "the level engine call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 13,
-    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read)");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 14,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {
