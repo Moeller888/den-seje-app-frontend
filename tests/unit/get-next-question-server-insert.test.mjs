@@ -157,6 +157,9 @@ test("the admin client is used only for the instance insert and the server-only 
   assert.match(INDEX_CODE, /await insertQuestionInstance\(makeAdminClient, \{/);
   const adminUses = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.(from|rpc)\(\s*"([a-z_]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
   assert.deepEqual(adminUses, [
+    // LP-13/K9 prototype (LAERLIGVERSE_INTRODUCTION=on, sequence requests only): the objective's introduction
+    // round for the verified pupil (serve_introduction, service_role only); an introduction carries no key.
+    "rpc:serve_introduction",
     // D-338, sequence requests only (LAERLIGVERSE_SEQUENCE=on + targeting + body.sequence): the pupil's own
     // history in the objective — answered, verdict, time and the question's step tag; no content, no key.
     "from:question_instances",
