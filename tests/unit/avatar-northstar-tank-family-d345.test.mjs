@@ -11,6 +11,7 @@ import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as WR from "../../tools/avatar/northstar-wardrobe.mjs";
 import * as AL from "../../js/avatar-layers.js";
+import { beforeLayerFixes } from "../../tools/avatar/northstar-free-matrix.mjs";   // D-370: the plan without its two layer fixes
 import * as K from "../../tools/avatar/northstar-top-cut-kit.mjs";
 import * as TF from "../../tools/avatar/northstar-tank-family.mjs";
 
@@ -33,7 +34,7 @@ test("D-345 the family: 44 tee-approved pairs x 6 designs = 264; olive with beig
 
 test("D-345 the runtime item shape: the hem junction after the shoes and before the bottom, a body layer, no sleeves, the cut's shadow", () => {
   const table = { ...AL.NORTHSTAR_ITEMS, [TF.itemOf("TK-NAVY-FOX")]: TF.itemShape(["body"]) };
-  const plan = AL.northstarPlanFor({ top: TF.itemOf("TK-NAVY-FOX"), bottom: "bottom-trousers-square-olive", shoes: "shoes-sneakers-white" }, table, "ns"), src = plan.map((s) => s.src.replace("ns/", ""));
+  const plan = AL.northstarPlanFor({ top: TF.itemOf("TK-NAVY-FOX"), bottom: "bottom-trousers-square-olive", shoes: "shoes-sneakers-white" }, table, "ns"), src = beforeLayerFixes(plan.map((s) => s.src.replace("ns/", "")));
   const j = src.indexOf(TF.JUNCTION_FILE); assert.ok(j > 0); assert.equal(src[j - 1], "shoes-sneakers-white-shoes-v1.webp"); assert.equal(src[j + 1], "bottom-trousers-square-olive-pants-v1.webp");
   assert.ok(src.includes("top-tank-navy-fox-top-body-v1.webp")); assert.ok(!src.some((f) => /top-tank.*sleeves/.test(f))); assert.ok(src.includes("top-tank-shadow-body-v1.webp"));
 });

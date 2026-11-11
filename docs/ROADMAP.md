@@ -901,8 +901,10 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   `20261106094831`).
 - **Trin 1b anvendt 2026-11-06:** piloten (500 opgaver i 3 filer) ligger inaktivt i produktionen (ledger
   `20261106192437`, `20261106193242`, `20261106194452`). Den har et åbent punkt før aktivering: forklaringen
-  til "She has a ___ memory" (runbookens §2.8). De øvrige 27 migrationer er ikke anvendt, og intet er
-  aktiveret.
+  til "She has a ___ memory" (runbookens §2.8).
+- **Trin 1c, batch 2 anvendt 2026-11-07/08:** batch 2 (500 opgaver i 3 filer) ligger inaktivt i produktionen
+  (ledger `20261107161010`, `20261107162331`, `20261108102751`). Den har et åbent punkt før aktivering:
+  forklaringen til "suppose" (runbookens §2.8). De øvrige 24 migrationer er ikke anvendt, og intet er aktiveret.
 - Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
   `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.

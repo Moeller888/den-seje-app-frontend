@@ -1029,11 +1029,18 @@ const _KIT_ITEM = Object.freeze({
   [NORTHSTAR_LS2_BASE]: Object.freeze({ category: "top", layers: ["top-body", "sleeves"], shadows: ["body", "arms"], shadowsOf: NORTHSTAR_LS2_BASE, hipSeam: NORTHSTAR_LS2_HIP_SEAM }),
   [NORTHSTAR_TANK_BASE]: Object.freeze({ category: "top", layers: ["top-body"], shadows: ["body"], shadowsOf: NORTHSTAR_TANK_BASE, hipSeam: NORTHSTAR_TANK_HEM_JUNCTION }),
 });
+// D-370: the two fit repairs of the free wardrobe (the blue tee's stray hem lines, and skin above a white sneaker's collar under long
+// trousers). Published with the owner's approval (2026-11-09): the four layer files are in assets/avatar-northstar (hashes in
+// layer-fixes-staging-v1.json), so all 3,780 outfits are drawn and none is refused. False draws the earlier files and refuses D-242's three.
+export const NORTHSTAR_LAYER_FIXES = true;
+const _NS_BLUE_TEE_LAYERS = NORTHSTAR_LAYER_FIXES ? { layerRev: 3, hipSeam: "top-tee-hip-blue-hip-cover-v1.webp" } : { layerRev: 2 };   // the hem lines moved behind the bottom
+const _NS_UNDER_LONG_HEM = Object.freeze({ "shoes-sneakers-white": "shoes-sneakers-white-under-long-hem-v1.webp" });   // a closed collar under a long hem
+const _nsLongHem = (bottom) => typeof bottom === "string" && bottom.startsWith("bottom-trousers-square-");
 // The ten items: their layers and their skin-shadow parts (multiply; on C's body, on C's arms); then the print tees, the trousers,
 // the SV1-V5 shoes, the AB-1 boots and the sweaters (with their hip seam). layerRev 2 on the tees: D-349's layer files (U-343-1).
 export const NORTHSTAR_ITEMS = Object.freeze({
   "top-tee-hip-cream":            { category: "top",    layers: ["top-body", "sleeves"], shadows: ["body", "arms"], layerRev: 2 },
-  "top-tee-hip-blue":             { category: "top",    layers: ["top-body", "sleeves"], shadows: ["arms"], layerRev: 2 },
+  "top-tee-hip-blue":             { category: "top",    layers: ["top-body", "sleeves"], shadows: ["arms"], ..._NS_BLUE_TEE_LAYERS },
   "bottom-skirt-sand":            { category: "bottom", layers: ["pants"],               shadows: ["body", "arms"] },
   "bottom-shorts-navy":           { category: "bottom", layers: ["pants"],               shadows: ["body"] },
   "bottom-capri-lightblue":       { category: "bottom", layers: ["pants"],               shadows: ["body"] },
@@ -1075,7 +1082,7 @@ export const NORTHSTAR_OUTFITS = Object.freeze({
   K19: _NS("tee-hip-blue", "capri-lightblue", "ankleboots-brown"),
 });
 // Known fault (a double edge at the right hip): never rendered, whatever is stored.
-export const NORTHSTAR_KNOWN_FAULTY = Object.freeze([
+export const NORTHSTAR_KNOWN_FAULTY = Object.freeze(NORTHSTAR_LAYER_FIXES ? [] : [
   "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-beige",
   "top-tee-hip-blue+bottom-skirt-sand+shoes-boots-laceup-black",
   "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-white",
@@ -1219,6 +1226,7 @@ export function northstarPlanFor(o, itemTable = NORTHSTAR_ITEMS, basePath = NORT
   return [
     figure(NORTHSTAR_FIGURE.body),
     ...items[2].layers.map((l) => layer(o.shoes, l)),
+    ...(NORTHSTAR_LAYER_FIXES && _nsLongHem(o.bottom) && Object.prototype.hasOwnProperty.call(_NS_UNDER_LONG_HEM, o.shoes) ? [{ op: "draw", src: _nsSrc(_NS_UNDER_LONG_HEM[o.shoes]) }] : []),   // D-370
     ...(items[0].hipSeam ? [{ op: "draw", src: _nsSrc(items[0].hipSeam) }] : []),   // D-337: a sweater's hip seam (D-348: a tank's hem junction), behind the bottom
     ...items[1].layers.map((l) => layer(o.bottom, l)),
     ...items[0].layers.filter((l) => l !== "sleeves").map((l) => layer(o.top, l)),
@@ -1300,40 +1308,33 @@ export function northstarPieces() {
   for (const o of northstarApprovedOutfits().values()) { used.add(o.top); used.add(o.bottom); used.add(o.shoes); }
   return Object.keys(NORTHSTAR_ITEMS).filter((id) => used.has(id)).map((id) => Object.freeze({ item: id, category: NORTHSTAR_ITEMS[id].category }));
 }
+// D-370: a free choice holds the three parts directly: { outfit: "FRI", top, pants, shoes } with item ids (set_avatar_northstar's existing
+// format: only these keys, short ids, so no migration). Older choices with a K number keep reading exactly as before.
+export const NORTHSTAR_FREE = "FRI";
+function _nsFree() {
+  if (!AVATAR_NORTHSTAR_WARDROBE || !_nsAccount || _nsAccount.outfit !== NORTHSTAR_FREE) return null;
+  const is = (id, category) => typeof id === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_ITEMS, id) && NORTHSTAR_ITEMS[id].category === category;
+  const { top, pants, shoes } = _nsAccount;
+  return is(top, "top") && is(pants, "bottom") && is(shoes, "shoes") ? Object.freeze({ top, bottom: pants, shoes }) : null;
+}
 // What the pupil wears now, or null while on today's avatar.
 export function northstarOutfitNow() {
+  const free = _nsFree();
+  if (free) return free;
   const k = northstarSelectedOutfit();
   return k ? northstarOutfitFor(k, northstarSelectedTee(), northstarSelectedPants(), northstarSelectedShoe(), northstarSelectedSweater()) : null;
 }
-// Puts one part on. D-367: while the pupil wears an outfit, ONLY the chosen part changes: the part with the two parts the pupil already
-// wears, when that exact outfit is approved ({ top, bottom, shoes, choice, changed: [] }); otherwise the part is refused and nothing
-// changes ({ refused: true, category }), so the pupil can change another part first. On today's avatar (no outfit worn yet) the pupil
-// wears none of these parts, so D-359's rule still starts the figure: the approved outfit with the part that changes the start outfit
-// least — fewest other parts, shoes before the bottom before the top, then the part approved with most outfits, then catalogue order.
-// Deterministic. Null for an unknown part.
+// Puts one part on. D-370 (replaces D-367's approved-list check and D-359's start-outfit search): exactly the chosen part changes, with the
+// two parts the pupil wears; on today's avatar (no outfit yet), with the two other parts of the start outfit. The result is saved as the
+// three parts ({ outfit: "FRI", top, pants, shoes }). Only a combination the renderer will not draw is refused ({ refused: true, category }):
+// the three NORTHSTAR_KNOWN_FAULTY outfits, until the layer fixes are published. Deterministic. Null for an unknown part.
 export function northstarFitPiece(item) {
   const it = typeof item === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_ITEMS, item) ? NORTHSTAR_ITEMS[item] : null;
   if (!it) return null;
-  const worn = northstarOutfitNow();
-  if (worn) {
-    const want = { top: worn.top, bottom: worn.bottom, shoes: worn.shoes, [it.category]: item };
-    const o = northstarApprovedOutfits().get(want.top + "+" + want.bottom + "+" + want.shoes);
-    return o ? Object.freeze({ top: o.top, bottom: o.bottom, shoes: o.shoes, choice: o.choice, changed: Object.freeze([]) })
-      : Object.freeze({ refused: true, category: it.category });
-  }
-  const all = northstarApprovedOutfits(), now = NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT], cats = ["top", "bottom", "shoes"];
-  const count = new Map();
-  for (const o of all.values()) for (const c of cats) count.set(o[c], (count.get(o[c]) ?? 0) + 1);
-  let best = null, bestRank = null;
-  for (const o of all.values()) {
-    if (o[it.category] !== item) continue;
-    const gone = cats.filter((c) => c !== it.category && o[c] !== now[c]);
-    const rank = [gone.length, gone.includes("top") ? 1 : 0, gone.includes("bottom") ? 1 : 0, -gone.reduce((a, c) => a + count.get(o[c]), 0)];
-    const d = bestRank ? rank.findIndex((v, i) => v !== bestRank[i]) : -1;
-    if (!bestRank || (d !== -1 && rank[d] < bestRank[d])) { best = { o, gone }; bestRank = rank; }
-  }
-  if (!best) return null;
-  return Object.freeze({ top: best.o.top, bottom: best.o.bottom, shoes: best.o.shoes, choice: best.o.choice, changed: Object.freeze(best.gone.map((c) => Object.freeze({ category: c, from: now[c], to: best.o[c] }))) });
+  const from = northstarOutfitNow() || NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT];
+  const o = { top: from.top, bottom: from.bottom, shoes: from.shoes, [it.category]: item };
+  if (!northstarPlanFor(o)) return Object.freeze({ refused: true, category: it.category });
+  return Object.freeze({ top: o.top, bottom: o.bottom, shoes: o.shoes, choice: Object.freeze({ outfit: NORTHSTAR_FREE, top: o.top, pants: o.bottom, shoes: o.shoes }), changed: Object.freeze([]) });
 }
 // The layers of one part, for its picture in the wardrobe.
 export function northstarPieceLayers(item) {
@@ -1347,6 +1348,17 @@ export function northstarRenderFor(surface, cosmetics) {
   if (!isNorthstarWardrobeOn()) return null;
   if (_nsAccount === undefined && _nsStorage(NORTHSTAR_OPT_IN_KEY) !== "1") return null;   // D-357: no account named → a browser's choice still needs its opt-in
   if (NORTHSTAR_SURFACES.indexOf(surface) === -1) return null;
+  const free = _nsFree();
+  if (free) {
+    const plan = northstarPlanFor(free), out = [];
+    if (!plan) return null;
+    for (const c of Array.isArray(cosmetics) ? cosmetics : []) {
+      if (!c || !c.src || typeof c.z !== "number") continue;
+      if (NORTHSTAR_SUPPORTED_COSMETIC_SLOTS.indexOf(c.slot) === -1) return null;
+      out.push({ src: c.src, z: C2_LAYER_Z[c.slot] ?? c.z, isBase: false, inline: false, marker: "northstar-cosmetic" });
+    }
+    return { key: NORTHSTAR_FREE + "+" + free.top + "+" + free.bottom + "+" + free.shoes, outfit: NORTHSTAR_FREE, tee: null, pants: null, shoe: null, sweater: null, plan, cosmetics: out };
+  }
   const outfitKey = northstarSelectedOutfit(), base = northstarOutfitFor(outfitKey, northstarSelectedTee(), northstarSelectedPants(), northstarSelectedShoe());
   const outfit = northstarOutfitFor(outfitKey, northstarSelectedTee(), northstarSelectedPants(), northstarSelectedShoe(), northstarSelectedSweater());
   const plan = outfit ? northstarPlanFor(outfit) : null;
