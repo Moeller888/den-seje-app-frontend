@@ -275,9 +275,14 @@ jobs:
           # The edge-runtime container can die while booting (SIGBUS, "Bus error (core dumped)", exit 135:
           # 2 of 9 jobs in run 40650983690). Like the stack start, ONLY the server start is retried, at
           # most 3 times and logged; no test is ever retried, and a runtime that never serves fails here.
+          # D-329: objective targeting is ON in the isolated stack only (the secret is unset — off — everywhere
+          # else). No existing client sends learning_objective, so the frontend suite still runs today's path.
+          echo 'LAERLIGVERSE_OBJECTIVE_TARGETING=on' > "$RUNNER_TEMP/functions.env"
+          # D-338: the server-directed sequence, likewise ON only in the isolated stack.
+          echo 'LAERLIGVERSE_SEQUENCE=on' >> "$RUNNER_TEMP/functions.env"
           ready=no
           for attempt in 1 2 3; do
-            nohup supabase functions serve >> "$RUNNER_TEMP/functions.log" 2>&1 &
+            nohup supabase functions serve --env-file "$RUNNER_TEMP/functions.env" >> "$RUNNER_TEMP/functions.log" 2>&1 &
             pid=$!
             for i in $(seq 1 60); do
               # Ready = the function's OWN code answered: get-next-question's preflight handler returns

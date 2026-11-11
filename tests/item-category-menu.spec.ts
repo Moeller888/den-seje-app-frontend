@@ -282,16 +282,14 @@ for (const width of [1100, 390]) {
     expect(await now()).toEqual(worn);
     expect(pupil.calls.length).toBe(1);
 
-    // a top that does not fit the shorts is refused (D-367): nothing changes, nothing is saved, the category stays Overdele;
-    // a top that fits goes on with exactly the same bottom and shoes
+    // D-370: any top goes on, also the sweater over the shorts, with exactly the same bottom and shoes; the category stays Overdele
     await page.getByRole("tab", { name: "Overdele", exact: true }).click();
     await page.locator("#northstarWardrobeCards .item-card[data-piece='top-sweater-ls2-green-check'] .equip-btn").click();
-    await expect(page.locator("#northstarWardrobe .northstar-status")).toContainText("Den overdel passer ikke til dit nuværende outfit.");
-    await expect(selected(page)).toHaveText("Overdele");
-    expect(await now()).toEqual(worn);
-    expect(pupil.calls.length).toBe(1);
-    await page.locator("#northstarWardrobeCards .item-card[data-piece='top-tee-hip-blue'] .equip-btn").click();
     await expect.poll(() => pupil.calls.length).toBe(2);
+    await expect(selected(page)).toHaveText("Overdele");
+    expect((await now())!.id).toBe("top-sweater-ls2-green-check+" + worn!.id.split("+").slice(1).join("+"));
+    await page.locator("#northstarWardrobeCards .item-card[data-piece='top-tee-hip-blue'] .equip-btn").click();
+    await expect.poll(() => pupil.calls.length).toBe(3);
     await expect(selected(page)).toHaveText("Overdele");
     const changedTop = await now();
     expect(changedTop && changedTop.approved && changedTop.id === "top-tee-hip-blue+" + worn!.id.split("+").slice(1).join("+")).toBe(true);

@@ -1,0 +1,119 @@
+{
+  "decision": "D-370",
+  "what": "Det eneste undtagne fund i pasformskontrollen: COMBO-2 på snørebåndslinjerne lige under buksekanten, kun disse tre overgange og kun disse felter. Felter [x, y, bredde, højde] i 1024 x 1536.",
+  "check": "COMBO-2-DOUBLE-CONTOUR",
+  "shoes": "shoes-sneakers-low-sv1-charcoal",
+  "transitions": [
+    {
+      "bottom": "bottom-trousers-square-olive",
+      "boxes": [
+        [
+          390,
+          1376,
+          9,
+          2
+        ],
+        [
+          626,
+          1376,
+          8,
+          2
+        ],
+        [
+          390,
+          1379,
+          9,
+          2
+        ],
+        [
+          626,
+          1379,
+          8,
+          2
+        ],
+        [
+          424,
+          1380,
+          8,
+          1
+        ],
+        [
+          592,
+          1380,
+          7,
+          1
+        ],
+        [
+          424,
+          1382,
+          8,
+          3
+        ],
+        [
+          592,
+          1382,
+          7,
+          3
+        ]
+      ]
+    },
+    {
+      "bottom": "bottom-trousers-square-navy",
+      "boxes": [
+        [
+          424,
+          1380,
+          8,
+          1
+        ],
+        [
+          592,
+          1380,
+          7,
+          1
+        ],
+        [
+          424,
+          1382,
+          8,
+          3
+        ],
+        [
+          592,
+          1382,
+          7,
+          3
+        ]
+      ]
+    },
+    {
+      "bottom": "bottom-trousers-square-sand",
+      "boxes": [
+        [
+          424,
+          1380,
+          8,
+          1
+        ],
+        [
+          592,
+          1380,
+          7,
+          1
+        ],
+        [
+          424,
+          1382,
+          8,
+          3
+        ],
+        [
+          592,
+          1382,
+          7,
+          3
+        ]
+      ]
+    }
+  ]
+}

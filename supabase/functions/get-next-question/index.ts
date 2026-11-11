@@ -4,6 +4,8 @@ import { publishableKey, serviceKey } from "../_shared/supabase-keys.ts";
 import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
 import { deriveQuestionScope } from "./scope.ts";
+import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
+import { checkRequestedStep, historyFromRows, nextStep, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
 import { sortByWave } from "./wave-order.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
@@ -158,6 +160,58 @@ serve(async (req) => {
     if (profileError) throw profileError;
 
     const scope = deriveQuestionScope(profileData, body?.subject);
+
+    // Objective targeting (D-329, ./objective-target.ts): OFF unless the Edge secret
+    // LAERLIGVERSE_OBJECTIVE_TARGETING is "on" AND the request names a learning_objective. It can only
+    // NARROW the server-derived scope to one of its own domains; everything below then runs unchanged
+    // on that narrower scope, except that the repeat step is skipped (E2 mini-scope, see the module).
+    const targeting = resolveObjectiveTargeting(Deno.env.get("LAERLIGVERSE_OBJECTIVE_TARGETING"), body?.learning_objective, scope.subjectDomains);
+    if (targeting.mode === "error") {
+      return new Response(JSON.stringify({ error: targeting.error }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: targeting.status,
+      });
+    }
+    if (targeting.mode === "on") {
+      scope.subjectDomains = [targeting.objective];
+      // The subject-switch release below must never release an open round of the TARGETED objective: the
+      // objective is already validated as part of this pupil's own scope (D-338, found by the isolated
+      // resume test — an objective outside HISTORY_DOMAINS was released and re-served on every request).
+      if (!scope.releaseDomains.includes(targeting.objective)) scope.releaseDomains = [...scope.releaseDomains, targeting.objective];
+      console.log("OBJECTIVE_TARGETING:", { objective: targeting.objective });
+    }
+
+    // Server-directed sequence (D-338, ../_shared/learning-sequence.ts): OFF unless the Edge secret
+    // LAERLIGVERSE_SEQUENCE is "on", objective targeting is on, AND the request asks for it. The SERVER derives
+    // the pupil's current step from its own history in the objective; the client may only name the step it
+    // expects (a stale or manipulated one is refused). Off: no read, no change — the calls are as before.
+    let sequence: Extract<SequenceDecision, { state: "step" }> | null = null;
+    if (targeting.mode === "on" && Deno.env.get("LAERLIGVERSE_SEQUENCE") === "on" && body?.sequence === true) {
+      const { data: historyRows, error: historyError } = await admin()
+        .from("question_instances")
+        .select("answered, was_correct, answered_at, questions!inner(learning_objective, metadata)")
+        .eq("student_id", student_id)
+        .eq("questions.learning_objective", targeting.objective);
+      if (historyError) throw historyError;
+      const decision = nextStep(historyFromRows(historyRows), Date.now());
+      const requested = checkRequestedStep(body?.learning_step, decision);
+      if (!requested.ok) {
+        return new Response(JSON.stringify({ error: requested.error }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: requested.status,
+        });
+      }
+      if (decision.state !== "step") {
+        return new Response(JSON.stringify(decision.state === "complete"
+          ? { step: "sequence_complete", learning_objective: targeting.objective, policy: decision.policy }
+          : { step: "sequence_waiting", learning_objective: targeting.objective, learning_step: decision.step, due_at: decision.dueAt, policy: decision.policy }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+      sequence = decision;
+      console.log("LEARNING_SEQUENCE:", { step: decision.step, policy: decision.policy });
+    }
     const selectedGrade  = scope.grade;
     const subjectDomains = scope.subjectDomains;
 
@@ -198,6 +252,11 @@ serve(async (req) => {
       if (roleError) throw roleError;
       if ((roleRow as { role?: unknown } | null)?.role !== "student") levelEngine = "off";
     }
+    // F10-B: a targeted request (D-329, and the D-338 sequence on top of it) is a COURSE request. A course
+    // objective is not on the difficulty scale, so the level route would serve none of its questions (only
+    // questions with a difficulty_level are candidates) and would advance the pupil's subject level on a course
+    // call. It therefore always takes the classic route on the narrowed scope. Untargeted requests: unchanged.
+    if (targeting.mode === "on") levelEngine = "off";
     const route = chooseSelectionRoute(mixEngine, levelEngine);
     // L1 K1 (Edge secret K1_SERVED_SNAPSHOT, ./served-snapshot.ts): unset = everything below runs exactly
     // as before; "on" (only after migration 20261103110000) makes every response and the recorded delivered
@@ -250,7 +309,7 @@ serve(async (req) => {
         id,
         repeat_count,
         next_review_at,
-        questions (
+        questions (${targeting.mode === "on" ? "\n          learning_objective," : ""}
           content,
           answer_format,
           answer_type,
@@ -281,6 +340,23 @@ serve(async (req) => {
 
     for (const instance of sortedDue) {
       if (!instance.questions) continue;
+      // D-329 rule 3: an open instance of ANOTHER objective is neither served as this objective's
+      // question nor released — explicit conflict, no side effect on the ordinary quiz. The objective is
+      // the question row's (routing), whatever version K1 delivers.
+      if (!openInstanceMatches(targeting, instance.questions.learning_objective)) {
+        return new Response(JSON.stringify({ error: "open_question_other_objective" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        });
+      }
+      // D-338: in a sequence, an open round is resumed only in the step the server decided (the step tag is the
+      // question row's, like the objective; K1 may deliver an earlier version of the content).
+      if (sequence !== null && stepOf(instance.questions.metadata) !== sequence.step) {
+        return new Response(JSON.stringify({ error: "open_question_other_step" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        });
+      }
       // Outside the try: an invalid round, or a malformed delivered version, fails loud instead of being
       // skipped like bad content.
       const roundNo = roundNoOf(instance);
@@ -306,6 +382,10 @@ serve(async (req) => {
             answer_type: q.answer_type || "short",
             metadata: pub.metadata,
             wave_phase: wavePhase,
+            // D-329: echoed only when targeting, so the caller can verify it got the objective it asked for.
+            ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
+            // D-338: the server's step and activity mode, only in a sequence.
+            ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -412,6 +492,8 @@ serve(async (req) => {
 
     for (const q of sortedQuestions) {
       if (!q.content) continue;
+      // D-338: in a sequence, only the questions tagged with the server's current step are candidates.
+      if (sequence !== null && stepOf(q.metadata) !== sequence.step) continue;
 
       let format: string;
       let normalized: any;
@@ -468,6 +550,31 @@ serve(async (req) => {
     //
     // Same subject scope as the unserved query above: a pupil in historie must not be handed an
     // English repeat, and "the pool is empty" must mean empty for the chosen subject.
+    // D-329 rule 4: a targeted request never reaches the repeat step (E2 mini-scope).
+    if (!inserted && targeting.mode === "on") {
+      // A concurrent request may have won idx_one_open_question (one open instance per pupil): then the
+      // objective is NOT exhausted. Say so explicitly; the caller's retry gets that instance as due.
+      const { data: openRows, error: openError } = await admin()
+        .from("question_instances")
+        .select("id")
+        .eq("student_id", student_id)
+        .eq("answered", false)
+        .limit(1);
+      if (openError) throw openError;
+      if (Array.isArray(openRows) && openRows.length > 0) {
+        return new Response(JSON.stringify({ error: "open_question_exists" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        });
+      }
+      return new Response(JSON.stringify(sequence !== null
+        ? { step: "no_questions", reason: "step_exhausted", learning_step: sequence.step }
+        : { step: "no_questions", reason: "objective_exhausted" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     if (!inserted) {
       // v2: "exhausted" means no SERVABLE unserved question is left — the same rule the v2 candidate
       // window uses (public.question_is_servable), so a pool that holds only formats the client cannot
@@ -549,6 +656,10 @@ serve(async (req) => {
                   answer_type: src.answer_type || "short",
                   metadata: pub.metadata,
                   wave_phase: wavePhase,
+                  // D-329: echoed only when targeting, so the caller can verify it got the objective it asked for.
+                  ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
+                  // D-338: the server's step and activity mode, only in a sequence.
+                  ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
                   is_repeat: true,
                 }),
                 {
@@ -590,6 +701,10 @@ serve(async (req) => {
         answer_type: inserted.question?.answer_type || "short",
         metadata: inserted.pub.metadata,
         wave_phase: wavePhase,
+        // D-329: echoed only when targeting, so the caller can verify it got the objective it asked for.
+        ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
+        // D-338: the server's step and activity mode, only in a sequence.
+        ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
