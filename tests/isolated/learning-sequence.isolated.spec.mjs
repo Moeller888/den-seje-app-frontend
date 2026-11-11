@@ -164,14 +164,27 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
     }
     expect(ids.size).toBe(1);
     const s = await (await next(request, p)).json();
-    const sub = randomUUID();
-    const [a1, a2] = await Promise.all([answer(request, p, s, ITEM.guided_practice.content.correct, sub), answer(request, p, s, ITEM.guided_practice.content.correct)]);
-    const outcomes = [await a1.json(), await a2.json()].map((b) => b.outcome ?? b.error);
+    // Two tabs submit the same round at once, each with its own submission id. Which one the server records
+    // is a race; the test reads the winner from the responses instead of assuming it (it used to replay a
+    // fixed id and so failed whenever that id lost the race — the K1 lane, 2026-11-11).
+    const subs = [randomUUID(), randomUUID()];
+    const rs2 = await Promise.all(subs.map((id) => answer(request, p, s, ITEM.guided_practice.content.correct, id)));
+    const bodies = await Promise.all(rs2.map((r) => r.json()));
+    const outcomes = bodies.map((b) => b.outcome ?? b.error);
     expect(outcomes.filter((o) => o === "recorded")).toHaveLength(1);
+    const winner = subs[outcomes.indexOf("recorded")];
+    const loser = subs[1 - outcomes.indexOf("recorded")];
+    const recorded = await attempts(request, p);
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0].submission_id).toBe(winner);
     const xp = (await progress(request, p)).xp;
-    // The same submission again (e.g. a retry after the response was lost): the frozen result, no new effect.
-    const replay = await (await answer(request, p, s, ITEM.guided_practice.content.correct, sub)).json();
-    expect(["replay", "Round already closed"]).toContain(replay.outcome ?? replay.error);
+    // The recorded submission again (e.g. a retry after the response was lost): the frozen result, no new effect.
+    const replay = await (await answer(request, p, s, ITEM.guided_practice.content.correct, winner)).json();
+    expect(replay.outcome).toBe("replay");
+    // The other tab's submission again: the round is closed, nothing is written.
+    const late = await answer(request, p, s, ITEM.guided_practice.content.correct, loser);
+    expect(late.status()).toBe(409);
+    expect(await late.json()).toEqual({ outcome: "round_closed", error: "Round already closed" });
     expect((await attempts(request, p)).length).toBe(1);
     expect((await progress(request, p)).xp).toBe(xp);
     // The step advanced exactly once.
