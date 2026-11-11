@@ -592,8 +592,8 @@ jobs:
     # runs inside the lock; its apt half hit a slow Ubuntu mirror 8 times in 90 full runs (5.7–47 min,
     # 2026-10-16..24 — once 117 MB at 42 kB/s) while every other run waited. The browsers themselves
     # always arrived in seconds. So the .deb files apt downloads, and the browsers, are cached: a run
-    # with a cache hit restores them from GitHub's cache and apt installs WITHOUT downloading (apt
-    # still checks every .deb against its signed index). The runner environment is unchanged — the
+    # with a cache hit restores them from GitHub's cache and installs them WITHOUT any Ubuntu mirror
+    # (cache first, 2026-11-11; trust boundary in the install step). The runner environment is unchanged — the
     # official Playwright image was tried and changes Chromium's rendering (11 golden screenshots,
     # 1 px), which would need new owner-approved baselines (run 40079704807).
     # Key = runner image + Playwright version: a new runner image or Playwright bump starts fresh.
@@ -624,11 +624,48 @@ jobs:
           | sudo tee /etc/apt/apt.conf.d/99-keep-downloaded-debs > /dev/null
         mkdir -p ~/.cache/pw-apt
         seeded=$(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l)
-        if [ "$seeded" -gt 0 ]; then sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/; fi
-        echo "apt: seeded ${seeded} cached .deb file(s); cache hit: ${{ steps.pwcache.outputs.cache-hit == 'true' }}"
-        npx playwright install --with-deps
-        find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp {} ~/.cache/pw-apt/ \;
-        echo "apt: cache now holds $(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l) .deb file(s)"
+        echo "apt: ${seeded} cached .deb file(s); cache hit: ${{ steps.pwcache.outputs.cache-hit == 'true' }}"
+        # CACHE FIRST, NO UBUNTU MIRROR — same as isolated-e2e.yml (same key, same entry): install the cached
+        # .deb closure from the files alone, browsers from the cache, all three must start; else the old path.
+        # TRUST: an Actions cache entry carries no signature. This one is written only by a push to main on a key miss
+        # (the save step needs a push event; PR runs cannot write main's scope; a written key is never overwritten), from the .debs apt had
+        # just checked against Ubuntu's signed index. Installing those files offline skips that check, so the trust anchor
+        # is "who can push to main" - the same as for the cached browsers. The launch check proves function, not integrity.
+        path=mirrors
+        if [ "$seeded" -gt 0 ]; then
+          # Audit trail (no integrity proof - see TRUST above): one digest of the restored .deb set, so runs on the same
+          # key can be compared, and the cache entry can be matched to the main run that wrote it.
+          echo "apt: cached .deb set sha256 $(cd ~/.cache/pw-apt && sha256sum -- *.deb | sha256sum | cut -c1-64)"
+          # --no-download: never a mirror. --no-remove: apt aborts instead of removing any installed package.
+          if sudo apt-get install -y --no-download --no-remove --no-install-recommends ~/.cache/pw-apt/*.deb > "$RUNNER_TEMP/apt-cache-install.log" 2>&1 \
+             && npx playwright install > "$RUNNER_TEMP/pw-cache-install.log" 2>&1 \
+             && node tests/support/browser-launch-check.mjs; then
+            path=cache
+          else
+            echo "::warning title=INFRA-CACHE::cache-first install did not complete; falling back to the Ubuntu mirrors"
+            tail -n 15 "$RUNNER_TEMP/apt-cache-install.log"
+            if [ -s "$RUNNER_TEMP/pw-cache-install.log" ]; then tail -n 15 "$RUNNER_TEMP/pw-cache-install.log"; fi
+            # A cache install that stopped inside dpkg leaves half-configured packages, and apt then refuses all work.
+            # Finish it here, or fail closed: never hand a broken dpkg state to the fallback.
+            if ! sudo dpkg --configure -a; then
+              echo "::error title=INFRA-INSTALL::dpkg could not finish the interrupted cache install - no test ran"
+              exit 1
+            fi
+          fi
+        fi
+        if [ "$path" = mirrors ]; then
+          if [ "$seeded" -gt 0 ]; then sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/; fi
+          if ! npx playwright install --with-deps; then
+            echo "::error title=INFRA-INSTALL::npx playwright install --with-deps failed (Ubuntu mirror, runner DNS or network) - no test ran"
+            exit 1
+          fi
+          if ! node tests/support/browser-launch-check.mjs; then
+            echo "::error title=INFRA-INSTALL::a browser cannot start after the mirror install - no test ran"
+            exit 1
+          fi
+          find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp {} ~/.cache/pw-apt/ \;
+        fi
+        echo "::notice title=INFRA-INSTALL-PATH::playwright install: system packages from the ${path}; cache now holds $(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l) .deb file(s)"
     # Only push runs (main) write the cache; pull requests read it (a PR may restore its base
     # branch's cache). Since D-261 this job no longer runs on push, so this step is dormant: the main
     # entry (same key, same paths) is written by isolated-e2e.yml's push-to-main run instead. Kept so a

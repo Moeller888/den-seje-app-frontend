@@ -188,3 +188,21 @@ test("no false green, and the order that makes the job fail-closed", () => {
   assert.match(job, /fail-fast: false/);
   assert.match(job, /run: \$\{\{ fromJSON\(needs\.plan\.outputs\.runs\) \}\}/);
 });
+
+test("browser install: cache first without the Ubuntu mirrors, the unchanged installer as fallback, browsers proven to start", () => {
+  // CI stability 2026-11-11: `--with-deps` runs `apt-get update` against the Ubuntu mirrors on EVERY run, cache hit
+  // or not; when no ubuntu.com name resolved on the runners (16:02–17:10 UTC) every install failed or hung.
+  const wf = read(".github/workflows/isolated-e2e.yml");
+  const at = wf.indexOf("- name: Install Playwright browsers\n");
+  assert.notEqual(at, -1);
+  const install = wf.slice(at, wf.indexOf("\n      - ", at + 10));
+  assert.match(install, /apt-get install -y --no-download --no-remove --no-install-recommends ~\/\.cache\/pw-apt\/\*\.deb/, "cache-first install never downloads and never removes a package");
+  assert.match(install, /if ! sudo dpkg --configure -a; then\n\s+echo "::error title=INFRA-INSTALL::[^\n]*\n\s+exit 1/, "an interrupted cache install is finished or fails closed, never handed to the fallback");
+  assert.match(install, /if ! node tests\/support\/browser-launch-check\.mjs; then\n\s+echo "::error title=INFRA-INSTALL::[^\n]*\n\s+exit 1/, "a browser that cannot start after the fallback fails the step, labelled");
+  assert.match(install, /::notice title=INFRA-INSTALL-PATH::[^\n]*\$\{path\}/, "every run says which path installed the system packages");
+  assert.ok(install.includes("npx playwright install --with-deps; then"), "the unchanged installer remains the fallback");
+  assert.equal((install.match(/node tests\/support\/browser-launch-check\.mjs/g) ?? []).length, 2, "both paths prove all browsers start");
+  assert.ok(!/allow-downgrades|\|\| true/.test(install), "no downgrade, no masked failure");
+  assert.match(install, /::error title=INFRA-INSTALL::[^\n]*\n\s+exit 1/, "a failed fallback is labelled as infrastructure AND fails the step");
+  assert.match(install, /timeout-minutes: 15/, "the step bound is unchanged");
+});

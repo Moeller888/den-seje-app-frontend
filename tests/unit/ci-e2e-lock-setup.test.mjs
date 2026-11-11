@@ -33,7 +33,18 @@ test("the suite still runs on the runner itself (goldens were made there), with 
   assert.ok(!/docker (run|pull)|container:|PLAYWRIGHT_IMAGE/.test(TEST_JOB_CODE),
     "the Playwright image changes Chromium rendering (11 goldens, run 40079704807) — not without new owner-approved baselines");
   assert.ok(step("Run Playwright tests").includes("      run: npx playwright test"));
-  assert.ok(step("Install Playwright Browsers").includes("        npx playwright install --with-deps\n"), "same installer, same browsers and system deps");
+  // Cache first (CI stability 2026-11-11): the cached .deb closure from the files alone, no Ubuntu mirror;
+  // the old installer is the fallback, unchanged (all browsers, system deps). Either way all three browsers
+  // must start before a test runs, and nothing may downgrade a package or hide an install failure.
+  const install = step("Install Playwright Browsers");
+  assert.ok(install.includes("if ! npx playwright install --with-deps; then"), "the unchanged installer remains the fallback");
+  assert.match(install, /apt-get install -y --no-download --no-remove --no-install-recommends ~\/\.cache\/pw-apt\/\*\.deb/, "cache-first install never downloads and never removes a package");
+  assert.match(install, /if ! sudo dpkg --configure -a; then\n\s+echo "::error title=INFRA-INSTALL::[^\n]*\n\s+exit 1/, "an interrupted cache install is finished or fails closed, never handed to the fallback");
+  assert.match(install, /if ! node tests\/support\/browser-launch-check\.mjs; then\n\s+echo "::error title=INFRA-INSTALL::[^\n]*\n\s+exit 1/, "a browser that cannot start after the fallback fails the step, labelled");
+  assert.match(install, /::notice title=INFRA-INSTALL-PATH::[^\n]*\$\{path\}/, "every run says which path installed the system packages");
+  assert.equal((install.match(/node tests\/support\/browser-launch-check\.mjs/g) ?? []).length, 2, "both paths prove the browsers start");
+  assert.ok(!/allow-downgrades|\|\| true|continue-on-error/.test(install), "no downgrade, no masked failure");
+  assert.match(install, /::error title=INFRA-INSTALL::/, "a failed fallback is labelled as infrastructure and fails the step");
 });
 
 test("the cache key changes with the runner image and the Playwright version from package-lock", () => {

@@ -171,10 +171,53 @@ jobs:
             | sudo tee /etc/apt/apt.conf.d/99-keep-downloaded-debs > /dev/null
           mkdir -p ~/.cache/pw-apt
           seeded=$(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l)
-          if [ "$seeded" -gt 0 ]; then sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/; fi
-          echo "apt: seeded ${seeded} cached .deb file(s)"
-          npx playwright install --with-deps
-          find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp {} ~/.cache/pw-apt/ \;
+          echo "apt: ${seeded} cached .deb file(s)"
+          # CACHE FIRST, NO UBUNTU MIRROR (CI stability, 2026-11-11). `--with-deps` always runs `apt-get update`
+          # (13 MB of indexes from the Ubuntu mirrors) even on a cache hit, so every run depended on them: on
+          # 2026-11-11 16:02–17:10 UTC no ubuntu.com name resolved on the runners and every install failed or
+          # hung, while npm and the cache worked. The cached .deb set is the system-package closure THIS runner
+          # image needed when the entry was written (the key includes ImageVersion), so it is installed from the
+          # files alone (--no-download), the browsers come from ~/.cache/ms-playwright, and all three must then
+          # really start (tests/support/browser-launch-check.mjs). Any failure falls back to the old path below.
+          # TRUST: an Actions cache entry carries no signature. This one is written only by a push to main on a key miss
+          # (the save step needs a push event; PR runs cannot write main's scope; a written key is never overwritten), from the .debs apt had
+          # just checked against Ubuntu's signed index. Installing those files offline skips that check, so the trust anchor
+          # is "who can push to main" - the same as for the cached browsers. The launch check proves function, not integrity.
+          path=mirrors
+          if [ "$seeded" -gt 0 ]; then
+            # Audit trail (no integrity proof - see TRUST above): one digest of the restored .deb set, so runs on the same
+            # key can be compared, and the cache entry can be matched to the main run that wrote it.
+            echo "apt: cached .deb set sha256 $(cd ~/.cache/pw-apt && sha256sum -- *.deb | sha256sum | cut -c1-64)"
+            # --no-download: never a mirror. --no-remove: apt aborts instead of removing any installed package.
+            if sudo apt-get install -y --no-download --no-remove --no-install-recommends ~/.cache/pw-apt/*.deb > "$RUNNER_TEMP/apt-cache-install.log" 2>&1 \
+               && npx playwright install > "$RUNNER_TEMP/pw-cache-install.log" 2>&1 \
+               && node tests/support/browser-launch-check.mjs; then
+              path=cache
+            else
+              echo "::warning title=INFRA-CACHE::cache-first install did not complete; falling back to the Ubuntu mirrors"
+              tail -n 15 "$RUNNER_TEMP/apt-cache-install.log"
+              if [ -s "$RUNNER_TEMP/pw-cache-install.log" ]; then tail -n 15 "$RUNNER_TEMP/pw-cache-install.log"; fi
+              # A cache install that stopped inside dpkg leaves half-configured packages, and apt then refuses all work.
+              # Finish it here, or fail closed: never hand a broken dpkg state to the fallback.
+              if ! sudo dpkg --configure -a; then
+                echo "::error title=INFRA-INSTALL::dpkg could not finish the interrupted cache install - no test ran"
+                exit 1
+              fi
+            fi
+          fi
+          if [ "$path" = mirrors ]; then
+            if [ "$seeded" -gt 0 ]; then sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/; fi
+            if ! npx playwright install --with-deps; then
+              echo "::error title=INFRA-INSTALL::npx playwright install --with-deps failed (Ubuntu mirror, runner DNS or network) - no test ran"
+              exit 1
+            fi
+            if ! node tests/support/browser-launch-check.mjs; then
+              echo "::error title=INFRA-INSTALL::a browser cannot start after the mirror install - no test ran"
+              exit 1
+            fi
+            find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp {} ~/.cache/pw-apt/ \;
+          fi
+          echo "::notice title=INFRA-INSTALL-PATH::playwright install: system packages from the ${path}"
           docker pull curlimages/curl:8.11.1 > /dev/null
       # Only a push to main writes the ~557 MB entry, and only on a miss — nine PRs saving their own would
       # evict it from the 10 GB cache. Runs before the egress lock; it carries no secret and changes
