@@ -67,10 +67,13 @@ test("D-371 plan: three frozen prompts (common text + one style each), the reque
   assert.equal(PLAN.template.sha256, sha256(readFileSync(repoFile(T.FIXTURE)))); assert.ok(PLAN.visualStop.some((v) => /skin flap .* double line .* seam/.test(v)));
 });
 
-test("D-371 authorisation: at most one call per hairstyle, Kort first, nothing spent; the decision carries the token and every pin", () => {
-  assert.deepEqual([AUTH.decision, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.perStyle, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions, AUTH.budget.actuallySent], ["D-371", false, 3, 1, 0, 0, false, false, 0]);
-  assert.deepEqual(AUTH.calls.map((e) => [e.callId, e.order, e.mandateState, e.outcome, e.prompt.sha256]), PLAN.calls.map((c) => [c.callId, c.order, "UNSPENT", "NOT YET ATTEMPTED", c.prompt.sha256]));
-  assert.equal(AUTH.afterShort.verdict, "PENDING"); assert.equal(AUTH.frozen.plan.sha256, sha256(readFileSync(repoFile(PLAN_REL)))); assert.deepEqual(AUTH.frozen.methodFiles, PLAN.method.files);
+test("D-371 authorisation: at most one call per hairstyle, Kort first; Kort spent and rejected, NH-2 and NH-3 unspent and paused; the decision carries the token and every pin", () => {
+  assert.deepEqual([AUTH.decision, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.perStyle, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions, AUTH.budget.actuallySent], ["D-371", false, 3, 1, 0, 0, false, false, 1]);
+  // NH-1 was sent once (2026-11-11) and rejected for further use; it is never an active permission again
+  assert.deepEqual(AUTH.calls.map((e) => [e.callId, e.order, e.mandateState, e.outcome, e.prompt.sha256]), PLAN.calls.map((c, i) => [c.callId, c.order, i === 0 ? "SPENT" : "UNSPENT", i === 0 ? "RECEIVED_FOR_PLACEMENT" : "NOT YET ATTEMPTED", c.prompt.sha256]));
+  const kort = AUTH.calls[0]; assert.deepEqual([kort.neverReuse, kort.result.assessment, kort.result.gates.pass, kort.result.gates.failed, kort.result.image.tracked, kort.result.neverPromoted], [true, "REJECTED_FOR_FURTHER_USE", false, ["M1", "M2", "M3", "M4", "M6", "M8"], false, true]);
+  for (const e of AUTH.calls.slice(1)) for (const k of ["neverReuse", "closedBy", "result"]) assert.ok(!(k in e), e.callId + " carries no " + k);
+  assert.equal(AUTH.afterShort.verdict, "PENDING", "a common fault at the ears: NH-2 and NH-3 stay paused"); assert.equal(AUTH.frozen.plan.sha256, sha256(readFileSync(repoFile(PLAN_REL)))); assert.deepEqual(AUTH.frozen.methodFiles, PLAN.method.files);
   assert.deepEqual(AUTH.request.images, PLAN.request.images.map((i) => ({ role: i.role, name: i.name, bytes: i.bytes, sha256: i.sha256, tracked: false })));
   const status = /^status: (.*)$/m.exec(DECISION)[1]; assert.ok(status.split(" — ").map((x) => x.trim()).includes("D-371 HAIR: 3 CALLS AUTHORISED (1 PER STYLE)"));
   for (const n of [...IDS, "--owner-approval=D-371", MODEL, ADAPTER_REL, AUTH.frozen.plan.sha256, "1024x1024", ...PLAN.calls.map((c) => c.prompt.sha256), ...PLAN.request.images.map((i) => i.sha256)]) assert.ok(DECISION.includes(n), n);
@@ -116,6 +119,9 @@ function sandbox({ base: mod } = {}) {
   writeFileSync(sb.gitconfig, "[core]\n\tautocrlf = false\n[init]\n\tdefaultBranch = main\n"); writeFileSync(sb.mock, MOCK_SRC); writeFileSync(sb.log, ""); writeFileSync(sb.png, png(1024, 1024));
   const rd = join(sb.out, "references"); mkdirSync(rd, { recursive: true }); for (const i of PLAN.request.images) copyFileSync(join(REFS, i.name), join(rd, i.name));
   for (const rel of TRACKED) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  // the adapter's behaviour is tested on the authorisation as merged, before NH-1 was spent (2026-11-11)
+  { const p = join(sb.repo, ...AUTH_REL.split("/")), a = JSON.parse(readFileSync(p, "utf8")), e = a.calls[0]; a.budget.actuallySent = 0; delete a.afterShort.assessment;
+    e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; for (const k of ["neverReuse", "closedBy", "result"]) delete e[k]; writeFileSync(p, JSON.stringify(a, null, 2) + "\n"); }
   if (mod) mod(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb; }
