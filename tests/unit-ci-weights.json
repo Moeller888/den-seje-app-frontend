@@ -245,7 +245,6 @@
     "isolated-seed-guard.test.mjs": 19.4,
     "isolated-suite-runner.test.mjs": 0.7,
     "kloeft.test.mjs": 0.1,
-    "krypter-backup.test.mjs": 30.0,
     "l1-k1-attempt-context-concurrency.test.mjs": 1.4,
     "l1-k1-attempt-context-migration-run.test.mjs": 66.3,
     "l1-k1-served-snapshot-gnq-integration.test.mjs": 0.9,

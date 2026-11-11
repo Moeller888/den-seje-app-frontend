@@ -306,7 +306,7 @@ for a in "$@"; do
   fi
 done
 exec "$real" "$@"
-`);
+`, { mode: 0o755 });
   return posix(p);
 }
 
