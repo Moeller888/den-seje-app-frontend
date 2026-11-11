@@ -1,0 +1,172 @@
+{
+  "decision": "D-371",
+  "meta": {
+    "authorisesImageRequest": false,
+    "note": "the authorisation is the token in D-371's status on origin/main together with the owner's separate execution instruction for each send; this file is the budget, the order and the entries"
+  },
+  "budget": {
+    "authorised": 3,
+    "perStyle": 1,
+    "reserve": 0,
+    "retries": 0,
+    "fallback": false,
+    "reusesEarlierPermissions": false,
+    "automaticExtension": false,
+    "separateFrom": "every earlier budget (D-175/D-177/D-180/D-183's R3 hair calls and D-320's AB-1 included)",
+    "enforcedLimit": "the call count (one one-shot claim per call id, three call ids); the price is an estimate",
+    "price": {
+      "verifiedAt": "2026-11-02",
+      "source": "https://developers.openai.com/api/docs/pricing (Standard, gpt-image-2.5-sunburst: text input $5.00, image input $8.00, image output $30.00 per 1M tokens), as recorded by D-320; not re-read for D-371",
+      "perCallEstimate": 0.07,
+      "perCallUpperEstimate": 0.08,
+      "totalEstimate": 0.21,
+      "totalUpperEstimate": 0.25,
+      "basis": "measured usage of earlier sunburst calls with two input images (D-228, D-235, B1: 3,072 image-input tokens = 1,536 per image, 1,372 image-output tokens at high quality): two images ≤ 3,072 tokens = $0.025, the prompt about 500 text tokens = $0.0025, the output 1,372 tokens = $0.041 → about $0.07; at most about $0.08 with 800 text tokens and the largest measured output (1,756 tokens)",
+      "note": "an estimate, not a guaranteed maximum; a 1024x1024 image may count fewer tokens than the measured 1024x1536; the billed amount is read on the OpenAI usage page"
+    },
+    "actuallySent": 0
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "name": "northstar-hair-reference-1024.png",
+        "bytes": 351957,
+        "sha256": "a75eb7af92153d6e1a620def0ac678330db942f8e2238fd7e451e3ef57e6c3ad",
+        "tracked": false
+      },
+      {
+        "role": "Image 2",
+        "name": "northstar-bald-guide-1024.png",
+        "bytes": 146731,
+        "sha256": "be42c4599780252788a787126ee7d5c6a6a41a966d957a81878d096cafa89934",
+        "tracked": false
+      }
+    ]
+  },
+  "frozen": {
+    "plan": {
+      "file": "tools/avatar/fixtures/northstar-hair-d371/plan-v1.json",
+      "sha256": "6989df93d7a217a1bd185dd958ce8d77d39cf3a27f8ceee634d30b1977eebbf1"
+    },
+    "template": {
+      "file": "tools/avatar/fixtures/northstar-hair-d371/template-v1.json",
+      "sha256": "034b3f04b5e0d89e3e76bb52056fa6814a5b120b4df975447b6c2f4f9a5e2e9d",
+      "crop": {
+        "x": 256,
+        "y": 0,
+        "size": 512,
+        "scale": 2
+      },
+      "callSize": "1024x1024",
+      "callMargin": 16
+    },
+    "methodFiles": {
+      "tools/avatar/northstar-hair-template-d371.mjs": "1724d074e7f968b8b17515970680c00f272e36f7be9cc16bc3a730f9e6109451",
+      "tools/avatar/northstar-hair-polish-d368.mjs": "559fb780c20fac846d45044c3406bcacdfd958954eae7c6f4594e614316a3e08",
+      "tools/avatar/northstar-hair-trial-d368.mjs": "53624fdb07e5658361e6c8d56a327ce6c2aeaf46473e0e1f8005ca5f70ea3d6a",
+      "tools/avatar/promote-r2-torso-asset.mjs": "c030f74ec58edaa82673887d403caf50d4d3ff791781b6502882ed01258613be",
+      "tools/avatar/r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+      "tools/avatar/r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+      "tools/avatar/r3-northstar-head.mjs": "584db7b2d057168420c5abf0bc0a76ee8bec65e08a2107826b158d432f354401",
+      "tools/avatar/r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+      "tools/avatar/fixtures/northstar-hair-d371/template-v1.json": "034b3f04b5e0d89e3e76bb52056fa6814a5b120b4df975447b6c2f4f9a5e2e9d"
+    }
+  },
+  "afterShort": {
+    "verdict": "PENDING",
+    "rule": "NH-2 and NH-3 are refused until the owner's assessment of Kort (NH-1) is recorded here on origin/main as NO_COMMON_FAULT; a common fault in placement, transparency or coverage at the ears means the template is assessed first, and this stays PENDING"
+  },
+  "stopRules": [
+    "at most one call per hairstyle: no retry, no reserve, no fallback, no other model",
+    "Kort (NH-1) first; NH-2 and NH-3 only after the owner's assessment of Kort is recorded on origin/main as afterShort.verdict NO_COMMON_FAULT",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome — never resent, and every later call stops",
+    "any HTTP error, moderation block or format error ends the trial with that outcome",
+    "the executor's stop file NH-STOP.json"
+  ],
+  "calls": [
+    {
+      "callId": "NH-1-hair-short",
+      "style": "short",
+      "name": "Kort",
+      "order": 1,
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED",
+      "claim": {
+        "identity": "NH-1-hair-short-claim",
+        "filename": "NH-1-hair-short.claim.json",
+        "eventsFilename": "NH-1-hair-short.events.jsonl"
+      },
+      "prompt": {
+        "sha256": "ec36859fc1ee4565759bda4ac31e176d7185357762b06517ee79e9f312fb877a"
+      }
+    },
+    {
+      "callId": "NH-2-hair-curls",
+      "style": "curls",
+      "name": "Kompakte krøller",
+      "order": 2,
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED",
+      "claim": {
+        "identity": "NH-2-hair-curls-claim",
+        "filename": "NH-2-hair-curls.claim.json",
+        "eventsFilename": "NH-2-hair-curls.events.jsonl"
+      },
+      "prompt": {
+        "sha256": "987e7eb8d99bb9cb1b7d0f4b58fdae183e206d4ef9fc9dc224b5a6d3890f1f3a"
+      }
+    },
+    {
+      "callId": "NH-3-hair-sidepart",
+      "style": "sidepart",
+      "name": "Halvlang med sideskilning",
+      "order": 3,
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED",
+      "claim": {
+        "identity": "NH-3-hair-sidepart-claim",
+        "filename": "NH-3-hair-sidepart.claim.json",
+        "eventsFilename": "NH-3-hair-sidepart.events.jsonl"
+      },
+      "prompt": {
+        "sha256": "83b2df7084a55bcc3ca9417abe8450feb792a54cc070d7c96c0b62d6ac292501"
+      }
+    }
+  ],
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-hair-d371.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-371",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}
