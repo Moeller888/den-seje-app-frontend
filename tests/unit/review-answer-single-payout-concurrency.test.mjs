@@ -1,4 +1,4 @@
-// REAL concurrency proof for migration 20261111120000_review_answer_single_payout on a real PostgreSQL
+// REAL concurrency proof for migration 20261111120000_review_answer_single_payout (model B) on a real PostgreSQL
 // server with several simultaneous sessions — what PGlite (one connection) cannot show.
 //
 // Runs only when LEVEL_ENGINE_PG_URL points at a disposable PostgreSQL server where the user may create
@@ -14,10 +14,13 @@
 // What this proves:
 //   0. NEGATIVE CONTROL: production's body (tests/support/review-answer-prod-preimage.mjs) pays SEVERAL
 //      times when reviews of one instance overlap — the defect is real, and the harness can see it.
-//   1. One long answer, 8 simultaneous reviews: exactly one 'rewarded', seven 'already_rewarded', XP paid
-//      once, one audit row.
+//   1. One long answer, 8 simultaneous identical reviews: exactly one 'rewarded', seven 'unchanged', XP paid
+//      once, one posting.
 //   2. 12 instances × 3 simultaneous reviews each, two pupils: every instance paid exactly once, the XP
-//      total equals the audit total, no error, no deadlock.
+//      total equals the ledger total, no error, no deadlock.
+//   3. Model B: one long answer, 8 simultaneous reviews with DIFFERENT scores (a correction racing the first
+//      review): whatever order the lock decides, the pupil ends with exactly the amount for the score that
+//      was written last, and the postings sum to that amount.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -177,11 +180,11 @@ test("real PostgreSQL: review_answer pays exactly once per instance under simult
     await blocker.query("COMMIT");
     const results = await Promise.all(calls);
     const statuses = results.map((r) => r.rows[0].r.status).sort();
-    assert.deepEqual(statuses, ["already_rewarded", "already_rewarded", "already_rewarded", "already_rewarded",
-      "already_rewarded", "already_rewarded", "already_rewarded", "rewarded"]);
+    assert.deepEqual(statuses, ["rewarded", "unchanged", "unchanged", "unchanged", "unchanged", "unchanged",
+      "unchanged", "unchanged"]);
     assert.equal(await xpOf(p), 25);
-    const audit = (await su.query("SELECT count(*)::int AS n, sum(xp_awarded)::int AS xp FROM public.teacher_review_payouts WHERE question_instance_id = $1", [inst])).rows[0];
-    assert.deepEqual(audit, { n: 1, xp: 25 });
+    const ledger = (await su.query("SELECT count(*)::int AS n, sum(xp_delta)::int AS xp FROM public.teacher_review_postings WHERE question_instance_id = $1", [inst])).rows[0];
+    assert.deepEqual(ledger, { n: 1, xp: 25 });
     await done(blocker, ...sessions);
   });
 
@@ -201,10 +204,35 @@ test("real PostgreSQL: review_answer pays exactly once per instance under simult
     for (const p of pupils) {
       const expected = insts.filter((_, k) => pupils[k % 2] === p).reduce((s, it) => s + amount[it.score], 0);
       assert.equal(await xpOf(p), expected, p);
-      const audit = (await su.query("SELECT coalesce(sum(xp_awarded), 0)::int AS xp FROM public.teacher_review_payouts WHERE student_id = $1", [p])).rows[0].xp;
-      assert.equal(audit, expected, `audit total equals XP for ${p}`);
+      const ledger = (await su.query("SELECT coalesce(sum(xp_delta), 0)::int AS xp FROM public.teacher_review_postings WHERE student_id = $1", [p])).rows[0].xp;
+      assert.equal(ledger, expected, `ledger total equals XP for ${p}`);
     }
     await done(...sessions.map((s) => s.c));
+  });
+
+  await t.test("3. model B: 8 simultaneous reviews with different scores → XP equals the last written score's amount", async () => {
+    const amount = { 1: 0, 2: 10, 3: 25, 4: 50 };
+    for (let round = 0; round < 3; round++) {
+      const p = await pupil();
+      const inst = await longAnswer(p);
+      const blocker = await connect();
+      await blocker.query("BEGIN");
+      await blocker.query("SELECT 1 FROM public.question_instances WHERE id = $1 FOR UPDATE", [inst]);
+      const scores = [4, 1, 3, 2, 4, 2, 1, 3];
+      const sessions = await Promise.all(scores.map(() => serviceSession()));
+      const calls = sessions.map((c, k) => call(c, inst, scores[k]));
+      await waitForLockWaiters(su, 8);
+      await blocker.query("COMMIT");
+      const results = (await Promise.all(calls)).map((r) => r.rows[0].r);
+      const final = (await su.query("SELECT teacher_score FROM public.question_instances WHERE id = $1", [inst])).rows[0].teacher_score;
+      assert.equal(await xpOf(p), amount[final], `round ${round}: XP = amount for the final score ${final}`);
+      const ledger = (await su.query("SELECT count(*)::int AS n, coalesce(sum(xp_delta), 0)::int AS xp FROM public.teacher_review_postings WHERE question_instance_id = $1", [inst])).rows[0];
+      assert.equal(ledger.xp, amount[final], `round ${round}: postings sum to the final amount`);
+      assert.equal(results.reduce((s, r) => s + r.xp_awarded, 0), amount[final], "the reported deltas add up");
+      assert.equal(results.filter((r) => r.status === "rewarded").length, 1, "exactly one first award");
+      assert.equal(ledger.n, results.filter((r) => r.status !== "unchanged").length, "one posting per non-zero change (+ the first award)");
+      await done(blocker, ...sessions);
+    }
   });
 
   await done(su);

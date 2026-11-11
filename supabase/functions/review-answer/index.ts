@@ -96,6 +96,15 @@ serve(async (req) => {
       );
     }
 
+    // The teacher's scale is 1–4 (js/student-detail.js). Anything else is refused before any read or
+    // write; the database refuses it too ('Invalid score').
+    if (!Number.isInteger(score) || score < 1 || score > 4) {
+      return new Response(
+        JSON.stringify({ error: "Invalid score" }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
     // 🔍 find student_id
     const { data: instance, error: instanceError } = await supabase
       .from("question_instances")
@@ -156,10 +165,13 @@ serve(async (req) => {
       });
     }
 
-    // 🔁 RPC — the ONE pay path. review_answer records the review and, in the same transaction, pays
-    // at most once per instance and only for teacher-graded answers
-    // (supabase/migrations/20261111120000_review_answer_single_payout.sql). This function never writes
-    // XP itself: a second write here was a double payout per review.
+    // 🔁 RPC — the ONE pay path. review_answer records the review and, in the same transaction, posts
+    // the difference between the amount for the new score and what this instance has already been
+    // posted (model B: a correction up or down is one traceable posting; the same review again posts
+    // nothing), and only for teacher-graded answers
+    // (supabase/migrations/20261111120000_review_answer_single_payout.sql). xp_awarded is that
+    // difference and can be negative after a correction down. This function never writes XP itself: a
+    // second write here was a double payout per review.
     const { data: reviewStatus, error: rpcError } = await supabase.rpc("review_answer", {
       p_instance_id: instance_id,
       p_score: score,

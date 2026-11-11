@@ -1,20 +1,21 @@
-// RUNTIME proof for migration 20261111120000_review_answer_single_payout, single session (PGlite,
-// in-process). The simultaneous-call proof is review-answer-single-payout-concurrency.test.mjs (real
-// PostgreSQL in CI).
+// RUNTIME proof for migration 20261111120000_review_answer_single_payout (model B: adjustable postings),
+// single session (PGlite, in-process). The simultaneous-call proof is
+// review-answer-single-payout-concurrency.test.mjs (real PostgreSQL in CI).
 //
 // Fixture: production's state, read-only catalog 2026-11-11 — review_answer(uuid,integer,text,uuid) with
-// production's EXACT body (prosrc below, base64, md5 310f72f4… asserted), SECURITY DEFINER, search_path
-// public, pg_temp, EXECUTE service_role only; the 3-argument overload with the isolated replay's stub body
-// (production's own body is not needed: this migration must leave whatever is there untouched). Synthetic
+// production's EXACT body (prosrc, base64, md5 310f72f4… asserted), SECURITY DEFINER, search_path public,
+// pg_temp, EXECUTE service_role only; the 3-argument overload with the isolated replay's stub body. Synthetic
 // users only.
 //
-// Cases: negative control (production's body pays on every call, also for an MC answer); the guard refuses
-// an unreviewed body and changes nothing; first review of a long answer pays once, in the same statement as
-// the audit row; a re-review pays nothing; an auto-graded or unanswered instance pays nothing; a review
-// from before the migration counts as paid; a payout row blocks a second payout even if the score was
-// cleared; score 1 consumes the payout with 0 XP; an unknown instance and a missing progress row raise and
-// leave nothing behind; signature / SECURITY DEFINER / search_path / ACL; the 3-argument overload and its
-// grants are unchanged; the audit table is closed to the API roles; a re-run is accepted.
+// Cases: negative control (production's body pays on every call, also for an MC answer); the guard refuses an
+// unreviewed body and changes nothing; first review pays the score's amount; the same review again pays
+// nothing; a correction up pays the difference, down takes it back, back again restores it — the postings
+// always sum to the current score's amount; auto-graded / unanswered / question-less instances post nothing;
+// a review from before the migration is recognised as paid (legacy baseline), corrections from there move
+// only the difference; an invalid score is refused before any write; a missing progress row and a correction
+// below 0 XP raise and leave nothing behind; the ledger is append-only even for the owner; signature /
+// SECURITY DEFINER / search_path / ACL; the 3-argument overload is unchanged; the ledger is closed to the
+// API roles; a re-run is accepted.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -28,10 +29,9 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8").split("\r\n").join("\n");
 const FILE = "supabase/migrations/20261111120000_review_answer_single_payout.sql";
 const PROD_MD5 = "310f72f44b3720c25e24a4d14307a3df";
-const NEW_MD5 = "a9442050751b9f4e97715671a60a20a9";
+const NEW_MD5 = "f0ac2d912b94b958360ca99a9d0a1028";
 const SIG4 = "public.review_answer(uuid,integer,text,uuid)";
 const SIG3 = "public.review_answer(uuid,integer,text)";
-
 
 // The isolated replay's 3-argument stub (tests/isolated/schema/ci-function-stubs.sql), with production's grants.
 function stubFunctions() {
@@ -85,11 +85,13 @@ const FIXTURE = `
     ('${i(3)}', '${P1}', '${Q_TEXT}', true,  'hund', false, NULL),                        -- short text, auto-graded
     ('${i(4)}', '${P1}', '${Q_NUM}',  true,  '42', true, NULL),                           -- number, already paid
     ('${i(5)}', '${P1}', '${Q_LONG}', false, NULL, NULL, NULL),                           -- long, never answered
-    ('${i(6)}', '${P1}', '${Q_LONG}', false, 'Bedømt før migrationen', NULL, 3),          -- reviewed before
-    ('${i(7)}', '${P1}', '${Q_LONG}', false, 'Et andet langt svar', NULL, NULL),          -- long, score 1
+    ('${i(6)}', '${P1}', '${Q_LONG}', false, 'Bedømt før migrationen', NULL, 3),          -- reviewed before (3)
+    ('${i(7)}', '${P1}', '${Q_LONG}', false, 'Et andet langt svar', NULL, NULL),          -- long, corrections
     ('${i(8)}', '${P1}', '${Q_TEXT}', true,  'pending tekst', NULL, NULL),                -- text pending (pqa)
     ('${i(9)}', '${P2}', '${Q_LONG}', false, 'Svar fra elev uden progress', NULL, NULL),  -- no progress row
-    ('${i(10)}', '${P1}', '${Q_LONG}', false, '   ', NULL, NULL);                         -- blank answer
+    ('${i(10)}', '${P1}', '${Q_LONG}', false, '   ', NULL, NULL),                         -- blank answer
+    ('${i(11)}', '${P1}', NULL,        false, 'Svar uden spørgsmål', NULL, NULL),         -- question missing
+    ('${i(12)}', '${P1}', '${Q_LONG}', false, 'Bedømt 2 før migrationen', NULL, 2);       -- reviewed before (2)
 `;
 
 async function prodDb({ fourBody = PROD_FUNCTION } = {}) {
@@ -97,10 +99,8 @@ async function prodDb({ fourBody = PROD_FUNCTION } = {}) {
   await db.exec(FIXTURE);
   await db.exec(fourBody);
   await db.exec(stubFunctions().three);
-  for (const sig of ["(uuid, integer, text)"]) {
-    await db.exec(`REVOKE EXECUTE ON FUNCTION public.review_answer${sig} FROM PUBLIC;
-                   GRANT EXECUTE ON FUNCTION public.review_answer${sig} TO service_role;`);
-  }
+  await db.exec(`REVOKE EXECUTE ON FUNCTION public.review_answer(uuid, integer, text) FROM PUBLIC;
+                 GRANT EXECUTE ON FUNCTION public.review_answer(uuid, integer, text) TO service_role;`);
   return db;
 }
 const one = async (db, sql, params) => (await db.query(sql, params)).rows[0];
@@ -110,7 +110,13 @@ const review = async (db, inst, score, fb = "fb") =>
 const md5Of = async (db, sig) => (await one(db, `SELECT md5(prosrc) AS m FROM pg_proc WHERE oid = to_regprocedure('${sig}')`))?.m ?? null;
 const meta = async (db, sig) => one(db, `SELECT pg_get_function_result(oid) AS result, prosecdef, proconfig,
   proacl::text AS acl, pg_get_userbyid(proowner) AS owner FROM pg_proc WHERE oid = to_regprocedure('${sig}')`);
-const payouts = async (db) => (await db.query("SELECT question_instance_id, student_id, teacher_id, score, xp_awarded, coins_awarded FROM public.teacher_review_payouts ORDER BY question_instance_id")).rows;
+const postings = async (db, inst) => (await db.query(
+  `SELECT question_instance_id, student_id, teacher_id, kind, previous_score, score, xp_delta, coins_delta, entitled_xp, applied
+   FROM public.teacher_review_postings ${inst ? "WHERE question_instance_id = $1" : ""} ORDER BY id`, inst ? [inst] : [])).rows;
+const sumFor = async (db, inst) => Number((await one(db,
+  "SELECT coalesce(sum(xp_delta), 0) AS s FROM public.teacher_review_postings WHERE question_instance_id = $1", [inst])).s);
+const XP_FOR = { 1: 0, 2: 10, 3: 25, 4: 50 };
+const R = (status, xp_awarded) => ({ status, xp_awarded, coins_awarded: 0 });
 
 test("fixture: production's body is reproduced byte for byte (md5(prosrc) 310f72f4…)", async () => {
   assert.equal(createHash("md5").update(PROD_BODY, "utf8").digest("hex"), PROD_MD5);
@@ -136,7 +142,7 @@ test("the guard refuses an unreviewed body and changes nothing", async () => {
   assert.notEqual(before, PROD_MD5);
   await assert.rejects(db.exec(read(FILE)), /unreviewed body/);
   assert.equal(await md5Of(db, SIG4), before, "the function is untouched");
-  assert.equal((await one(db, "SELECT to_regclass('public.teacher_review_payouts') AS t")).t, null, "no table created");
+  assert.equal((await one(db, "SELECT to_regclass('public.teacher_review_postings') AS t")).t, null, "no table created");
 });
 
 test("the guard refuses when the function is missing", async () => {
@@ -161,8 +167,7 @@ test("after the migration: new body, same signature, SECURITY DEFINER, search_pa
   assert.deepEqual(m.proconfig, ['search_path=""']);
   const grantees = m.acl.replace(/[{}]/g, "").split(",").map((e) => e.split("=")[0]).sort();
   assert.deepEqual(grantees, [m.owner, "service_role"], `ACL ${m.acl}`);
-  // The 3-argument overload is untouched: body and grants.
-  assert.equal(await md5Of(db, SIG3), three.md5);
+  assert.equal(await md5Of(db, SIG3), three.md5, "the 3-argument overload is untouched");
   assert.deepEqual(await meta(db, SIG3), three.meta);
   for (const role of ["anon", "authenticated"]) {
     for (const sig of [SIG4, SIG3]) {
@@ -172,86 +177,129 @@ test("after the migration: new body, same signature, SECURITY DEFINER, search_pa
   assert.equal((await one(db, `SELECT has_function_privilege('service_role', '${SIG4}', 'EXECUTE') AS ok`)).ok, true);
 });
 
-test("the audit table is closed to the API roles (RLS on, no grant except service_role SELECT)", async () => {
+test("the ledger is closed to the API roles (RLS on, no grant except service_role SELECT)", async () => {
   const { db } = await migrated();
-  const t = await one(db, "SELECT relrowsecurity, relacl::text AS acl FROM pg_class WHERE oid = 'public.teacher_review_payouts'::regclass");
+  const t = await one(db, "SELECT relrowsecurity FROM pg_class WHERE oid = 'public.teacher_review_postings'::regclass");
   assert.equal(t.relrowsecurity, true);
   for (const role of ["anon", "authenticated"]) {
     for (const priv of ["SELECT", "INSERT", "UPDATE", "DELETE"]) {
-      assert.equal((await one(db, `SELECT has_table_privilege('${role}', 'public.teacher_review_payouts', '${priv}') AS ok`)).ok, false, `${role} ${priv}`);
+      assert.equal((await one(db, `SELECT has_table_privilege('${role}', 'public.teacher_review_postings', '${priv}') AS ok`)).ok, false, `${role} ${priv}`);
     }
   }
   for (const priv of ["INSERT", "UPDATE", "DELETE"]) {
-    assert.equal((await one(db, `SELECT has_table_privilege('service_role', 'public.teacher_review_payouts', '${priv}') AS ok`)).ok, false, `service_role ${priv}`);
+    assert.equal((await one(db, `SELECT has_table_privilege('service_role', 'public.teacher_review_postings', '${priv}') AS ok`)).ok, false, `service_role ${priv}`);
   }
-  assert.equal((await one(db, "SELECT has_table_privilege('service_role', 'public.teacher_review_payouts', 'SELECT') AS ok")).ok, true);
+  assert.equal((await one(db, "SELECT has_table_privilege('service_role', 'public.teacher_review_postings', 'SELECT') AS ok")).ok, true);
 });
 
-test("first review of a long answer pays once; a re-review updates the review and pays nothing", async () => {
+test("first review pays the score's amount once; the same review again (retry, double click) pays nothing", async () => {
   const { db } = await migrated();
-  assert.deepEqual(await review(db, i(1), 3, "Godt"), { status: "rewarded", xp_awarded: 25, coins_awarded: 0 });
+  assert.deepEqual(await review(db, i(1), 3, "Godt"), R("rewarded", 25));
   assert.deepEqual(await xp(db), { xp: 120, level: 2 }, "XP + level formula unchanged: floor(120/100)+1");
-  assert.deepEqual(await payouts(db), [{ question_instance_id: i(1), student_id: P1, teacher_id: T, score: 3, xp_awarded: 25, coins_awarded: 0 }]);
-
-  assert.deepEqual(await review(db, i(1), 4, "Perfekt"), { status: "already_rewarded", xp_awarded: 0, coins_awarded: 0 });
+  assert.deepEqual(await postings(db), [{ question_instance_id: i(1), student_id: P1, teacher_id: T, kind: "award",
+    previous_score: null, score: 3, xp_delta: 25, coins_delta: 0, entitled_xp: 25, applied: true }]);
+  for (let k = 0; k < 3; k++) assert.deepEqual(await review(db, i(1), 3, "Godt"), R("unchanged", 0));
   assert.deepEqual(await xp(db), { xp: 120, level: 2 }, "no second payout");
-  const row = await one(db, "SELECT teacher_score, teacher_feedback, reviewed_by FROM public.question_instances WHERE id = $1", [i(1)]);
-  assert.deepEqual(row, { teacher_score: 4, teacher_feedback: "Perfekt", reviewed_by: T }, "the re-review itself is recorded");
-  assert.equal((await payouts(db)).length, 1, "the audit keeps the first payout only");
+  assert.equal((await postings(db)).length, 1, "a repeated review writes no posting");
 });
 
-test("auto-graded or unanswered instances: the review is recorded, nothing is paid", async () => {
+test("corrections: up pays the difference, down takes it back, back again restores it; history is kept", async () => {
   const { db } = await migrated();
-  for (const inst of [i(2), i(3), i(4), i(5), i(10)]) {
-    assert.deepEqual(await review(db, inst, 4), { status: "not_teacher_graded", xp_awarded: 0, coins_awarded: 0 }, inst);
+  const steps = [[2, "rewarded", 10], [4, "adjusted", 40], [1, "adjusted", -50], [2, "adjusted", 10], [2, "unchanged", 0], [3, "adjusted", 15]];
+  for (const [score, status, delta] of steps) {
+    assert.deepEqual(await review(db, i(7), score), R(status, delta), `score ${score}`);
+    assert.equal(await sumFor(db, i(7)), XP_FOR[score], `after ${score}: postings sum to the current score's amount`);
+    assert.equal((await xp(db)).xp, 95 + XP_FOR[score], `after ${score}: the pupil holds exactly that amount`);
+    const row = await one(db, "SELECT teacher_score FROM public.question_instances WHERE id = $1", [i(7)]);
+    assert.equal(row.teacher_score, score);
+  }
+  const ledger = await postings(db, i(7));
+  assert.deepEqual(ledger.map((p) => [p.kind, p.previous_score, p.score, p.xp_delta, p.entitled_xp]),
+    [["award", null, 2, 10, 10], ["adjustment", 2, 4, 40, 50], ["adjustment", 4, 1, -50, 0],
+     ["adjustment", 1, 2, 10, 10], ["adjustment", 2, 3, 15, 25]], "every change is one posting, none rewritten");
+  assert.deepEqual(await xp(db), { xp: 120, level: 2 }, "level follows the formula, also after a correction down");
+});
+
+test("score 1 first: an 'award' posting of 0 XP settles the instance; a later 4 pays 50 as an adjustment", async () => {
+  const { db } = await migrated();
+  assert.deepEqual(await review(db, i(1), 1), R("rewarded", 0));
+  assert.deepEqual(await xp(db), { xp: 95, level: 1 }, "progress not touched at 0 XP");
+  assert.deepEqual(await review(db, i(1), 1), R("unchanged", 0));
+  assert.deepEqual(await review(db, i(1), 4), R("adjusted", 50));
+  assert.equal((await xp(db)).xp, 145);
+});
+
+test("auto-graded, unanswered, blank or question-less instances: the review is recorded, nothing is posted", async () => {
+  const { db } = await migrated();
+  for (const inst of [i(2), i(3), i(4), i(5), i(10), i(11)]) {
+    for (const score of [4, 1, 4]) {
+      assert.deepEqual(await review(db, inst, score), R("not_teacher_graded", 0), inst);
+    }
     const r = await one(db, "SELECT teacher_score, reviewed_by FROM public.question_instances WHERE id = $1", [inst]);
     assert.deepEqual(r, { teacher_score: 4, reviewed_by: T }, `${inst}: the teacher's queue moves on`);
   }
-  assert.deepEqual(await xp(db), { xp: 95, level: 1 });
-  assert.deepEqual(await payouts(db), []);
+  assert.deepEqual(await xp(db), { xp: 95, level: 1 }, "an already-paid MC answer is never paid again");
+  assert.deepEqual(await postings(db), []);
 });
 
 test("the pending text format (process_question_attempt: was_correct NULL) is teacher-graded", async () => {
   const { db } = await migrated();
-  assert.deepEqual(await review(db, i(8), 2), { status: "rewarded", xp_awarded: 10, coins_awarded: 0 });
+  assert.deepEqual(await review(db, i(8), 2), R("rewarded", 10));
   assert.equal((await xp(db)).xp, 105);
 });
 
-test("a review from before the migration counts as paid; historical rows are not touched by the migration", async () => {
+test("a review from before the migration is recognised as paid; corrections move only the difference", async () => {
   const db = await prodDb();
   const before = (await db.query("SELECT * FROM public.question_instances ORDER BY id")).rows;
   const progressBefore = (await db.query("SELECT * FROM public.student_progress ORDER BY student_id")).rows;
   await db.exec(read(FILE));
   assert.deepEqual((await db.query("SELECT * FROM public.question_instances ORDER BY id")).rows, before);
   assert.deepEqual((await db.query("SELECT * FROM public.student_progress ORDER BY student_id")).rows, progressBefore);
-  assert.deepEqual(await payouts(db), [], "no back-filled payout rows");
-  assert.deepEqual(await review(db, i(6), 4), { status: "already_rewarded", xp_awarded: 0, coins_awarded: 0 });
+  assert.deepEqual(await postings(db), [], "the migration back-fills nothing");
+  // Old score 3 (25 XP recognised): the same score again changes nothing, 4 pays the 25 difference.
+  assert.deepEqual(await review(db, i(6), 3), R("unchanged", 0));
   assert.equal((await xp(db)).xp, 95);
+  assert.deepEqual(await review(db, i(6), 4), R("adjusted", 25));
+  assert.equal((await xp(db)).xp, 120);
+  assert.deepEqual((await postings(db, i(6))).map((p) => [p.kind, p.score, p.xp_delta, p.entitled_xp, p.applied]),
+    [["legacy_baseline", 3, 25, 25, false], ["adjustment", 4, 25, 50, true]]);
+  // Old score 2 (10 recognised) corrected down to 1 takes back 10.
+  assert.deepEqual(await review(db, i(12), 1), R("adjusted", -10));
+  assert.equal((await xp(db)).xp, 110);
 });
 
-test("score 1 consumes the payout with 0 XP; a later higher score pays nothing", async () => {
+test("an invalid score is refused before anything is written", async () => {
   const { db } = await migrated();
-  assert.deepEqual(await review(db, i(7), 1), { status: "rewarded", xp_awarded: 0, coins_awarded: 0 });
-  assert.deepEqual(await review(db, i(7), 4), { status: "already_rewarded", xp_awarded: 0, coins_awarded: 0 });
-  assert.deepEqual(await xp(db), { xp: 95, level: 1 }, "progress not touched at 0 XP");
-  assert.equal((await payouts(db)).length, 1);
+  for (const bad of [0, 5, -1, null]) {
+    await assert.rejects(review(db, i(1), bad), /Invalid score/, String(bad));
+  }
+  const r = await one(db, "SELECT teacher_score, reviewed_at FROM public.question_instances WHERE id = $1", [i(1)]);
+  assert.deepEqual(r, { teacher_score: null, reviewed_at: null });
+  assert.deepEqual(await postings(db), []);
 });
 
-test("a payout row blocks a second payout even if teacher_score was cleared afterwards", async () => {
-  const { db } = await migrated();
-  await review(db, i(1), 4);
-  await db.exec(`UPDATE public.question_instances SET teacher_score = NULL WHERE id = '${i(1)}'`);
-  assert.deepEqual(await review(db, i(1), 4), { status: "already_rewarded", xp_awarded: 0, coins_awarded: 0 });
-  assert.equal((await xp(db)).xp, 145);
-});
-
-test("unknown instance and missing progress row raise and leave nothing behind", async () => {
+test("partial failure: unknown instance, missing progress row and a correction below 0 XP raise and leave nothing behind", async () => {
   const { db } = await migrated();
   await assert.rejects(review(db, i(999), 4), /Instance not found/);
   await assert.rejects(review(db, i(9), 4), /student_progress missing/);
   const r = await one(db, "SELECT teacher_score, reviewed_at FROM public.question_instances WHERE id = $1", [i(9)]);
   assert.deepEqual(r, { teacher_score: null, reviewed_at: null }, "the failed review was rolled back");
-  assert.deepEqual(await payouts(db), [], "no audit row for a rolled-back payout");
+  assert.deepEqual(await postings(db), [], "no posting for a rolled-back review");
+  // XP lowered outside the ledger (nothing in production does this today): a correction down must not go below 0.
+  await review(db, i(1), 4);
+  await db.exec(`UPDATE public.student_progress SET xp = 10 WHERE student_id = '${P1}'`);
+  await assert.rejects(review(db, i(1), 1), /XP negative/);
+  assert.equal((await xp(db)).xp, 10, "XP unchanged");
+  assert.equal((await one(db, "SELECT teacher_score FROM public.question_instances WHERE id = $1", [i(1)])).teacher_score, 4, "review rolled back");
+  assert.equal((await postings(db, i(1))).length, 1, "posting rolled back");
+});
+
+test("the ledger is append-only, even for the table owner", async () => {
+  const { db } = await migrated();
+  await review(db, i(1), 4);
+  await assert.rejects(db.exec("UPDATE public.teacher_review_postings SET xp_delta = 0"), /append-only/);
+  await assert.rejects(db.exec("DELETE FROM public.teacher_review_postings"), /append-only/);
+  assert.equal(await sumFor(db, i(1)), 50);
 });
 
 test("only service_role can call it; the API roles are refused", async () => {
@@ -272,6 +320,7 @@ test("re-running the migration is accepted and changes nothing", async () => {
   await review(db, i(1), 3);
   await db.exec(read(FILE));
   assert.equal(await md5Of(db, SIG4), NEW_MD5);
-  assert.equal((await payouts(db)).length, 1, "the audit survives a re-run");
-  assert.deepEqual(await review(db, i(1), 4), { status: "already_rewarded", xp_awarded: 0, coins_awarded: 0 });
+  assert.equal((await postings(db)).length, 1, "the ledger survives a re-run");
+  assert.deepEqual(await review(db, i(1), 3), R("unchanged", 0));
+  assert.deepEqual(await review(db, i(1), 4), R("adjusted", 25));
 });

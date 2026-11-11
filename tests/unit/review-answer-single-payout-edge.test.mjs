@@ -1,7 +1,8 @@
 // Source contract for supabase/functions/review-answer/index.ts after the single-payout fix
 // (migration 20261111120000_review_answer_single_payout, docs/security/review-answer-enkelt-udbetaling.md).
 //
-// The database function review_answer is the ONE pay path. The Edge Function used to add the same XP a
+// The database function review_answer is the ONE pay path (model B: it posts the difference to the
+// amount already posted for the instance, so xp_awarded can be negative after a correction down). The Edge Function used to add the same XP a
 // second time with its own read-then-write; it must never write progress again, and it reports the RPC's
 // own status in the old response shape ({ ok: true, xp_awarded: <number> }).
 import { test } from "node:test";
@@ -59,4 +60,20 @@ test("the frontend caller reads only `error` from review-answer (the shape chang
   const m = js.match(/const \{([^}]*)\} = await supabase\.functions\.invoke\("review-answer"/);
   assert.ok(m, "the caller exists");
   assert.deepEqual(m[1].split(",").map((s) => s.trim()).filter(Boolean), ["error"]);
+});
+
+test("a score outside 1..4 is refused (400) before any read or write", () => {
+  const c = code();
+  const guard = c.indexOf("!Number.isInteger(score) || score < 1 || score > 4");
+  assert.ok(guard > 0, "the score guard exists");
+  assert.ok(guard < c.indexOf('.from("question_instances")'), "before the instance lookup");
+  assert.ok(guard < c.indexOf('.rpc("review_answer"'), "before the RPC");
+  assert.match(c.slice(guard, guard + 200), /error: "Invalid score"[\s\S]*status: 400/);
+});
+
+test("a negative xp_awarded (a correction down) is passed on, not refused or clamped", () => {
+  const c = code();
+  assert.ok(!/xpAwarded\s*<\s*0/.test(c), "no check that would refuse a negative delta");
+  assert.ok(!/Math\.max\(\s*0/.test(c), "no clamping");
+  assert.match(c, /Number\.isFinite\(xpAwarded\)/);
 });

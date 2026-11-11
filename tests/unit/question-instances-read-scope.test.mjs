@@ -367,6 +367,13 @@ const REVIEWED_LATER_READERS = {
     "D-347's (one instance by id AND student_id = auth.uid(), no instance column returned, no write). EXECUTE " +
     "stays revoked from PUBLIC and anon. No policy, RLS or table privilege on question_instances is touched " +
     "(proven in minigame-break-interval-10min-migration-run.test.mjs, tests 1 and 4).",
+  "20261111120000_review_answer_single_payout.sql":
+    "re-creates review_answer(uuid,integer,text,uuid) with EXECUTE revoked from PUBLIC, anon and authenticated " +
+    "and granted to service_role only (the review-answer Edge Function, after its role and ownership checks). " +
+    "It reads ONE instance by id (FOR UPDATE) joined to its question, as production's body already does, and " +
+    "returns only {status, xp_awarded, coins_awarded} — no instance column. Its RLS/REVOKE/GRANT statements " +
+    "target the new table teacher_review_postings, never question_instances (proven in " +
+    "review-answer-single-payout-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -508,7 +515,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261101190100_question_attempts_v2_align_grading.sql",
      "20261103110000_l1_k1_attempt_context.sql",
      "20261105090000_minigame_breaks.sql",
-     "20261107090000_minigame_break_interval_10min.sql"],
+     "20261107090000_minigame_break_interval_10min.sql",
+     "20261111120000_review_answer_single_payout.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
