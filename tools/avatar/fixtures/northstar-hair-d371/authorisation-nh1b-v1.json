@@ -1,0 +1,122 @@
+{
+  "decision": "D-371",
+  "callId": "NH-1B-hair-short-silhouette",
+  "meta": {
+    "authorisesImageRequest": false,
+    "note": "the authorisation is the token in D-371's status on origin/main together with the owner's separate execution instruction for the send; this file is the budget and the entry"
+  },
+  "budget": {
+    "authorised": 1,
+    "reserve": 0,
+    "retries": 0,
+    "fallback": false,
+    "reusesEarlierPermissions": false,
+    "automaticExtension": false,
+    "separateFrom": "D-371's NH-1…NH-3 entries (NH-1 spent and rejected; NH-2 and NH-3 paused) and every earlier budget",
+    "enforcedLimit": "one one-shot claim for one call id",
+    "price": {
+      "verifiedAt": "2026-11-11",
+      "source": "https://developers.openai.com/api/docs/pricing (Standard, gpt-image-2.5-sunburst: text input $5.00, image input $8.00, image output $30.00 per 1M tokens), re-read 2026-11-11",
+      "perCallEstimate": 0.07,
+      "perCallUpperEstimate": 0.08,
+      "basis": "NH-1's measured usage with two 1024×1024 images: 2,048 image tokens and 530 text tokens in, 1,756 image tokens out = about $0.072",
+      "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
+    },
+    "actuallySent": 0
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "name": "northstar-hair-reference-1024.png",
+        "bytes": 351957,
+        "sha256": "a75eb7af92153d6e1a620def0ac678330db942f8e2238fd7e451e3ef57e6c3ad",
+        "tracked": false
+      },
+      {
+        "role": "Image 2",
+        "name": "northstar-kort-guide-ears-on-top-1024.png",
+        "bytes": 133522,
+        "sha256": "5cddc136cedace3d81937be0892d51253472e4d67c9b850b014910bef1c87a5c",
+        "tracked": false
+      }
+    ]
+  },
+  "frozen": {
+    "plan": {
+      "file": "tools/avatar/fixtures/northstar-hair-d371/plan-nh1b-v1.json",
+      "sha256": "d30fa41df3281b3bedf9a3a892c003bc1fe291da15464b72f84c08a8f404c450"
+    },
+    "methodFiles": {
+      "tools/avatar/northstar-hair-template-d371.mjs": "1724d074e7f968b8b17515970680c00f272e36f7be9cc16bc3a730f9e6109451",
+      "tools/avatar/northstar-hair-polish-d368.mjs": "559fb780c20fac846d45044c3406bcacdfd958954eae7c6f4594e614316a3e08",
+      "tools/avatar/northstar-hair-trial-d368.mjs": "53624fdb07e5658361e6c8d56a327ce6c2aeaf46473e0e1f8005ca5f70ea3d6a",
+      "tools/avatar/promote-r2-torso-asset.mjs": "c030f74ec58edaa82673887d403caf50d4d3ff791781b6502882ed01258613be",
+      "tools/avatar/r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+      "tools/avatar/r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+      "tools/avatar/r3-northstar-head.mjs": "584db7b2d057168420c5abf0bc0a76ee8bec65e08a2107826b158d432f354401",
+      "tools/avatar/r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+      "tools/avatar/fixtures/northstar-hair-d371/template-v1.json": "034b3f04b5e0d89e3e76bb52056fa6814a5b120b4df975447b6c2f4f9a5e2e9d",
+      "tools/avatar/northstar-kort-silhouette-d371.mjs": "e0f31c2560479c557a555f2957b0707d6c7259744003ffbe97f6f0d87e6fb625",
+      "tools/avatar/northstar-hair-compose-d371.mjs": "3c2c14b3f39f1d423dc63112376eb2ec9d0883a1c0335219fce31df04ac86b3a",
+      "tools/avatar/fixtures/northstar-hair-d371/composition-nh1b-v1.json": "8e374f5ee89abad497413a4b19fd9f9d99b34a6723008cc155e36cbf686e48cc"
+    }
+  },
+  "stopRules": [
+    "one call: no retry, no reserve, no fallback, no other model",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome — never resent",
+    "any HTTP error, moderation block or format error ends the attempt with that outcome",
+    "the executor's stop file NH-STOP.json",
+    "NH-2 and NH-3 stay paused: this entry never authorises them"
+  ],
+  "call": {
+    "callId": "NH-1B-hair-short-silhouette",
+    "style": "short",
+    "name": "Kort (fixed composition)",
+    "mandateState": "UNSPENT",
+    "outcome": "NOT YET ATTEMPTED",
+    "claim": {
+      "identity": "NH-1B-hair-short-silhouette-claim",
+      "filename": "NH-1B-hair-short-silhouette.claim.json",
+      "eventsFilename": "NH-1B-hair-short-silhouette.events.jsonl"
+    },
+    "prompt": {
+      "sha256": "b898a3344424a7347c4a8692b68bfa4acdce5a502d6e573648c4aa96a45620f9"
+    }
+  },
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-hair-nh1b.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-371-NH-1B",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}
