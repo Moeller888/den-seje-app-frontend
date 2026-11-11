@@ -417,20 +417,25 @@ test("the real suite: every shard plan, run with its weights as durations, keeps
 });
 
 test("negative control: the old pool ran ≥ 2 PG files at once on PR #674's shard-1 plan", () => {
-  // PR #674 = this suite + one unweighted file; its shard 1 is the plan that failed (run 42611228361).
-  // The file is added only when absent, so the control holds both before and after #674 is merged.
-  const suite = [...new Set([...ciSuite(), "isolated-stimulus-chain-seed.test.mjs"])].sort();
-  const pg = new Set(realPg());
-  const isPg = (f) => pg.has(f);
-  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
-  const shard1 = planShards(suite, 4, weights)[0];
+  // The exact shard-1 plan of the failed run 42611228361 (PR #674 merged with main d19fd4c9), pinned as a
+  // fixture. Recomputing it from today's suite moved files between shards whenever a PR added a unit file,
+  // which made this control fail for reasons unrelated to D-369 (issue #683). Today's suite is covered by
+  // "the real suite: every shard plan … keeps the lane" above; this test only proves the old pool overlapped.
+  const plan = JSON.parse(read("tests/unit/fixtures/d369-pr674-shard1-plan.json"));
+  assert.equal(plan.order.length, 92, "shard 1 of run 42611228361 ran 92 of 367 files");
+  assert.equal(new Set(plan.order).size, plan.order.length, "no file twice");
   for (const f of ["minigame-breaks-concurrency.test.mjs", "mc-length-cue-top10-concurrency.test.mjs", "claim-daily-reward-concurrency.test.mjs"]) {
-    assert.ok(shard1.order.includes(f), `${f} is in #674's shard 1`);
+    assert.ok(plan.order.includes(f) && plan.pg.includes(f), `${f} is a PG file in #674's shard 1`);
   }
-  const known = Object.values(weights).filter((w) => Number.isFinite(w) && w > 0).sort((a, b) => a - b);
-  const median = known[Math.floor(known.length / 2)];
-  const dur = (f) => (Number.isFinite(weights[f]) && weights[f] > 0 ? weights[f] : median);
-  const old = simulateSchedule(shard1.order, dur, 3, () => false); // the pre-D-369 pool
+  // The PG rule did not change: every pinned PG file that still exists is still detected as one today.
+  const today = new Set(ciSuite());
+  const pgToday = new Set(realPg());
+  for (const f of plan.pg) if (today.has(f)) assert.ok(pgToday.has(f), `${f} is still a PG file`);
+  const pg = new Set(plan.pg);
+  const isPg = (f) => pg.has(f);
+  const dur = (f) => plan.weights[f] ?? plan.median_weight;
+  const shard1 = { order: plan.order };
+  const old = simulateSchedule(shard1.order, dur, plan.concurrency, () => false); // the pre-D-369 pool
   assert.ok(maxOverlap(old.runs, isPg) >= 2, "the old schedule overlaps PG files on this plan");
   const neu = checkRun(shard1.order, dur, 3, isPg);
   assert.ok(neu.wall <= old.wall * 1.05, `the lane costs little here (${old.wall.toFixed(1)} → ${neu.wall.toFixed(1)} s)`);
