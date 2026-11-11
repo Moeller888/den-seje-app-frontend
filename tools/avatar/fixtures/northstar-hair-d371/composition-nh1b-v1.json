@@ -1,0 +1,68 @@
+{
+  "decision": "D-371",
+  "callId": "NH-1B-hair-short-silhouette",
+  "method": "FIXED COMPOSITION (owner-approved 2026-11-11)",
+  "rules": {
+    "templeUnderEarPx": 6,
+    "cutLinePx": 3,
+    "frontLinePx": 2,
+    "lineGrey": 24,
+    "templeGrey": 132,
+    "guideFill": 205,
+    "earZone": {
+      "abovePx": 40,
+      "belowPx": 8,
+      "outerPx": 30,
+      "innerPx": 14
+    }
+  },
+  "gates": {
+    "M10": {
+      "on": "the raw placed drawing, before any clip",
+      "tolerancePx": 4,
+      "maxOutsideShare": 0.01,
+      "maxCoreMissingShare": 0.01,
+      "minIoU": 0.9,
+      "rule": "hair alpha ≥ 128: at most 1 % outside the silhouette grown by 4 px; at most 1 % of the silhouette shrunk by 4 px empty; IoU with the silhouette ≥ 0.90"
+    },
+    "M11": {
+      "on": "the composite",
+      "maxFlatShare": 0.03,
+      "rule": "at most 3 % of the visible TEMPLE strip left uncovered by the drawing (no flat patch)"
+    }
+  },
+  "silhouette": {
+    "frontPixels": "c48ce88897059f726581ea8645147a0a86fda2c1fecc4512ee0d3cb07faa663a",
+    "behindPixels": "9f9b7748c5eb06d2d8c9709f06e4490adac3d6662d143148f36a8aabd7271274",
+    "frontPx": 33440,
+    "behindPx": 60
+  },
+  "earOnTop": {
+    "bowl": {
+      "left": {
+        "px": 0,
+        "rows": null
+      },
+      "right": {
+        "px": 151,
+        "rows": [
+          341,
+          353
+        ]
+      }
+    },
+    "topStripPx": 0,
+    "slipPx": 15,
+    "frontLinePx": 39,
+    "earOnTopPx": 5608,
+    "maskPixels": "2df29ce6bbd8dbbab50e974202b63096fd655fa5636da732036eb83229511b49"
+  },
+  "temple": {
+    "px": 1508
+  },
+  "guide": {
+    "name": "northstar-kort-guide-ears-on-top-1024.png",
+    "pixels": "7790638c34bf25283bf237a628fcc843d2fabe900fb37bdab3fbd4834cf6b2f5",
+    "size": "1024x1024"
+  }
+}
