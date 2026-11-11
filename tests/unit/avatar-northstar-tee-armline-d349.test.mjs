@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import * as L from "../../js/avatar-layers.js";
 import { resplitTee, teeItems, NEW_REV, FROM_ARM_ALPHA } from "../../tools/avatar/northstar-tee-armline-d349.mjs";
 import { v1Table, APPROVAL_REL } from "../../tools/avatar/verify-northstar-tee-armline-runtime-d349.mjs";
+import { beforeLayerFixes } from "../../tools/avatar/northstar-free-matrix.mjs";   // D-370: the plan without its two layer fixes
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", ".."), W = 1024, N = W * 1536, sha = (b) => createHash("sha256").update(b).digest("hex");
 const CAND = JSON.parse(readFileSync(join(REPO, "tools", "avatar", "fixtures", "northstar-wardrobe", "tee", "tee-armline-v2-candidates.json"), "utf8"));
@@ -32,9 +33,10 @@ test("D-349 the repair: the soft-edge pixels move to the sleeve layer, the union
 test("D-349 layerRev: exactly the 18 tees set 2 and draw their -v2 layers with v1 shadows; the v1 revision still draws the v1 files", () => {
   const tees = teeItems(L);
   assert.equal(tees.length, 18);
-  for (const [k, it] of Object.entries(L.NORTHSTAR_ITEMS)) assert.equal(it.layerRev, tees.includes(k) ? NEW_REV : undefined, k);
+  // D-370 moved the blue tee on to revision 3 (its layer fixes); the other 17 stay at 2
+  for (const [k, it] of Object.entries(L.NORTHSTAR_ITEMS)) assert.equal(it.layerRev, tees.includes(k) ? (k === "top-tee-hip-blue" ? 3 : NEW_REV) : undefined, k);
   const T1 = v1Table(L.NORTHSTAR_ITEMS);
-  for (const k of Object.keys(L.NORTHSTAR_OUTFITS)) { const now = L.northstarCanvasPlan(k).map((s) => s.src.split("/").pop()), then = L.northstarPlanFor(L.NORTHSTAR_OUTFITS[k], T1).map((s) => s.src.split("/").pop());
+  for (const k of Object.keys(L.NORTHSTAR_OUTFITS)) { const now = beforeLayerFixes(L.northstarCanvasPlan(k).map((s) => s.src.split("/").pop())), then = beforeLayerFixes(L.northstarPlanFor(L.NORTHSTAR_OUTFITS[k], T1).map((s) => s.src.split("/").pop()));
     assert.ok(then.every((f) => f.endsWith("-v1.webp")), k + ": the v1 revision");
     assert.deepEqual(now.filter((f, i) => f !== then[i]), [L.NORTHSTAR_OUTFITS[k].top + "-top-body-v2.webp", L.NORTHSTAR_OUTFITS[k].top + "-sleeves-v2.webp"], k); }
   const o = L.northstarOutfitFor("K07", "TP-FOX-NAV"), a = L.northstarPlanFor(o, T1).map((s) => s.src.split("/").pop()), b = L.northstarPlanFor(o).map((s) => s.src.split("/").pop());
