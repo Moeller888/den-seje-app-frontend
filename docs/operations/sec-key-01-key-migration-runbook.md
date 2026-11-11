@@ -38,24 +38,112 @@ læst, kopieret eller logget.
 
 ---
 
+## Revision 2026-11-09 — status og tekniske risici
+
+Denne revision godkender ikke merge, deploy, ændring af secrets, R-01, JWT-rotation eller R-04. Hver
+produktionshandling kræver særskilt GO fra ejeren.
+
+**Evidensklasser.** **VERIFICERET:** observeret i drift eller dokumenteret gennem test. **FORVENTET:** understøttet
+af kodeanalyse, men ikke testet. **UKENDT:** manglende bevis. En forventning er ikke dokumenteret driftssikkerhed.
+
+| Emne | Status 2026-11-09 | Klasse |
+|---|---|---|
+| Nye nøgler | Publishable `default`, secret `default` samt dedikerede secret keys `github_actions_ci` og `local_dev_tools` | VERIFICERET af ejeren |
+| GitHub-secrets `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY` | Opdateret ifølge metadata | VERIFICERET |
+| GitHub Actions med de nye secrets | Ikke driftstestet | UKENDT |
+| De to primære lokale `.env`-filer | Read-only Deno-test: HTTP 200, `sb_secret_`-nøgle, ingen legacy-nøgle | VERIFICERET |
+| `.env`-kopier i Git-worktrees | Kontrollen er blokeret af sikkerhedsguarden. Afgrænset restrisiko accepteret af ejeren | UKENDT |
+| Tidligere lokale legacy-kald | Bekræftet af ejeren som egne kørsler | VERIFICERET af ejeren |
+| Legacy API-nøgler | Stadig aktive | VERIFICERET af ejeren |
+| Legacy-trafik i `edge_logs` | 0 kald fra 2026-10-30 15:08:51Z til 2026-11-09 19:25Z | VERIFICERET |
+| R-01 | Ikke godkendt | — |
+
+Dette er en dokumenteret status og ikke en garanti for, at samtlige komponenter er migreret.
+
+### Tekniske risici
+
+**A. `SUPABASE_SERVICE_ROLE_KEY`.** Læses direkte af `reset-student`, `create-teacher`, `reset-student-password`,
+`request-password-help`, `equip-avatar` og `avatar-generation`. Værdien er ikke den lækkede nøgle (intern
+sammenligning 2026-11-09), og funktioner, der læser variablen, er set bruge en `sb_secret_`-nøgle i drift. Supabase
+lister dog variablen under „Legacy keys” og dokumenterer ikke, at den bevares efter deaktivering. **Direkte
+afhængighed må derfor ikke behandles som verificeret sikker efter R-01.**
+
+**B. `SUPABASE_ANON_KEY`.** Samme problem. Læses direkte af `buy-item`, `get-reviewed-answers`, `equip-avatar`,
+`avatar-generation` og `request-password-help`.
+
+**C. Nye variabler.** `SUPABASE_SECRET_KEYS` og `SUPABASE_PUBLISHABLE_KEYS` er JSON-objekter med én nøgle pr. navn.
+Resolveren `supabase/functions/_shared/supabase-keys.ts` læser navnet `default` og falder kun tilbage til de gamle
+variabler, når bundtet helt mangler. Er bundtet ugyldigt, fejler den i stedet for at falde tilbage. Secret `default`
+må derfor ikke slettes, så længe resolveren læser det navn. Navne, der begynder med `SUPABASE_`, er forbeholdt
+platformen.
+
+**D. Headers.**
+
+| Header eller værdi | Betydning |
+|---|---|
+| `apikey` | Identificerer **applikationen**. Publishable eller secret API key |
+| `Authorization: Bearer` | Bærer en **JWT**, normalt brugerens |
+| Bruger-JWT | Udstedt af Supabase Auth til en bestemt bruger. Det er den, `auth.getUser()` og `verify_jwt` vurderer |
+| Secret API key | Ikke en JWT og identificerer ingen bruger. Hører til i `apikey` og må aldrig bruges i en browser |
+
+En secret API key må ikke automatisk behandles som en bruger-JWT. Supabase fraråder at sende nye nøgler som Bearer.
+`supabase-js` håndterer headerne selv. Kode, der sætter dem manuelt, skal gennemgås enkeltvis:
+`avatar-generation/onboarding-client.ts` og `tools/avatar-batch/batch-create.ts` sender nøglen som Bearer.
+
+**E. `request-password-help`.** Har `verify_jwt: true`, og frontenden sender publishable-nøglen. Main afviger væsentligt
+fra den deployede kode, fordi main kalder en RPC fra en migration, der ikke er anvendt. Funktionen må aldrig deployes
+fra main. Ændringer skal være kirurgiske, særskilt verificerede og tage udgangspunkt i
+`tools/production/edge-patches/request-password-help/`.
+
+**F. `question-context`.** Kilden kan ikke hentes. Funktionen er **uafklaret**, indtil dens faktiske afhængigheder kan
+dokumenteres. Se Q-09.
+
+### Funktioner i fase C
+
+| Funktion | Kaldere på main | Betydning | Krav før R-01 |
+|---|---|---|---|
+| `equip-avatar` (Q-01) | Ingen | Ikke fundet i aktivt flow | 0 kald i `function_edge_logs` de seneste 30 dage |
+| `get-reviewed-answers` (Q-03) | Ingen | Ikke fundet i aktivt flow | 0 kald de seneste 30 dage |
+| `avatar-generation` (Q-07) | `js/admin.js` (kun `super_admin`) | Fejler allerede ved onboarding, som er en 503-stub | Ejeren bekræfter, at funktionen ikke er i brug |
+| `question-context` (Q-09) | Ingen | Uafklaret | 0 kald de seneste 30 dage |
+
+Viser en funktion aktiv brug, flyttes den til fase A, eller R-01 er NO-GO.
+
+---
+
 ## 0. Oversigt
 
 | Trin | Hvad | Hvem | GO | Kan rulles tilbage |
 |---|---|---|---|---|
 | Q-00 | Dashboard-tjek: legacy-nøgler og JWT-signeringsnøgler | Ejer | — (kun aflæsning) | — |
-| K-01 | Separate secret keys til CI og lokale værktøjer | Ejer | Ejer | Ja |
-| Q-01…Q-08 | Flyt hver deployet funktion over på resolveren | Claude/ejer | Ét GO pr. funktion | Ja (redeploy) |
-| Q-09 | Afklar `question-context` | Ejer | Ejer | Ja |
-| O-01 | 24–48 timers observation: nul legacy-trafik | Claude (read-only) | — | — |
-| R-01 | Deaktivér legacy API-nøgler (`anon` + `service_role`) | Ejer | Ejer | **Ja** (genaktivér) |
+| K-01 | Separate secret keys til CI og lokale værktøjer | Ejer | Ejer | Kun fremad (ny nøgle) |
+| Q-02, Q-06, Q-05, Q-04, Q-08 (fase A) | Flyt funktionerne, der skal være flyttet før R-01 | Claude/ejer | Ét GO pr. funktion | Ja (redeploy), kun før R-01 |
+| Q-01, Q-03, Q-07 (fase C) | Flyt de øvrige funktioner | Claude/ejer | Ét GO pr. funktion | Kun fremad efter R-01 |
+| Q-09 (fase C) | Afklar `question-context` | Ejer | Ejer | Nej (kilden kan ikke hentes) |
+| O-01 | 24–48 timers observation efter fase A: nul legacy-trafik | Claude (read-only) | — | — |
+| R-01 | Deaktivér legacy API-nøgler (`anon` + `service_role`) | Ejer | Ejer | **Nej.** Genaktivering er forbudt; fejl rettes fremad |
 | R-02 | Rotér de eksponerede testkontoadgangskoder | Ejer | Ejer | Nej (nye værdier) |
 | R-03 | Slet historiske Playwright-artefakter (D-146 (6)) | Ejer | Ejer | Nej |
 | R-04 | Tilbagekald legacy-JWT-secret | Ejer | Ejer | **NEJ — irreversibel** |
 | R-05 | Luk GitHub secret-scanning alert #1 med begrundelse | Ejer | Ejer | Ja (genåbn) |
 | G-01 | Dokumentér persondata-risikovurdering (GDPR) | Ejer | Ejerbeslutning | — |
 
-Rækkefølgen er bindende: R-01 først, når Q-01…Q-09 og O-01 er grønne; R-04 først, når R-01 har
-stået i mindst 48 timer uden fejl.
+Rækkefølgen er en **foreløbig arbejdsplan**, godkendt af ejeren 2026-11-09. Den kan kun ændres ved at forelægge
+ejeren konkret dokumentation for, at en anden rækkefølge er sikrere.
+
+- **Fase A, før R-01:** Q-02 `reset-student`, Q-06 `create-teacher`, Q-05 `reset-student-password`, Q-04 `buy-item`,
+  Q-08 `request-password-help`, i den rækkefølge. Q-02 er prøven, fordi funktionen ingen kaldere har. Q-08 er sidst,
+  fordi den har den mest komplekse fejlvej.
+- **Fase B:** O-01 og derefter R-01, når alle krav i „GO/NO-GO før R-01” er opfyldt, og ejeren har givet udtrykkeligt GO.
+- **Fase C, efter R-01:** Q-01, Q-03, Q-07 og Q-09, derefter JWT-migration og R-04. R-04 først, når R-01 har stået i
+  mindst 48 timer uden uafklarede fejl.
+
+Hvert trin i fase A kræver kontrol af deployet kode og forventet ændring, dokumenterede nøgleafhængigheder, en
+testplan, kontrol af eksisterende fejl, særskilt GO fra ejeren og efterfølgende verifikation. Ved uventede
+afvigelser: **STOP**.
+
+**Ingen funktion må vente til efter R-01, hvis den stadig er nødvendig for et aktivt produktionsflow og kan bryde
+ved deaktivering.** Se „Funktioner i fase C” nedenfor. Kan det ikke afklares, er R-01 **NO-GO**.
 
 ---
 
@@ -84,20 +172,22 @@ Ejeren noterer svarene (ja/nej og nøglenavne, ingen værdier) i PR'en for næst
 Formål: Når legacy slås fra, må hverken CI eller lokale scripts stå uden nøgle, og hver forbruger skal
 kunne tilbagekaldes alene.
 
-1. Ejeren opretter i dashboardet to nye secret keys, fx med navnene `ci` og `local-tools`.
-2. Ejeren opdaterer **GitHub Actions-secret** `SUPABASE_SERVICE_ROLE_KEY` (bruges af
-   `.github/workflows/playwright.yml` og `update-avatar-goldens.yml`) til værdien af `ci`, og
-   `SUPABASE_ANON_KEY` til publishable-nøglen. Navnene på secrets kan blive stående; kun værdien
-   skifter.
-3. Ejeren opdaterer sin **lokale `.env`** (bruges af `fetch_legacy.mjs`, `production/…`,
+1. **Udført 2026-11-09:** ejeren har oprettet de dedikerede secret keys `github_actions_ci` og `local_dev_tools`.
+2. **Udført 2026-11-09:** **GitHub Actions-secret** `SUPABASE_SERVICE_ROLE_KEY` (bruges af
+   `.github/workflows/playwright.yml` og `update-avatar-goldens.yml`) er sat til `github_actions_ci`, og
+   `SUPABASE_ANON_KEY` til publishable `default`. Navnene på secrets er uændrede; kun værdien er skiftet.
+   Accept i GitHub Actions er endnu **UKENDT**.
+3. **Udført 2026-11-09 for de to primære filer:** **lokal `.env`** (bruges af `fetch_legacy.mjs`, `production/…`,
    `tools/avatar-batch/batch-create.ts` og de manuelle Deno-tests i
-   `supabase/functions/avatar-generation/*.test.ts`) til `local-tools`.
+   `supabase/functions/avatar-generation/*.test.ts`) bruger `local_dev_tools`. Kopier i worktrees er ikke kontrolleret.
 4. Kendt kompatibilitetspunkt: `sb_secret_…` er ikke en JWT. Klienter, der kun sender
    `Authorization: Bearer <nøgle>` uden et `apikey`-header, skal kontrolleres
    (`tools/avatar-batch/batch-create.ts` linje ~196). supabase-js sender begge headers.
-5. **Verifikation:** næste prod-facing E2E-kørsel (kun med ejerens GO) eller et lokalt read-only
-   script lykkes, og `edge_logs` viser forespørgslerne med en `sb_secret_`-nøgle (kun præfikset
-   `sb_secret_` tælles, aldrig resten).
+5. **Verifikation:** det lokale read-only script er gennemført for begge primære filer, og `edge_logs` viste HTTP 200 med
+   en `sb_secret_`-nøgle (kun præfikset `sb_secret_` tælles, aldrig resten). De eksisterende workflows skriver til
+   produktionens testkonti, så en test af GitHub Actions kræver særskilt GO.
+6. **Fejl:** afvises en ny nøgle, indsættes den igen fra dashboardet. Fejler den stadig, oprettes en ny secret key.
+   Den gamle værdi må aldrig indsættes igen, og der gemmes ingen kopi af den.
 
 Claude læser, kopierer eller logger aldrig nogen af værdierne.
 
@@ -121,9 +211,8 @@ er import af resolveren og udskiftning af `Deno.env.get("SUPABASE_…_KEY")` med
 | Q-07 | `avatar-generation` | v22 · `71d65a7c4da46dbf8bd986aa0cee3b6298f633bcb0839a84754df8f2750e13a5` · 2026-05-13T09:03:17Z | **true** | `index.ts` l. 53 `Deno.env.get("SUPABASE_ANON_KEY")`; `supabase.ts` l. 7 og `onboarding-client.ts` l. 25 `Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")` | Ja, kun nøglelinjer i 3 af 7 filer; 4 filer byte-identiske | **Deploy fra main** | `js/admin.js` (super_admin) |
 | Q-08 | `request-password-help` | v10 · `d5c06a16b06e11f5f9a7aaa3e6ed6f101b72f8fc4e6a841148f1baaceece9afa` · 2026-08-08T16:28:32Z | **true** | `index.ts` l. 35 `Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!`; l. 36 `Deno.env.get("SUPABASE_ANON_KEY") ?? ""` | **Nej** — main kalder RPC'en `reserve_password_help` (migration `20260808010000`, D-243), som **ikke** er anvendt | **Kirurgisk patch** (PR #606, `tools/production/edge-patches/request-password-help/`) | `js/login.js` |
 
-Rækkefølgen er lavest risiko først: funktioner uden kaldere (Q-01…Q-03), så elevens butik (Q-04),
-så lærer- og adminværktøjer (Q-05…Q-07) og til sidst login-flowets glemt-adgangskode (Q-08), som
-har den mest komplekse fejlvej. `equip-avatar` og `buy-item` rører ikke avatar-render-stien.
+Tabellens versioner og hashes beskriver gennemgangen 2026-11-05. Rækkefølgen står i afsnit 0. `equip-avatar` og
+`buy-item` rører ikke avatar-render-stien.
 
 **Bemærkning om `avatar-generation`:** den kalder `avatar-asset-onboarding`, som i dag er en
 503-containment-stub (2026-11-02). Avatar-generering fejler derfor allerede i onboarding-trinnet,
@@ -147,8 +236,9 @@ Der blev ikke fundet nogen yderligere funktion, som læser `SUPABASE_SERVICE_ROL
 
 ### Fælles tjek før hvert deploy
 
-1. `list_edge_functions` (read-only): funktionens `version` og `ezbr_sha256` er præcis som i
-   tabellen. Har noget ændret sig, er planen forældet for den funktion: **STOP** og gennemgå igen.
+1. `list_edge_functions` (read-only): funktionens `ezbr_sha256` og `verify_jwt` er præcis som i tabellen. Afviger de,
+   er planen forældet for den funktion: **STOP** og gennemgå igen. Versionsnummeret kan stige uden kodeændring, når
+   platformen opdaterer funktionernes miljø. Det er derfor ikke i sig selv et stopkriterium.
 2. `git rev-parse origin/main` og diff af funktionens mappe mod `87aa94b4`. Har funktionen eller
    `_shared/supabase-keys.ts` ændret sig på main siden, gennemgås diffen igen før deploy.
 3. `node --test tests/unit/sec-key-01-runbook.test.mjs tests/unit/request-password-help-keys-patch.test.mjs`
@@ -219,8 +309,8 @@ Pr. funktion (kun med ugyldigt eller manglende token — ingen rigtige elevkonti
 
   Kontrollér altid SHA-256 på det, der hentes, før det deployes.
 - **Kirurgisk patch:** redeploy pakkens `deployed-vN/` (se pakkens `README.md`).
-- Rollback virker **kun**, så længe legacy-nøglerne er aktive (før R-01, eller efter en
-  genaktivering af R-01). Efter R-04 er rollback til en legacy-læsende version udelukket.
+- Redeploy af en tidligere version er kun tilladt **før R-01**. Efter R-01 må ingen funktion rulles tilbage til en
+  version, der læser en legacy-variabel direkte. Fejl rettes fremad efter „Fejlhåndtering efter R-01”.
 
 ## Q-09 — `question-context` (UKENDT)
 
@@ -236,12 +326,14 @@ Pr. funktion (kun med ugyldigt eller manglende token — ingen rigtige elevkonti
   bevares), eller (b) slet funktionen i dashboardet. Begge fjerner det ukendte. Rollback til v12 er
   ikke mulig i nogen af tilfældene, fordi kilden ikke kan hentes. Det er uden betydning, så længe
   intet kalder den.
+- **Status 2026-11-09:** **UKENDT.** Kilden kan stadig ikke hentes, og der er ingen kaldere på main. Funktionen er
+  uafklaret, indtil dens faktiske afhængigheder kan dokumenteres.
 
 ---
 
 ## O-01 — observation i 24–48 timer
 
-Start, når Q-01…Q-09 er udført. Kør begge forespørgsler én gang pr. døgn i to på hinanden følgende
+Start, når fase A (Q-02, Q-06, Q-05, Q-04, Q-08) er udført og verificeret. Kør begge forespørgsler én gang pr. døgn i to på hinanden følgende
 døgn via Supabase-MCP `query_logs` (read-only; vinduet er højst 24 timer, så angiv altid
 `iso_timestamp_start`/`iso_timestamp_end`). Forespørgslerne returnerer kun tællinger og aldrig
 nøgleværdier eller nøglefragmenter.
@@ -293,25 +385,71 @@ limit 100
 2026-11-05 08:07:22Z kaldte `buy-item` v39 — der læser `Deno.env.get("SUPABASE_ANON_KEY")` — RPC'en
 `purchase_item`, og `edge_logs` registrerede kaldet med en `sb_publishable_`-nøgle. Enten indeholder
 runtime-variablen `SUPABASE_ANON_KEY` allerede den nye nøgle, eller gatewayen logger den oversatte
-nøgle. Det er ikke afklaret (spørgsmål til ejeren/Supabase). Beviset for, at intet afhænger af
+nøgle. Afklaret 2026-11-09: runtime-variablen svarer til den nye publishable-nøgle. Beviset for, at intet afhænger af
 legacy, er derfor kodegennemgangen (tabellen ovenfor) plus O-01b — og O-01a bekræfter kun, at ingen
 **ekstern** klient (CI, scripts, tredjepart) stadig bruger legacy-nøglerne.
 
 **Gate til R-01:** O-01a giver 0 rækker i begge døgn, O-01b viser ingen `legacy-…`-linjer for de
-nye versioner, og alle Q-trin er verificeret.
+nye versioner, og alle krav i „GO/NO-GO før R-01” er opfyldt.
 
 ---
 
-## R-01 — deaktivér legacy API-nøgler (reversibelt)
+## GO/NO-GO før R-01
 
-- **Hvem:** ejeren, i dashboardet (Settings → API Keys → Legacy API keys → *Disable*).
-- **Virkning:** `anon` og `service_role` slås fra samtidig. Den lækkede nøgle virker ikke længere
-  mod API'et. Det kan fortrydes med *Enable*.
-- **Verifikation:** O-01a/O-01b igen efter 1 time og efter 24 timer; elevflowet (login → spørgsmål
-  → svar), butik, lærerens reset og glemt-adgangskode virker. Fejler noget: genaktivér straks, find
-  forbrugeren i `edge_logs` (afvist med 401) og ret den, før der prøves igen.
-- **Status bagefter:** risikoen er **reduceret, ikke lukket** — legacy-JWT-secret kan stadig
-  signere nye tokens, og R-01 kan genaktiveres.
+„Efter R-01” er **UKENDT** for alle funktioner, der stadig læser en legacy-variabel direkte.
+
+| Område | Status 2026-11-09 | Klasse | Krav før R-01 |
+|---|---|---|---|
+| Login | Frontend bruger publishable-nøglen | VERIFICERET | Testes straks efter R-01 |
+| Glemt adgangskode | 320 af 320 admin-kald med `sb_secret_`-nøgle (2026-10-30) | VERIFICERET før R-01 | Q-08 udført og verificeret med en konto, ejeren selv kontrollerer |
+| Læreradministreret nulstilling | 42 af 42 med `sb_secret_`-nøgle (2026-10-30) | VERIFICERET før R-01 | Q-05 udført og verificeret |
+| Elevoprettelse | `create-student` på resolveren, `sb_secret_`-nøgle (2026-11-06) | VERIFICERET | Testes straks efter R-01 |
+| Læreroprettelse | 2 af 2 med `sb_secret_`-nøgle (2026-10-10) | VERIFICERET før R-01 | Q-06 udført og verificeret |
+| Quiz | `get-next-question` og `process-event` på resolveren | VERIFICERET | Testes straks efter R-01 |
+| Butik | `purchase_item` med publishable-nøgle (2026-11-09) | VERIFICERET før R-01 | Q-04 udført og verificeret |
+| Avatar | Se „Funktioner i fase C” | UKENDT | Ejeren bekræfter, at flowet ikke er aktivt, ellers NO-GO |
+| Edge Functions | 8 læser en legacy-variabel direkte, 4 bruger resolveren, 3 læser ingen nøgle, `question-context` er ukendt | VERIFICERET (kode) | Fase A udført; `ezbr_sha256` kontrolleret |
+| GitHub Actions | Secrets opdateret, ikke driftstestet | UKENDT | Testet med særskilt GO, eller ejeren accepterer, at manuelle workflows kan fejle |
+| Nøglebrug i API-logs | Nye nøgler observeret | VERIFICERET | O-01b uden `legacy-…`-linjer |
+| Uventede legacy-kald | 0 i perioden nævnt i revisionen | VERIFICERET | O-01a giver 0 rækker i begge døgn og umiddelbart før R-01 |
+
+**GO kræver alle punkter:** fase A verificeret, kritiske brugerflows verificeret, fase C-funktionerne afklaret, øvrige
+afhængigheder gennemgået, „Fejlhåndtering efter R-01” klar, „last used” kontrolleret i dashboardet og udtrykkeligt GO
+fra ejeren til netop R-01.
+
+**NO-GO ved ét af disse:** uventet legacy-trafik, et ukendt krav der ikke kan afklares, en fase C-funktion i aktiv brug,
+en afvigelse fra forventet `ezbr_sha256` eller et uløst problem fra fase A.
+
+**Aktivt misbrug:** konstateres aktivt misbrug af nøglen, må planen ikke afventes. Ejeren træffer straks beslutning om
+at trække nøglen tilbage, også selv om komponenter, der stadig bruger den, så holder op med at virke.
+
+## R-01 — deaktivér legacy API-nøgler (genaktivering forbudt)
+
+> **Genaktivering er forbudt**, selv om dashboardet teknisk tillader den, fordi den gendanner den kompromitterede nøgle.
+> Se [Supabases vejledning](https://supabase.com/docs/guides/security/rotate-leaked-api-keys).
+
+- **Hvem:** ejeren, i dashboardet (Settings → API Keys → Legacy API keys → *Disable*), kun efter udtrykkeligt GO.
+- **Forberedelse:** uden for skoletid, patchpakker kontrolleret og en testkonto, ejeren selv kontrollerer.
+- **Virkning:** `anon` og `service_role` slås fra samtidig som API-nøgler.
+- **Verifikation:** dashboardet eller API-svaret viser `"enabled": false`. O-01a/O-01b igen efter 1 time og efter 24 timer.
+  Login, quiz, butik, elevoprettelse, læreroprettelse, lærerens nulstilling og glemt adgangskode virker.
+- **Status bagefter:** risikoen er **reduceret, ikke lukket**. Legacy-nøglerne er JWT'er signeret med legacy-JWT-secret,
+  og alt, der stadig stoler på den, kan acceptere dem. Deaktivering af API-nøgler (R-01) og tilbagekaldelse af
+  legacy-JWT-secret (R-04) er to forskellige handlinger.
+
+### Fejlhåndtering efter R-01
+
+**Den kompromitterede nøgle må ikke genaktiveres.** Der må heller ikke bruges en kompromitteret nøgle som fallback,
+vendes tilbage til gamle secret-værdier, eller flyttes legacy-JWT-secret tilbage til standby. Et midlertidigt udfald af
+en enkelt funktion foretrækkes frem for genaktivering.
+
+1. Identificér den berørte funktion.
+2. Stop eller isolér det fejlende flow.
+3. Undersøg logs uden at eksponere hemmeligheder: kun tællinger, statuskoder og nøgletyper.
+4. Ret kode eller konfiguration til nye nøgler. Overset klient: giv den en ny nøgle.
+5. Verificér rettelsen.
+6. Deploy kun efter særskilt GO fra ejeren.
+7. Informér berørte brugere, hvis det er nødvendigt.
 
 ## R-02 — rotér de eksponerede testkontoadgangskoder
 
@@ -335,10 +473,14 @@ GitHub (Actions → artefakter, eller via API) — kun med særskilt GO.
 
 1. Q-00 bekræfter, at current JWT-signeringsnøgle er asymmetrisk (ES256), og at legacy HS256 ikke er
    current.
-2. R-01 har været aktiv i mindst 48 timer uden fejl og uden genaktivering.
+2. R-01 har været aktiv i mindst 48 timer uden uafklarede fejl. Perioden må ikke forkortes alene, fordi en
+   rollback-mulighed er fjernet. En forkortelse kræver dokumenteret begrundelse og ejerens særskilte godkendelse.
 3. O-01a har været 0 i hele perioden, og O-01b viser ingen `legacy-…`-linjer.
 4. Ingen kendt forbruger mangler: CI og lokale værktøjer bruger K-01-nøglerne.
 5. Ejeren har accepteret, at rollback til en legacy-læsende funktionsversion herefter er umulig.
+6. Der foreligger en særskilt analyse af aktuelle signing keys, JWT-algoritmer, aktive brugersessioner, token-refresh,
+   konsekvenser ved tilbagekaldelse og nødvendige observationstider.
+7. Ejeren har givet særskilt GO til netop R-04.
 
 **Virkning:** alle tokens, der er signeret med legacy HS256-secret — herunder de lækkede legacy API-
 nøgler — bliver permanent ugyldige. Først nu er den kritiske risiko **lukket**.
@@ -441,5 +583,7 @@ dette offentlige repository).
 2. Hvornår blev repositoryet offentligt? Det afgør den uverificerbare periode i G-01.
 3. Q-09: skal `question-context` erstattes med main-skabelonen eller slettes?
 4. Indeholder runtime-variablen `SUPABASE_ANON_KEY` i Edge Functions allerede den nye publishable-
-   nøgle (se O-01, „Vigtig begrænsning")? Kan afklares med Supabase-support. Det ændrer ikke planen.
+   nøgle (se O-01, „Vigtig begrænsning")? **Besvaret 2026-11-09 for anon: ja.**
+6. Bevares `SUPABASE_SERVICE_ROLE_KEY` og `SUPABASE_ANON_KEY`, når legacy-nøglerne er deaktiveret? Det er ikke
+   dokumenteret af Supabase. Direkte afhængighed behandles derfor som **UKENDT** efter R-01.
 5. G-01: skal hændelsen anmeldes til Datatilsynet? Ejerens beslutning, som skal dokumenteres.

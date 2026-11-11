@@ -192,7 +192,7 @@ test("C. literal e-mail addresses in specs are mocks only", () => {
 // and reset-student-password additionally require the teacher to own the pupil.
 const USER_SCOPED_ENDPOINTS = Object.freeze([
   "fn:get-next-question", "fn:process-event", "fn:request-password-help", "fn:reset-student-password",
-  "rpc:equip_item", "rpc:set_avatar_identity", "rpc:set_student_domains",
+  "rpc:equip_item", "rpc:set_avatar_identity", "rpc:set_avatar_northstar", "rpc:set_student_domains",
 ]);
 
 test("D. every Edge Function / RPC a spec calls directly is a reviewed user-scoped endpoint", () => {

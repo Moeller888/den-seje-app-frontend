@@ -79,7 +79,7 @@ test("(1) the runbook keeps the open-risk warning, the irreversible step and the
   assert.match(rb, /KRITISK RISIKO: ÅBEN/);
   assert.match(rb, /uanset\*\* hvor mange tests der er grønne/);
   assert.match(rb, /## R-04 — tilbagekald legacy-JWT-secret \(IRREVERSIBELT\)/);
-  assert.match(rb, /## R-01 — deaktivér legacy API-nøgler \(reversibelt\)/);
+  assert.match(rb, /## R-01 — deaktivér legacy API-nøgler \(genaktivering forbudt\)/);
   for (const fn of ["get-next-question", "process-event"]) {
     assert.ok(rb.split("\n").some((l) => l.startsWith(`| \`${fn}\``) && l.includes("**Rør ikke.**")), `${fn} must be marked hands-off`);
   }

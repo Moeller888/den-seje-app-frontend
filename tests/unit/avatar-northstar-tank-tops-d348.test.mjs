@@ -11,6 +11,7 @@ import { createHash } from "node:crypto";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as L from "../../js/avatar-layers.js";
+import { beforeLayerFixes } from "../../tools/avatar/northstar-free-matrix.mjs";   // D-370: the plan without its two layer fixes
 import { applyNorthstarUrlOptIn } from "../../js/avatar-northstar-panel.js";
 import * as TF from "../../tools/avatar/northstar-tank-family.mjs";
 import { approval, reachableTankOutfits } from "../../tools/avatar/verify-northstar-tank-runtime-d348.mjs";
@@ -64,7 +65,7 @@ test("D-348 the stored choice: shown where allowed; outside the list the own top
 });
 
 test("D-348 the plan: hem junction after the shoes and right before the bottom, body after it, no sleeves; tees' and sweaters' plans unchanged", () => {
-  for (const c of A.combinations) { const srcs = L.northstarPlanFor({ top: c.top, bottom: c.bottom, shoes: c.shoes }).map((s) => s.src.split("/").pop()), k = srcs.indexOf(L.NORTHSTAR_TANK_HEM_JUNCTION);
+  for (const c of A.combinations) { const srcs = beforeLayerFixes(L.northstarPlanFor({ top: c.top, bottom: c.bottom, shoes: c.shoes }).map((s) => s.src.split("/").pop())), k = srcs.indexOf(L.NORTHSTAR_TANK_HEM_JUNCTION);
     assert.equal(srcs[k - 1], c.shoes + "-shoes-v1.webp"); assert.equal(srcs[k + 1], c.bottom + "-pants-v1.webp"); assert.ok(srcs.indexOf(c.top + "-top-body-v1.webp") > k + 1);
     assert.ok(!srcs.some((f) => f.includes("sleeves"))); assert.ok(srcs.includes("top-tank-shadow-body-v1.webp")); assert.ok(!srcs.some((f) => f.includes("hip-seam"))); }
   for (const k of Object.keys(L.NORTHSTAR_OUTFITS)) assert.ok(!L.northstarPlanFor(L.NORTHSTAR_OUTFITS[k]).some((s) => s.src.includes("top-tank")));

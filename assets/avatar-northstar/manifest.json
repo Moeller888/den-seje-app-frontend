@@ -7,7 +7,7 @@
   },
   "flag": "AVATAR_NORTHSTAR_WARDROBE (js/avatar-layers.js), false",
   "counts": {
-    "files": 191,
+    "files": 195,
     "shadows": 12,
     "maxFiles": 41,
     "maxShadows": 20,
@@ -19,7 +19,8 @@
     "d336Files": 15,
     "d345Files": 8,
     "d349Files": 36,
-    "d355Files": 55
+    "d355Files": 55,
+    "d370Files": 4
   },
   "outfits": {
     "K01": {
@@ -3789,6 +3790,63 @@
       "width": 1024,
       "height": 1536,
       "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-blue-top-body-v3.webp",
+      "purpose": "the top-body layer of top-tee-hip-blue without the stray hem lines below the hem; they moved to the hip cover behind the bottom (D-370)",
+      "origin": {
+        "decision": "D-370",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/free-combination/layer-fixes-staging-v1.json",
+        "replaces": "top-tee-hip-blue-top-body-v2.webp",
+        "oldSha256": "07729e64240a7f5ec6fa1d5eb0653e4e7a117d7ec8c87f116a2a3e15f88b4870"
+      },
+      "sha256": "ec2daa95bf6ab90323f982a19a693571f43981f02ce9853231f632731e16ee22",
+      "bytes": 55050,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-blue-hip-cover-v1.webp",
+      "purpose": "the blue tee's former hem lines, drawn behind the bottom as its hip seam, so long trousers leave no hole at the right hip (D-370)",
+      "origin": {
+        "decision": "D-370",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/free-combination/layer-fixes-staging-v1.json"
+      },
+      "sha256": "cf76d9b2475759ef8956a62db3526735b7b83e9592a69906303c950c0394a020",
+      "bytes": 670,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-sneakers-white-under-long-hem-v1.webp",
+      "purpose": "a closed lining above the white sneaker's collar, drawn only under long trousers, so no skin shows above the collar (D-370)",
+      "origin": {
+        "decision": "D-370",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/free-combination/layer-fixes-staging-v1.json"
+      },
+      "sha256": "5eec49280352b9a37ea78421070244d7aa7d7986e070ba9eb1ab267223693a07",
+      "bytes": 158,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-blue-sleeves-v3.webp",
+      "purpose": "the sleeve layer of top-tee-hip-blue at layer revision 3; the same bytes as -sleeves-v2 (D-370)",
+      "origin": {
+        "decision": "D-370",
+        "approval": "tools/avatar/fixtures/northstar-wardrobe/free-combination/layer-fixes-staging-v1.json",
+        "replaces": "top-tee-hip-blue-sleeves-v2.webp",
+        "oldSha256": "8ba67643fd23db865c9d47f223237a996ab88484c71baea988a35920c197f292",
+        "sameBytesAs": "top-tee-hip-blue-sleeves-v2.webp"
+      },
+      "sha256": "8ba67643fd23db865c9d47f223237a996ab88484c71baea988a35920c197f292",
+      "bytes": 11088,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
     }
   ],
   "extensions": [
@@ -6874,6 +6932,51 @@
           "allOnMovedPixels": true,
           "alphaLower": 0
         }
+      }
+    },
+    {
+      "decision": "D-370",
+      "publishedBy": "D-370",
+      "authorisation": "owner 2026-11-09: Når kontoprøven er bestået, må du tilføje præcis de fire lagfiler fra D-370-pakkens STATUS.md med de allerede afleverede fulde SHA-256-hashes. Aktivér NORTHSTAR_LAYER_FIXES på samme gren. Denne instruktion giver tilladelse til at lægge de fire filer i PR'en.",
+      "files": [
+        "shoes-sneakers-white-under-long-hem-v1.webp",
+        "top-tee-hip-blue-hip-cover-v1.webp",
+        "top-tee-hip-blue-sleeves-v3.webp",
+        "top-tee-hip-blue-top-body-v3.webp"
+      ],
+      "replaces": [
+        "top-tee-hip-blue-sleeves-v2.webp",
+        "top-tee-hip-blue-top-body-v2.webp"
+      ],
+      "approval": "tools/avatar/fixtures/northstar-wardrobe/free-combination/layer-fixes-staging-v1.json",
+      "flag": "NORTHSTAR_LAYER_FIXES = true (js/avatar-layers.js)",
+      "layerRev": {
+        "items": [
+          "top-tee-hip-blue"
+        ],
+        "rev": 3,
+        "hipSeam": "top-tee-hip-blue-hip-cover-v1.webp",
+        "shadows": "unchanged (v1)"
+      },
+      "underLongHem": {
+        "shoes": "shoes-sneakers-white",
+        "file": "shoes-sneakers-white-under-long-hem-v1.webp",
+        "bottoms": "bottom-trousers-square-*"
+      },
+      "replacedKept": "the replaced v2 files stay published, unchanged; with the flag off the renderer draws them exactly as before",
+      "knownFaultyResolved": [
+        "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-beige",
+        "top-tee-hip-blue+bottom-skirt-sand+shoes-boots-laceup-black",
+        "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-white"
+      ],
+      "equivalence": {
+        "what": "the production fit check over 378 hip and 60 shoe transitions, deciding all 3,780 free outfits, with the four files (tools/avatar/northstar-free-matrix.mjs)",
+        "outfits": 3780,
+        "pass": 3591,
+        "passWithCharcoalLaceException": 189,
+        "fail": 0,
+        "heavyHipContour": 1360,
+        "exception": "tools/avatar/fixtures/northstar-wardrobe/free-combination/charcoal-lace-exception-v1.json"
       }
     }
   ]
