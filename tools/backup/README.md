@@ -29,18 +29,36 @@ Den nyeste `dump-ÅÅÅÅMMDDTTTMMSSZ`-mappe, hvor alt dette gælder:
 
 - mappen er ikke mærket fejlet (navnet ender ikke på `-FEJLET`, og der er ingen `FEJLET.txt`);
 - `SHA256SUMS` findes, og alle filer stemmer;
-- `VERIFIKATION-<dump>.md` ligger ved siden af og siger `BACKUP VERIFICERET`;
+- mappen indeholder kun filer efter **filreglen** nedenfor;
+- `VERIFIKATION-<dump>.md` ligger ved siden af og har **præcis én** konklusionslinje, og den er entydigt
+  positiv: `Konklusion: BACKUP VERIFICERET` (fed skrift, store/små bogstaver, mellemrum og linjeskift er
+  ligegyldige). En linje som `IKKE BACKUP VERIFICERET`, en konklusion med forbehold (`ikke`, `fejl`,
+  `delvis`, `foreløbig`, `?` …), flere konklusionslinjer eller ingen afviser dumpen;
 - rapporten nævner præcis én `expected-counts-*.json`, og filen findes.
 
-En nyere dump, der ikke opfylder kravene, springes over med en besked. Den kan derfor ikke krypteres ved et
-uheld, før den er verificeret.
+En nyere dump, der ikke opfylder kravene, springes over med en besked. Vælges en ældre dump, skriver
+scriptet en **ADVARSEL** og navnene på de nyere dumps, der er sprunget over. Den valgte backups tidspunkt
+og alder skrives altid, så en gammel backup aldrig ligner en frisk.
+
+### Filreglen
+
+En dump-mappe må kun indeholde det, `run-backup.ps1` skriver:
+
+- filerne i `SHA256SUMS` (de fire `.sql`-filer) — kontrolleres mod `SHA256SUMS`;
+- `SHA256SUMS`, `RUN-INFO.txt` og `<fil>.stderr.txt` for hver fil i `SHA256SUMS` — metadata uden data.
+
+Alt andet (en ekstra fil, en undermappe, et link) afviser dumpen.
 
 ## Sikkerhed
 
-- Ingen ukrypteret kopi skrives: `tar` sender direkte til `gpg`.
+- Ingen ukrypteret kopi skrives: `tar` sender direkte til `gpg`, og kontrollen sker i en pipe.
+- Alle filer, der arkiveres, hashes før krypteringen. Bagefter dekrypteres kopien én gang i hukommelsen, og
+  arkivet skal indeholde præcis de filer med præcis de hashes: ingen mangler, ingen ekstra.
+- Kopien skrives først som `….tar.gpg.ufuldstaendig` og får sit rigtige navn, når kontrollen er bestået.
+  Fejler noget, fjernes kun denne kørsels ufuldstændige fil, og scriptet slutter med en fejlkode.
 - Mål på `C:` og synkroniserede mapper (OneDrive, Dropbox, Google Drive, iCloud) afvises.
-- Kopien dekrypteres i hukommelsen bagefter, og hver fil sammenlignes med `SHA256SUMS`.
-- Scriptet sletter, flytter eller ændrer aldrig en dump; det skriver kun `laerlig-<dump>.tar.gpg` og dens
-  `.sha256` på målet.
+- Eksisterende filer på målet overskrives aldrig, og en dump slettes, flyttes eller ændres aldrig.
+- Arkivets format er uændret: en `tar` med de samme stier, krypteret med AES-256. Gendannelse:
+  `gpg -d laerlig-<dump>.tar.gpg | tar -xf -`.
 
 Testet på falske backupmapper i `tests/unit/krypter-backup.test.mjs`.
