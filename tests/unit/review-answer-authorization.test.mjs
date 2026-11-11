@@ -94,8 +94,6 @@ test("NOTHING is read or written before the role check", () => {
   for (const [label, needle] of [
     ["the instance lookup", '.from("question_instances")'],
     ["the RPC call", 'rpc("review_answer"'],
-    ["the XP read", '.from("student_progress")'],
-    ["the XP write", '.update({ xp:'],
   ]) {
     const at = src.indexOf(needle);
     assert.ok(at !== -1, `${label} must be present`);
@@ -222,9 +220,31 @@ test("the lockdown migration sorts after every migration that touches review_ans
     .filter((line) => !line.trim().startsWith("--"))
     .join("\n");
   const dir = join(REPO, "supabase", "migrations");
+  // Later migrations that REDEFINE review_answer(uuid,integer,text,uuid) and were reviewed as keeping the
+  // lockdown: each one must restate it in executable SQL — REVOKE from PUBLIC, anon and authenticated, and
+  // GRANT to service_role only — and must not touch the 3-argument overload.
+  const REVIEWED_LATER_REDEFINITIONS = {
+    "20261111120000_review_answer_single_payout.sql":
+      "single payout: DROP + CREATE of the 4-argument overload (void → jsonb), restating the lockdown in the same file.",
+  };
+  const SIG4 = "public.review_answer(uuid, integer, text, uuid)";
+  for (const [name, reason] of Object.entries(REVIEWED_LATER_REDEFINITIONS)) {
+    assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
+    const code = executable(readFileSync(join(dir, name), "utf8"));
+    for (const role of ["PUBLIC", "anon", "authenticated"]) {
+      assert.match(code, new RegExp(`REVOKE\\s+EXECUTE\\s+ON\\s+FUNCTION\\s+${SIG4.replace(/[().]/g, "\\$&")}\\s+FROM\\s+${role}\\s*;`, "i"),
+        `${name} must revoke EXECUTE from ${role}`);
+    }
+    const grants = [...code.matchAll(/GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+[^;]*?\s+TO\s+(\w+)\s*;/gi)].map((m) => m[1].toLowerCase());
+    assert.deepEqual(grants, ["service_role"], `${name} may grant EXECUTE to service_role only`);
+    assert.doesNotMatch(code, /review_answer\s*\(\s*uuid\s*,\s*integer\s*,\s*text\s*\)/i, `${name} must not touch the 3-argument overload`);
+  }
+  assert.deepEqual(Object.keys(REVIEWED_LATER_REDEFINITIONS), ["20261111120000_review_answer_single_payout.sql"],
+    "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const touching = readdirSync(dir)
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
     .filter((n) => /review_answer/i.test(executable(readFileSync(join(dir, n), "utf8"))))
+    .filter((n) => !Object.hasOwn(REVIEWED_LATER_REDEFINITIONS, n))
     .sort();
   assert.ok(touching.includes("20260919000000_review_answer_execute_lockdown.sql"),
     "the lockdown migration must be present in the tree");
