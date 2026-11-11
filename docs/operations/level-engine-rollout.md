@@ -410,7 +410,12 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (D-362 Rækkefølge og Kategorisering servable, plus D-329 `objective-target.ts`, Lærligverse-integration lag 2) — **ikke deployet** | dette repository | 20 | `3072e189b7b9acea4c870f8e29444be11667e036fa73652163b537a90f1b2c34` |
+| Kandidat (Lærligverse-integration lag 3 oven på main med D-362; målrettet kald går aldrig gennem niveaumotoren) — **ikke deployet** | dette repository | 21 | `ea8072da934530fbf3dc39a29599f6026f3b8ed995a157eeb424023aed61ca8b` |
+| Forrige kandidat (Lærligverse-integration lag 3 oven på main med F-05 Kategorisering, før D-362; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | `9f904b3c` | 21 | `ae22cf64a930cb91351d1e2dfbb8bf4d7678e9019d544b278ddba69d4da792cf` |
+| Forrige kandidat (lag 3 plus F10-B-rettelsen, før F-05) — ikke deployet | `6bca478a` | 20 | `e20c056b935880c72a87e7875a797c4070ad1fe54d4d8035bcfb834fe6daefe6` |
+| Forrige kandidat (Lærligverse-integration lag 3: F-04/F-02/F-07, D-329 `objective-target.ts`, D-332 `option_details`, D-338 `learning-sequence.ts`) — ikke deployet | `0a6d7b6d` | 20 | `cf71236f4e54cf6aeb719d83bd7e94754c9ae279dd2c17c0c24f06f3bec3bda2` |
+| Forrige kandidat (lag 2 oven på F-05: F-05 plus D-329) — ikke deployet | `09a9ad37` | 20 | `a0688ada4117ac2f2d58ef9e7fd4badfc714417f8cad80fa183e2990b9a6196f` |
+| Forrige kandidat (D-362 Rækkefølge og Kategorisering servable, plus D-329 `objective-target.ts`, Lærligverse-integration lag 2) — ikke deployet | `cf7cf7a3` | 20 | `3072e189b7b9acea4c870f8e29444be11667e036fa73652163b537a90f1b2c34` |
 | Forrige kandidat (D-362: Rækkefølge og Kategorisering servable, oven på F-05, før D-329) — ikke deployet | main `32f0cb3d` | 19 | `04039767dfcdec861abcaef69c333977d0145fc482df9cbc58bc3860b907d6b2` |
 | Forrige kandidat (F-05 Kategorisering, oven på F-04) — ikke deployet | main `1b8b7e80` | 19 | `467f9582454a8d36f6d5f6010c6736b9911bee2ac1e3c8c42edd36d55f14d5c6` |
 | Forrige kandidat (F-05 Kategorisering oven på F-04, plus D-329 `objective-target.ts`, Lærligverse-integration lag 2 før D-362) — ikke deployet | `09a9ad37` | 20 | `a0688ada4117ac2f2d58ef9e7fd4badfc714417f8cad80fa183e2990b9a6196f` |
@@ -492,6 +497,15 @@ kald som før. `learning_objective` læses kun i den åbne instans' select, når
 slukket-pariteten er uændret. Tændt kan den kun indsnævre det server-afledte scope. Den springer
 gentagelsestrinnet over (E2) og svarer 409 på en åben instans fra et andet mål, og 409 `open_question_exists`, hvis en samtidig anmodning vandt den ene åbne instans. Secret'en sættes ikke i
 produktionen uden ejerens særskilte GO.
+D-332 udvider den offentlige spørgsmåls-DTO (`_shared/question-dto.ts`) med det valgfrie felt
+`content.option_details`: én beskrivelse pr. svarmulighed (»bagsiden« af en kilde), kun for MC, højst 400
+tegn. Intet eksisterende spørgsmål har feltet, så svarene og slukket-pariteten er uændrede. Et misdannet felt
+afviser spørgsmålet som dårligt indhold.
+D-338 tilføjer `_shared/learning-sequence.ts`: en serverstyret læringssekvens for ét mål. Den kører kun,
+når Edge-secret'en `LAERLIGVERSE_SEQUENCE` er præcis `on`, målretningen (D-329) er tændt, og anmodningen
+indeholder `sequence: true`. Så læser funktionen elevens egen historik i målet (svar, dom, tid og
+spørgsmålets trin-mærke; intet indhold og ingen nøgle) og udleverer kun spørgsmål med det aktuelle trin.
+Slukket er kaldene uændrede.
 Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
 kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten
@@ -592,7 +606,7 @@ reference.
 - `entrypoint_path` `functions/get-next-question/index.ts`;
 - `import_map_path` `functions/get-next-question/deno.json`;
 - `verify_jwt` `false`, ellers fejler browserens OPTIONS-preflight;
-- præcis filerne i kandidatmanifestet (19 for kandidaten ovenfor), med stierne som i manifestet.
+- præcis filerne i kandidatmanifestet (20 for kandidaten ovenfor), med stierne som i manifestet.
 
 Ingen secret ændres.
 

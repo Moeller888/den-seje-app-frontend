@@ -26,7 +26,13 @@
         <h3>Testværktøjer</h3>
         <button id="inject-network" type="button">Simulér netværksfejl (næste 4 kald)</button>
         <button id="reload-game" type="button">Genindlæs spillet</button>
+        <button id="advance-clock" type="button">Spol testadapterens ur 20 timer frem</button>
       </aside>
+      <section id="evidence-panel" class="host-evidence" aria-labelledby="evidence-title">
+        <h2 id="evidence-title">Hvad kan dette dokumentere?</h2>
+        <p class="evidence-note">Kilde: testadapteren, ikke Lærligs server. Et rigtigt svar er ikke dokumenteret læring.</p>
+        <div id="evidence-body" aria-live="polite"></div>
+      </section>
     </main>
     <script type="module" src="./src/host-main.ts"></script>
   </body>

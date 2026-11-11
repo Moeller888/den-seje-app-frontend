@@ -1,0 +1,127 @@
+{
+  "_om": "Lærerens afgørelser om prøverne (D-346). Gemmes kun som fil; intet sendes eller aktiveres.",
+  "format": "laerligverse-proeve-godkendelse/1",
+  "version": "kildekritik-maaling-v1.2",
+  "laerer": "chri",
+  "dato": "05-11/2026",
+  "indhold": {
+    "A": "d56002dafa669ea5030608f41b25d06ef18c374fcf5939cef010061ac277d88a",
+    "B": "23aace8b367deb5fff617e2e4290728452fb610352c15e40c0b452df3ecc0e27",
+    "T": "14f03a5ba5aa5fba3163a73fdab8cbc50858ec290299eb6411eb87902c9e813a",
+    "C": "af34ad5ce4045ecde030d2dd2e1810b55924376c5c0fb775798dcbd4744f85e0",
+    "rubrik": "2da041a4515f26c03749ca68d1d21f1c901f2825215e3dfa4c73bd656104b354"
+  },
+  "proever": {
+    "A": {
+      "status": "godkendt",
+      "faglig": "",
+      "historisk": "",
+      "sprog": "",
+      "svaerhed": "",
+      "elevforstaaelse": "",
+      "aendringer": ""
+    },
+    "B": {
+      "status": "godkendt",
+      "faglig": "",
+      "historisk": "",
+      "sprog": "",
+      "svaerhed": "",
+      "elevforstaaelse": "",
+      "aendringer": ""
+    },
+    "T": {
+      "status": "godkendt",
+      "faglig": "",
+      "historisk": "",
+      "sprog": "",
+      "svaerhed": "",
+      "elevforstaaelse": "",
+      "aendringer": ""
+    },
+    "C": {
+      "status": "godkendt",
+      "faglig": "",
+      "historisk": "",
+      "sprog": "",
+      "svaerhed": "",
+      "elevforstaaelse": "",
+      "aendringer": ""
+    },
+    "rubrik": {
+      "status": "godkendt",
+      "faglig": "",
+      "historisk": "",
+      "sprog": "",
+      "svaerhed": "",
+      "elevforstaaelse": "",
+      "aendringer": ""
+    }
+  },
+  "tvetydigheder": {
+    "S2": {
+      "valg": "ikke_besluttet",
+      "kommentar": ""
+    },
+    "S3": {
+      "valg": "ikke_besluttet",
+      "kommentar": ""
+    },
+    "S4": {
+      "valg": "ikke_besluttet",
+      "kommentar": ""
+    },
+    "S6": {
+      "valg": "foelgefejl",
+      "kommentar": ""
+    },
+    "S7": {
+      "valg": "spoerg",
+      "kommentar": ""
+    }
+  },
+  "rubrikbeslutninger": {
+    "T1": {
+      "valg": "saerskilt",
+      "kommentar": ""
+    }
+  },
+  "lp13": {
+    "LP13-1": {
+      "valg": "A",
+      "kommentar": ""
+    },
+    "LP13-2": {
+      "valg": "A",
+      "kommentar": ""
+    },
+    "LP13-3": {
+      "valg": "A",
+      "kommentar": ""
+    },
+    "LP13-4": {
+      "valg": "A",
+      "kommentar": ""
+    },
+    "LP13-5": {
+      "valg": "A",
+      "kommentar": ""
+    },
+    "genbesoeg": {
+      "valg": "B",
+      "kommentar": ""
+    },
+    "forsinket": {
+      "valg": "A",
+      "kommentar": ""
+    },
+    "LP13-7": {
+      "valg": "B",
+      "kommentar": ""
+    },
+    "pilot": {
+      "valg": "A",
+      "kommentar": ""
+    }
+  }
+}

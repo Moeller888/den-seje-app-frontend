@@ -90,7 +90,7 @@ export async function startHarness(opts = {}) {
   let hostHandlerFn = handler("host");
   if (opts.host === "f3") {
     const { renderHostPage, hostHandler } = await import("../../../tools/laerligverse/host-page.mjs");
-    hostHandlerFn = hostHandler(renderHostPage({ mode: opts.mode ?? "isolated-test", backend: "local-supabase", gameOrigin: GAME_ORIGIN, gameUrl: `${GAME_ORIGIN}/game.html`, supabaseUrl: opts.supabaseUrl, anonKey: opts.anonKey }));
+    hostHandlerFn = hostHandler(renderHostPage({ mode: opts.mode ?? "isolated-test", backend: "local-supabase", gameOrigin: GAME_ORIGIN, gameUrl: `${GAME_ORIGIN}/game.html`, supabaseUrl: opts.supabaseUrl, anonKey: opts.anonKey, objectiveMap: opts.objectiveMap ?? null, h5: opts.h5 === true, sequence: opts.sequence === true, stepContexts: opts.stepContexts ?? null }));
   }
   const listen = (fn, port) =>
     new Promise((ok, fail) => {

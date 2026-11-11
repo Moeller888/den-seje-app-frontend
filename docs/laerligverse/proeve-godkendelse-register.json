@@ -1,0 +1,103 @@
+{
+  "_om": "D-346: lærerens afgørelser om prøverne, bundet til det indhold, de blev truffet på. Genereret af tools/laerligverse/assessment-register.mjs. Ret ikke i hånden. Godkendelserne er faglige og er IKKE et GO til elevpilot, produktion, LP-13 eller merge.",
+  "godkendelsesfil": "docs/laerligverse/proeve-godkendelse-2026-11-05.json",
+  "original_filnavn": "proeve-godkendelse.json",
+  "sha256": "61eec75348c5020e5f92deae3e9c28a85fa0d639bd30761fa48fd1247ebd93c6",
+  "format": "laerligverse-proeve-godkendelse/1",
+  "version": "kildekritik-maaling-v1.2",
+  "laerer": "chri",
+  "dato": "05-11/2026",
+  "bemaerkninger": [
+    "Lærerfeltet er »chri« (forkortet). Bevaret uændret. Ved næste registrering bør det fulde navn skrives.",
+    "Datofeltet er »05-11/2026« (ikke DD-MM-ÅÅÅÅ). Bevaret uændret. Ved næste registrering bør datoen skrives som 05-11-2026."
+  ],
+  "indholdsversion": "d9115492eb34abac61ba001a9fdbafc736cff3e4",
+  "afgoerelser": {
+    "A": {
+      "status": "godkendt",
+      "fingeraftryk": "d56002dafa669ea5030608f41b25d06ef18c374fcf5939cef010061ac277d88a"
+    },
+    "B": {
+      "status": "godkendt",
+      "fingeraftryk": "23aace8b367deb5fff617e2e4290728452fb610352c15e40c0b452df3ecc0e27"
+    },
+    "T": {
+      "status": "godkendt",
+      "fingeraftryk": "14f03a5ba5aa5fba3163a73fdab8cbc50858ec290299eb6411eb87902c9e813a"
+    },
+    "C": {
+      "status": "godkendt",
+      "fingeraftryk": "af34ad5ce4045ecde030d2dd2e1810b55924376c5c0fb775798dcbd4744f85e0"
+    },
+    "rubrik": {
+      "status": "godkendt",
+      "fingeraftryk": "2da041a4515f26c03749ca68d1d21f1c901f2825215e3dfa4c73bd656104b354"
+    }
+  },
+  "tvetydigheder": {
+    "S2": {
+      "valg": "ikke_besluttet",
+      "kilde": "fil"
+    },
+    "S3": {
+      "valg": "ikke_besluttet",
+      "kilde": "fil"
+    },
+    "S4": {
+      "valg": "ikke_besluttet",
+      "kilde": "fil"
+    },
+    "S6": {
+      "valg": "foelgefejl",
+      "kilde": "fil"
+    },
+    "S7": {
+      "valg": "spoerg",
+      "kilde": "fil"
+    }
+  },
+  "rubrikbeslutninger": {
+    "T1": {
+      "valg": "saerskilt",
+      "kilde": "fil"
+    }
+  },
+  "lp13": {
+    "LP13-1": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-2": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-3": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-4": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-5": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "genbesoeg": {
+      "valg": "B",
+      "kilde": "fil"
+    },
+    "forsinket": {
+      "valg": "A",
+      "kilde": "fil"
+    },
+    "LP13-7": {
+      "valg": "B",
+      "kilde": "fil"
+    },
+    "pilot": {
+      "valg": "A",
+      "kilde": "fil"
+    }
+  }
+}

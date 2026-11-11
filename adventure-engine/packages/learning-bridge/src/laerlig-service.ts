@@ -22,10 +22,18 @@ import { ServiceError, type ServiceHint, type ServiceResult, type ServiceTask, t
  *                      recovers the original verdict — it can neither record nor pay twice.
  *
  * What it does NOT give, and this adapter does not pretend to:
- *   - no learning-objective targeting (`objectiveId` is ignored; see `targeting`);
  *   - no server hint log (`hintsAvailable` is always 0; `hint()` refuses);
- *   - no evidence classification (`evidence` is always "none");
- *   - no submission id (the guarantee is per instance, not per submission).
+ *   - no evidence classification (`evidence` is always "none": the server registers no mode or hints yet);
+ *
+ * Two OPT-IN extensions (D-330), both OFF unless the host configures them:
+ *   - `objectiveMap` (D-329): the HOST maps the world's objective id to an EXISTING server objective
+ *     (questions.learning_objective) and get-next-question targets it. The server must echo the objective;
+ *     a reply without the echo (targeting switched off on the server) is refused — a random question is
+ *     never presented as the objective's task (C3, D-317). Without a mapping for the asked objective the
+ *     request is refused, never sent untargeted.
+ *   - `h5Submissions` (D-273): process-event gets the host's round_no + submission_id and takes the _v2
+ *     path, which REGISTERS each attempt in question_attempts (attempt_no, submission_id, is_repeat,
+ *     award). Production has no _v2 (H5 is not applied there): never turn this on against production.
  *
  * The answer key never passes through here before grading: get-next-question's DTO is whitelisted
  * server-side (_shared/question-dto.ts). Options are mapped to opaque ids so the game never sends text.
@@ -45,6 +53,15 @@ export type Subject = "historie" | "engelsk" | "dansk";
 export interface LaerligServiceOptions {
   readonly call: EdgeCaller;
   readonly subject: Subject;
+  /** D-329/D-330: world objective id → existing server learning_objective. Absent = subject-only (today). */
+  readonly objectiveMap?: Readonly<Record<string, string>>;
+  /** D-273/D-330: send round_no + submission_id (the H5 _v2 path). Absent/false = the legacy path (today). */
+  readonly h5Submissions?: boolean;
+  /**
+   * D-338: ask the SERVER for the next step of its sequence (requires objectiveMap). The server's learning_step
+   * is mapped to the contextKey the world shows; the server's mode becomes the task's mode. Absent = off.
+   */
+  readonly sequence?: { readonly contextOfStep: Readonly<Record<string, string>> };
   /** Milliseconds since epoch, for process-event's question_shown_at. */
   readonly now?: () => number;
 }
@@ -89,14 +106,21 @@ function failure(status: number, body: unknown): ServiceError {
   if (status === 403) return new ServiceError("forbidden", false);
   if (status === 404) return new ServiceError("not_found", false);
   if (status === 426) return new ServiceError("outdated", false, "the backend closed this answer path");
+  // D-329: a concurrent request won the pupil's one open instance. Transient: a retry gets that instance.
+  if (status === 409 && isObj(body) && body.error === "open_question_exists") return new ServiceError("unavailable", true, "open_question_exists");
+  // D-329 open_question_other_objective; H5 round_closed / stale_round / submission_conflict. Never retried:
+  // the server refused on purpose and wrote nothing.
+  if (status === 409) return new ServiceError("unavailable", false, isObj(body) ? String(body.error ?? body.outcome ?? "conflict") : "conflict");
   if (status === 400) return new ServiceError("invalid", false);
   if (status >= 500) return new ServiceError("server", true);
   return new ServiceError("invalid", false, `unexpected status ${status}`);
 }
 
 export class LaerligTaskService implements TaskService {
-  /** Honest description of what `objectiveId` does here: nothing. Subject (and the teacher's domains) only. */
-  readonly targeting = "subject-only" as const;
+  /** Honest description of what `objectiveId` does: nothing (subject only) unless the host maps objectives. */
+  get targeting(): "subject-only" | "objective" {
+    return this.o.objectiveMap === undefined ? "subject-only" : "objective";
+  }
   /**
    * Per instance, in the database: once answered=true, process_question_attempt / process_text_answer
    * return the stored verdict and pay nothing (production body md5 2e05e769…, read 2026-11-02).
@@ -120,11 +144,47 @@ export class LaerligTaskService implements TaskService {
   }
 
   async fetchTask(q: TaskQuery): Promise<ServiceTask> {
-    const r = await this.invoke("get-next-question", { subject: this.o.subject });
+    let objective: string | null = null;
+    if (this.o.objectiveMap !== undefined) {
+      const mapped = Object.prototype.hasOwnProperty.call(this.o.objectiveMap, q.objectiveId) ? this.o.objectiveMap[q.objectiveId] : undefined;
+      // Never fall back to an untargeted question for an objective the host does not know (C3).
+      if (typeof mapped !== "string" || mapped.length === 0) throw new ServiceError("unavailable", false, `no server objective for "${q.objectiveId}"`);
+      objective = mapped;
+    }
+    const seq = this.o.sequence;
+    if (seq !== undefined && objective === null) throw new ServiceError("unavailable", false, "a sequence needs a mapped objective");
+    const r = await this.invoke(
+      "get-next-question",
+      objective === null ? { subject: this.o.subject } : seq !== undefined ? { subject: this.o.subject, learning_objective: objective, sequence: true } : { subject: this.o.subject, learning_objective: objective },
+    );
     if (r.status !== 200) throw failure(r.status, r.body);
     const b = r.body;
-    if (isObj(b) && b.step === "no_questions") throw new ServiceError("unavailable", false, "no question for this pupil and subject");
-    const served = this.parseQuestion(b, q);
+    if (isObj(b) && (b.step === "sequence_complete" || b.step === "sequence_waiting")) {
+      this.lastSequence = { state: b.step, step: typeof b.learning_step === "string" ? b.learning_step : null, dueAt: typeof b.due_at === "string" ? b.due_at : null };
+      throw new ServiceError("unavailable", false, b.step === "sequence_waiting" ? `sequence_waiting until ${String(b.due_at)}` : "sequence_complete");
+    }
+    if (isObj(b) && b.step === "no_questions") {
+      throw new ServiceError("unavailable", false, b.reason === "objective_exhausted" ? "no question left in this objective" : "no question for this pupil and subject");
+    }
+    if (objective !== null && (!isObj(b) || b.learning_objective !== objective)) {
+      // The server did not confirm the objective (targeting off there): refuse rather than mislabel.
+      throw new ServiceError("unavailable", false, "the server did not confirm the learning objective");
+    }
+    let stepContext: string | null = null;
+    let serverMode: "practice" | "check" | "review" | "application" | null = null;
+    if (seq !== undefined) {
+      // The server must state the step and mode it chose; a reply without them is not a sequence reply.
+      const step = isObj(b) ? b.learning_step : undefined;
+      const mode = isObj(b) ? b.mode : undefined;
+      const context = typeof step === "string" && Object.prototype.hasOwnProperty.call(seq.contextOfStep, step) ? seq.contextOfStep[step] : undefined;
+      if (context === undefined || (mode !== "practice" && mode !== "check" && mode !== "review" && mode !== "application")) {
+        throw new ServiceError("unavailable", false, "the server did not confirm a known learning step");
+      }
+      stepContext = context;
+      serverMode = mode;
+      this.lastSequence = { state: "step", step: step as string, dueAt: null };
+    }
+    const served = this.parseQuestion(b, stepContext === null ? q : { ...q, contextKey: stepContext }, objective, serverMode);
     if (!q.kinds.includes(served.task.kind)) {
       // The instance stays open on the server for the ordinary quiz (one open instance per pupil).
       throw new ServiceError("unavailable", false, `the next question is "${served.task.kind}", which this world cannot render`);
@@ -138,15 +198,19 @@ export class LaerligTaskService implements TaskService {
     const served = this.served.get(s.instanceId);
     if (served === undefined) throw new ServiceError("not_found", false, "this host did not serve that instance");
     const answer = this.answerText(served, s.action);
-    const r = await this.invoke("process-event", {
-      question_instance_id: s.instanceId,
-      answer,
-      question_shown_at: served.shownAt,
-    });
+    const h5 = this.o.h5Submissions === true;
+    if (h5 && s.roundNo !== served.task.roundNo) throw new ServiceError("invalid", false, "submission round does not match the served round");
+    const r = await this.invoke("process-event", h5
+      ? { question_instance_id: s.instanceId, answer, question_shown_at: served.shownAt, round_no: s.roundNo, submission_id: s.submissionId }
+      : { question_instance_id: s.instanceId, answer, question_shown_at: served.shownAt });
     if (r.status !== 200) throw failure(r.status, r.body);
     const b = r.body;
     if (!isObj(b) || (b.status !== "correct" && b.status !== "incorrect" && b.status !== "pending")) {
       throw new ServiceError("server", true, "process-event returned an unexpected body");
+    }
+    // H5: only "recorded" and "replay" are successes, and only for the round we sent (replyForV2's contract).
+    if (h5 && ((b.outcome !== "recorded" && b.outcome !== "replay") || b.round_no !== s.roundNo)) {
+      throw new ServiceError("server", false, "process-event (H5) returned an unexpected outcome");
     }
     if (this.open === served) this.open = null;
     const correctAnswer = typeof b.correct_answer === "string" && b.correct_answer.length > 0 ? b.correct_answer : null;
@@ -155,9 +219,9 @@ export class LaerligTaskService implements TaskService {
       outcome: b.status,
       feedbackText: review,
       correctAnswer,
-      // The legacy answer path classifies nothing (no mode, no hint log): say so instead of guessing.
+      // Neither answer path classifies anything (no mode, no hint log on the server): say so instead of guessing.
       evidence: "none",
-      replay: false,
+      replay: h5 && b.outcome === "replay",
     };
   }
 
@@ -176,7 +240,10 @@ export class LaerligTaskService implements TaskService {
     }
   }
 
-  private parseQuestion(b: unknown, q: TaskQuery): Served {
+  /** D-338: the last sequence state the server reported (developer view only). */
+  lastSequence: { state: string; step: string | null; dueAt: string | null } | null = null;
+
+  private parseQuestion(b: unknown, q: TaskQuery, objective: string | null, serverMode: "practice" | "check" | "review" | "application" | null = null): Served {
     const bad = (why: string): never => {
       throw new ServiceError("server", false, `get-next-question: ${why}`);
     };
@@ -194,10 +261,16 @@ export class LaerligTaskService implements TaskService {
     if (format === "mc" && c.force_text !== true && answerType === "short") {
       const opts = c.options;
       if (!Array.isArray(opts) || opts.length < 2 || opts.length > 12 || !opts.every((o) => typeof o === "string" && o.length > 0)) return bad("invalid options");
+      // D-332: optional per-option descriptions (the back of each source), one per option, same order.
+      const details = c.option_details;
+      if (details !== undefined && (!Array.isArray(details) || details.length !== opts.length || !details.every((t) => typeof t === "string" && t.length > 0 && t.length <= 400))) {
+        return bad("invalid option_details");
+      }
       stimulusOptions = (opts as string[]).map((text, i) => {
         const oid = `o${i + 1}`;
         options.set(oid, text);
-        return { id: oid, label: text };
+        const detail = Array.isArray(details) ? (details[i] as string) : undefined;
+        return detail === undefined ? { id: oid, label: text } : { id: oid, label: text, detail };
       });
       kind = "choice";
     } else if ((format === "text" && answerType === "short") || (format === "mc" && c.force_text === true && answerType === "short")) {
@@ -212,11 +285,12 @@ export class LaerligTaskService implements TaskService {
       kind,
       prompt: c.question,
       options: stimulusOptions,
-      // The legacy contract has no mode; quiz_v1 is the D-277 name for exactly that.
-      mode: "quiz_v1",
+      // The legacy contract has no mode (quiz_v1); in a sequence the SERVER states it (D-338).
+      mode: serverMode ?? "quiz_v1",
       hintsAvailable: 0,
       contextKey: q.contextKey,
       roundNo,
+      objective,
     };
     return { task, options, shownAt: this.o.now?.() ?? Date.now() };
   }
