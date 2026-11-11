@@ -4,23 +4,27 @@
 i §3 kræver ejerens særskilte GO (CLAUDE.md regel 48, `docs/migration-workflow-policy.md`, D-110).
 `supabase db push` er forbudt.
 
-**Senest kontrolleret:** 2026-11-11, mod main `f389af2e`.
+**Senest kontrolleret:** 2026-11-11, mod main `edc899bd`.
 
 Denne plan bygger videre på `docs/operations/h5-k1-activation-runbook.md`, som ejer trin A1–A10 (H5 og K1), og
 gentager det ikke.
 
-## 1. Otte adskilte tilstande
+## 1. Ti adskilte tilstande
 
 At kode er på `main`, betyder ikke, at den er aktiv. For hvert lag skal disse tilstande holdes adskilt:
 
 1. Koden er merget til `main`.
-2. Migrationen er afspillet i den isolerede CI-stak (K1-testbanen, #652).
-3. Migrationen er godkendt til produktion.
-4. Migrationen er anvendt i produktionen.
-5. Edge Function er deployet.
-6. Flaget er tændt.
-7. Funktionen er verificeret med sikre tests (testelev, aldrig rigtige elever).
-8. Funktionen er frigivet til elever.
+2. Databasekontrakten er testet isoleret (PGlite, rigtig PostgreSQL i CI, K1-testbanen #652).
+3. Migrationen er klar til review (vagt, tilbagerulning og verifikations-SQL er skrevet).
+4. Migrationen er godkendt til produktion (ejerens GO for netop den fil).
+5. Migrationen er anvendt i produktionen.
+6. Edge Function er deployet.
+7. Flaget er tændt.
+8. Funktionen er verificeret med sikre tests (testelev, aldrig rigtige elever).
+9. Begrænset elevpilot (én klasse, én lærer, aftalt periode).
+10. Bredere frigivelse.
+
+Status pr. 2026-11-11: alle lag i §2 står højst i tilstand 3. Intet er i tilstand 4 eller derover.
 
 Et merge til `main` deployer kun frontenden (Cloudflare, allowlist i `tools/cloudflare-build-static.mjs`):
 
@@ -77,7 +81,14 @@ Hvert merge kræver:
 | P6 | Deploy `introduction-progress` og `get-next-question`. Tænd derefter `LAERLIGVERSE_INTRODUCTION` og til sidst `LAERLIGVERSE_PRESENTED` | Edge-deploy og secrets | P5 | Testelev får introduktionen før første trin | Fjern flaget |
 | P7 | Anvend `20261109120000` (`get_course_progress`) | `apply_migration` | P1 (viser `mode` og `hints_used`, når K1 og L3 findes) | Læreren ser kun egne elever, eleven kun sig selv, en anden rolle får NULL | `DROP FUNCTION` (kun læsning, ingen data) |
 | P8 | `ENABLE_COURSE_PROGRESS_VIEW = true` | Egen PR, merge og Cloudflare-deploy | P7 | Lærervisningen på en testelev. Manglende data vises som "Ikke registreret", aldrig som 0 | Sæt konstanten til `false` igen |
-| P9 | Belønninger | — | §5 | — | — |
+| P9 | Rettelsen af lærerbedømmelsens udbetaling: migration `20261111120000`, derefter Edge `review-answer` | `apply_migration` + Edge-deploy (to GO'er) | Uafhængig af P1–P8; skal ligge før P10 | `docs/security/review-answer-enkelt-udbetaling.md`, verifikation 1–4 | Fremad; posteringstabellen er append-only |
+| P10 | Belønninger (#657) | — | §5 og `belonningsmodel-v2.md` | — | — |
+| P11 | Begrænset elevpilot | Ejerbeslutning | P1–P8 (og P10, hvis belønninger skal med) | Lærerens kursusvisning, forsøgsregister, hintlog | Sluk flagene i omvendt rækkefølge |
+| P12 | #616: legacy-svarfunktionerne lukkes | Migration (GO) | H5 + K1 live, `ENABLE_H5_SUBMISSIONS = true` i klienten, ingen legacy-kald i loggen i en aftalt periode | Runbookens §8 | Genskab EXECUTE (fremad-migration) |
+
+**Legacy-vejen:** indtil P12 svarer produktionen stadig gennem de gamle svarfunktioner. Arkivskabets forsøg
+registreres med L3/L5-data kun på H5-vejen. Derfor skal en pilot (P11) bruge H5-vejen, og #616 må først
+lukke legacy-vejen, når ingen klient længere bruger den.
 
 ### 3.1 NO-GO-kriterier for alle trin
 
@@ -111,3 +122,14 @@ sker ingen ændring. Rækkefølgen skal derfor aftales:
    `docs/laerligverse/forslag-k1-belonning-kursussvar.md`). Fejlen med gentagen XP-udbetaling i lærerens
    bedømmelse skal også være rettet; den håndteres i belønnings- og sikkerhedssporet.
 4. **Produktion:** P1–P4 er i produktion, så "bestået" kan strammes til "første forsøg uden hjælp".
+5. **Beståelseskriterium:** ejeren har valgt model (forslag: 3b i `belonningsmodel-v2.md`).
+
+## 6. Kursusprogression og mastery (#647)
+
+#647 sikrer, at kursusopgaver ikke flytter niveau eller bånd og ikke tæller i lærerens mestringstal. Den er
+bygget oven på #623 og har md5-vagter på #623's funktionskroppe. #623 tilhører opgaveformssporet og er i dag
+CONFLICTING og rød (2026-11-11). #647 kan derfor først gøres færdig, når #623 er grøn eller merget.
+
+Indtil da er prod-risikoen lav: produktionen har 0 spørgsmål med `metadata.learning_step`, så ingen
+kursusopgave kan påvirke niveauet i dag. #647 skal være anvendt, før der lægges kursusopgaver i produktionen
+(før P11).
