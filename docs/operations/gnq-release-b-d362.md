@@ -4,6 +4,12 @@
 secret er ændret. Den eneste kontakt med produktionen var ét læsende `get_edge_function`-kald
 (2026-11-09). Hvert trin nedenfor kræver ejerens særskilte GO.
 
+**Genverificeret 2026-11-11 (§7): main er flyttet.** Releasekandidaten er ikke længere "main", men den
+fastlåste commit `32f0cb3d` med kandidatmanifestet `04039767…` (strategi A i §7). Den aktuelle main
+(`033c90a1`, manifest `ea8072da…`) indeholder desuden Lærligversets serverkode (D-329, D-332, D-338) og er
+**ikke** releasekandidat for piloten (strategi B i §7). §1-§6 står uændret som det oprindelige grundlag;
+hvor §7 afviger, gælder §7.
+
 Vej B betyder: `get-next-question` deployes fra main **før** K1 (A4), og `process-event` deployes
 **ikke**. Det fraviger forslaget til B2 i `docs/operations/h5-k1-activation-runbook.md` §1.1 (A5 efter
 A4). Afvigelsen kræver ejerens udtrykkelige GO.
@@ -240,3 +246,144 @@ start` og `supabase functions serve`) kan øve det senere i et workflow, der kr�
 3. Skift tilbage til `a7450b0f`, og kør igen.
 
 Supabase's bundling og `ezbr_sha256` kan ikke øves uden for produktionen.
+
+## 7. Genverifikation 2026-11-11: to releasestrategier
+
+Alt herunder er målt igen 2026-11-11 og bygger ikke på tallene i §1-§6.
+
+### 7.1 Fastlåst udgangspunkt
+
+| Hvad | Værdi | Hvordan målt |
+|---|---|---|
+| main | `033c90a12a778735f459dd5273988c17e68201f3` (merge af #684) | `git fetch` |
+| Deployet `get-next-question` | version 191 (`ACTIVE`), `verify_jwt` false, `ezbr_sha256` `77e6acf8…` som før, kildemappe stadig `…_181` | `list_edge_functions` (læsende) |
+| Deployet kilde | 15 filer, manifest `1f508a84…`; alle 15 byte-identiske med `a7450b0f` | `supabase functions download --use-api` til en tom mappe, sha256 pr. fil |
+| Secrets (kun navne og digests) | `LEVEL_ENGINE` = `v1` og `QUESTION_MIX_ENGINE` = `shadow`, bevist med sha256 af værdien mod `secrets list`-digesten; `K1_SERVED_SNAPSHOT`, `LAERLIGVERSE_OBJECTIVE_TARGETING` og `LAERLIGVERSE_SEQUENCE` findes ikke | `supabase secrets list` (læsende) |
+| Deployet `process-event` | version 44, 7 filer; `index.ts` og `text-answer-rpc.ts` afviger fra main, de øvrige 5 er byte-identiske; kalder `process_question_attempt` og `process_text_answer` | `supabase functions download --use-api` |
+| D-362-migrationer i ledgeren | ingen af `20261108090000`, `…090100`, `…090200` og `20261109151000` (nyeste version: `20261109151454`) | `execute_sql` (læsende) |
+| Pilot | 0 rækker med `learning_objective = 'pilot_d362'`, 0 profiler med et `pilot*`-domæne | `execute_sql` |
+| Indhold | 3763 spørgsmål (2099 aktive): 3738 `mc`, 22 `number`, 3 `text`; 0 med nøglen `stimulus`, 0 med `option_details`, 0 med `order`, `categorize` eller `match` | `execute_sql` |
+| Constraint | `questions_answer_format_check` tillader kun `mc`, `number` og `text` | `execute_sql` |
+| `set_student_domains` | md5 `953a2991…`: låsen fra #673 er ikke anvendt | `execute_sql` |
+
+Versionsnummeret er gået fra 189 til 191 uden ny kode. Kilde, kildemappe og `ezbr_sha256` er uændrede,
+så de to nye versioner er secret-versioner. Rollback-målet er stadig `a7450b0f`.
+
+Manifestet pr. commit (`tools/edge/gnq-release.mjs`, `gitReader`):
+
+| Commit | Hvad | Filer | Manifest |
+|---|---|---|---|
+| `a7450b0f` | deployet | 15 | `1f508a84…` |
+| `d19fd4c9`, `406b9197`, `32f0cb3d`, `49be3ed7` (#674), `f64086f3` (#641), `8ef86890` (#679) | D-362 uden Lærligversets serverkode | 19 | `04039767…` |
+| `8a799553` (#642), `4c217b73` (#673) | plus D-329 `objective-target.ts` | 20 | `3072e189…` |
+| `033c90a1` (main) | plus D-332 `option_details` og D-338 `learning-sequence.ts` (#644) | 21 | `ea8072da934530fbf3dc39a29599f6026f3b8ed995a157eeb424023aed61ca8b` |
+
+### 7.2 Strategi A: releasekandidat `32f0cb3d`, manifest `04039767…`
+
+Kandidaten er den sidste main-commit før Lærligversets serverkode, hvor hele main-CI'en var grøn (§7.5).
+Det er præcis de filer, §2 beskriver:
+
+<!-- gnq-b:candidate-manifest -->
+```
+c79d0021bb8f1de7076cb012f287c38182f23550fa1662b0e37fec22180c1a37  functions/_shared/categorize.ts
+a3ec6372f232ccae1b21df70492fb016f4fccb81dd7b7f1308d4dc7e97213c28  functions/_shared/interaction-kinds.ts
+6736cb2c5d1817a3f15df40e000d8deb52f34982eb3419f84749f25a67c73aed  functions/_shared/match-pairs.ts
+7a5bcf5d8eccf908fb9ef87ba6e0af3e50e01a1b6e2c88cb0770c00252d4a46a  functions/_shared/order-items.ts
+3210facf2e4865065fc1019a02d53cc8823d42b0e7710c0976386f8b8489a103  functions/_shared/question-dto.ts
+393c420246d701ff353e34d298828dbd81160b6be49b4e9eb403607fdbac8703  functions/_shared/stimulus.ts
+472b99398ba2e94b3a71ee6383bce6d70f8bcfe0d76b955b0912e94a3eaa274d  functions/_shared/supabase-keys.ts
+13fff21cd5c601ba312df6c65ac4f280572bd93fb1ab321d02dba6ebfed20c7b  functions/_shared/true-false.ts
+52047e69faf4e12b45df387e9510d1be97c68ef9d02795ff3e2ef40657d394da  functions/get-next-question/deno.json
+7638e2063fa045fb8011910afabeb6856d528062b2ea8a7e0b4fd23a234f7f9f  functions/get-next-question/format-mix.ts
+358bf644c4a0b124cd3f909bb0bf37dc7a8f7e74e5c26114e3f6518c14f78013  functions/get-next-question/index.ts
+0e36b2867fc6e1e12b61f4861bf1fec0ce9a30edf7c8c22d78bc0fa57a07b6bb  functions/get-next-question/instance-insert.ts
+98510fe75f2d1e68a6eb40e802c0ff77ac1e68f16e9165294b21cc21765d1d10  functions/get-next-question/level-flow.ts
+dd74416744d47d53f50b40ec7e320861d9565f3fbd76413e49590ef70000bea1  functions/get-next-question/log-pseudonym.ts
+f161934181edac9ee4a5c7c37723a18b150cc214c363b5a42697b103bffcb082  functions/get-next-question/mix-flow.ts
+a0be345d09a0fa114571e139927588a8ef7d5e752fe479c7b9cd51a544b18e7e  functions/get-next-question/scope.ts
+0401e1b9b9e5d3635aed902f2f8da5d516729cd8164a14ad6d5a9737245be970  functions/get-next-question/served-snapshot.ts
+eb3cce0affc37c46c7e52561777ad8857427e878b21346dc44a31672dea3a1d3  functions/get-next-question/server-band.ts
+9a0e60610e52536cbdc328816b7758f4f334f64aeb6502c53a80968e1b3ff5c3  functions/get-next-question/wave-order.ts
+```
+
+**Hvorfor ikke en endnu mindre backport med kun stimulus.** F-07 kræver strengt taget kun
+`_shared/stimulus.ts` og stimulus-delen af `_shared/question-dto.ts`. Den filmængde findes ikke i nogen commit.
+Den skulle sammensættes i hånden og har aldrig kørt i CI. Den isolerede stak kan kun serve den fra en særlig
+gren, og produktionen ville køre kode, der ikke findes på main. Det, `04039767…` har ud over stimulus
+(Rækkefølge, Kategorisering og Sandt/falsk), kan ikke nå en elev i dag: constraintet afviser formaterne
+`order` og `categorize`, migrationen `20261108090000` er ikke anvendt, og `true_false` er ikke servable (§3).
+Den ekstra kode ændrer altså ikke adfærden, mens en håndlavet backport ville være en ny og utestet artefakt.
+Derfor er A = `04039767…` og ikke en ny sammensætning.
+
+### 7.3 Strategi B: release fra main `033c90a1`, manifest `ea8072da…`
+
+Forskellen fra kandidat A, ud over §2:
+
+<!-- gnq-b:main-diff -->
+```
+added    functions/_shared/learning-sequence.ts
+added    functions/get-next-question/objective-target.ts
+changed  functions/_shared/question-dto.ts
+changed  functions/get-next-question/index.ts
+```
+
+- **D-329 målretning** (`objective-target.ts`, `index.ts`): slået fra, medmindre
+  `LAERLIGVERSE_OBJECTIVE_TARGETING` er `"on"` **og** kaldet sender `learning_objective`. Slået fra returnerer
+  `resolveObjectiveTargeting` `{ mode: "off" }` før enhver validering, og `openInstanceMatches` giver altid
+  `true`. Select-strengen for åbne runder er uændret. Slået til går et målrettet kald altid den klassiske vej
+  (`levelEngine = "off"`), springer gentagelsen over og kan give nye svar (`409 open_question_other_objective`,
+  `409 open_question_exists`, `objective_exhausted`) og et ekstra felt `learning_objective`.
+- **D-338 læringssekvens** (`learning-sequence.ts`, `index.ts`): kræver begge flag og `sequence: true`. Slået
+  til læser den `question_instances` med en join på `questions` og kan svare `sequence_waiting` eller
+  `sequence_complete`.
+- **D-332 `option_details`** (`question-dto.ts`): **ikke flag-styret.** En MC-række med
+  `content.option_details` serveres med feltet, og et ugyldigt felt får rækken sprunget over (`no_questions`).
+  I dag har 0 rækker nøglen, så det er uden virkning nu. Men det ændrer kontrakten for alle MC-rækker, så snart
+  en række med nøglen gemmes.
+- Ingen nye RPC'er. Den nye `.from("question_instances")`-læsning kører kun med flagene slået til.
+
+### 7.4 Afprøvet 2026-11-11 (lokalt, Node-harness)
+
+`tests/unit/gnq-release-b-rollback.test.mjs` læser nu kandidaten fra commit `32f0cb3d` (ikke fra arbejdstræet)
+og B fra commit `033c90a1`. Tallene er fra kørslen 2026-11-11:
+
+1. A (`32f0cb3d`) og arkivet (`a7450b0f`) giver identisk status, svar, backend-kald og loglinjer i 360
+   tilfælde: `LEVEL_ENGINE` mangler, `v1` og `canary` med og uden eleven på allowlisten × alle tre `QUESTION_MIX_ENGINE`-tilstande × historie og
+   engelsk × fem situationer × tre anmodningskroppe (almindelig; med `learning_objective`, `sequence` og
+   `learning_step`; med et ugyldigt `learning_objective`).
+2. B med flagene slået fra, som i produktionen, giver det samme i alle 360 tilfælde. B med begge flag slået
+   til og uden `learning_objective` giver det samme i 120 tilfælde.
+3. Negativ kontrol: med `LAERLIGVERSE_OBJECTIVE_TARGETING=on` og `learning_objective: "vikings"` svarer B
+   anderledes end arkivet (feltet `learning_objective` sendes med).
+4. Negativ kontrol: en MC-række med `option_details` serveres med feltet af B og uden feltet af arkivet og A,
+   med flagene slået fra, `LEVEL_ENGINE=v1` og `QUESTION_MIX_ENGINE=shadow`. Et ugyldigt `option_details` giver
+   `no_questions` i B, mens arkivet serverer rækken.
+
+Det er en indlæsning af kilden i Node med en fast backend. Det er ikke Edge Runtime og ikke en database.
+
+### 7.5 CI-bevis, og hvad det dækker
+
+| Kørsel | Kilde til `get-next-question` | Flag i den isolerede stak | Resultat |
+|---|---|---|---|
+| main `32f0cb3d`, push, 2026-11-09 | `04039767…` (A) | ingen `LAERLIGVERSE_*`; `LEVEL_ENGINE` mangler | unit 367/367; isolated 1272 bestået, 0 fejlede, 0 flaky; tripwire 0 |
+| #674, merge-ref `b9fb21a` (`49be3ed7` + `406b9197`), 2026-11-09 | `04039767…` (A) | som ovenfor | F-07-kæden grøn i tre browsere plus negativ kontrol; tripwire 0 |
+| main `9e5adf97`, push, 2026-11-11 | `ea8072da…` (B) | `LAERLIGVERSE_OBJECTIVE_TARGETING=on` og `LAERLIGVERSE_SEQUENCE=on` | isolated 1277 bestået, 0 fejlede; backend-suiten 146 bestået og 112 sprunget over (18 af de beståede er `test.fail` uden K1); tripwire 0 |
+
+- Siden #642 skriver `.github/workflows/isolated-e2e.yml` begge `LAERLIGVERSE_*`-flag som `on` for hele den
+  isolerede stak. **Ingen isoleret kørsel af B har derfor brugt produktionens flagtilstand.**
+- Ingen isoleret kørsel sætter `LEVEL_ENGINE=v1`. Niveauvejen er dækket i Node-harnessen (§7.4) og af
+  pilotafgrænsningen i PGlite (`tests/unit/task-forms-pilot-scope.test.mjs`, test b og c).
+- Den isolerede stak serverer repoets `process-event`, ikke den deployede version 44. F-07-rækkerne er MC og
+  tal og bedømmes i produktionen af den samme `process_question_attempt` som alle andre MC-rækker.
+- En ny PR-kørsel af #674 ville teste merge-ref'en med den aktuelle main, altså B med flagene slået til, ikke A.
+  Et nyt CI-bevis for A kræver `workflow_dispatch` på en gren, hvis træ har manifest `04039767…` (fx
+  `test/f07-stimulus-chain-e2e` på `49be3ed7`). Det kræver ejerens GO.
+
+### 7.6 Ændringer i procedure og rollback
+
+- §5.1.1 og §5.1.6: commit'en er `32f0cb3d` (ikke "main"), og manifestet skal være `04039767…`.
+- §5.1.5: version 191 med manifest `1f508a84…` er den forventede live-tilstand pr. 2026-11-11.
+- §5.3.1: den nye version forventes at være 192 eller højere.
+- §5.4: rollback er uændret: `a7450b0f`, 15 filer, manifest `1f508a84…`.
+- **Næste deploy fra main** er en særskilt beslutning for Lærligverse-sporet. Den bringer D-329, D-332 og D-338
+  i produktion, også selv om flagene forbliver slået fra, fordi D-332 ikke er flag-styret.
