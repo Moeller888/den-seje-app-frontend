@@ -233,6 +233,18 @@ Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokume
   2.200–10.000, fordelingen er A1 2, A2 82, B1 156, B2 137 og C1 123, og intet niveau ligger uden for sit
   CEFR-interval. Indholdet er identisk med repoet, og banken har nu 3.263 rækker. Antallet af aktive er uændret,
   2.099.
+- **Batch 3 er anvendt 2026-11-09**, hver fil for sig med sit eget GO:
+
+  | Fil | Ledger-version | Rækker | Log |
+  |---|---|---|---|
+  | `20261020150001_english_level_batch3_1` | `20261109142935` | 167 | [1429Z](production-actions/2026-11-09T1429Z-english-batch3-1-applied.md) |
+  | `20261020150002_english_level_batch3_2` | `20261109150712` | 167 | [1507Z](production-actions/2026-11-09T1507Z-english-batch3-2-applied.md) |
+  | `20261020150003_english_level_batch3_3` | `20261109151454` | 166 | [1514Z](production-actions/2026-11-09T1514Z-english-batch3-3-applied.md) |
+
+  Efterkontrollen viste 500 rækker i `batch3`, 0 aktive og 0 uden niveau eller CEFR. Niveauerne ligger i
+  2.500–10.000, fordelingen er A1 1, A2 72, B1 160, B2 140 og C1 127, og intet niveau ligger uden for sit
+  CEFR-interval. Indholdet er identisk med repoet, og banken har nu 3.763 rækker. Antallet af aktive er uændret,
+  2.099.
 - **Åbne punkter før aktivering.** Hvert punkt skal rettes både i repoet og i den levende række, med eget GO, før
   den pågældende portion aktiveres:
 
@@ -240,7 +252,13 @@ Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokume
   |---|---|---|
   | `pilot` (trin 2d) | "She has a ___ memory. She never forgets anything." (pilot_2, niveau 7.856, B2) | Facit `sharp` er rigtigt, men forklaringen siger kun "Man siger 'a strong (or good) memory'." og nævner ikke `sharp` |
   | `batch2` | "Hvad betyder 'suppose' i 'I suppose you're right'?" (batch2_2, niveau 6.948, B1, række-id `3cf224e8-b08a-4ab3-b4d8-de4d72f09e6e`) | Facit "formoder" er rigtigt, men forklaringen handler om et andet ord: "'Guess' betyder gætte. Gæst hedder 'guest'." |
-- Resten af trin 1c (batch3–batch6, 12 filer), trin 1d og hele fase 2 er ikke udført.
+  | `batch3` | "Supposing he ___ the truth, what would you do?" (batch3_3, niveau 8.722, C1, række-id `bc9fddd1-bfc2-42c1-a25f-edca68d1df90`) | Facit er "knew", men forklaringen siger "Hypotese om fortiden: supposing he had known." og passer ikke til facit |
+  | `batch3` | "Hvad betyder 'unanimous'?" (batch3_3, niveau 8.908, C1, række-id `d5ed354d-186e-4ab2-9b8d-f5dd4dfd297a`) | Facit "enstemmig" er rigtigt, men forklaringen indeholder en forfatternote: "'anonym' bliver en reel fælde." |
+- **Til ejerens vurdering før aktivering af `batch3`:** opgaven "She's a ___ smoker. She smokes forty a day."
+  (batch3_2, niveau 7.982, B2, række-id `214ebebf-2f13-4ec4-b7ff-03be35eb2d8a`) handler om rygning. Facit `heavy` er
+  rigtigt, og emnet står ikke på listen over udelukkede emner. Ejeren afgør, om opgaven skal beholdes, omskrives
+  eller tages ud.
+- Resten af trin 1c (batch4–batch6, 9 filer), trin 1d og hele fase 2 er ikke udført.
 
 **Godkendelser:**
 - Hvert trin herunder kræver sit eget GO fra ejeren (E2, D-110). Det gælder også hver `apply_migration`, hver

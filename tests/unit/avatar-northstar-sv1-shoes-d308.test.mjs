@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import * as L from "../../js/avatar-layers.js";
 import { reachableShoeOutfits } from "../../tools/avatar/verify-northstar-sv1-shoes-runtime-d308.mjs";
 import { v1Table } from "../../tools/avatar/verify-northstar-tee-armline-runtime-d349.mjs";
+import { beforeLayerFixes } from "../../tools/avatar/northstar-free-matrix.mjs";   // D-370: the plan without its two layer fixes
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (f) => readFileSync(join(REPO, f), "utf8"), A = JSON.parse(read("tools/avatar/fixtures/northstar-wardrobe/shoe-source/sv1-v5-owner-approval-v1.json"));
@@ -74,8 +75,8 @@ test("D-308 a stored shoe never appears on an unapproved outfit after a reload o
 test("D-308 the plan: the shoe with its own covering mask, in the D-242 order, the beige sneakers' shadow; without a choice the K plan", () => {
   const T1 = v1Table(L.NORTHSTAR_ITEMS);
   for (const [label, o, s] of reachableShoeOutfits(L)) { const plan = L.northstarPlanFor(o), plan1 = L.northstarPlanFor(o, T1), item = L.NORTHSTAR_SV1_SHOES[s].item;
-    assert.deepEqual(plan1.filter((x) => x.op === "draw").map((x) => x.src.split("/").pop()), ["figure-body-v1.webp", item + "-shoes-v1.webp", o.bottom + "-pants-v1.webp", o.top + "-top-body-v1.webp", "figure-arms-v1.webp", o.top + "-sleeves-v1.webp", "figure-head-v1.webp"], label);
-    assert.ok(o.top.startsWith("top-tee-"), label); assert.deepEqual(plan.filter((x) => x.op === "draw").map((x) => x.src.split("/").pop()), ["figure-body-v1.webp", item + "-shoes-v1.webp", o.bottom + "-pants-v1.webp", o.top + "-top-body-v2.webp", "figure-arms-v1.webp", o.top + "-sleeves-v2.webp", "figure-head-v1.webp"], label + " (D-349)");
+    assert.deepEqual(beforeLayerFixes(plan1.filter((x) => x.op === "draw").map((x) => x.src.split("/").pop())), ["figure-body-v1.webp", item + "-shoes-v1.webp", o.bottom + "-pants-v1.webp", o.top + "-top-body-v1.webp", "figure-arms-v1.webp", o.top + "-sleeves-v1.webp", "figure-head-v1.webp"], label);
+    assert.ok(o.top.startsWith("top-tee-"), label); assert.deepEqual(beforeLayerFixes(plan.filter((x) => x.op === "draw").map((x) => x.src.split("/").pop())), ["figure-body-v1.webp", item + "-shoes-v1.webp", o.bottom + "-pants-v1.webp", o.top + "-top-body-v2.webp", "figure-arms-v1.webp", o.top + "-sleeves-v2.webp", "figure-head-v1.webp"], label + " (D-349)");
     for (const x of plan1.filter((x) => x.figure)) assert.ok(x.cut.endsWith("/hide-" + item + "-v1.webp"), label);
     for (const x of plan.filter((x) => x.figure)) assert.ok(x.cut.endsWith("/hide-" + item + "-v1.webp"), label);
     assert.ok(plan.some((x) => x.op === "shade" && x.src.endsWith("/shoes-sneakers-beige-shadow-body-v1.webp")), label); }

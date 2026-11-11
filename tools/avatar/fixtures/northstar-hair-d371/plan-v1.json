@@ -1,0 +1,181 @@
+{
+  "decision": "D-371",
+  "kind": "northstar-hair-drawn-trial",
+  "authorisesImageRequest": false,
+  "purpose": "three hairstyles drawn from scratch to Northstar's exact head as one separate grey hair layer each, in Northstar's drawing style; a private trial for the owner's assessment — not a promotion, not an asset, not an activation",
+  "template": {
+    "file": "tools/avatar/fixtures/northstar-hair-d371/template-v1.json",
+    "sha256": "034b3f04b5e0d89e3e76bb52056fa6814a5b120b4df975447b6c2f4f9a5e2e9d",
+    "crop": {
+      "x": 256,
+      "y": 0,
+      "size": 512,
+      "scale": 2
+    },
+    "callSize": "1024x1024",
+    "callMargin": 16
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "images": [
+      {
+        "role": "Image 1",
+        "name": "northstar-hair-reference-1024.png",
+        "bytes": 351957,
+        "sha256": "a75eb7af92153d6e1a620def0ac678330db942f8e2238fd7e451e3ef57e6c3ad",
+        "pixelSha256": "1b5480fc54505653694c7a59682000e2ada55a33773fbb2ddc5e051db63e0bfa",
+        "width": 1024,
+        "height": 1024,
+        "location": "<Documents>/DenSejeApp-artefacts/hair-d371-calls/references/",
+        "tracked": false,
+        "what": "STYLE: Northstar's head with its current hair",
+        "made": "northstar-hair-template-d371.mjs inputImages().reference: the template's square of the D-194 head, ×2 nearest neighbour"
+      },
+      {
+        "role": "Image 2",
+        "name": "northstar-bald-guide-1024.png",
+        "bytes": 146731,
+        "sha256": "be42c4599780252788a787126ee7d5c6a6a41a966d957a81878d096cafa89934",
+        "pixelSha256": "3db3357b049f5b7835d4b886cbef6decfb5ce3cd9f839812dd55fa8d8e3cb8f3",
+        "width": 1024,
+        "height": 1024,
+        "location": "<Documents>/DenSejeApp-artefacts/hair-d371-calls/references/",
+        "tracked": false,
+        "what": "GEOMETRY: the same head without hair, no extra skin layer",
+        "made": "northstar-hair-template-d371.mjs inputImages().guide: the template's square of the bald head (D-368 repairs), ×2 nearest neighbour"
+      }
+    ],
+    "neverSent": [
+      "mask",
+      "input_fidelity",
+      "any other image"
+    ]
+  },
+  "prompts": {
+    "common": {
+      "text": "Image 1 is the STYLE reference: Northstar, the character this hair is for, with the current hair. Image 2 is the exact HEAD the new hair must fit: the same character without hair, in the same 1024x1024 frame, at the same scale and in the same position.\n\nDraw ONLY a new hairstyle, as a separate layer that fits the bald head in Image 2 exactly, in the same frame: same position, same scale, no shift, no zoom, no tilt. Output the hair alone on a fully transparent background. No face, eyes, brows, ears, skin, neck, body or background: every pixel that is not hair is fully transparent.\n\nSTYLE: draw the hair exactly the way Image 1's hair is drawn: the same confident dark outline of the same weight, the same cel shading in a few value steps, the same sharp-edged highlight shapes, the same level of detail. Not photoreal, not painterly, no texture noise, no soft airbrush.\n\nCOLOUR: neutral greyscale only (white, greys and near-black), no hue at all. The layer is a luminance map that is tinted later; do not copy the brown of Image 1.\n\nFIT TO THE HEAD IN IMAGE 2:\n- The hair sits on the skull and covers the whole top of the head, with some volume above the skull's outline. The bald skull's outline must not show anywhere under or through the hair.\n- At each side the hair comes down in front of the ear, over the temple, and covers the narrow strip of skin between the face's outline and the front edge of the ear, down to where the ear meets the face, the way Image 1's hair does.\n- The ears stay fully visible. Hair never lies over an ear: where hair passes an ear it lies BEHIND it (outside the head, next to the ear).\n- The eyes stay completely clear. A fringe may cover the brows partly, at most half of each brow.\n- The hair is one connected shape with no detached specks. Keep at least 16 pixels of empty transparent margin on all four sides of the image.\n\nTHE HAIRSTYLE:\n",
+      "sha256": "aef4469f81596d0bdbbeddc8c4c9f6174128a41f533361e43b87a40aee784e4f"
+    }
+  },
+  "calls": [
+    {
+      "callId": "NH-1-hair-short",
+      "style": "short",
+      "name": "Kort",
+      "order": 1,
+      "prompt": {
+        "text": "Image 1 is the STYLE reference: Northstar, the character this hair is for, with the current hair. Image 2 is the exact HEAD the new hair must fit: the same character without hair, in the same 1024x1024 frame, at the same scale and in the same position.\n\nDraw ONLY a new hairstyle, as a separate layer that fits the bald head in Image 2 exactly, in the same frame: same position, same scale, no shift, no zoom, no tilt. Output the hair alone on a fully transparent background. No face, eyes, brows, ears, skin, neck, body or background: every pixel that is not hair is fully transparent.\n\nSTYLE: draw the hair exactly the way Image 1's hair is drawn: the same confident dark outline of the same weight, the same cel shading in a few value steps, the same sharp-edged highlight shapes, the same level of detail. Not photoreal, not painterly, no texture noise, no soft airbrush.\n\nCOLOUR: neutral greyscale only (white, greys and near-black), no hue at all. The layer is a luminance map that is tinted later; do not copy the brown of Image 1.\n\nFIT TO THE HEAD IN IMAGE 2:\n- The hair sits on the skull and covers the whole top of the head, with some volume above the skull's outline. The bald skull's outline must not show anywhere under or through the hair.\n- At each side the hair comes down in front of the ear, over the temple, and covers the narrow strip of skin between the face's outline and the front edge of the ear, down to where the ear meets the face, the way Image 1's hair does.\n- The ears stay fully visible. Hair never lies over an ear: where hair passes an ear it lies BEHIND it (outside the head, next to the ear).\n- The eyes stay completely clear. A fringe may cover the brows partly, at most half of each brow.\n- The hair is one connected shape with no detached specks. Keep at least 16 pixels of empty transparent margin on all four sides of the image.\n\nTHE HAIRSTYLE:\nSHORT: a short, neat cut. Close to the head on the sides, a little more length on top, brushed forward and slightly up, with a short soft fringe that ends well above the brows. Clearly shorter and calmer than the hair in Image 1.\n",
+        "bytes": 2115,
+        "sha256": "ec36859fc1ee4565759bda4ac31e176d7185357762b06517ee79e9f312fb877a"
+      }
+    },
+    {
+      "callId": "NH-2-hair-curls",
+      "style": "curls",
+      "name": "Kompakte krøller",
+      "order": 2,
+      "prompt": {
+        "text": "Image 1 is the STYLE reference: Northstar, the character this hair is for, with the current hair. Image 2 is the exact HEAD the new hair must fit: the same character without hair, in the same 1024x1024 frame, at the same scale and in the same position.\n\nDraw ONLY a new hairstyle, as a separate layer that fits the bald head in Image 2 exactly, in the same frame: same position, same scale, no shift, no zoom, no tilt. Output the hair alone on a fully transparent background. No face, eyes, brows, ears, skin, neck, body or background: every pixel that is not hair is fully transparent.\n\nSTYLE: draw the hair exactly the way Image 1's hair is drawn: the same confident dark outline of the same weight, the same cel shading in a few value steps, the same sharp-edged highlight shapes, the same level of detail. Not photoreal, not painterly, no texture noise, no soft airbrush.\n\nCOLOUR: neutral greyscale only (white, greys and near-black), no hue at all. The layer is a luminance map that is tinted later; do not copy the brown of Image 1.\n\nFIT TO THE HEAD IN IMAGE 2:\n- The hair sits on the skull and covers the whole top of the head, with some volume above the skull's outline. The bald skull's outline must not show anywhere under or through the hair.\n- At each side the hair comes down in front of the ear, over the temple, and covers the narrow strip of skin between the face's outline and the front edge of the ear, down to where the ear meets the face, the way Image 1's hair does.\n- The ears stay fully visible. Hair never lies over an ear: where hair passes an ear it lies BEHIND it (outside the head, next to the ear).\n- The eyes stay completely clear. A fringe may cover the brows partly, at most half of each brow.\n- The hair is one connected shape with no detached specks. Keep at least 16 pixels of empty transparent margin on all four sides of the image.\n\nTHE HAIRSTYLE:\nCOMPACT CURLS: a compact, rounded mass of tight curls with only a little volume around the skull. The curls are drawn as clustered rounded shapes, each with its outline, and the hairline over the forehead is a soft scalloped edge of curls. Not a large afro: the outline stays close to the head.\n",
+        "bytes": 2180,
+        "sha256": "987e7eb8d99bb9cb1b7d0f4b58fdae183e206d4ef9fc9dc224b5a6d3890f1f3a"
+      }
+    },
+    {
+      "callId": "NH-3-hair-sidepart",
+      "style": "sidepart",
+      "name": "Halvlang med sideskilning",
+      "order": 3,
+      "prompt": {
+        "text": "Image 1 is the STYLE reference: Northstar, the character this hair is for, with the current hair. Image 2 is the exact HEAD the new hair must fit: the same character without hair, in the same 1024x1024 frame, at the same scale and in the same position.\n\nDraw ONLY a new hairstyle, as a separate layer that fits the bald head in Image 2 exactly, in the same frame: same position, same scale, no shift, no zoom, no tilt. Output the hair alone on a fully transparent background. No face, eyes, brows, ears, skin, neck, body or background: every pixel that is not hair is fully transparent.\n\nSTYLE: draw the hair exactly the way Image 1's hair is drawn: the same confident dark outline of the same weight, the same cel shading in a few value steps, the same sharp-edged highlight shapes, the same level of detail. Not photoreal, not painterly, no texture noise, no soft airbrush.\n\nCOLOUR: neutral greyscale only (white, greys and near-black), no hue at all. The layer is a luminance map that is tinted later; do not copy the brown of Image 1.\n\nFIT TO THE HEAD IN IMAGE 2:\n- The hair sits on the skull and covers the whole top of the head, with some volume above the skull's outline. The bald skull's outline must not show anywhere under or through the hair.\n- At each side the hair comes down in front of the ear, over the temple, and covers the narrow strip of skin between the face's outline and the front edge of the ear, down to where the ear meets the face, the way Image 1's hair does.\n- The ears stay fully visible. Hair never lies over an ear: where hair passes an ear it lies BEHIND it (outside the head, next to the ear).\n- The eyes stay completely clear. A fringe may cover the brows partly, at most half of each brow.\n- The hair is one connected shape with no detached specks. Keep at least 16 pixels of empty transparent margin on all four sides of the image.\n\nTHE HAIRSTYLE:\nMEDIUM LENGTH WITH A SIDE PARTING: a clear parting above the brow on the left side of the image. From the parting the hair sweeps across the forehead to the other side and may cover part of that brow. On the sides and at the back it falls fairly straight down past the ears to about the jaw line, lying behind the ears (outside the head), with the ears staying visible.\n",
+        "bytes": 2255,
+        "sha256": "83b2df7084a55bcc3ca9417abe8450feb792a54cc070d7c96c0b62d6ac292501"
+      }
+    }
+  ],
+  "order": {
+    "first": "NH-1-hair-short",
+    "rule": "Kort is sent and assessed first. NH-2 and NH-3 wait for the owner's assessment of Kort, recorded on origin/main (authorisation file afterShort.verdict = NO_COMMON_FAULT). If Kort's layer has a fault in placement, transparency or coverage at the ears that the other calls would share, the template is assessed before any further call."
+  },
+  "placement": {
+    "rule": "the 1024×1024 result ÷2 by the premultiplied 2×2 box (downscaleHalf from promote-r2-torso-asset.mjs, D-119) and pasted at (256, 0) on the 1024×1536 master grid; no move, scale, rotation or retouch; colours by the same tint as Northstar's hair (r3-northstar-hairstyles.mjs tint)",
+    "tool": "node tools/avatar/northstar-hair-template-d371.mjs --measure <image> --out <dir outside the repository>"
+  },
+  "gates": {
+    "M1": {
+      "what": "eyes (+2 px) clear",
+      "rule": "hair alpha 0 on every pixel (D-118)"
+    },
+    "M2": {
+      "what": "the ear's inside clear (ear minus its outer 3 px)",
+      "rule": "hair alpha ≤ 8 on every pixel, each ear"
+    },
+    "M3": {
+      "what": "the ear's rim",
+      "rule": "hair alpha > 8 on ≤ 15 % of each ear's outer 3 px (Northstar: 13.5 % / 11.6 %)",
+      "maxShare": 0.15
+    },
+    "M4": {
+      "what": "the flap in front of each ear covered",
+      "rule": "hair alpha ≥ 200 on ≥ 99 % of each flap",
+      "minShare": 0.99
+    },
+    "M5": {
+      "what": "the top of the skull covered",
+      "rule": "hair alpha ≥ 200 on ≥ 99 % of the skull above Northstar's highest hairline point",
+      "minShare": 0.99
+    },
+    "M6": {
+      "what": "the brows",
+      "rule": "hair alpha ≥ 128 on ≤ 50 % of each brow; the largest visible piece of each brow is ≥ 80 % of its visible part (no loose stump; Northstar: 91 %)",
+      "maxShare": 0.5,
+      "minMainVisible": 0.8
+    },
+    "M7": {
+      "what": "one mass",
+      "rule": "one main shape (alpha ≥ 128, 4-connected); the other pieces together ≤ 40 px, not counting a lock that overlaps a flap (a separate sideburn in front of the ear, as Northstar has)",
+      "maxLoose": 40
+    },
+    "M8": {
+      "what": "margin and transparency",
+      "rule": "no alpha in the call image's outer 16 px; hair alpha ≤ 8 on ≥ 95 % of the face below the ear tops (outside the flaps and ears)",
+      "minClearFace": 0.95
+    },
+    "M9": {
+      "what": "neutral grey",
+      "rule": "max channel difference ≤ 12 on ≥ 99 % of the hair (alpha ≥ 128)",
+      "maxSpread": 12,
+      "minShare": 0.99
+    }
+  },
+  "visualStop": [
+    "every candidate is shown on the same bald head at 1:1 and at app size (÷2 and ÷4) beside the Northstar reference; the whole first, then both ears, both temples and the brows at 4×",
+    "a skin flap left in front of an ear, a double line (the face's contour showing beside or through the hair) or a visible seam at the ear sends the candidate back to the drawing trial, also when M1–M9 pass",
+    "hair lying over the ear (beyond a short crossing at the ear's top, as Northstar's), a loose stump of brow, a drawing style that is not Northstar's (outline weight, cel steps, highlight shapes) or a hairstyle that is not the one asked for sends it back",
+    "nothing is retouched to pass: a failing candidate is a result of the trial, not something to repair"
+  ],
+  "calibration": {
+    "northstar": "Northstar's own hair (grey) passes M1–M9 on this template",
+    "kortEnvelope": "a minimal Kort silhouette made only from the template's zones covers both flaps fully (M4 100 %) with the ear's inside untouched (M2 0 px) and passes M1–M9"
+  },
+  "method": {
+    "files": {
+      "tools/avatar/northstar-hair-template-d371.mjs": "1724d074e7f968b8b17515970680c00f272e36f7be9cc16bc3a730f9e6109451",
+      "tools/avatar/northstar-hair-polish-d368.mjs": "559fb780c20fac846d45044c3406bcacdfd958954eae7c6f4594e614316a3e08",
+      "tools/avatar/northstar-hair-trial-d368.mjs": "53624fdb07e5658361e6c8d56a327ce6c2aeaf46473e0e1f8005ca5f70ea3d6a",
+      "tools/avatar/promote-r2-torso-asset.mjs": "c030f74ec58edaa82673887d403caf50d4d3ff791781b6502882ed01258613be",
+      "tools/avatar/r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+      "tools/avatar/r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+      "tools/avatar/r3-northstar-head.mjs": "584db7b2d057168420c5abf0bc0a76ee8bec65e08a2107826b158d432f354401",
+      "tools/avatar/r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+      "tools/avatar/fixtures/northstar-hair-d371/template-v1.json": "034b3f04b5e0d89e3e76bb52056fa6814a5b120b4df975447b6c2f4f9a5e2e9d"
+    }
+  }
+}

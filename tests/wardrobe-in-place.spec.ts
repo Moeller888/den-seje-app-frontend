@@ -4,9 +4,9 @@
 // At 1100 and 390 px it proves:
 //   - "Tag på" redraws the figure in the existing preview without navigation or reload (a page marker survives, no load event);
 //   - the category, the list's scroll position and keyboard focus stay; "✓ På" moves to the right card;
-//   - D-367: only the chosen part changes — a fitting shoe, bottom or top keeps exactly the other two parts; a part that does not go
-//     with the two worn parts is refused with a short reason and changes neither the figure nor the account (the owner's case: brown
-//     ankle boots with the creme T-shirt and sand skirt; a sweater over the navy shorts — the pupil changes the bottom first);
+//   - D-370: the wardrobe is free: any top, bottom or shoes goes on, exactly the chosen part changes, saved as the three parts. Only an
+//     outfit the renderer will not draw is refused and changes nothing; with the layer fixes published there is none, so the three blue
+//     T-shirt and skirt outfits that were refused before now go on;
 //   - the choice is saved on the account and kept after a manual reload and in a new session;
 //   - quick choices: one save at a time, only the newest waiting choice is sent, a late answer never overwrites a newer choice;
 //   - a failed save shows the last saved outfit again with a short message.
@@ -120,94 +120,72 @@ const shot = async (page: Page, name: string) => {
 const scrollList = (page: Page, by: number) => page.evaluate((y) => { const c = document.querySelector(".right-column") as HTMLElement; if (c && c.scrollHeight > c.clientHeight) c.scrollTop = y; else window.scrollTo(0, y); }, by);
 
 for (const width of [1100, 390]) {
-  test(`D-366/D-367 at ${width} px: "Tag på" changes only the chosen part, in place — or refuses it and changes nothing`, async ({ browser, browserName }) => {
+  test(`D-370 at ${width} px: every part goes on freely and only that part changes, in place`, async ({ browser, browserName }) => {
     test.skip(browserName !== "chromium", "UI dedup");
     test.setTimeout(120000);   // two page loads, a manual reload and a second session in one test
     const pupil = newPupil();
-    pupil.northstar = { outfit: "K01" };   // creme T-shirt, sand skirt, beige sneakers
+    pupil.northstar = { outfit: "K01" };   // an older choice: creme T-shirt, sand skirt, beige sneakers
     const { ctx, page, errs } = await openAvatar(browser, pupil, width);
     await page.waitForLoadState("load");   // the page's own first load event (it can come late, e.g. on a slower host) is not a reload
-    // the first figure must be drawn before any baseline is taken: on a slower host it can still be loading here, and its arrival
-    // would look like a redraw caused by the first (refused) choice
     await expect.poll(async () => { const f = await figure(page); return f.rendered && f.path === "northstar" && !!f.src; }, { timeout: 30000 }).toBe(true);
+    expect(await outfitNow(page), "the older choice reads as before").toBe("top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-beige");
     let loads = 0, navigations = 0;
-    // the category menu writes #kategori=<key> (D-363) — a same-document change; anything else would be a navigation
-    const start = page.url().split("#")[0];
+    const start = page.url().split("#")[0];   // the category menu writes #kategori=<key> (D-363), a same-document change
     page.on("load", () => { loads++; });
     page.on("framenavigated", (f) => { if (f === page.mainFrame() && f.url().split("#")[0] !== start) navigations++; });
     await page.evaluate(() => { (window as any).__d366 = "same page"; });
     const status = page.locator("#northstarWardrobe .northstar-status");
-    /** A refused part: the figure, the worn parts and the account stay exactly as they were, and the pupil is told why. */
-    const refused = async (piece: string, reason: string) => {
-      const before = { outfit: await outfitNow(page), worn: await worn(page), fig: (await figure(page)).src, sent: pupil.sent.length };
-      expect(before.fig, "the baseline is a drawn figure").not.toBeNull();
-      await card(page, piece).locator(".equip-btn").click();
-      await expect(status).toContainText(reason);
-      await expect(card(page, piece).locator(".northstar-refusal"), "the reason shows on the card the pupil pressed").toHaveText(reason);
-      expect(await outfitNow(page), "the outfit stays").toBe(before.outfit);
-      expect(await worn(page), "the marks stay").toEqual(before.worn);
-      await expect(card(page, piece)).not.toHaveClass(/equipped/);
-      await page.waitForTimeout(400);
-      expect((await figure(page)).src, "the figure is not redrawn").toBe(before.fig);
-      expect(pupil.sent.length, "nothing is saved").toBe(before.sent);
-    };
-    /** An accepted part: exactly that part changes, the figure is redrawn in place, and the choice is saved. */
+    /** Exactly that part changes, the figure is redrawn in place, the "✓ På" mark moves, and the three parts are saved. */
     const accepted = async (piece: string, category: "top" | "bottom" | "shoes") => {
-      const before = (await outfitNow(page))!.split("+"), fig = (await figure(page)).src, sent = pupil.sent.length;
+      const before = (await outfitNow(page))!.split("+"), fig = (await figure(page)).src, sent = pupil.sent.length, at = { top: 0, bottom: 1, shoes: 2 }[category];
       await card(page, piece).locator(".equip-btn").click();
       await expect(card(page, piece)).toHaveClass(/equipped/);
-      const after = (await outfitNow(page))!.split("+"), at = { top: 0, bottom: 1, shoes: 2 }[category];
+      await expect(card(page, piece).locator(".equipped-label")).toHaveText("✓ På");
+      await expect(card(page, before[at]), "the old part is no longer marked").not.toHaveClass(/equipped/);
+      const after = (await outfitNow(page))!.split("+");
       expect(after[at]).toBe(piece);
       expect(after.filter((_x, i) => i !== at), "the other two parts are exactly the same").toEqual(before.filter((_x, i) => i !== at));
       await redrawn(page, fig);
       await expect.poll(() => pupil.sent.length).toBe(sent + 1);
+      expect(JSON.parse(pupil.sent[sent])).toEqual({ outfit: "FRI", top: after[0], pants: after[1], shoes: after[2] });
       await expect.poll(() => JSON.stringify(pupil.northstar)).toBe(pupil.sent[sent]);   // saved on the account
       await expect(status).not.toContainText("passer ikke");
-      await expect(page.locator(".northstar-refusal"), "an earlier reason is gone").toHaveCount(0);
     };
 
-    // the owner's case: brown ankle boots do not go with the creme T-shirt and the sand skirt → refused, nothing changes
-    await page.getByRole("tab", { name: "Sko", exact: true }).click();
-    await refused("shoes-ankleboots-brown", "De sko passer ikke til dit nuværende outfit.");
-
-    // a fitting shoe, from the keyboard after scrolling the list: only the shoes change; category, scroll and focus stay
-    await scrollList(page, 120);
-    const scrolled = await scrollTop(page);
-    await shot(page, `d367-${width}-foer`);
-    const fig0 = (await figure(page)).src;
-    await card(page, "shoes-sneakers-white").locator(".equip-btn").focus();
-    await page.keyboard.press("Enter");
-    expect((await figure(page)).src, "the preview is never empty while the new figure loads").not.toBeNull();
-    await expect(card(page, "shoes-sneakers-white")).toHaveClass(/equipped/);
-    await expect(card(page, "shoes-sneakers-white").locator(".equipped-label")).toHaveText("✓ På");
-    expect(await page.evaluate(() => document.activeElement && (document.activeElement as HTMLElement).dataset.piece)).toBe("shoes-sneakers-white");   // focus stays on the card
-    await expect(page.locator("#categoryTabs [aria-selected=true]")).toHaveText("Sko");
-    expect(await scrollTop(page)).toBe(scrolled);
-    expect(await outfitNow(page)).toBe("top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-white");
-    await redrawn(page, fig0);
-    await expect.poll(() => pupil.sent.length).toBe(1);
-    await shot(page, `d367-${width}-sko-skift`);
-
-    // bottoms: the navy shorts go with the T-shirt and the white sneakers
-    await page.getByRole("tab", { name: "Underdele", exact: true }).click();
-    await accepted("bottom-shorts-navy", "bottom");
-    // tops: a sweater does not go with the shorts → refused; the pupil chooses another bottom first, then the sweater goes on
-    await page.getByRole("tab", { name: "Overdele", exact: true }).click();
-    await refused("top-sweater-ls2-green-check", "Den overdel passer ikke til dit nuværende outfit.");
-    await shot(page, `d367-${width}-sweater-afvist`);
-    await page.getByRole("tab", { name: "Underdele", exact: true }).click();
-    await accepted("bottom-capri-lightblue", "bottom");
-    await page.getByRole("tab", { name: "Overdele", exact: true }).click();
-    await accepted("top-sweater-ls2-green-check", "top");
-    // a bottom that does not go with the sweater → refused
-    await page.getByRole("tab", { name: "Underdele", exact: true }).click();
-    await refused("bottom-shorts-navy", "Den underdel passer ikke til dit nuværende outfit.");
-    // and brown ankle boots now fit: only the shoes change
+    // brown ankle boots with the creme T-shirt and sand skirt, refused before D-370
     await page.getByRole("tab", { name: "Sko", exact: true }).click();
     await accepted("shoes-ankleboots-brown", "shoes");
+
+    // from the keyboard after scrolling the list: only the shoes change; category, scroll and focus stay
+    await scrollList(page, 120);
+    await shot(page, `d370-${width}-foer`);
+    const fig0 = (await figure(page)).src;
+    await card(page, "shoes-sneakers-low-sv1-chalk").locator(".equip-btn").focus();   // focusing a card far down the list scrolls it into view
+    const scrolled = await scrollTop(page);
+    await page.keyboard.press("Enter");
+    expect((await figure(page)).src, "the preview is never empty while the new figure loads").not.toBeNull();
+    await expect(card(page, "shoes-sneakers-low-sv1-chalk")).toHaveClass(/equipped/);
+    expect(await page.evaluate(() => document.activeElement && (document.activeElement as HTMLElement).dataset.piece)).toBe("shoes-sneakers-low-sv1-chalk");   // focus stays on the card
+    await expect(page.locator("#categoryTabs [aria-selected=true]")).toHaveText("Sko");
+    expect(await scrollTop(page)).toBe(scrolled);
+    await redrawn(page, fig0);
+    await expect.poll(() => pupil.sent.length).toBe(2);
+
+    // the olive trousers with the creme T-shirt and these sneakers: on an approval list, but not selectable before D-370
+    await page.getByRole("tab", { name: "Underdele", exact: true }).click();
+    await accepted("bottom-trousers-square-olive", "bottom");
+    expect(await outfitNow(page)).toBe("top-tee-hip-cream+bottom-trousers-square-olive+shoes-sneakers-low-sv1-chalk");
+    await shot(page, `d370-${width}-oliven`);
+    // a sweater over the olive trousers, then over the navy shorts; the charcoal sneakers under long trousers
+    await page.getByRole("tab", { name: "Overdele", exact: true }).click();
+    await accepted("top-sweater-ls2-green-check", "top");
+    await page.getByRole("tab", { name: "Sko", exact: true }).click();
+    await accepted("shoes-sneakers-low-sv1-charcoal", "shoes");
+    await page.getByRole("tab", { name: "Underdele", exact: true }).click();
+    await accepted("bottom-shorts-navy", "bottom");
     const final = (await outfitNow(page))!;
-    expect(final).toBe("top-sweater-ls2-green-check+bottom-capri-lightblue+shoes-ankleboots-brown");
-    await shot(page, `d367-${width}-efter`);
+    expect(final).toBe("top-sweater-ls2-green-check+bottom-shorts-navy+shoes-sneakers-low-sv1-charcoal");
+    await shot(page, `d370-${width}-efter`);
 
     expect(loads, "no reload").toBe(0);
     expect(navigations, "no navigation").toBe(0);
@@ -221,8 +199,73 @@ for (const width of [1100, 390]) {
     await ctx.close();
     const again = await openAvatar(browser, pupil, width);
     expect(await outfitNow(again.page)).toBe(final);
-    await expect(card(again.page, "shoes-ankleboots-brown")).toHaveClass(/equipped/);
+    await expect(card(again.page, "shoes-sneakers-low-sv1-charcoal")).toHaveClass(/equipped/);
     await again.ctx.close();
+  });
+
+  test(`D-370 at ${width} px: quick choices across top, bottom and shoes keep each other; a failed save shows the last saved outfit`, async ({ browser, browserName }) => {
+    test.skip(browserName !== "chromium", "UI dedup");
+    test.setTimeout(90000);
+    const pupil = newPupil();
+    pupil.northstar = { outfit: "K01" };
+    const { ctx, page } = await openAvatar(browser, pupil, width);
+    const pick = async (tab: string, piece: string) => { await page.getByRole("tab", { name: tab, exact: true }).click(); await card(page, piece).locator(".equip-btn").click(); await expect(card(page, piece)).toHaveClass(/equipped/); };
+    pupil.mode = "hold";
+    await pick("Underdele", "bottom-trousers-square-olive");
+    await pick("Overdele", "top-tank-navy");
+    await pick("Sko", "shoes-ankleboots-ab1-lightsand");
+    const newest = "top-tank-navy+bottom-trousers-square-olive+shoes-ankleboots-ab1-lightsand";
+    expect(await outfitNow(page), "all three quick choices are shown at once").toBe(newest);
+    expect(pupil.sent.length, "one save at a time").toBe(1);
+    pupil.mode = "ok";
+    pupil.held.shift()!();   // the late answer to the first choice
+    await expect.poll(() => pupil.sent.length).toBe(2);   // the waiting newest choice goes; the middle one is never sent
+    expect(JSON.parse(pupil.sent[1])).toEqual({ outfit: "FRI", top: "top-tank-navy", pants: "bottom-trousers-square-olive", shoes: "shoes-ankleboots-ab1-lightsand" });
+    await expect.poll(() => JSON.stringify(pupil.northstar)).toBe(pupil.sent[1]);
+    expect(await outfitNow(page), "a late answer never wins").toBe(newest);
+    // a failed save: back to exactly the last saved outfit, marks included, and a later choice works
+    pupil.mode = "fail";
+    await page.getByRole("tab", { name: "Overdele", exact: true }).click();
+    await card(page, "top-tee-hip-blue").locator(".equip-btn").click();
+    await expect(page.locator("#northstarWardrobe .northstar-status")).toContainText("Valget kunne ikke gemmes. Prøv igen.");
+    expect(await outfitNow(page)).toBe(newest);
+    await expect(card(page, "top-tee-hip-blue")).not.toHaveClass(/equipped/);
+    await expect(card(page, "top-tank-navy")).toHaveClass(/equipped/);
+    await shot(page, `d370-${width}-fejlet-gemning`);
+    pupil.mode = "ok";
+    await card(page, "top-tee-hip-blue").locator(".equip-btn").click();
+    await expect.poll(() => (pupil.northstar || {}).top).toBe("top-tee-hip-blue");
+    await ctx.close();
+  });
+}
+
+// The three outfits D-242 never drew (blue T-shirt and skirt with beige, black lace-up or white shoes) were refused until the layer fixes
+// were published; now each goes on in place, only the bottom changes, it is saved as the three parts, and the blue tee's fixed layers load.
+for (const shoes of ["shoes-sneakers-beige", "shoes-boots-laceup-black", "shoes-sneakers-white"]) {
+  test(`D-370: blue T-shirt and skirt with ${shoes}, refused before the layer fixes, now goes on in place`, async ({ browser, browserName }) => {
+    test.skip(browserName !== "chromium", "UI dedup");
+    const pupil = newPupil();
+    pupil.northstar = { outfit: "FRI", top: "top-tee-hip-blue", pants: "bottom-shorts-navy", shoes };
+    const { ctx, page, errs } = await openAvatar(browser, pupil, 1100);
+    let loads = 0;
+    await page.waitForLoadState("load");
+    page.on("load", () => { loads++; });
+    await expect.poll(async () => { const f = await figure(page); return f.rendered && f.path === "northstar" && !!f.src; }, { timeout: 30000 }).toBe(true);
+    await page.getByRole("tab", { name: "Underdele", exact: true }).click();
+    const fig = (await figure(page)).src;
+    await card(page, "bottom-skirt-sand").locator(".equip-btn").click();
+    await expect(card(page, "bottom-skirt-sand")).toHaveClass(/equipped/);
+    await redrawn(page, fig);
+    expect(await outfitNow(page)).toBe(`top-tee-hip-blue+bottom-skirt-sand+${shoes}`);
+    await expect(page.locator("#northstarWardrobe .northstar-refusal")).toHaveCount(0);
+    await expect.poll(() => pupil.northstar).toEqual({ outfit: "FRI", top: "top-tee-hip-blue", pants: "bottom-skirt-sand", shoes });
+    const layers = await page.evaluate(async () => { const L: any = await import("/js/avatar-layers.js"); return [L.NORTHSTAR_LAYER_FIXES, L.NORTHSTAR_KNOWN_FAULTY.length]; });
+    expect(layers, "the layer fixes are on and nothing is known faulty").toEqual([true, 0]);
+    const fixed = await page.evaluate(() => performance.getEntriesByType("resource").map((e) => e.name.split("/").pop()));
+    for (const f of ["top-tee-hip-blue-top-body-v3.webp", "top-tee-hip-blue-hip-cover-v1.webp"]) expect(fixed, "the blue tee's fixed layer is drawn: " + f).toContain(f);
+    expect(loads, "no reload").toBe(0);
+    expect(errs).toEqual([]);
+    await ctx.close();
   });
 }
 
@@ -237,12 +280,12 @@ test("D-366: quick choices — one save at a time, only the newest waiting choic
   await expect(card(page, "top-sweater-ls2-green-check")).toHaveClass(/equipped/);
   expect((await outfitNow(page))!.startsWith("top-sweater-ls2-green-check+")).toBe(true);
   expect(pupil.sent.length).toBe(1);
-  expect(pupil.sent[0]).toContain("TK-NAVY");               // the first choice is out, held
+  expect(pupil.sent[0]).toContain("top-tank-navy");         // the first choice is out, held
   pupil.mode = "ok";
   pupil.held.shift()!();                                   // the late answer to the first choice arrives
   await expect.poll(() => pupil.sent.length).toBe(2);      // the middle choice was never sent; the newest was
   await expect.poll(() => JSON.stringify(pupil.northstar)).toBe(pupil.sent[1]);
-  expect(pupil.sent[1]).not.toContain("TK-");
+  expect(pupil.sent[1]).not.toContain("top-tank");
   expect((await outfitNow(page))!.startsWith("top-sweater-ls2-green-check+")).toBe(true);
   await page.waitForTimeout(500);
   expect(pupil.sent.length, "nothing more is sent").toBe(2);
@@ -269,6 +312,6 @@ test("D-366: a failed save shows the last saved outfit again with a short messag
   // and a later choice that saves works again
   pupil.mode = "ok";
   await card(page, "top-tank-navy").locator(".equip-btn").click();
-  await expect.poll(() => JSON.stringify(pupil.northstar)).toContain("TK-NAVY");
+  await expect.poll(() => JSON.stringify(pupil.northstar)).toContain("top-tank-navy");
   await ctx.close();
 });
