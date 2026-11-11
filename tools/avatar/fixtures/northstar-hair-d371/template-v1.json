@@ -1,0 +1,260 @@
+{
+  "decision": "D-371",
+  "canvas": {
+    "width": 1024,
+    "height": 1536,
+    "grid": "Northstar Master v2 (1024×1536), the runtime figure's grid"
+  },
+  "crop": {
+    "x": 256,
+    "y": 0,
+    "size": 512,
+    "scale": 2
+  },
+  "call": {
+    "size": "1024x1024",
+    "margin": 16,
+    "placement": "the 1024×1024 result ÷2 by the premultiplied 2×2 box (downscaleHalf, D-119), pasted at (crop.x, crop.y); no move, scale, rotation or retouch"
+  },
+  "head": {
+    "x0": 345,
+    "y0": 119,
+    "x1": 680,
+    "y1": 486
+  },
+  "crown": {
+    "y": 119,
+    "x": 513
+  },
+  "hairline": {
+    "rule": "Northstar's own hairline: per forehead column (every 8 px), the lowest row of its hair connected to the top of the head; a new style may sit anywhere between its highest point and the brows' top",
+    "top": 200,
+    "browsTop": 243,
+    "points": [
+      [
+        398,
+        246
+      ],
+      [
+        406,
+        246
+      ],
+      [
+        414,
+        246
+      ],
+      [
+        422,
+        246
+      ],
+      [
+        430,
+        242
+      ],
+      [
+        438,
+        235
+      ],
+      [
+        446,
+        229
+      ],
+      [
+        454,
+        224
+      ],
+      [
+        462,
+        218
+      ],
+      [
+        470,
+        246
+      ],
+      [
+        478,
+        246
+      ],
+      [
+        486,
+        246
+      ],
+      [
+        494,
+        246
+      ],
+      [
+        502,
+        240
+      ],
+      [
+        510,
+        232
+      ],
+      [
+        518,
+        225
+      ],
+      [
+        526,
+        242
+      ],
+      [
+        534,
+        233
+      ],
+      [
+        542,
+        223
+      ],
+      [
+        550,
+        210
+      ],
+      [
+        558,
+        200
+      ],
+      [
+        566,
+        201
+      ],
+      [
+        574,
+        202
+      ],
+      [
+        582,
+        200
+      ],
+      [
+        590,
+        203
+      ],
+      [
+        598,
+        204
+      ],
+      [
+        606,
+        214
+      ],
+      [
+        614,
+        223
+      ]
+    ]
+  },
+  "brows": {
+    "left": {
+      "x0": 398,
+      "y0": 247,
+      "x1": 482,
+      "y1": 273
+    },
+    "right": {
+      "x0": 533,
+      "y0": 243,
+      "x1": 620,
+      "y1": 270
+    }
+  },
+  "ears": {
+    "left": {
+      "x0": 345,
+      "y0": 307,
+      "x1": 401,
+      "y1": 377
+    },
+    "right": {
+      "x0": 620,
+      "y0": 308,
+      "x1": 680,
+      "y1": 379
+    },
+    "px": {
+      "left": 2609,
+      "right": 2863
+    }
+  },
+  "earTops": {
+    "left": 307,
+    "right": 308
+  },
+  "temples": {
+    "left": {
+      "x0": 373,
+      "y0": 307,
+      "x1": 398,
+      "y1": 363
+    },
+    "right": {
+      "x0": 617,
+      "y0": 308,
+      "x1": 647,
+      "y1": 379
+    },
+    "px": {
+      "left": 335,
+      "right": 331
+    },
+    "rule": "the flap in front of each ear: head skin and the face's contour line that Northstar's hair covers; the new hair lies IN FRONT of it, down to where the ear meets the face"
+  },
+  "zones": {
+    "mustCover": {
+      "skullTopPx": 14686,
+      "flapPx": {
+        "left": 335,
+        "right": 331
+      },
+      "rule": "M4 + M5"
+    },
+    "keepClear": {
+      "eyesPx": 12317,
+      "earInnerPx": {
+        "left": 2030,
+        "right": 2209
+      },
+      "rule": "M1 + M2"
+    },
+    "earRim": {
+      "px": {
+        "left": 579,
+        "right": 654
+      },
+      "width": 3,
+      "rule": "M3: the ear's outer 3 px — hair may lie over a little of it at the junction, as Northstar's does"
+    },
+    "mayCover": {
+      "browsPx": {
+        "left": 1128,
+        "right": 1170
+      },
+      "rule": "M6"
+    },
+    "behindEar": {
+      "px": 9055,
+      "rule": "outside the head next to the ear: hair may lie here, behind the ear"
+    },
+    "lowerFace": {
+      "px": 30017,
+      "rule": "M8 (transparency): no hairstyle lies here"
+    }
+  },
+  "overlap": {
+    "mustCoverAndKeepClear": 0,
+    "mustCoverAndEars": 0,
+    "mustCoverAndBrows": 0,
+    "flapTouchingEarRim": {
+      "left": 71,
+      "right": 53
+    }
+  },
+  "holes": {
+    "px": 0,
+    "rule": "pixels inside the head's silhouette that are not opaque (the base has no extra skin layer)"
+  },
+  "sha": {
+    "baldPixels": "2134af6602ab2402fc6ff445f1298a151ebca37560cc0376455e39a5107416d9"
+  }
+}

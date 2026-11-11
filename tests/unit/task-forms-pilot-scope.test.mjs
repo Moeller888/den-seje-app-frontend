@@ -20,8 +20,10 @@
 //      three forms.
 //   d. A pupil (role authenticated, its own JWT sub) cannot UPDATE its own active_domains, cannot call
 //      set_student_domains for itself, and cannot EXECUTE any selection RPC directly.
-//   e. KNOWN, DOCUMENTED GAP: the pupil's teacher CAN assign pilot_d362 once the rows are active (not while
-//      inactive). Closing it needs a migration on set_student_domains, proposed in D-362, NOT written.
+//   e. KNOWN, DOCUMENTED GAP before the lock migration (production today): the pupil's teacher CAN assign
+//      pilot_d362 once the rows are active (not while inactive). 20261109151000_set_student_domains_pilot_lock.sql
+//      (written, NOT applied) closes it; the last test applies it here, inside a rolled-back transaction, and
+//      proves the gap is closed. Full proof: tests/unit/set-student-domains-pilot-lock-migration-run.test.mjs.
 // HONEST LIMITS: PGlite is PostgreSQL 18.x (production 17.6); the platform stub's auth.uid() reads
 // request.jwt.claim.sub (tests/isolated/schema/pglite-platform.sql), as other replay tests use it.
 // Passing is not permission to apply (D-110).
@@ -41,6 +43,7 @@ const read = (f) => readFileSync(join(MIGRATIONS, f), "utf8");
 const STIMULUS_SQL = read("20261108090100_stimulus_pilot_content.sql");
 const ACTIVATION_SQL = read("20261108090000_order_categorize_activation.sql");
 const OC_SQL = read("20261108090200_order_categorize_pilot_content.sql");
+const LOCK_SQL = read("20261109151000_set_student_domains_pilot_lock.sql");
 
 const PILOT = "pilot_d362";
 const GRADE = 7;
@@ -280,9 +283,9 @@ test("d. no selection RPC is executable by a pupil (anon/authenticated); the sco
   });
 });
 
-// ── e. KNOWN GAP (documented in D-362, closed only by a proposed migration that is NOT written) ─────
+// ── e. KNOWN GAP before the lock migration (D-362; production runs the old function until it is applied) ─
 
-test("e. KNOWN GAP (D-362, open until the proposed set_student_domains migration): the pupil's teacher CAN assign pilot_d362 once the rows are active, not while inactive", async () => {
+test("e. KNOWN GAP before the lock migration (D-362, open in production until 20261109151000 is applied): the pupil's teacher CAN assign pilot_d362 once the rows are active, not while inactive", async () => {
   // While the pilot rows are inactive: refused (no active question in the domain at the pupil's grade).
   // Not inside a transaction: the expected error would abort it before RESET ROLE.
   await db.query("UPDATE public.questions SET is_active = false WHERE id = ANY ($1::uuid[])", [pilotIds]);
@@ -321,5 +324,32 @@ test("e. a teacher who is NOT the pupil's teacher cannot assign pilot_d362", asy
     await assert.rejects(db.query("SELECT public.set_student_domains($1::uuid, ARRAY['pilot_d362'])", [PUPIL]),
       /Not authorized: caller is not the teacher of this student/);
   });
+  assert.equal(await activeDomainsOf(PUPIL), null);
+});
+
+test("e. after the lock migration (20261109151000, applied here in a rolled-back transaction): the pupil's teacher can NOT assign pilot_d362, and an owner-granted pilot_d362 survives the teacher's save", async () => {
+  await db.exec("BEGIN");
+  try {
+    await db.exec(LOCK_SQL);
+    await db.query("SELECT set_config('request.jwt.claim.sub', $1, true)", [TEACHER]);
+    await db.exec("SAVEPOINT refused");
+    await db.exec("SET LOCAL ROLE authenticated");
+    await assert.rejects(db.query("SELECT public.set_student_domains($1::uuid, ARRAY['pilot_d362'])", [PUPIL]),
+      /Domain "pilot_d362" is a pilot domain and cannot be assigned by a teacher\. Pilot access is granted by the project owner\./);
+    await db.exec("ROLLBACK TO SAVEPOINT refused");
+    assert.equal((await db.query("SELECT current_user AS u")).rows[0].u, "postgres");
+    assert.equal(await activeDomainsOf(PUPIL), null);
+
+    // Owner grant (superuser UPDATE), then the teacher's ordinary save keeps it.
+    await db.query("UPDATE public.profiles SET active_domains = ARRAY['pilot_d362', 'vikings'] WHERE id = $1", [PUPIL]);
+    await db.exec("SET LOCAL ROLE authenticated");
+    await db.query("SELECT public.set_student_domains($1::uuid, ARRAY['revolutions_democracy'])", [PUPIL]);
+    await db.exec("RESET ROLE");
+    assert.deepEqual(await activeDomainsOf(PUPIL), ["revolutions_democracy", PILOT]);
+    const profile = (await db.query("SELECT active_domains, selected_grade FROM public.profiles WHERE id = $1", [PUPIL])).rows[0];
+    assert.deepEqual(deriveQuestionScope(profile, "historie").subjectDomains, ["revolutions_democracy", PILOT]);
+  } finally {
+    await db.exec("ROLLBACK");
+  }
   assert.equal(await activeDomainsOf(PUPIL), null);
 });

@@ -1,0 +1,127 @@
+{
+  "decision": "D-371",
+  "kind": "northstar-hair-drawn-composed",
+  "callId": "NH-1B-hair-short-silhouette",
+  "authorisesImageRequest": false,
+  "purpose": "one new Kort attempt after NH-1 (spent, rejected): the image model draws the hair inside the fixed Kort silhouette in Northstar's drawing style; our own layers set the hair's border at both ears (the owner-approved fixed composition); a private trial for the owner's assessment — not a promotion, not an asset, not an activation",
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSent": [
+      "mask",
+      "input_fidelity",
+      "any other image"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "name": "northstar-hair-reference-1024.png",
+        "bytes": 351957,
+        "sha256": "a75eb7af92153d6e1a620def0ac678330db942f8e2238fd7e451e3ef57e6c3ad",
+        "pixelSha256": "1b5480fc54505653694c7a59682000e2ada55a33773fbb2ddc5e051db63e0bfa",
+        "width": 1024,
+        "height": 1024,
+        "location": "<Documents>/DenSejeApp-artefacts/hair-d371-calls/references/",
+        "tracked": false,
+        "what": "STYLE: Northstar's head with its current hair (D-371's Image 1, unchanged)",
+        "made": "northstar-hair-template-d371.mjs inputImages().reference"
+      },
+      {
+        "role": "Image 2",
+        "name": "northstar-kort-guide-ears-on-top-1024.png",
+        "bytes": 133522,
+        "sha256": "5cddc136cedace3d81937be0892d51253472e4d67c9b850b014910bef1c87a5c",
+        "pixelSha256": "7790638c34bf25283bf237a628fcc843d2fabe900fb37bdab3fbd4834cf6b2f5",
+        "width": 1024,
+        "height": 1024,
+        "location": "<Documents>/DenSejeApp-artefacts/hair-d371-calls/references/",
+        "tracked": false,
+        "what": "GEOMETRY: the bald head with the Kort shape drawn light (fill 205, line 24), the ear laid on top through the corrected ear mask, and its front line",
+        "made": "northstar-hair-compose-d371.mjs --inputs (guideImage)"
+      }
+    ]
+  },
+  "prompt": {
+    "text": "Image 1 is the STYLE reference: Northstar, the character this hair is for, with the current hair. Image 2 is the exact HEAD and the exact HAIR SHAPE: the same character without hair, in the same 1024x1024 frame, at the same scale and in the same position, with the new hairstyle's outline drawn on it as a flat light-grey shape with a dark outline.\n\nDraw ONLY the hair, as a separate layer that fills the light-grey shape in Image 2 exactly, in the same frame: same position, same scale, no shift, no zoom, no tilt. Output the hair alone on a fully transparent background. No face, eyes, brows, ears, skin, neck, body or background: every pixel that is not hair is fully transparent.\n\nSHAPE: the hair's outer edge follows the outer edge of the light-grey shape, and its lower edge along the forehead, the temples and the sideburns follows the shape's lower edge. Do not add hair outside the shape and do not leave parts of the shape empty. Small locks and a drawn edge may move the outline by a few pixels, never more.\n\nSTYLE: draw the hair exactly the way Image 1's hair is drawn: the same confident dark outline of the same weight, the same cel shading in a few value steps, the same sharp-edged highlight shapes, the same level of detail. Short strands and lock shapes inside the outline, brushed forward and slightly up. Not photoreal, not painterly, no texture noise, no soft airbrush.\n\nCOLOUR: neutral greyscale only (white, greys and near-black), no hue at all. The layer is a luminance map that is tinted later; do not copy the brown of Image 1 and do not copy the flat light grey of the shape.\n\nFIT:\n- The ears are drawn in front of the hair, as Image 2 shows. Where the shape meets an ear, let the hair continue a few pixels BEHIND the ear instead of stopping short of it.\n- In front of each ear the shape covers the narrow strip of skin between the face's outline and the ear: the hair covers that strip completely, down to the end of the shape, with the hair's own outline on the face side only.\n- The eyes and the brows stay completely clear; the fringe ends where the shape ends, above the brows.\n- The hair is one connected shape with no detached specks. Keep at least 16 pixels of empty transparent margin on all four sides of the image.\n\nTHE HAIRSTYLE: KORT — a short, neat cut, close to the head, slightly fuller on top, a soft fringe that sweeps a little lower on the left side of the image. Clearly shorter and calmer than the hair in Image 1.",
+    "bytes": 2465,
+    "sha256": "b898a3344424a7347c4a8692b68bfa4acdce5a502d6e573648c4aa96a45620f9"
+  },
+  "placement": "unchanged from D-371: the 1024×1024 result ÷2 by the premultiplied 2×2 box (downscaleHalf, D-119), pasted at (256, 0); no move, scale, rotation or retouch",
+  "composition": {
+    "fixture": "tools/avatar/fixtures/northstar-hair-d371/composition-nh1b-v1.json",
+    "sha256": "8e374f5ee89abad497413a4b19fd9f9d99b34a6723008cc155e36cbf686e48cc",
+    "tool": "tools/avatar/northstar-hair-compose-d371.mjs",
+    "order": [
+      "the bald head",
+      "TEMPLE: fill-only strip — each flap and 6 px under the ear",
+      "the drawing clipped to the Kort silhouette; cuts over visible skin closed with a 3 px line",
+      "EAR: the bald head's own ear pixels through the corrected ear mask (front bowl added, skin strip above the ear's top and the 1-row slip removed)",
+      "EAR FRONT LINE: 2 px where the bald head draws none"
+    ]
+  },
+  "gates": {
+    "M1–M9": "D-371's gates (template-v1.json), on the VISIBLE hair of the composite, with the call image for M8's 16 px margin",
+    "M10": {
+      "on": "the raw placed drawing, before any clip",
+      "tolerancePx": 4,
+      "maxOutsideShare": 0.01,
+      "maxCoreMissingShare": 0.01,
+      "minIoU": 0.9,
+      "rule": "hair alpha ≥ 128: at most 1 % outside the silhouette grown by 4 px; at most 1 % of the silhouette shrunk by 4 px empty; IoU with the silhouette ≥ 0.90"
+    },
+    "M11": {
+      "on": "the composite",
+      "maxFlatShare": 0.03,
+      "rule": "at most 3 % of the visible TEMPLE strip left uncovered by the drawing (no flat patch)"
+    }
+  },
+  "measure": "node tools/avatar/northstar-hair-compose-d371.mjs --measure <the returned image> --out <a new directory outside both clones>",
+  "dryRunExamples": {
+    "kort-unshifted": "PASSES_GATES (the planned transition at both ears)",
+    "kort-shifted-2px-right": "REJECTED (M11: the flat strip shows at the right sideburn's lower tail, figure x 614–628, y 360–382)"
+  },
+  "visualStop": [
+    "the composite is shown at 1:1 and at app size (÷2 and ÷4), then both ears, temples and brows at 4×",
+    "a hook at an ear, a double line (the face's contour beside or through the hair), a seam, a flat patch of the strip or a visible cut sends it back, also when M1–M11 pass",
+    "a drawing style that is not Northstar's (outline weight, cel steps, highlight shapes) or a hairstyle that is not Kort sends it back",
+    "nothing is retouched to pass: the composition is fixed before the call and applied unchanged; a failing result is a result of the trial"
+  ],
+  "method": {
+    "files": {
+      "tools/avatar/northstar-hair-template-d371.mjs": "1724d074e7f968b8b17515970680c00f272e36f7be9cc16bc3a730f9e6109451",
+      "tools/avatar/northstar-hair-polish-d368.mjs": "559fb780c20fac846d45044c3406bcacdfd958954eae7c6f4594e614316a3e08",
+      "tools/avatar/northstar-hair-trial-d368.mjs": "53624fdb07e5658361e6c8d56a327ce6c2aeaf46473e0e1f8005ca5f70ea3d6a",
+      "tools/avatar/promote-r2-torso-asset.mjs": "c030f74ec58edaa82673887d403caf50d4d3ff791781b6502882ed01258613be",
+      "tools/avatar/r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+      "tools/avatar/r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+      "tools/avatar/r3-northstar-head.mjs": "584db7b2d057168420c5abf0bc0a76ee8bec65e08a2107826b158d432f354401",
+      "tools/avatar/r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+      "tools/avatar/fixtures/northstar-hair-d371/template-v1.json": "034b3f04b5e0d89e3e76bb52056fa6814a5b120b4df975447b6c2f4f9a5e2e9d",
+      "tools/avatar/northstar-kort-silhouette-d371.mjs": "e0f31c2560479c557a555f2957b0707d6c7259744003ffbe97f6f0d87e6fb625",
+      "tools/avatar/northstar-hair-compose-d371.mjs": "3c2c14b3f39f1d423dc63112376eb2ec9d0883a1c0335219fce31df04ac86b3a",
+      "tools/avatar/fixtures/northstar-hair-d371/composition-nh1b-v1.json": "8e374f5ee89abad497413a4b19fd9f9d99b34a6723008cc155e36cbf686e48cc"
+    }
+  },
+  "paused": [
+    "NH-2-hair-curls",
+    "NH-3-hair-sidepart"
+  ]
+}
