@@ -24,7 +24,7 @@
       "basis": "measured usage of earlier sunburst calls with two input images (D-228, D-235, B1: 3,072 image-input tokens = 1,536 per image, 1,372 image-output tokens at high quality): two images ≤ 3,072 tokens = $0.025, the prompt about 500 text tokens = $0.0025, the output 1,372 tokens = $0.041 → about $0.07; at most about $0.08 with 800 text tokens and the largest measured output (1,756 tokens)",
       "note": "an estimate, not a guaranteed maximum; a 1024x1024 image may count fewer tokens than the measured 1024x1536; the billed amount is read on the OpenAI usage page"
     },
-    "actuallySent": 0
+    "actuallySent": 1
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -102,7 +102,8 @@
   },
   "afterShort": {
     "verdict": "PENDING",
-    "rule": "NH-2 and NH-3 are refused until the owner's assessment of Kort (NH-1) is recorded here on origin/main as NO_COMMON_FAULT; a common fault in placement, transparency or coverage at the ears means the template is assessed first, and this stays PENDING"
+    "rule": "NH-2 and NH-3 are refused until the owner's assessment of Kort (NH-1) is recorded here on origin/main as NO_COMMON_FAULT; a common fault in placement, transparency or coverage at the ears means the template is assessed first, and this stays PENDING",
+    "assessment": "2026-11-11: Kort (NH-1) rejected — a common fault in coverage at the ears; the hair shape is fixed first with an offline silhouette, so this stays PENDING and NH-2 and NH-3 stay paused"
   },
   "stopRules": [
     "at most one call per hairstyle: no retry, no reserve, no fallback, no other model",
@@ -117,8 +118,8 @@
       "style": "short",
       "name": "Kort",
       "order": 1,
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED",
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_PLACEMENT",
       "claim": {
         "identity": "NH-1-hair-short-claim",
         "filename": "NH-1-hair-short.claim.json",
@@ -126,6 +127,79 @@
       },
       "prompt": {
         "sha256": "ec36859fc1ee4565759bda4ac31e176d7185357762b06517ee79e9f312fb877a"
+      },
+      "neverReuse": true,
+      "closedBy": "owner 2026-11-11: used and rejected for further use",
+      "result": {
+        "sentAt": "2026-11-11T07:02:07.933Z",
+        "httpStatus": 200,
+        "requestId": "req_29637cddbcdd4ea0be1da55e3cad91c8",
+        "usage": {
+          "imageInputTokens": 2048,
+          "textInputTokens": 530,
+          "imageOutputTokens": 1756
+        },
+        "priceAtVerifiedRates": 0.072,
+        "image": {
+          "sha256": "f2759c22518878d74cadc68fa492d7c544207d0b9db38333094e5297b63c886a",
+          "size": "1024x1024",
+          "tracked": false,
+          "location": "<Documents>/DenSejeApp-artefacts/hair-d371-calls/NH-1-hair-short/ (raw image, receipt, request, response and measurements kept private)"
+        },
+        "gates": {
+          "pass": false,
+          "failed": [
+            "M1",
+            "M2",
+            "M3",
+            "M4",
+            "M6",
+            "M8"
+          ],
+          "passed": [
+            "M5",
+            "M7",
+            "M9"
+          ],
+          "M1": {
+            "eyesPx": 892
+          },
+          "M2": {
+            "earInnerPx": {
+              "left": 748,
+              "right": 1141
+            }
+          },
+          "M3": {
+            "rimShare": {
+              "left": 0.466,
+              "right": 0.367
+            }
+          },
+          "M4": {
+            "flapShare": {
+              "left": 0.934,
+              "right": 0.215
+            }
+          },
+          "M6": {
+            "browCovered": {
+              "left": 0.925,
+              "right": 0.101
+            }
+          },
+          "M8": {
+            "edgePx": 28,
+            "lowerFaceClear": 0.994
+          }
+        },
+        "assessment": "REJECTED_FOR_FURTHER_USE",
+        "faults": [
+          "the right flap is not covered (21 %): skin and the face contour show in front of the ear",
+          "hair hangs over the front and inside of both ears",
+          "the fringe covers the left brow (92 %) and reaches the left eyelid"
+        ],
+        "neverPromoted": true
       }
     },
     {
