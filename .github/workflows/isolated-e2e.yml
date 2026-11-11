@@ -17,23 +17,24 @@ name: Isolated E2E
 #   seed guard   schema and seed run only against the database carrying this run's token and id.
 # Providers: no OpenAI/Azure/Resend key exists here. Edge Functions take their "not configured" paths;
 # the bundle server answers /api/tts like the Worker without an Azure key (503 azure_not_configured).
+#
+# THIS COPY — test branch test/f07-strategy-a-prodlike only, never merged (D-362 / F-07, strategy A):
+# one targeted run of the release candidate under production's server settings.
+#   sources      get-next-question = candidate 32f0cb3d (manifest 04039767…), process-event = production
+#                version 44 — checked by tests/isolated/verify-strategy-a.mjs before anything is served;
+#   secrets      LEVEL_ENGINE=v1 and QUESTION_MIX_ENGINE=shadow as in production; no LAERLIGVERSE_* flag;
+#   levels       synthetic rows put on the difficulty scale like production's (seed/level-fill-prodlike.mjs);
+#   tests        the F-07 chain + the isolated smoke behind the tripwire (run-isolated-tripwire.mjs), then
+#                tests/example.spec.ts through run-suite.mjs — nothing else;
+#   triggers     workflow_dispatch only, exactly one run: no push or pull_request event starts this copy.
 on:
-  # Every pull request to main gets one isolated job, `isolated-e2e (run 1)` (D-241 transition step A:
-  # observation next to the old suite; no paths filter, so the check exists on every PR — a required
-  # check that a PR never receives would make it unmergeable).
-  pull_request:
-    branches: [ main ]
-  push:
-    # main (D-110 phase D1): every push to main gets exactly one isolated run of what landed, next to
-    # the old production-facing push suite in playwright.yml, which stays unchanged for now.
-    branches: [ main, "d110/**" ]
   workflow_dispatch:
     inputs:
       parallel:
-        description: "Independent isolated runs at the same time"
+        description: "Independent isolated runs at the same time (this branch: exactly one)"
         type: choice
-        options: [ "1", "3", "6", "9" ]
-        default: "3"
+        options: [ "1" ]
+        default: "1"
 
 permissions:
   contents: read
@@ -246,6 +247,14 @@ jobs:
         if: needs.plan.outputs.scope != 'docs-md'
         run: node tests/isolated/seed/seed.mjs --db-url "$ISOLATED_DB_URL"
 
+      - name: Seed — synthetic rows on the difficulty scale, like production's (LEVEL_ENGINE=v1)
+        if: needs.plan.outputs.scope != 'docs-md'
+        run: node tests/isolated/seed/level-fill-prodlike.mjs --db-url "$ISOLATED_DB_URL"
+
+      - name: Sources — get-next-question = candidate 32f0cb3d, process-event = production version 44
+        if: needs.plan.outputs.scope != 'docs-md'
+        run: node tests/isolated/verify-strategy-a.mjs
+
       - name: Edge Functions — serve this commit's functions locally, warm every module
         if: needs.plan.outputs.scope != 'docs-md'
         run: |
@@ -253,11 +262,13 @@ jobs:
           # The edge-runtime container can die while booting (SIGBUS, "Bus error (core dumped)", exit 135:
           # 2 of 9 jobs in run 40650983690). Like the stack start, ONLY the server start is retried, at
           # most 3 times and logged; no test is ever retried, and a runtime that never serves fails here.
-          # D-329: objective targeting is ON in the isolated stack only (the secret is unset — off — everywhere
-          # else). No existing client sends learning_objective, so the frontend suite still runs today's path.
-          echo 'LAERLIGVERSE_OBJECTIVE_TARGETING=on' > "$RUNNER_TEMP/functions.env"
-          # D-338: the server-directed sequence, likewise ON only in the isolated stack.
-          echo 'LAERLIGVERSE_SEQUENCE=on' >> "$RUNNER_TEMP/functions.env"
+          # test/f07-strategy-a-prodlike: production's Edge secrets for these functions (names and values
+          # verified read-only by digest 2026-11-11): LEVEL_ENGINE=v1, QUESTION_MIX_ENGINE=shadow. No
+          # LAERLIGVERSE_* flag (absent in production; candidate 32f0cb3d does not read them anyway).
+          printf '%s\n' 'LEVEL_ENGINE=v1' 'QUESTION_MIX_ENGINE=shadow' > "$RUNNER_TEMP/functions.env"
+          if grep -q 'LAERLIGVERSE' "$RUNNER_TEMP/functions.env"; then echo "a LAERLIGVERSE flag is set" >&2; exit 1; fi
+          [ "$(cut -d= -f1 "$RUNNER_TEMP/functions.env" | sort | tr '\n' ' ')" = "LEVEL_ENGINE QUESTION_MIX_ENGINE " ] || { echo "unexpected functions.env names" >&2; exit 1; }
+          echo "functions.env: $(cat "$RUNNER_TEMP/functions.env" | tr '\n' ' ')"
           ready=no
           for attempt in 1 2 3; do
             nohup supabase functions serve --env-file "$RUNNER_TEMP/functions.env" >> "$RUNNER_TEMP/functions.log" 2>&1 &
@@ -349,6 +360,7 @@ jobs:
 
       - name: Network lock — test group and containers reach loopback/private only (verified)
         if: needs.plan.outputs.scope != 'docs-md'
+        id: lock
         run: |
           set -euo pipefail
           sudo groupadd "$ISOLATED_GROUP"
@@ -360,16 +372,21 @@ jobs:
         if: needs.plan.outputs.scope != 'docs-md'
         run: bash tests/isolated/negative-controls.sh post-lock
 
-      - name: Isolated smoke — login against local Auth, recovery mail into the local catcher
+      # Only these two specs, every browser behind the tripwire (positive control first, 0 refusals required).
+      - name: F-07 chain and isolated smoke — behind the tripwire, LEVEL_ENGINE=v1
         if: needs.plan.outputs.scope != 'docs-md'
+        env:
+          ISOLATED_LEVEL_ENGINE: v1
         run: |
-          sg "$ISOLATED_GROUP" -c "npx playwright test -c tests/isolated/playwright.isolated.config.mjs"
+          sg "$ISOLATED_GROUP" -c "node tests/isolated/run-isolated-tripwire.mjs tests/isolated/f07-stimulus-chain.isolated.spec.mjs tests/isolated/isolated-smoke.isolated.spec.mjs"
 
-      - name: Existing Playwright suite against the isolated stack
-        if: needs.plan.outputs.scope != 'docs-md'
+      # Only the regular quiz flow (login → question → answer → feedback → next) of the existing suite; runs
+      # even when the step above failed, but never without the verified network lock.
+      - name: Existing Playwright suite against the isolated stack — tests/example.spec.ts only
+        if: ${{ !cancelled() && needs.plan.outputs.scope != 'docs-md' && steps.lock.outcome == 'success' }}
         id: suite
         run: |
-          sg "$ISOLATED_GROUP" -c "node tests/isolated/run-suite.mjs"
+          sg "$ISOLATED_GROUP" -c "node tests/isolated/run-suite.mjs tests/example.spec.ts"
 
       - name: Diagnostics (on failure)
         if: failure() && needs.plan.outputs.scope != 'docs-md'
