@@ -22,7 +22,7 @@
       "basis": "NH-1's measured usage with two 1024×1024 images: 2,048 image tokens and 530 text tokens in, 1,756 image tokens out = about $0.072",
       "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
     },
-    "actuallySent": 0
+    "actuallySent": 1
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -100,8 +100,8 @@
     "callId": "NH-1B-hair-short-silhouette",
     "style": "short",
     "name": "Kort (fixed composition)",
-    "mandateState": "UNSPENT",
-    "outcome": "NOT YET ATTEMPTED",
+    "mandateState": "SPENT",
+    "outcome": "RECEIVED_FOR_PLACEMENT",
     "claim": {
       "identity": "NH-1B-hair-short-silhouette-claim",
       "filename": "NH-1B-hair-short-silhouette.claim.json",
@@ -109,6 +109,63 @@
     },
     "prompt": {
       "sha256": "b898a3344424a7347c4a8692b68bfa4acdce5a502d6e573648c4aa96a45620f9"
+    },
+    "neverReuse": true,
+    "closedBy": "owner 2026-11-11: used and rejected",
+    "result": {
+      "sentAt": "2026-11-11T14:48:22.667Z",
+      "originMainSha": "b92be5ef70b67eb04064700771217ae90c17d9e2",
+      "httpStatus": 200,
+      "requestId": "req_5578b4f8b7ec428682cfa9045b8cf574",
+      "usage": {
+        "imageInputTokens": 2048,
+        "textInputTokens": 603,
+        "imageOutputTokens": 1756
+      },
+      "priceAtVerifiedRates": 0.072,
+      "image": {
+        "sha256": "107c6dd1e66444fac226474f9f44c9cdcfbc6ba3c950b98f988758c87ea06411",
+        "size": "1024x1024",
+        "tracked": false,
+        "location": "<Documents>/DenSejeApp-artefacts/hair-d371-calls/NH-1B-hair-short-silhouette/ (raw image, receipt, request, response, measurements and review pictures kept private)"
+      },
+      "gates": {
+        "pass": false,
+        "failed": [
+          "M10",
+          "M8",
+          "M11"
+        ],
+        "passed": [
+          "M1",
+          "M2",
+          "M3",
+          "M4",
+          "M5",
+          "M6",
+          "M7",
+          "M9"
+        ],
+        "M10": {
+          "outsideShare": 0.352,
+          "coreMissingShare": 0.021,
+          "iou": 0.569
+        },
+        "M11": {
+          "flatShare": 0.449
+        },
+        "M8": {
+          "edgePx": 1,
+          "lowerFaceClear": 0.998
+        }
+      },
+      "assessment": "REJECTED",
+      "faults": [
+        "the drawing departs from the Kort silhouette: 35 % of it lies outside the shape (IoU 0.57) — the model drew a large spiky hairstyle like Image 1, not the shape in Image 2",
+        "clipped to the silhouette, the fringe ends in a straight horizontal cut across the forehead above the brows (the cut-off forehead)",
+        "at the right ear a flat grey wedge of the temple strip shows between the hair and the ear, with a broken line along it (M11: 45 % of the strip uncovered)"
+      ],
+      "neverPromoted": true
     }
   },
   "adapterImplementations": {
