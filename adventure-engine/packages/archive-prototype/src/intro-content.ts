@@ -18,6 +18,10 @@ export const INTRO_CARDS: readonly IntroCard[] = [
     title: "Sådan spørger man en kilde",
     text: "En kilde er et spor fra fortiden: et brev, en avis, en dagbog. Før du bruger en kilde, stiller du fire spørgsmål. Hvem har lavet den? Hvornår? Til hvem? Og hvorfor? Svarene viser, hvad kilden kan fortælle om, og hvad den måske ikke fortæller. En kilde fra selve dagen kan noget andet end én, der er skrevet mange år senere. Den bedste kilde afhænger af, hvad du vil undersøge.",
   },
+  {
+    title: "Kontekst: hvad kan kilden bruges til?",
+    text: "Kontekst er situationen omkring kilden: hvad skete der, da den blev lavet? En dagbog fra 9. april 1940 kan vise, hvordan én person oplevede dagen. Den kan ikke vise, hvad alle danskere følte, eller hvad regeringen ville. Spørg derfor altid: Hvad kan kilden bruges som belæg for — og hvad kan den ikke?",
+  },
 ];
 
 export const INTRO_CHECK = {

@@ -43,6 +43,17 @@
         <p id="lv-live" class="lv-live" role="status" aria-live="polite"></p>
         <button id="lv-logout" type="button" hidden>Log ud</button>
       </aside>
+      <section id="lv-dev-panel" class="lv-card lv-dev" aria-labelledby="lv-dev-title" hidden>
+        <h2 id="lv-dev-title">Udviklervisning (kun lokalt, ikke elevens visning)</h2>
+        <dl id="lv-dev-body"></dl>
+        <button id="lv-dev-clock" type="button">Spol testadapterens ur 20 timer frem (simulation)</button>
+        <p id="lv-dev-clock-state" class="lv-note">Simuleret tid: +0 timer. Simuleret tid er aldrig dokumentation for fastholdelse.</p>
+      </section>
+      <section id="lv-evidence-panel" class="lv-card lv-evidence" aria-labelledby="lv-evidence-title" hidden>
+        <h2 id="lv-evidence-title">Hvad kan dette dokumentere?</h2>
+        <p class="lv-note" id="lv-evidence-source">Kilde: testadapteren i denne fane, ikke Lærligs server. Intet her er registreret, og et rigtigt svar er ikke dokumenteret læring.</p>
+        <div id="lv-evidence-body" aria-live="polite"></div>
+      </section>
     </main>
     <noscript>Lærligverse kræver JavaScript.</noscript>
     <script type="module" src="./host-app.js"></script>

@@ -99,3 +99,10 @@ test("index.ts: the served objective is echoed only when targeting (so a client 
   const echoes = INDEX_CODE.match(/\.\.\.\(targeting\.mode === "on" \? \{ learning_objective: targeting\.objective \} : \{\}\),/g) ?? [];
   assert.equal(echoes.length, 3, "due, repeat and new-question responses");
 });
+
+test("index.ts (D-338): in targeting mode the targeted objective is added to the subject-switch release domains, so its open round is resumed, not released", () => {
+  const narrow = INDEX_CODE.indexOf("scope.subjectDomains = [targeting.objective];");
+  const keep = INDEX_CODE.indexOf("if (!scope.releaseDomains.includes(targeting.objective)) scope.releaseDomains = [...scope.releaseDomains, targeting.objective];");
+  const release = INDEX_CODE.search(/"release_open_question_outside",\s*\{ p_domains: scope\.releaseDomains \}/);
+  assert.ok(narrow > 0 && keep > narrow && release > keep, "narrow → keep the objective → release");
+});

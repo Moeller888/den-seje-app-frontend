@@ -6,7 +6,7 @@
 // fill in the configuration and the Content-Security-Policy. In Lærlig it would use the existing
 // supabase-js session (supabaseSessionProvider) instead of the local password sign-in shown here.
 import { assertOrigin, createLaerligverseHost, passwordSessionProvider } from "./host-core.js";
-import { BridgeHost } from "./bridge/index.js";
+import { BridgeHost, assessObjectives } from "./bridge/index.js";
 
 const $ = (id) => /** @type {HTMLElement} */ (document.getElementById(id));
 const body = document.body;
@@ -50,6 +50,20 @@ function readConfig() {
       assertOrigin(new URL(c.supabaseUrl).origin);
       if (typeof c.anonKey !== "string" || c.anonKey.length === 0) return null;
     }
+    // D-330: optional, non-production only. A malformed value refuses the page rather than being ignored.
+    if (c.objectiveMap !== undefined && c.objectiveMap !== null) {
+      if (typeof c.objectiveMap !== "object" || Array.isArray(c.objectiveMap)) return null;
+      for (const [k, v] of Object.entries(c.objectiveMap)) {
+        if (typeof k !== "string" || k.length === 0 || typeof v !== "string" || !/^[a-z][a-z0-9_]{0,63}$/.test(v)) return null;
+      }
+    }
+    if (c.h5 !== undefined && typeof c.h5 !== "boolean") return null;
+    // D-338: a server-directed sequence needs a step → activity map (string → string), and an objective map.
+    if (c.sequence !== undefined && typeof c.sequence !== "boolean") return null;
+    if (c.sequence === true && c.backend === "local-supabase") {
+      if (!c.objectiveMap || !c.stepContexts || typeof c.stepContexts !== "object" || Array.isArray(c.stepContexts)) return null;
+      for (const [k, v] of Object.entries(c.stepContexts)) if (typeof k !== "string" || typeof v !== "string" || v.length === 0) return null;
+    }
   } catch {
     return null;
   }
@@ -74,13 +88,27 @@ async function startDidacticDemo(c) {
   $("lv-mode").textContent = "Didaktisk demo med testadapter — ikke Lærligs server, intet registreres";
   $("lv-session").textContent = "ingen (testadapter)";
   body.dataset.session = "test-adapter";
-  const { FakeTaskService, ARCHIVE_ITEMS } = await import("./dev/test-adapter.js");
+  const { FakeTaskService, ARCHIVE_ITEMS, CONTEXT_OF_STEP, OBJECTIVE, STEP_OF_CONTEXT } = await import("./dev/test-adapter.js");
+  // D-338: with a sequence, the test adapter runs the SERVER's own step policy (bridge/learning-sequence.js is
+  // generated from supabase/functions/_shared/learning-sequence.ts). The world only asks for "next".
+  const policy = c.sequence === true ? await import("./bridge/learning-sequence.js") : null;
+  const service = new FakeTaskService(ARCHIVE_ITEMS, policy ? { sequence: { nextStep: policy.nextStep, stepOfContext: STEP_OF_CONTEXT, contextOfStep: CONTEXT_OF_STEP } } : {});
+  // The revisit needs time to pass: only the TEST ADAPTER's clock moves (a simulation, never retention evidence).
+  let clockOffset = 0;
+  service.clock = () => Date.now() + clockOffset;
+  const refreshDev = () => renderDevPanel({ objective: OBJECTIVE, policy, service, clockOffset });
+  $("lv-dev-clock").addEventListener("click", () => {
+    clockOffset += 20 * 3_600_000;
+    $("lv-dev-clock-state").textContent = `Simuleret tid: +${clockOffset / 3_600_000} timer`;
+    refreshDev();
+  });
+  $("lv-dev-panel").hidden = false;
   const frame = /** @type {HTMLIFrameElement} */ ($("lv-game"));
   const host = new BridgeHost({
     gameOrigin: assertOrigin(c.gameOrigin),
     gameWindow: frame.contentWindow,
     post: (m) => frame.contentWindow?.postMessage(m, c.gameOrigin),
-    service: new FakeTaskService(ARCHIVE_ITEMS),
+    service,
     randomId: () => crypto.randomUUID(),
     store: sessionStorage,
     onReject: (reason) => (body.dataset.lastReject = reason),
@@ -88,12 +116,139 @@ async function startDidacticDemo(c) {
   window.addEventListener("message", (e) => {
     void host.onMessage({ origin: e.origin, source: e.source, data: e.data }).then(() => {
       if (host.sessionNonce !== null) linked();
+      renderEvidence(assessObjectives(service.observations()));
+      refreshDev();
     });
   });
+  refreshDev();
+  $("lv-evidence-panel").hidden = false;
+  renderEvidence([]);
   $("lv-game-region").hidden = false;
   frame.src = c.gameUrl;
   body.dataset.state = "running";
   say("Spillet indlæses.");
+}
+
+const STEP_LABEL = {
+  guided_practice: "3 · Støttet øvelse",
+  revision: "5 · Revision",
+  independent_application: "6 · Selvstændig anvendelse",
+  transfer: "7 · Overførsel",
+  revisit: "8 · Genbesøg",
+};
+
+/**
+ * D-338 DEVELOPER VIEW (local demo only, separate from the pupil's view): what the "server" — here the test
+ * adapter running the server's own policy — decided and observed. No token, no key, nothing secret.
+ */
+function renderDevPanel({ objective, policy, service, clockOffset = 0 }) {
+  // The server's NEXT decision now (a side-effect-free preview), not the step of the task already served.
+  const d = service.previewSequence(objective.id);
+  const obs = service.observations();
+  const last = obs.at(-1);
+  const rows = [
+    ["Læringsmål (prototype)", `${objective.id}`],
+    ["Politik", policy ? `${policy.POLICY_ID} (foreløbig testpolitik, LP-13)` : "ingen: spillet bestemmer rækkefølgen (F5)"],
+    ["Serverens næste trin", d === null ? "ingen sekvens" : d.state === "step" ? `${STEP_LABEL[d.step] ?? d.step} (mode ${d.mode})` : d.state === "waiting" ? `venter på genbesøg til ${d.dueAt}` : "forløbet er gennemført"],
+    ["Hvorfor", d === null ? "—" : d.state === "step" ? whyStep(d.step, obs) : d.state === "waiting" ? `genbesøget kommer tidligst ${policy?.REVISIT_AFTER_HOURS ?? 20} timer efter overførslen` : "alle trin har et registreret svar"],
+    ["Seneste opgaveinstans · runde", last ? `${last.instanceId} · ${last.roundNo}` : "—"],
+    ["Seneste serverresultat", last ? (last.wasCorrect ? "rigtigt" : "forkert") : "—"],
+    ["Registreret hjælp", last ? `${last.hintsUsed} hints (testadapteren kender hjælpen; Lærligs server gør ikke før L1 K1)` : "—"],
+    ["Evidensstatus", last ? "ikke evidens: kilden er testadapteren, K5 er ikke fastslået, og introduktionen er ikke registreret" : "—"],
+    // D-341: what is observed vs what is MISSING, the time basis, the possible next steps and the open owner decision.
+    ["Observeret", observedOf(obs)],
+    ["Mangler for at kunne tale om læring", MISSING_EVIDENCE],
+    ["Tid", clockOffset === 0 ? "rigtig tid" : `SIMULERET: testadapterens ur er +${clockOffset / 3_600_000} timer foran. Et genbesøg i simuleret tid er aldrig fastholdelse`],
+    ["Mulige næste trin", d === null ? "spillet bestemmer" : d.state === "step" ? (NEXT_OPTIONS[d.step] ?? "—") : d.state === "waiting" ? "genbesøg, når tiden er gået" : "ingen"],
+    ["Åben LP-13-beslutning", d === null ? "LP-13 (hele sekvenspolitikken)" : d.state === "step" ? (OPEN_DECISION[d.step] ?? "—") : d.state === "waiting" ? OPEN_DECISION.revisit : OPEN_DECISION.complete],
+  ];
+  const dl = $("lv-dev-body");
+  dl.replaceChildren();
+  for (const [k, v] of rows) dl.append(Object.assign(document.createElement("dt"), { textContent: k }), Object.assign(document.createElement("dd"), { textContent: v }));
+}
+
+/** D-341: the five steps' possible successors under the PROVISIONAL policy (laerligverse-test-policy-v0). */
+const NEXT_OPTIONS = {
+  guided_practice: "forkert svar → 5 · Revision; rigtigt svar → 6 · Selvstændig anvendelse",
+  revision: "6 · Selvstændig anvendelse (uanset svaret; højst én revision)",
+  independent_application: "7 · Overførsel (uanset svaret)",
+  transfer: "8 · Genbesøg, tidligst 20 timer efter overførslen",
+  revisit: "forløbet er gennemført (betyder kun: alle trin har et svar)",
+};
+
+/** D-341: the owner decision (docs/laerligverse/lp13-beslutningskatalog.md) each step is still waiting for. */
+const OPEN_DECISION = {
+  guided_practice: "LP13-1 (hvad udløser revision) og LP13-3 (må hints tælle) er ikke besluttet",
+  revision: "LP13-2 (hvor mange revisioner, og hvad sker der ved fortsat forkert) er ikke besluttet",
+  independent_application: "LP13-4 (skal et forkert svar her føre tilbage til øvelse) er ikke besluttet",
+  transfer: "LP13-5 (hvad tæller som overførsel) er ikke besluttet",
+  revisit: "LP13-6 (genbesøgsinterval; 20 timer er et forslag) er ikke besluttet",
+  complete: "LP13-7 (hvad »gennemført« må hedde over for elev og lærer) er ikke besluttet; mestring er IKKE en del af politikken",
+};
+
+const MISSING_EVIDENCE = "begrundelse for valget, tidsforbrug, hjælp på serveren (L1 K1 ikke anvendt), introduktion registreret, fastholdelse i rigtig tid, overførsel til et andet fag/emne, og en ejergodkendt politik (LP-13)";
+
+function observedOf(obs) {
+  if (obs.length === 0) return "intet endnu";
+  const right = obs.filter((o) => o.wasCorrect).length;
+  return `${obs.length} besvarelse(r), ${right} rigtige, ${obs.length - right} forkerte (testadapteren; valg og rigtigt/forkert, ikke hvordan eleven tænkte)`;
+}
+
+function whyStep(step, obs) {
+  if (step === "guided_practice") return "intet svar i støttet øvelse endnu";
+  if (step === "revision") return "det seneste svar i støttet øvelse var forkert: politikken indsætter én revision";
+  if (step === "independent_application") return obs.length > 0 && obs[0].wasCorrect ? "støttet øvelse besvaret rigtigt: ingen revision" : "revisionen er besvaret (én revision, ingen sløjfe)";
+  if (step === "transfer") return "selvstændig anvendelse er besvaret";
+  return "overførslen er besvaret, og genbesøget er forfaldent";
+}
+
+const STATE_LABEL = {
+  introduced: "Introduceret",
+  practised: "Øvet",
+  supported: "Støttet præstation",
+  independent: "Selvstændig præstation",
+  applied: "Anvendelse i ny situation",
+  revisited: "Genbesøg",
+  documentedProgression: "Dokumenteret progression",
+};
+const STATUS_LABEL = { observed: "observeret", not_observed: "ikke observeret", unknown: "ukendt" };
+
+/** D-330: the evidence chain's classification of what the TEST ADAPTER observed — never server evidence. */
+function renderEvidence(assessments) {
+  const box = $("lv-evidence-body");
+  box.replaceChildren();
+  if (assessments.length === 0) {
+    box.append(Object.assign(document.createElement("p"), { textContent: "Endnu ingen besvarede opgaver." }));
+    return;
+  }
+  for (const a of assessments) {
+    const table = document.createElement("table");
+    table.dataset.objective = a.objective;
+    const cap = document.createElement("caption");
+    cap.textContent = `Mål (prototype-id): ${a.objective}`;
+    table.append(cap);
+    const tbody = document.createElement("tbody");
+    for (const [key, label] of Object.entries(STATE_LABEL)) {
+      const v = a.states[key];
+      const tr = document.createElement("tr");
+      tr.dataset.state = key;
+      const th = Object.assign(document.createElement("th"), { scope: "row", textContent: label });
+      const td = Object.assign(document.createElement("td"), { textContent: `${STATUS_LABEL[v.status]} — ${v.why.join(" ")}` });
+      td.dataset.status = v.status;
+      tr.append(th, td);
+      tbody.append(tr);
+    }
+    const eligible = a.evidence.filter((e) => e.eligible).length;
+    const tr = document.createElement("tr");
+    tr.dataset.state = "evidence";
+    tr.append(
+      Object.assign(document.createElement("th"), { scope: "row", textContent: "Kan bruges som evidens (K4)" }),
+      Object.assign(document.createElement("td"), { textContent: `${eligible} af ${a.evidence.length} svar. ${a.evidence[0] ? "Fx: " + (a.evidence[0].reasons.join("; ") || "opfylder K4") : ""}` }),
+    );
+    tbody.append(tr);
+    table.append(tbody);
+    box.append(table);
+  }
 }
 
 function start(c) {
@@ -146,6 +301,9 @@ function start(c) {
       anonKey: c.anonKey,
       subject: c.subject ?? "historie",
       flags: reportedFlag,
+      objectiveMap: c.objectiveMap ?? null,
+      h5Submissions: c.h5 === true,
+      sequence: c.sequence === true ? { contextOfStep: c.stepContexts } : null,
       randomId: () => crypto.randomUUID(),
       store: sessionStorage,
       onEvent: (e) => {
