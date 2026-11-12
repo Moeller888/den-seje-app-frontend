@@ -1,14 +1,14 @@
 // D-373: the hair choice on the Northstar figure — three published heads on one shared head base, behind NORTHSTAR_HAIR_CHOICE (off).
 // The static tests run everywhere: the flag is off and changes nothing; with a browser's opt-in the head follows the stored hairstyle and
 // only the head; the published heads are exactly the fixture's; the migration accepts the three hairstyles and nothing else (PGlite).
-// The rebuild from NH-4's raw image needs the private files and the vendored libwebp tools kept outside the clones: it runs only where
-// those exist — skipped in CI, never faked. 0 image calls.
+// The rebuild from NH-4's raw image needs the private files and the vendored libwebp, so it is not a unit test (D-094: no unit file may
+// depend on a vendored binary): tools/avatar/build-northstar-hair-heads-d373.mjs checks every hash against the fixture itself and exits 1
+// on any difference (D-373.md records its runs). 0 image calls.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { homedir } from "node:os";
 import { createHash } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 import * as B from "../../tools/avatar/build-northstar-hair-heads-d373.mjs";
@@ -137,22 +137,3 @@ test("D-373 migration: the hairstyle joins the northstar object — the three ha
   await pg.close();
 });
 
-const PRIVATE = join(homedir(), "Documents", "DenSejeApp-artefacts", "hair-d371-calls");
-const VENDOR = join(homedir(), "Documents", "DEN SEJE APP", "DEN SEJE APP", "tools", "avatar", "vendor");
-const inputPath = (role) => { const i = FX.inputs.find((x) => x.role === role); return join(PRIVATE, i.folder, i.name); };
-const SKIP = ["raw", "clean", "ear", "swept"].every((r) => existsSync(inputPath(r))) && existsSync(join(VENDOR, "cwebp.exe")) && existsSync(join(VENDOR, "dwebp.exe"))
-  ? false : "NH-4's raw image, the clean head inputs and the vendored libwebp tools are kept outside the clones";
-
-test("D-373 rebuild: from NH-4's raw image, through D-372's bound layers, to exactly the three published heads", { skip: SKIP }, () => {
-  const r = B.rebuild({ raw: inputPath("raw"), clean: inputPath("clean"), ear: inputPath("ear"), swept: inputPath("swept"), dwebp: join(VENDOR, "dwebp.exe") });
-  assert.deepEqual(r.d372, { greyLayer: FX.d372.greyLayer, brownLayer: FX.d372.brownLayer });
-  for (const [k, o] of Object.entries(FX.temple.layers)) assert.equal(sha(r.tipPng[k]), o.pngSha256, "temple tip " + k);
-  for (const [k, o] of Object.entries(FX.heads)) {
-    assert.equal(sha(r.png[k]), o.pngSha256, k);
-    assert.equal(sha(B.toWebp(r.png[k], { cwebp: join(VENDOR, "cwebp.exe"), dwebp: join(VENDOR, "dwebp.exe") })), o.webpSha256, k + " webp");
-  }
-  assert.deepEqual(r.stats.standard, { shadowClippedPx: FX.standard.shadowClippedPx, residueBelowEarTopsRemovedPx: FX.standard.residueBelowEarTopsRemovedPx, earEdgeOverHairPx: FX.standard.earEdgeOverHairPx });
-  for (const k of Object.keys(FX.heads)) assert.equal(r.stats.heads[k].neckBelowY430DiffersFromAppPx, 0, k + ": the neck is the app's own");
-  assert.deepEqual(Object.fromEntries(Object.entries(r.stats.heads).map(([k, v]) => [k, v.earPxIdenticalToBase])), { standard: "5337/5386", "nh4-grey": "5386/5386", "nh4-brown": "5386/5386" });
-  assert.equal(r.stats.neckCutPx, FX.appHead.neckCutPx);
-});
