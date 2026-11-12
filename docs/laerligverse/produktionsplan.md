@@ -4,7 +4,7 @@
 i §3 kræver ejerens særskilte GO (CLAUDE.md regel 48, `docs/migration-workflow-policy.md`, D-110).
 `supabase db push` er forbudt.
 
-**Senest kontrolleret:** 2026-11-11, mod main `edc899bd`.
+**Senest kontrolleret:** 2026-11-12, mod main `ae729ddd` (§2.1). Resten af planen: 2026-11-11, mod main `edc899bd`.
 
 Denne plan bygger videre på `docs/operations/h5-k1-activation-runbook.md`, som ejer trin A1–A10 (H5 og K1), og
 gentager det ikke.
@@ -38,7 +38,7 @@ Intet workflow deployer Edge Functions eller anvender migrationer.
 
 | # | PR | Lag | Migration (ikke i produktion) | Flag (alle slukket som standard) | Afhænger af |
 |---|---|---|---|---|---|
-| 1 | #652 | K1-testbane i CI | — | — | — |
+| 1 | #652 | K1-testbane i CI (**merget** 2026-11-12, `949dfdab`) | — | — | — |
 | 2 | #656 | Hints i testfixturen og kontrakter | — | — | — |
 | 3 | #653 | L3/L5: `served_mode`, atomisk hintlog, `request-hint` | `20261108043500` | `LAERLIGVERSE_SERVED_MODE`, `LAERLIGVERSE_ATTEMPT_CONTEXT`, `LAERLIGVERSE_HINTS` | K1 (kun i produktion); #656 for hint-teksten i testen |
 | 4 | #665 | Lærerens og elevens kursusvisning | `20261109120000` (kun læsning) | `ENABLE_COURSE_PROGRESS_VIEW` (frontend-konstant) | K1 opdages under kørsel |
@@ -51,8 +51,23 @@ Begrundelse for rækkefølgen:
   hver hintanmodning i den isolerede stak `hint_unavailable`.
 - **#665 før #664:** #665 rører ingen Edge Function og ingen af #653's filer. Den kan merges uafhængigt og er
   derfor lagt tidligt.
-- **#664 efter #653:** #664 indeholder #653's head (`807a9e10`). Når #653 er merget, skrumper #664's diff til
-  dens egne 7 commits (22 filer). Historikken skal ikke omskrives.
+- **#664 efter #653:** #664 indeholder alle #653's egne commits. Begge har dog flettet main ind hver for sig,
+  så #664 indeholder ikke #653's seneste merge-commit. Kontrol 2026-11-12 med korrekte forældre: når #653 er
+  merget, flettes #664 rent (0 konflikter). Historikken skal ikke omskrives.
+
+### 2.1 Konflikter mellem PR'erne (kontrol 2026-11-12, main `ae729ddd`)
+
+Hver PR flettes rent mod den aktuelle `main`. Konflikterne opstår først, når en anden PR er merget:
+
+| Merget først | Derefter | Konflikt | Løsning |
+|---|---|---|---|
+| #656 | #665 | `docs/laerligverse/kursusvisning-ui-kontrakt.md` (begge tilføjer filen) | Tag #665's version. Den indeholder #656's §1–§7 ordret plus §8–§9 |
+| #665 | #653 / #664 | Listerne over gennemgåede migrationer i `question-attempts-v2-bootstrap`, `quiz-repeat-when-pool-exhausted` og `question-instances-read-scope` | Behold begge poster |
+| #689 | #665 / #664 | `tests/isolated/schema/replay-plan.mjs` (`NOT_IN_PRODUCTION`) og `question-instances-read-scope` | Behold begge poster |
+| #653 | #664 | Ingen | — |
+| #656 | #653, #664, #689 | Ingen | — |
+
+Efter hvert merge får den næste PR main flettet ind og en frisk CI-kørsel, før den kan få GO.
 
 Fælles filer, der skal genkontrolleres før hvert merge:
 
