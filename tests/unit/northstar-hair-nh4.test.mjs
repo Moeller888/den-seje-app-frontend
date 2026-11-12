@@ -75,10 +75,12 @@ test("NH-4 plan: the frozen prompt, the three private images in order, the post-
   assert.deepEqual(PLAN.paused, ["NH-2-hair-curls", "NH-3-hair-sidepart"]); assert.ok(PLAN.visualStop.some((v) => /nothing is retouched to pass/.test(v)));
 });
 
-test("NH-4 authorisation: one unspent call, its own budget; NH-1 and NH-1B spent, NH-2 and NH-3 paused; the decision carries the token and every pin", () => {
-  assert.deepEqual([AUTH.decision, AUTH.callId, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions, AUTH.budget.actuallySent], ["D-371", ID, false, 1, 0, 0, false, false, 0]);
-  assert.deepEqual([AUTH.call.callId, AUTH.call.style, AUTH.call.mandateState, AUTH.call.outcome, AUTH.call.prompt.sha256], [ID, "short-soft", "UNSPENT", "NOT YET ATTEMPTED", PLAN.prompt.sha256]);
-  for (const k of ["neverReuse", "closedBy", "result"]) assert.ok(!(k in AUTH.call), "the entry carries no " + k);
+test("NH-4 authorisation: one call, its own budget, spent; the first extraction rejected on P3, P4 and P8; NH-1 and NH-1B spent, NH-2 and NH-3 paused; the decision carries the token and every pin", () => {
+  assert.deepEqual([AUTH.decision, AUTH.callId, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions, AUTH.budget.actuallySent], ["D-371", ID, false, 1, 0, 0, false, false, 1]);
+  // NH-4 was sent once (2026-11-12); it is never an active permission again; its first extraction is rejected
+  assert.deepEqual([AUTH.call.callId, AUTH.call.style, AUTH.call.mandateState, AUTH.call.outcome, AUTH.call.prompt.sha256], [ID, "short-soft", "SPENT", "RECEIVED_FOR_PLACEMENT", PLAN.prompt.sha256]);
+  const r = AUTH.call.result; assert.deepEqual([AUTH.call.neverReuse, r.assessment, r.extractionV1.verdict, r.extractionV1.failed, r.image.tracked, r.neverPromoted], [true, "EXTRACTION_V1_REJECTED", "REJECTED", ["P3", "P4", "P8"], false, true]);
+  assert.deepEqual([r.privateCandidate, r.extractionV2.status, r.extractionV2.newImageCall, r.extractionV2.failed, r.extractionV2.P8.iouSideSwept, r.extractionV2.P10.v2.longestRun], ["extractionV2", "PRIVATE_CANDIDATE", false, ["P3", "P4", "P8"], 0.766, 1], "V2 is a private candidate from the same raw image, with its actual results");
   assert.deepEqual(AUTH.call.claim, { identity: ID + "-claim", filename: ID + ".claim.json", eventsFilename: ID + ".events.jsonl" });
   assert.equal(AUTH.frozen.plan.sha256, sha256(readFileSync(repoFile(PLAN_REL)))); assert.deepEqual(AUTH.frozen.methodFiles, PLAN.method.files);
   assert.deepEqual(AUTH.request.images, PLAN.request.images.map((i) => ({ role: i.role, name: i.name, bytes: i.bytes, sha256: i.sha256, tracked: false })));
@@ -131,6 +133,9 @@ function sandbox({ base: mod } = {}) {
   writeFileSync(sb.gitconfig, "[core]\n\tautocrlf = false\n[init]\n\tdefaultBranch = main\n"); writeFileSync(sb.mock, MOCK_SRC); writeFileSync(sb.log, ""); writeFileSync(sb.png, png(1024, 1024));
   const rd = join(sb.out, "references"); mkdirSync(rd, { recursive: true }); for (const i of PLAN.request.images) copyFileSync(join(REFS, i.name), join(rd, i.name));
   for (const rel of TRACKED) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  // the adapter's behaviour is tested on the authorisation as merged, before NH-4 was spent (2026-11-12)
+  { const p = join(sb.repo, ...AUTH_REL.split("/")), a = JSON.parse(readFileSync(p, "utf8")), e = a.call; a.budget.actuallySent = 0;
+    e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; for (const k of ["neverReuse", "closedBy", "result"]) delete e[k]; writeFileSync(p, JSON.stringify(a, null, 2) + "\n"); }
   if (mod) mod(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb; }

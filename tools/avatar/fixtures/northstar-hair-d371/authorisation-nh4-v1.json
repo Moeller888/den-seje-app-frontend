@@ -22,7 +22,7 @@
       "basis": "three 1024×1024 input images ≈ 3,072 image tokens, the prompt ≈ 600 text tokens, the output ≈ 1,756 image tokens (as NH-1 and NH-1B) = about $0.080",
       "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
     },
-    "actuallySent": 0
+    "actuallySent": 1
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -108,8 +108,8 @@
     "callId": "NH-4-hair-soft-texture",
     "style": "short-soft",
     "name": "Kort, blød tekstur (rent hoved)",
-    "mandateState": "UNSPENT",
-    "outcome": "NOT YET ATTEMPTED",
+    "mandateState": "SPENT",
+    "outcome": "RECEIVED_FOR_PLACEMENT",
     "claim": {
       "identity": "NH-4-hair-soft-texture-claim",
       "filename": "NH-4-hair-soft-texture.claim.json",
@@ -117,6 +117,142 @@
     },
     "prompt": {
       "sha256": "fe6dec6d09cc48e34fca86f99a4e0eacd950b2f75bb7db0d4019831c523c0fa8"
+    },
+    "neverReuse": true,
+    "closedBy": "owner 2026-11-12: used; the first extraction rejected on P3, P4 and P8",
+    "result": {
+      "sentAt": "2026-11-12T09:10:44.021Z",
+      "originMainSha": "0e28570fa7d3ca91c0412f2511241717056c803f",
+      "httpStatus": 200,
+      "requestId": "req_8da13a5e8aea4b42a42ddb1f23edad32",
+      "usage": {
+        "imageInputTokens": 3072,
+        "textInputTokens": 620,
+        "imageOutputTokens": 1756
+      },
+      "priceAtVerifiedRates": 0.08,
+      "image": {
+        "sha256": "02d70373e6ddd5065630e2460b4873d820911b6eb43f9bdb98e637c6e5475d35",
+        "size": "1024x1024",
+        "tracked": false,
+        "location": "<Documents>/DenSejeApp-artefacts/hair-d371-calls/NH-4-hair-soft-texture/ (raw image, receipt, request, response and the first extraction report kept private)"
+      },
+      "extractionV1": {
+        "tool": "tools/avatar/northstar-hair-nh4-post.mjs",
+        "verdict": "REJECTED",
+        "failed": [
+          "P3",
+          "P4",
+          "P8"
+        ],
+        "passed": [
+          "P1",
+          "P2",
+          "P5",
+          "P6",
+          "P7",
+          "P9"
+        ],
+        "P1": {
+          "scale": 1,
+          "dx": 0,
+          "dy": 0,
+          "faceErr": 9.51
+        },
+        "P2": {
+          "covered": 0.9974
+        },
+        "P3": {
+          "resultOnBrowsPx": 15,
+          "onBrowPx": 0,
+          "eyesPx": 0,
+          "gapPx": {
+            "left": 14,
+            "right": 11
+          }
+        },
+        "P4": {
+          "resultOnEarsPx": 125,
+          "onEarPx": 0,
+          "softIdentical": "321 of 321"
+        },
+        "P8": {
+          "iouNorthstar": 0.415,
+          "iouSideSwept": 0.778
+        },
+        "P9": {
+          "spillShare": 0.0182
+        },
+        "visualFaults": [
+          "the zone trims the fringe tips: a straight horizontal cut across the forehead",
+          "the zone trims the right temple: a straight cut on the outer side",
+          "P9 passed (1.8 %) because the trimmed pixels are few overall but concentrated along the fringe"
+        ]
+      },
+      "assessment": "EXTRACTION_V1_REJECTED",
+      "next": "a private V2 extraction from the same raw image, no new image call",
+      "neverPromoted": true,
+      "extractionV2": {
+        "status": "PRIVATE_CANDIDATE",
+        "tool": "a private copy of northstar-hair-nh4-post.mjs (not the locked method): the lifted layer follows the result's own connected grey hair out to its visible tips; hard limits only the eyes, the brows (+2 px) and the ears",
+        "sameRawImage": true,
+        "newImageCall": false,
+        "verdict": "REJECTED",
+        "failed": [
+          "P3",
+          "P4",
+          "P8"
+        ],
+        "passed": [
+          "P1",
+          "P2",
+          "P5",
+          "P6",
+          "P7",
+          "P9",
+          "P10"
+        ],
+        "P3": {
+          "resultOnBrowsPx": 15,
+          "onBrowPx": 0,
+          "eyesPx": 0,
+          "gapPx": {
+            "left": 6,
+            "right": 7
+          }
+        },
+        "P4": {
+          "resultOnEarsPx": 125,
+          "onEarPx": 0,
+          "softIdentical": "321 of 321",
+          "faceBelowEarTopPx": 36
+        },
+        "P8": {
+          "iouNorthstar": 0.426,
+          "iouSideSwept": 0.766
+        },
+        "P10": {
+          "rule": "new local check: where the layer ends although the result's grey hair continues (not under an ear), the longest connected run ≤ 6 px",
+          "v1": {
+            "cutEdgePx": 179,
+            "longestRun": 38
+          },
+          "v2": {
+            "cutEdgePx": 1,
+            "longestRun": 1
+          }
+        },
+        "visible": {
+          "browPixelsWithAnyHair": 0,
+          "gapAnyAlphaPx": {
+            "left": 5,
+            "right": 6
+          },
+          "earSoftIdentical": "321 of 321"
+        },
+        "note": "P3 and P4 count the grey hair in the RAW result: they cannot change with a new extraction; what is visible in the composite is listed under visible"
+      },
+      "privateCandidate": "extractionV2"
     }
   },
   "adapterImplementations": {
