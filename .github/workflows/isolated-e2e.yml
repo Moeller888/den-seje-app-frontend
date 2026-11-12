@@ -99,7 +99,9 @@ jobs:
   isolated-e2e:
     needs: plan
     name: isolated-e2e (run ${{ matrix.run }})
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest became ubuntu-26.04 (image 20261101.186.1), where Playwright 1.59.1 does not support chromium
+    # ("Playwright does not support chromium on ubuntu26.04-x64", 2026-11-12). Unpin together with a Playwright upgrade.
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     strategy:
       fail-fast: false
