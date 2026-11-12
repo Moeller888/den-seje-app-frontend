@@ -205,4 +205,15 @@ test("browser install: cache first without the Ubuntu mirrors, the unchanged ins
   assert.ok(!/allow-downgrades|\|\| true/.test(install), "no downgrade, no masked failure");
   assert.match(install, /::error title=INFRA-INSTALL::[^\n]*\n\s+exit 1/, "a failed fallback is labelled as infrastructure AND fails the step");
   assert.match(install, /timeout-minutes: 15/, "the step bound is unchanged");
+  // Run 43089224884: apt treats a .deb outside /var/cache/apt/archives as a fetch, and --no-download drops it.
+  const seed = install.indexOf("sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/");
+  const offline = install.indexOf("apt-get install -y --no-download");
+  assert.ok(seed !== -1 && seed < offline, "the cached .debs are in apt's archive directory before the offline install");
+  assert.equal(install.split("sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/").length - 1, 1, "copied once, for both paths");
+  assert.ok(!/tail -n/.test(install), "a failed cache install shows the whole apt output, not a tail");
+  assert.ok(install.includes('echo "::group::apt output of the cache install"; cat "$RUNNER_TEMP/apt-cache-install.log"; echo "::endgroup::"'), "a cache install shows what apt did");
+  assert.ok(install.includes('&& timeout --kill-after=30s 3m npx playwright install > "$RUNNER_TEMP/pw-cache-install.log" 2>&1'), "the cache path's browser check is bounded");
+  assert.ok(install.includes("if ! timeout --kill-after=30s 10m npx playwright install --with-deps; then"), "the fallback is bounded to 10 min");
+  assert.ok(install.includes(`'Acquire::Retries "3";' 'Acquire::http::Timeout "30";' 'Acquire::https::Timeout "30";'`), "a silent mirror fails in 30 s per try");
+  assert.match(install, /apt: cached \.deb set sha256 /, "the digest of the restored .deb set stays in the log");
 });

@@ -167,7 +167,10 @@ jobs:
         run: |
           set -euo pipefail
           # Keep what apt downloads, so a miss on main can refill the cache (same as playwright.yml).
+          # Mirror path only: a connection that delivers nothing for 30 s fails and is retried at most 3 times
+          # (apt's own default waits 120 s), instead of stalling silently until the step timeout.
           printf '%s\n' 'APT::Keep-Downloaded-Packages "true";' 'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
+            'Acquire::Retries "3";' 'Acquire::http::Timeout "30";' 'Acquire::https::Timeout "30";' \
             | sudo tee /etc/apt/apt.conf.d/99-keep-downloaded-debs > /dev/null
           mkdir -p ~/.cache/pw-apt
           seeded=$(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l)
@@ -188,15 +191,25 @@ jobs:
             # Audit trail (no integrity proof - see TRUST above): one digest of the restored .deb set, so runs on the same
             # key can be compared, and the cache entry can be matched to the main run that wrote it.
             echo "apt: cached .deb set sha256 $(cd ~/.cache/pw-apt && sha256sum -- *.deb | sha256sum | cut -c1-64)"
+            # apt counts a package as already fetched only when its .deb lies in /var/cache/apt/archives under apt's own
+            # file name (apt-pkg pkgAcqArchive). A .deb named on the command line from anywhere else is still queued as a
+            # fetch, and --no-download drops every queued fetch: "E: Unable to fetch some archives" in 2 s, before apt
+            # prints its package list (run 43089224884). So the files go into the archive directory first; the
+            # names in ~/.cache/pw-apt are the ones apt gave them when it downloaded them on main.
+            sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/
             # --no-download: never a mirror. --no-remove: apt aborts instead of removing any installed package.
             if sudo apt-get install -y --no-download --no-remove --no-install-recommends ~/.cache/pw-apt/*.deb > "$RUNNER_TEMP/apt-cache-install.log" 2>&1 \
-               && npx playwright install > "$RUNNER_TEMP/pw-cache-install.log" 2>&1 \
+               && timeout --kill-after=30s 3m npx playwright install > "$RUNNER_TEMP/pw-cache-install.log" 2>&1 \
                && node tests/support/browser-launch-check.mjs; then
               path=cache
+              # The whole apt output, so every run shows what was installed and that nothing was fetched ("Need to get 0 B").
+              echo "::group::apt output of the cache install"; cat "$RUNNER_TEMP/apt-cache-install.log"; echo "::endgroup::"
             else
               echo "::warning title=INFRA-CACHE::cache-first install did not complete; falling back to the Ubuntu mirrors"
-              tail -n 15 "$RUNNER_TEMP/apt-cache-install.log"
-              if [ -s "$RUNNER_TEMP/pw-cache-install.log" ]; then tail -n 15 "$RUNNER_TEMP/pw-cache-install.log"; fi
+              # The whole output, not a tail: a tail hid which archive apt was missing in run 43089224884.
+              for log in "$RUNNER_TEMP/apt-cache-install.log" "$RUNNER_TEMP/pw-cache-install.log"; do
+                if [ -f "$log" ]; then echo "--- ${log##*/}"; cat "$log"; fi
+              done
               # A cache install that stopped inside dpkg leaves half-configured packages, and apt then refuses all work.
               # Finish it here, or fail closed: never hand a broken dpkg state to the fallback.
               if ! sudo dpkg --configure -a; then
@@ -206,9 +219,10 @@ jobs:
             fi
           fi
           if [ "$path" = mirrors ]; then
-            if [ "$seeded" -gt 0 ]; then sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/; fi
-            if ! npx playwright install --with-deps; then
-              echo "::error title=INFRA-INSTALL::npx playwright install --with-deps failed (Ubuntu mirror, runner DNS or network) - no test ran"
+            # The cached .debs are already in /var/cache/apt/archives (above), so apt fetches only what differs.
+            # Bounded: a cold install takes a few minutes; 10 min leaves the 15-min step room for the launch check.
+            if ! timeout --kill-after=30s 10m npx playwright install --with-deps; then
+              echo "::error title=INFRA-INSTALL::npx playwright install --with-deps failed or ran past 10 min (Ubuntu mirror, runner DNS or network) - no test ran"
               exit 1
             fi
             if ! node tests/support/browser-launch-check.mjs; then
