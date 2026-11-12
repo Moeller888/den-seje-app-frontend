@@ -1,0 +1,56 @@
+{
+  "decision": "D-372",
+  "relatesTo": "D-371",
+  "callId": "NH-4-hair-soft-texture",
+  "kind": "ONE_TIME_EXCEPTION",
+  "status": "PROPOSED — NOT APPROVED, NOT PROMOTED, NOT ACTIVATED",
+  "scope": "only NH-4's temple variant in its original grey and in Northstar's brown, exactly the bound files below; no other image, no other extraction, no rule change",
+  "newImageCall": false,
+  "tool": "tools/avatar/northstar-hair-nh4-exception-d372.mjs",
+  "historicalThresholds": "GATES of tools/avatar/northstar-hair-nh4-post.mjs, unchanged and locked by plan-nh4-v1.json",
+  "inputs": [
+    { "role": "raw", "name": "nh.image-1.png", "folder": "NH-4-hair-soft-texture", "tracked": false, "sha256": "02d70373e6ddd5065630e2460b4873d820911b6eb43f9bdb98e637c6e5475d35" },
+    { "role": "base", "name": "clean-head-layer.png", "folder": "references", "tracked": false, "sha256": "90df02aca8241c5707780952d103898dc9e94a4ff0f18c04ee38d3e13df14052" },
+    { "role": "ear", "name": "clean-head-ear-on-top-mask.png", "folder": "references", "tracked": false, "sha256": "955806ec039dafc7f1f7f16696b28c57722eb579e691e7498cea472fa9508840" },
+    { "role": "swept", "name": "kort-sidesweep-rev1-hair-layer.png", "folder": "references", "tracked": false, "sha256": "007d3838c64cfad639a1498fe8b1a0f643e07a6b41beaa851d077b2b68c6ffe4" }
+  ],
+  "temple": {
+    "rule": "ONLY the left temple tip's own hair pixels (figure x 380–400, rows 290–323) are compressed into rows 290–310; vacated pixels take the clean head's pixels; nothing outside the box changes",
+    "x": [380, 400],
+    "rows": [290, 323],
+    "into": [290, 310],
+    "rawPixelsChanged": 1095
+  },
+  "outputs": {
+    "adjusted": { "name": "nh4-d372-raw-temple-adjusted-1024.png", "bound": true, "tracked": false, "sha256": "9ccb990af382fd75caee0bfe68b3f2cc3c15ea504185dd7c416b130c81cadca0" },
+    "greyLayer": { "name": "nh4-d372-grey-hair-layer.png", "bound": true, "tracked": false, "sha256": "1dc8036b44aeb50324fd001dc56bac308b68694395d038907b49f2120b15d5cb" },
+    "brownLayer": { "name": "nh4-d372-brown-hair-layer.png", "bound": true, "tracked": false, "sha256": "864af40aa6deba6c4df2ec1bccaf90b19a13aa22e5d9ff501aaf24dc229f5c12" },
+    "greyOnCleanHead": { "name": "nh4-d372-grey-on-clean-head-full.png", "bound": false, "tracked": false, "sha256": "6d138e5a57e041adf771e0764f21ab8bba11b7d538e30681465df8498aeaa9b4" },
+    "brownOnCleanHead": { "name": "nh4-d372-brown-on-clean-head-full.png", "bound": false, "tracked": false, "sha256": "c36a66e61865092e411f7b8e881fdc0ba15761e42e75e06cdda155d22e55bc09" }
+  },
+  "historical": {
+    "note": "the results under NH-4's unchanged thresholds; nothing here is re-scored",
+    "extractionV1": { "failed": ["P3", "P4", "P8"], "P3": { "resultOnBrowsPx": 15 }, "P4": { "resultOnEarsPx": 125 }, "P8": { "iouSideSwept": 0.778, "iouNorthstar": 0.415 }, "P10": { "cutEdgePx": 179, "longestRun": 38 } },
+    "extractionV2": { "image": "untouched raw", "failed": ["P3", "P4", "P8"], "P3": { "resultOnBrowsPx": 15 }, "P4": { "resultOnEarsPx": 125, "faceBelowEarTopPx": 36 }, "P8": { "iouSideSwept": 0.766, "iouNorthstar": 0.426 }, "P10": { "longestRun": 1 } },
+    "candidate": { "image": "adjusted copy", "failed": ["P3", "P4", "P8"], "P3": { "resultOnBrowsPx": 15 }, "P4": { "resultOnEarsPx": 76, "faceBelowEarTopPx": 0 }, "P8": { "iouSideSwept": 0.767, "iouNorthstar": 0.425, "max": 0.75 }, "P10": { "cutEdgePx": 1, "longestRun": 1 } },
+    "candidateP10AgainstUntouchedRaw": { "cutEdgePx": 24, "longestRun": 21, "why": "the intended temple change: the tip is shortened on purpose, so the layer ends where the untouched raw image's tip goes on" }
+  },
+  "exceptedChecks": {
+    "P3": "fails on the untouched raw image (15 px > 10); the finished candidate has no hair on the brows and 5–6 px of gap at any alpha",
+    "P4": "fails on the untouched raw image (125 px > 10) and on the adjusted copy (76 px); the finished candidate has no hair on the ears, ear soft edges identical to the clean head (321 of 321) and 0 px of hair on the face below the ear tops",
+    "P8": "0.767 against the side-swept trial, limit 0.75; 0.425 against Northstar; at app size the two read clearly apart (a closed smooth helmet with a side part against a short, soft, open-tipped cut)"
+  },
+  "finished": {
+    "browPixelsWithAnyHair": 0,
+    "gapAboveBrowsAnyAlphaPx": { "left": 5, "right": 6 },
+    "earSoftEdges": 321,
+    "earSoftIdenticalGrey": 321,
+    "earSoftIdenticalBrown": 321,
+    "faceBelowEarTopPx": { "left": 0, "right": 0 },
+    "alphaDiffGreyVsBrownPx": 0,
+    "greyLayerNonNeutralPx": 0,
+    "layerAlphaDiffersFromV2OutsideTemplePx": 0
+  },
+  "neverPromoted": true,
+  "activation": "a separate owner decision; this exception publishes, promotes and activates nothing"
+}
