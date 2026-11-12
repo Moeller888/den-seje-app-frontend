@@ -59,6 +59,9 @@ export const CONTENT_ONLY = Object.freeze({
   "20261020150001_english_level_batch3_1.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and LISTEN and DROP in questions",
   "20261020150002_english_level_batch3_2.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role)",
   "20261020150003_english_level_batch3_3.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and DROP and POLICY in questions",
+  "20261020160001_english_level_batch4_1.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and LISTEN and DROP in questions",
+  "20261020160002_english_level_batch4_2.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and LISTEN, DROP and IMPORT in questions",
+  "20261020160003_english_level_batch4_3.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and IMPORT in a question",
 });
 
 export const DATA_PRECONDITION = Object.freeze({});
@@ -141,12 +144,6 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "F-04/F-05 pilot content (D-362), not applied in production and not applicable before 20261108090000: data only, inserts INACTIVE order and categorize pilot questions",
   "20261109151000_set_student_domains_pilot_lock.sql":
     "D-362 pilot lock, not applied in production and to be applied before the pilot_d362 rows are activated: it re-creates set_student_domains so a teacher cannot add a pilot_* domain and a save keeps the pupil's existing pilot_* domains",
-  "20261020160001_english_level_batch4_1.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
-  "20261020160002_english_level_batch4_2.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
-  "20261020160003_english_level_batch4_3.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020170001_english_level_batch5_1.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020170002_english_level_batch5_2.sql":
@@ -217,6 +214,9 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261020150001_english_level_batch3_1.sql": "20261109142935",
   "20261020150002_english_level_batch3_2.sql": "20261109150712",
   "20261020150003_english_level_batch3_3.sql": "20261109151454",
+  "20261020160001_english_level_batch4_1.sql": "20261111170401",
+  "20261020160002_english_level_batch4_2.sql": "20261111173154",
+  "20261020160003_english_level_batch4_3.sql": "20261111182211",
   "20261022120000_fix_mc_correct_answer_not_in_options.sql": "20261029141201",
   "20261025120000_student_rpc_caller_scope.sql": "20261025172041",
   "20261026110000_leaderboard_execute_containment.sql": "20261026113548",
@@ -282,8 +282,45 @@ export function preconditionCheckSql(file) {
   return rows.join("\nUNION ALL\n") + ";";
 }
 
-export function planReplay(fileNames, readSql) {
+// TEST PROFILES (owner GO 2026-11-07, F10-B2: "K1 i isolerede integrationstests"). A profile replays,
+// in the isolated CI database ONLY, a named set of files that are NOT_IN_PRODUCTION — so a test lane can
+// exercise code that needs them (K1: process-event's H5 call with p_mode/p_hints_used) while the default
+// plan keeps mirroring production exactly. Rules, enforced in planReplay and by
+// tests/unit/replay-test-profiles.test.mjs:
+//   - the default (no profile, or "production") is byte-for-byte today's plan; production's guards and
+//     every existing replay test run against it unchanged;
+//   - a profile may only name files that are in NOT_IN_PRODUCTION (it can never re-order, drop or
+//     re-classify anything production has), and every file it names must exist;
+//   - an unknown profile name fails loud;
+//   - a profile never touches production: replay.mjs runs only after assertSeedTarget has proven the
+//     target is this run's isolated database, and production migrations go only through
+//     apply_migration with a separate owner authorisation (D-110).
+export const DEFAULT_PROFILE = "production";
+export const TEST_PROFILES = Object.freeze({
+  k1: Object.freeze({
+    "20261103110000_l1_k1_attempt_context.sql":
+      "TEST PROFILE k1: L1 K1 is NOT applied in production; replayed only in the isolated K1 lane so H5 submissions (p_mode/p_hints_used → 9/10-parameter _v2) can be tested (D-341)",
+  }),
+});
+
+export function profileFiles(profile = DEFAULT_PROFILE) {
+  if (profile === undefined || profile === null || profile === DEFAULT_PROFILE) return Object.freeze({});
+  if (!Object.hasOwn(TEST_PROFILES, profile)) {
+    throw new Error(`unknown replay profile: ${JSON.stringify(profile)} (known: ${[DEFAULT_PROFILE, ...Object.keys(TEST_PROFILES)].join(", ")})`);
+  }
+  const files = TEST_PROFILES[profile];
+  for (const f of Object.keys(files)) {
+    if (!NOT_IN_PRODUCTION[f]) throw new Error(`replay profile ${profile}: ${f} is not in NOT_IN_PRODUCTION — a profile may only add test-only replays`);
+  }
+  return files;
+}
+
+export function planReplay(fileNames, readSql, { profile = DEFAULT_PROFILE } = {}) {
+  const extra = profileFiles(profile);
   const files = [...fileNames].sort();
+  for (const f of Object.keys(extra)) {
+    if (!files.includes(f)) throw new Error(`replay profile ${profile}: ${f} does not exist`);
+  }
   const timestamped = files.filter((f) => TIMESTAMPED.test(f));
   const seenNames = new Map(); // name without timestamp → first file
   const plan = [];
@@ -299,6 +336,7 @@ export function planReplay(fileNames, readSql) {
     else if (CONTENT_ONLY[f]) d = { action: "skip", reason: CONTENT_ONLY[f] };
     else if (DATA_PRECONDITION[f]) d = { action: "skip", reason: DATA_PRECONDITION[f] };
     else if (SCHEMA_PART[f]) d = { action: "apply", part: true, reason: SCHEMA_PART[f].reason, requires: PRECONDITIONS[f] ?? [] };
+    else if (NOT_IN_PRODUCTION[f] && extra[f]) d = { action: "apply", reason: extra[f], profile, requires: PRECONDITIONS[f] ?? [] };
     else if (NOT_IN_PRODUCTION[f]) d = { action: "skip", reason: NOT_IN_PRODUCTION[f] };
     else if (REPO_AHEAD_OF_PRODUCTION[f]) d = { action: "apply", reason: REPO_AHEAD_OF_PRODUCTION[f], requires: PRECONDITIONS[f] ?? [] };
     else if (CATALOG_DATA[f]) d = { action: "apply", reason: `app catalog data: ${CATALOG_DATA[f]}`, requires: [] };

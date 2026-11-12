@@ -71,9 +71,11 @@ test("NH-1B plan: the frozen prompt, the two private images, the composition, th
   assert.deepEqual(PLAN.paused, ["NH-2-hair-curls", "NH-3-hair-sidepart"]); assert.ok(PLAN.visualStop.some((v) => /hook.*double line.*seam.*flat patch/.test(v)));
 });
 
-test("NH-1B authorisation: one unspent call, its own budget; D-371's NH-1 spent, NH-2 and NH-3 paused; the decision carries the token and every pin", () => {
-  assert.deepEqual([AUTH.decision, AUTH.callId, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions, AUTH.budget.actuallySent], ["D-371", ID, false, 1, 0, 0, false, false, 0]);
-  assert.deepEqual([AUTH.call.callId, AUTH.call.style, AUTH.call.mandateState, AUTH.call.outcome, AUTH.call.prompt.sha256], [ID, "short", "UNSPENT", "NOT YET ATTEMPTED", PLAN.prompt.sha256]);
+test("NH-1B authorisation: one call, its own budget, spent and rejected; D-371's NH-1 spent, NH-2 and NH-3 paused; the decision carries the token and every pin", () => {
+  assert.deepEqual([AUTH.decision, AUTH.callId, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions, AUTH.budget.actuallySent], ["D-371", ID, false, 1, 0, 0, false, false, 1]);
+  // NH-1B was sent once (2026-11-11) and rejected; it is never an active permission again
+  assert.deepEqual([AUTH.call.callId, AUTH.call.style, AUTH.call.mandateState, AUTH.call.outcome, AUTH.call.prompt.sha256], [ID, "short", "SPENT", "RECEIVED_FOR_PLACEMENT", PLAN.prompt.sha256]);
+  const r = AUTH.call.result; assert.deepEqual([AUTH.call.neverReuse, r.assessment, r.gates.pass, r.gates.failed, r.image.tracked, r.neverPromoted], [true, "REJECTED", false, ["M10", "M8", "M11"], false, true]);
   assert.deepEqual(AUTH.call.claim, { identity: ID + "-claim", filename: ID + ".claim.json", eventsFilename: ID + ".events.jsonl" });
   assert.equal(AUTH.frozen.plan.sha256, sha256(readFileSync(repoFile(PLAN_REL)))); assert.deepEqual(AUTH.frozen.methodFiles, PLAN.method.files);
   assert.deepEqual(AUTH.request.images, PLAN.request.images.map((i) => ({ role: i.role, name: i.name, bytes: i.bytes, sha256: i.sha256, tracked: false })));
@@ -124,6 +126,9 @@ function sandbox({ base: mod } = {}) {
   writeFileSync(sb.gitconfig, "[core]\n\tautocrlf = false\n[init]\n\tdefaultBranch = main\n"); writeFileSync(sb.mock, MOCK_SRC); writeFileSync(sb.log, ""); writeFileSync(sb.png, png(1024, 1024));
   const rd = join(sb.out, "references"); mkdirSync(rd, { recursive: true }); for (const i of PLAN.request.images) copyFileSync(join(REFS, i.name), join(rd, i.name));
   for (const rel of TRACKED) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  // the adapter's behaviour is tested on the authorisation as merged, before NH-1B was spent (2026-11-11)
+  { const p = join(sb.repo, ...AUTH_REL.split("/")), a = JSON.parse(readFileSync(p, "utf8")), e = a.call; a.budget.actuallySent = 0;
+    e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; for (const k of ["neverReuse", "closedBy", "result"]) delete e[k]; writeFileSync(p, JSON.stringify(a, null, 2) + "\n"); }
   if (mod) mod(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb; }
