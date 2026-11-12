@@ -18,7 +18,7 @@
 // the same store, so at most one sweater or tank top is chosen; the same rule and fallback.
 // D-359: with the flag on pupils get mountNorthstarWardrobe below: single parts in the right-hand column, no sets. The K panel is what
 // the local opt-in shows while the flag is off, and what the verifiers drive.
-import { northstarPieces, northstarPieceLayers, northstarFitPiece, northstarOutfitNow, NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_TOP_CHOICES, NORTHSTAR_SELECTABLE_TOPS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor, northstarUseAccount, northstarAccountChoice } from "./avatar-layers.js";
+import { northstarPieces, northstarPieceLayers, northstarFitPiece, northstarOutfitNow, NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_TOP_CHOICES, NORTHSTAR_SELECTABLE_TOPS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor, northstarUseAccount, northstarAccountChoice, isNorthstarHairOn, northstarHairNow, northstarFitHair, northstarHeadSrc, NORTHSTAR_HAIRS, NORTHSTAR_HAIR_OPT_IN_KEY, NORTHSTAR_HAIR_ITEM_CATEGORY } from "./avatar-layers.js";
 
 function store(key, value) {
   try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch (_e) { return false; }
@@ -29,6 +29,11 @@ export function applyNorthstarUrlOptIn(search) {
   try { v = new URLSearchParams(search || "").get("northstar"); } catch (_e) { v = null; }
   if (v === "1") store(NORTHSTAR_OPT_IN_KEY, "1");
   else if (v === "0") { store(NORTHSTAR_OPT_IN_KEY, null); store(NORTHSTAR_OUTFIT_KEY, null); store(NORTHSTAR_TEE_KEY, null); store(NORTHSTAR_PANTS_KEY, null); store(NORTHSTAR_SHOES_KEY, null); store(NORTHSTAR_SWEATER_KEY, null); }
+  // D-373: this browser's opt-in to the hair choice while its flag is off (?northstarhair=1 / =0)
+  let h = null;
+  try { h = new URLSearchParams(search || "").get("northstarhair"); } catch (_e) { h = null; }
+  if (h === "1") store(NORTHSTAR_HAIR_OPT_IN_KEY, "1");
+  else if (h === "0") store(NORTHSTAR_HAIR_OPT_IN_KEY, null);
   return v;
 }
 
@@ -146,7 +151,7 @@ const BASE_NAMES = Object.freeze({
 });
 const CATEGORIES = Object.freeze([["top", "Overdele", "Overdel"], ["bottom", "Underdele", "Underdel"], ["shoes", "Sko", "Sko"]]);
 // Where each category sits on the 1024×1536 canvas: centre and the side of the square that holds it (measured over all layers).
-const CROP = Object.freeze({ top: { x: 511, y: 650, side: 440 }, bottom: { x: 510, y: 1074, side: 640 }, shoes: { x: 511, y: 1396, side: 370 } });
+const CROP = Object.freeze({ top: { x: 511, y: 650, side: 440 }, bottom: { x: 510, y: 1074, side: 640 }, shoes: { x: 511, y: 1396, side: 370 }, hair: { x: 512, y: 250, side: 420 } });
 const THUMB = 88, NOTE_KEY = "avatar_northstar_note";
 
 export function northstarPieceLabel(item) {
@@ -175,11 +180,11 @@ function session(key, value) {
   } catch (_e) { /* the note is a convenience; the choice itself is saved */ }
   return null;
 }
-function thumb(item, category, name) {
+function thumb(item, category, name, srcs = northstarPieceLayers(item)) {
   const box = document.createElement("div");
   box.className = "northstar-thumb";
   const c = CROP[category], scale = THUMB / c.side;
-  for (const src of northstarPieceLayers(item)) {
+  for (const src of srcs) {
     const img = document.createElement("img");
     img.src = src; img.alt = ""; img.loading = "lazy"; img.decoding = "async";
     img.style.width = 1024 * scale + "px";
@@ -222,8 +227,9 @@ export function mountNorthstarWardrobe(root, preview, { saveChoice, cardsRoot = 
   // an outfit is chosen. Keyboard focus on a card whose button turns into "På" stays on that card.
   const mark = () => {
     const had = document.activeElement;
+    const hairNow = northstarHairNow();
     for (const { card, item, category } of cards) {
-      const worn = !!now && now[category] === item;
+      const worn = !!now && (category === "hair" ? hairNow === item : now[category] === item);
       if (card.classList.contains("equipped") === worn && card.lastElementChild && card.lastElementChild.dataset.mark) continue;
       const focused = !!had && card.contains(had);
       card.classList.toggle("equipped", worn);
@@ -235,7 +241,7 @@ export function mountNorthstarWardrobe(root, preview, { saveChoice, cardsRoot = 
       } else {
         el = document.createElement("button");
         el.type = "button"; el.className = "equip-btn"; el.textContent = "Tag på";
-        el.addEventListener("click", () => put(item));
+        el.addEventListener("click", () => (category === "hair" ? putHair(item) : put(item)));
       }
       el.dataset.mark = "1";
       card.appendChild(el);
@@ -294,6 +300,12 @@ export function mountNorthstarWardrobe(root, preview, { saveChoice, cardsRoot = 
     if (fit) save(fit.choice, now ? northstarFitNote(item, fit.changed) : null);
     else status.textContent = "Delen kunne ikke tages på.";
   };
+  // D-373: a hairstyle goes on with the outfit worn now (on today's avatar, the start outfit); the outfit stays
+  const putHair = (hair) => {
+    const fit = northstarFitHair(hair);
+    if (fit) save(fit.choice, null);
+    else status.textContent = "Frisuren kunne ikke vælges.";
+  };
   back.addEventListener("click", () => save({}, null));
   if (preview && typeof MutationObserver !== "undefined") new MutationObserver(describe).observe(preview, { attributes: true, attributeFilter: ["data-avatar-render-path"] });
   const title = document.createElement("div");
@@ -324,6 +336,25 @@ export function mountNorthstarWardrobe(root, preview, { saveChoice, cardsRoot = 
     if (cardsRoot) { cardsRoot.appendChild(grid); continue; }
     root.appendChild(subtitle);
     root.appendChild(grid);
+  }
+  // D-373: the hairstyles, while the hair choice is on — one card each, under the menu's Hoved (the grid names its own category)
+  if (isNorthstarHairOn()) {
+    const grid = document.createElement("div");
+    grid.className = "inventory-grid";
+    grid.dataset.wardrobeCategory = "hair";
+    grid.dataset.itemCategory = NORTHSTAR_HAIR_ITEM_CATEGORY;
+    for (const [id, h] of Object.entries(NORTHSTAR_HAIRS)) {
+      const card = document.createElement("div");
+      card.className = "item-card";
+      card.dataset.rarity = "common"; card.dataset.hair = id;
+      const label = document.createElement("div"); label.className = "item-name"; label.textContent = h.label;
+      const slot = document.createElement("div"); slot.className = "slot-label"; slot.textContent = "Hår";
+      card.append(thumb(id, "hair", h.label, [northstarHeadSrc(id)]), label, slot);
+      cards.push({ card, item: id, category: "hair" });
+      grid.appendChild(card);
+    }
+    if (cardsRoot) cardsRoot.appendChild(grid);
+    else { const subtitle = document.createElement("div"); subtitle.className = "northstar-subtitle"; subtitle.textContent = "Hår"; root.appendChild(subtitle); root.appendChild(grid); }
   }
   mark();
   root.hidden = false;
