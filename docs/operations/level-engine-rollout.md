@@ -245,6 +245,18 @@ Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokume
   2.500–10.000, fordelingen er A1 1, A2 72, B1 160, B2 140 og C1 127, og intet niveau ligger uden for sit
   CEFR-interval. Indholdet er identisk med repoet, og banken har nu 3.763 rækker. Antallet af aktive er uændret,
   2.099.
+- **Batch 4 er anvendt 2026-11-11**, hver fil for sig med sit eget GO:
+
+  | Fil | Ledger-version | Rækker | Log |
+  |---|---|---|---|
+  | `20261020160001_english_level_batch4_1` | `20261111170401` | 167 | [1704Z](production-actions/2026-11-11T1704Z-english-batch4-1-applied.md) |
+  | `20261020160002_english_level_batch4_2` | `20261111173154` | 167 | [1731Z](production-actions/2026-11-11T1731Z-english-batch4-2-applied.md) |
+  | `20261020160003_english_level_batch4_3` | `20261111182211` | 166 | [1822Z](production-actions/2026-11-11T1822Z-english-batch4-3-applied.md) |
+
+  Efterkontrollen viste 500 rækker i `batch4`, 0 aktive og 0 uden niveau eller CEFR. Niveauerne ligger i
+  2.200–10.000, fordelingen er A1 6, A2 95, B1 132, B2 141 og C1 126, og intet niveau ligger uden for sit
+  CEFR-interval. Indholdet er identisk med repoet, og banken har nu 4.263 rækker. Antallet af aktive er uændret,
+  2.099.
 - **Åbne punkter før aktivering.** Hvert punkt skal rettes både i repoet og i den levende række, med eget GO, før
   den pågældende portion aktiveres:
 
@@ -254,11 +266,25 @@ Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokume
   | `batch2` | "Hvad betyder 'suppose' i 'I suppose you're right'?" (batch2_2, niveau 6.948, B1, række-id `3cf224e8-b08a-4ab3-b4d8-de4d72f09e6e`) | Facit "formoder" er rigtigt, men forklaringen handler om et andet ord: "'Guess' betyder gætte. Gæst hedder 'guest'." |
   | `batch3` | "Supposing he ___ the truth, what would you do?" (batch3_3, niveau 8.722, C1, række-id `bc9fddd1-bfc2-42c1-a25f-edca68d1df90`) | Facit er "knew", men forklaringen siger "Hypotese om fortiden: supposing he had known." og passer ikke til facit |
   | `batch3` | "Hvad betyder 'unanimous'?" (batch3_3, niveau 8.908, C1, række-id `d5ed354d-186e-4ab2-9b8d-f5dd4dfd297a`) | Facit "enstemmig" er rigtigt, men forklaringen indeholder en forfatternote: "'anonym' bliver en reel fælde." |
+  | `batch4` | "Hvad betyder 'Sounds good!'?" (batch4_2, niveau 4.400, A2, række-id `aebc0b79-f77b-4621-a4ac-9ce3fa867522`) | Facit "Det lyder godt!" er rigtigt, men forklaringen er en forfatternote: "Flyt til A2 (fx l ≈ 4400) eller erstat med et sværere B1-udtryk." |
+  | `batch4` | "Hvilket ord betyder det modsatte af 'maximum'?" (batch4_2, niveau 5.200, B1, række-id `6668f28f-7951-4888-b7fa-5b7d274781f3`) | Facit "minimum" er rigtigt, men forklaringen er en forfatternote: "Flyt til B1 (fx l ≈ 5200) eller erstat med et sværere antonym-par." |
+  | `batch4` | "Læs: 'My grandfather was only eighteen when the war broke out, and he was twenty-three when it ended.' Hvor længe varede krigen?" (batch4_2, niveau 6.698, B1, række-id `15372b8d-039e-4125-9f34-fe7900142433`) | Facit "fem år" er rigtigt, men forklaringen er en forfatternote: "Kræver at forstå begge tal og drage en slutning – passer til B1." |
 - **Til ejerens vurdering før aktivering af `batch3`:** opgaven "She's a ___ smoker. She smokes forty a day."
   (batch3_2, niveau 7.982, B2, række-id `214ebebf-2f13-4ec4-b7ff-03be35eb2d8a`) handler om rygning. Facit `heavy` er
   rigtigt, og emnet står ikke på listen over udelukkede emner. Ejeren afgør, om opgaven skal beholdes, omskrives
   eller tages ud.
-- Resten af trin 1c (batch4–batch6, 9 filer), trin 1d og hele fase 2 er ikke udført.
+- **Til ejerens vurdering før aktivering af `batch4`.** Ingen af emnerne står på listen over udelukkede emner, og
+  facit er rigtigt i begge. Ejeren afgør, om opgaverne skal beholdes, omskrives eller tages ud:
+  - rygning: "My grandfather ___ to smoke, but he stopped years ago." (batch4_1, niveau 5.152, B1, række-id
+    `29c46027-0fab-416f-b689-f444782e9a1f`);
+  - krig: læseopgaven "My grandfather was only eighteen when the war broke out …" (batch4_2, niveau 6.698, B1,
+    række-id `15372b8d-039e-4125-9f34-fe7900142433`). Den har også en forklaringsfejl, se tabellen ovenfor.
+- **Ejerbeslutning 2026-11-12: batch 4 er det sidste batch i den nuværende udrulning.** Batch 5–10 sættes på pause
+  og må ikke anvendes uden en ny ejerbeslutning, efter at de andre opgavetyper er integreret. Pausen omfatter
+  18 filer: resten af trin 1c (`batch5` og `batch6`, `2026102017000[1-3]` og `2026102018000[1-3]`) og hele trin 1d
+  (`batch7`–`batch10`). Filerne står fortsat i `NOT_IN_PRODUCTION`. Et GO til en enkelt fil er ikke nok, så længe
+  pausen gælder.
+- Trin 1c er dermed udført til og med `batch4`. Fase 2 (aktivering) er ikke påbegyndt.
 
 **Godkendelser:**
 - Hvert trin herunder kræver sit eget GO fra ejeren (E2, D-110). Det gælder også hver `apply_migration`, hver
@@ -300,6 +326,9 @@ Filerne anvendes én ad gangen i versionsorden, med den nøjagtige fil fra `main
 | 1b | `2026102013000[1-3]` (pilot) | 500 | |
 | 1c | `202610201[4-8]000[1-3]` (batch2–batch6) | 2.500 | |
 | 1d | `2026102019000[1-3]` … `2026102022000[1-3]` (batch7–batch10) | 1.880 | |
+
+**På pause:** `batch5`–`batch10` (18 filer) anvendes ikke uden en ny ejerbeslutning, efter at de andre
+opgavetyper er integreret (ejerbeslutning 2026-11-12, se Status ovenfor).
 
 **Efter hver fil:**
 - Kør `node tools/questions/english-5000-precheck.mjs after` (læsende). Portionen skal have det forventede antal, 0 aktive og
