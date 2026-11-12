@@ -79,6 +79,48 @@ Model A (den første bedømmelse låser beløbet) er enklere, men kan ikke rette
 Der er ingen ventende lærerbedømte svar i produktionen (read-only 2026-11-11), så vinduet mellem de to trin har
 i praksis ingen effekt.
 
+### Hvorfor ikke omvendt
+
+| Mellemtilstand | Hvad der sker ved en bedømmelse |
+|---|---|
+| Ny migration, gammel Edge (v20) | RPC'en posterer forskellen, og v20 lægger desuden sin egen XP til. Det er den samme dobbelte udbetaling som i dag, ikke værre. Lukkes af trin 2. |
+| Gammel migration, ny Edge | Den gamle RPC betaler og returnerer intet. Den nye Edge svarer 500 ("Review reward status missing"), selv om bedømmelsen er gemt og betalt. Læreren prøver igen og udløser en ny udbetaling. **Må ikke forekomme.** |
+
+### Preflight før trin 1 (alle skal være opfyldt, ellers NO-GO)
+
+1. Ejerens særskilte GO til netop migrationen `20261111120000_review_answer_single_payout.sql` og, separat, til
+   deploy af `review-answer`.
+2. #689 er merget til `main`, og deploy sker fra `main`. Ellers deployes en kode, der ikke er reviewet på `main`.
+3. Read-only kontrol umiddelbart før:
+   - `md5(prosrc)` for `review_answer(uuid,integer,text,uuid)` er `310f72f44b3720c25e24a4d14307a3df`. Vagten i
+     migrationen afviser også selv.
+   - `teacher_review_postings` findes ikke.
+   - Ingen ventende lærerbedømte svar.
+4. Deployet `review-answer` er stadig version 20. Den svarer til `main` før #689: samme imports
+   (`_shared/supabase-keys.ts`) og samme XP-skrivning. Før deploy laves en byte-diff mellem den deployede kilde
+   og `main`'s forælder, så #689's diff er det eneste, der ændres.
+5. Ingen anden migration eller andet Edge-deploy i samme vindue (planens §3.1).
+6. #657 (kursusbelønninger) er ikke aktiveret og bygges oven på denne rettelse.
+
+### Kontrol 2026-11-12 (read-only)
+
+- Vagtens md5 passer stadig: `310f72f44b3720c25e24a4d14307a3df`.
+- 57 bedømte instanser, seneste bedømmelse 2026-04-22, ingen siden.
+- `teacher_review_postings` findes ikke.
+- `review-answer` er version 20 og blev senest opdateret 2026-09-23.
+
+### Restpunkt: 3-argument-udgaven
+
+Produktionen har også `review_answer(uuid, integer, text)`, som returnerer `json`. Dens krop opdaterer
+`student_progress`, men posterer ikke i posteringstabellen.
+
+- Kun `service_role` (og `postgres`) har EXECUTE.
+- Ingen kode i repoet kalder den. Edge-funktionen sender altid `p_teacher_id` og rammer 4-argument-udgaven.
+
+Migrationen lader den bevidst være uændret, så den kan ikke nås fra en klient. Den er alligevel en anden
+XP-vej uden for posteringerne. **Ejerbeslutning:** lad den være, eller fjern den (REVOKE eller DROP) i en egen,
+efterfølgende migration med eget GO.
+
 ## Verifikation efter udrulning (read-only)
 
 ```sql
