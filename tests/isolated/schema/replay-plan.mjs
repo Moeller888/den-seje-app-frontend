@@ -59,6 +59,9 @@ export const CONTENT_ONLY = Object.freeze({
   "20261020150001_english_level_batch3_1.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and LISTEN and DROP in questions",
   "20261020150002_english_level_batch3_2.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role)",
   "20261020150003_english_level_batch3_3.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and DROP and POLICY in questions",
+  "20261020160001_english_level_batch4_1.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and LISTEN and DROP in questions",
+  "20261020160002_english_level_batch4_2.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and LISTEN, DROP and IMPORT in questions",
+  "20261020160003_english_level_batch4_3.sql": "question-bank content (INSERT into questions only); token scan hit ROLE (challenge_role) and IMPORT in a question",
 });
 
 export const DATA_PRECONDITION = Object.freeze({});
@@ -139,12 +142,6 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "F-04/F-05 pilot content (D-362), not applied in production and not applicable before 20261108090000: data only, inserts INACTIVE order and categorize pilot questions",
   "20261109151000_set_student_domains_pilot_lock.sql":
     "D-362 pilot lock, not applied in production and to be applied before the pilot_d362 rows are activated: it re-creates set_student_domains so a teacher cannot add a pilot_* domain and a save keeps the pupil's existing pilot_* domains",
-  "20261020160001_english_level_batch4_1.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
-  "20261020160002_english_level_batch4_2.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
-  "20261020160003_english_level_batch4_3.sql":
-    "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020170001_english_level_batch5_1.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020170002_english_level_batch5_2.sql":
@@ -215,6 +212,9 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261020150001_english_level_batch3_1.sql": "20261109142935",
   "20261020150002_english_level_batch3_2.sql": "20261109150712",
   "20261020150003_english_level_batch3_3.sql": "20261109151454",
+  "20261020160001_english_level_batch4_1.sql": "20261111170401",
+  "20261020160002_english_level_batch4_2.sql": "20261111173154",
+  "20261020160003_english_level_batch4_3.sql": "20261111182211",
   "20261022120000_fix_mc_correct_answer_not_in_options.sql": "20261029141201",
   "20261025120000_student_rpc_caller_scope.sql": "20261025172041",
   "20261026110000_leaderboard_execute_containment.sql": "20261026113548",
