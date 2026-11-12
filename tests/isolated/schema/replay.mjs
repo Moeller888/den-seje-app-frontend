@@ -20,7 +20,7 @@ import { readFileSync, readdirSync, appendFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { planReplay, summarise, preconditionCheckSql, extractSchemaPart, MANUALLY_APPLIED_IN_PRODUCTION } from "./replay-plan.mjs";
+import { planReplay, summarise, preconditionCheckSql, extractSchemaPart, MANUALLY_APPLIED_IN_PRODUCTION, DEFAULT_PROFILE, profileFiles } from "./replay-plan.mjs";
 import { contentFilterOnSql, contentFilterOffSql, assertSeedTarget } from "../seed/seed-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -38,8 +38,8 @@ export const readMigration = (f) => read(join(MIGRATIONS_DIR, f));
 
 const firstLine = (e) => String(e?.message ?? e).split("\n")[0].slice(0, 300);
 
-export async function replaySchema({ exec, query, files = migrationFiles(), readSql = readMigration, onStep = () => {} }) {
-  const { plan, manual, notReplayed } = planReplay(files, readSql);
+export async function replaySchema({ exec, query, files = migrationFiles(), readSql = readMigration, onStep = () => {}, profile = DEFAULT_PROFILE }) {
+  const { plan, manual, notReplayed } = planReplay(files, readSql, { profile });
   const steps = [];
   const failures = [];
   const run = async (name, sql) => {
@@ -100,6 +100,7 @@ export function summaryMarkdown(result, seconds) {
     `|---|---|`,
     `| result | ${result.failures.length === 0 ? "**success**" : `**FAILED** (${result.failures.length})`} |`,
     `| timestamped migrations | ${s.total}: apply ${s.apply}, skip ${s.skip} (each with a written reason), blocked ${s.blocked} |`,
+    `| test profile (isolated only, NOT in production) | ${result.plan.filter((p) => p.profile).map((p) => `${p.profile}: ${p.file}`).join(", ") || "— (production mirror)"} |`,
     `| manually applied | ${result.manual.join(", ") || "—"} |`,
     `| not replayed (non-timestamped) | ${result.notReplayed.join(", ") || "—"} |`,
     `| statements run | ${result.steps.length} |`,
@@ -134,11 +135,16 @@ async function main(argv) {
   const arg = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : undefined; };
   const dbUrl = arg("--db-url");
   const summary = arg("--summary");
-  if (!dbUrl) throw new Error("usage: replay.mjs --db-url <postgres url> [--summary <file>]");
+  // The profile comes ONLY from this explicit argument (never from the environment), and is validated
+  // before anything connects: an unknown name fails here.
+  const profile = arg("--profile") ?? DEFAULT_PROFILE;
+  if (!dbUrl) throw new Error("usage: replay.mjs --db-url <postgres url> [--summary <file>] [--profile production|k1]");
+  profileFiles(profile);
   const { exec, query } = psqlExecutor(dbUrl);
   await assertSeedTarget({ query, env: process.env }); // isolation guard + run token + cluster id + empty
   const t0 = Date.now();
-  const result = await replaySchema({ exec, query, onStep: (n, ok, e) => console.log(`${ok ? "ok  " : "FAIL"} ${n}${e ? " — " + e : ""}`) });
+  console.log(`replay profile: ${profile}`);
+  const result = await replaySchema({ exec, query, profile, onStep: (n, ok, e) => console.log(`${ok ? "ok  " : "FAIL"} ${n}${e ? " — " + e : ""}`) });
   const md = summaryMarkdown(result, Math.round((Date.now() - t0) / 1000));
   console.log(md);
   if (summary) appendFileSync(summary, md);

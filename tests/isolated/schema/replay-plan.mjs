@@ -286,8 +286,45 @@ export function preconditionCheckSql(file) {
   return rows.join("\nUNION ALL\n") + ";";
 }
 
-export function planReplay(fileNames, readSql) {
+// TEST PROFILES (owner GO 2026-11-07, F10-B2: "K1 i isolerede integrationstests"). A profile replays,
+// in the isolated CI database ONLY, a named set of files that are NOT_IN_PRODUCTION — so a test lane can
+// exercise code that needs them (K1: process-event's H5 call with p_mode/p_hints_used) while the default
+// plan keeps mirroring production exactly. Rules, enforced in planReplay and by
+// tests/unit/replay-test-profiles.test.mjs:
+//   - the default (no profile, or "production") is byte-for-byte today's plan; production's guards and
+//     every existing replay test run against it unchanged;
+//   - a profile may only name files that are in NOT_IN_PRODUCTION (it can never re-order, drop or
+//     re-classify anything production has), and every file it names must exist;
+//   - an unknown profile name fails loud;
+//   - a profile never touches production: replay.mjs runs only after assertSeedTarget has proven the
+//     target is this run's isolated database, and production migrations go only through
+//     apply_migration with a separate owner authorisation (D-110).
+export const DEFAULT_PROFILE = "production";
+export const TEST_PROFILES = Object.freeze({
+  k1: Object.freeze({
+    "20261103110000_l1_k1_attempt_context.sql":
+      "TEST PROFILE k1: L1 K1 is NOT applied in production; replayed only in the isolated K1 lane so H5 submissions (p_mode/p_hints_used → 9/10-parameter _v2) can be tested (D-341)",
+  }),
+});
+
+export function profileFiles(profile = DEFAULT_PROFILE) {
+  if (profile === undefined || profile === null || profile === DEFAULT_PROFILE) return Object.freeze({});
+  if (!Object.hasOwn(TEST_PROFILES, profile)) {
+    throw new Error(`unknown replay profile: ${JSON.stringify(profile)} (known: ${[DEFAULT_PROFILE, ...Object.keys(TEST_PROFILES)].join(", ")})`);
+  }
+  const files = TEST_PROFILES[profile];
+  for (const f of Object.keys(files)) {
+    if (!NOT_IN_PRODUCTION[f]) throw new Error(`replay profile ${profile}: ${f} is not in NOT_IN_PRODUCTION — a profile may only add test-only replays`);
+  }
+  return files;
+}
+
+export function planReplay(fileNames, readSql, { profile = DEFAULT_PROFILE } = {}) {
+  const extra = profileFiles(profile);
   const files = [...fileNames].sort();
+  for (const f of Object.keys(extra)) {
+    if (!files.includes(f)) throw new Error(`replay profile ${profile}: ${f} does not exist`);
+  }
   const timestamped = files.filter((f) => TIMESTAMPED.test(f));
   const seenNames = new Map(); // name without timestamp → first file
   const plan = [];
@@ -303,6 +340,7 @@ export function planReplay(fileNames, readSql) {
     else if (CONTENT_ONLY[f]) d = { action: "skip", reason: CONTENT_ONLY[f] };
     else if (DATA_PRECONDITION[f]) d = { action: "skip", reason: DATA_PRECONDITION[f] };
     else if (SCHEMA_PART[f]) d = { action: "apply", part: true, reason: SCHEMA_PART[f].reason, requires: PRECONDITIONS[f] ?? [] };
+    else if (NOT_IN_PRODUCTION[f] && extra[f]) d = { action: "apply", reason: extra[f], profile, requires: PRECONDITIONS[f] ?? [] };
     else if (NOT_IN_PRODUCTION[f]) d = { action: "skip", reason: NOT_IN_PRODUCTION[f] };
     else if (REPO_AHEAD_OF_PRODUCTION[f]) d = { action: "apply", reason: REPO_AHEAD_OF_PRODUCTION[f], requires: PRECONDITIONS[f] ?? [] };
     else if (CATALOG_DATA[f]) d = { action: "apply", reason: `app catalog data: ${CATALOG_DATA[f]}`, requires: [] };
