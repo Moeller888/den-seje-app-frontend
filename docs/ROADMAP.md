@@ -908,7 +908,14 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
 - **Trin 1c, batch 3 anvendt 2026-11-09:** batch 3 (500 opgaver i 3 filer) ligger inaktivt i produktionen
   (ledger `20261109142935`, `20261109150712`, `20261109151454`). Den har to åbne punkter før aktivering
   (forklaringerne til "Supposing he …" og "unanimous") og én opgave til ejerens vurdering ("heavy smoker"),
-  se runbookens §2.8. De øvrige 21 migrationer er ikke anvendt, og intet er aktiveret.
+  se runbookens §2.8.
+- **Trin 1c, batch 4 anvendt 2026-11-11:** batch 4 (500 opgaver i 3 filer) ligger inaktivt i produktionen
+  (ledger `20261111170401`, `20261111173154`, `20261111182211`). Den har tre åbne punkter før aktivering
+  (forklaringerne til "Sounds good!", "maximum" og læseopgaven om krigen) og to opgaver til ejerens vurdering
+  (rygning og krig), se runbookens §2.8.
+- **Ejerbeslutning 2026-11-12: batch 4 er det sidste batch i den nuværende udrulning.** Batch 5–10 (18
+  migrationer) er sat på pause og må ikke anvendes uden en ny ejerbeslutning, efter at de andre opgavetyper er
+  integreret. Banken har nu 2.120 nye inaktive engelskopgaver, og intet er aktiveret.
 - Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
   `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.
