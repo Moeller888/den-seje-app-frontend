@@ -178,6 +178,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020220003_english_level_batch10_3.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261113120000_english_review_text_corrections.sql":
+    "English 5,000 corrections (owner approval 2026-11-13), not applied in production: data only, rewrites the explanation or question text of nine inactive English questions from pilot and batch2-batch4, which the isolated stack does not have",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
