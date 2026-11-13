@@ -1334,7 +1334,57 @@ export function northstarFitPiece(item) {
   const from = northstarOutfitNow() || NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT];
   const o = { top: from.top, bottom: from.bottom, shoes: from.shoes, [it.category]: item };
   if (!northstarPlanFor(o)) return Object.freeze({ refused: true, category: it.category });
-  return Object.freeze({ top: o.top, bottom: o.bottom, shoes: o.shoes, choice: Object.freeze({ outfit: NORTHSTAR_FREE, top: o.top, pants: o.bottom, shoes: o.shoes }), changed: Object.freeze([]) });
+  const hair = _nsChosenHair();   // D-373: a chosen hairstyle stays when a part changes
+  return Object.freeze({ top: o.top, bottom: o.bottom, shoes: o.shoes, choice: Object.freeze({ outfit: NORTHSTAR_FREE, top: o.top, pants: o.bottom, shoes: o.shoes, ...(hair ? { hair } : {}) }), changed: Object.freeze([]) });
+}
+// D-373: the hair choice on the figure — one shared head base with three hairstyles (assets/avatar-northstar-hair/, rebuilt by
+// tools/avatar/build-northstar-hair-heads-d373.mjs). OFF: the figure keeps today's head (figure-head-v1.webp) and the wardrobe shows no
+// hair. A browser can opt in for testing: localStorage avatar_northstar_hair = "1" (or avatar.html?northstarhair=1; =0 removes it). On,
+// every figure stands on the shared base, and a stored choice without a hairstyle (every saved avatar today) gets the standard hair. The
+// hairstyle is saved with the outfit (avatar_identity.northstar.hair through set_avatar_northstar); the database accepts the key only
+// with D-373's migration (not applied in production).
+export const NORTHSTAR_HAIR_CHOICE = false;
+export const NORTHSTAR_HAIR_OPT_IN_KEY = "avatar_northstar_hair";
+export const NORTHSTAR_HAIR_BASE_PATH = "/assets/avatar-northstar-hair";
+export const NORTHSTAR_HAIR_DEFAULT = "standard";
+export const NORTHSTAR_HAIRS = Object.freeze({
+  standard: Object.freeze({ file: "head-standard-v1.webp", label: "Standardhår" }),
+  "nh4-grey": Object.freeze({ file: "head-nh4-grey-v1.webp", label: "Kort pjusket hår · gråt" }),
+  "nh4-brown": Object.freeze({ file: "head-nh4-brown-v1.webp", label: "Kort pjusket hår · brunt" }),
+});
+// The item category (ITEM_CATEGORIES) the hairstyles are shown under.
+export const NORTHSTAR_HAIR_ITEM_CATEGORY = "hoved";
+// The flag, or this browser's explicit opt-in. Never throws.
+export function isNorthstarHairOn() {
+  if (NORTHSTAR_HAIR_CHOICE) return true;
+  try { return typeof localStorage !== "undefined" && localStorage.getItem(NORTHSTAR_HAIR_OPT_IN_KEY) === "1"; } catch (_e) { return false; }
+}
+const _nsIsHair = (h) => typeof h === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_HAIRS, h);
+// The hairstyle the named account has explicitly chosen, or null (also while the hair choice is off).
+function _nsChosenHair() {
+  return isNorthstarHairOn() && _nsAccount && _nsIsHair(_nsAccount.hair) ? _nsAccount.hair : null;
+}
+// The hairstyle the figure wears now: the chosen one, else the standard hair; null while the hair choice is off.
+export function northstarHairNow() {
+  if (!isNorthstarHairOn()) return null;
+  return _nsChosenHair() || NORTHSTAR_HAIR_DEFAULT;
+}
+// The head layer of a hairstyle; today's head for anything else.
+export function northstarHeadSrc(hair) {
+  return _nsIsHair(hair) ? NORTHSTAR_HAIR_BASE_PATH + "/" + NORTHSTAR_HAIRS[hair].file : _nsSrc(NORTHSTAR_FIGURE.head);
+}
+// Puts a hairstyle on: the outfit worn now (on today's avatar, the start outfit) stays, saved as the three parts with the hairstyle.
+// Null while the hair choice is off or for an unknown hairstyle.
+export function northstarFitHair(hair) {
+  if (!isNorthstarHairOn() || !_nsIsHair(hair)) return null;
+  const o = northstarOutfitNow() || NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT];
+  return Object.freeze({ top: o.top, bottom: o.bottom, shoes: o.shoes, hair, choice: Object.freeze({ outfit: NORTHSTAR_FREE, top: o.top, pants: o.bottom, shoes: o.shoes, hair }) });
+}
+// A plan with the head of a hairstyle in place of today's head (the plan itself when the hair choice is off).
+function _nsWithHair(plan, hair) {
+  if (!plan || !hair) return plan;
+  const today = _nsSrc(NORTHSTAR_FIGURE.head), head = northstarHeadSrc(hair);
+  return plan.map((s) => (s.op === "draw" && s.src === today ? { ...s, src: head } : s));
 }
 // The layers of one part, for its picture in the wardrobe.
 export function northstarPieceLayers(item) {
@@ -1348,27 +1398,28 @@ export function northstarRenderFor(surface, cosmetics) {
   if (!isNorthstarWardrobeOn()) return null;
   if (_nsAccount === undefined && _nsStorage(NORTHSTAR_OPT_IN_KEY) !== "1") return null;   // D-357: no account named → a browser's choice still needs its opt-in
   if (NORTHSTAR_SURFACES.indexOf(surface) === -1) return null;
+  const hair = northstarHairNow(), hairKey = hair ? "+hair:" + hair : "";   // D-373: the hairstyle's head, and a figure key that names it
   const free = _nsFree();
   if (free) {
-    const plan = northstarPlanFor(free), out = [];
+    const plan = _nsWithHair(northstarPlanFor(free), hair), out = [];
     if (!plan) return null;
     for (const c of Array.isArray(cosmetics) ? cosmetics : []) {
       if (!c || !c.src || typeof c.z !== "number") continue;
       if (NORTHSTAR_SUPPORTED_COSMETIC_SLOTS.indexOf(c.slot) === -1) return null;
       out.push({ src: c.src, z: C2_LAYER_Z[c.slot] ?? c.z, isBase: false, inline: false, marker: "northstar-cosmetic" });
     }
-    return { key: NORTHSTAR_FREE + "+" + free.top + "+" + free.bottom + "+" + free.shoes, outfit: NORTHSTAR_FREE, tee: null, pants: null, shoe: null, sweater: null, plan, cosmetics: out };
+    return { key: NORTHSTAR_FREE + "+" + free.top + "+" + free.bottom + "+" + free.shoes + hairKey, outfit: NORTHSTAR_FREE, tee: null, pants: null, shoe: null, sweater: null, hair, plan, cosmetics: out };
   }
   const outfitKey = northstarSelectedOutfit(), base = northstarOutfitFor(outfitKey, northstarSelectedTee(), northstarSelectedPants(), northstarSelectedShoe());
   const outfit = northstarOutfitFor(outfitKey, northstarSelectedTee(), northstarSelectedPants(), northstarSelectedShoe(), northstarSelectedSweater());
-  const plan = outfit ? northstarPlanFor(outfit) : null;
+  const plan = outfit ? _nsWithHair(northstarPlanFor(outfit), hair) : null;
   if (!plan) return null;
   // the figure cache is keyed by what is drawn: "K01", "K01+TP-TEA-CRM" with an allowed print tee, "K01+TP-TEA-CRM+TS-NAV" or
   // "K01+TS-NAV" with allowed trousers, "K01+TS-NAV+SV1-V5-CHALK" or "K04+SV1-V5-CHARCOAL" with an allowed shoe
   // a sweater replaces whatever top the tee choice gave, so a replaced tee is not named (the key names what is drawn)
   const sweater = outfit.top !== base.top ? northstarSelectedSweater() : null, tee = !sweater && base.top !== NORTHSTAR_OUTFITS[outfitKey].top ? northstarSelectedTee() : null;
   const pants = base.bottom !== NORTHSTAR_OUTFITS[outfitKey].bottom ? northstarSelectedPants() : null, shoe = base.shoes !== NORTHSTAR_OUTFITS[outfitKey].shoes ? northstarSelectedShoe() : null;
-  const key = outfitKey + (tee ? "+" + tee : "") + (pants ? "+" + pants : "") + (shoe ? "+" + shoe : "") + (sweater ? "+" + sweater : "");
+  const key = outfitKey + (tee ? "+" + tee : "") + (pants ? "+" + pants : "") + (shoe ? "+" + shoe : "") + (sweater ? "+" + sweater : "") + hairKey;
   const list = Array.isArray(cosmetics) ? cosmetics : [];
   const out = [];
   for (const c of list) {
@@ -1376,5 +1427,5 @@ export function northstarRenderFor(surface, cosmetics) {
     if (NORTHSTAR_SUPPORTED_COSMETIC_SLOTS.indexOf(c.slot) === -1) return null;
     out.push({ src: c.src, z: C2_LAYER_Z[c.slot] ?? c.z, isBase: false, inline: false, marker: "northstar-cosmetic" });
   }
-  return { key, outfit: outfitKey, tee, pants, shoe, sweater, plan, cosmetics: out };
+  return { key, outfit: outfitKey, tee, pants, shoe, sweater, hair, plan, cosmetics: out };
 }

@@ -1215,7 +1215,8 @@ function applyItemCategory() {
     if (on) shown++;
   });
   document.querySelectorAll("#northstarWardrobeCards [data-wardrobe-category]").forEach(grid => {
-    const on = grid.dataset.wardrobeCategory === cat.wardrobe;
+    // D-373: a grid that names its own menu category (the hairstyles, under Hoved) is shown there
+    const on = grid.dataset.itemCategory ? grid.dataset.itemCategory === cat.key : grid.dataset.wardrobeCategory === cat.wardrobe;
     grid.style.display = on ? "" : "none";
     if (on) shown += grid.children.length;
   });
