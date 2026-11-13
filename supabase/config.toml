@@ -405,6 +405,12 @@ entrypoint = "./functions/process-event/index.ts"
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/process-event/*.html" ]
 
+[functions.course-progress]
+enabled = true
+verify_jwt = false
+import_map = "./functions/course-progress/deno.json"
+entrypoint = "./functions/course-progress/index.ts"
+
 [functions.reset-student]
 enabled = true
 verify_jwt = false

@@ -222,9 +222,31 @@ test("the lockdown migration sorts after every migration that touches review_ans
     .filter((line) => !line.trim().startsWith("--"))
     .join("\n");
   const dir = join(REPO, "supabase", "migrations");
+  // Later migrations that only READ review_answer's catalog entry (md5 of its body) and were reviewed as unable
+  // to override the lockdown. Verified below: every executable mention is exactly one catalog lookup by
+  // signature, and the file has no CREATE / ALTER / DROP / GRANT / REVOKE / COMMENT on the function and no call.
+  const REVIEWED_LATER_CATALOG_READERS = {
+    "20261108171500_course_progress_rewards.sql":
+      "Lærligverse course rewards (draft): award_course_milestones' double-pay guard reads md5(prosrc) of " +
+      "review_answer(uuid,integer,text,uuid) from pg_catalog.pg_proc and refuses to award while it is not the " +
+      "reviewed proposal body. It never calls, creates, alters, grants or revokes review_answer.",
+  };
+  const LOOKUP = "to_regprocedure('public.review_answer(uuid,integer,text,uuid)')";
+  for (const [name, reason] of Object.entries(REVIEWED_LATER_CATALOG_READERS)) {
+    assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
+    const code = executable(readFileSync(join(dir, name), "utf8"));
+    const mentions = code.match(/review_answer/gi) ?? [];
+    assert.ok(mentions.length > 0, `${name} no longer names review_answer — remove the stale exception`);
+    assert.equal(code.split(LOOKUP).length - 1, mentions.length, `${name}: every mention is the catalog lookup ${LOOKUP}`);
+    assert.doesNotMatch(code, /\b(CREATE|ALTER|DROP|GRANT|REVOKE|COMMENT)\b[^;]*review_answer/i, `${name} must not change review_answer`);
+    assert.doesNotMatch(code, /review_answer\s*\(\s*p_|PERFORM\s+public\.review_answer|SELECT\s+public\.review_answer/i, `${name} must not call review_answer`);
+  }
+  assert.deepEqual(Object.keys(REVIEWED_LATER_CATALOG_READERS), ["20261108171500_course_progress_rewards.sql"],
+    "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const touching = readdirSync(dir)
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
     .filter((n) => /review_answer/i.test(executable(readFileSync(join(dir, n), "utf8"))))
+    .filter((n) => !Object.hasOwn(REVIEWED_LATER_CATALOG_READERS, n))
     .sort();
   assert.ok(touching.includes("20260919000000_review_answer_execute_lockdown.sql"),
     "the lockdown migration must be present in the tree");

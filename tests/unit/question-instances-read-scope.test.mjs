@@ -367,6 +367,15 @@ const REVIEWED_LATER_READERS = {
     "D-347's (one instance by id AND student_id = auth.uid(), no instance column returned, no write). EXECUTE " +
     "stays revoked from PUBLIC and anon. No policy, RLS or table privilege on question_instances is touched " +
     "(proven in minigame-break-interval-10min-migration-run.test.mjs, tests 1 and 4).",
+  "20261108171500_course_progress_rewards.sql":
+    "Lærligverse course rewards (draft): award_course_milestones (SECURITY INVOKER, search_path '', EXECUTE " +
+    "revoked from PUBLIC, anon and authenticated, granted to service_role only — course-progress calls it with " +
+    "the verified user.id) reads only the GIVEN pupil's own answered instances (student_id = p_student_id, " +
+    "answered = true: question_id, was_correct, answered_at, id) joined to their question's learning_objective " +
+    "and metadata.learning_step, to decide which course milestones are earned. It returns only milestone keys " +
+    "and amounts, never an instance column, and never writes question_instances; its writes go to the new " +
+    "ledger course_progress_rewards and to xp/coins of the pupil's student_progress row. No policy, RLS or " +
+    "table privilege on question_instances is touched (proven in course-progress-rewards-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -508,7 +517,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261101190100_question_attempts_v2_align_grading.sql",
      "20261103110000_l1_k1_attempt_context.sql",
      "20261105090000_minigame_breaks.sql",
-     "20261107090000_minigame_break_interval_10min.sql"],
+     "20261107090000_minigame_break_interval_10min.sql",
+     "20261108171500_course_progress_rewards.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
