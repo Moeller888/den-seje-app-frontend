@@ -10,6 +10,7 @@ import { callProcessTextAnswerV2, callProcessQuestionAttemptV2, LEGACY_ANSWER_RP
 import { updateOwnInstance, recordMisconceptionSignal, type InstanceWriteResult } from "./instance-writes.ts";
 import { readInstanceForGrading } from "./instance-read.ts";
 import { answerMode, replyForV2, isRevokedLegacyRpc, errorCodeOf, CLIENT_OUTDATED, UNEXPECTED_RESULT } from "./answer-v2.ts";
+import { ATTEMPT_CONTEXT_ENV, attemptContextEnabled } from "./attempt-context.ts";
 import { isQuizCooldownError, cooldownReply } from "./quiz-cooldown.ts";
 
 const corsHeaders = {
@@ -107,6 +108,11 @@ serve(async (req) => {
       })
     }
     const h5 = mode.kind === "h5" ? mode : null
+
+    // Lærligverse L5 + L3 (./attempt-context.ts): only an H5 request with the Edge secret
+    // LAERLIGVERSE_ATTEMPT_CONTEXT exactly "on" derives mode and hints from server facts. Otherwise every read
+    // and call below is exactly as before, and _v2 gets the L1 constants.
+    const attemptContextOn = h5 !== null && attemptContextEnabled(Deno.env.get(ATTEMPT_CONTEXT_ENV))
 
     // ── Fetch instance + question meta ───────────────────────────────────────
     // A backend read (./instance-read.ts): the answer key and the question content are server-only.
@@ -230,6 +236,8 @@ serve(async (req) => {
         let v2Data: unknown
         let v2Error: unknown
         try {
+          // L5 + L3 (./attempt-context.ts): attemptContextOn → the wrapper derives mode and hints in the
+          // answer's own transaction; false → the L1 constants, exactly as before.
           ({ data: v2Data, error: v2Error } = await callProcessTextAnswerV2(
             makeAdminClient,
             {
@@ -241,7 +249,8 @@ serve(async (req) => {
               submissionId:      h5.submissionId,
               reviewText,
               misconceptionType,
-            }
+            },
+            attemptContextOn
           ))
         } catch (keyError: any) {
           // serviceKey()'s messages name the variables, never their values.
@@ -409,6 +418,8 @@ serve(async (req) => {
       let v2Data: unknown
       let v2Error: unknown
       try {
+        // L5 + L3 (./attempt-context.ts): attemptContextOn → the wrapper derives mode and hints in the
+        // answer's own transaction; false → the L1 constants, exactly as before.
         ({ data: v2Data, error: v2Error } = await callProcessQuestionAttemptV2(
           makeAdminClient,
           {
@@ -419,7 +430,8 @@ serve(async (req) => {
             submissionId:      h5.submissionId,
             reviewText,
             misconceptionType,
-          }
+          },
+          attemptContextOn
         ))
       } catch (keyError: any) {
         // serviceKey()'s messages name the variables, never their values.

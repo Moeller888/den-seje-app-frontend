@@ -405,6 +405,22 @@ entrypoint = "./functions/process-event/index.ts"
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/process-event/*.html" ]
 
+# Lærligverse L3 (not deployed): like process-event, the function verifies the pupil's JWT itself
+# (auth.getUser → 401) and answers 404 unless the Edge secret LAERLIGVERSE_HINTS is exactly "on".
+[functions.request-hint]
+enabled = true
+verify_jwt = false
+import_map = "./functions/request-hint/deno.json"
+entrypoint = "./functions/request-hint/index.ts"
+
+# Lærligverse LP-13 / K9 prototype (not deployed): verifies the pupil's JWT itself (auth.getUser → 401) and answers
+# 404 unless LAERLIGVERSE_INTRODUCTION or LAERLIGVERSE_PRESENTED is exactly "on".
+[functions.introduction-progress]
+enabled = true
+verify_jwt = false
+import_map = "./functions/introduction-progress/deno.json"
+entrypoint = "./functions/introduction-progress/index.ts"
+
 [functions.reset-student]
 enabled = true
 verify_jwt = false

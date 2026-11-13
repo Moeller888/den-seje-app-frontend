@@ -439,7 +439,10 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (Lærligverse-integration lag 3 oven på main med D-362; målrettet kald går aldrig gennem niveaumotoren) — **ikke deployet** | dette repository | 21 | `ea8072da934530fbf3dc39a29599f6026f3b8ed995a157eeb424023aed61ca8b` |
+| Kandidat (LP-13/K9-prototype oven på L5 + L3: introduktionen som særskilt serverrunde bag `LAERLIGVERSE_INTRODUCTION`, ny `_shared/introduction.ts`) — **ikke deployet** | dette repository | 23 | `00e180368681fa5571a74aa7b7d0b4c2e0dd38847322668196c559000ef1ce6f` |
+| Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `1df8cd79`: `served_mode` ved indsættelsen og antal hints i et sekvenssvar, begge slukket) — ikke deployet | #653 `807a9e10` | 22 | `5854770231cf0f7440963969ca1c8eeee512b5647bfc77f485fa330298e73c0b` |
+| Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `b6d65cdd`, før D-362) — ikke deployet | #653 `9296ac7f` | 22 | `ac5bef7dba2ee43ed25818b703107ec4f573fa5ce55287cfc26fb34612a81029` |
+| Forrige kandidat (Lærligverse-integration lag 3 oven på main med D-362; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | lag 4 `1df8cd79` | 21 | `ea8072da934530fbf3dc39a29599f6026f3b8ed995a157eeb424023aed61ca8b` |
 | Forrige kandidat (Lærligverse-integration lag 3 oven på main med F-05 Kategorisering, før D-362; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | `9f904b3c` | 21 | `ae22cf64a930cb91351d1e2dfbb8bf4d7678e9019d544b278ddba69d4da792cf` |
 | Forrige kandidat (lag 3 plus F10-B-rettelsen, før F-05) — ikke deployet | `6bca478a` | 20 | `e20c056b935880c72a87e7875a797c4070ad1fe54d4d8035bcfb834fe6daefe6` |
 | Forrige kandidat (Lærligverse-integration lag 3: F-04/F-02/F-07, D-329 `objective-target.ts`, D-332 `option_details`, D-338 `learning-sequence.ts`) — ikke deployet | `0a6d7b6d` | 20 | `cf71236f4e54cf6aeb719d83bd7e94754c9ae279dd2c17c0c24f06f3bec3bda2` |
@@ -535,6 +538,19 @@ når Edge-secret'en `LAERLIGVERSE_SEQUENCE` er præcis `on`, målretningen (D-32
 indeholder `sequence: true`. Så læser funktionen elevens egen historik i målet (svar, dom, tid og
 spørgsmålets trin-mærke; intet indhold og ingen nøgle) og udleverer kun spørgsmål med det aktuelle trin.
 Slukket er kaldene uændrede.
+Lærligverse L5 + L3 ændrer grafen fra 21 til 22 filer. `_shared/hints.ts` er ny (antallet af hint-niveauer i
+indholdet, samme regel som databasefunktionen `request_question_hint`), og `index.ts` og
+`instance-insert.ts` ændres. To nye Edge-secrets, begge **slukket**, medmindre de er præcis `on`:
+`LAERLIGVERSE_SERVED_MODE` skriver trinnets tilstand i `question_instances.served_mode`, når sekvensen
+(D-338) har valgt et trin for anmodningen, og `LAERLIGVERSE_HINTS` tilføjer `hints_available` (kun antallet,
+aldrig teksten) i et sekvenssvar. Slukket, eller uden et sekvenstrin, er indsættelsen, svaret og kaldene
+præcis som før (`tests/unit/laerligverse-served-mode-gnq.test.mjs`). `LAERLIGVERSE_SERVED_MODE` må først
+slås til, når migration `20261108043500` (og før den K1) er anvendt. Ingen af dem sættes i produktionen
+uden ejerens særskilte GO.
+LP-13/K9-prototypen ændrer grafen fra 22 til 23 filer: `_shared/introduction.ts` er ny (det offentlige
+introduktionsindhold, kun kort med titel og tekst), og `index.ts` kalder `serve_introduction`, når Edge-secret'en
+`LAERLIGVERSE_INTRODUCTION` er præcis `on` og en serverstyret sekvens er i gang. Slukket er kaldene præcis som før
+(`tests/unit/laerligverse-introduction-gnq.test.mjs`). Kræver migration `20261110043500` (ikke anvendt).
 Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
 kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten

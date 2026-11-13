@@ -270,7 +270,12 @@ test("the only admin-client writes are the scoped v32 update helper and the serv
   assert.match(values[1], /answered: false,/);
   // L1 K1 (reviewed): the only other column is the delivery proposal, served_snapshot, and only when
   // get-next-question sends one (K1_SERVED_SNAPSHOT=on); the database verifies and owns it.
-  assert.equal((values[1].match(/\.\.\./g) ?? []).length, 1, "exactly one spread");
+  // Lærligverse L5 (reviewed, migration 20261108043500): the second optional column is served_mode, only when
+  // get-next-question records a sequence step's mode (LAERLIGVERSE_SERVED_MODE=on); the database trigger checks it
+  // against the question's learning_step and owns it afterwards. No other spread.
+  assert.equal((values[1].match(/\.\.\./g) ?? []).length, 2, "exactly two reviewed spreads");
   assert.match(values[1], /^\s*\.\.\.servedSnapshotColumn\(assignment\),$/m);
+  assert.match(values[1], /^\s*\.\.\.servedModeColumn\(assignment\),$/m);
+  assert.match(ins, /export function servedModeColumn\(assignment: QuestionAssignment\): \{ served_mode\?: string \} \{\s*return assignment\.servedMode !== undefined \? \{ served_mode: assignment\.servedMode \} : \{\};\s*\}/);
   assert.match(ins, /export function servedSnapshotColumn\(assignment: QuestionAssignment\): \{ served_snapshot\?: Record<string, unknown> \} \{\s*return assignment\.servedSnapshot !== undefined \? \{ served_snapshot: assignment\.servedSnapshot \} : \{\};\s*\}/);
 });
