@@ -224,7 +224,6 @@
     "english-level-batch5-migration-run.test.mjs": 4.3,
     "english-level-batch6-migration-run.test.mjs": 6.6,
     "english-level-pilot-migration-run.test.mjs": 7.1,
-    "english-review-text-corrections-migration-run.test.mjs": 30,
     "fix-tests-no-git-mutation.test.mjs": 34.8,
     "format-mix-log-pseudonym.test.mjs": 0.2,
     "get-next-question-level-canary.test.mjs": 1.8,
