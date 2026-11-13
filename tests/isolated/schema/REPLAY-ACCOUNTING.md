@@ -168,3 +168,8 @@ merge ikke længere kan afspille en uanvendt fil ved en forglemmelse. En fil fly
 `20261030211428_question_attempts_v2` (H5) er ikke anvendt i produktionen, men repositoryets
 `process-event` kalder v2-funktionerne bag H5-kontakten. Den står derfor i `REPO_AHEAD_OF_PRODUCTION`
 (uændret afspilning) som åben produktionsopgave under D-266/D-273.
+
+`20261112150000_avatar_northstar_hair_d373` (D-373) er heller ikke anvendt i produktionen. Repositoryets
+Northstar-garderobe gemmer frisuren (`avatar_identity.northstar.hair`) gennem `set_avatar_northstar` bag
+`NORTHSTAR_HAIR_CHOICE`, og produktionens `validate_avatar_identity` afviser nøglen. Den står derfor i
+`REPO_AHEAD_OF_PRODUCTION` som åben produktionsopgave under D-373. Den skal anvendes, før flaget slås til.

@@ -1,0 +1,50 @@
+{
+  "decision": "D-373",
+  "relatesTo": ["D-371", "D-372"],
+  "tool": "tools/avatar/build-northstar-hair-heads-d373.mjs",
+  "visualReference": "the owner-approved private V4 trial (2026-11-12): shared head base, adjusted standard hair, NH-4 grey and brown with the shorter temple tip",
+  "newImageCall": false,
+  "inputs": [
+    { "role": "raw", "name": "nh.image-1.png", "folder": "NH-4-hair-soft-texture", "tracked": false, "sha256": "02d70373e6ddd5065630e2460b4873d820911b6eb43f9bdb98e637c6e5475d35" },
+    { "role": "clean", "name": "clean-head-layer.png", "folder": "references", "tracked": false, "sha256": "90df02aca8241c5707780952d103898dc9e94a4ff0f18c04ee38d3e13df14052" },
+    { "role": "ear", "name": "clean-head-ear-on-top-mask.png", "folder": "references", "tracked": false, "sha256": "955806ec039dafc7f1f7f16696b28c57722eb579e691e7498cea472fa9508840" },
+    { "role": "swept", "name": "kort-sidesweep-rev1-hair-layer.png", "folder": "references", "tracked": false, "sha256": "007d3838c64cfad639a1498fe8b1a0f643e07a6b41beaa851d077b2b68c6ffe4" }
+  ],
+  "appHead": { "file": "assets/avatar-northstar/figure-head-v1.webp", "sha256": "0e80e65abb1caa620dd647cfe728474a7593a0256d9e792a0ba6f21c8a030671", "neckCutPx": 440, "neckCutLayer": "skin: the R3 head's leftover collar edge, cut by runtimeHead where C's body lies (the light arc across the neck)" },
+  "d372": {
+    "fixture": "tools/avatar/fixtures/northstar-hair-d371/exception-d372-v1.json",
+    "greyLayer": "1dc8036b44aeb50324fd001dc56bac308b68694395d038907b49f2120b15d5cb",
+    "brownLayer": "864af40aa6deba6c4df2ec1bccaf90b19a13aa22e5d9ff501aaf24dc229f5c12",
+    "reconciliation": "D-372 bound the temple variant's layers (the left temple tip shortened in the raw image, rows 290–323 → 290–310). D-373 starts from exactly those bound files and shortens the remaining thin tip once more in the layers themselves (rows 299–311 → 299–304); D-372's files and hashes are unchanged and stay the record of the exception"
+  },
+  "temple": {
+    "rule": "in both D-372 layers ONLY the thin tip at the image-left temple (figure x 383–398) is moved: rows 299–311 compressed into rows 299–304; the rest of the box becomes transparent; the same move in grey and brown, so the alpha channels stay identical",
+    "x": [383, 398],
+    "rows": [299, 311],
+    "into": [299, 304],
+    "layers": {
+      "grey": { "pngSha256": "84a596d07209802cdb6beeead014015a94a5b75f3e2548b842aeca761afcf1ed", "tracked": false },
+      "brown": { "pngSha256": "67184db32b6b1e14ef60296970158e0b06adc9c891d26fa68c634ebc802b27c1", "tracked": false }
+    }
+  },
+  "base": {
+    "rule": "the clean head above y 430 (its clean ear junction and cleaned forehead), the app's own runtime neck below (the R3 head stack minus the neck cut, without hair and hair shadow)",
+    "neckY": 430,
+    "differsFromAppBaldPx": 9836,
+    "faceFeaturePxDiffer": 44,
+    "faceFeatureNote": "hair residue under the hair and faint eye-layer edge pixels inside the ear junction, which the clean head removed; no visible face feature changes"
+  },
+  "standard": {
+    "rule": "Northstar's own hair with its own hair shadow: byte for byte the app's head wherever the base equals the app's bald head; the hair shadow only on skin (alpha scaled by the base's alpha); hair pieces wholly below the ear tops (y > 340) removed; under the ear's semi-transparent top edge, where the hair meets the ear (≤ 3 px straight above), the ear's own pixel drawn over the hair",
+    "shadowClippedPx": 132,
+    "residueBelowEarTopsRemovedPx": 275,
+    "earEdgeOverHairPx": 49
+  },
+  "heads": {
+    "standard": { "file": "head-standard-v1.webp", "label": "Standardhår", "pngSha256": "eeb321432fcdd19975bdc17583bcdb769dfa3a6824c4d956c1e5e6cdb7866f04", "webpSha256": "9cfe6828e6703c8500a7bbe90e0bf173026cbddf75cd61e7b58c8c0ad0b813ea" },
+    "nh4-grey": { "file": "head-nh4-grey-v1.webp", "label": "Kort pjusket hår · gråt", "pngSha256": "9c15b3126217de8b75c8efa6920ab827329ad228e193a92ddd1786b7bc605cff", "webpSha256": "31e99de3ca9cea8ee4fa2aaafb81a9f50a425a5f24a238e4bc08313cd570409d" },
+    "nh4-brown": { "file": "head-nh4-brown-v1.webp", "label": "Kort pjusket hår · brunt", "pngSha256": "9cf311b28b3c3bf5ea89eff3f2d9d8d00fcf702e4fc83daf6f9f885d533d4cef", "webpSha256": "42f136a02b4fc6d2e7e107717e1c1b4cfefb4dec782dfca3db02a311a81a1d41" }
+  },
+  "published": "only the three finished heads, in assets/avatar-northstar-hair/ (owner 2026-11-12: the PR may contain them); the raw image, the clean head, its ear mask and every intermediate layer stay outside the clones",
+  "activation": "behind NORTHSTAR_HAIR_CHOICE (js/avatar-layers.js), false; a separate owner decision activates it"
+}
