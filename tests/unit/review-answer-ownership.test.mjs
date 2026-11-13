@@ -133,8 +133,6 @@ test("the ownership check precedes EVERY write", () => {
   assert.ok(guard !== -1, "the ownership guard must exist");
   for (const [label, needle] of [
     ["the RPC call", 'rpc("review_answer"'],
-    ["the XP read", '.from("student_progress")'],
-    ["the XP write", '.update({ xp:'],
   ]) {
     const at = s.indexOf(needle);
     assert.ok(at !== -1 && at > guard, `${label} must come after the ownership guard`);

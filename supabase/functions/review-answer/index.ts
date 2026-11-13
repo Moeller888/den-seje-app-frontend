@@ -8,14 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type"
 };
 
-function scoreToXP(score: number) {
-  if (score === 1) return 0;
-  if (score === 2) return 10;
-  if (score === 3) return 25;
-  if (score === 4) return 50;
-  return 0;
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -51,7 +43,7 @@ serve(async (req) => {
       serviceKey()
     );
 
-    // 🔐 ROLE CHECK — must come BEFORE the instance lookup, the RPC and the XP write.
+    // 🔐 ROLE CHECK — must come BEFORE the instance lookup and the RPC.
     //
     // The identity is `user.id`, taken from the verified JWT above. It is NEVER taken from the
     // request body: a caller who could supply their own teacher id would be asserting their own
@@ -100,6 +92,15 @@ serve(async (req) => {
     if (!instance_id || score === undefined || score === null) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // The teacher's scale is 1–4 (js/student-detail.js). Anything else is refused before any read or
+    // write; the database refuses it too ('Invalid score').
+    if (!Number.isInteger(score) || score < 1 || score > 4) {
+      return new Response(
+        JSON.stringify({ error: "Invalid score" }),
         { status: 400, headers: corsHeaders }
       );
     }
@@ -164,8 +165,14 @@ serve(async (req) => {
       });
     }
 
-    // 🔁 RPC (gem vurdering)
-    const { error: rpcError } = await supabase.rpc("review_answer", {
+    // 🔁 RPC — the ONE pay path. review_answer records the review and, in the same transaction, posts
+    // the difference between the amount for the new score and what this instance has already been
+    // posted (model B: a correction up or down is one traceable posting; the same review again posts
+    // nothing), and only for teacher-graded answers
+    // (supabase/migrations/20261111120000_review_answer_single_payout.sql). xp_awarded is that
+    // difference and can be negative after a correction down. This function never writes XP itself: a
+    // second write here was a double payout per review.
+    const { data: reviewStatus, error: rpcError } = await supabase.rpc("review_answer", {
       p_instance_id: instance_id,
       p_score: score,
       p_feedback: feedback ?? null,
@@ -177,29 +184,21 @@ serve(async (req) => {
       throw rpcError;
     }
 
-    // 🔥 XP BONUS
-    const xpToAdd = scoreToXP(score);
+    // The status must be the RPC's JSON. Anything else (e.g. the old void body) is an explicit error,
+    // never a guessed amount.
+    const xpAwarded = reviewStatus && typeof reviewStatus === "object"
+      ? (reviewStatus as { xp_awarded?: unknown }).xp_awarded
+      : undefined;
+    const rewardStatus = reviewStatus && typeof reviewStatus === "object"
+      ? (reviewStatus as { status?: unknown }).status
+      : undefined;
 
-    if (xpToAdd > 0) {
-      const { data: progress, error: progressError } = await supabase
-        .from("student_progress")
-        .select("xp")
-        .eq("student_id", student_id)
-        .maybeSingle();
-
-      if (progressError) throw progressError;
-
-      const currentXP = progress?.xp ?? 0;
-
-      const { error: updateError } = await supabase
-        .from("student_progress")
-        .update({ xp: currentXP + xpToAdd })
-        .eq("student_id", student_id);
-
-      if (updateError) throw updateError;
+    if (typeof xpAwarded !== "number" || !Number.isFinite(xpAwarded) || typeof rewardStatus !== "string") {
+      console.error("REVIEW STATUS MISSING:", JSON.stringify({ instance_id }));
+      throw new Error("Review reward status missing");
     }
 
-    return new Response(JSON.stringify({ ok: true, xp_awarded: xpToAdd }), {
+    return new Response(JSON.stringify({ ok: true, xp_awarded: xpAwarded, reward_status: rewardStatus }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
 
