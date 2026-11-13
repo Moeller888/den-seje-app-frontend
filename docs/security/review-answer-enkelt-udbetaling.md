@@ -109,6 +109,14 @@ i praksis ingen effekt.
 - `teacher_review_postings` findes ikke.
 - `review-answer` er version 20 og blev senest opdateret 2026-09-23.
 
+### Kontrol 2026-11-13 (read-only)
+
+- Uændret: md5 `310f72f4…`, 57 bedømte instanser (seneste 2026-04-22), ingen `teacher_review_postings`,
+  `review-answer` version 20.
+- Ny migration i produktionen siden 2026-11-12: `20261113053515` (avatar, D-373). Den rører ikke `review_answer`.
+- Rækkefølgen i produktionsplanen (`docs/laerligverse/produktionsplan.md`, P9a–P9c): migrationen, straks
+  derefter Edge-funktionen, og først bagefter en eventuel REVOKE på 3-argument-udgaven.
+
 ### Restpunkt: 3-argument-udgaven
 
 Produktionen har også `review_answer(uuid, integer, text)`, som returnerer `json`. Dens krop opdaterer
