@@ -2,120 +2,237 @@
 // Alt kører i midlertidige mapper og midlertidige git-repos; intet rører den rigtige klon eller GitHub.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
+import { pathToFileURL } from "node:url";
 import {
-  EXIT, claim, check, heartbeat, release, list, claimFile, describe, pushCheck, findDuplicates, similarity, main, handover, ageHours,
+  EXIT, ABSENT, claim, check, heartbeat, release, list, claimFile, describe, verify, pushCheck, afterPush, parsePorcelain,
+  findDuplicates, similarity, main, handover, ageHours, readClaim, BrokenClaimError, update,
 } from "../../tools/agents/claim.mjs";
 
+const MODULE = new URL("../../tools/agents/claim.mjs", import.meta.url).href;
 const T0 = Date.parse("2026-11-13T08:00:00Z");
 const H = 3_600_000;
 const tmp = () => mkdtempSync(join(tmpdir(), "laerlig-claims-"));
 const sh = (args, cwd) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+const commit = (cwd, msg) => {
+  writeFileSync(join(cwd, "f.txt"), msg);
+  sh(["add", "f.txt"], cwd);
+  sh(["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", msg], cwd);
+};
+// Et bart "remote", agentens klon `a` på branchen `work`, og en fremmed klon `b`.
+function repos() {
+  const root = tmp();
+  const bare = join(root, "remote.git"), a = join(root, "a"), b = join(root, "b"), dir = join(root, "claims");
+  sh(["init", "-q", "--bare", bare], root);
+  sh(["clone", "-q", bare, a], root);
+  commit(a, "1");
+  sh(["branch", "-M", "work"], a);
+  return { root, bare, a, b, dir, done: () => rmSync(root, { recursive: true, force: true }) };
+}
+const own = (dir, branch = "work", session = "A") => claim(dir, { branch, session, task: "T", purpose: "p" }, { now: T0 });
 
-test("claim opretter låsen; en anden session afvises — også når låsen er forældet", () => {
+test("en anden session afvises — også når låsen er forældet; alder giver kun en markering", () => {
   const dir = tmp();
   try {
-    const a = claim(dir, { branch: "ci/x", session: "A", task: "T-1", purpose: "p" }, { now: T0 });
-    assert.equal(a.code, EXIT.OK);
-    assert.equal(a.created, true);
-    const b = claim(dir, { branch: "ci/x", session: "B", task: "T-2", purpose: "q" }, { now: T0 + 1 * H });
-    assert.equal(b.code, EXIT.OWNED_BY_OTHER);
-    assert.equal(b.claim.session, "A");
-    // 1000 timer senere: stadig A's. Alder giver kun en markering, aldrig overtagelse.
-    const c = claim(dir, { branch: "ci/x", session: "B", task: "T-2", purpose: "q" }, { now: T0 + 1000 * H });
-    assert.equal(c.code, EXIT.OWNED_BY_OTHER);
-    assert.match(describe(c.claim, { now: T0 + 1000 * H }), /FORÆLDET .*overtages ikke automatisk/);
-    assert.equal(JSON.parse(readFileSync(claimFile(dir, "ci/x"), "utf8")).session, "A");
+    assert.equal(own(dir, "ci/x").created, true);
+    assert.equal(claim(dir, { branch: "ci/x", session: "B", task: "T", purpose: "q" }, { now: T0 + H }).code, EXIT.OWNED_BY_OTHER);
+    const late = claim(dir, { branch: "ci/x", session: "B", task: "T", purpose: "q" }, { now: T0 + 1000 * H });
+    assert.equal(late.code, EXIT.OWNED_BY_OTHER, "stale lock: ingen automatisk overtagelse");
+    assert.match(describe(late.claim, { now: T0 + 1000 * H }), /FORÆLDET .*overtages ikke automatisk/);
+    assert.doesNotMatch(describe(late.claim, { now: T0 + 2 * H }), /FORÆLDET/);
+    assert.equal(heartbeat(dir, { branch: "ci/x", session: "B" }).code, EXIT.OWNED_BY_OTHER);
+    assert.equal(release(dir, { branch: "ci/x", session: "B" }).code, EXIT.OWNED_BY_OTHER);
+    assert.equal(readClaim(dir, "ci/x").session, "A");
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test("samme session fornyer sin lås uden at ændre createdAt; check skelner din/andens/ingen", () => {
+test("samme session fornyer uden at ændre createdAt; check skelner din/andens/ingen; release kun for ejeren", () => {
   const dir = tmp();
   try {
-    claim(dir, { branch: "feat/y", session: "A", task: "T", purpose: "p" }, { now: T0 });
+    own(dir, "feat/y");
     const again = claim(dir, { branch: "feat/y", session: "A", task: "T", purpose: "p", pr: "701" }, { now: T0 + 2 * H });
-    assert.equal(again.code, EXIT.OK);
     assert.equal(again.created, false);
     assert.equal(again.claim.createdAt, new Date(T0).toISOString());
-    assert.equal(again.claim.lastActivity, new Date(T0 + 2 * H).toISOString());
     assert.equal(again.claim.pr, "701");
     assert.equal(check(dir, { branch: "feat/y", session: "A" }).code, EXIT.OK);
     assert.equal(check(dir, { branch: "feat/y", session: "B" }).code, EXIT.OWNED_BY_OTHER);
     assert.equal(check(dir, { branch: "feat/z", session: "A" }).code, EXIT.UNCLAIMED);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
-});
-
-test("heartbeat og release virker kun for ejeren", () => {
-  const dir = tmp();
-  try {
-    claim(dir, { branch: "b", session: "A", task: "T", purpose: "p" }, { now: T0 });
-    assert.equal(heartbeat(dir, { branch: "b", session: "B" }, { now: T0 + H }).code, EXIT.OWNED_BY_OTHER);
-    const hb = heartbeat(dir, { branch: "b", session: "A", next: "kør CI" }, { now: T0 + 5 * H });
-    assert.equal(hb.code, EXIT.OK);
+    const hb = heartbeat(dir, { branch: "feat/y", session: "A", next: "kør CI" }, { now: T0 + 5 * H });
     assert.equal(hb.claim.next, "kør CI");
     assert.equal(ageHours(hb.claim, T0 + 6 * H), 1);
-    assert.equal(release(dir, { branch: "b", session: "B" }).code, EXIT.OWNED_BY_OTHER);
-    assert.ok(existsSync(claimFile(dir, "b")));
-    assert.equal(release(dir, { branch: "b", session: "A" }).code, EXIT.OK);
-    assert.equal(existsSync(claimFile(dir, "b")), false);
-    assert.equal(release(dir, { branch: "b", session: "A" }).code, EXIT.UNCLAIMED);
+    assert.equal(release(dir, { branch: "feat/y", session: "A" }).code, EXIT.OK);
+    assert.equal(existsSync(claimFile(dir, "feat/y")), false);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test("branchnavne kan ikke pege uden for låsemappen; en ødelagt låsefil overskrives ikke", () => {
+test("20 samtidige processer om samme lås: præcis én vinder, ingen tom eller halv låsefil, ingen .tmp tilbage", async () => {
+  const dir = tmp();
+  try {
+    const one = (i) => new Promise((res) => {
+      const p = spawn(process.execPath, ["--input-type=module", "-e",
+        `const m = await import(${JSON.stringify(MODULE)}); process.stdout.write(String(m.claim(${JSON.stringify(dir)}, { branch: "x", session: "S${i}", task: "T", purpose: "p" }).code));`]);
+      let o = ""; p.stdout.on("data", (c) => { o += c; }); p.on("close", () => res(o));
+    });
+    const codes = await Promise.all(Array.from({ length: 20 }, (_, i) => one(i)));
+    assert.equal(codes.filter((c) => c === String(EXIT.OK)).length, 1, codes.join(","));
+    assert.equal(codes.filter((c) => c === String(EXIT.OWNED_BY_OTHER)).length, 19, codes.join(","));
+    const winner = readClaim(dir, "x");
+    assert.match(winner.session, /^S\d+$/);
+    assert.deepEqual(readdirSync(dir), ["x.json"]);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("ødelagt eller tom låsefil: check fejler lukket (BROKEN), list viser ØDELAGT og fortsætter, intet overskrives", async () => {
+  const dir = tmp();
+  try {
+    own(dir, "ok");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(claimFile(dir, "tom"), "", "utf8");
+    writeFileSync(claimFile(dir, "skrald"), "{ikke json", "utf8");
+    writeFileSync(claimFile(dir, "halv"), "{}", "utf8");
+    for (const b of ["tom", "skrald", "halv"]) {
+      assert.throws(() => check(dir, { branch: b, session: "A" }), BrokenClaimError, b);
+      assert.throws(() => claim(dir, { branch: b, session: "A", task: "T", purpose: "p" }), BrokenClaimError, b);
+    }
+    assert.equal(readFileSync(claimFile(dir, "tom"), "utf8"), "");
+    const all = list(dir);
+    assert.deepEqual(all.filter((c) => !c.broken).map((c) => c.branch), ["ok"]);
+    assert.equal(all.filter((c) => c.broken).length, 3);
+    assert.match(describe(all.find((c) => c.broken && c.file.endsWith("tom.json"))), /ØDELAGT .*tom fil/);
+    const log = [];
+    const io = { env: { LAERLIG_CLAIMS_DIR: dir }, cwd: dir, out: (s) => log.push(s), err: (s) => log.push(s) };
+    assert.equal(await main(["check", "--branch", "tom", "--session", "A"], io), EXIT.BROKEN);
+    assert.equal(await main(["list"], io), EXIT.BROKEN, "list rapporterer, men viser stadig de gyldige");
+    assert.ok(log.some((l) => /^ok: ejet af session A/.test(l)));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("opdatering genlæser låsen før skrivning: skiftede ejeren imens, skrives intet (heartbeat/verify/after-push)", () => {
+  const dir = tmp();
+  try {
+    own(dir, "z");
+    const seenByA = readClaim(dir, "z");          // A har læst sin lås …
+    rmSync(claimFile(dir, "z"));                  // … et menneske sletter den efter afklaring …
+    claim(dir, { branch: "z", session: "B", task: "T", purpose: "p" }, { now: T0 + H }); // … og B tager den
+    const r = update(dir, claimFile(dir, "z"), seenByA, { next: "A's skrivning" }, T0 + 2 * H);
+    assert.equal(r.code, EXIT.OWNED_BY_OTHER);
+    assert.equal(readClaim(dir, "z").session, "B");
+    assert.equal(readClaim(dir, "z").next, undefined);
+    rmSync(claimFile(dir, "z"));
+    assert.equal(update(dir, claimFile(dir, "z"), seenByA, {}, T0 + 3 * H).code, EXIT.UNCLAIMED, "slettet imens: genopret ikke");
+    assert.equal(existsSync(claimFile(dir, "z")), false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("branchnavne kan ikke pege uden for låsemappen", () => {
   const dir = tmp();
   try {
     for (const bad of ["../x", "a/../../b", "a b", "", "a;rm"]) {
       assert.throws(() => claim(dir, { branch: bad, session: "A" }), /ugyldigt branchnavn/);
     }
-    mkdirSync(dir, { recursive: true });
-    writeFileSync(claimFile(dir, "c"), "{}", "utf8");
-    assert.throws(() => claim(dir, { branch: "c", session: "A", task: "T", purpose: "p" }), /ødelagt låsefil/);
-    assert.equal(readFileSync(claimFile(dir, "c"), "utf8"), "{}");
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test("list viser alle låse", () => {
-  const dir = tmp();
+test("push-check: uden verificeret remote-SHA → NOT_VERIFIED; ny branch verificeret fraværende → ok", () => {
+  const r = repos();
   try {
-    assert.deepEqual(list(join(dir, "findes-ikke")), []);
-    claim(dir, { branch: "a/1", session: "A", task: "T", purpose: "p" }, { now: T0 });
-    claim(dir, { branch: "b/2", session: "B", task: "U", purpose: "q" }, { now: T0 });
-    assert.deepEqual(list(dir).map((c) => `${c.branch}:${c.session}`), ["a/1:A", "b/2:B"]);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+    own(r.dir);
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.NOT_VERIFIED);
+    assert.equal(verify(r.dir, { cwd: r.a, branch: "work", session: "A" }).claim.verifiedRemote, ABSENT);
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.OK);
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "B" }).code, EXIT.OWNED_BY_OTHER);
+    // En anden opretter branchen, efter at A verificerede den som fraværende.
+    sh(["clone", "-q", r.bare, r.b], r.root);
+    commit(r.b, "fremmed");
+    sh(["push", "-q", "origin", "HEAD:refs/heads/work"], r.b);
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.REMOTE_MOVED);
+  } finally { r.done(); }
 });
 
-test("pushCheck: ny branch og fast-forward er ok; flyttet remote stopper — med et rigtigt git-remote", () => {
-  const root = tmp();
+test("push-check: force-push (tilbagerulning) på remote opdages, selvom den gamle remote er en forfader af HEAD", () => {
+  const r = repos();
   try {
-    const bare = join(root, "remote.git");
-    const a = join(root, "a");
-    const b = join(root, "b");
-    sh(["init", "-q", "--bare", bare], root);
-    sh(["clone", "-q", bare, a], root);
-    const commit = (cwd, msg) => { writeFileSync(join(cwd, "f.txt"), msg); sh(["add", "f.txt"], cwd); sh(["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", msg], cwd); };
-    commit(a, "1");
-    sh(["branch", "-M", "work"], a);
-    assert.equal(pushCheck({ cwd: a, branch: "work" }).code, EXIT.OK, "ny branch");
-    sh(["push", "-q", "origin", "work"], a);
-    commit(a, "2");
-    const ff = pushCheck({ cwd: a, branch: "work" });
-    assert.equal(ff.code, EXIT.OK);
-    assert.equal(ff.reason, "fast-forward");
-    // En anden klon pusher imens: remote er ikke længere indeholdt i a's HEAD.
-    sh(["clone", "-q", "-b", "work", bare, b], root);
-    commit(b, "fremmed");
-    sh(["push", "-q", "origin", "work"], b);
-    const moved = pushCheck({ cwd: a, branch: "work" });
-    assert.equal(moved.code, EXIT.REMOTE_MOVED);
-    assert.match(moved.reason, /ingen force/);
-    // --expect fanger det også, selv før merge-base-tjekket.
-    const exp = pushCheck({ cwd: b, branch: "work", expect: "0".repeat(40) });
-    assert.equal(exp.code, EXIT.REMOTE_MOVED);
-  } finally { rmSync(root, { recursive: true, force: true }); }
+    commit(r.a, "2");
+    sh(["push", "-q", "origin", "work"], r.a);
+    own(r.dir);
+    verify(r.dir, { cwd: r.a, branch: "work", session: "A" });
+    sh(["clone", "-q", "-b", "work", r.bare, r.b], r.root);
+    sh(["reset", "-q", "--hard", "HEAD~1"], r.b);
+    sh(["push", "-q", "-f", "origin", "work"], r.b); // en anden rullede tilbage
+    commit(r.a, "3");
+    const res = pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" });
+    assert.equal(res.code, EXIT.REMOTE_MOVED, res.reason);
+    assert.match(res.reason, /verificeret var .*ingen force/);
+  } finally { r.done(); }
+});
+
+test("push-check: en fremmed commit, som agenten har trukket ind lokalt (pull), omgår ikke kontrollen", () => {
+  const r = repos();
+  try {
+    sh(["push", "-q", "origin", "work"], r.a);
+    own(r.dir);
+    verify(r.dir, { cwd: r.a, branch: "work", session: "A" });
+    sh(["clone", "-q", "-b", "work", r.bare, r.b], r.root);
+    commit(r.b, "fremmed");
+    sh(["push", "-q", "origin", "work"], r.b);
+    sh(["-c", "user.email=t@t", "-c", "user.name=t", "pull", "-q", "--no-rebase", "origin", "work"], r.a);
+    commit(r.a, "mit");
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.REMOTE_MOVED, "remote-HEAD ≠ verificeret");
+    // Først efter en BEVIDST ny verificering (agenten har gennemgået den fremmede commit) må den pushe.
+    verify(r.dir, { cwd: r.a, branch: "work", session: "A" });
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.OK);
+  } finally { r.done(); }
+});
+
+test("push-check: verificeret remote, der ikke er i HEAD, stopper (en almindelig push ville blive afvist)", () => {
+  const r = repos();
+  try {
+    sh(["push", "-q", "origin", "work"], r.a);
+    sh(["clone", "-q", "-b", "work", r.bare, r.b], r.root);
+    commit(r.b, "fremmed");
+    sh(["push", "-q", "origin", "work"], r.b);
+    own(r.dir);
+    verify(r.dir, { cwd: r.a, branch: "work", session: "A" }); // verificerer remote uden at integrere den
+    commit(r.a, "mit");
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.REMOTE_MOVED);
+  } finally { r.done(); }
+});
+
+test("after-push: rigtig git push --porcelain bekræftes; serverens gamle værdi ≠ verificeret giver ALARM", () => {
+  const r = repos();
+  try {
+    sh(["push", "-q", "origin", "work"], r.a);
+    own(r.dir);
+    verify(r.dir, { cwd: r.a, branch: "work", session: "A" });
+    commit(r.a, "2");
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.OK);
+    const out = sh(["push", "--porcelain", "origin", "HEAD:refs/heads/work"], r.a);
+    const ok = afterPush(r.dir, { cwd: r.a, branch: "work", session: "A", porcelain: out });
+    assert.equal(ok.code, EXIT.OK, ok.reason);
+    assert.equal(readClaim(r.dir, "work").verifiedRemote, sh(["rev-parse", "HEAD"], r.a));
+    // Kapløb: en anden rullede tilbage MELLEM push-check og push. Serveren accepterede (fast-forward fra den
+    // tilbagerullede commit), men den gamle værdi i outputtet afslører det.
+    const fake = `To ${r.bare}\n \trefs/heads/work:refs/heads/work\t${"1".repeat(7)}..${sh(["rev-parse", "--short", "HEAD"], r.a)}\nDone`;
+    const alarm = afterPush(r.dir, { cwd: r.a, branch: "work", session: "A", porcelain: fake });
+    assert.equal(alarm.code, EXIT.PUSH_ALERT);
+    assert.match(alarm.reason, /ALARM/);
+    assert.equal(afterPush(r.dir, { cwd: r.a, branch: "work", session: "A", porcelain: `+\trefs/heads/work:refs/heads/work\t1a2b3c4...5d6e7f8 (forced update)` }).code, EXIT.PUSH_ALERT);
+    // En forced opdatering er en ALARM, også når den gamle værdi stemmer med den verificerede SHA.
+    const verifiedShort = readClaim(r.dir, "work").verifiedRemote.slice(0, 7);
+    assert.equal(afterPush(r.dir, { cwd: r.a, branch: "work", session: "A", porcelain: `+\trefs/heads/work:refs/heads/work\t${verifiedShort}...5d6e7f8 (forced update)` }).code, EXIT.PUSH_ALERT);
+    assert.equal(afterPush(r.dir, { cwd: r.a, branch: "work", session: "A", porcelain: `!\trefs/heads/work:refs/heads/work\t[rejected] (fetch first)` }).code, EXIT.REMOTE_MOVED);
+    assert.equal(afterPush(r.dir, { cwd: r.a, branch: "work", session: "A", porcelain: "noget andet" }).code, EXIT.USAGE);
+  } finally { r.done(); }
+});
+
+test("parsePorcelain læser git's porcelain-format", () => {
+  assert.deepEqual(parsePorcelain("*\trefs/heads/x:refs/heads/x\t[new branch]", "x"), { old: ABSENT });
+  assert.deepEqual(parsePorcelain(" \tHEAD:refs/heads/x\t6a03d46..bf23a3e", "x"), { old: "6a03d46", forced: false });
+  assert.deepEqual(parsePorcelain("=\trefs/heads/x:refs/heads/x\t[up to date]", "x"), { old: "up-to-date" });
+  assert.equal(parsePorcelain(" \tHEAD:refs/heads/y\t1..2", "x"), null);
 });
 
 test("findDuplicates: samme branch eller ens formål flagges; ulige formål gør ikke", () => {
@@ -131,15 +248,15 @@ test("findDuplicates: samme branch eller ens formål flagges; ulige formål gør
 
 test("CLI: exitkoderne er kontrakten, som agenter stopper på", async () => {
   const dir = tmp();
-  const env = { LAERLIG_CLAIMS_DIR: dir };
   const log = [];
-  const io = { env, cwd: dir, out: (s) => log.push(s), err: (s) => log.push(s) };
+  const io = { env: { LAERLIG_CLAIMS_DIR: dir }, cwd: dir, out: (s) => log.push(s), err: (s) => log.push(s) };
   try {
     assert.equal(await main(["check", "--branch", "x", "--session", "A"], io), EXIT.UNCLAIMED);
     assert.equal(await main(["claim", "--branch", "x", "--session", "A"], io), EXIT.USAGE, "task og purpose er krævet");
     assert.equal(await main(["claim", "--branch", "x", "--session", "A", "--task", "T", "--purpose", "p"], io), EXIT.OK);
     assert.equal(await main(["claim", "--branch", "x", "--session", "B", "--task", "T", "--purpose", "p"], io), EXIT.OWNED_BY_OTHER);
-    assert.equal(await main(["push-check", "--branch", "x", "--session", "B"], io), EXIT.OWNED_BY_OTHER, "push-check kræver ejerskab før noget andet");
+    assert.equal(await main(["push-check", "--branch", "x", "--session", "B"], io), EXIT.OWNED_BY_OTHER, "ejerskab før alt andet");
+    assert.equal(await main(["push-check", "--branch", "x", "--session", "A"], io), EXIT.NOT_VERIFIED);
     const prsFile = join(dir, "prs.json");
     writeFileSync(prsFile, JSON.stringify([{ number: 1, title: "Agent ejerskab og låse", headRefName: "ops/agent-claims" }]));
     assert.equal(await main(["dupes", "--title", "ejerskab låse for agenter", "--prs-json", prsFile], io), EXIT.DUPLICATE);
@@ -149,13 +266,19 @@ test("CLI: exitkoderne er kontrakten, som agenter stopper på", async () => {
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test("værktøjet indeholder ingen skrivende git-kommando (push/merge/reset/…): de skal stå i agentens egen kommando, synlige for LÆRLIG-GUARD", () => {
+  const src = readFileSync(new URL("../../tools/agents/claim.mjs", import.meta.url), "utf8");
+  const gitCalls = [...src.matchAll(/run\(\["([a-z-]+)"/g)].map((m) => m[1]);
+  assert.deepEqual([...new Set(gitCalls)].sort(), ["diff", "ls-remote", "merge-base", "rev-parse", "status"]);
+  assert.doesNotMatch(src, /execFileSync\("git", \[\s*"(push|merge|reset|checkout|branch|commit|rebase|stash|clean)/);
+});
+
 test("handover henter fakta fra git og efterlader kun de felter, et menneske eller en agent skal udfylde", () => {
   const facts = { "rev-parse HEAD": "h".repeat(40), "merge-base HEAD origin/main": "b".repeat(40), [`diff --name-status ${"b".repeat(40)}..HEAD`]: "M\ttools/x.mjs", "status --porcelain": "" };
   const run = (args) => { const k = args.join(" "); if (k.startsWith("ls-remote")) return `${"r".repeat(40)}\trefs/heads/x`; return facts[k]; };
   const md = handover({ cwd: "/w", branch: "x", claimInfo: null, run });
   assert.match(md, /Sidste verificerede SHA \(lokal HEAD\):\*\* h{40}/);
   assert.match(md, /Remote-HEAD:\*\* r{40}/);
-  assert.match(md, /M\ttools\/x\.mjs/);
   assert.match(md, /Arbejdstræ:\*\* rent/);
   for (const f of ["Tests", "Åbne fejl", "Risici", "Næste sikre handling", "Godkendelsesstatus"]) assert.match(md, new RegExp(f));
 });

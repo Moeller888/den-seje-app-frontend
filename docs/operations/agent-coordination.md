@@ -4,14 +4,19 @@ _Status: IMPLEMENTERET (værktøj + tests), ikke påbudt af en hook. Oprettet 20
 
 Procedurerne for hovedsession, underagenter og filejerskab står i [`CLAUDE_WORKFLOW.md` §11](../CLAUDE_WORKFLOW.md)
 (foreslået i PR #604). Dette dokument beskriver **værktøjet, der håndhæver dem**: `tools/agents/claim.mjs`.
-Root-`CLAUDE.md` og LÆRLIG-GUARD går forud for alt her. Værktøjet kan ikke slå guarden fra og kalder den ikke.
+Root-`CLAUDE.md` og LÆRLIG-GUARD går forud for alt her.
+
+Værktøjet kan ikke slå guarden fra, og det kører **aldrig selv** `git push`, `git merge` eller andre skrivende
+git-kommandoer. Det læser kun med `ls-remote`, `rev-parse`, `merge-base`, `diff` og `status`. En push skal stå i
+agentens egen kommando, så guarden ser den. Hvis værktøjet selv pushede, ville guarden kun se `node claim.mjs …`, og
+det ville være en omgåelse.
 
 ## Hvorfor
 
 Den 2026-11-12 blev én PR (#687) opdateret af en anden session, mens en tredje fulgte dens CI, og en
 fjerde session havde branchen tjekket ud. Ingen af dem kunne se, hvem der måtte skrive. Maskinen havde
-386 worktrees fordelt på 32 sessioner. Problemet er ikke manglende regler, men at reglerne ikke kan
-tjekkes, før man skriver.
+391 worktree-registreringer fordelt på 32 sessioner. Problemet er ikke manglende regler, men at reglerne ikke
+kan tjekkes, før man skriver.
 
 ## Princip
 
@@ -21,11 +26,17 @@ tjekkes, før man skriver.
 - **Ingen automatisk overtagelse.** En lås uden aktivitet i over 24 timer markeres `FORÆLDET`, men kun
   ejersessionen kan frigive den. Er ejeren væk, afgør Christopher sagen og sletter selv filen.
 - **Exitkoder er kontrakten:**
-  - `0` ok
-  - `2` ejet af en anden session: STOP
-  - `3` ingen lås: lav en `claim` først
-  - `4` mulig dublet-PR: STOP og rapportér
-  - `5` remote har flyttet sig: STOP, ingen force
+
+| Kode | Betydning | Agentens handling |
+|---|---|---|
+| 0 | ok | fortsæt |
+| 2 | ejet af en anden session | STOP |
+| 3 | ingen lås | `claim` først |
+| 4 | mulig dublet-PR | STOP og rapportér |
+| 5 | remote har ændret sig siden den verificerede SHA | STOP: gennemgå forskellen, ingen force |
+| 6 | ødelagt låsefil | STOP: et menneske afklarer |
+| 7 | ingen verificeret remote-SHA | hent og gennemgå, kør derefter `verify` |
+| 8 | ALARM efter push | rapportér til ejeren |
 
 ## Arbejdsgang for en agent
 
@@ -35,68 +46,107 @@ Sessionens id er den UUID, der står i stien til dens scratchpad (`…/claude/<p
    ```
    node tools/agents/claim.mjs dupes --title "<PR-titel>" --branch <branch>
    ```
-   Søg også i issues og i `git branch -r`. Ved exit 4: opret intet nyt. Rapportér de mulige dubletter, og
-   luk eller overtag ikke andres PR'er.
-2. **Gør krav på branchen** og arbejd i en ny, isoleret worktree fra `origin/main`:
+   Søg også i issues og i `git branch -r`. Ved exit 4: opret intet nyt, og rapportér.
+2. **Gør krav på branchen** i en ny, isoleret worktree fra `origin/main`:
    ```
    node tools/agents/claim.mjs claim --branch <b> --session <id> --task <ID> --purpose "<formål>" [--pr N]
    ```
-3. **Før hver skrivehandling** (commit, merge af main ind, push):
+3. **Før hver skrivehandling:**
    ```
    node tools/agents/claim.mjs check --branch <b> --session <id>
    ```
-4. **Hold låsen levende** ved hver milepæl:
+4. **Hold låsen levende:**
    ```
-   node tools/agents/claim.mjs heartbeat --branch <b> --session <id> --status "<status>" --next "<næste handling>" [--tests "<…>"]
+   node tools/agents/claim.mjs heartbeat --branch <b> --session <id> --status "<status>" --next "<næste handling>"
    ```
-5. **Umiddelbart før push:**
+5. **Push i fire trin:**
    ```
-   node tools/agents/claim.mjs push-check --branch <b> --session <id> [--expect <remote-sha>]
+   git fetch origin <b>          # og gennemgå, hvad der eventuelt er kommet til
+   node tools/agents/claim.mjs verify     --branch <b> --session <id>
+   node tools/agents/claim.mjs push-check --branch <b> --session <id>
+   git push --porcelain origin HEAD:refs/heads/<b> > push.txt     # agentens egen push, aldrig force
+   node tools/agents/claim.mjs after-push --branch <b> --session <id> --porcelain-file push.txt
    ```
-   Kommandoen kontrollerer ejerskabet og sammenligner med remote-HEAD (`git ls-remote`). Push kun ved exit 0,
-   og push aldrig med force. Ved exit 5: undersøg forskellen, og afklar ejerskabet, før du integrerer noget.
+   - `verify` registrerer den remote-HEAD, agenten har set. Det er en bevidst handling: kommer der en ny fremmed
+     commit, skal den gennemgås og verificeres igen.
+   - `push-check` kræver ejerskab og en verificeret SHA, og at remote-HEAD er **præcis** den samme nu. En
+     tilbagerulning eller en fremmed commit, som agenten har trukket ind med `git pull`, stoppes derfor. Til sidst
+     kræver den, at den verificerede SHA er indeholdt i HEAD.
+   - `after-push` sammenligner serverens gamle værdi fra `--porcelain`-outputtet med den verificerede SHA. Er de
+     forskellige, eller var opdateringen forced, giver den ALARM. Ellers registreres den nye HEAD som verificeret.
 6. **Ved overdragelse:**
    ```
    node tools/agents/claim.mjs handover --branch <b>
    ```
-   Kommandoen skriver en skabelon med fakta fra git: HEAD, remote-HEAD, grundlag, ændrede filer og arbejdstræ.
-   Den afleverende agent udfylder opgave, tests (lokalt/CI/simuleret/PGlite/rigtig PostgreSQL/ikke testet),
-   åbne fejl, risici, næste sikre handling og godkendelsesstatus. Derefter frigiver den sin lås, og
-   modtageren laver sin egen `claim`.
+   Kommandoen skriver en skabelon med fakta fra git. Den afleverende agent udfylder opgave, tests, åbne fejl,
+   risici, næste sikre handling og godkendelsesstatus. Derefter frigiver den sin lås, og modtageren laver sin egen
+   `claim` og `verify`.
 7. **Når PR'en er merget eller opgaven opgivet:**
    ```
    node tools/agents/claim.mjs release --branch <b> --session <id>
    ```
-   Worktrees og branches slettes ikke. Det kræver et særskilt GO (§11.6).
+   Worktrees og branches slettes ikke; det kræver et særskilt GO (§11.6).
 
-Overblik over alle låse: `node tools/agents/claim.mjs list`.
+Overblik over alle låse: `node tools/agents/claim.mjs list`. Ødelagte låse vises som `ØDELAGT`, de øvrige vises
+stadig, og exitkoden er 6.
 
-## Hvad låsen registrerer
+## Hvad push-kontrollen faktisk garanterer
 
-Låsen gemmer `branch`, `session`, `task`, `purpose`, `worktree`, `pr`, `status`, `next`, `tests`, `blockedBy`,
-`needsApproval`, `createdAt` og `lastActivity`. Sporet og afhængighederne står i ROADMAP-backloggen (#604),
-som forbliver det autoritative opgaveregister. Låsen er ikke et nyt register, men en skrivetilladelse.
+| Scenarie | Opdages | Hvordan |
+|---|---|---|
+| En anden har pushet ovenpå, før push-check | ja, før push | remote ≠ verificeret (5) |
+| En anden har rullet branchen tilbage med force, før push-check | ja, før push | remote ≠ verificeret (5); ancestry alene ville have sagt ok |
+| Agenten har trukket en fremmed commit ind med `git pull` | ja, før push | remote ≠ verificeret, indtil den bevidst verificerer igen (5) |
+| En anden pusher ovenpå MELLEM push-check og push | ja, af serveren | en almindelig push uden force afvises som non-fast-forward |
+| En anden ruller tilbage MELLEM push-check og push | **kun bagefter** | serveren accepterer agentens fast-forward; `after-push` ser den gamle værdi og giver ALARM (8) |
+| Agenten bruger force | ja, bagefter | `after-push` giver ALARM; guard og CLAUDE.md forbyder det i forvejen |
 
-## Begrænsninger (bevidste)
+**Det eneste, et lokalt preflight ikke kan forhindre**, er en tilbagerulning i millisekunderne mellem tjek og push.
+Den eneste atomiske, serverhåndhævede beskyttelse er en GitHub-ruleset med `non_fast_forward` (og `deletion`) på
+**alle** branches.
+- **I dag:** ruleset 26126869 har reglen, men kun på `main`, så PR-branches kan force-pushes.
+- **Forslag (kræver ejerens GO, fordi det ændrer repoets regler):** udvid reglen til `~ALL`. Så kan ingen, hverken
+  agent eller menneske, omskrive en branch, og push-kontrollen bliver et ekstra lag i stedet for det eneste.
+- **Bevidst fravalgt:** `git push --force-with-lease` giver en atomisk sammenligning på serveren, men er en
+  force-push. Den ville tillade omskrivning, hvis HEAD ikke er efterfølger, og den strider mod "aldrig force".
 
-- **Kun én maskine og én klon.** Låsefilerne ligger i klonens `.git`. Sessioner på en anden computer, i en
-  cloud-session eller i en anden klon ser dem ikke. For dem gælder fortsat, at `push-check` mod remote-HEAD
-  er det sidste værn. GitHub er den eneste fælles sandhed, og en push uden force kan aldrig overskrive.
-  Hvis koordinering på tværs af maskiner bliver nødvendig, er næste skridt en ejerlinje i PR-beskrivelsen
-  eller en assignee. Det er ikke indført nu, fordi alt arbejde i dag sker på én maskine.
-- **Frivillig.** Ingen hook tvinger værktøjet igennem. En agent, der ikke kalder det, bliver ikke stoppet
-  af det. LÆRLIG-GUARD og "ingen force" gælder uanset. Om `check` skal gøres obligatorisk via en hook, er en
-  beslutning for ejeren (ændring af guard-konfiguration).
-- **Sessions-id er selvopgivet.** Værktøjet beskytter mod uheld og glemsel, ikke mod en agent, der lyver om
-  sit id.
-- **Eksisterende branches** har ingen lås, før deres ejer laver en `claim`. Indtil da gælder den read-only
-  ejerskabskontrol i §11.3: hvilken worktree har branchen tjekket ud, og hvornår var sessionen sidst aktiv?
+## Samtidighed og nedbrud
+
+- **Oprettelse er atomisk og med indhold.** Låsen skrives færdig til en midlertidig fil og linkes derefter til det
+  endelige navn (`link` fejler, hvis navnet findes). Ved 20 samtidige processer vinder præcis én. Et nedbrud før
+  linket efterlader kun en `.tmp`-fil og aldrig en tom lås. `.tmp`-filer ignoreres og kan slettes.
+- **En tom eller ødelagt lås** (fx efter en ældre version eller manuel redigering) fejler lukket. `check`, `claim`
+  og `push-check` stopper med exit 6, og ingen kan skrive på branchen, før et menneske har set på filen.
+- **Opdateringer** (`heartbeat`, `verify`, `after-push`) skriver til en midlertidig fil og omdøber den, så en læser
+  aldrig ser en halv fil. Låsen genlæses lige før omdøbningen, og skrivningen opgives, hvis ejeren er skiftet.
+  - **Tilbageværende vindue:** der er stadig et vindue på mikrosekunder mellem genlæsning og omdøbning.
+  - **Hvorfor det er acceptabelt:** et ejerskifte kræver, at et menneske har slettet låsen manuelt, og værktøjet
+    selv sletter kun ejerens egen lås. En fuld fil-lås ville kræve ekstra mekanik og en håndtering af forældede
+    lås-på-låsen, så den er bevidst ikke indført.
+- **`release`** læser og sletter. Samme lille vindue, samme begrundelse.
+
+## Frivillig kontrol, hook, klon og maskine
+
+| Niveau | Hvad det beskytter | Begrænsning | Status |
+|---|---|---|---|
+| Frivillig kontrol | Agenter, der følger arbejdsgangen | En agent, der glemmer den, stoppes ikke; sessions-id er selvopgivet | IMPLEMENTERET |
+| Obligatorisk hook (PreToolUse på `git commit`/`git push`/`git merge`) | Alle Claude-sessioner i klonen; sessions-id kommer fra harnessen, ikke fra agenten | Kræver ændring af `.claude/settings.json` = guard-konfiguration | FORESLÅET, kræver ejerens GO |
+| Samme klon | Låsene i `.git/laerlig-claims/` er fælles for alle worktrees | — | IMPLEMENTERET |
+| På tværs af kloner og maskiner | Kun remote: `verify`/`push-check`/`after-push` og serverens non-fast-forward | Ingen fælles lås. Næste skridt kunne være ruleset på alle branches og en ejerlinje i PR-beskrivelsen | DELVIST |
+
+## Hvad kræver manuel godkendelse
+
+- Frigivelse af en andens lås, også en forældet, eller en ødelagt låsefil: Christopher, efter afklaring.
+- En ALARM (exit 8): ejeren beslutter, hvad der skal ske med den omskrevne historik.
+- Hook, ruleset og anden konfiguration: ejerens GO for hver ændring.
+- Merge, deploy, sletning af worktrees og branches: ejerens GO som altid.
 
 ## Fravalg
 
-- **GitHub Issues som lås:** de virker på tværs af maskiner, men hvert tjek koster API-kald og netværk, de
-  fejler offline, og de kræver skriveadgang til issues, bare for at kunne arbejde. Måske senere.
-- **En fil i repoet:** hver lås ville blive en commit eller PR og give konflikter mellem netop de sessioner,
-  den skal adskille.
-- **Automatisk overtagelse efter timeout:** afvist. En session, der har været inaktiv i 15 timer, kan stadig
-  have arbejde, der ikke er pushet. Det skete 2026-11-12 med `wt-k1b`.
+- **GitHub Issues som lås:** virker på tværs af maskiner, men kræver API-kald og netværk for hvert tjek og
+  skriveadgang til issues. Måske senere.
+- **En fil i repoet:** hver lås ville blive en commit eller PR og give konflikter mellem netop de sessioner, den
+  skal adskille.
+- **Automatisk overtagelse efter timeout:** afvist. En session, der har været inaktiv i 15 timer, kan stadig have
+  arbejde, der ikke er pushet (2026-11-12, `wt-k1b`).
+- **At værktøjet selv pusher:** afvist. Det ville skjule pushet for LÆRLIG-GUARD.
