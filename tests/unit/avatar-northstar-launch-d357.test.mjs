@@ -47,7 +47,7 @@ test("D-357: stored ids still pass every approval gate; unknown ids and unsuppor
   L.northstarUseAccount({ northstar: { outfit: "K99" } });
   assert.equal(withStorage({}, () => L.northstarRenderFor("avatar", [])), null);
   L.northstarUseAccount({ northstar: { outfit: "K01", tee: "not-an-item", shoes: "not-an-item", top: "not-an-item", pants: "not-an-item" } });
-  assert.equal(withStorage({}, () => L.northstarRenderFor("avatar", [])).key, "K01");
+  assert.equal(withStorage({}, () => L.northstarRenderFor("avatar", [])).key, "K01+hair:standard");
   L.northstarUseAccount({ northstar: { outfit: "K01" } });
   assert.equal(withStorage({}, () => L.northstarRenderFor("avatar", [{ src: "/x.svg", z: 5, slot: "hat" }])), null, "a hat falls back, whole");
   assert.equal(withStorage({}, () => L.northstarRenderFor("shop", [])), null, "only the three surfaces show the figure");

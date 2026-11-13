@@ -60,16 +60,16 @@ test("D-308 the whole effective outfit decides: refused combinations keep the ou
 
 test("D-308 a stored shoe never appears on an unapproved outfit after a reload or a change of top, trousers or K outfit", () => {
   const on = { avatar_northstar: "1", avatar_northstar_outfit: "K04", avatar_northstar_shoes: "SV1-V5-CHARCOAL" };
-  const r = withStorage(on, () => L.northstarRenderFor("avatar", [])); assert.deepEqual([r.key, r.shoe], ["K04+SV1-V5-CHARCOAL", "SV1-V5-CHARCOAL"]);
+  const r = withStorage(on, () => L.northstarRenderFor("avatar", [])); assert.deepEqual([r.key, r.shoe], ["K04+SV1-V5-CHARCOAL+hair:standard", "SV1-V5-CHARCOAL"]);
   // D-314: with a print tee or on K12 (blue tee + shorts) charcoal is approved; with long trousers on any top it is not
-  for (const [change, want] of [[{ avatar_northstar_tee: "TP-SHD-FOR" }, "K04+TP-SHD-FOR+SV1-V5-CHARCOAL"], [{ avatar_northstar_outfit: "K12" }, "K12+SV1-V5-CHARCOAL"]])
+  for (const [change, want] of [[{ avatar_northstar_tee: "TP-SHD-FOR" }, "K04+TP-SHD-FOR+SV1-V5-CHARCOAL+hair:standard"], [{ avatar_northstar_outfit: "K12" }, "K12+SV1-V5-CHARCOAL+hair:standard"]])
     for (const s of ["avatar", "quiz", "hub"]) assert.equal(withStorage({ ...on, ...change }, () => L.northstarRenderFor(s, [])).key, want, JSON.stringify(change) + " " + s);
-  for (const [change, want] of [[{ avatar_northstar_pants: "TS-NAV" }, "K04+TS-NAV"], [{ avatar_northstar_tee: "TP-SHD-FOR", avatar_northstar_pants: "TS-SND" }, "K04+TP-SHD-FOR+TS-SND"], [{ avatar_northstar_outfit: "K17" }, "K17"], [{ avatar_northstar_outfit: "K18" }, "K18"], [{ avatar_northstar_outfit: "K12", avatar_northstar_pants: "TS-SND" }, "K12+TS-SND"]]) {
+  for (const [change, want] of [[{ avatar_northstar_pants: "TS-NAV" }, "K04+TS-NAV+hair:standard"], [{ avatar_northstar_tee: "TP-SHD-FOR", avatar_northstar_pants: "TS-SND" }, "K04+TP-SHD-FOR+TS-SND+hair:standard"], [{ avatar_northstar_outfit: "K17" }, "K17+hair:standard"], [{ avatar_northstar_outfit: "K18" }, "K18+hair:standard"], [{ avatar_northstar_outfit: "K12", avatar_northstar_pants: "TS-SND" }, "K12+TS-SND+hair:standard"]]) {
     for (const s of ["avatar", "quiz", "hub"]) { const x = withStorage({ ...on, ...change }, () => L.northstarRenderFor(s, [])); assert.deepEqual([x.key, x.shoe], [want, null], JSON.stringify(change) + " " + s);
       assert.ok(!x.plan.some((st) => /sv1/.test(st.src)), "no SV1 file drawn"); } }
   // back to an approved outfit: the stored choice applies again (it was never rewritten)
-  const back = withStorage({ ...on, avatar_northstar_pants: "TS-NAV" }, (m) => { m.delete("avatar_northstar_pants"); return L.northstarRenderFor("hub", []); }); assert.equal(back.key, "K04+SV1-V5-CHARCOAL");
-  const c = withStorage({ ...on, avatar_northstar_shoes: "SV1-V5-CHALK", avatar_northstar_pants: "TS-SND", avatar_northstar_outfit: "K07" }, () => L.northstarRenderFor("quiz", [])); assert.deepEqual([c.key, c.pants, c.shoe], ["K07+TS-SND+SV1-V5-CHALK", "TS-SND", "SV1-V5-CHALK"]);
+  const back = withStorage({ ...on, avatar_northstar_pants: "TS-NAV" }, (m) => { m.delete("avatar_northstar_pants"); return L.northstarRenderFor("hub", []); }); assert.equal(back.key, "K04+SV1-V5-CHARCOAL+hair:standard");
+  const c = withStorage({ ...on, avatar_northstar_shoes: "SV1-V5-CHALK", avatar_northstar_pants: "TS-SND", avatar_northstar_outfit: "K07" }, () => L.northstarRenderFor("quiz", [])); assert.deepEqual([c.key, c.pants, c.shoe], ["K07+TS-SND+SV1-V5-CHALK+hair:standard", "TS-SND", "SV1-V5-CHALK"]);
 });
 
 test("D-308 the plan: the shoe with its own covering mask, in the D-242 order, the beige sneakers' shadow; without a choice the K plan", () => {
@@ -80,7 +80,7 @@ test("D-308 the plan: the shoe with its own covering mask, in the D-242 order, t
     for (const x of plan1.filter((x) => x.figure)) assert.ok(x.cut.endsWith("/hide-" + item + "-v1.webp"), label);
     for (const x of plan.filter((x) => x.figure)) assert.ok(x.cut.endsWith("/hide-" + item + "-v1.webp"), label);
     assert.ok(plan.some((x) => x.op === "shade" && x.src.endsWith("/shoes-sneakers-beige-shadow-body-v1.webp")), label); }
-  const r = withStorage({ avatar_northstar: "1", avatar_northstar_outfit: "K05" }, () => L.northstarRenderFor("quiz", [])); assert.deepEqual([r.key, r.shoe], ["K05", null]); assert.deepEqual(r.plan, L.northstarCanvasPlan("K05"));
+  const r = withStorage({ avatar_northstar: "1", avatar_northstar_outfit: "K05" }, () => L.northstarRenderFor("quiz", [])); assert.deepEqual([r.key, r.shoe], ["K05+hair:standard", null]); assert.deepEqual(r.plan, L.northstarCanvasPlan("K05").map((s) => (s.op === "draw" && s.src === L.northstarHeadSrc(null) ? { ...s, src: L.northstarHeadSrc("standard") } : s)));
 });
 
 test("D-308 without the opt-in nothing changes, even with a stored shoe; ?northstar=0 forgets it; the panel offers it with reasons", async () => {

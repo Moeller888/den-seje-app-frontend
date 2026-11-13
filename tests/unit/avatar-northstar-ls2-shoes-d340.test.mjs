@@ -43,8 +43,8 @@ test("D-340 the whole effective outfit decides: shoes and trousers choices keep 
 
 test("D-340 the stored choice: a shoe choice keeps it; shorts show the own top with the choice kept on every load; returning brings it back", () => {
   const on = { avatar_northstar: "1", avatar_northstar_outfit: "K01", avatar_northstar_sweater: "LS2-HEATHER", avatar_northstar_shoes: "SV1-V5-CHALK" };
-  assert.deepEqual(withStorage(on, () => { const r = L.northstarRenderFor("hub", []); return [r.key, r.sweater]; }), ["K01+SV1-V5-CHALK+LS2-HEATHER", "LS2-HEATHER"]);
-  for (const load of [1, 2]) withStorage({ ...on, avatar_northstar_outfit: "K04" }, (m) => { const r = L.northstarRenderFor("quiz", []); assert.deepEqual([r.key, r.sweater], ["K04+SV1-V5-CHALK", null], "load " + load); assert.equal(m.get("avatar_northstar_sweater"), "LS2-HEATHER"); });
-  assert.equal(withStorage({ ...on, avatar_northstar_outfit: "K07" }, () => L.northstarRenderFor("avatar", [])).key, "K07+SV1-V5-CHALK+LS2-HEATHER");
+  assert.deepEqual(withStorage(on, () => { const r = L.northstarRenderFor("hub", []); return [r.key, r.sweater]; }), ["K01+SV1-V5-CHALK+LS2-HEATHER+hair:standard", "LS2-HEATHER"]);
+  for (const load of [1, 2]) withStorage({ ...on, avatar_northstar_outfit: "K04" }, (m) => { const r = L.northstarRenderFor("quiz", []); assert.deepEqual([r.key, r.sweater], ["K04+SV1-V5-CHALK+hair:standard", null], "load " + load); assert.equal(m.get("avatar_northstar_sweater"), "LS2-HEATHER"); });
+  assert.equal(withStorage({ ...on, avatar_northstar_outfit: "K07" }, () => L.northstarRenderFor("avatar", [])).key, "K07+SV1-V5-CHALK+LS2-HEATHER+hair:standard");
   assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
 });
