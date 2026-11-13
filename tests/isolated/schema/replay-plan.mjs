@@ -178,6 +178,66 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020220003_english_level_batch10_3.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261107100001_danish_level_batch1_1.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107100002_danish_level_batch1_2.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107100003_danish_level_batch1_3.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107110001_danish_level_batch2_1.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107110002_danish_level_batch2_2.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107110003_danish_level_batch2_3.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107120001_danish_level_batch3_1.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107120002_danish_level_batch3_2.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107120003_danish_level_batch3_3.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107130001_danish_level_batch4_1.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107130002_danish_level_batch4_2.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107130003_danish_level_batch4_3.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107140001_danish_level_batch5_1.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107140002_danish_level_batch5_2.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107140003_danish_level_batch5_3.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107150001_danish_level_batch6_1.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107150002_danish_level_batch6_2.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107150003_danish_level_batch6_3.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107160001_danish_level_batch7_1.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107160002_danish_level_batch7_2.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107160003_danish_level_batch7_3.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107170001_danish_level_batch8_1.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107170002_danish_level_batch8_2.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107170003_danish_level_batch8_3.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107180001_danish_level_batch9_1.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107180002_danish_level_batch9_2.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107180003_danish_level_batch9_3.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107190001_danish_level_batch10_1.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107190002_danish_level_batch10_2.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
+  "20261107190003_danish_level_batch10_3.sql":
+    "Danish 5,000, not applied in production: data only, inserts inactive Danish questions (metadata.level_batch)",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision

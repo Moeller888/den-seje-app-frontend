@@ -385,3 +385,173 @@ Planen for anvendelse og trinvis aktivering står i runbookens §2.8
 - **De omvendte ordforrådsopgaver øver ord, som `pilot`–`batch6` også spørger om**, bare i den modsatte
   retning.
 - **PGlite er PostgreSQL 18**, mens produktionen kører 17.6.
+
+---
+
+## 12. 5.000 nye danskopgaver (2026-11-06)
+
+Ejeren bad 2026-11-06 om 5.000 spørgsmål til danskfaget. Produktionen havde på det tidspunkt **0
+danskopgaver**: de 210 fra `20261019120001`/`20261019120002` er aldrig anvendt, fordi de strander på
+`unique_question_text` (PR #349 er åben). De 5.000 er nye og afhænger ikke af de 210.
+
+Opgaverne følger engelsksporet: **inaktive**, mærket `metadata.level_batch`, og hver migration
+anvendes kun med særskilt ejer-GO (D-110). Intet her er anvendt, og intet er aktiveret.
+
+### 12.1 Indhold og fordeling
+
+30 migrationer, `20261107100001`–`20261107190003` (`danish_level_batch1_1`–`batch10_3`): 10 portioner
+(`danish1`–`danish10`) à 500 opgaver i 3 filer. Hver portion spænder over hele skalaen, og facit står
+præcis 125 gange på hver plads pr. portion.
+
+| Klassetrin | Stavning | Ordforråd | Grammatik | Tegnsætning | Læseforståelse | Litteratur | I alt |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 3. | 170 | 190 | 110 | 60 | 165 | 20 | 715 |
+| 4. | 150 | 190 | 120 | 70 | 160 | 25 | 715 |
+| 5. | 130 | 190 | 130 | 75 | 155 | 40 | 720 |
+| 6. | 120 | 190 | 130 | 75 | 165 | 60 | 740 |
+| 7. | 110 | 190 | 130 | 70 | 142 | 85 | 727 |
+| 8. | 100 | 190 | 130 | 65 | 107 | 105 | 697 |
+| 9. | 90 | 190 | 130 | 55 | 96 | 125 | 686 |
+| **I alt** | **870** | **1.330** | **880** | **470** | **990** | **460** | **5.000** |
+
+**Niveau.** Dansk har ingen CEFR-ankre. Niveauet er forfatterens skøn inden for klassetrinnets del af
+skalaen, og `target_grade`/`difficulty_band` er afledt baglæns (§4.1). Kalibrering kræver svardata.
+
+Forfatterreglerne står i `tools/questions/fixtures/danish-5000/AUTHORING.md`, og opgaverne ligger i
+samme mappe. Migrationerne er genereret; ret i fixturerne, og kør
+`node tools/questions/build-danish-5000.mjs`.
+
+### 12.2 To regler, der er særlige for dansk
+
+- **Bedømmelsen skelner ikke store og små bogstaver** (`normalize_choice_answer`, D-290 G1). To svar,
+  der kun adskiller sig på den måde, ville begge give point. Opgaver om stort bogstav spørger derfor
+  efter *hvilket ord*. Testen kører produktionens egen funktion på alle 5.000.
+- **Teksten er unik i hele banken.** Bare rammer som "Hvilket ord er stavet rigtigt?" er forbudt.
+
+Oplæsning er ikke en risiko: sprogsegmenteringen bruges kun til engelsk.
+
+### 12.3 Automatiske kontroller
+
+- **`tools/questions/danish-5000-quality.mjs`:** struktur, længdesignal, bedømmelsesnøgle, "samme opgave".
+- **`tools/questions/check-danish-items.mjs`:** kvoter, bånd, banken og overlap på tværs. Facit skal være
+  det længste svar i 15–35 % af opgaverne pr. del, så længden ikke afslører svaret i nogen retning.
+  Stavning er undtaget, fordi svarene dér er varianter af samme ord.
+- **`tools/questions/danish-5000-precheck.mjs`:** skrivebeskyttet SQL før og efter hver portion.
+- **`tests/unit/danish-5000-migrations-run.test.mjs`:** kører alle 30 migrationer på PGlite efter migration A.
+
+### 12.4 Gennemgang
+
+Forfatterne gennemlæste egne opgaver. Derefter blev der foretaget en uafhængig gennemgang:
+
+| Gennemgang | Opgaver | Forkert facit | Kritiske fund | Mindre fund |
+|---|---:|---:|---:|---:|
+| Stavning og tegnsætning (lagdelt stikprøve) | 196 | 0 | 4 | 7 |
+| Ordforråd og grammatik (stikprøve + alle ordforråd 9. kl.) | 372 | 0 | 5 | 17 |
+| Læseforståelse og litteratur (lagdelt stikprøve) | 226 | 0 | 1 | 14 |
+| **I alt** | **794** | **0** | **10** | **38** |
+
+"Kritisk" dækker her fagligt forkerte forklaringer, to forsvarlige svar eller et ufuldstændigt facit.
+Alle kritiske fund er rettet, og de mindre er rettet undtagen dem i §12.5. Fejlene samlede sig om
+påstande om udtale, oprindelse og optælling, så alle 898 forklaringer af den type blev gennemgået
+særskilt mod Den Danske Ordbog: 61 blev rettet.
+
+Den samlede kritiske fejlrate i stikprøven var 1,3 %. Det er **ikke** den fulde E5-kontrol, og
+læsningen er foretaget af AI, ikke af en dansklærer.
+
+### 12.5 Kendte begrænsninger og åbne valg
+
+- **Retskrivningsordbogen er ikke slået op.** Opslag er sket i Den Danske Ordbog; tilladte dobbeltformer
+  kan derfor have overlevet som distraktorer.
+- **Niveauerne er skøn.** Enkelte lette ord ligger højt inden for deres klassetrin.
+- **Top-niveauet (ca. 9.800+) går ud over 9. klasse** (`mutatis mutandis`, `ceteris paribus`, `antinomi`).
+  Ejeren besluttede 2026-11-06, at det bevares: der skal også være noget til de dygtige.
+- **Læringsværdien af de korte tekster er vurderet, ikke målt** (§12.7).
+- **En for let opgave er ikke ændret:** `t6789-03.json#52` (anførselstegn om en titel, niveau 7414).
+- **Blokerede emner, se §12.8.** Kontrollen fanger kun de tydelige tilfælde og kan ikke se en holdning.
+- **Sammenligning med produktionsbanken mangler.** Teksterne er tjekket mod alle migrationer i repoet
+  og mod PR #349, ikke mod live. Det gøres pr. portion før anvendelse (§12.6).
+
+### 12.6 Anvendelse (intet udført)
+
+Hvert trin kræver sit eget GO. Pr. portion: kør `danish-5000-precheck.mjs before <n>` én gang via
+`execute_sql`, anvend de tre filer i versionsorden med `apply_migration`, og kør `... after`.
+Filerne står i `NOT_IN_PRODUCTION`, indtil de er anvendt og verificeret.
+
+Aktivering er en separat migration pr. portion efter dokumenteret E5-kontrol:
+`UPDATE … SET is_active = true WHERE learning_objective = 'danish' AND metadata->>'level_batch' = …`.
+Eleverne får dansk gennem den eksisterende vej, så der kræves ingen ændring af Edge Functions eller frontend.
+En fejl rulles tilbage med `DELETE` på `metadata.level_batch`, så længe ingen elev har set opgaverne.
+
+### 12.7 De korte læsetekster
+
+205 læseforståelsesopgaver i 7.–9. klasse havde tekster på 1–2 sætninger. Ejeren besluttede 2026-11-06,
+at de må blive, hvis de kan dokumenteres læringsgivende, og at de gerne må ligge lavere.
+
+Hver opgave er vurderet enkeltvis, med færdighed, læringsmål og begrundelse, i
+[`operations/danish-5000-short-texts.json`](operations/danish-5000-short-texts.json):
+
+| Dom | Opgaver | Følge |
+|---|---:|---|
+| Beholdes på niveau | 110 | Uændret |
+| Lettere end niveauet | 90 | Flyttet ned: 5 til 5. klasse, 25 til 6., 42 til 7., 18 til 8. |
+| Ingen reel læringsværdi | 5 | Erstattet af nye opgaver med tekster på 4 sætninger |
+
+Længden var ikke afgørende. Mange af de flyttede opgaver havde svage distraktorer. Ingen landede i 3.–4.
+klasse, fordi ordforråd og emne ikke passer dertil. Fordelingen i §12.1 er tallene efter flytningen.
+
+**Dokumentationen viser læringsmål, ikke læringseffekt.** Den er en faglig vurdering. Om opgaverne faktisk
+lærer eleverne noget, kan først ses af svardata: Efter aktivering bør de korte opgaver sammenlignes med
+læseforståelsesopgaver på samme niveau, på svarprocent og på om dygtigere elever klarer dem bedre.
+Opgaver, der ikke skiller, flyttes eller fjernes. Filen rummer de 190 opgaver, der stadig er i banken efter §12.8 og §12.9.
+
+### 12.8 Blokerede emner (ejerbeslutning 2026-11-06)
+
+34 opgaver blev sendt til lærergennemgang. Læreren vurderede 29: 7 "Kan bruges" og 22 "Skal fjernes".
+Ejeren besluttede derefter, at spørgsmål med disse emner fremover blot blokeres:
+
+- død og sorg hos mennesker;
+- alvorlig sygdom;
+- skilsmisse og konflikter i familien;
+- pengenød, fyring og arbejdsløshed;
+- mobning og udelukkelse;
+- stillingtagen i et politisk spørgsmål.
+
+Neutrale ord og fakta er ikke omfattet: "hospital" i en staveopgave, "Folketinget" som samfundsord.
+
+| Gruppe | Opgaver | Følge |
+|---|---:|---|
+| Læreren: "Skal fjernes" | 22 | Fjernet |
+| Ikke vurderet af læreren | 5 | Fjernet, fordi de falder under reglen og ikke er godkendt |
+| Samme type, uden for lærerens liste | 8 | Fjernet |
+| Læreren: "Kan bruges" | 7 | Beholdt i `teacher-approved.json` |
+
+De 35 fjernede er erstattet af nye, neutrale opgaver på samme niveauer, så banken stadig er på 5.000.
+En staveopgave om mobning fik en ny sætning. Reglen står i `AUTHORING.md`, og `check-danish-items.mjs`
+afviser de tydelige tilfælde i læseforståelse og litteratur.
+
+### 12.9 Facit skal give mening for et menneske
+
+Ejeren læste opgaverne og fandt, at facit på mange spørgsmål ikke gav mening. Facit var sjældent forkert, men
+svarede som en analytiker: "håndtere nederlag" i stedet for "tåle at tabe". Korrekturen i §12.4 opdagede det
+ikke, fordi den spurgte, om facit var rigtigt, ikke om det lød som et svar.
+
+**Spisebordstesten** blev derefter fast regel i `AUTHORING.md`: Ville en voksen sige facit sådan til et barn
+ved spisebordet? Alle 1.450 opgaver i læseforståelse og litteratur er læst igen med den test:
+
+| Del | Læst | Rettet | Erstattet (blokeret emne) |
+|---|---:|---:|---:|
+| Læseforståelse 7.–9. | 345 | 230 | 14 |
+| Læseforståelse 5.–6. | 320 | 110 | 36 |
+| Læseforståelse 3.–4. | 325 | 61 | 22 |
+| Litteratur 7.–9. | 315 | 40 | 28 |
+| Litteratur 3.–6. | 145 | 31 | 3 |
+| **I alt** | **1.450** | **472** | **103** |
+
+Ejeren læste og godkendte 20 opgaver fra læseforståelse 7.–9., heraf 5 urørte, før resten blev rettet.
+
+De blokerede emner blev fundet ved læsning, fordi mange tekster kun antyder dem. Redaktørerne læste reglen
+forsigtigt, så nogle grænsetilfælde er erstattet (et barn, der mangler fem kroner), og andre er beholdt
+(en veninde, der flytter). Bagefter blev ordforråd og grammatik også læst med testen: 2.210 læst, 374 rettet.
+
+Tallene i §12.4 gælder teksterne, som de så ud før §12.8 og §12.9. E5 er kørt i to runder uden at bestå, se
+[`operations/danish-5000-e5.md`](operations/danish-5000-e5.md) §7.
