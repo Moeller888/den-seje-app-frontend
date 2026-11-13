@@ -1,6 +1,6 @@
-// D-373: the hair choice on the Northstar figure — three published heads on one shared head base, behind NORTHSTAR_HAIR_CHOICE (off).
-// The static tests run everywhere: the flag is off and changes nothing; with a browser's opt-in the head follows the stored hairstyle and
-// only the head; the published heads are exactly the fixture's; the migration accepts the three hairstyles and nothing else (PGlite).
+// D-373: the hair choice on the Northstar figure — three published heads on one shared head base; open by default since D-374
+// (NORTHSTAR_HAIR_CHOICE = true). The static tests run everywhere: without any opt-in the head follows the stored hairstyle and only
+// the head (a browser's old opt-in changes nothing); the published heads are exactly the fixture's; the migration accepts the three hairstyles and nothing else (PGlite).
 // The rebuild from NH-4's raw image needs the private files and the vendored libwebp, so it is not a unit test (D-094: no unit file may
 // depend on a vendored binary): tools/avatar/build-northstar-hair-heads-d373.mjs checks every hash against the fixture itself and exits 1
 // on any difference (D-373.md records its runs). 0 image calls.
@@ -30,17 +30,23 @@ async function layers(optIn) {
 }
 const headOf = (r) => r.plan.filter((s) => s.op === "draw" && /head/.test(s.src)).map((s) => s.src);
 
-test("D-373 off: the flag is off, and the figure, its key and every save are exactly as before", async () => {
+test("D-374 open by default: the flag is on, and without any opt-in the figure wears the stored hairstyle, else the standard hair", async () => {
   const L = await layers(false);
-  assert.equal(L.NORTHSTAR_HAIR_CHOICE, false);
-  assert.equal(L.isNorthstarHairOn(), false);
+  assert.equal(L.NORTHSTAR_HAIR_CHOICE, true);
+  assert.equal(L.isNorthstarHairOn(), true, "no opt-in needed");
+  L.northstarUseAccount({ northstar: { ...FREE } });
+  assert.equal(L.northstarHairNow(), "standard", "a saved avatar without a hairstyle gets the standard hair");
+  let r = L.northstarRenderFor("avatar", []);
+  assert.deepEqual(headOf(r), ["/assets/avatar-northstar-hair/head-standard-v1.webp"]);
+  assert.notDeepEqual(headOf(r), [TODAY], "not today's head");
+  assert.equal(r.key, "FRI+top-tee-hip-blue+bottom-trousers-square-navy+shoes-sneakers-white+hair:standard");
   L.northstarUseAccount({ northstar: { ...FREE, hair: "nh4-grey" } });
-  assert.equal(L.northstarHairNow(), null);
-  const r = L.northstarRenderFor("avatar", []);
-  assert.deepEqual(headOf(r), [TODAY], "today's head");
-  assert.equal(r.key, "FRI+top-tee-hip-blue+bottom-trousers-square-navy+shoes-sneakers-white", "today's figure key");
-  assert.equal("hair" in L.northstarFitPiece("top-tank-navy").choice, false, "a part saves without a hairstyle");
-  assert.equal(L.northstarFitHair("nh4-grey"), null);
+  r = L.northstarRenderFor("avatar", []);
+  assert.deepEqual(headOf(r), ["/assets/avatar-northstar-hair/head-nh4-grey-v1.webp"]);
+  assert.deepEqual(L.northstarFitPiece("top-tank-navy").choice, { ...FREE, top: "top-tank-navy", hair: "nh4-grey" }, "a part saves with the hairstyle");
+  assert.deepEqual(L.northstarFitHair("nh4-brown").choice, { ...FREE, hair: "nh4-brown" });
+  const opted = await layers(true);
+  assert.equal(opted.isNorthstarHairOn(), true, "a browser's old opt-in changes nothing");
 });
 
 test("D-373 on (a browser's opt-in): the head follows the stored hairstyle, the standard hair for every choice without one", async () => {
