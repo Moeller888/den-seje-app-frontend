@@ -18,15 +18,42 @@ Kommandoen skriver et dansk resumé med:
   browsere der startede, K1-kolonner og testtal;
 - en dækningssektion.
 
-## 1. Fejltyper
+## 1. GitHub-status, diagnose og evidensniveau
+
+Rapporten holder tre ting adskilt:
+
+| Kolonne | Hvem siger det | Eksempel |
+|---|---|---|
+| **GitHub-status** | GitHub (jobbets `conclusion`) | `success`, `failure`, `cancelled`, `skipped` |
+| **Diagnose** | værktøjet, ud fra loggen | `INFRA-ARTIFACT` |
+| **Evidens** | værktøjet, om sin egen diagnose | se nedenfor |
+
+| Evidensniveau | Hvornår |
+|---|---|
+| `VERIFICERET` | diagnosen bygger på en genkendt loglinje i en **fuldstændig** log, dvs. en log der slutter med GitHubs "Cleaning up orphan processes" |
+| `SANDSYNLIGT` | diagnosen er **udledt**: `CANCELLED-SUPERSEDED` bygger på tidsmæssigt sammenfald, og `INFRA-INSTALL` ved trin-timeout bygger på trinnavnet. Det gælder også, når en genkendt linje står i en log, der ser **ufuldstændig** ud |
+| `UKENDT` | ingen log, eller ingen genkendt linje |
+
+**Manglende log:** en grøn status uden tilgængelig log får `UKENDT` og noten "log ikke tilgængelig: kun GitHubs
+jobstatus — installation, browsere og testtal er ikke kontrolleret". En grøn kørsel præsenteres aldrig som fuldt
+verificeret, hvis loggen ikke er læst.
+
+**Logdata i rapporten:**
+- Evidenslinjer afkortes til 200 tegn.
+- Værktøjet maskerer alt, der ligner en hemmelighed: GitHub-tokens, `sb_secret_`/`sb_publishable_`, JWT'er (fx
+  legacy-nøgler), `sk-…`, værdien efter `Bearer`/`apikey`/`password`/`secret`/`token` og brugernavn/kodeord i URL'er.
+  GitHub maskerer selv kendte secrets som `***`, men værktøjet stoler ikke på, at alt er kendt.
+- Der kopieres aldrig mere end den ene linje, diagnosen bygger på, og første fejllinje for hver flaky test.
+
+## 2. Fejltyper
 
 Hver type sættes kun på en genkendt linje fra projektets egne workflows. Alt andet er `UKENDT`.
 
 | Type | Genkendes på | Betydning |
 |---|---|---|
-| `OK` / `OK-MED-FLAKY` | grønt job; flaky-linjen navngiver testen | bestået; flaky er en overvågningskandidat, ikke en fejl |
+| `OK` / `OK-MED-FLAKY` | grønt job; flaky-linjen navngiver testen | bestået; flaky er en overvågningskandidat, ikke en fejl. Flaky tests vises i en egen tabel (test, fejl ved første forsøg, bestod ved genforsøg), **også når jobbet endte rødt** |
 | `SPRUNGET-OVER` | jobbets konklusion `skipped` | **ikke bestået**; kontrollér at springet er tilsigtet |
-| `CANCELLED-SUPERSEDED` | annulleret, og en nyere kørsel af samme workflow på samme branch startede før stoppet | den nyere kørsel gælder; main-supersede (#428) gør det bevidst |
+| `CANCELLED-SUPERSEDED` | annulleret, og en nyere kørsel af samme workflow på samme branch startede før stoppet | den nyere kørsel gælder; main-supersede (#428) gør det bevidst. Altid `SANDSYNLIGT`: sammenfald, ikke bevis |
 | `CANCELLED-TIMEOUT` | "exceeded the maximum execution time" / "has timed out after" | læs hvilket trin der stoppede |
 | `CANCELLED-UKENDT` | annulleret uden nyere kørsel | manuel annullering, kø eller lås; find ud af hvem |
 | `INFRA-RUNNER` | "Playwright does not support … on …" | runneren understøttes ikke (ubuntu-26.04, 2026-11-12) |
@@ -44,7 +71,7 @@ Hver type sættes kun på en genkendt linje fra projektets egne workflows. Alt a
   linjer indeholder `INFRA-INSTALL` i hver eneste kørsel og ignoreres derfor (ESC[36;1m). Kørsel 43089224884 viser
   hvorfor: en simpel tekstsøgning kaldte dens upload-fejl en installationsfejl.
 
-## 2. Hvad en grøn kørsel ikke beviser
+## 3. Hvad en grøn kørsel ikke beviser
 
 Dækningssektionen i rapporten viser bl.a.:
 - **Fallback trods cache-hit:** "cache-hit, men systempakkerne kom fra spejlene". Cache-vejen fejlede i den kørsel,
@@ -56,7 +83,7 @@ Dækningssektionen i rapporten viser bl.a.:
 Kontrollér altid testtallene mod baseline. På main pr. 2026-11-12 er standardbanen 146/112 (smoke) og
 1277/377 (suite). K1-banen er 145/113, hvor den ene ekstra skip er "D-341 WITHOUT K1", som er tilsigtet.
 
-## 3. Browserinstallationen (spor B)
+## 4. Browserinstallationen (spor B)
 
 **Baseline, VERIFICERET:** main `361a783c`, kørsel 43190527778, og senere kørsler:
 - cache-hit på `pw-browsers-apt-ubuntu24-20261101.360.1-playwright-1.59.1`;
@@ -99,7 +126,7 @@ Kontrollér altid testtallene mod baseline. På main pr. 2026-11-12 er standardb
   Det er SANDSYNLIGT, at apt bliver stoppet, men det er ikke afprøvet på en runner. Når fallback rammer sin
   grænse, fejler trinnet under alle omstændigheder med `INFRA-INSTALL`.
 
-## 4. Flaky tests (D3)
+## 5. Flaky tests (D3)
 
 Projektet har intet register over flaky tests. Playwright-rapporten navngiver dem, og `run-triage` løfter dem op i
 resuméet.
@@ -126,14 +153,35 @@ hukommelse.
 | Andre WebKit-tests | `mobile-ux-validation:277` ×2. Én gang hver: `:73`, `:300`, `:353`, `:376`, `stav-til:199/228/245`, `placement-e2e:150/165`, `landing:306` |
 | Unexpected (rigtige fejl) | 0 i de 44 jobs |
 
-**Vurdering (SANDSYNLIGT):** flakiness, der er spredt over 9 forskellige WebKit-specs og aldrig ses i Chromium
-eller Firefox, peger på WebKit-runtimen i CI ("WebKit encountered an internal error" ved `page.goto`) snarere end på
-én dårlig test. `:327` er derfor ikke en "permanent flaky test", men den hyppigste repræsentant for et WebKit-mønster.
+Det er 15 forekomster fordelt på 12 tests i 4 spec-filer: `mobile-ux-validation` ×8, `stav-til` ×3,
+`placement-e2e` ×2 og `landing` ×1.
+
+**Fejl ved første forsøg:**
+
+| Fejl | Forekomster |
+|---|---|
+| `page.goto: WebKit encountered an internal error` | 6 |
+| `page.goto: Test ended.` | 3 |
+| `page.goto`: timeout / afbrudt navigation | 1 + 1 |
+| `toHaveAttribute` (alle i `stav-til`) | 3 |
+| `waitForSelector`-timeout | 1 |
+
+**Uden for stikprøven (2026-11-13):**
+- `[webkit] mobile-ux-validation:250` (internal error) på #700.
+- `[firefox] landing.spec.ts:989` (`page.waitForURL`-timeout) på #699.
+
+**Vurdering (SANDSYNLIGT):**
+- **Navigationsfejl:** 11 af 15 forekomster er fejl i navigationslaget, inde i WebKit og før applikationens logik.
+  Det peger på WebKit-runtimen eller -miljøet i CI, ikke på én dårlig test. `:327` er derfor ikke en "permanent flaky
+  test", men den hyppigste repræsentant for mønstret.
+- **Stav til:** de 3 `toHaveAttribute`-fejl i `stav-til` er et særskilt mønster, som kan være et reelt
+  timing-problem, og bør undersøges for sig.
+- **Ikke kun WebKit:** Firefox-forekomsten viser, at mønstret ikke er udelukkende WebKit.
 
 **Næste skridt:** én issue for WebKit-mønstret, der tæller fejltypen pr. kørsel med `run-triage`. Ingen test springes
 over, og ingen retries hæves.
 
-## 5. Genkørsler (D4)
+## 6. Genkørsler (D4)
 
 Automatisk genkørsel er **ikke** indført. Det kræver ejerens særskilte GO. Den anbefalede politik, hvis det
 indføres:

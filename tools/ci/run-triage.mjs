@@ -1,14 +1,18 @@
 #!/usr/bin/env node
-// CI-triage: et kort dansk resumé af én GitHub Actions-kørsel — job for job, med fejltype, dokumenteret
-// årsag (den loglinje, klassifikationen bygger på), mulig næste handling og om den kræver ejerens GO.
-// Dokumentation: docs/operations/ci-triage.md.
+// CI-triage: et kort dansk resumé af én GitHub Actions-kørsel — job for job: GitHubs rapporterede status,
+// værktøjets diagnose af årsagen, evidensniveauet for diagnosen, den loglinje den bygger på, mulig næste
+// handling og om den kræver ejerens GO. Dokumentation: docs/operations/ci-triage.md.
 //
 //   node tools/ci/run-triage.mjs <run-id> [--repo owner/name]     (læser via gh; ændrer intet)
 //   node tools/ci/run-triage.mjs --run-json run.json --log <jobnavn>=<fil> …   (offline, til tests)
 //
-// Reglerne er bevidst snævre: en kategori sættes kun på en konkret, genkendt loglinje fra projektets egne
-// workflows (INFRA-INSTALL, INFRA-CACHE, browser-launch-check, Playwrights opsummering, node --test). Alt
-// andet er UKENDT — hellere ukendt end en forkert diagnose. Værktøjet genkører aldrig noget.
+// Reglerne er bevidst snævre: en diagnose sættes kun på en konkret, genkendt loglinje fra projektets egne
+// workflows. Alt andet er UKENDT — hellere ukendt end en forkert diagnose. Værktøjet genkører aldrig noget.
+//
+// Evidensniveau (gælder DIAGNOSEN, ikke GitHubs status, som altid er GitHubs egen):
+//   VERIFICERET  diagnosen bygger på en genkendt loglinje i en fuldstændig log
+//   SANDSYNLIGT  diagnosen er udledt (tidsmæssigt sammenfald, trin-timeout) eller loggen ser ufuldstændig ud
+//   UKENDT       ingen log, eller ingen genkendt linje
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -28,6 +32,8 @@ export const CATEGORY = Object.freeze({
   TEST_FAILURE: "TEST-FAILURE",
   UNKNOWN: "UKENDT",
 });
+export const LEVEL = Object.freeze({ VERIFIED: "VERIFICERET", PROBABLE: "SANDSYNLIGT", UNKNOWN: "UKENDT" });
+export const MAX_EVIDENCE = 200;
 
 // Hvad næste skridt er, og hvem der skal godkende det. "Genkør" står aldrig uden et GO (D4).
 const ADVICE = {
@@ -46,15 +52,36 @@ const ADVICE = {
 };
 
 const TS = /^\uFEFF?\d{4}-\d\d-\d\dT[\d:.]+Z /;
-// GitHub skriver hvert trins script ud f\u00F8r det k\u00F8rer, farvet cyan (ESC[36;1m). De linjer er KILDEKODE, ikke
-// h\u00E6ndelser: `echo "::error title=INFRA-INSTALL::\u2026"` st\u00E5r i hver k\u00F8rsels log, ogs\u00E5 n\u00E5r intet fejlede
-// (k\u00F8rsel 43089224884 fejlede i upload, ikke i installationen). De fjernes, f\u00F8r der klassificeres.
+// GitHub skriver hvert trins script ud før det kører, farvet cyan (ESC[36;1m). De linjer er KILDEKODE, ikke
+// hændelser: `echo "::error title=INFRA-INSTALL::…"` står i hver kørsels log, også når intet fejlede
+// (kørsel 43089224884 fejlede i upload, ikke i installationen). De fjernes, før der klassificeres.
 const SCRIPT_ECHO = /^\x1b\[36;1m/;
 function logLines(text) {
-  return text.split(/\r?\n/)
+  return String(text ?? "").split(/\r?\n/)
     .map((l) => l.replace(TS, ""))
     .filter((l) => !SCRIPT_ECHO.test(l))
     .map((l) => l.replace(/\x1b\[[0-9;]*m/g, ""));
+}
+// GitHub afslutter hver fuldstændig job-log med runnerens oprydning.
+const COMPLETE = /Cleaning up orphan processes/;
+
+// Evidens er data fra en log: maskér alt, der ligner en hemmelighed, og afkort. GitHub maskerer selv kendte
+// secrets som ***, men værktøjet skal ikke stole på, at alt er kendt.
+const SECRET_TOKENS = [
+  /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b/g, // GitHub-tokens
+  /\bgithub_pat_[A-Za-z0-9_]{20,}\b/g,
+  /\bsb_(?:secret|publishable)_[A-Za-z0-9_-]{10,}\b/g, // Supabase-nøgler
+  /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g, // JWT (fx legacy service_role/anon)
+  /\b(?:sk|rk)-[A-Za-z0-9_-]{20,}\b/g, // API-nøgler af typen sk-…
+];
+const KEY_VALUE = /\b(Bearer|apikey|api_key|password|passwd|secret|token)(\s*[:=]\s*["']?|\s+)[^\s"',;]{6,}/gi;
+const URL_CREDENTIALS = /(https?:\/\/)[^\s:@\/]+:[^\s@\/]+@/g;
+export function sanitize(s, max = MAX_EVIDENCE) {
+  if (s == null) return s;
+  let t = String(s);
+  for (const re of SECRET_TOKENS) t = t.replace(re, "***");
+  t = t.replace(KEY_VALUE, "$1$2***").replace(URL_CREDENTIALS, "$1***@");
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 }
 
 function first(lines, re) {
@@ -62,10 +89,27 @@ function first(lines, re) {
   return null;
 }
 
+// Playwrights fejlblokke: "  1) [webkit] › tests/x.spec.ts:327:1 › titel" efterfulgt af "    Error: …".
+function failureBlocks(lines) {
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = /^\s+\d+\) \[(\w+)\] › (\S+?):(\d+):\d+ › /.exec(lines[i]);
+    if (!m) continue;
+    let error = null;
+    for (let k = i + 1; k < Math.min(lines.length, i + 8); k++) {
+      const e = /^\s+((?:\w*Error|Error)(?: \[\w+\])?: .*)$/.exec(lines[k]);
+      if (e) { error = e[1]; break; }
+    }
+    out.push({ browser: m[1], test: `${m[2].replace(/^tests\//, "")}:${m[3]}`, error });
+  }
+  return out;
+}
+
 // Fakta om installationen og testene, uanset om jobbet bestod — så en grøn kørsel også viser HVAD den dækkede.
 export function facts(logText = "") {
   const lines = logLines(logText);
-  const f = {};
+  const f = { logAvailable: String(logText ?? "").trim().length > 0 };
+  f.logComplete = f.logAvailable && lines.some((l) => COMPLETE.test(l));
   const image = first(lines, /^Image: /);
   if (image) f.image = image.slice(7);
   const hit = first(lines, /^Cache hit for: /);
@@ -84,7 +128,12 @@ export function facts(logText = "") {
   const skipped = lines.filter((l) => /^\s*\d+ skipped$/.test(l)).map((l) => +l.trim().split(" ")[0]);
   if (passed.length) f.playwrightPassed = passed;
   if (skipped.length) f.playwrightSkipped = skipped;
-  f.flakyTests = lines.filter((l) => /\] \S+\.spec\.\w+:\d+ flaky after \d+ attempt/.test(l)).map((l) => l.trim());
+  const blocks = failureBlocks(lines);
+  // "flaky after N attempt(s)" = fejlede først og bestod ved et genforsøg (run-suite.mjs' opsummering).
+  f.flaky = lines.map((l) => /\[(\w+)\] (\S+\.spec\.\w+:\d+) flaky after (\d+) attempt/.exec(l)).filter(Boolean).map((m) => {
+    const b = blocks.find((x) => x.browser === m[1] && x.test.endsWith(m[2]));
+    return { browser: m[1], test: m[2], attempts: +m[3], passedOnRetry: true, error: b?.error ?? null };
+  });
   const nodeFail = lines.map((l) => l.match(/^ℹ fail (\d+)$/)).filter(Boolean).reduce((s, m) => s + +m[1], 0);
   const nodePass = lines.map((l) => l.match(/^ℹ pass (\d+)$/)).filter(Boolean).reduce((s, m) => s + +m[1], 0);
   if (nodePass || nodeFail) f.nodeTest = { pass: nodePass, fail: nodeFail };
@@ -97,58 +146,75 @@ export function facts(logText = "") {
 export function classifyJob(job, logText = "", { newerRunAt = null } = {}) {
   const lines = logLines(logText);
   const f = facts(logText);
-  const out = (category, evidence) => ({ name: job.name, conclusion: job.conclusion, category, evidence, facts: f });
+  const lvl = (l) => (l === LEVEL.VERIFIED && !f.logComplete ? LEVEL.PROBABLE : l);
+  const out = (category, evidence, level) => ({
+    name: job.name, conclusion: job.conclusion, category, level, evidence: sanitize(evidence), facts: f,
+  });
 
-  if (job.conclusion === "skipped") return out(CATEGORY.SKIPPED, null);
+  if (job.conclusion === "skipped") return out(CATEGORY.SKIPPED, "GitHub: skipped", LEVEL.VERIFIED);
   if (job.conclusion === "success") {
-    if (f.suite?.flaky > 0 || f.flakyTests.length) return out(CATEGORY.FLAKY, f.flakyTests.join(" | ") || `flaky ${f.suite.flaky}`);
-    return out(CATEGORY.OK, null);
+    if (!f.logAvailable) return out(CATEGORY.OK, "log ikke tilgængelig: kun GitHubs jobstatus — installation, browsere og testtal er ikke kontrolleret", LEVEL.UNKNOWN);
+    if (f.suite?.flaky > 0 || f.flaky.length) {
+      return out(CATEGORY.FLAKY, f.flaky.map((x) => `[${x.browser}] ${x.test}`).join(" | ") || `flaky ${f.suite.flaky}`, lvl(LEVEL.VERIFIED));
+    }
+    return out(CATEGORY.OK, f.logComplete ? null : "loggen ser ufuldstændig ud (ingen afsluttende oprydning)", lvl(LEVEL.VERIFIED));
   }
 
   const timedOut = first(lines, /has timed out after \d+ minutes|exceeded the maximum execution time/);
   if (job.conclusion === "cancelled" || timedOut) {
     if (timedOut) {
-      const installStep = (job.steps ?? []).find((s) => s.conclusion === "cancelled" || s.conclusion === "failure");
-      const inInstall = installStep && /install playwright/i.test(installStep.name);
-      return out(inInstall ? CATEGORY.INFRA_INSTALL : CATEGORY.TIMEOUT,
-        inInstall ? `trin-timeout i "${installStep.name}": ${timedOut}` : timedOut);
+      const step = (job.steps ?? []).find((s) => s.conclusion === "cancelled" || s.conclusion === "failure");
+      const inInstall = step && /install playwright/i.test(step.name);
+      // Timeouten selv er verificeret; at årsagen er net/spejl er udledt af trinnets navn.
+      return inInstall
+        ? out(CATEGORY.INFRA_INSTALL, `trin-timeout i "${step.name}": ${timedOut}`, LEVEL.PROBABLE)
+        : out(CATEGORY.TIMEOUT, timedOut, lvl(LEVEL.VERIFIED));
     }
     if (newerRunAt && job.completedAt && Date.parse(newerRunAt) <= Date.parse(job.completedAt)) {
-      return out(CATEGORY.SUPERSEDED, `nyere kørsel startet ${newerRunAt}, jobbet stoppet ${job.completedAt}`);
+      // Tidsmæssigt sammenfald, ikke et bevis for årsagen: derfor SANDSYNLIGT.
+      return out(CATEGORY.SUPERSEDED, `nyere kørsel startet ${newerRunAt}, jobbet stoppet ${job.completedAt}`, LEVEL.PROBABLE);
     }
-    return out(CATEGORY.CANCELLED, null);
+    return out(CATEGORY.CANCELLED, "GitHub: cancelled — ingen nyere kørsel og ingen timeout-linje", LEVEL.UNKNOWN);
   }
 
+  if (!f.logAvailable) {
+    const failedStep = (job.steps ?? []).find((s) => s.conclusion === "failure");
+    return out(CATEGORY.UNKNOWN, `log ikke tilgængelig${failedStep ? `; fejlet trin: "${failedStep.name}"` : ""}`, LEVEL.UNKNOWN);
+  }
   // failure — mest specifikke, projekt-egne markører først.
   const runner = first(lines, /Playwright does not support \S+ on \S+/);
-  if (runner) return out(CATEGORY.INFRA_RUNNER, runner);
+  if (runner) return out(CATEGORY.INFRA_RUNNER, runner, lvl(LEVEL.VERIFIED));
   const launch = first(lines, /^browser-launch-check: \S+ cannot launch/);
   const install = first(lines, /INFRA-INSTALL|failed or ran past \d+ min \(Ubuntu mirror|dpkg could not finish the interrupted cache install|a browser cannot start after the mirror install/);
-  if (launch && !install) return out(CATEGORY.INFRA_BROWSER, launch);
-  if (install) return out(CATEGORY.INFRA_INSTALL, launch ? `${install} — ${launch}` : install);
-  if (f.suite?.unexpected > 0) return out(CATEGORY.TEST_FAILURE, `unexpected ${f.suite.unexpected} (expected ${f.suite.expected})`);
+  if (launch && !install) return out(CATEGORY.INFRA_BROWSER, launch, lvl(LEVEL.VERIFIED));
+  if (install) return out(CATEGORY.INFRA_INSTALL, launch ? `${install} — ${launch}` : install, lvl(LEVEL.VERIFIED));
+  if (f.suite?.unexpected > 0) return out(CATEGORY.TEST_FAILURE, `unexpected ${f.suite.unexpected} (expected ${f.suite.expected})`, lvl(LEVEL.VERIFIED));
   const pwFailed = first(lines, /^\s*\d+ failed$/);
-  if (pwFailed) return out(CATEGORY.TEST_FAILURE, `Playwright: ${pwFailed.trim()} failed`);
-  if (f.nodeTest?.fail > 0) return out(CATEGORY.TEST_FAILURE, `node --test: ${f.nodeTest.fail} fejlet`);
+  if (pwFailed) return out(CATEGORY.TEST_FAILURE, `Playwright: ${pwFailed.trim()} failed`, lvl(LEVEL.VERIFIED));
+  if (f.nodeTest?.fail > 0) return out(CATEGORY.TEST_FAILURE, `node --test: ${f.nodeTest.fail} fejlet`, lvl(LEVEL.VERIFIED));
   const failedStep = (job.steps ?? []).find((s) => s.conclusion === "failure");
   const artifact = first(lines, /Failed to CreateArtifact|Failed to make request after \d+ attempts/);
-  if (artifact && failedStep && /upload/i.test(failedStep.name)) return out(CATEGORY.INFRA_ARTIFACT, artifact);
-  return out(CATEGORY.UNKNOWN, failedStep ? `fejlet trin: "${failedStep.name}"` : null);
+  if (artifact && failedStep && /upload/i.test(failedStep.name)) return out(CATEGORY.INFRA_ARTIFACT, artifact, lvl(LEVEL.VERIFIED));
+  return out(CATEGORY.UNKNOWN, failedStep ? `fejlet trin: "${failedStep.name}"` : "ingen genkendt linje", LEVEL.UNKNOWN);
 }
 
-// Dækning: en grøn kørsel beviser kun, at de JOBS der kørte bestod. Her står, hvad der faktisk blev kørt.
+// Dækning: en grøn kørsel beviser kun, at de JOBS der kørte bestod. Her står, hvad der faktisk blev kørt —
+// og hvad der IKKE kunne kontrolleres.
 export function coverage(jobs, results) {
   const notes = [];
   for (const j of jobs) {
     if (j.conclusion === "skipped") notes.push(`${j.name}: sprunget over — tæller ikke som bestået`);
   }
   for (const r of results) {
+    if (r.conclusion !== "skipped" && !r.facts.logAvailable) notes.push(`${r.name}: log ikke tilgængelig — kun GitHubs status (${r.conclusion}) er kendt; intet andet er kontrolleret`);
+    else if (r.conclusion !== "skipped" && !r.facts.logComplete) notes.push(`${r.name}: loggen ser ufuldstændig ud — konklusionen er højst SANDSYNLIGT`);
     if (r.facts.cache === "hit" && r.facts.installPath === "spejle") {
       notes.push(`${r.name}: cache-hit, men systempakkerne kom fra spejlene (fallback) — cache-vejen FEJLEDE i denne kørsel, uanset jobbets resultat`);
     } else if (r.facts.installPath === "spejle") {
       notes.push(`${r.name}: installeret fra spejlene (cache-miss) — cache-vejen er ikke afprøvet i denne kørsel`);
     }
-    if (/^isolated-e2e \(run /.test(r.name) && r.conclusion === "success") {
+    if (r.facts.flaky.length && r.conclusion !== "success") notes.push(`${r.name}: ${r.facts.flaky.length} flaky test(s) i et job, der endte ${r.conclusion} — se "Flaky tests"`);
+    if (/^isolated-e2e \(run /.test(r.name) && r.conclusion === "success" && r.facts.logAvailable) {
       if (!r.facts.playwrightPassed) notes.push(`${r.name}: grøn, men ingen Playwright-opsummering i loggen — dækningen er ikke dokumenteret`);
       if (r.facts.launched.length && r.facts.launched.length < 3) notes.push(`${r.name}: kun ${r.facts.launched.join(", ")} startet`);
     }
@@ -164,14 +230,19 @@ export function report(run, results, { newerRun = null } = {}) {
     "",
     `- **Branch/PR:** ${run.headBranch ?? "—"}${run.prNumber ? ` (#${run.prNumber})` : ""} · **event:** ${run.event ?? "—"}`,
     `- **HEAD:** ${run.headSha ?? "—"}`,
-    `- **Resultat:** ${run.status ?? "—"} / ${run.conclusion || "—"}${newerRun ? ` · nyere kørsel: ${newerRun.databaseId} (${newerRun.createdAt})` : ""}`,
+    `- **GitHubs resultat:** ${run.status ?? "—"} / ${run.conclusion || "—"}${newerRun ? ` · nyere kørsel: ${newerRun.databaseId} (${newerRun.createdAt})` : ""}`,
     "",
-    "| Job | Resultat | Fejltype | Dokumenteret årsag | Mulig handling | Godkendelse |",
-    "|---|---|---|---|---|---|",
+    "| Job | GitHub-status | Diagnose | Evidens | Dokumenteret årsag | Mulig handling | Godkendelse |",
+    "|---|---|---|---|---|---|---|",
   ];
   for (const r of results) {
     const [act, go] = ADVICE[r.category];
-    lines.push(`| ${cell(r.name)} | ${cell(r.conclusion)} | ${r.category} | ${cell(r.evidence)} | ${cell(act)} | ${cell(go)} |`);
+    lines.push(`| ${cell(r.name)} | ${cell(r.conclusion)} | ${r.category} | ${r.level} | ${cell(r.evidence)} | ${cell(act)} | ${cell(go)} |`);
+  }
+  const flaky = results.flatMap((r) => r.facts.flaky.map((x) => ({ ...x, job: r.name, jobConclusion: r.conclusion })));
+  if (flaky.length) {
+    lines.push("", `### Flaky tests (${flaky.length})`, "", "| Job (status) | Test | Fejl ved første forsøg | Bestod ved genforsøg |", "|---|---|---|---|");
+    for (const x of flaky) lines.push(`| ${cell(x.job)} (${x.jobConclusion}) | [${x.browser}] ${cell(x.test)} | ${cell(sanitize(x.error, 120) ?? "UKENDT")} | ja (${x.attempts} forsøg) |`);
   }
   const det = results.filter((r) => r.facts.installPath || r.facts.suite || r.facts.nodeTest || r.facts.k1Columns);
   if (det.length) {
@@ -191,8 +262,8 @@ export function report(run, results, { newerRun = null } = {}) {
     }
   }
   const cov = coverage(run.jobs ?? [], results);
-  if (cov.length) lines.push("", "### Dækning", ...cov.map((n) => `- ${n}`));
-  lines.push("", "_Ukendte forhold står som UKENDT. Værktøjet genkører intet; en genkørsel kræver ejerens GO (docs/operations/ci-triage.md)._", "");
+  if (cov.length) lines.push("", "### Dækning og hvad der ikke kunne kontrolleres", ...cov.map((n) => `- ${n}`));
+  lines.push("", "_GitHub-status er GitHubs egen. Diagnose og evidensniveau er værktøjets: VERIFICERET = genkendt loglinje i en fuldstændig log; SANDSYNLIGT = udledt eller ufuldstændig log; UKENDT = ingen log eller ingen genkendt linje. Værktøjet genkører intet; en genkørsel kræver ejerens GO (docs/operations/ci-triage.md)._", "");
   return lines.join("\n");
 }
 
@@ -238,7 +309,7 @@ export async function main(argv = process.argv.slice(2), { out = console.log, er
     out(report(run, results, { newerRun: newer }));
     return 0;
   } catch (e) {
-    err(`run-triage: ${e.message}`);
+    err(`run-triage: ${sanitize(e.message, 300)}`);
     return 1;
   }
 }
