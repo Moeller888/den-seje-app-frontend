@@ -39,7 +39,7 @@ Intet workflow deployer Edge Functions eller anvender migrationer.
 | # | PR | Lag | Migration (ikke i produktion) | Flag (alle slukket som standard) | Afhænger af |
 |---|---|---|---|---|---|
 | 1 | #652 | K1-testbane i CI (**merget** 2026-11-12, `949dfdab`) | — | — | — |
-| 2 | #656 | Hints i testfixturen og kontrakter | — | — | — |
+| 2 | #656 | Hints i testfixturen og kontrakter (**merget** 2026-11-12, `93169fe3`) | — | — | — |
 | 3 | #653 | L3/L5: `served_mode`, atomisk hintlog, `request-hint` | `20261108043500` | `LAERLIGVERSE_SERVED_MODE`, `LAERLIGVERSE_ATTEMPT_CONTEXT`, `LAERLIGVERSE_HINTS` | K1 (kun i produktion); #656 for hint-teksten i testen |
 | 4 | #665 | Lærerens og elevens kursusvisning | `20261109120000` (kun læsning) | `ENABLE_COURSE_PROGRESS_VIEW` (frontend-konstant) | K1 opdages under kørsel |
 | 5 | #664 | K9: introduktion og præsentation | `20261109043500`, `20261110043500` | `LAERLIGVERSE_INTRODUCTION`, `LAERLIGVERSE_PRESENTED` | #653 (den er indeholdt i #664) |
@@ -67,7 +67,24 @@ Hver PR flettes rent mod den aktuelle `main`. Konflikterne opstår først, når 
 | #653 | #664 | Ingen | — |
 | #656 | #653, #664, #689 | Ingen | — |
 
+**Kontrol 2026-11-13 (main `175dbe24`):** #665 har fået main flettet ind (head `d0ca5ccd`). Konflikten fra
+#656 er løst med #665's samlede version, og CI er grøn. Simuleret med main plus #665 (begge forældre):
+
+| PR | Konflikter efter #665 | Filer |
+|---|---|---|
+| #653 (`405b8fdb`) | 2 | `question-attempts-v2-bootstrap`, `quiz-repeat-when-pool-exhausted` |
+| #664 (`55e33f29`) | 3 | de to ovenfor og `question-instances-read-scope` |
+| #689 (`7bfa79e4`) | 2 | `replay-plan.mjs` (`NOT_IN_PRODUCTION`), `question-instances-read-scope` |
+
+Alle er lister over gennemgåede migrationer, hvor begge poster skal bevares. Ingen af dem rører kode, der
+går i drift.
+
 Efter hvert merge får den næste PR main flettet ind og en frisk CI-kørsel, før den kan få GO.
+
+**CI-runner (#696):** `adventure-engine / e2e (chromium)` fejler på #653 og #664, fordi runner-billedet
+`ubuntu-latest` er skiftet til en version, som Playwright ikke understøtter. Checken er ikke påkrævet og
+skyldes ikke PR'ernes kode. #696 låser de tre browserjobs til `ubuntu-24.04` og er grøn. Den hører til
+CI-sporet og merges med sit eget GO; derefter genkøres checken på #653 og #664 ved næste main-fletning.
 
 Fælles filer, der skal genkontrolleres før hvert merge:
 
@@ -96,7 +113,9 @@ Hvert merge kræver:
 | P6 | Deploy `introduction-progress` og `get-next-question`. Tænd derefter `LAERLIGVERSE_INTRODUCTION` og til sidst `LAERLIGVERSE_PRESENTED` | Edge-deploy og secrets | P5 | Testelev får introduktionen før første trin | Fjern flaget |
 | P7 | Anvend `20261109120000` (`get_course_progress`) | `apply_migration` | P1 (viser `mode` og `hints_used`, når K1 og L3 findes) | Læreren ser kun egne elever, eleven kun sig selv, en anden rolle får NULL | `DROP FUNCTION` (kun læsning, ingen data) |
 | P8 | `ENABLE_COURSE_PROGRESS_VIEW = true` | Egen PR, merge og Cloudflare-deploy | P7 | Lærervisningen på en testelev. Manglende data vises som "Ikke registreret", aldrig som 0 | Sæt konstanten til `false` igen |
-| P9 | Rettelsen af lærerbedømmelsens udbetaling: migration `20261111120000`, derefter Edge `review-answer` | `apply_migration` + Edge-deploy (to GO'er) | Uafhængig af P1–P8; skal ligge før P10 | `docs/security/review-answer-enkelt-udbetaling.md`, verifikation 1–4 | Fremad; posteringstabellen er append-only |
+| P9a | Rettelsen af lærerbedømmelsens udbetaling (#689): migration `20261111120000` | `apply_migration` (GO) | #689 merget. Uafhængig af P1–P8; skal ligge før P10. Preflight i `docs/security/review-answer-enkelt-udbetaling.md` (md5 på 4-argument-udgaven uændret, ingen posteringstabel) | Samme dokument, verifikation 1–2 | Fremad; posteringstabellen er append-only |
+| P9b | Deploy Edge `review-answer` fra main, **straks** efter P9a i samme vindue | Edge-deploy (GO) | P9a | Verifikation 3–4; én bedømmelse af en testelev giver præcis én postering | Genudrul den forrige version. Aldrig omvendt rækkefølge: Edge før migration giver fejl efter udbetaling |
+| P9c | Anbefalet (ejerbeslutning, se restpunktet i samme dokument): fjern EXECUTE på den ubrugte 3-argument-udgave af `review_answer` | Egen migration (GO) | P9b grøn | Kun 4-argument-udgaven kan køres af `service_role` | `GRANT EXECUTE` igen |
 | P10 | Belønninger (#657) | — | §5 og `belonningsmodel-v2.md` | — | — |
 | P11 | Begrænset elevpilot | Ejerbeslutning | P1–P8 (og P10, hvis belønninger skal med) | Lærerens kursusvisning, forsøgsregister, hintlog | Sluk flagene i omvendt rækkefølge |
 | P12 | #616: legacy-svarfunktionerne lukkes | Migration (GO) | H5 + K1 live, `ENABLE_H5_SUBMISSIONS = true` i klienten, ingen legacy-kald i loggen i en aftalt periode | Runbookens §8 | Genskab EXECUTE (fremad-migration) |
