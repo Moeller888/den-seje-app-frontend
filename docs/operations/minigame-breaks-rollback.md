@@ -52,7 +52,7 @@ COMMIT;
 
 ## D-364 — intervallet tilbage til 20 minutter
 
-D-364 (`20261107090000_minigame_break_interval_10min.sql`) ændrer kun konstanten `c_interval` i
+D-364 (`20261107090000_minigame_break_interval_10min.sql`, anvendt 2026-11-08 som remote version `20261108102949`; PR #651, merge-commit `13b03774`) ændrer kun konstanten `c_interval` i
 `minigame_break_after_answer` fra 1200 til 600. Tilbagerulning = en ny migration med D-347's definition af
 netop den funktion (samme `CREATE OR REPLACE`-blok som i `20261105090000_minigame_breaks.sql`, dvs.
 `c_interval := 1200`) plus de samme to linjer `REVOKE … FROM PUBLIC, anon` / `GRANT EXECUTE … TO
