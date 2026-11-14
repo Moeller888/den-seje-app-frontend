@@ -38,6 +38,7 @@ export const OFFLINE_SPECS = Object.freeze([
   "number-answer-ui.spec.ts",
   "learning-sequence-quiz.spec.ts",
   "categorize-quiz.spec.ts",
+  "course-progress-view.spec.ts",
   "item-category-menu.spec.ts",
   "wardrobe-in-place.spec.ts",
 ]);

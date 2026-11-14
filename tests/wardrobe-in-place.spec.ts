@@ -93,7 +93,7 @@ async function openAvatar(browser: any, pupil: Pupil, width: number) {
   const errs: string[] = [];
   page.on("pageerror", (e) => errs.push(String(e)));
   await page.goto(`${baseUrl}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(79, { timeout: 30000 });
+  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(82, { timeout: 30000 });   // D-374: the 79 parts and the 3 hairstyles
   return { ctx, page, errs };
 }
 
@@ -194,7 +194,7 @@ for (const width of [1100, 390]) {
 
     // kept after a manual reload, and in a new session
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(79, { timeout: 30000 });
+    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(82, { timeout: 30000 });   // D-374: the 79 parts and the 3 hairstyles
     expect(await outfitNow(page)).toBe(final);
     await ctx.close();
     const again = await openAvatar(browser, pupil, width);

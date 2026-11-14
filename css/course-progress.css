@@ -1,0 +1,41 @@
+/* Lærligverse F10-B2: the "Kursusforløb" section on student-detail.html. Loaded only when
+   ENABLE_COURSE_PROGRESS_VIEW is on (js/student-detail.js). Status is always in the text; nothing here
+   carries meaning through colour alone. */
+
+.course-progress-card {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.course-progress-title {
+  font-size: 15px;
+  color: var(--text-bright);
+  margin-bottom: 4px;
+}
+
+.course-progress-caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.course-progress-table .course-progress-step {
+  background: transparent;
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: normal;
+}
+
+.course-progress-note,
+.box .course-progress-footer,
+.box .course-progress-intro {
+  font-size: 12px;
+  color: var(--text-dim);
+}

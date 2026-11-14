@@ -65,10 +65,10 @@ test("D-283 the plan: the D-242 stack with the trousers' own layer; the olive tr
     assert.ok(o.top.startsWith("top-tee-"), k); assert.deepEqual(beforeLayerFixes(plan.filter((s) => s.op === "draw").map((s) => s.src.split("/").pop())), ["figure-body-v1.webp", o.shoes + "-shoes-v1.webp", item + "-pants-v1.webp", o.top + "-top-body-v2.webp", "figure-arms-v1.webp", o.top + "-sleeves-v2.webp", "figure-head-v1.webp"], k + "+" + p + " (D-349)");
     assert.ok(plan.some((s) => s.op === "shade" && s.src.endsWith("/bottom-trousers-square-olive-shadow-body-v1.webp")), k + "+" + p); }
   const on = { avatar_northstar: "1", avatar_northstar_outfit: "K05", avatar_northstar_tee: "TP-TEA-COR", avatar_northstar_pants: "TS-SND" };
-  const r = withStorage(on, () => L.northstarRenderFor("avatar", [])); assert.deepEqual([r.key, r.tee, r.pants], ["K05+TP-TEA-COR+TS-SND", "TP-TEA-COR", "TS-SND"]);
-  const r2 = withStorage({ ...on, avatar_northstar_outfit: "K12" }, () => L.northstarRenderFor("hub", [])); assert.deepEqual([r2.key, r2.tee, r2.pants], ["K12+TS-SND", null, "TS-SND"]);
-  const r3 = withStorage({ avatar_northstar: "1", avatar_northstar_outfit: "K05" }, () => L.northstarRenderFor("quiz", [])); assert.deepEqual([r3.key, r3.pants], ["K05", null]);
-  assert.deepEqual(r3.plan, L.northstarCanvasPlan("K05"), "without trousers the K plan is unchanged");
+  const r = withStorage(on, () => L.northstarRenderFor("avatar", [])); assert.deepEqual([r.key, r.tee, r.pants], ["K05+TP-TEA-COR+TS-SND+hair:standard", "TP-TEA-COR", "TS-SND"]);
+  const r2 = withStorage({ ...on, avatar_northstar_outfit: "K12" }, () => L.northstarRenderFor("hub", [])); assert.deepEqual([r2.key, r2.tee, r2.pants], ["K12+TS-SND+hair:standard", null, "TS-SND"]);
+  const r3 = withStorage({ avatar_northstar: "1", avatar_northstar_outfit: "K05" }, () => L.northstarRenderFor("quiz", [])); assert.deepEqual([r3.key, r3.pants], ["K05+hair:standard", null]);
+  assert.deepEqual(r3.plan, L.northstarCanvasPlan("K05").map((s) => (s.op === "draw" && s.src === L.northstarHeadSrc(null) ? { ...s, src: L.northstarHeadSrc("standard") } : s)), "without trousers the K plan is unchanged (D-374: with the standard hair's head)");
 });
 
 test("D-283 without the opt-in nothing changes, even with stored trousers; ?northstar=0 forgets outfit, tee and trousers; the panel offers them", async () => {

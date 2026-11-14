@@ -122,6 +122,8 @@ export function extractSchemaPart(file, sql) {
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
 export const NOT_IN_PRODUCTION = Object.freeze({
+  "20261109120000_laerligverse_course_progress_read.sql":
+    "Lærligverse F10-B2 course-progress view, not applied in production: it adds the read RPC get_course_progress for the teacher's \"Kursusforløb\" section, which stays behind ENABLE_COURSE_PROGRESS_VIEW = false; applying it needs its own owner GO",
   "20261107090000_minigame_break_interval_10min.sql":
     "D-364, not applied in production: minigame_break_after_answer there still has D-347's interval of 1200 s (20 minutes); this re-creates it with 600 s",
   "20261031230000_claim_daily_reward_exactly_once.sql":
@@ -192,8 +194,6 @@ export const REPO_AHEAD_OF_PRODUCTION = Object.freeze({
     "repository ahead of production: the repository's request-password-help calls public.reserve_password_help, which production does not have (catalog, 2026-10-25) — open production task D-243",
   "20261030211428_question_attempts_v2.sql":
     "repository ahead of production: the repository's process-event calls process_question_attempt_v2 / process_text_answer_v2 behind the H5 switch, which production does not have (catalog, 2026-11-01) — open production task D-266/D-273 (H5)",
-  "20261112150000_avatar_northstar_hair_d373.sql":
-    "repository ahead of production: the repository's Northstar wardrobe saves the hairstyle (avatar_identity.northstar.hair) through set_avatar_northstar behind NORTHSTAR_HAIR_CHOICE, which production's validate_avatar_identity refuses — open production task D-373 (apply before the flag is turned on)",
 });
 
 // Every timestamped migration from ACCOUNTED_FROM on must be accounted for in exactly one place:
@@ -247,6 +247,8 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261103100000_question_attempts_history_no_action.sql": "20261104163310",
   "20261105090000_minigame_breaks.sql": "20261105060103",
   "20261106120000_avatar_northstar_choice.sql": "20261106151348",
+  "20261112150000_avatar_northstar_hair_d373.sql": "20261113053515",
+  "20261113120000_english_review_text_corrections.sql": "20261114141653",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),

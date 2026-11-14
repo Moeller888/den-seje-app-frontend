@@ -68,3 +68,69 @@ Returformen er `{ objective_id, started_at, completed_at, steps: [{ step, mode, 
 1. Ejeren godkender placering og ordvalg (§1–§3).
 2. Læse-RPC'en og dens gate (§5) er en migration, der kræver ejerens GO.
 3. Visningen viser kun data fra K1 + L5 + L3. Før aktiveringen vises "ikke registreret" for hjælp og evidens.
+
+## 8. Implementeret bag slukket flag (F10-B2, #665, 2026-11-10)
+
+§1–§7 ovenfor er #656's tekst, ordret. Afsnittet her tilføjer det, der er bygget. Når begge PR'er er merget, er denne fil den fulde version: den indeholder #656's tekst uændret plus §8–§9.
+
+### 8.1 Ordvalg (ejerbeslutning, bindende)
+Lærerens visning bruger **Gennemført / Løst / Løst selvstændigt / Ikke registreret** og desuden "Gentaget senere" for repetitionstrinnet.
+- "Løst selvstændigt" erstatter §1's "Vist selvstændigt" i brugerfladen. Betydningen er den samme: korrekt førstesvar i et bedømt trin med 0 **registrerede** hints og en registreret vurderingstilstand.
+- Hverken gennemførelse eller et enkelt rigtigt svar kaldes nogensinde "lært".
+- Manglende data vises aldrig som 0.
+- Kursusprogressionen er adskilt fra almindelig mestring og niveau.
+
+### 8.2 Hvad der findes
+
+| Del | Fil | Status |
+|---|---|---|
+| Flag | `js/student-detail.js`: `const ENABLE_COURSE_PROGRESS_VIEW = false;` | Slukket. En konstant, ingen browser-overstyring |
+| Indlæsning | `loadCourseProgressSection()` i samme fil | Kaldes kun i flagets gren. Modulet importeres dynamisk. Slukket flag giver uændret DOM og ingen ekstra request (testet) |
+| Visning | `js/course-progress-view.js` | Rene funktioner + DOM-render med `textContent` |
+| Stil | `css/course-progress.css` | Indlæses kun med tændt flag |
+| Læse-RPC | `supabase/migrations/20261109120000_laerligverse_course_progress_read.sql` | Kladde, **ikke anvendt**, i `NOT_IN_PRODUCTION` |
+
+Placering: sektionen ligger lige under "Fremskridt per domæne". Tælleren i klasseoversigten (§2) er ikke bygget.
+
+### 8.3 RPC'ens faktiske form og gate
+`get_course_progress(p_student_id uuid) RETURNS jsonb`:
+- **Hvem får data:** elevens egen lærer (`profiles.teacher_id = auth.uid()` og kalderens rolle er `teacher`), `super_admin` og eleven selv. Alle andre får `NULL`: en anden lærer, en anden elev, en bruger uden profil, anonym, et ukendt id og et mål, der ikke er en elev. Gaten er `get_student_overview`'s plus elevens egen række.
+- **Rollen:** læses kun fra `public.profiles` ud fra `auth.uid()`, aldrig fra klienten eller JWT-claims.
+- **Teknik:** `SECURITY DEFINER`, tom `search_path`, `EXECUTE` kun til `authenticated`.
+- **Verificeret i PGlite med de rigtige roller:** se §8.5.
+
+Returform:
+
+```
+{ version: 1, rules: "evidence.ts@<sha256-12>", sources: { attempt_log, mode, hints },
+  objectives: [ { objective_id, started_at,
+    steps: [ { step, status: "answered"|"served", correct, attempt_no, hints_used, mode,
+               evidence: "practice"|"shown_independently"|"not_shown"|"unknown",
+               first_answer_at, served_at, grading, source, sequence: { answered, was_correct, answered_at } } ] } ] }
+```
+
+- `correct` er førstesvarets dom. `attempt_no` er nummeret på det første korrekte forsøg.
+- Kun kursusopgaver (`metadata.learning_step`), kun førstesvar, én post pr. instans. Der kommer ingen facit, ingen svartekst og ingen andre elever med.
+- Uden forsøg 1 i H5-loggen er et gentaget legacy-svars førstesvar ukendt (`NULL`).
+- "Forløb gennemført" beregnes i browseren af en paritetstestet port af `learning-sequence.ts` `nextStep` og ikke i SQL.
+- Evidensen er `evidence.ts`' tilstand `independent`. Det er ikke K4-berettigelse.
+
+### 8.4 Elevens egen visning
+RPC'en tillader eleven at hente sine egne data, men ingen elevside kalder den endnu. En elevvisning er **næste skridt** og skal have sit eget slukkede flag og egne tests. Den bør ligge på hub-siden og bruge de samme rene funktioner med elevvenlig tekst. Et slukket flag er ikke en sikkerhedsforanstaltning. Adgangen afgøres alene af RPC'ens gate (§8.3).
+
+### 8.5 Tests
+- `tests/unit/course-progress-view.test.mjs`: flag, regelkilder fastlåst med sha256, paritet med `evidence.ts` og `learning-sequence.ts`, kontraktens tilfælde, ordvalg og DOM.
+- `tests/unit/course-progress-rpc-migration-run.test.mjs`: PGlite over hele den isolerede replay med og uden K1. Gatematrix som de rigtige roller (`authenticated`, `anon`) og forsøg på at forfalske rolle eller lærer: rolle i JWT-claims, `UPDATE profiles` af `role`/`teacher_id`, en ny profilrække.
+- `tests/course-progress-view.spec.ts`: offline. Slukket flag giver samme DOM og samme requests som siden uden flagets blok. Tændt flag giver placering, statusord og meddelelser.
+
+## 9. Hvornår data er pålidelige nok til at blive vist
+
+| Oplysning | Kræver (aktivt i produktionen) | Indtil da viser visningen |
+|---|---|---|
+| Hvilke trin der er serveret og besvaret | instanser med `learning_step` (Arkivskabets seed-migration, endnu ikke skrevet) | intet forløb ("Eleven har ikke påbegyndt et kursusforløb.") |
+| Førstesvar og "Løst ved 2. forsøg" | **K1** + H5 live (`question_attempts` med `attempt_no`, `submission_id`) | legacy: førstesvaret kun for ugentagne instanser; ellers "Førstesvar ikke registreret" |
+| Hjælp ("N hints") | **#653 L3** (hint-log) med `LAERLIGVERSE_ATTEMPT_CONTEXT=on` oven på K1 | "Ikke registreret" (aldrig 0, heller ikke under K1's konstant 0) |
+| Svartype / "Løst selvstændigt" | **#653 L5** (`served_mode` → `question_attempts.mode`) oven på K1 | "Ikke registreret" |
+| Adskillelse fra almindelig mestring | **#647** (kursusopgaver flytter hverken niveau, bånd eller lærertal) | kursussvar kan forvride de almindelige tal, så visningen bør ikke tændes før #647 |
+
+Visningen må tændes, når ejeren har givet produkt-GO og migrations-GO, og K1, #653 (L5 + L3) og #647 er anvendt og aktive. Tændes den før, er den korrekt, men næsten alt står som "Ikke registreret".

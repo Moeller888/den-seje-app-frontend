@@ -916,6 +916,9 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
 - **Ejerbeslutning 2026-11-12: batch 4 er det sidste batch i den nuværende udrulning.** Batch 5–10 (18
   migrationer) er sat på pause og må ikke anvendes uden en ny ejerbeslutning, efter at de andre opgavetyper er
   integreret. Banken har nu 2.120 nye inaktive engelskopgaver, og intet er aktiveret.
+- **Rettelser anvendt 2026-11-14:** de syv forklaringsfejl og de tre opgaver om rygning og krig fra pilot og
+  batch 2–4 er rettet i én datamigration (#701, ledger `20261114141653`). Alle ni rækker er fortsat inaktive, og
+  de åbne indholdspunkter i runbookens §2.8 er lukket. Intet er aktiveret.
 - Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
   `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.

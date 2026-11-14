@@ -257,8 +257,24 @@ Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokume
   2.200–10.000, fordelingen er A1 6, A2 95, B1 132, B2 141 og C1 126, og intet niveau ligger uden for sit
   CEFR-interval. Indholdet er identisk med repoet, og banken har nu 4.263 rækker. Antallet af aktive er uændret,
   2.099.
-- **Åbne punkter før aktivering.** Hvert punkt skal rettes både i repoet og i den levende række, med eget GO, før
-  den pågældende portion aktiveres:
+- **Rettelserne er anvendt 2026-11-14.** Ejeren godkendte 2026-11-13 de syv nye forklaringer og de tre omskrivninger
+  (krig → London, "heavy smoker" → "heavy traffic", "used to smoke" → "used to play football"). Rettelsen er én
+  datamigration (#701, merget som `22e74bb8`), anvendt med sit eget GO:
+
+  | Fil | Ledger-version | Rækker | Log |
+  |---|---|---|---|
+  | `20261113120000_english_review_text_corrections` | `20261114141653` | 9 ændrede | [1416Z](production-actions/2026-11-14T1416Z-english-review-text-corrections-applied.md) |
+
+  - Forhåndskontrollen viste, at alle ni rækker var inaktive, havde det gennemgåede indhold (md5) og 0
+    `question_instances`, og at migrationen ikke var anvendt før.
+  - Efterkontrollen viste præcis ni rækker med det forventede nye indhold. Alle ni er fortsat inaktive og har 0
+    `question_instances`.
+  - Facit, svarmuligheder, metadata og niveau for de ni rækker er uændrede, og det samme er alle øvrige 4.254
+    rækker (samme fingeraftryk før og efter).
+  - Banken har fortsat 4.263 rækker og 2.099 aktive, og `pilot` og `batch2`–`batch4` er alle inaktive.
+  - Den samme rettelse af "unanimous" står i den pauserede `batch7_3` gennem generatorens `REVIEW_TEXT_CORRECTIONS`.
+- **Åbne punkter før aktivering (lukket 2026-11-14 af rettelsen ovenfor).** Hvert punkt skulle rettes både i repoet
+  og i den levende række, med eget GO, før den pågældende portion aktiveres:
 
   | Portion | Opgave | Fejl |
   |---|---|---|
@@ -269,11 +285,13 @@ Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokume
   | `batch4` | "Hvad betyder 'Sounds good!'?" (batch4_2, niveau 4.400, A2, række-id `aebc0b79-f77b-4621-a4ac-9ce3fa867522`) | Facit "Det lyder godt!" er rigtigt, men forklaringen er en forfatternote: "Flyt til A2 (fx l ≈ 4400) eller erstat med et sværere B1-udtryk." |
   | `batch4` | "Hvilket ord betyder det modsatte af 'maximum'?" (batch4_2, niveau 5.200, B1, række-id `6668f28f-7951-4888-b7fa-5b7d274781f3`) | Facit "minimum" er rigtigt, men forklaringen er en forfatternote: "Flyt til B1 (fx l ≈ 5200) eller erstat med et sværere antonym-par." |
   | `batch4` | "Læs: 'My grandfather was only eighteen when the war broke out, and he was twenty-three when it ended.' Hvor længe varede krigen?" (batch4_2, niveau 6.698, B1, række-id `15372b8d-039e-4125-9f34-fe7900142433`) | Facit "fem år" er rigtigt, men forklaringen er en forfatternote: "Kræver at forstå begge tal og drage en slutning – passer til B1." |
-- **Til ejerens vurdering før aktivering af `batch3`:** opgaven "She's a ___ smoker. She smokes forty a day."
+- **Til ejerens vurdering før aktivering af `batch3` (afgjort 2026-11-13: omskrevet til "heavy traffic", anvendt
+  2026-11-14):** opgaven "She's a ___ smoker. She smokes forty a day."
   (batch3_2, niveau 7.982, B2, række-id `214ebebf-2f13-4ec4-b7ff-03be35eb2d8a`) handler om rygning. Facit `heavy` er
   rigtigt, og emnet står ikke på listen over udelukkede emner. Ejeren afgør, om opgaven skal beholdes, omskrives
   eller tages ud.
-- **Til ejerens vurdering før aktivering af `batch4`.** Ingen af emnerne står på listen over udelukkede emner, og
+- **Til ejerens vurdering før aktivering af `batch4` (afgjort 2026-11-13: begge omskrevet, anvendt 2026-11-14).**
+  Ingen af emnerne står på listen over udelukkede emner, og
   facit er rigtigt i begge. Ejeren afgør, om opgaverne skal beholdes, omskrives eller tages ud:
   - rygning: "My grandfather ___ to smoke, but he stopped years ago." (batch4_1, niveau 5.152, B1, række-id
     `29c46027-0fab-416f-b689-f444782e9a1f`);

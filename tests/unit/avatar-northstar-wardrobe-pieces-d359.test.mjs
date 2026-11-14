@@ -25,7 +25,7 @@ test("D-359: 1304 approved outfits and D-355's 1441 (2745); each stored choice d
     assert.ok(r, id);
     const now = L.northstarOutfitNow();
     assert.equal(now.top + "+" + now.bottom + "+" + now.shoes, id);
-    assert.deepEqual(r.plan, L.northstarPlanFor(now));
+    assert.deepEqual(r.plan, L.northstarPlanFor(now).map((s) => (s.op === "draw" && s.src === L.northstarHeadSrc(null) ? { ...s, src: L.northstarHeadSrc("standard") } : s)));   // D-374: the standard hair's head
   }
 });
 
