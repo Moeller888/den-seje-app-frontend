@@ -52,6 +52,10 @@ export type QuestionAssignment = {
   // L1 K1 (./served-snapshot.ts): the delivery proposal — exactly the row the response is built from.
   // Sent only when K1_SERVED_SNAPSHOT=on; the database verifies it against the locked question row.
   servedSnapshot?: Record<string, unknown>;
+  // Lærligverse L5 (migration 20261108043500): the activity mode of the server-directed sequence step this
+  // round is served in. Sent only when LAERLIGVERSE_SERVED_MODE=on AND the server chose a step; the database
+  // refuses a mode that is not the question's learning_step mode, and owns the column afterwards.
+  servedMode?: string;
 };
 
 // Creates one question instance for the signed-in pupil through a freshly built admin client.
@@ -73,6 +77,7 @@ export async function insertQuestionInstance(
       mastery_snapshot: 1,
       next_review_at: assignment.nowIso,
       ...servedSnapshotColumn(assignment),
+      ...servedModeColumn(assignment),
     })
     // repeat_count is read back, not assumed: get-next-question derives round_no from it (D-266, H5).
     .select("id, repeat_count")
@@ -82,4 +87,9 @@ export async function insertQuestionInstance(
 // L1 K1: the one optional column — served_snapshot, only when get-next-question sends a proposal.
 export function servedSnapshotColumn(assignment: QuestionAssignment): { served_snapshot?: Record<string, unknown> } {
   return assignment.servedSnapshot !== undefined ? { served_snapshot: assignment.servedSnapshot } : {};
+}
+
+// Lærligverse L5: the one other optional column — served_mode, only when get-next-question records a mode.
+export function servedModeColumn(assignment: QuestionAssignment): { served_mode?: string } {
+  return assignment.servedMode !== undefined ? { served_mode: assignment.servedMode } : {};
 }

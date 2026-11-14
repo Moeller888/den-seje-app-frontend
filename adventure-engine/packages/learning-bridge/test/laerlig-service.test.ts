@@ -407,3 +407,85 @@ describe("LaerligTaskService — server-directed sequence, D-338 (mock HTTP)", (
     expect(s.calls).toEqual([]);
   });
 });
+
+describe("LaerligTaskService — server hint log, Lærligverse L3 (mock HTTP)", () => {
+  const MAP = { "hist.besaettelsen.h4": "world_war_2" } as const;
+  const CTX = { guided_practice: "arkivskab", revision: "arkivskab-revision", independent_application: "skuffe", transfer: "overfoersel", revisit: "genbesoeg" };
+  const SEQ = { ...MC, learning_objective: "world_war_2", learning_step: "guided_practice", mode: "practice", hints_available: 2 };
+  const RID = ["0b6c8f8e-6f1d-4a43-9d4e-2f2a1f6a7b01", "1b6c8f8e-6f1d-4a43-9d4e-2f2a1f6a7b02", "2b6c8f8e-6f1d-4a43-9d4e-2f2a1f6a7b03"];
+  const make = (serverHints: boolean | undefined, ...replies: Array<{ status: number; body: unknown } | Error>) => {
+    const s = scripted({ status: 200, body: SEQ }, ...replies);
+    const ids = [...RID];
+    const svc = new LaerligTaskService({
+      call: s.call, subject: "historie", objectiveMap: MAP, sequence: { contextOfStep: CTX },
+      ...(serverHints === undefined ? {} : { serverHints }), newRequestId: () => ids.shift() as string,
+    });
+    return { s, svc };
+  };
+  const ok = (level: number, remaining: number, outcome = "recorded") => ({ status: 200, body: { outcome, level, text: `Hjælp ${level}`, hints_remaining: remaining, round_no: 1 } });
+
+  it("default (option absent or false): hintsAvailable 0 whatever the server states, hint() refuses, nothing is sent", async () => {
+    for (const flag of [undefined, false]) {
+      const { s, svc } = make(flag);
+      const t = await svc.fetchTask(Q);
+      expect(t.hintsAvailable).toBe(0);
+      await expect(svc.hint(t.instanceId, 1)).rejects.toMatchObject({ code: "unavailable", message: "the backend has no hint log yet" });
+      expect(s.calls.map((c) => c.fn)).toEqual(["get-next-question"]);
+    }
+  });
+
+  it("serverHints: the server's hint count; hint() calls request-hint with instance, round, level and a request id", async () => {
+    const { s, svc } = make(true, ok(1, 1), ok(2, 0));
+    const t = await svc.fetchTask(Q);
+    expect(t.hintsAvailable).toBe(2);
+    expect(await svc.hint(t.instanceId, 1)).toEqual({ level: 1, text: "Hjælp 1", hintsRemaining: 1 });
+    expect(await svc.hint(t.instanceId, 2)).toEqual({ level: 2, text: "Hjælp 2", hintsRemaining: 0 });
+    expect(s.calls.slice(1)).toEqual([
+      { fn: "request-hint", body: { question_instance_id: ID, round_no: 1, level: 1, request_id: RID[0] } },
+      { fn: "request-hint", body: { question_instance_id: ID, round_no: 1, level: 2, request_id: RID[1] } },
+    ]);
+    // Neither mode nor hints are ever sent with an answer: the server derives them.
+    expect(JSON.stringify(s.calls)).not.toMatch(/hints_used|"mode"/);
+  });
+
+  it("a retry after a lost response reuses the SAME request id, so the server can never count it twice", async () => {
+    const { s, svc } = make(true, new Error("network down"), { status: 503, body: {} }, ok(1, 1, "replay"));
+    const t = await svc.fetchTask(Q);
+    await expect(svc.hint(t.instanceId, 1)).rejects.toMatchObject({ code: "network", transient: true });
+    await expect(svc.hint(t.instanceId, 1)).rejects.toMatchObject({ code: "server", transient: true });
+    expect((await svc.hint(t.instanceId, 1)).text).toBe("Hjælp 1");
+    const ids = s.calls.slice(1).map((c) => c.body.request_id);
+    expect(ids).toEqual([RID[0], RID[0], RID[0]]);
+  });
+
+  it("refusals: unknown instance, a level the server did not offer, disabled hints, and a malformed reply", async () => {
+    const { s, svc } = make(true,
+      { status: 404, body: { outcome: "hints_disabled", error: "Hints are not enabled" } },
+      { status: 409, body: { outcome: "hint_unavailable", error: "No hint at this level", hints_available: 0 } },
+      { status: 200, body: { outcome: "recorded", level: 2, text: "x", hints_remaining: 0 } },
+      { status: 200, body: { outcome: "recorded", level: 1, text: "", hints_remaining: 1 } },
+    );
+    const t = await svc.fetchTask(Q);
+    await expect(svc.hint("not-served", 1)).rejects.toMatchObject({ code: "not_found" });
+    await expect(svc.hint(t.instanceId, 3)).rejects.toMatchObject({ code: "invalid" });
+    await expect(svc.hint(t.instanceId, 0)).rejects.toMatchObject({ code: "invalid" });
+    expect(s.calls).toHaveLength(1);
+    await expect(svc.hint(t.instanceId, 1)).rejects.toMatchObject({ code: "unavailable", transient: false, message: "hints_disabled" });
+    await expect(svc.hint(t.instanceId, 1)).rejects.toMatchObject({ code: "unavailable", transient: false });
+    await expect(svc.hint(t.instanceId, 1)).rejects.toMatchObject({ code: "server", transient: false });
+    await expect(svc.hint(t.instanceId, 1)).rejects.toMatchObject({ code: "server", transient: false });
+  });
+
+  it("a malformed server hint count is refused; an absent one is 0", async () => {
+    for (const hints_available of [-1, 4, 1.5, "2", null]) {
+      const s = scripted({ status: 200, body: { ...SEQ, hints_available } });
+      const svc = new LaerligTaskService({ call: s.call, subject: "historie", objectiveMap: MAP, sequence: { contextOfStep: CTX }, serverHints: true });
+      await expect(svc.fetchTask(Q)).rejects.toMatchObject({ code: "server" });
+    }
+    const without: Record<string, unknown> = { ...SEQ };
+    delete without.hints_available;
+    const s = scripted({ status: 200, body: without });
+    const svc = new LaerligTaskService({ call: s.call, subject: "historie", objectiveMap: MAP, sequence: { contextOfStep: CTX }, serverHints: true });
+    expect((await svc.fetchTask(Q)).hintsAvailable).toBe(0);
+  });
+});

@@ -5,7 +5,8 @@ import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
 import { deriveQuestionScope } from "./scope.ts";
 import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
-import { checkRequestedStep, historyFromRows, nextStep, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
+import { checkRequestedStep, historyFromRows, nextStep, stepDef, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
+import { hintsAvailable } from "../_shared/hints.ts";
 import { sortByWave } from "./wave-order.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
@@ -263,6 +264,16 @@ serve(async (req) => {
     // version the same: new instances propose the row they are built from, open and repeated rounds are
     // served from their snapshot.
     const servedSnapshot = servedSnapshotEnabled(Deno.env.get(SERVED_SNAPSHOT_ENV));
+    // Lærligverse L5 (Edge secret LAERLIGVERSE_SERVED_MODE, only after migration 20261108043500): when the
+    // server-directed sequence chose a step for THIS request, the new instance records that step's activity mode
+    // (served_mode), which process-event later sends as question_attempts.mode. Anything but "on", or no
+    // sequence step: the insert is exactly as before. An open round is resumed with the mode it was served in.
+    const servedMode = Deno.env.get("LAERLIGVERSE_SERVED_MODE") === "on" && sequence !== null ? stepDef(sequence.step).mode : undefined;
+    // Lærligverse L3 (Edge secret LAERLIGVERSE_HINTS): in a sequence step the response states how many hint
+    // levels the served content offers (the COUNT only, ../_shared/hints.ts — the text comes one level at a
+    // time from request-hint, after it is logged). Off, or no sequence: the response is exactly as before.
+    const hintsCount = (content: unknown): { hints_available?: number } =>
+      sequence !== null && Deno.env.get("LAERLIGVERSE_HINTS") === "on" ? { hints_available: hintsAvailable(content) } : {};
     const wireFormat = (row: { answer_format?: unknown; answer_type?: unknown; content?: unknown }): string | null =>
       mixEngine === "v2" ? servableWireFormat(row) : mapAnswerFormat(row.answer_format as string | null);
 
@@ -386,6 +397,8 @@ serve(async (req) => {
             ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
             // D-338: the server's step and activity mode, only in a sequence.
             ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
+            // L3: the hint count of the served (delivered) content, only in a sequence with LAERLIGVERSE_HINTS=on.
+            ...hintsCount(q.content),
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -522,6 +535,9 @@ serve(async (req) => {
         // K1: the row this response is built from; the database refuses the insert (40001) if the
         // question changed since it was read, and the next candidate is tried.
         servedSnapshot: servedSnapshot ? deliveryProposal(q) : undefined,
+        // L5: the sequence step's mode, only with LAERLIGVERSE_SERVED_MODE=on (see above); the database
+        // refuses a mode that is not this question's learning_step mode.
+        servedMode,
       });
 
       if (error) {
@@ -705,6 +721,8 @@ serve(async (req) => {
         ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
         // D-338: the server's step and activity mode, only in a sequence.
         ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
+        // L3: the hint count of the served content, only in a sequence with LAERLIGVERSE_HINTS=on.
+        ...hintsCount(inserted.question?.content),
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

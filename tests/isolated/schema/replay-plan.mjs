@@ -132,6 +132,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "D-286, not applied in production: it re-creates evaluate_achievements and revokes set_night_correct from authenticated, which production still grants",
   "20261103110000_l1_k1_attempt_context.sql":
     "L1 K1, not applied in production: it extends H5's question_attempts (there since the bootstrap, 2026-11-04, still without these columns) with mode, hints and content fingerprint",
+  "20261108043500_laerligverse_served_mode_hint_log.sql":
+    "Lærligverse L5 + L3, not applied in production: it needs L1 K1 (not applied either) and adds question_instances.served_mode, the hint log question_hint_requests and request_question_hint; every reader is behind an Edge flag that is off",
   "20261105130000_quiz_anti_guess_cooldown.sql":
     "anti-gætte-pause, not applied in production: it adds quiz_cooldown_* and two triggers on question_instances; not replayed in the isolated stack, where shared synthetic pupils answer many questions wrong in a row (the frontend treats the missing get_my_quiz_cooldown as no pause)",
   "20261105120000_true_false_activation.sql":
