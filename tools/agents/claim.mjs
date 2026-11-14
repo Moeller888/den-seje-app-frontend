@@ -4,25 +4,34 @@
 // (PR #604); dette værktøj håndhæver dem lokalt: før en agent skriver, committer eller pusher på en branch,
 // spørger den `check`/`push-check`, og en anden sessions ejerskab stopper den.
 //
-// Låsene ligger i <git-common-dir>/laerlig-claims/ — fælles for alle worktrees af SAMME klon på SAMME
-// maskine, aldrig committet, uden hemmeligheder. De koordinerer ikke sessioner på andre maskiner eller i
-// andre kloner (se dokumentationen). En lås overtages ALDRIG automatisk: en gammel lås markeres FORÆLDET,
-// men kun ejeren (eller Christopher, ved at slette filen efter afklaring) kan frigive den.
+// Låsene ligger i ~/.claude/laerlig-claims/<repo>/ — fælles for ALLE kloner og worktrees af samme GitHub-repo
+// på samme maskine (trin 1, 2026-11-14), aldrig committet, uden hemmeligheder. Ældre låse i
+// <git-common-dir>/laerlig-claims/ læses stadig: en gammel lås, der tilhører en anden session, stopper; en
+// gammel og en ny lås med forskellige ejere er en KONFLIKT og stopper også. Intet slettes automatisk. En lås
+// overtages ALDRIG automatisk: en gammel lås markeres FORÆLDET, men kun ejeren (eller Christopher, ved at
+// slette filen efter afklaring) kan frigive den.
+//
+// Sessions-id tages fra harnessen (CLAUDE_CODE_SESSION_ID). Et --session, der afviger fra den, afvises: en
+// agent kan ikke uforvarende optræde som en anden session. Låsen gemmer sessions-id (ikke PID), så en
+// genstartet session med ny PID ejer stadig sine låse; `whois` finder den aktuelle PID og navn.
 //
 // Værktøjet kører ALDRIG selv `git push`, `git merge` eller andre skrivende git-kommandoer: de skal stå i
-// agentens egen kommando, så LÆRLIG-GUARD ser dem. Det læser kun (ls-remote, rev-parse, merge-base).
+// agentens egen kommando, så LÆRLIG-GUARD ser dem. Det læser kun (ls-remote, rev-parse, merge-base, config).
 //
 // Exitkoder: 0 ok · 1 brugsfejl · 2 ejet af en anden session · 3 ingen lås · 4 mulig dublet-PR ·
 //            5 remote har flyttet sig siden den verificerede SHA · 6 ødelagt låsefil ·
 //            7 ingen verificeret remote-SHA (kør `verify`) · 8 ALARM efter push: serverens gamle værdi var
-//            ikke den verificerede (en anden har ændret branchen i mellemtiden)
+//            ikke den verificerede (en anden har ændret branchen i mellemtiden) ·
+//            9 KONFLIKT: modstridende låse (ny og gammel placering har forskellige ejere)
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync, readFileSync, readdirSync, unlinkSync, existsSync, renameSync, linkSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 export const EXIT = Object.freeze({
   OK: 0, USAGE: 1, OWNED_BY_OTHER: 2, UNCLAIMED: 3, DUPLICATE: 4, REMOTE_MOVED: 5, BROKEN: 6, NOT_VERIFIED: 7, PUSH_ALERT: 8,
+  CONFLICT: 9,
 });
 export const DEFAULT_STALE_HOURS = 24;
 export const ABSENT = "absent"; // verificeret: branchen findes ikke på remote
@@ -33,9 +42,108 @@ export function git(args, cwd) {
   return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 }
 
-export function claimsDir({ env = process.env, cwd = process.cwd() } = {}) {
+// "https://github.com/Moeller888/den-seje-app-frontend.git" og "git@github.com:Moeller888/…" giver samme nøgle:
+// "github.com__moeller888__den-seje-app-frontend". Brugernavn/kodeord i URL'en indgår aldrig.
+export function repoKey(url) {
+  const s = String(url ?? "").trim();
+  // Fejlbeskeder viser aldrig URL'ens brugernavn/kodeord eller en nøgle afledt af dem.
+  const fail = () => new UsageError(`kan ikke udlede repo fra remote-URL ${JSON.stringify(s.replace(/^([a-z+]+:\/\/)?[^@\/]*@/i, "$1***@"))}`);
+  const m = /^(?:[a-z+]+:\/\/)?(?:[^@\/]+@)?([^\/:@]+)[:\/]([^@]+?)(?:\.git)?\/?$/i.exec(s);
+  if (!m) throw fail();
+  const key = `${m[1]}/${m[2]}`.toLowerCase().replaceAll("/", "__");
+  if (!/^[a-z0-9._-]+(?:__[a-z0-9._-]+)+$/.test(key)) throw fail();
+  return key;
+}
+
+const home = (env) => env.USERPROFILE || env.HOME || homedir();
+
+// Den fælles mappe for repoet (alle kloner). LAERLIG_CLAIMS_DIR overstyrer helt (tests og særtilfælde).
+export function claimsDir({ env = process.env, cwd = process.cwd(), run = git } = {}) {
   if (env.LAERLIG_CLAIMS_DIR) return resolve(env.LAERLIG_CLAIMS_DIR);
-  return join(resolve(cwd, git(["rev-parse", "--git-common-dir"], cwd)), "laerlig-claims");
+  const base = env.LAERLIG_CLAIMS_HOME ? resolve(env.LAERLIG_CLAIMS_HOME) : join(home(env), ".claude", "laerlig-claims");
+  return join(base, repoKey(run(["config", "--get", "remote.origin.url"], cwd)));
+}
+
+// Den gamle placering (før trin 1): kun den aktuelle klon. Læses, så ældre låse fortsat respekteres.
+export function legacyClaimsDir({ env = process.env, cwd = process.cwd(), run = git } = {}) {
+  if (env.LAERLIG_CLAIMS_DIR) return null;
+  try { return join(resolve(cwd, run(["rev-parse", "--git-common-dir"], cwd)), "laerlig-claims"); } catch { return null; }
+}
+
+// Find branchens lås på tværs af ny og gammel placering. Modstridende ejere = KONFLIKT, aldrig et valg.
+export function locate(dirs, branch) {
+  const shared = readClaim(dirs.shared, branch);
+  const legacy = dirs.legacy ? readClaim(dirs.legacy, branch) : null;
+  if (shared && legacy && shared.session !== legacy.session) return { conflict: true, shared, legacy };
+  if (shared) return { claim: shared, dir: dirs.shared };
+  if (legacy) return { claim: legacy, dir: dirs.legacy };
+  return { claim: null, dir: dirs.shared };
+}
+
+// Sessions-id fra harnessen. Et eksplicit --session skal være det samme.
+export function resolveSession(given, env = process.env) {
+  const harness = env.CLAUDE_CODE_SESSION_ID;
+  if (given && given !== true && harness && given !== harness) {
+    throw new UsageError(`--session ${given} afviger fra harnessens CLAUDE_CODE_SESSION_ID (${harness}) — en agent kan ikke optræde som en anden session`);
+  }
+  const s = (given && given !== true) ? given : harness;
+  if (!s) throw new UsageError("intet sessions-id: hverken --session eller CLAUDE_CODE_SESSION_ID");
+  return s;
+}
+
+// Claude Code skriver én fil pr. kørende session: ~/.claude/sessions/<pid>.json med sessionId, name, status.
+// Matcher på sessions-id (ikke PID): en genstartet session har ny PID og ofte nyt navn, men samme id.
+export function findSession(sessionId, { env = process.env, alive = pidAlive } = {}) {
+  const dir = env.CLAUDE_SESSIONS_DIR ? resolve(env.CLAUDE_SESSIONS_DIR) : join(home(env), ".claude", "sessions");
+  if (!existsSync(dir)) return null;
+  const found = [];
+  for (const f of readdirSync(dir)) {
+    if (!/^\d+\.json$/.test(f)) continue;
+    let o;
+    try { o = JSON.parse(readFileSync(join(dir, f), "utf8")); } catch { continue; }
+    if (o?.sessionId !== sessionId) continue;
+    found.push({ pid: o.pid, name: o.name ?? null, status: o.status ?? null, cwd: o.cwd ?? null, updatedAt: o.updatedAt ?? null, alive: alive(o.pid) });
+  }
+  // Flere filer for samme session (genstart uden oprydning): den levende og nyeste vinder; resten er forældede.
+  found.sort((x, y) => Number(y.alive) - Number(x.alive) || (y.updatedAt ?? 0) - (x.updatedAt ?? 0));
+  return found.length ? { ...found[0], stalePids: found.slice(1).map((x) => x.pid) } : null;
+}
+
+export function pidAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; }
+}
+
+// Terminalens shell = forælderprocessen til claude-processen (i VS Code: den PID, der står i terminalfanens tooltip).
+export function parentPid(pid) {
+  try {
+    if (process.platform === "win32") {
+      const out = execFileSync("powershell.exe", ["-NoProfile", "-Command", `(Get-CimInstance Win32_Process -Filter "ProcessId=${Number(pid)}").ParentProcessId`], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15000 }).trim();
+      return /^\d+$/.test(out) ? Number(out) : null;
+    }
+    const out = execFileSync("ps", ["-o", "ppid=", "-p", String(Number(pid))], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    return /^\d+$/.test(out) ? Number(out) : null;
+  } catch { return null; }
+}
+
+// Hvem ejer branchen, og hvor er den session nu? Ændrer intet.
+export function whois(dirs, branch, { env = process.env, alive = pidAlive, parentOf = parentPid, now = Date.now(), staleHours = DEFAULT_STALE_HOURS } = {}) {
+  const loc = locate(dirs, branch);
+  if (loc.conflict) return { code: EXIT.CONFLICT, text: `KONFLIKT: ${branch} har to ejere — ny placering: ${loc.shared.session}, gammel placering: ${loc.legacy.session}. Stop; Christopher afklarer.` };
+  if (!loc.claim) return { code: EXIT.UNCLAIMED, text: `${branch}: ingen lås` };
+  const c = loc.claim;
+  const s = findSession(c.session, { env, alive });
+  const lines = [describe(c, { now, staleHours })];
+  if (!s) {
+    lines.push(`Ejersessionen ${c.session} kører ikke (ingen sessionsfil). Låsen er bevaret; den frigives kun af ejeren eller af Christopher efter afklaring.`);
+    return { code: EXIT.OK, text: lines.join("\n"), owner: { session: c.session, running: false } };
+  }
+  const terminal = s.alive ? parentOf(s.pid) : null;
+  lines.push(`Ejer nu: ${s.name ?? "(uden navn)"} · session ${c.session} · PID ${s.pid}${s.alive ? "" : " (PROCES VÆK — forældet sessionsfil)"} · status ${s.status ?? "ukendt"}` +
+    (terminal ? ` · terminalens shell-PID ${terminal} (VS Code: hold musen over terminalfanen)` : ""));
+  if (s.stalePids.length) lines.push(`Forældede sessionsfiler for samme session (genstart): PID ${s.stalePids.join(", ")}`);
+  if (c.sessionName && s.name && c.sessionName !== s.name) lines.push(`Navnet er skiftet siden låsen blev taget: ${c.sessionName} → ${s.name}`);
+  return { code: EXIT.OK, text: lines.join("\n"), owner: { session: c.session, running: s.alive, pid: s.pid, name: s.name, terminal } };
 }
 
 export class UsageError extends Error {}
@@ -95,7 +203,7 @@ function replaceClaim(file, obj) {
   renameSync(tmp, file);
 }
 
-const FIELDS = ["task", "purpose", "worktree", "pr", "status", "next", "blockedBy", "needsApproval", "tests"];
+const FIELDS = ["task", "purpose", "worktree", "pr", "status", "next", "blockedBy", "needsApproval", "tests", "sessionName"];
 
 // Opretter låsen atomisk MED indhold: den midlertidige fil skrives færdig og linkes derefter til det
 // endelige navn (link fejler med EEXIST, hvis låsen findes). Et nedbrud før linket efterlader kun en .tmp-fil
@@ -309,60 +417,98 @@ function parseArgs(argv) {
 }
 
 const USAGE = `Brug: node tools/agents/claim.mjs <kommando> [--flag værdi]
-  claim       --branch B --session S --task ID --purpose "…" [--worktree W] [--pr N] [--status …] [--next …]
-  check       --branch B --session S            (0 = din, 2 = en andens, 3 = ingen lås, 6 = ødelagt)
-  heartbeat   --branch B --session S [--status …] [--next …] [--tests …]
-  verify      --branch B --session S [--remote origin]   (registrér den remote-HEAD, du har gennemgået)
-  push-check  --branch B --session S [--remote origin]   (0 = push uden force; 5/7 = stop)
-  after-push  --branch B --session S --porcelain-file F  (output fra din egen git push --porcelain; 8 = ALARM)
-  release     --branch B --session S
+  (--session er valgfri: harnessens CLAUDE_CODE_SESSION_ID bruges; et afvigende --session afvises)
+  claim       --branch B --task ID --purpose "…" [--worktree W] [--pr N] [--status …] [--next …]
+  check       --branch B            (0 = din, 2 = en andens, 3 = ingen lås, 6 = ødelagt, 9 = konflikt)
+  heartbeat   --branch B [--status …] [--next …] [--tests …]
+  verify      --branch B [--remote origin]   (registrér den remote-HEAD, du har gennemgået)
+  push-check  --branch B [--remote origin]   (0 = push uden force; 5/7/9 = stop)
+  after-push  --branch B --porcelain-file F  (output fra din egen git push --porcelain; 8 = ALARM)
+  release     --branch B
+  whois       --branch B                     (hvem ejer branchen, kører sessionen, hvilken terminal)
   list        [--stale-hours N]
   dupes       --title "…" [--branch B] [--prs-json fil]
-  handover    --branch B [--session S]`;
+  handover    --branch B`;
 
-export async function main(argv = process.argv.slice(2), { env = process.env, cwd = process.cwd(), out = console.log, err = console.error } = {}) {
+export async function main(argv = process.argv.slice(2), { env = process.env, cwd = process.cwd(), out = console.log, err = console.error, alive, parentOf } = {}) {
   let parsed;
   try { parsed = parseArgs(argv); } catch (e) { err(e.message); err(USAGE); return EXIT.USAGE; }
   const { cmd, o } = parsed;
   const staleHours = o["stale-hours"] ? Number(o["stale-hours"]) : DEFAULT_STALE_HOURS;
   const need = (...ks) => { for (const k of ks) if (!o[k] || o[k] === true) throw new UsageError(`--${k} mangler`); };
+  const dirs = () => ({ shared: claimsDir({ env, cwd }), legacy: legacyClaimsDir({ env, cwd }) });
+  // Find den mappe, hvor branchens lås ligger. En konflikt mellem ny og gammel placering stopper altid.
+  const target = (d, branch) => {
+    const loc = locate(d, branch);
+    if (loc.conflict) {
+      err(`${cmd}: KONFLIKT — ${branch} har to ejere: ny placering ${loc.shared.session}, gammel placering ${loc.legacy.session}. Stop; Christopher afklarer.`);
+      return null;
+    }
+    return loc;
+  };
   try {
     switch (cmd) {
       case "claim": case "check": case "heartbeat": case "release": {
-        need("branch", "session");
+        need("branch");
         if (cmd === "claim") need("task", "purpose");
-        const dir = claimsDir({ env, cwd });
-        const args = { branch: o.branch, session: o.session, task: o.task, purpose: o.purpose, worktree: o.worktree ?? (cmd === "claim" ? cwd : undefined),
+        const session = resolveSession(o.session, env);
+        const d = dirs();
+        const loc = target(d, o.branch);
+        if (!loc) return EXIT.CONFLICT;
+        const args = { branch: o.branch, session, task: o.task, purpose: o.purpose, worktree: o.worktree ?? (cmd === "claim" ? cwd : undefined),
           pr: o.pr, status: o.status, next: o.next, tests: o.tests };
-        const r = cmd === "claim" ? claim(dir, args) : cmd === "check" ? check(dir, args) : cmd === "heartbeat" ? heartbeat(dir, args) : release(dir, args);
+        let r;
+        if (cmd === "claim") {
+          // En lås i den gamle placering, der tilhører en anden, stopper — der skrives intet nyt.
+          if (loc.claim && loc.claim.session !== session) r = { code: EXIT.OWNED_BY_OTHER, claim: loc.claim };
+          else {
+            const s = findSession(session, { env, alive: alive ?? pidAlive });
+            r = claim(d.shared, { ...args, ...(s?.name ? { sessionName: s.name } : {}) });
+            if (r.code === EXIT.OK && s?.name && r.claim.sessionName !== s.name) r = update(d.shared, claimFile(d.shared, o.branch), r.claim, {}, Date.now(), { sessionName: s.name });
+          }
+        } else if (cmd === "release") {
+          r = release(loc.dir, args);
+          // En gammel lås fra samme session frigives også; en andens røres ikke.
+          if (r.code === EXIT.OK && d.legacy && loc.dir !== d.legacy) {
+            const old = readClaim(d.legacy, o.branch);
+            if (old && old.session === session) release(d.legacy, args);
+          }
+        } else {
+          r = cmd === "check" ? check(loc.dir, args) : heartbeat(loc.dir, args);
+        }
         if (r.code === EXIT.OK) out(`${cmd}: ok — ${describe(r.claim, { staleHours })}`);
         else if (r.code === EXIT.UNCLAIMED) err(`${cmd}: ingen lås på ${o.branch} — kør 'claim' før du skriver`);
         else err(`${cmd}: STOP — ${describe(r.claim, { staleHours })}`);
         return r.code;
       }
-      case "verify": {
-        need("branch", "session");
-        const r = verify(claimsDir({ env, cwd }), { cwd, branch: o.branch, session: o.session, remote: o.remote ?? "origin" });
-        if (r.code === EXIT.OK) out(`verify: ok — verificeret remote ${r.remoteSha}`);
-        else err(r.claim ? `verify: STOP — ${describe(r.claim, { staleHours })}` : `verify: ingen lås på ${o.branch}`);
+      case "verify": case "push-check": case "after-push": {
+        need("branch");
+        if (cmd === "after-push") need("porcelain-file");
+        const session = resolveSession(o.session, env);
+        const loc = target(dirs(), o.branch);
+        if (!loc) return EXIT.CONFLICT;
+        const base = { cwd, branch: o.branch, session, remote: o.remote ?? "origin" };
+        if (cmd === "verify") {
+          const r = verify(loc.dir, base);
+          if (r.code === EXIT.OK) out(`verify: ok — verificeret remote ${r.remoteSha}`);
+          else err(r.claim ? `verify: STOP — ${describe(r.claim, { staleHours })}` : `verify: ingen lås på ${o.branch}`);
+          return r.code;
+        }
+        const r = cmd === "push-check" ? pushCheck(loc.dir, base) : afterPush(loc.dir, { ...base, porcelain: readFileSync(o["porcelain-file"], "utf8") });
+        (r.code === EXIT.OK ? out : err)(`${cmd}: ${r.code === EXIT.OK ? "ok" : "STOP"} — ${r.reason}`);
         return r.code;
       }
-      case "push-check": {
-        need("branch", "session");
-        const r = pushCheck(claimsDir({ env, cwd }), { cwd, branch: o.branch, session: o.session, remote: o.remote ?? "origin" });
-        (r.code === EXIT.OK ? out : err)(`push-check: ${r.code === EXIT.OK ? "ok" : "STOP"} — ${r.reason}`);
-        return r.code;
-      }
-      case "after-push": {
-        need("branch", "session", "porcelain-file");
-        const r = afterPush(claimsDir({ env, cwd }), { cwd, branch: o.branch, session: o.session, porcelain: readFileSync(o["porcelain-file"], "utf8"), remote: o.remote ?? "origin" });
-        (r.code === EXIT.OK ? out : err)(`after-push: ${r.code === EXIT.OK ? "ok" : "STOP"} — ${r.reason}`);
+      case "whois": {
+        need("branch");
+        const r = whois(dirs(), o.branch, { env, alive: alive ?? pidAlive, parentOf: parentOf ?? parentPid, staleHours });
+        (r.code === EXIT.OK ? out : err)(r.text);
         return r.code;
       }
       case "list": {
-        const all = list(claimsDir({ env, cwd }));
+        const d = dirs();
+        const all = [...list(d.shared), ...(d.legacy ? list(d.legacy).map((c) => (c.broken ? c : { ...c, legacy: true })) : [])];
         if (all.length === 0) out("ingen låse");
-        for (const c of all) (c.broken ? err : out)(describe(c, { staleHours }));
+        for (const c of all) (c.broken ? err : out)(`${c.legacy ? "[gammel placering] " : ""}${describe(c, { staleHours })}`);
         return all.some((c) => c.broken) ? EXIT.BROKEN : EXIT.OK;
       }
       case "dupes": {
@@ -379,7 +525,10 @@ export async function main(argv = process.argv.slice(2), { env = process.env, cw
       case "handover": {
         need("branch");
         let info = null;
-        try { const c = readClaim(claimsDir({ env, cwd }), o.branch); info = c ? describe(c, { staleHours }) : null; } catch (e) { info = e.message; }
+        try {
+          const loc = locate(dirs(), o.branch);
+          info = loc.conflict ? `KONFLIKT: ${loc.shared.session} / ${loc.legacy.session}` : loc.claim ? describe(loc.claim, { staleHours }) : null;
+        } catch (e) { info = e.message; }
         out(handover({ cwd, branch: o.branch, claimInfo: info }));
         return EXIT.OK;
       }

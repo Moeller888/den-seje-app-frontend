@@ -1,15 +1,17 @@
 # Koordinering mellem AI-agenter: ejerskab, dubletter, overdragelse og push
 
-_Status: IMPLEMENTERET (værktøj + tests), ikke påbudt af en hook. Oprettet 2026-11-13._
+_Status: IMPLEMENTERET (værktøjer + tests), ikke påbudt af en hook. Oprettet 2026-11-13; trin 1 (fælles låsemappe,
+`whois`, godkendelsesregister) 2026-11-14._
 
 Procedurerne for hovedsession, underagenter og filejerskab står i [`CLAUDE_WORKFLOW.md` §11](../CLAUDE_WORKFLOW.md)
-(foreslået i PR #604). Dette dokument beskriver **værktøjet, der håndhæver dem**: `tools/agents/claim.mjs`.
-Root-`CLAUDE.md` og LÆRLIG-GUARD går forud for alt her.
+(foreslået i PR #604). Dette dokument beskriver **værktøjerne, der håndhæver dem**: `tools/agents/claim.mjs`
+(ejerskab) og `tools/agents/approvals.mjs` (godkendelser, rådgivende). Root-`CLAUDE.md` og LÆRLIG-GUARD går forud
+for alt her.
 
-Værktøjet kan ikke slå guarden fra, og det kører **aldrig selv** `git push`, `git merge` eller andre skrivende
-git-kommandoer. Det læser kun med `ls-remote`, `rev-parse`, `merge-base`, `diff` og `status`. En push skal stå i
-agentens egen kommando, så guarden ser den. Hvis værktøjet selv pushede, ville guarden kun se `node claim.mjs …`, og
-det ville være en omgåelse.
+Værktøjerne kan ikke slå guarden fra, og de kører **aldrig selv** `git push`, `git merge` eller andre skrivende
+git-kommandoer. De læser kun med `ls-remote`, `rev-parse`, `merge-base`, `diff`, `status` og
+`config --get remote.origin.url`. En push skal stå i agentens egen kommando, så guarden ser den. Hvis værktøjet selv
+pushede, ville guarden kun se `node claim.mjs …`, og det ville være en omgåelse.
 
 ## Hvorfor
 
@@ -21,8 +23,17 @@ kan tjekkes, før man skriver.
 ## Princip
 
 - **Én branch, én skrivende session.** Andre må læse og reviewe, men aldrig skrive, committe eller pushe.
-- **Låsen er en fil**, `<git-common-dir>/laerlig-claims/<branch>.json`. Den deles af alle worktrees af den
-  samme klon. Den committes aldrig og indeholder ingen hemmeligheder.
+- **Låsen er en fil**, `~/.claude/laerlig-claims/<repo>/<branch>.json`. `<repo>` udledes af `origin`-URL'en,
+  f.eks. `github.com__moeller888__den-seje-app-frontend`, og brugernavn og kodeord indgår aldrig. Mappen deles derfor
+  af **alle kloner og worktrees** af samme GitHub-repo på maskinen. Den committes aldrig og indeholder ingen
+  hemmeligheder.
+- **Ældre låse respekteres.** Låse fra før trin 1 ligger i `<git-common-dir>/laerlig-claims/` og læses stadig:
+  - en gammel lås, der tilhører en anden session, stopper;
+  - en gammel og en ny lås med forskellige ejere er en **KONFLIKT** (exit 9), og alle kommandoer stopper;
+  - intet slettes eller flyttes automatisk.
+- **Sessions-id kommer fra harnessen** (`CLAUDE_CODE_SESSION_ID`). Et `--session`, der afviger, afvises, så en agent
+  ikke kan optræde som en anden session ved en fejl.
+- **Låsen gemmer sessions-id, ikke PID.** En genstartet session har ny PID og ofte nyt navn, men ejer stadig sine låse.
 - **Ingen automatisk overtagelse.** En lås uden aktivitet i over 24 timer markeres `FORÆLDET`, men kun
   ejersessionen kan frigive den. Er ejeren væk, afgør Christopher sagen og sletter selv filen.
 - **Exitkoder er kontrakten:**
@@ -37,10 +48,11 @@ kan tjekkes, før man skriver.
 | 6 | ødelagt låsefil | STOP: et menneske afklarer |
 | 7 | ingen verificeret remote-SHA | hent og gennemgå, kør derefter `verify` |
 | 8 | ALARM efter push | rapportér til ejeren |
+| 9 | KONFLIKT: ny og gammel lås har forskellige ejere | STOP: Christopher afklarer |
 
 ## Arbejdsgang for en agent
 
-Sessionens id er den UUID, der står i stien til dens scratchpad (`…/claude/<projekt>/<session-id>/scratchpad`).
+Sessions-id tages automatisk fra harnessen, så `--session` er ikke nødvendig.
 
 1. **Før en ny branch eller PR:**
    ```
@@ -49,23 +61,23 @@ Sessionens id er den UUID, der står i stien til dens scratchpad (`…/claude/<p
    Søg også i issues og i `git branch -r`. Ved exit 4: opret intet nyt, og rapportér.
 2. **Gør krav på branchen** i en ny, isoleret worktree fra `origin/main`:
    ```
-   node tools/agents/claim.mjs claim --branch <b> --session <id> --task <ID> --purpose "<formål>" [--pr N]
+   node tools/agents/claim.mjs claim --branch <b> --task <ID> --purpose "<formål>" [--pr N]
    ```
 3. **Før hver skrivehandling:**
    ```
-   node tools/agents/claim.mjs check --branch <b> --session <id>
+   node tools/agents/claim.mjs check --branch <b>
    ```
 4. **Hold låsen levende:**
    ```
-   node tools/agents/claim.mjs heartbeat --branch <b> --session <id> --status "<status>" --next "<næste handling>"
+   node tools/agents/claim.mjs heartbeat --branch <b> --status "<status>" --next "<næste handling>"
    ```
 5. **Push i fire trin:**
    ```
    git fetch origin <b>          # og gennemgå, hvad der eventuelt er kommet til
-   node tools/agents/claim.mjs verify     --branch <b> --session <id>
-   node tools/agents/claim.mjs push-check --branch <b> --session <id>
+   node tools/agents/claim.mjs verify     --branch <b>
+   node tools/agents/claim.mjs push-check --branch <b>
    git push --porcelain origin HEAD:refs/heads/<b> > push.txt     # agentens egen push, aldrig force
-   node tools/agents/claim.mjs after-push --branch <b> --session <id> --porcelain-file push.txt
+   node tools/agents/claim.mjs after-push --branch <b> --porcelain-file push.txt
    ```
    - `verify` registrerer den remote-HEAD, agenten har set. Det er en bevidst handling: kommer der en ny fremmed
      commit, skal den gennemgås og verificeres igen.
@@ -83,7 +95,7 @@ Sessionens id er den UUID, der står i stien til dens scratchpad (`…/claude/<p
    `claim` og `verify`.
 7. **Når PR'en er merget eller opgaven opgivet:**
    ```
-   node tools/agents/claim.mjs release --branch <b> --session <id>
+   node tools/agents/claim.mjs release --branch <b>
    ```
    Worktrees og branches slettes ikke; det kræver et særskilt GO (§11.6).
 
@@ -129,10 +141,65 @@ Den eneste atomiske, serverhåndhævede beskyttelse er en GitHub-ruleset med `no
 
 | Niveau | Hvad det beskytter | Begrænsning | Status |
 |---|---|---|---|
-| Frivillig kontrol | Agenter, der følger arbejdsgangen | En agent, der glemmer den, stoppes ikke; sessions-id er selvopgivet | IMPLEMENTERET |
-| Obligatorisk hook (PreToolUse på `git commit`/`git push`/`git merge`) | Alle Claude-sessioner i klonen; sessions-id kommer fra harnessen, ikke fra agenten | Kræver ændring af `.claude/settings.json` = guard-konfiguration | FORESLÅET, kræver ejerens GO |
-| Samme klon | Låsene i `.git/laerlig-claims/` er fælles for alle worktrees | — | IMPLEMENTERET |
-| På tværs af kloner og maskiner | Kun remote: `verify`/`push-check`/`after-push` og serverens non-fast-forward | Ingen fælles lås. Næste skridt kunne være ruleset på alle branches og en ejerlinje i PR-beskrivelsen | DELVIST |
+| Frivillig kontrol | Agenter, der følger arbejdsgangen | En agent, der glemmer den, stoppes ikke. Sessions-id kommer fra harnessen, men en agent kan selv ændre sit miljø | IMPLEMENTERET |
+| Obligatorisk hook (PreToolUse på `git commit`/`git push`/`git merge`) | Alle Claude-sessioner på maskinen. Hook-input bærer harnessens sessions-id, som agenten ikke kan ændre | Kræver ændring af `.claude/settings.json` = guard-konfiguration | FORESLÅET, kræver ejerens GO (trin 2) |
+| Alle kloner på samme maskine | `~/.claude/laerlig-claims/<repo>/` er fælles for alle kloner og worktrees af repoet | — | IMPLEMENTERET (trin 1) |
+| På tværs af maskiner | Kun remote: `verify`/`push-check`/`after-push` og serverens non-fast-forward | Ingen fælles lås. Næste skridt kunne være ruleset på alle branches og en ejerlinje i PR-beskrivelsen | DELVIST |
+
+## Hvem ejer branchen? (`whois`)
+
+```
+node tools/agents/claim.mjs whois --branch <b>
+```
+
+Kommandoen svarer med:
+- **Ejeren:** sessions-id og navnet, da låsen blev taget.
+- **Hvor ejeren er nu:** fundet via Claude Codes egne sessionsfiler (`~/.claude/sessions/<pid>.json`), dvs. det
+  aktuelle navn, PID og status. Der matches på sessions-id, så en **genstartet** session findes under sin nye PID og
+  sit nye navn (f.eks. `den-seje-app-ea` → `den-seje-app-68`).
+- **Terminalen:** shell-PID'en, dvs. den PID, VS Code viser i terminalfanens tooltip.
+- **Forældede sessionsfiler** for samme session.
+- **Kører ejeren ikke**, eller er processen væk, siger `whois` det og bevarer låsen. Den frigives kun af ejeren eller af
+  Christopher efter afklaring.
+
+Hovedagenten bruger `whois` til at sige præcist, hvor ejeren er, eller til at sende den en besked. Christopher skal
+ikke kende sessions-id'er.
+
+## Godkendelser (`approvals.mjs`): RÅDGIVENDE
+
+Formålet er, at Christopher taler med **én hovedagent**, og at den kan videregive et præcist afgrænset GO til den
+session, der skal udføre arbejdet, uden at nogen agent kan opfinde, udvide eller genbruge det.
+
+```
+node tools/agents/approvals.mjs record --quote "<ordret fra Christophers besked>" --action merge --pr 699 --head <sha> [--executor <sessions-id>]
+node tools/agents/approvals.mjs use    --id <id> --action merge --pr 699          # kontrol + engangsforbrug
+node tools/agents/approvals.mjs check  --id <id> …                                # kontrol uden forbrug
+node tools/agents/approvals.mjs list
+```
+
+| Regel | Hvordan |
+|---|---|
+| Kun Christophers egne ord | `record` kræver et ordret citat af en besked, som Claude Codes transskript har registreret som **tastet af et menneske** i den registrerende session (`origin.kind = "human"`, `promptSource = "typed"`, `turnOrigin = "human"`). Beskeder fra andre sessioner (`peer`), notifikationer, accepterede forslag og modellens tekst tæller aldrig |
+| Ingen udvidelse | Handling (`merge`/`push`/`commit`/`pr-create`), branch eller `#PR`, forventet HEAD og en eventuel udførende session skal stå **bogstaveligt** i citatet. Det tjekkes ved oprettelse og igen ved hver brug |
+| Konkret omfang | Repo, handling, branch, PR, forventet HEAD, udførende session og udløb (højst 72 timer, standard 24) |
+| Engangsbrug | `use` registrerer forbruget atomisk (link med `O_EXCL`). Ved 10 samtidige forsøg vinder præcis ét; genbrug giver exit 23 |
+| HEAD-binding | Har GO'et en forventet HEAD, slår `use` den aktuelle HEAD op på remote, og en ændring giver exit 24 |
+| Videregivelse | Hovedagenten registrerer GO'et med `--executor <sessions-id>`. Den udførende sessions navn eller id skal stå i Christophers tekst, og kun den session kan bruge det; hovedagenten kan ikke selv |
+| Manipulation | En post, hvis id ikke passer til indholdet, en post, der dækker mere end citatet, eller en ændret citeret besked i transskriptet giver exit 25 |
+
+**Grænsen.** Transskriptet er en fil på maskinen, og en agent med skriveadgang kan forfalske både det og registret
+konsistent. Et hash af en tekst beviser ikke, at Christopher har skrevet den. Registret er derfor **rådgivende**:
+- det stopper fejl, glemsel, udvidelse og genbrug;
+- det erstatter **aldrig** LÆRLIG-GUARD's spørgsmål eller Christophers egen bekræftelse;
+- hver kommando skriver det i sit output.
+
+**Vejen til autoriserende godkendelser (trin 2, kræver GO til en hook).** En `UserPromptSubmit`-hook køres af harnessen
+og kun, når Christopher sender en besked; en agent kan ikke kalde den.
+- **Hooken:** den udtrækker GO-blokke fra beskeden og skriver dem i registret med en HMAC, hvis nøgle ligger i en fil,
+  som guarden nægter agenter at læse.
+- **`use`:** den kræver så en gyldig HMAC.
+- **Resultatet:** først dér beviser registret, at godkendelsen stammer fra en brugerhandling, og først da kan det blive
+  autoriserende. Indtil da gælder ovenstående grænse.
 
 ## Hvad kræver manuel godkendelse
 
