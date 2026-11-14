@@ -137,14 +137,24 @@ test("4b. on the full replay: the f07 profile yields the phase repeat function (
 
 test("5. only the isolated workflow uses a profile, and it is fenced", () => {
   const wf = read(".github/workflows/isolated-e2e.yml");
-  assert.match(wf, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| '' \}\}\)/,
+  // D-362 / F-07 (owner GO 2026-11-14): the matrix comes from the plan job; the default is still the production
+  // mirror plus exactly one k1 entry (test 5b runs the plan step), the F07 suffix only ever names f07 entries.
+  assert.match(wf, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| '' \}\}\$\{\{ matrix\.profile == 'f07' && ', F07-testprofil' \|\| '' \}\}\)/,
     "the production-mirror check name stays 'isolated-e2e (run N)'");
-  assert.match(wf, /profile: \[production\]\n\s+include:\n\s+- run: 1\n\s+profile: k1\n/, "exactly one k1 entry");
+  assert.match(wf, /profile: \$\{\{ fromJSON\(needs\.plan\.outputs\.profiles\) \}\}\n\s+include: \$\{\{ fromJSON\(needs\.plan\.outputs\.include\) \}\}\n/);
   assert.match(wf, /replay\.mjs --db-url "\$ISOLATED_DB_URL" --summary "\$GITHUB_STEP_SUMMARY" --profile "\$REPLAY_PROFILE"/);
   assert.match(wf, /REPLAY_PROFILE: \$\{\{ matrix\.profile \}\}/);
   assert.match(wf, /K1 lane without K1/);
   assert.match(wf, /K1 leaked into the production-mirror lane/);
-  assert.match(wf, /- name: Existing Playwright suite against the isolated stack\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile != 'k1'/);
+  assert.match(wf, /- name: Existing Playwright suite against the isolated stack\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile == 'production'/);
+  // F07: the phase repeat RPC is checked per lane; the F07 lane runs only the F-07 spec and verifies its counts.
+  assert.match(wf, /F07 lane without the phase repeat RPC/);
+  assert.match(wf, /the F-07 phase repeat RPC leaked into the \$REPLAY_PROFILE lane/);
+  assert.match(wf, /- name: Isolated smoke[^\n]*\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile != 'f07'/);
+  assert.match(wf, /- name: F07 lane[^\n]*\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile == 'f07'/);
+  assert.match(wf, /node tests\/isolated\/f07-lane-check\.mjs "\$RUNNER_TEMP\/f07-chromium\.json" "\$RUNNER_TEMP\/f07-firefox\.json" "\$RUNNER_TEMP\/f07-webkit\.json"/);
+  assert.match(wf, /if \[ "\$PROFILE" = "f07" \]; then\n\s+printf '%s\\n' 'LEVEL_ENGINE=v1' 'QUESTION_MIX_ENGINE=shadow' > "\$RUNNER_TEMP\/functions\.env"/,
+    "only the F07 lane replaces the Edge env");
   // The guard step that refuses non-isolated targets precedes everything and is unchanged.
   assert.match(wf, /- name: Guard — refuse anything that is not isolated/);
 

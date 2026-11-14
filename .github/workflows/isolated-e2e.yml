@@ -34,6 +34,14 @@ on:
         type: choice
         options: [ "1", "3", "6", "9" ]
         default: "3"
+      # D-362 / F-07 (owner GO 2026-11-14): "f07" runs ONLY the F07 lane — one job, replay profile f07, production's
+      # selection settings, the F-07 spec alone, verified test counts. "standard" (and every pull_request/push) is
+      # exactly the matrix this workflow always had. Never reachable from a pull_request or push event.
+      profile:
+        description: "standard = the usual lanes; f07 = only the dispatch-only F-07 lane (D-362)"
+        type: choice
+        options: [ "standard", "f07" ]
+        default: "standard"
 
 permissions:
   contents: read
@@ -63,6 +71,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       runs: ${{ steps.n.outputs.runs }}
+      profiles: ${{ steps.n.outputs.profiles }}
+      include: ${{ steps.n.outputs.include }}
       scope: ${{ steps.scope.outputs.scope }}
       files_b64: ${{ steps.scope.outputs.files_b64 }}
     steps:
@@ -82,6 +92,7 @@ jobs:
       - id: n
         env:
           PARALLEL: ${{ github.event.inputs.parallel }}
+          PROFILE: ${{ github.event.inputs.profile }}
           EVENT: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}
         run: |
@@ -94,7 +105,20 @@ jobs:
           case "$REF_NAME" in d110/par-*) default=1 ;; esac
           n="${PARALLEL:-$default}"
           case "$n" in 1|3|6|9) ;; *) echo "invalid parallel: $n" >&2; exit 1 ;; esac
+          # Lanes. Default: the production mirror × runs plus ONE K1 entry — exactly as before. The F07 lane only on
+          # an explicit dispatch with profile=f07, and then it is the only job (one run, no mirror, no K1).
+          profile="${PROFILE:-standard}"
+          case "$profile" in standard|f07) ;; *) echo "invalid profile: $profile" >&2; exit 1 ;; esac
+          if [ "$profile" = "f07" ]; then
+            [ "$EVENT" = "workflow_dispatch" ] || { echo "the F07 lane runs only on workflow_dispatch" >&2; exit 1; }
+            n=1; profiles='["f07"]'; include='[]'
+          else
+            profiles='["production"]'; include='[{"run":1,"profile":"k1"}]'
+          fi
           echo "runs=$(node -e "console.log(JSON.stringify(Array.from({length: $n}, (_, i) => i + 1)))")" >> "$GITHUB_OUTPUT"
+          echo "profiles=$profiles" >> "$GITHUB_OUTPUT"
+          echo "include=$include" >> "$GITHUB_OUTPUT"
+          echo "lanes: runs=$n profiles=$profiles include=$include"
 
   isolated-e2e:
     needs: plan
@@ -102,7 +126,8 @@ jobs:
     # (owner GO 2026-11-07, F10-B2) is ONE extra entry with replay profile k1: the same isolated stack
     # plus L1 K1 (NOT applied in production), running only the isolated specs (tests/isolated), where
     # the H5 tests live. tests/isolated/schema/replay-plan.mjs TEST_PROFILES documents the rules.
-    name: isolated-e2e (run ${{ matrix.run }}${{ matrix.profile == 'k1' && ', K1-testprofil' || '' }})
+    # The F07 lane (owner GO 2026-11-14, D-362) is dispatch-only (input profile=f07) and then the only job.
+    name: isolated-e2e (run ${{ matrix.run }}${{ matrix.profile == 'k1' && ', K1-testprofil' || '' }}${{ matrix.profile == 'f07' && ', F07-testprofil' || '' }})
     # Pinned: ubuntu-latest became ubuntu-26.04 (image 20261101.186.1), where Playwright 1.59.1 does not support chromium
     # ("Playwright does not support chromium on ubuntu26.04-x64", 2026-11-12). Unpin together with a Playwright upgrade.
     runs-on: ubuntu-24.04
@@ -111,10 +136,9 @@ jobs:
       fail-fast: false
       matrix:
         run: ${{ fromJSON(needs.plan.outputs.runs) }}
-        profile: [production]
-        include:
-          - run: 1
-            profile: k1
+        # Default (every pull_request and push): profile [production] and include [{ run: 1, profile: k1 }].
+        profile: ${{ fromJSON(needs.plan.outputs.profiles) }}
+        include: ${{ fromJSON(needs.plan.outputs.include) }}
     steps:
       - uses: actions/checkout@v4
       # Pinned to 24 (CI-01): lts/* moved to Node 26, and Playwright 1.59.1's zip extraction never
@@ -322,6 +346,11 @@ jobs:
           echo "replay profile $REPLAY_PROFILE: K1 columns on question_attempts = $n"
           if [ "$REPLAY_PROFILE" = "k1" ]; then [ "$n" = "2" ] || { echo "K1 lane without K1" >&2; exit 1; }
           else [ "$n" = "0" ] || { echo "K1 leaked into the production-mirror lane" >&2; exit 1; }; fi
+          # D-362 / F-07: the phase repeat RPC (20261113170000, NOT_IN_PRODUCTION) exists in the f07 lane only.
+          r=$(psql "$ISOLATED_DB_URL" -X -A -t -c "SELECT count(*) FROM pg_proc p JOIN pg_namespace s ON s.oid = p.pronamespace WHERE s.nspname = 'public' AND p.proname = 'request_repeat_phase_question_for_student'")
+          echo "replay profile $REPLAY_PROFILE: F-07 phase repeat RPC = $r"
+          if [ "$REPLAY_PROFILE" = "f07" ]; then [ "$r" = "1" ] || { echo "F07 lane without the phase repeat RPC" >&2; exit 1; }
+          else [ "$r" = "0" ] || { echo "the F-07 phase repeat RPC leaked into the $REPLAY_PROFILE lane" >&2; exit 1; }; fi
 
       - name: Seed — synthetic questions (INSERT-only, behind the target check)
         if: needs.plan.outputs.scope != 'docs-md'
@@ -329,6 +358,8 @@ jobs:
 
       - name: Edge Functions — serve this commit's functions locally, warm every module
         if: needs.plan.outputs.scope != 'docs-md'
+        env:
+          PROFILE: ${{ matrix.profile }}
         run: |
           set -euo pipefail
           # The edge-runtime container can die while booting (SIGBUS, "Bus error (core dumped)", exit 135:
@@ -339,6 +370,12 @@ jobs:
           echo 'LAERLIGVERSE_OBJECTIVE_TARGETING=on' > "$RUNNER_TEMP/functions.env"
           # D-338: the server-directed sequence, likewise ON only in the isolated stack.
           echo 'LAERLIGVERSE_SEQUENCE=on' >> "$RUNNER_TEMP/functions.env"
+          # D-362 / F-07: the F07 lane uses production's selection settings instead (LEVEL_ENGINE=v1,
+          # QUESTION_MIX_ENGINE=shadow, no Lærligverse flag). Every other lane keeps the two lines above.
+          if [ "$PROFILE" = "f07" ]; then
+            printf '%s\n' 'LEVEL_ENGINE=v1' 'QUESTION_MIX_ENGINE=shadow' > "$RUNNER_TEMP/functions.env"
+          fi
+          echo "functions.env ($PROFILE): $(cut -d= -f1 "$RUNNER_TEMP/functions.env" | tr '\n' ' ')"
           ready=no
           for attempt in 1 2 3; do
             nohup supabase functions serve --env-file "$RUNNER_TEMP/functions.env" >> "$RUNNER_TEMP/functions.log" 2>&1 &
@@ -442,12 +479,33 @@ jobs:
         run: bash tests/isolated/negative-controls.sh post-lock
 
       - name: Isolated smoke — login against local Auth, recovery mail into the local catcher
-        if: needs.plan.outputs.scope != 'docs-md'
+        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile != 'f07'
         run: |
           sg "$ISOLATED_GROUP" -c "npx playwright test -c tests/isolated/playwright.isolated.config.mjs"
 
+      # D-362 / F-07 (owner GO 2026-11-14): ONLY the F-07 spec, Chromium first, then Firefox, then WebKit (every
+      # browser runs even if an earlier one fails), each with a JSON report; then f07-lane-check.mjs fails the job
+      # unless every expected test executed with the expected outcome — an all-skipped run is never green.
+      - name: F07 lane — the F-07 spec per browser, then the verified test counts
+        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'f07'
+        env:
+          # The spec fails (never skips) when the phase repeat RPC is missing in this lane.
+          F07_LANE: "1"
+        run: |
+          set -uo pipefail
+          status=0
+          for b in chromium firefox webkit; do
+            echo "::group::F-07 spec — $b"
+            export PLAYWRIGHT_JSON_OUTPUT_NAME="$RUNNER_TEMP/f07-$b.json"
+            sg "$ISOLATED_GROUP" -c "npx playwright test -c tests/isolated/playwright.isolated.config.mjs tests/isolated/f07-phase-progression.isolated.spec.mjs --project=$b --reporter=list,json" || { status=1; echo "::error::F-07 spec failed on $b"; }
+            echo "::endgroup::"
+          done
+          mkdir -p test-results-isolated/f07-reports && cp "$RUNNER_TEMP"/f07-*.json test-results-isolated/f07-reports/ || status=1
+          node tests/isolated/f07-lane-check.mjs "$RUNNER_TEMP/f07-chromium.json" "$RUNNER_TEMP/f07-firefox.json" "$RUNNER_TEMP/f07-webkit.json" | tee -a "$GITHUB_STEP_SUMMARY" || status=1
+          exit "$status"
+
       - name: Existing Playwright suite against the isolated stack
-        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile != 'k1'
+        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'
         id: suite
         run: |
           sg "$ISOLATED_GROUP" -c "node tests/isolated/run-suite.mjs"
@@ -463,7 +521,7 @@ jobs:
         if: always() && needs.plan.outputs.scope != 'docs-md'
         uses: actions/upload-artifact@v4
         with:
-          name: isolated-report-run-${{ matrix.run }}${{ matrix.profile == 'k1' && '-k1' || '' }}
+          name: isolated-report-run-${{ matrix.run }}${{ matrix.profile == 'k1' && '-k1' || '' }}${{ matrix.profile == 'f07' && '-f07' || '' }}
           path: |
             playwright-report-isolated/
             test-results-isolated/
