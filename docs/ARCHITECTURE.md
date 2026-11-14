@@ -618,7 +618,8 @@ level is a separate product decision. `profiles.current_band`,
 `profiles.placement_band` (both client-writable) and the request body are not inputs. Since D-356
 pupils no longer take placement, and since D-360 the client code is gone, so a new pupil always seeds
 from the grade's start band. `placement_sessions` stays: the seed reads it for pupils who took the
-test. `start_placement` and `submit_placement` still exist in the database but have no caller.
+test. `start_placement` and `submit_placement` still exist in the database but have no caller;
+migration `20261108170000_drop_placement_rpcs` (D-365) drops them and is not applied yet.
 
 **Adding a new kind:** (1) registry entry with `servable: false`; (2) renderer in
 `js/answer-input.js`, evaluator/award path in `process-event`, deliberate extension of
