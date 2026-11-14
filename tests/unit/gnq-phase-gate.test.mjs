@@ -191,6 +191,22 @@ test("wiring (race): a phase repeat that returns no row answers 409 phase_state_
   assert.match(app, /if \(error\) \{\s*await new Promise\(resolve => setTimeout\(resolve, 500\)\);\s*\(\{ data, error \} = await supabase\.functions\.invoke\("get-next-question"/);
 });
 
+test("wiring (race, other order — CI run 43619749472): before no_questions, a phased course re-reads open rounds and answers 409", () => {
+  const code = INDEX.replace(/\/\/.*$/gm, "");
+  assert.match(code, /let phaseGateApplied = false;/);
+  assert.match(code, /if \(gate\.applied\) \{\s*phaseGateApplied = true;/);
+  const at = code.indexOf("if (!inserted && phaseGateApplied) {");
+  const final = code.indexOf('JSON.stringify({ step: "no_questions" })', at);
+  assert.ok(at > code.indexOf("const phaseRepeat ="), "after the phase repeat and the generic repeat");
+  assert.ok(at > 0 && final > at, "the open check sits immediately before the final no_questions");
+  const block = code.slice(at, final);
+  assert.match(block, /\.from\("question_instances"\)\s*\.select\("id"\)\s*\.eq\("student_id", student_id\)\s*\.eq\("answered", false\)\s*\.limit\(1\);/,
+    "a fresh read of the VERIFIED pupil's open rounds");
+  assert.match(block, /if \(openError\) throw openError;/);
+  assert.match(block, /JSON\.stringify\(\{ error: "phase_state_changed" \}\)[\s\S]{0,200}status: 409/);
+  assert.equal((code.match(/step: "no_questions" \}\)/g) ?? []).length, 1, "still exactly one plain no_questions response");
+});
+
 // A stub client with rpc for the per-course candidates.
 function stubWithRpc(tables, rpcRows) {
   const c = stubClient(tables);

@@ -457,7 +457,7 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (main med D-362 P1: fagskift bevarer elevens egne tildelte domæner (`scope.ts`), faseforløb med mestring `phase-gate.ts` og fasegentagelse; kræver migration 20261113170000 før deploy, 2026-11-13) — **ikke deployet** | dette repository | 22 | `9fb467d40e2a22d42a0582ce935e77c71aecb891226790195120a1220d516af5` |
+| Kandidat (main med D-362 P1: fagskift bevarer elevens egne tildelte domæner (`scope.ts`), faseforløb med mestring `phase-gate.ts` og fasegentagelse; kræver migration 20261113170000 før deploy, 2026-11-13) — **ikke deployet** | dette repository | 22 | `05d9920252556d6674fdbad7f25f920849f71e38b4bcbed77556e7bfcefb638e` |
 | Forrige kandidat (Lærligverse-integration lag 3 oven på main med D-362; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | `94210ae0` | 21 | `ea8072da934530fbf3dc39a29599f6026f3b8ed995a157eeb424023aed61ca8b` |
 | Forrige kandidat (Lærligverse-integration lag 3 oven på main med F-05 Kategorisering, før D-362; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | `9f904b3c` | 21 | `ae22cf64a930cb91351d1e2dfbb8bf4d7678e9019d544b278ddba69d4da792cf` |
 | Forrige kandidat (lag 3 plus F10-B-rettelsen, før F-05) — ikke deployet | `6bca478a` | 20 | `e20c056b935880c72a87e7875a797c4070ad1fe54d4d8035bcfb834fe6daefe6` |

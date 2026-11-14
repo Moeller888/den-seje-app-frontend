@@ -45,8 +45,8 @@ const PILOT = JSON.parse(/\$pilot\$(\[[\s\S]*\])\$pilot\$::jsonb/.exec(SQL)[1]).
 const BY_QUESTION = new Map(PILOT.map((r, i) => [r.content.question, { label: `S${i + 1}`, rank: PHASES.indexOf(r.metadata.pilot_phase), row: r }]));
 const GRADING_KEYS = ["correct", "accepted_answers", "review_text", "correct_answer", "pilot_phase"];
 
-test.describe.configure({ mode: "serial" });
-
+// Not serial: one failing test must not hide the others (CI run 43619749472: backend 3 failed and backend 4 + the
+// browser test "did not run"). With one worker, a failure restarts the worker and beforeAll runs again (idempotent).
 let inProfile = false;
 test.beforeAll(async ({ request }) => {
   expect(PILOT.length, "the pilot migration holds seven rows").toBe(7);
@@ -71,6 +71,15 @@ test.beforeAll(async ({ request }) => {
   expect(active.length, "seven active pilot rows in the isolated stack").toBe(7);
 });
 test.beforeEach(() => { test.skip(!inProfile, "not the F07 lane (the phase repeat function is absent)"); });
+// The browser test's evidence (URL, console errors, failed requests), attached to the report when it fails.
+let browserEvidence = null;
+test.afterEach(async ({}, testInfo) => {
+  if (browserEvidence && testInfo.status !== testInfo.expectedStatus) {
+    await testInfo.attach("f07-browser-evidence", { body: browserEvidence(), contentType: "text/plain" });
+    console.log(`F07 browser evidence (${testInfo.project.name}):\n${browserEvidence()}`);
+  }
+  browserEvidence = null;
+});
 
 async function makePupil(request, tag, domains = [OBJECTIVE]) {
   const email = `f07-phase-${tag}-${RUN}@${SYNTHETIC_EMAIL_DOMAIN}`;
@@ -80,7 +89,11 @@ async function makePupil(request, tag, domains = [OBJECTIVE]) {
   const id = (await created.json()).id;
   const profile = await request.post(`${SUPA}/rest/v1/profiles`, {
     headers: { ...svc, ...json, prefer: "return=minimal" },
-    data: { id, role: "student", full_name: `Syntetisk F-07-elev ${tag}`, selected_grade: 7, active_domains: domains, equipped_slots: {}, active_theme: "default" },
+    // A pupil who has already chosen an avatar identity, like every returning pupil: without chosen_at, index.html
+    // shows the identity prompt (Section 152C) and waits for a choice BEFORE the first question is fetched (CI run
+    // 43619749472: no get-next-question call in firefox/webkit). The prompt itself is not part of F-07.
+    data: { id, role: "student", full_name: `Syntetisk F-07-elev ${tag}`, selected_grade: 7, active_domains: domains, equipped_slots: {}, active_theme: "default",
+      avatar_identity: { v: 1, body_type: "neutral", chosen_at: "2026-11-14T00:00:00.000Z" } },
   });
   expect(profile.status(), await profile.text()).toBe(201);
   const signIn = await request.post(`${SUPA}/auth/v1/token?grant_type=password`, { headers: { apikey: ANON }, data: { email, password } });
@@ -179,6 +192,7 @@ test("backend 3: two tabs at once when a phase repeat is due get the SAME open r
     expect(meta.rank).toBe(0);
     expect((await (await answer(request, p, q.question_instance_id, wrongFor(meta.row))).json()).status).toBe("incorrect");
   }
+  const beforeRace = await progressOf(request, p);
   const [a, b] = await Promise.all([gnqRaw(request, p), gnqRaw(request, p)]);
   const statuses = [a.status(), b.status()].sort();
   for (const s of statuses) expect([200, 409], `tab answered ${s}`).toContain(s);
@@ -190,6 +204,15 @@ test("backend 3: two tabs at once when a phase repeat is due get the SAME open r
   expect(metaOf(qa).rank, "the repeat stays in the introduction").toBe(0);
   const open = await (await request.get(`${SUPA}/rest/v1/question_instances?select=id,repeat_count&student_id=eq.${p.id}&answered=eq.false`, { headers: svc })).json();
   expect(open, "exactly one open round: the reopened phase repeat (round 2)").toEqual([{ id: qa.question_instance_id, repeat_count: 1 }]);
+  const afterRace = await progressOf(request, p);
+  expect([afterRace.xp, afterRace.coins], "the race itself pays nothing").toEqual([beforeRace.xp, beforeRace.coins]);
+  // Answering the shared round pays the repeat amount ONCE; the second tab's submit of the same round pays nothing.
+  const meta = metaOf(qa);
+  expect((await (await answer(request, p, qa.question_instance_id, meta.row.content.correct)).json()).status).toBe("correct");
+  const paid = await progressOf(request, p);
+  expect(paid.xp - afterRace.xp, "a right repeat: 2 XP").toBe(2);
+  expect((await answer(request, p, qb.question_instance_id, meta.row.content.correct)).status()).toBe(200);
+  expect((await progressOf(request, p)).xp, "the other tab's submit of the same round pays nothing").toBe(paid.xp);
 });
 
 test("backend 4: all answers wrong — at most 1 + 2 attempts per question, the pupil always moves on, never no_questions", async ({ request }, testInfo) => {
@@ -226,11 +249,20 @@ async function login(page, p) {
 
 test("browser: the quiz shows each of the seven stimuli and the pupil answers all seven (MC by click, numbers by typing)", async ({ page, request }, testInfo) => {
   test.slow();
+  // Evidence on failure (CI has no trace viewer at hand): the page's URL, console errors and failed requests are
+  // attached to the JSON report.
+  const evidence = [];
+  page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") evidence.push(`console.${m.type()}: ${m.text().slice(0, 300)}`); });
+  page.on("pageerror", (e) => evidence.push(`pageerror: ${String(e?.message ?? e).slice(0, 300)}`));
+  page.on("requestfailed", (r) => evidence.push(`requestfailed: ${r.method()} ${r.url().slice(0, 200)} — ${r.failure()?.errorText ?? "?"}`));
+  page.on("response", (r) => { if (r.status() >= 400) evidence.push(`http ${r.status()}: ${r.request().method()} ${r.url().slice(0, 200)}`); });
+  browserEvidence = () => [`url: ${page.url()}`, ...evidence].join("\n");
   const p = await makePupil(request, `ui-${testInfo.project.name}`);
   await login(page, p);
   const isGnq = (r) => r.url().startsWith(`${SUPA}/functions/v1/get-next-question`) && r.request().method() === "POST";
   let pending = page.waitForResponse(isGnq, { timeout: 30000 });
   await page.goto(`${BASE}/index.html`);
+  await expect(page.locator("#identity-overlay"), "no identity prompt for a pupil who has chosen").toBeHidden();
   const seen = [];
   let sourceHasPlayer = null;
   let imageHasPlayer = null;

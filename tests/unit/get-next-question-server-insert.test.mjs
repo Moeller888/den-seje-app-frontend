@@ -182,6 +182,9 @@ test("the admin client is used only for the instance insert and the server-only 
     // service_role only, SECURITY INVOKER, same student-scoped guards).
     "rpc:request_repeat_level_question_for_student",
     "from:question_instances",
+    // D-362 (CI run 43619749472): phased courses only — an id-only read of the VERIFIED pupil's open round right
+    // before no_questions (a concurrent request opened one → 409 phase_state_changed, never a false no_questions).
+    "from:question_instances",
   ]);
   // The format mix (QUESTION_MIX_ENGINE "v2"/"shadow") hands the same backend client to
   // ./mix-flow.ts, whose three reads (candidate RPC, own history, own placement session — all scoped
@@ -200,8 +203,8 @@ test("the admin client is used only for the instance insert and the server-only 
   // student) are pinned in gnq-phase-gate.test.mjs; with no phased candidate and no pilot_* domain nothing is read.
   assert.equal((INDEX_CODE.match(/await applyPhaseGate\(admin\(\) as unknown as PhaseReadClient, student_id, sortedQuestions, subjectDomains, \{ level: pupilLevel \}\)/g) ?? []).length, 1,
     "the phase gate call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 15,
-    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the D-362 phase gate, the 15th the D-362 phase repeat)");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 16,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the D-362 phase gate, the 15th the D-362 phase repeat, the 16th the D-362 id-only open check before no_questions)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {

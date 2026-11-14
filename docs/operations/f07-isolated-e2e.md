@@ -32,6 +32,17 @@ af browseren.
 - **Genindlæsning:** "genindlæsning" testes som et nyt kald til `get-next-question` med en åben runde, ikke som en
   genindlæsning af siden i browseren.
 
+## Første kørsel (run 43619749472, commit `6e03faf0`): fund og rettelser
+
+| Fejl | Årsag | Type | Rettelse |
+|---|---|---|---|
+| backend 3 (chromium): en fane fik `no_questions` | Kapløb i den rækkefølge, testen ikke dækkede: fane A genåbner S1, efter at fane B's due-trin har læst "ingen åben runde", men før B's fasespærre læser. B's spærre ser S1 som åben og tilbyder ingen fasegentagelse, og den generelle gentagelse afviser, fordi der er en åben runde. Det samme sker, hvis A åbner en ny opgave, så B's indsættelse rammer `idx_one_open_question` | Produktfejl (get-next-question) | Når fasespærren har kørt, læser get-next-question lige før `no_questions` friskt elevens åbne runde (kun id). Findes en, svares `409 phase_state_changed`, og klientens automatiske genforsøg får runden fra due-trinnet |
+| browser (firefox, webkit): intet kald til get-next-question inden for 30 s | Den syntetiske elev havde ingen valgt avataridentitet. `index.html` viser så identitetsprompten (Section 152C) og venter på et valg, før første opgave hentes | Testfejl | Testeleven får `avatar_identity` med `chosen_at` som en tilbagevendende elev, og testen kontrollerer, at prompten er skjult |
+| chromium: backend 4 og browser "did not run" | Specen kørte serielt, så én fejl stoppede resten | Testfejl | Ikke længere seriel; `beforeAll` er idempotent |
+
+Kørslen havde ingen traces eller fejlkontekst, fordi de lå uden for de uploadede mapper. F07-banen gemmer nu begge
+i `test-results-isolated/f07-<browser>`, og browsertesten vedhæfter URL, konsolfejl og fejlede kald til JSON-rapporten.
+
 ## Sådan er banen isoleret
 
 1. **Kun ved dispatch.** Planjobbet giver F07-banen, når `profile=f07` og hændelsen er `workflow_dispatch`. Så er F07

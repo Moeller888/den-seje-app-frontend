@@ -499,9 +499,11 @@ serve(async (req) => {
     // reopens one of THOSE (request_repeat_phase_question_for_student) instead of the generic repeat, which
     // refuses while later phases are unserved — so a pupil who needs practice is never sent to no_questions.
     let phaseRepeatIds: string[] = [];
+    let phaseGateApplied = false;
     {
       const gate = await applyPhaseGate(admin() as unknown as PhaseReadClient, student_id, sortedQuestions, subjectDomains, { level: pupilLevel });
       if (gate.applied) {
+        phaseGateApplied = true;
         console.log("PHASE_GATE:", JSON.stringify({
           candidates: sortedQuestions.length, allowed: gate.allowed.length, held: gate.held, unknown_phase: gate.unknownPhase.length,
           repeat: gate.repeatIds.length,
@@ -723,6 +725,28 @@ serve(async (req) => {
             }
           }
         }
+      }
+    }
+
+    if (!inserted && phaseGateApplied) {
+      // D-362 (CI run 43619749472, two tabs): the due step above read "no open round", but another request of this
+      // pupil opened one since — a phase repeat (then this gate saw the question "open" and offered no repeat) or a
+      // new question (then this request's insert hit idx_one_open_question). Every later step refuses while that round
+      // is open, so "no_questions" here would be false: the pupil can continue. A FRESH read decides; with an open
+      // round the client's automatic retry gets it from the due step. Only for phased courses (the gate ran).
+      const { data: openRows, error: openError } = await admin()
+        .from("question_instances")
+        .select("id")
+        .eq("student_id", student_id)
+        .eq("answered", false)
+        .limit(1);
+      if (openError) throw openError;
+      if (Array.isArray(openRows) && openRows.length > 0) {
+        console.log("PHASE_OPEN_RACE:", JSON.stringify({ repeat: phaseRepeatIds.length }));
+        return new Response(JSON.stringify({ error: "phase_state_changed" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        });
       }
     }
 

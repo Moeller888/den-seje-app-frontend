@@ -252,6 +252,44 @@ test("race between two tabs: the losing phase repeat returns no row, the open ro
   assert.deepEqual(open.map((r) => r.id), [a]);
 });
 
+// REGRESSION (CI run 43619749472, backend 3): the OTHER interleaving. Tab A's phase repeat reopens S1 BEFORE tab B's
+// gate reads (B's due step had already read "no open round"). B's gate then sees S1 "open" → no repeat ids, nothing
+// new allowed in the phase; the generic level repeat refuses while a round is open → without the fresh open check
+// index.ts answered { step: "no_questions" } although the pupil can continue. Same for a NEW question opened by A
+// after B's gate read: B's insert hits idx_one_open_question.
+test("race, other order: tab B's gate reads AFTER tab A reopened → every later step refuses; only the fresh open check avoids a false no_questions", async () => {
+  const p = await pupil({});
+  const client = pgClient();
+  const plan = async () => loadLevelPlan(client, { studentId: p, subject: "historie", grade: 7, domains: ["pilot_d362"], wavePhase: "challenge", lastMisconceptionType: null, mixEngine: "shadow" });
+  for (const i of [0, 1]) {
+    const qi = (await db.query(`INSERT INTO public.question_instances (student_id, question_id, answered, correct_answer, difficulty_at_time, mastery_snapshot, next_review_at)
+      VALUES ($1, $2, false, $3, 1, 1, now()) RETURNING id`, [p, ROWS[i].id, ROWS[i].content.correct])).rows[0].id;
+    await asService(() => db.query("SELECT public.process_question_attempt($1, $2, 'feil', 0)", [p, qi]));
+  }
+  // B's due step: no open round yet.
+  const openBefore = (await db.query("SELECT id FROM public.question_instances WHERE student_id = $1 AND answered = false", [p])).rows;
+  assert.deepEqual(openBefore, [], "B's due step finds nothing to resume");
+  // Tab A: gate + phase repeat → reopens one round.
+  const lvA = await plan();
+  const gA = await applyPhaseGate(client, p, lvA.ordered, ["pilot_d362"], { level: lvA.level.level });
+  const a = Object.values((await asService(() => client.rpc("request_repeat_phase_question_for_student", { p_student_id: p, p_domains: ["pilot_d362"], p_question_ids: gA.repeatIds, p_max_repeats: 2 }))).data[0])[0];
+  assert.ok(a, "tab A reopens one round");
+  // Tab B: its gate reads NOW.
+  const lvB = await plan();
+  const gB = await applyPhaseGate(client, p, lvB.ordered, ["pilot_d362"], { level: lvB.level.level });
+  assert.deepEqual(gB.repeatIds, [], "B's gate sees the round open → no phase repeat offered");
+  assert.equal(gB.allowed.filter((c) => phaseRank(c.metadata) !== null).length, 0, "and nothing new of the phase");
+  const generic = Object.values((await asService(() => client.rpc("request_repeat_level_question_for_student", { p_student_id: p, p_domains: ["pilot_d362"] }))).data[0])[0];
+  assert.equal(generic, null, "the generic repeat refuses too → before the fix: no_questions (the CI failure)");
+  // The fix's fresh read (index.ts, before no_questions when the gate ran): the open round exists → 409, the retry's
+  // due step serves exactly A's round.
+  const openNow = (await db.query("SELECT id FROM public.question_instances WHERE student_id = $1 AND answered = false LIMIT 1", [p])).rows;
+  assert.deepEqual(openNow.map((r) => r.id), [a], "the fresh open check finds A's round");
+  // A new question opened by A after B's gate read: B's insert of another phase row is refused by idx_one_open_question.
+  await assert.rejects(db.query(`INSERT INTO public.question_instances (student_id, question_id, answered, correct_answer, difficulty_at_time, mastery_snapshot, next_review_at)
+    VALUES ($1, $2, false, $3, 1, 1, now())`, [p, ROWS[2].id, ROWS[2].content.correct]), /idx_one_open_question|duplicate key/);
+});
+
 test("more than 50 candidates: a crowded window from another domain cannot break the phases (and without the level the gate stays conservative)", async () => {
   // 60 regular, active questions in the pupil's other domain, all nearer the pupil's level than any pilot row
   const fill = [];

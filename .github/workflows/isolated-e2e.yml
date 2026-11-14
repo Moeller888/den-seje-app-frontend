@@ -484,7 +484,8 @@ jobs:
           sg "$ISOLATED_GROUP" -c "npx playwright test -c tests/isolated/playwright.isolated.config.mjs"
 
       # D-362 / F-07 (owner GO 2026-11-14): ONLY the F-07 spec, Chromium first, then Firefox, then WebKit (every
-      # browser runs even if an earlier one fails), each with a JSON report; then f07-lane-check.mjs fails the job
+      # browser runs even if an earlier one fails), each with a JSON report and, on failure, a trace and error context in
+      # test-results-isolated/f07-<browser> (uploaded below); then f07-lane-check.mjs fails the job
       # unless every expected test executed with the expected outcome — an all-skipped run is never green.
       - name: F07 lane — the F-07 spec per browser, then the verified test counts
         if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'f07'
@@ -497,7 +498,7 @@ jobs:
           for b in chromium firefox webkit; do
             echo "::group::F-07 spec — $b"
             export PLAYWRIGHT_JSON_OUTPUT_NAME="$RUNNER_TEMP/f07-$b.json"
-            sg "$ISOLATED_GROUP" -c "npx playwright test -c tests/isolated/playwright.isolated.config.mjs tests/isolated/f07-phase-progression.isolated.spec.mjs --project=$b --reporter=list,json" || { status=1; echo "::error::F-07 spec failed on $b"; }
+            sg "$ISOLATED_GROUP" -c "npx playwright test -c tests/isolated/playwright.isolated.config.mjs tests/isolated/f07-phase-progression.isolated.spec.mjs --project=$b --reporter=list,json --output=test-results-isolated/f07-$b --trace=retain-on-failure" || { status=1; echo "::error::F-07 spec failed on $b"; }
             echo "::endgroup::"
           done
           mkdir -p test-results-isolated/f07-reports && cp "$RUNNER_TEMP"/f07-*.json test-results-isolated/f07-reports/ || status=1
