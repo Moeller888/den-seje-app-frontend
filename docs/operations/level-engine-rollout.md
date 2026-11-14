@@ -303,6 +303,8 @@ Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokume
   (`batch7`–`batch10`). Filerne står fortsat i `NOT_IN_PRODUCTION`. Et GO til en enkelt fil er ikke nok, så længe
   pausen gælder.
 - Trin 1c er dermed udført til og med `batch4`. Fase 2 (aktivering) er ikke påbegyndt.
+- **Ejerbeslutning 2026-11-14: aktiveringsrækkefølgen er `batch3` → `pilot` → `batch2` → `grade6_9` → `batch4`**,
+  med en lærerstikprøve før `batch4`. Se fase 2 (C) nedenfor. Aktiveringsmigrationerne er endnu ikke skrevet.
 
 **Godkendelser:**
 - Hvert trin herunder kræver sit eget GO fra ejeren (E2, D-110). Det gælder også hver `apply_migration`, hver
@@ -371,31 +373,76 @@ opgavetyper er integreret (ejerbeslutning 2026-11-12, se Status ovenfor).
      AND NOT is_active;
    ```
 
-#### C. Fase 2: trinvis aktivering
+#### C. Fase 2: trinvis aktivering (ejerbeslutning 2026-11-14)
 
-Én aktiveringsmigration pr. trin. Den skrives i en PR med eget GO, anvendes med eget GO, og antallet er låst:
+Ejeren godkendte rækkefølgen 2026-11-14. Den erstatter den tidligere plan, som begyndte med `batch7` som
+indholdscanary og sluttede med `batch4` og `batch5` (cirka 6.088 aktive). Kun de fem portioner i produktionen
+aktiveres. **Batch 5–10 er fortsat sat på pause** (ejerbeslutning 2026-11-12, se Status ovenfor). De indgår ikke i
+fase 2 og må hverken anvendes eller aktiveres uden en ny ejerbeslutning.
+
+**Udgangspunkt (læst 2026-11-14):**
+- De fem portioner har 2.120 rækker, alle inaktive, med 0 `question_instances`.
+- Fordelingen er `grade6_9` 120, `pilot` 500, `batch2` 500, `batch3` 500 og `batch4` 500.
+- De 1.090 ældre engelskopgaver uden `level_batch` har niveau 143–3.857, og 1.088 af dem er aktive.
+- 19 elever har et engelskniveau. Medianen er 5.640, og 17 ligger på 3.000 eller derover. De fleste får derfor i dag
+  opgaver under deres niveau, og allerede trin 2a rammer næsten alle elever med et engelskniveau.
+
+| Trin | Portion | Rækker | Fund i E5 (hele portionen) | Begrundelse | Aktive engelsk efter |
+|---|---|---|---|---|---|
+| 2a | `batch3` | 500 | 25 af 500 (5,0 %) | Første indholdscanary: færrest fund og alle CEFR-niveauer A1–C1 | 1.588 |
+| 2b | `pilot` | 500 | 26 af 500 (5,2 %) | Få fund. "Sharp memory"-forklaringen er rettet | 2.088 |
+| 2c | `batch2` | 500 | 29 af 500 (5,8 %) | Få fund. "Suppose"-forklaringen er rettet | 2.588 |
+| 2d | `grade6_9` | 120 | 25 af 120 (21 %) | Den høje andel var et systematisk for højt niveau, som er rettet. Lille portion | 2.708 |
+| 2e | `batch4` | 500 | 95 af 500 (19 %) | Flest fund (forvanskede distraktorer, for højt niveau, forfatternoter), alle rettet. Aktiveres sidst og først efter lærerstikprøven | 3.208 |
+
+Alle fund er rettet. De ni sidste rettelser blev anvendt 2026-11-14 (`20261114141653`), og der er ingen åbne
+indholdspunkter i §2.8. Efter 2e har engelsk 3.208 aktive opgaver, cirka halvdelen af lasttesten i §4.2 (6.090
+aktive, kandidatvalget under 50 ms). Hvis 2a forløber helt rent, kan 2b og 2c slås sammen, men kun med ejerens GO
+på det tidspunkt.
+
+**Lærerstikprøve før 2e:** E5 anbefaler, at fundene suppleres af en lærers stikprøve, før de højeste portioner
+aktiveres. Før `batch4` gennemgår en lærer cirka 30 af portionens C1-opgaver. Fund rettes i repoet og i den levende
+række, hver med eget GO, før 2e.
+
+**Aktiveringsmigrationerne:** én fil pr. trin. De skrives samlet i én PR med eget GO og står i `NOT_IN_PRODUCTION`,
+til de er anvendt. Hver fil testes i PGlite og anvendes med sit eget GO. Hver fil er en `DO`-blok, der afbryder hele
+trinnet, medmindre alle disse vagter holder:
+1. Portionen har præcis det forventede antal rækker med `learning_objective = 'english'` og den rigtige
+   `level_batch`.
+2. Alle rækkerne er inaktive, og indholdets fingeraftryk svarer til repoet.
+3. De foregående trin er aktiveret, og de senere er ikke. Rækkefølgen kan altså ikke springes over.
+4. `UPDATE … SET is_active = true` ændrer præcis det forventede antal rækker.
+
+Skabelon, med `batch3` som eksempel:
 
 ```sql
 DO $$
 DECLARE n integer;
 BEGIN
   UPDATE public.questions SET is_active = true
-  WHERE learning_objective = 'english' AND metadata->>'level_batch' = 'batch7' AND NOT is_active;
+  WHERE learning_objective = 'english' AND metadata->>'level_batch' = 'batch3' AND NOT is_active;
   GET DIAGNOSTICS n = ROW_COUNT;
-  IF n <> 470 THEN RAISE EXCEPTION 'batch7: expected 470 rows, got %', n; END IF;
+  IF n <> 500 THEN RAISE EXCEPTION 'batch3: expected 500 rows, got %', n; END IF;
 END $$;
 ```
 
-| Trin | Portioner | Rækker | Begrundelse |
-|---|---|---|---|
-| 2a | batch7 | 470 | Første indholdscanary: alle seks CEFR-niveauer, nyt indhold, laveste E5-rate (stikprøve 4 %) |
-| 2b | batch8, batch9, batch10 (ét ad gangen eller samlet) | 1.410 | Samme kilde og kontrol som 2a |
-| 2c | batch6, grade6_9 | 620 | Fuldt gennemgået i E5 |
-| 2d | pilot, batch2, batch3 | 1.500 | Fuldt gennemgået i E5, få fund |
-| 2e | batch4, batch5 | 1.000 | Flest E5-fund (forvanskede distraktorer og CEFR), alle rettet. Aktiveres sidst |
+**Før hvert trin** (læsende):
+- Portionen har det forventede antal inaktive rækker, 0 aktive, 0 uden niveau eller CEFR og 0
+  `question_instances`.
+- Der tages et fingeraftryk af alle øvrige rækker i `public.questions`.
+- Det aktive engelske antal er som forventet efter det foregående trin.
+- Migrationsloggen indeholder ikke trinnet.
+- Det kontrolleres, at `LEVEL_ENGINE` findes. Kun navnet og digesten læses, aldrig værdien.
+- Observationen efter det foregående trin er afsluttet uden stopkriterier.
 
-Efter 2e har engelsk cirka 6.088 aktive opgaver. Det svarer til lasttesten i §4.2 (6.090 aktive engelskopgaver,
-kandidatvalget under 50 ms). §2.5-målingen i produktion bør tages efter 2b. Guarden blokerer `execute_sql` mod
+**Efter hvert trin** (læsende):
+- Portionen har det forventede antal aktive rækker.
+- Det aktive engelske antal er steget med præcis portionens størrelse.
+- Fingeraftrykket af alle øvrige rækker er uændret.
+- Migrationsloggen har fået én ny række.
+- Der skrives en produktionslog, og bogføringen sker i en PR med eget GO.
+
+**Query-planer:** §2.5-målingen i produktion tages efter 2a og efter 2e. Guarden blokerer `execute_sql` mod
 app-funktioner, så målingen køres af ejeren i dashboardet.
 
 **Observation mellem trinene:** mindst tre skoledage med elevtrafik, kun læsende og kun aggregeret.
@@ -405,20 +452,29 @@ app-funktioner, så målingen køres af ejeren i dashboardet.
 - **For lette opgaver på et højt niveau:** ≥ 20 besvarelser, over 97 % rigtige og B2 eller højere. Kandidat til et nyt
   niveau i en senere PR.
 - **Elevernes niveauer:** fordelingen i `student_subject_level` for engelsk. Ingen massiv ophobning ved 1 eller 10.000.
+- Med få elever kan det tage længere end tre skoledage, før en opgave har 20 besvarelser. Kriteriet for at gå videre
+  er derfor, at intet stopkriterium er ramt, ikke at hver opgave er statistisk afprøvet.
 
-**Stop-kriterier:** et 5xx fra niveaumotoren, et bekræftet forkert facit eller en klage fra en lærer. Næste trin venter,
-til fundet er rettet.
+**Stopkriterier:** et 5xx fra niveaumotoren, et bekræftet forkert facit, en opgave om et udelukket emne eller en klage
+fra en lærer. Næste trin venter, til fundet er rettet og ejeren har givet GO til at fortsætte.
 
-**Tilbagerulning (fase 2, eget GO):** ét af følgende.
+**Tilbagerulning (fase 2, eget GO):** ét af følgende, hvert med låst antal.
 - Hele portionen:
   ```sql
   UPDATE public.questions SET is_active = false
-  WHERE learning_objective = 'english' AND metadata->>'level_batch' = '<portion>';
+  WHERE learning_objective = 'english' AND metadata->>'level_batch' = '<portion>' AND is_active;
   ```
 - Én opgave: samme `UPDATE` med `WHERE id = …`.
+- Fejler selve niveaumotoren: fjern Edge-secret'en `LEVEL_ENGINE` (§3). Det giver den hidtidige udvælgelse uden
+  deploy.
 
-Åbne runder på deaktiverede opgaver frigives af `release_open_rounds_on_inactive_questions`. Besvarede instanser og
-niveaurækker bevares.
+En aktiveret portion rulles aldrig tilbage med fase 1's `DELETE`, fordi besvarelser peger på rækkerne. Produktionen har
+ingen gendannelig backup, så deaktivering er den eneste tilbagerulning. Den er fuldt reversibel. Åbne runder på
+deaktiverede opgaver frigives af `release_open_rounds_on_inactive_questions`. Besvarede instanser og niveaurækker
+bevares.
+
+**Godkendelser i fase 2:** hvert punkt kræver sit eget GO. Det gælder PR'en med aktiveringsmigrationerne og dens
+merge, hver anvendelse (2a–2e), hver bogføring, lærerstikprøvens rettelser og hver tilbagerulning.
 
 ---
 

@@ -919,6 +919,14 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
 - **Rettelser anvendt 2026-11-14:** de syv forklaringsfejl og de tre opgaver om rygning og krig fra pilot og
   batch 2–4 er rettet i én datamigration (#701, ledger `20261114141653`). Alle ni rækker er fortsat inaktive, og
   de åbne indholdspunkter i runbookens §2.8 er lukket. Intet er aktiveret.
+- **Ejerbeslutning 2026-11-14: aktiveringsrækkefølge.** De 2.120 opgaver aktiveres i fem trin: `batch3` → `pilot` →
+  `batch2` → `grade6_9` → `batch4` (færrest E5-fund først, flest sidst). Efter sidste trin har engelsk 3.208 aktive
+  opgaver.
+  - Mellem trinene er der mindst tre skoledages læsende observation, med stopkriterier og tilbagerulning ved
+    deaktivering (runbookens §2.8, fase 2).
+  - En lærer laver en stikprøve af `batch4`'s C1-opgaver før sidste trin.
+  - Batch 5–10 er fortsat sat på pause.
+  - Hvert trin kræver sit eget GO. Aktiveringsmigrationerne er endnu ikke skrevet, og intet er aktiveret.
 - Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
   `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.
