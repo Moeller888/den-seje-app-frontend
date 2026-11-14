@@ -58,8 +58,24 @@ test("2. the k1 profile changes exactly one decision: K1 skip → apply", () => 
   assert.match(changed[0].reason, /NOT applied in production/);
 });
 
+const F07_FILES = ["20261113170000_phase_repeat_rpc.sql"];
+
+test("2b. the f07 profile changes exactly one decision: the D-362 phase repeat, skip → apply", () => {
+  const base = planReplay(files, readMigration).plan;
+  const f07 = planReplay(files, readMigration, { profile: "f07" }).plan;
+  assert.deepEqual(f07.map((p) => p.file), base.map((p) => p.file), "same files, same order");
+  const changed = f07.filter((p, i) => JSON.stringify(p) !== JSON.stringify(base[i]));
+  assert.deepEqual(changed.map((p) => p.file), F07_FILES);
+  for (const c of changed) {
+    assert.equal(c.action, "apply");
+    assert.equal(c.profile, "f07");
+    assert.match(c.reason, /NOT applied in production/);
+  }
+});
+
 test("3. a profile can only add test-only replays; unknown or production-naming profiles fail loud", () => {
-  assert.deepEqual(Object.keys(TEST_PROFILES), ["k1"]);
+  assert.deepEqual(Object.keys(TEST_PROFILES), ["k1", "f07"]);
+  assert.deepEqual(Object.keys(TEST_PROFILES.f07), F07_FILES);
   assert.deepEqual(Object.keys(TEST_PROFILES.k1), [K1]);
   for (const [name, list] of Object.entries(TEST_PROFILES)) {
     assert.ok(Object.isFrozen(list), `${name} is frozen`);
@@ -107,6 +123,16 @@ test("4. on the full replay: the k1 profile yields K1's schema, the default none
   assert.deepEqual(k.columns, ["hints_used", "mode"]);
   assert.ok(k.v2.includes(9), "the 9-parameter _v2 exists in the K1 lane");
   assert.ok(lane.r.steps.some((s) => s.name === K1 && s.ok), "K1 itself was applied");
+});
+
+test("4b. on the full replay: the f07 profile yields the phase repeat function (question rows are seeded by the spec, never replayed)", async () => {
+  const lane = await replayDb("f07");
+  try {
+    assert.deepEqual(lane.r.failures, [], "the F-07 lane replay builds");
+    assert.ok(lane.r.steps.some((s) => s.name === F07_FILES[0] && s.ok), "the phase repeat migration itself was applied");
+    const fn = (await lane.db.query("SELECT to_regprocedure('public.request_repeat_phase_question_for_student(uuid,text[],uuid[],integer)') IS NOT NULL AS e")).rows[0].e;
+    assert.equal(fn, true);
+  } finally { await lane.db.close(); }
 });
 
 test("5. only the isolated workflow uses a profile, and it is fenced", () => {

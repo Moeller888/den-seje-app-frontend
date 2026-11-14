@@ -43,7 +43,8 @@ export type QuestionScope = {
   activeDomains: string[] | null;
   // Domains new questions and repeats are drawn from.
   subjectDomains: string[];
-  // Subject-level domains for the fagskift release (never the teacher filter).
+  // Domains whose open rounds the fagskift release keeps (release_open_question_outside): the subject's
+  // fixed domains plus, for historie, the pupil's own server-assigned history domains.
   releaseDomains: string[];
 };
 
@@ -68,20 +69,29 @@ export function deriveQuestionScope(profile: unknown, requestedSubject: unknown)
   //   dansk    → only Danish questions (teacher history filter does not apply)
   //   historie → teacher filter minus English and Danish, or all history domains when unfiltered
   let subjectDomains: string[];
+  let assignedHistory: string[] = [];
   if (subject === "engelsk") {
     subjectDomains = [ENGLISH_DOMAIN];
   } else if (subject === "dansk") {
     subjectDomains = [DANISH_DOMAIN];
   } else {
-    const assignedHistory = activeDomains !== null
+    assignedHistory = activeDomains !== null
       ? activeDomains.filter((d) => d !== ENGLISH_DOMAIN && d !== DANISH_DOMAIN)
       : [];
     subjectDomains = assignedHistory.length > 0 ? assignedHistory : [...HISTORY_DOMAINS];
   }
 
+  // The fagskift release (release_open_question_outside) closes or deletes the pupil's open round when its
+  // question lies OUTSIDE these domains. For historie that set is the fixed HISTORY_DOMAINS PLUS the pupil's
+  // own assigned history domains — so an open round in a domain the pupil is still assigned (e.g. the D-362
+  // pilot domain pilot_d362, which is not in HISTORY_DOMAINS) survives a reload or a second
+  // get-next-question call, and an old tab can still answer it (owner decision 2026-11-13, D-362 P1).
+  // Only server-side profile data is added (active_domains is not client-writable). A domain the teacher
+  // removes is no longer added, so its open round is released as before. For a regular pupil every assigned
+  // domain is already in HISTORY_DOMAINS, so the result is exactly HISTORY_DOMAINS (unchanged behaviour).
   const releaseDomains = subject === "engelsk" ? [ENGLISH_DOMAIN]
     : subject === "dansk" ? [DANISH_DOMAIN]
-    : [...HISTORY_DOMAINS];
+    : [...HISTORY_DOMAINS, ...assignedHistory.filter((d, i, all) => !HISTORY_DOMAINS.includes(d) && all.indexOf(d) === i)];
 
   return { subject, grade, activeDomains, subjectDomains, releaseDomains };
 }

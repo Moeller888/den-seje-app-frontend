@@ -171,6 +171,9 @@ test("the admin client is used only for the instance insert and the server-only 
     // D-329, targeted requests only: the lost-race check reads ONLY the id of the verified pupil's open
     // instance (no key), before "objective_exhausted" may be claimed; it never reaches the repeat RPCs below.
     "from:question_instances",
+    // D-362, phased courses only (the gate's repeat list): reopens a WRONG answer of the open phase among
+    // server-derived ids (migration 20261113170000; service_role only, SECURITY INVOKER, student-scoped guards).
+    "rpc:request_repeat_phase_question_for_student",
     // QUESTION_MIX_ENGINE "v2" only: the same repeat with exhaustion judged on servable formats
     // (migration 20261019150000; service_role only, same student-scoped guards).
     "rpc:request_repeat_question_servable_for_student",
@@ -190,8 +193,15 @@ test("the admin client is used only for the instance insert and the server-only 
   // pinned in level-flow.test.mjs.
   assert.equal((INDEX_CODE.match(/await loadLevelPlan\(admin\(\) as unknown as LevelReadClient, \{\s*studentId: student_id,/g) ?? []).length, 1,
     "the level engine call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 13,
-    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read)");
+  // D-362 phase gate: the same backend client handed to ./phase-gate.ts, whose three reads (active questions'
+  // id/learning_objective/metadata/difficulty_level of the phased objectives — no content, no key — the VERIFIED
+  // pupil's own instance state, and its first-round verdicts in student_level_fold_log) plus, with the level engine's
+  // level, each phased course's own candidates (get_level_questions_for_student for that one domain, the verified
+  // student) are pinned in gnq-phase-gate.test.mjs; with no phased candidate and no pilot_* domain nothing is read.
+  assert.equal((INDEX_CODE.match(/await applyPhaseGate\(admin\(\) as unknown as PhaseReadClient, student_id, sortedQuestions, subjectDomains, \{ level: pupilLevel \}\)/g) ?? []).length, 1,
+    "the phase gate call");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 15,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the D-362 phase gate, the 15th the D-362 phase repeat)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {

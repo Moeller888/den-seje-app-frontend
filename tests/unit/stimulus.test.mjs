@@ -214,6 +214,31 @@ test("browser: an image has its alt text and loads only from this site's stimulu
     "../../assets/stimulus/grundloven-1849-tidslinje.svg");
 });
 
+test("browser (F-07 a11y): an image's information can be opened as text and read aloud, named as the image description", () => {
+  const calls = [];
+  const fig = client.buildStimulus(fakeDocument, IMAGE, { attachReadAloud: (el, text, ctx) => calls.push([el, text, ctx]), readAloudContext: { subject: "historie" } });
+  const details = find(fig, "details");
+  assert.equal(details.className, "stimulus-image-description");
+  assert.equal(find(details, "summary").textContent, client.STIMULUS_TEXT.imageDescription);
+  const p = details.children[1];
+  assert.equal(p.id, "stimulus-image-text");
+  assert.equal(p.textContent, IMAGE.alt, "plain text, the same information as the alt text");
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][0], p);
+  assert.equal(calls[0][1], IMAGE.alt);
+  assert.deepEqual(calls[0][2], { subject: "historie", target: "image" });
+  // still there without read-aloud, and a failing read-aloud never breaks the image
+  assert.ok(find(client.buildStimulus(fakeDocument, IMAGE), "details"));
+  assert.doesNotThrow(() => client.buildStimulus(fakeDocument, IMAGE, { attachReadAloud: () => { throw new Error("x"); } }));
+  // the credit stays the last child (figcaption)
+  assert.equal(fig.children.at(-1).tagName, "FIGCAPTION");
+});
+
+test("read-aloud adapter (F-07 a11y): the image description has its own spoken name", () => {
+  const src = readFileSync(join(ROOT, "js", "read-aloud", "adapters", "quiz.js"), "utf8");
+  assert.match(src, /target === "source" \? "kilden" : target === "image" \? "billedbeskrivelsen" : "spørgsmålet"/);
+});
+
 test("browser: an audio clip has keyboard-operable controls and its transcript behind \"Vis teksten\"", () => {
   const fig = client.buildStimulus(fakeDocument, AUDIO);
   const audio = find(fig, "audio");
@@ -252,7 +277,8 @@ test("app.js: the stimulus is cleared for every question, shown above it, and a 
   assert.match(app, /attachReadAloud: attachReadAloudControl,/);
   assert.match(app, /readAloudContext: \{ subject: currentSubject, target: "source" \},/);
   const ra = read("js/read-aloud/adapters/quiz.js");
-  assert.match(ra, /context\.target === "source" \? "kilden" : "spørgsmålet"/);
+  // a source is "kilden", an image description "billedbeskrivelsen", everything else "spørgsmålet"
+  assert.match(ra, /target === "source" \? "kilden" : target === "image" \? "billedbeskrivelsen" : "spørgsmålet"/);
   const html = read("index.html");
   assert.match(html, /<div id="stimulus" hidden><\/div>\s*<div id="question">/);
   assert.match(html, /<link rel="stylesheet" href="css\/stimulus\.css">/);

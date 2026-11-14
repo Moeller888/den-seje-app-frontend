@@ -136,8 +136,14 @@ test("a. deriveQuestionScope yields pilot_d362 only when the profile's active_do
   // English and Danish use their fixed domain even for the approved account.
   assert.deepEqual(deriveQuestionScope(approved, "engelsk").subjectDomains, ["english"]);
   assert.deepEqual(deriveQuestionScope(approved, "dansk").subjectDomains, ["danish"]);
-  // releaseDomains (fagskift) is subject-level and never the teacher filter, so it never holds pilot_d362.
-  assert.equal(deriveQuestionScope(approved, "historie").releaseDomains.includes(PILOT), false);
+  // releaseDomains (fagskift): the subject's fixed domains PLUS the pupil's own assigned history domains, so an
+  // open pilot round survives a reload (D-362 P1, owner decision 2026-11-13). Only for historie, and only when the
+  // profile itself holds pilot_d362; engelsk/dansk keep their single fixed domain.
+  assert.deepEqual(deriveQuestionScope(approved, "historie").releaseDomains, [...HISTORY_DOMAINS, PILOT]);
+  assert.deepEqual(deriveQuestionScope({ selected_grade: GRADE, active_domains: ["vikings", PILOT, PILOT] }, "historie").releaseDomains,
+    [...HISTORY_DOMAINS, PILOT], "no duplicates");
+  assert.deepEqual(deriveQuestionScope(approved, "engelsk").releaseDomains, ["english"]);
+  assert.deepEqual(deriveQuestionScope(approved, "dansk").releaseDomains, ["danish"]);
 });
 
 // ── b. regular scope: no selection RPC returns a pilot row ──────────────────────────────────────────
