@@ -4,19 +4,26 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { DECISIONS, FIXTURE, STATUSES, TEST_OBJECTIVE, check, elements } from "../../tools/laerligverse/review-pack.mjs";
+import { DECISIONS, FIXTURE, HTML, STATUSES, TEST_OBJECTIVE, check, elements } from "../../tools/laerligverse/review-pack.mjs";
 
 test("pack, fixture and decision file are in sync with the item data (no drift)", async () => {
   assert.deepEqual(await check(), []);
 });
 
-test("the decision file is the teacher's: only valid statuses, and nothing is approved by the tool", async () => {
+test("the decision file is the teacher's: only valid statuses, and any decision carries a teacher name and a date", async () => {
   const d = JSON.parse(readFileSync(DECISIONS, "utf8"));
   const statuses = Object.values(d.elementer).map((v) => v.status);
   for (const s of statuses) assert.ok(STATUSES.includes(s), s);
-  // Committed state: not yet reviewed. A teacher's later edit changes this test's expectation deliberately.
-  assert.equal(d.laerer, "", "no reviewer has signed");
-  assert.ok(statuses.every((s) => s === "ikke_gennemgaaet"), "nothing is approved until a teacher writes it");
+  // The tool never approves: only a signed file may contain decisions (check() enforces it too).
+  if (statuses.some((s) => s !== "ikke_gennemgaaet")) assert.ok(d.laerer && d.dato, "decisions without a signature");
+});
+
+test("the review page is self-contained and cannot leak anything: no external resources, a strict CSP, no network calls", () => {
+  const page = readFileSync(HTML, "utf8");
+  assert.match(page, /Content-Security-Policy" content="default-src 'none'/);
+  assert.equal(/<script[^>]+src=|<link[^>]+href=|https?:\/\/(?!www\.w3)/.test(page), false);
+  assert.equal(/fetch\(|XMLHttpRequest|localStorage|sessionStorage/.test(page), false);
+  for (const id of ["maal", "h4-kilde", "t1864", "h4-genbesoeg"]) assert.match(page, new RegExp(`name="st-${id}"`));
 });
 
 test("the pack covers the whole sequence in teaching order: objective, intro, check, archive card, steps 3–8 with reflection", async () => {

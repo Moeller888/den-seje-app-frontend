@@ -371,3 +371,39 @@ describe("LaerligTaskService — option_details, D-332 (mock HTTP)", () => {
     }
   });
 });
+
+describe("LaerligTaskService — server-directed sequence, D-338 (mock HTTP)", () => {
+  const MAP = { "hist.besaettelsen.h4": "world_war_2" } as const;
+  const CTX = { guided_practice: "arkivskab", revision: "arkivskab-revision", independent_application: "skuffe", transfer: "overfoersel", revisit: "genbesoeg" };
+  const svc = (reply: { status: number; body: unknown } | Error) => {
+    const s = scripted(reply);
+    return { s, svc: new LaerligTaskService({ call: s.call, subject: "historie", objectiveMap: MAP, sequence: { contextOfStep: CTX } }) };
+  };
+
+  it("asks for the sequence; the SERVER's step becomes the world's activity and the server's mode the task's mode", async () => {
+    const { s, svc: a } = svc({ status: 200, body: { ...MC, learning_objective: "world_war_2", learning_step: "revision", mode: "practice" } });
+    const t = await a.fetchTask({ ...Q, contextKey: "overfoersel" });
+    expect(s.calls[0]?.body).toEqual({ subject: "historie", learning_objective: "world_war_2", sequence: true });
+    expect(t).toMatchObject({ contextKey: "arkivskab-revision", mode: "practice" });
+  });
+
+  it("a reply without a known step and mode is not a sequence reply; waiting and complete are explicit", async () => {
+    for (const body of [
+      { ...MC, learning_objective: "world_war_2" },
+      { ...MC, learning_objective: "world_war_2", learning_step: "mastery", mode: "practice" },
+      { ...MC, learning_objective: "world_war_2", learning_step: "transfer", mode: "quiz_v1" },
+    ]) await expect(svc({ status: 200, body }).svc.fetchTask(Q)).rejects.toMatchObject({ code: "unavailable", message: "the server did not confirm a known learning step" });
+    const w = svc({ status: 200, body: { step: "sequence_waiting", learning_step: "revisit", due_at: "2026-11-05T04:00:00.000Z" } });
+    await expect(w.svc.fetchTask(Q)).rejects.toMatchObject({ message: "sequence_waiting until 2026-11-05T04:00:00.000Z" });
+    expect(w.svc.lastSequence).toEqual({ state: "sequence_waiting", step: "revisit", dueAt: "2026-11-05T04:00:00.000Z" });
+    await expect(svc({ status: 200, body: { step: "sequence_complete" } }).svc.fetchTask(Q)).rejects.toMatchObject({ message: "sequence_complete" });
+    await expect(svc({ status: 409, body: { error: "learning_step_not_current" } }).svc.fetchTask(Q)).rejects.toMatchObject({ code: "unavailable", transient: false });
+  });
+
+  it("a sequence without an objective map is refused before any request", async () => {
+    const s = scripted();
+    const a = new LaerligTaskService({ call: s.call, subject: "historie", sequence: { contextOfStep: CTX } });
+    await expect(a.fetchTask(Q)).rejects.toMatchObject({ code: "unavailable" });
+    expect(s.calls).toEqual([]);
+  });
+});

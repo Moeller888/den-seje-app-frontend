@@ -19,6 +19,20 @@ export const OBJECTIVE = Object.freeze({
   status: "FORSLAG — kræver LP-2 (mål-id) og LP-13 (læringstrin); ikke et godkendt læringsmål",
 });
 
+/**
+ * D-338: the game's decision points (contextKey) ↔ the server's learning steps
+ * (supabase/functions/_shared/learning-sequence.ts). The server decides the step; the host maps it to the
+ * activity the game shows. Introduction and exploration are not server steps.
+ */
+export const STEP_OF_CONTEXT: Readonly<Record<string, string>> = Object.freeze({
+  arkivskab: "guided_practice",
+  "arkivskab-revision": "revision",
+  skuffe: "independent_application",
+  overfoersel: "transfer",
+  genbesoeg: "revisit",
+});
+export const CONTEXT_OF_STEP: Readonly<Record<string, string>> = Object.freeze(Object.fromEntries(Object.entries(STEP_OF_CONTEXT).map(([c, s]) => [s, c])));
+
 const d = (afsender: string, tid: string, modtager: string, formaal: string, kontekst: string): string =>
   `Afsender: ${afsender}|Tid: ${tid}|Modtager: ${modtager}|Formål: ${formaal}|Kontekst: ${kontekst}`;
 
@@ -67,7 +81,7 @@ export const ARCHIVE_ITEMS: readonly FakeItem[] = [
     objectiveId: OBJECTIVE.id,
     contextKey: "arkivskab-revision",
     kind: "choice",
-    prompt: "Revidér din vurdering med en ny påstand. Påstand: »Hærledelsen ville have, at de danske soldater stoppede kampene om morgenen den 9. april 1940.« Hvilken kilde er bedst til at undersøge påstanden?",
+    prompt: "Revidér din vurdering med en ny påstand. Påstand: »Om morgenen den 9. april 1940 gav den danske hærledelse tropperne ordre om at stoppe kampene.« Hvilken kilde er bedst til at undersøge påstanden?",
     options: [
       { id: "rev_erindr", label: "Erindring", detail: d("en dansk soldat, der var med den morgen", "skrevet i 1990", "hans børnebørn", "at fortælle sin historie videre", "skrevet 50 år efter, fra hukommelsen (konstrueret eksempel)") },
       { id: "rev_ordre", label: "Ordre", detail: d("den danske hærledelse", "morgenen den 9. april 1940", "de danske tropper", "at give tropperne besked om, hvad de skulle gøre", "sendt samme morgen, mens kampene stod på (konstrueret eksempel på en kildetype)") },
@@ -76,14 +90,14 @@ export const ARCHIVE_ITEMS: readonly FakeItem[] = [
     ],
     answer: "rev_ordre",
     correctLabel: "Ordre",
-    feedbackCorrect: "Ja. Samme princip som før: påstanden handler om hærledelsens vilje, og ordren er lavet af hærledelsen selv, samme morgen, til tropperne. Det kan den IKKE vise: om alle soldater faktisk nåede at få ordren, eller hvad de tænkte om den.",
-    feedbackIncorrect: "Brug feedbacken fra før: hvis vilje handler påstanden om, og hvilken kilde er lavet af netop dem, mens det skete?",
+    feedbackCorrect: "Ja. Samme princip som før: påstanden handler om, hvad hærledelsen beordrede, og ordren er lavet af hærledelsen selv, samme morgen, til tropperne. Det kan den IKKE vise: hvad hærledelsen selv mente om beslutningen, om alle soldater nåede at få ordren, eller hvad de tænkte om den.",
+    feedbackIncorrect: "Brug feedbacken fra før: hvem handler påstanden om, og hvilken kilde er lavet af netop dem, mens det skete?",
     optionFeedback: {
-      rev_erindr: "Se på tiden og afsenderen: soldaten skrev 50 år senere, og han var ikke hærledelsen. Han kan fortælle, hvad han husker, men ikke direkte, hvad hærledelsen ville.",
+      rev_erindr: "Se på tiden og afsenderen: soldaten skrev 50 år senere, og han var ikke hærledelsen. Han kan fortælle, hvad han husker om ordren, men hans erindring er ikke selve ordren.",
       rev_avis: "Se på afsenderen og tiden: journalisten var ikke hærledelsen og skrev dagen efter ud fra andres beretninger. Artiklen er et spor fra 1940, men ikke fra dem, påstanden handler om.",
       rev_laerebog: "Se på tiden: lærebogen er skrevet 70 år senere og bygger på andre kilder. Den kan forklare, men den er ikke et spor fra morgenen.",
     },
-    hints: ["Hvis vilje handler påstanden om?", "Hvilken kilde er lavet af dem, påstanden handler om, mens det skete?"],
+    hints: ["Hvem handler påstanden om?", "Hvilken kilde er lavet af dem, påstanden handler om, mens det skete?"],
   },
   {
     // Step 6 (independent application): the SAME proclamation is now a wrong answer, because the claim differs.
@@ -201,7 +215,7 @@ export const ITEM_REVIEW: Readonly<Record<string, ItemReview>> = Object.freeze({
     scoring: "Serverbedømt: rigtigt = Ordre",
     evidenceRole: "Øvelse (efter feedback, med hints). Aldrig evidens",
     cannotDocument: "Selvstændighed; varig læring",
-    context: "Om morgenen den 9. april 1940 besluttede regeringen at stoppe kampene; tropperne fik ordre om at indstille dem. Konstrueret ordre-eksempel",
+    context: "Om morgenen den 9. april 1940 besluttede regeringen at stoppe kampene, og tropperne fik ordre om at indstille dem. Påstanden handler om ordren (en handling), ikke om hærledelsens holdning. Ifølge historiske fremstillinger ønskede hærens chef at kæmpe videre; det skal læreren kontrollere. Ordre-eksemplet er konstrueret",
     misconceptions: ["»Den, der var med (soldaten), ved bedst, hvad ledelsen ville«", "»En avis fra dagen efter er lige så god som en kilde fra selve morgenen«"],
     difficulty: "middel",
     sourceStatus: CONSTRUCTED + " Lærer bør kontrollere formuleringen om ordren den 9. april",

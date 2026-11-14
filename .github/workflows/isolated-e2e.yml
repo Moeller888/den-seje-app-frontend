@@ -249,6 +249,8 @@ jobs:
           # D-329: objective targeting is ON in the isolated stack only (the secret is unset — off — everywhere
           # else). No existing client sends learning_objective, so the frontend suite still runs today's path.
           echo 'LAERLIGVERSE_OBJECTIVE_TARGETING=on' > "$RUNNER_TEMP/functions.env"
+          # D-338: the server-directed sequence, likewise ON only in the isolated stack.
+          echo 'LAERLIGVERSE_SEQUENCE=on' >> "$RUNNER_TEMP/functions.env"
           ready=no
           for attempt in 1 2 3; do
             nohup supabase functions serve --env-file "$RUNNER_TEMP/functions.env" >> "$RUNNER_TEMP/functions.log" 2>&1 &

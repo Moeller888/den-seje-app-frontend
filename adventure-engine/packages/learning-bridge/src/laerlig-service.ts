@@ -57,6 +57,11 @@ export interface LaerligServiceOptions {
   readonly objectiveMap?: Readonly<Record<string, string>>;
   /** D-273/D-330: send round_no + submission_id (the H5 _v2 path). Absent/false = the legacy path (today). */
   readonly h5Submissions?: boolean;
+  /**
+   * D-338: ask the SERVER for the next step of its sequence (requires objectiveMap). The server's learning_step
+   * is mapped to the contextKey the world shows; the server's mode becomes the task's mode. Absent = off.
+   */
+  readonly sequence?: { readonly contextOfStep: Readonly<Record<string, string>> };
   /** Milliseconds since epoch, for process-event's question_shown_at. */
   readonly now?: () => number;
 }
@@ -146,9 +151,18 @@ export class LaerligTaskService implements TaskService {
       if (typeof mapped !== "string" || mapped.length === 0) throw new ServiceError("unavailable", false, `no server objective for "${q.objectiveId}"`);
       objective = mapped;
     }
-    const r = await this.invoke("get-next-question", objective === null ? { subject: this.o.subject } : { subject: this.o.subject, learning_objective: objective });
+    const seq = this.o.sequence;
+    if (seq !== undefined && objective === null) throw new ServiceError("unavailable", false, "a sequence needs a mapped objective");
+    const r = await this.invoke(
+      "get-next-question",
+      objective === null ? { subject: this.o.subject } : seq !== undefined ? { subject: this.o.subject, learning_objective: objective, sequence: true } : { subject: this.o.subject, learning_objective: objective },
+    );
     if (r.status !== 200) throw failure(r.status, r.body);
     const b = r.body;
+    if (isObj(b) && (b.step === "sequence_complete" || b.step === "sequence_waiting")) {
+      this.lastSequence = { state: b.step, step: typeof b.learning_step === "string" ? b.learning_step : null, dueAt: typeof b.due_at === "string" ? b.due_at : null };
+      throw new ServiceError("unavailable", false, b.step === "sequence_waiting" ? `sequence_waiting until ${String(b.due_at)}` : "sequence_complete");
+    }
     if (isObj(b) && b.step === "no_questions") {
       throw new ServiceError("unavailable", false, b.reason === "objective_exhausted" ? "no question left in this objective" : "no question for this pupil and subject");
     }
@@ -156,7 +170,21 @@ export class LaerligTaskService implements TaskService {
       // The server did not confirm the objective (targeting off there): refuse rather than mislabel.
       throw new ServiceError("unavailable", false, "the server did not confirm the learning objective");
     }
-    const served = this.parseQuestion(b, q, objective);
+    let stepContext: string | null = null;
+    let serverMode: "practice" | "check" | "review" | "application" | null = null;
+    if (seq !== undefined) {
+      // The server must state the step and mode it chose; a reply without them is not a sequence reply.
+      const step = isObj(b) ? b.learning_step : undefined;
+      const mode = isObj(b) ? b.mode : undefined;
+      const context = typeof step === "string" && Object.prototype.hasOwnProperty.call(seq.contextOfStep, step) ? seq.contextOfStep[step] : undefined;
+      if (context === undefined || (mode !== "practice" && mode !== "check" && mode !== "review" && mode !== "application")) {
+        throw new ServiceError("unavailable", false, "the server did not confirm a known learning step");
+      }
+      stepContext = context;
+      serverMode = mode;
+      this.lastSequence = { state: "step", step: step as string, dueAt: null };
+    }
+    const served = this.parseQuestion(b, stepContext === null ? q : { ...q, contextKey: stepContext }, objective, serverMode);
     if (!q.kinds.includes(served.task.kind)) {
       // The instance stays open on the server for the ordinary quiz (one open instance per pupil).
       throw new ServiceError("unavailable", false, `the next question is "${served.task.kind}", which this world cannot render`);
@@ -212,7 +240,10 @@ export class LaerligTaskService implements TaskService {
     }
   }
 
-  private parseQuestion(b: unknown, q: TaskQuery, objective: string | null): Served {
+  /** D-338: the last sequence state the server reported (developer view only). */
+  lastSequence: { state: string; step: string | null; dueAt: string | null } | null = null;
+
+  private parseQuestion(b: unknown, q: TaskQuery, objective: string | null, serverMode: "practice" | "check" | "review" | "application" | null = null): Served {
     const bad = (why: string): never => {
       throw new ServiceError("server", false, `get-next-question: ${why}`);
     };
@@ -254,8 +285,8 @@ export class LaerligTaskService implements TaskService {
       kind,
       prompt: c.question,
       options: stimulusOptions,
-      // The legacy contract has no mode; quiz_v1 is the D-277 name for exactly that.
-      mode: "quiz_v1",
+      // The legacy contract has no mode (quiz_v1); in a sequence the SERVER states it (D-338).
+      mode: serverMode ?? "quiz_v1",
       hintsAvailable: 0,
       contextKey: q.contextKey,
       roundNo,
