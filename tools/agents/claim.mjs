@@ -12,8 +12,10 @@
 // slette filen efter afklaring) kan frigive den.
 //
 // Sessions-id tages fra harnessen (CLAUDE_CODE_SESSION_ID). Et --session, der afviger fra den, afvises: en
-// agent kan ikke uforvarende optræde som en anden session. Låsen gemmer sessions-id (ikke PID), så en
-// genstartet session med ny PID ejer stadig sine låse; `whois` finder den aktuelle PID og navn.
+// agent kan ikke UFORVARENDE optræde som en anden session. Miljøvariablen er ingen identitetsgaranti — låsene er
+// frivillig koordinering, ikke adgangskontrol. Låsen gemmer sessions-id (ikke PID), så en genstartet session med
+// ny PID ejer stadig sine låse; `whois` finder den aktuelle PID og navn og genkender genbrugte PID'er på
+// processens starttid. `verifyIdentity` (bruges af approvals.mjs) binder sessions-id til processens forfædre.
 //
 // Værktøjet kører ALDRIG selv `git push`, `git merge` eller andre skrivende git-kommandoer: de skal stå i
 // agentens egen kommando, så LÆRLIG-GUARD ser dem. Det læser kun (ls-remote, rev-parse, merge-base, config).
@@ -42,22 +44,49 @@ export function git(args, cwd) {
   return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 }
 
-// "https://github.com/Moeller888/den-seje-app-frontend.git" og "git@github.com:Moeller888/…" giver samme nøgle:
-// "github.com__moeller888__den-seje-app-frontend". Brugernavn/kodeord i URL'en indgår aldrig.
+// Kun GitHub-adresser accepteres, og alle gyldige former for samme repo giver samme nøgle
+// "github.com__<ejer>__<repo>" (GitHub skelner ikke mellem store og små bogstaver):
+//   https://[bruger[:kode]@][www.]github.com[:443]/EJER/REPO[.git][/]
+//   ssh://[bruger@](github.com|ssh.github.com)[:22|:443]/EJER/REPO[.git][/]
+//   [bruger@]github.com:EJER/REPO[.git][/]          (scp-form)
+// Alt andet — andre værter, andre porte, ekstra stisegmenter, "github.com:/…", lokale stier, file:// — afvises:
+// en tvetydig adresse må aldrig give en anden låsemappe end den rigtige. Brugernavn/kodeord indgår aldrig.
+const GH_HOSTS = new Set(["github.com", "www.github.com", "ssh.github.com"]);
 export function repoKey(url) {
   const s = String(url ?? "").trim();
   // Fejlbeskeder viser aldrig URL'ens brugernavn/kodeord eller en nøgle afledt af dem.
-  const fail = () => new UsageError(`kan ikke udlede repo fra remote-URL ${JSON.stringify(s.replace(/^([a-z+]+:\/\/)?[^@\/]*@/i, "$1***@"))}`);
-  const m = /^(?:[a-z+]+:\/\/)?(?:[^@\/]+@)?([^\/:@]+)[:\/]([^@]+?)(?:\.git)?\/?$/i.exec(s);
-  if (!m) throw fail();
-  const key = `${m[1]}/${m[2]}`.toLowerCase().replaceAll("/", "__");
-  if (!/^[a-z0-9._-]+(?:__[a-z0-9._-]+)+$/.test(key)) throw fail();
-  return key;
+  const masked = s.replace(/^([a-z][a-z0-9+.-]*:\/\/)?[^@\/]*@/i, "$1***@");
+  const fail = (why) => new UsageError(`kan ikke udlede repo fra remote-URL ${JSON.stringify(masked)}: ${why} (kun github.com-adresser accepteres)`);
+  let scheme = null, host, port = null, path;
+  let m = /^([a-z][a-z0-9+.-]*):\/\/(?:[^@\/]+@)?([^\/:@]+)(?::(\d+))?\/(.*)$/i.exec(s);
+  if (m) { [, scheme, host, port, path] = m; scheme = scheme.toLowerCase(); }
+  else if ((m = /^(?:[A-Za-z0-9._-]+@)?([A-Za-z0-9.-]+):(.*)$/.exec(s))) { [, host, path] = m; scheme = "scp"; }
+  else throw fail("ukendt format");
+  host = host.toLowerCase();
+  if (!GH_HOSTS.has(host)) throw fail(`værten ${host} er ikke GitHub`);
+  const okPort = { https: ["443"], ssh: ["22", "443"], "git+ssh": ["22", "443"], scp: [] }[scheme];
+  if (!okPort) throw fail(`protokollen ${scheme} accepteres ikke`);
+  if (port !== null && port !== undefined && !okPort.includes(port)) throw fail(`porten ${port} er tvetydig`);
+  if (host === "ssh.github.com" && scheme === "https") throw fail("ssh.github.com bruges kun til ssh");
+  const p = /^([A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))\/([A-Za-z0-9._-]+?)(?:\.git)?\/?$/.exec(path);
+  if (!p || p[2] === "." || p[2] === "..") throw fail("stien skal være præcis EJER/REPO");
+  return `github.com__${p[1]}__${p[2]}`.toLowerCase();
 }
 
-const home = (env) => env.USERPROFILE || env.HOME || homedir();
+// Variabler, der flytter låse, sessionsfiler, transskript og register. De findes KUN til tests. Kommandolinjen
+// fjerner dem (med en advarsel), så en testkonfiguration aldrig kan forveksles med den rigtige tilstand.
+export const TEST_OVERRIDES = Object.freeze(["LAERLIG_CLAIMS_DIR", "LAERLIG_CLAIMS_HOME", "LAERLIG_APPROVALS_DIR", "CLAUDE_PROJECTS_DIR", "CLAUDE_SESSIONS_DIR"]);
+export function productionEnv(env, warn = () => {}) {
+  const clean = { ...env };
+  const hit = TEST_OVERRIDES.filter((k) => clean[k] !== undefined && clean[k] !== "");
+  for (const k of TEST_OVERRIDES) delete clean[k];
+  if (hit.length) warn(`ADVARSEL: testvariablerne ${hit.join(", ")} ignoreres af kommandolinjen — de må kun bruges af tests`);
+  return clean;
+}
 
-// Den fælles mappe for repoet (alle kloner). LAERLIG_CLAIMS_DIR overstyrer helt (tests og særtilfælde).
+const home = (env) => env.USERPROFILE || homedir();
+
+// Den fælles mappe for repoet (alle kloner). LAERLIG_CLAIMS_DIR/-HOME overstyrer (KUN tests; se TEST_OVERRIDES).
 export function claimsDir({ env = process.env, cwd = process.cwd(), run = git } = {}) {
   if (env.LAERLIG_CLAIMS_DIR) return resolve(env.LAERLIG_CLAIMS_DIR);
   const base = env.LAERLIG_CLAIMS_HOME ? resolve(env.LAERLIG_CLAIMS_HOME) : join(home(env), ".claude", "laerlig-claims");
@@ -91,10 +120,48 @@ export function resolveSession(given, env = process.env) {
   return s;
 }
 
-// Claude Code skriver én fil pr. kørende session: ~/.claude/sessions/<pid>.json med sessionId, name, status.
-// Matcher på sessions-id (ikke PID): en genstartet session har ny PID og ofte nyt navn, men samme id.
-export function findSession(sessionId, { env = process.env, alive = pidAlive } = {}) {
-  const dir = env.CLAUDE_SESSIONS_DIR ? resolve(env.CLAUDE_SESSIONS_DIR) : join(home(env), ".claude", "sessions");
+const sessionsDirOf = (env) => (env.CLAUDE_SESSIONS_DIR ? resolve(env.CLAUDE_SESSIONS_DIR) : join(home(env), ".claude", "sessions"));
+
+// Proces-tabel: PID → { ppid, start }. `start` er processens starttid som Windows FILETIME (100 ns-enheder),
+// samme enhed som Claude Codes `procStart` i sessionsfilen. Hentes én gang pr. kørsel. Uden for Windows kendes
+// starttiden ikke (null) — så kan PID-genbrug ikke udelukkes, og identiteten kan ikke bekræftes.
+let procCache = null;
+export function processTable() {
+  if (procCache) return procCache;
+  const m = new Map();
+  try {
+    if (process.platform === "win32") {
+      const ps = "Get-CimInstance Win32_Process | ForEach-Object { '{0} {1} {2}' -f $_.ProcessId, $_.ParentProcessId, $(if ($_.CreationDate) { $_.CreationDate.ToFileTimeUtc() } else { '' }) }";
+      const out = execFileSync("powershell.exe", ["-NoProfile", "-Command", ps], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 30000 });
+      for (const line of out.split(/\r?\n/)) {
+        const [pid, ppid, start] = line.trim().split(/\s+/);
+        if (/^\d+$/.test(pid ?? "") && /^\d+$/.test(ppid ?? "")) m.set(Number(pid), { ppid: Number(ppid), start: /^\d+$/.test(start ?? "") ? start : null });
+      }
+    } else {
+      const out = execFileSync("ps", ["-A", "-o", "pid=,ppid="], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+      for (const line of out.split("\n")) {
+        const [pid, ppid] = line.trim().split(/\s+/);
+        if (/^\d+$/.test(pid ?? "") && /^\d+$/.test(ppid ?? "")) m.set(Number(pid), { ppid: Number(ppid), start: null });
+      }
+    }
+  } catch { /* ukendt: tom tabel → intet kan bekræftes */ }
+  procCache = m;
+  return m;
+}
+
+// Samme proces? true/false, eller null når en af starttiderne er ukendt. Tolerance 1 ms (CIM afrunder til µs).
+export function sameStart(a, b) {
+  if (!/^\d+$/.test(String(a ?? "")) || !/^\d+$/.test(String(b ?? ""))) return null;
+  const d = BigInt(a) - BigInt(b);
+  return (d < 0n ? -d : d) <= 10_000n;
+}
+const tableStartOf = (pid) => processTable().get(pid)?.start ?? null;
+
+// Claude Code skriver én fil pr. kørende session: ~/.claude/sessions/<pid>.json med sessionId, name, status og
+// procStart. Matcher på sessions-id (ikke PID): en genstartet session har ny PID og ofte nyt navn, men samme id.
+// En PID, der lever, men tilhører en ANDEN proces (starttiden passer ikke), er genbrugt: sessionen kører ikke.
+export function findSession(sessionId, { env = process.env, alive = pidAlive, startOf = tableStartOf } = {}) {
+  const dir = sessionsDirOf(env);
   if (!existsSync(dir)) return null;
   const found = [];
   for (const f of readdirSync(dir)) {
@@ -102,7 +169,9 @@ export function findSession(sessionId, { env = process.env, alive = pidAlive } =
     let o;
     try { o = JSON.parse(readFileSync(join(dir, f), "utf8")); } catch { continue; }
     if (o?.sessionId !== sessionId) continue;
-    found.push({ pid: o.pid, name: o.name ?? null, status: o.status ?? null, cwd: o.cwd ?? null, updatedAt: o.updatedAt ?? null, alive: alive(o.pid) });
+    const live = alive(o.pid);
+    const reused = live && sameStart(o.procStart, startOf(o.pid)) === false;
+    found.push({ pid: o.pid, name: o.name ?? null, status: o.status ?? null, cwd: o.cwd ?? null, updatedAt: o.updatedAt ?? null, alive: live && !reused, pidReused: reused });
   }
   // Flere filer for samme session (genstart uden oprydning): den levende og nyeste vinder; resten er forældede.
   found.sort((x, y) => Number(y.alive) - Number(x.alive) || (y.updatedAt ?? 0) - (x.updatedAt ?? 0));
@@ -115,31 +184,60 @@ export function pidAlive(pid) {
 }
 
 // Terminalens shell = forælderprocessen til claude-processen (i VS Code: den PID, der står i terminalfanens tooltip).
-export function parentPid(pid) {
-  try {
-    if (process.platform === "win32") {
-      const out = execFileSync("powershell.exe", ["-NoProfile", "-Command", `(Get-CimInstance Win32_Process -Filter "ProcessId=${Number(pid)}").ParentProcessId`], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15000 }).trim();
-      return /^\d+$/.test(out) ? Number(out) : null;
+// En forælder, der er startet EFTER barnet, er en genbrugt PID og tæller ikke.
+export function parentPid(pid, table = processTable()) {
+  const me = table.get(Number(pid));
+  const parent = me ? table.get(me.ppid) : null;
+  if (!me || !parent || me.ppid === Number(pid)) return null;
+  if (me.start && parent.start && BigInt(parent.start) > BigInt(me.start)) return null;
+  return me.ppid;
+}
+
+// Hvilken Claude Code-session kører DENNE proces i? Går op gennem forælderprocesserne til den første, der har en
+// sessionsfil, og kræver at filens procStart passer til processens starttid (ingen PID-genbrug). Den session skal
+// være den, CLAUDE_CODE_SESSION_ID påstår. Det hæver barren fra "sæt en miljøvariabel" til "forfalsk Claude Codes
+// egen sessionsfil" — men det er IKKE en sikkerhedsgrænse: samme Windows-bruger kan skrive den fil.
+export function verifyIdentity({ env = process.env, table = processTable(), selfPid = process.pid } = {}) {
+  const claimed = env.CLAUDE_CODE_SESSION_ID;
+  if (!claimed) return { ok: false, reason: "intet CLAUDE_CODE_SESSION_ID — kør fra en Claude Code-session" };
+  const dir = sessionsDirOf(env);
+  const files = new Map();
+  if (existsSync(dir)) {
+    for (const f of readdirSync(dir)) {
+      if (!/^\d+\.json$/.test(f)) continue;
+      try { const o = JSON.parse(readFileSync(join(dir, f), "utf8")); if (Number.isInteger(o?.pid)) files.set(o.pid, o); } catch { /* ulæselig: ignoreres */ }
     }
-    const out = execFileSync("ps", ["-o", "ppid=", "-p", String(Number(pid))], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-    return /^\d+$/.test(out) ? Number(out) : null;
-  } catch { return null; }
+  }
+  let pid = selfPid;
+  for (let i = 0; i < 64 && table.has(pid); i++) {
+    const f = files.get(pid);
+    if (f) {
+      if (sameStart(f.procStart, table.get(pid).start) !== true) return { ok: false, reason: `sessionsfilen for PID ${pid} passer ikke til processens starttid (genbrugt PID eller ukendt starttid)` };
+      if (f.sessionId !== claimed) return { ok: false, impersonation: true, reason: `processen kører i session ${f.sessionId}, ikke i ${claimed} — en agent kan ikke optræde som en anden session` };
+      return { ok: true, session: claimed, pid };
+    }
+    const next = parentPid(pid, table);
+    if (next === null) break;
+    pid = next;
+  }
+  return { ok: false, reason: "ingen Claude Code-session blandt processens forfædre — identiteten kan ikke bekræftes" };
 }
 
 // Hvem ejer branchen, og hvor er den session nu? Ændrer intet.
-export function whois(dirs, branch, { env = process.env, alive = pidAlive, parentOf = parentPid, now = Date.now(), staleHours = DEFAULT_STALE_HOURS } = {}) {
+export function whois(dirs, branch, { env = process.env, alive = pidAlive, startOf = tableStartOf, parentOf = (pid) => parentPid(pid), now = Date.now(), staleHours = DEFAULT_STALE_HOURS } = {}) {
   const loc = locate(dirs, branch);
   if (loc.conflict) return { code: EXIT.CONFLICT, text: `KONFLIKT: ${branch} har to ejere — ny placering: ${loc.shared.session}, gammel placering: ${loc.legacy.session}. Stop; Christopher afklarer.` };
   if (!loc.claim) return { code: EXIT.UNCLAIMED, text: `${branch}: ingen lås` };
   const c = loc.claim;
-  const s = findSession(c.session, { env, alive });
+  const s = findSession(c.session, { env, alive, startOf });
   const lines = [describe(c, { now, staleHours })];
   if (!s) {
     lines.push(`Ejersessionen ${c.session} kører ikke (ingen sessionsfil). Låsen er bevaret; den frigives kun af ejeren eller af Christopher efter afklaring.`);
     return { code: EXIT.OK, text: lines.join("\n"), owner: { session: c.session, running: false } };
   }
   const terminal = s.alive ? parentOf(s.pid) : null;
-  lines.push(`Ejer nu: ${s.name ?? "(uden navn)"} · session ${c.session} · PID ${s.pid}${s.alive ? "" : " (PROCES VÆK — forældet sessionsfil)"} · status ${s.status ?? "ukendt"}` +
+  const gone = s.pidReused ? " (PID GENBRUGT af en anden proces — sessionen kører ikke)" : " (PROCES VÆK — forældet sessionsfil)";
+  lines.push(`Ejer nu: ${s.name ?? "(uden navn)"} · session ${c.session} · PID ${s.pid}${s.alive ? "" : gone} · status ${s.status ?? "ukendt"}` +
     (terminal ? ` · terminalens shell-PID ${terminal} (VS Code: hold musen over terminalfanen)` : ""));
   if (s.stalePids.length) lines.push(`Forældede sessionsfiler for samme session (genstart): PID ${s.stalePids.join(", ")}`);
   if (c.sessionName && s.name && c.sessionName !== s.name) lines.push(`Navnet er skiftet siden låsen blev taget: ${c.sessionName} → ${s.name}`);
@@ -272,6 +370,37 @@ export function list(dir) {
       return { broken: true, file, error: e instanceof BrokenClaimError ? e.message : `ØDELAGT låsefil ${file} (${e.message})` };
     }
   });
+}
+
+// Overgang fra gamle låse (V6): en gammel lås i DENNE klons .git er usynlig for andre kloner. `migrate-legacy`
+// KOPIERER hver gammel lås til den fælles mappe med SAMME ejer, så andre kloner ser den. Der slettes, flyttes og
+// overtages intet: den gamle fil bliver liggende, en eksisterende fælles lås overskrives aldrig (atomisk
+// oprettelse), og en fælles lås med en anden ejer rapporteres som KONFLIKT. Gamle låse i kloner, hvor ingen kører
+// kommandoen, kan værktøjet ikke se — det er dokumenteret.
+export function migrateLegacy(dirs, { now = Date.now() } = {}) {
+  if (!dirs.legacy) return [];
+  const out = [];
+  for (const c of list(dirs.legacy)) {
+    if (c.broken) { out.push({ file: c.file, status: "ødelagt", detail: c.error }); continue; }
+    try {
+      const shared = readClaim(dirs.shared, c.branch);
+      if (shared) { out.push({ branch: c.branch, status: shared.session === c.session ? "findes allerede" : "KONFLIKT", detail: `fælles: ${shared.session}, gammel: ${c.session}` }); continue; }
+      mkdirSync(dirs.shared, { recursive: true });
+      const f = claimFile(dirs.shared, c.branch);
+      const copy = { ...c, mirroredFrom: claimFile(dirs.legacy, c.branch), mirroredAt: new Date(now).toISOString() };
+      const tmp = tmpName(f);
+      writeFileSync(tmp, JSON.stringify(copy, null, 2) + "\n", "utf8");
+      try { linkSync(tmp, f); out.push({ branch: c.branch, status: "kopieret", detail: `ejer ${c.session}` }); }
+      catch (e) {
+        if (e.code !== "EEXIST") throw e;
+        const now2 = readClaim(dirs.shared, c.branch);
+        out.push({ branch: c.branch, status: now2?.session === c.session ? "findes allerede" : "KONFLIKT", detail: `fælles: ${now2?.session}, gammel: ${c.session}` });
+      } finally { try { unlinkSync(tmp); } catch { /* væk */ } }
+    } catch (e) {
+      out.push({ branch: c.branch, status: "ødelagt", detail: e.message });
+    }
+  }
+  return out;
 }
 
 export function remoteHead({ cwd, branch, remote = "origin", run = git }) {
@@ -426,11 +555,12 @@ const USAGE = `Brug: node tools/agents/claim.mjs <kommando> [--flag værdi]
   after-push  --branch B --porcelain-file F  (output fra din egen git push --porcelain; 8 = ALARM)
   release     --branch B
   whois       --branch B                     (hvem ejer branchen, kører sessionen, hvilken terminal)
+  migrate-legacy                             (kopiér denne klons gamle låse til den fælles mappe; sletter intet)
   list        [--stale-hours N]
   dupes       --title "…" [--branch B] [--prs-json fil]
   handover    --branch B`;
 
-export async function main(argv = process.argv.slice(2), { env = process.env, cwd = process.cwd(), out = console.log, err = console.error, alive, parentOf } = {}) {
+export async function main(argv = process.argv.slice(2), { env = process.env, cwd = process.cwd(), out = console.log, err = console.error, alive, parentOf, startOf } = {}) {
   let parsed;
   try { parsed = parseArgs(argv); } catch (e) { err(e.message); err(USAGE); return EXIT.USAGE; }
   const { cmd, o } = parsed;
@@ -462,7 +592,7 @@ export async function main(argv = process.argv.slice(2), { env = process.env, cw
           // En lås i den gamle placering, der tilhører en anden, stopper — der skrives intet nyt.
           if (loc.claim && loc.claim.session !== session) r = { code: EXIT.OWNED_BY_OTHER, claim: loc.claim };
           else {
-            const s = findSession(session, { env, alive: alive ?? pidAlive });
+            const s = findSession(session, { env, alive: alive ?? pidAlive, startOf: startOf ?? tableStartOf });
             r = claim(d.shared, { ...args, ...(s?.name ? { sessionName: s.name } : {}) });
             if (r.code === EXIT.OK && s?.name && r.claim.sessionName !== s.name) r = update(d.shared, claimFile(d.shared, o.branch), r.claim, {}, Date.now(), { sessionName: s.name });
           }
@@ -500,9 +630,16 @@ export async function main(argv = process.argv.slice(2), { env = process.env, cw
       }
       case "whois": {
         need("branch");
-        const r = whois(dirs(), o.branch, { env, alive: alive ?? pidAlive, parentOf: parentOf ?? parentPid, staleHours });
+        const r = whois(dirs(), o.branch, { env, alive: alive ?? pidAlive, startOf: startOf ?? tableStartOf, parentOf: parentOf ?? ((pid) => parentPid(pid)), staleHours });
         (r.code === EXIT.OK ? out : err)(r.text);
         return r.code;
+      }
+      case "migrate-legacy": {
+        const res = migrateLegacy(dirs());
+        if (res.length === 0) out("migrate-legacy: ingen gamle låse i denne klon");
+        for (const x of res) (x.status === "kopieret" || x.status === "findes allerede" ? out : err)(`migrate-legacy: ${x.branch ?? x.file}: ${x.status} — ${x.detail}`);
+        if (res.some((x) => x.status === "KONFLIKT")) return EXIT.CONFLICT;
+        return res.some((x) => x.status === "ødelagt") ? EXIT.BROKEN : EXIT.OK;
       }
       case "list": {
         const d = dirs();
@@ -545,5 +682,5 @@ export async function main(argv = process.argv.slice(2), { env = process.env, cw
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  process.exitCode = await main();
+  process.exitCode = await main(process.argv.slice(2), { env: productionEnv(process.env, console.error) });
 }

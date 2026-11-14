@@ -7,7 +7,9 @@ import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync, readFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
-import { EXIT, repoKey, main, claim, claimFile, whois, findSession, resolveSession, locate } from "../../tools/agents/claim.mjs";
+import { EXIT, repoKey, main, claim, claimFile, whois, findSession, resolveSession, locate, verifyIdentity, sameStart, migrateLegacy, productionEnv, TEST_OVERRIDES, readClaim } from "../../tools/agents/claim.mjs";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const URL_ = "https://github.com/Example/Repo.git";
 const sh = (args, cwd) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
@@ -22,7 +24,7 @@ function world() {
   const env = (session) => ({ LAERLIG_CLAIMS_HOME: home, CLAUDE_SESSIONS_DIR: sessions, CLAUDE_CODE_SESSION_ID: session, USERPROFILE: root });
   const run = async (cwd, session, ...argv) => {
     const log = [];
-    const code = await main(argv, { env: env(session), cwd, out: (s) => log.push(s), err: (s) => log.push(s), alive: (pid) => pid >= 1000, parentOf: (pid) => pid + 1 });
+    const code = await main(argv, { env: env(session), cwd, out: (s) => log.push(s), err: (s) => log.push(s), alive: (pid) => pid >= 1000, parentOf: (pid) => pid + 1, startOf: () => null });
     return { code, log: log.join("\n") };
   };
   const sessionFile = (pid, sessionId, name, extra = {}) => writeFileSync(join(sessions, `${pid}.json`), JSON.stringify({ pid, sessionId, name, status: "idle", updatedAt: pid, ...extra }));
@@ -36,6 +38,18 @@ test("repo-nøglen er den samme for https/ssh og indeholder aldrig brugernavn el
     assert.equal(repoKey(u), k, u);
   }
   assert.throws(() => repoKey(""), /kan ikke udlede repo/);
+  // V7: alle gyldige GitHub-former giver samme nøgle …
+  for (const u of ["ssh://git@github.com:22/Moeller888/den-seje-app-frontend.git", "ssh://git@ssh.github.com:443/Moeller888/den-seje-app-frontend.git",
+    "https://www.github.com/Moeller888/den-seje-app-frontend", "https://github.com:443/moeller888/DEN-SEJE-APP-FRONTEND.git", "git@github.com:Moeller888/den-seje-app-frontend"]) {
+    assert.equal(repoKey(u), k, u);
+  }
+  // … og ukendte eller tvetydige adresser afvises i stedet for at give en anden låsemappe.
+  for (const u of ["git@github.com:/Moeller888/den-seje-app-frontend.git", "ssh://git@github.com:2222/Moeller888/den-seje-app-frontend",
+    "https://gitlab.com/Moeller888/den-seje-app-frontend", "https://github.com/Moeller888/den-seje-app-frontend/tree/main",
+    "github.com/Moeller888/den-seje-app-frontend", "file:///C:/x/repo", "C:\\Users\\x\\repo", "git://github.com/Moeller888/x.git",
+    "https://ssh.github.com/Moeller888/x", "https://evil.example/github.com/Moeller888/x"]) {
+    assert.throws(() => repoKey(u), /kan ikke udlede repo/, u);
+  }
   assert.throws(() => repoKey("https://user:hemmelig@"), (e) => !String(e.message).includes("hemmelig"));
 });
 
@@ -143,4 +157,81 @@ test("whois uden lås og list viser både ny og gammel placering", async () => {
     assert.match(r.log, /^\[gammel placering\] gammel: ejet af session C/m);
     assert.equal(whois({ shared: join(w.home, "tom"), legacy: null }, "x").code, EXIT.UNCLAIMED);
   } finally { w.done(); }
+});
+
+test("V8: en levende PID med en anden starttid er GENBRUGT — whois siger, at sessionen ikke kører", async () => {
+  const w = world();
+  try {
+    w.sessionFile(4321, "A", "den-seje-app-zz", { procStart: "134391387747916231" });
+    await w.run(w.clones[0], "A", "claim", "--branch", "pid", "--task", "T", "--purpose", "p");
+    const dirs = { shared: join(w.home, repoKey(URL_)), legacy: null };
+    const reused = whois(dirs, "pid", { env: w.env("B"), alive: () => true, startOf: () => "134391999999999999", parentOf: () => 1 });
+    assert.match(reused.text, /PID 4321 \(PID GENBRUGT af en anden proces — sessionen kører ikke\)/);
+    assert.doesNotMatch(reused.text, /terminalens shell-PID/);
+    const same = whois(dirs, "pid", { env: w.env("B"), alive: () => true, startOf: () => "134391387747916230", parentOf: () => 77 });
+    assert.match(same.text, /PID 4321 · status idle · terminalens shell-PID 77/);
+    assert.equal(sameStart("134391387747916231", "134391387747916230"), true);
+    assert.equal(sameStart("134391387747916231", null), null);
+  } finally { w.done(); }
+});
+
+test("V1: identiteten bindes til processens forfædre og Claude Codes sessionsfil — en miljøvariabel alene er ikke nok", () => {
+  const w = world();
+  try {
+    // node(900) → bash(800) → claude(700, session A) → shell(600)
+    const table = new Map([[900, { ppid: 800, start: "400000" }], [800, { ppid: 700, start: "300000" }], [700, { ppid: 600, start: "200000" }], [600, { ppid: 600, start: "10" }]]);
+    w.sessionFile(700, "A", "den-seje-app-aa", { procStart: "200001" });
+    w.sessionFile(701, "B", "den-seje-app-bb", { procStart: "5" });
+    assert.deepEqual(verifyIdentity({ env: w.env("A"), table, selfPid: 900 }), { ok: true, session: "A", pid: 700 });
+    const spoof = verifyIdentity({ env: w.env("B"), table, selfPid: 900 });
+    assert.equal(spoof.ok, false); assert.equal(spoof.impersonation, true); assert.match(spoof.reason, /kører i session A, ikke i B/);
+    assert.match(verifyIdentity({ env: { ...w.env("A"), CLAUDE_CODE_SESSION_ID: "" }, table, selfPid: 900 }).reason, /intet CLAUDE_CODE_SESSION_ID/);
+    const reused = new Map(table); reused.set(700, { ppid: 600, start: "100000" }); // anden proces med samme PID
+    assert.match(verifyIdentity({ env: w.env("A"), table: reused, selfPid: 900 }).reason, /passer ikke til processens starttid/);
+    assert.match(verifyIdentity({ env: w.env("A"), table, selfPid: 12345 }).reason, /ingen Claude Code-session blandt processens forfædre/);
+    // En forælder, der er startet EFTER barnet, er en genbrugt PID: kæden stopper der.
+    const late = new Map(table); late.set(800, { ppid: 700, start: "500000" });
+    assert.equal(verifyIdentity({ env: w.env("A"), table: late, selfPid: 900 }).ok, false);
+  } finally { w.done(); }
+});
+
+test("V6: migrate-legacy KOPIERER denne klons gamle låse med samme ejer — sletter, flytter og overtager intet", async () => {
+  const w = world();
+  try {
+    const legacy = join(w.clones[0], ".git", "laerlig-claims");
+    const shared = join(w.home, repoKey(URL_));
+    claim(legacy, { branch: "gl/a", session: "C", task: "T", purpose: "p" });
+    claim(legacy, { branch: "gl/b", session: "C", task: "T", purpose: "p" });
+    claim(shared, { branch: "gl/b", session: "D", task: "T", purpose: "p" }); // en andens fælles lås
+    const r = await w.run(w.clones[0], "A", "migrate-legacy");
+    assert.equal(r.code, EXIT.CONFLICT, r.log);
+    assert.match(r.log, /gl\/a: kopieret — ejer C/);
+    assert.match(r.log, /gl\/b: KONFLIKT — fælles: D, gammel: C/);
+    assert.equal(readClaim(shared, "gl/a").session, "C");
+    assert.equal(readClaim(shared, "gl/b").session, "D", "en eksisterende fælles lås overskrives aldrig");
+    assert.ok(existsSync(claimFile(legacy, "gl/a")) && existsSync(claimFile(legacy, "gl/b")), "de gamle filer bliver liggende");
+    // Nu ser den ANDEN klon låsen; ingen kan tage den.
+    assert.equal((await w.run(w.clones[1], "B", "claim", "--branch", "gl/a", "--task", "T", "--purpose", "p")).code, EXIT.OWNED_BY_OTHER);
+    // Gentagen kørsel ændrer intet.
+    assert.deepEqual(migrateLegacy({ shared, legacy }).map((x) => x.status), ["findes allerede", "KONFLIKT"]);
+  } finally { w.done(); }
+});
+
+test("V2: kommandolinjen ignorerer testvariablerne, der flytter låse, sessioner, transskript og register", () => {
+  const warn = [];
+  const clean = productionEnv({ LAERLIG_CLAIMS_DIR: "x", CLAUDE_PROJECTS_DIR: "y", PATH: "p" }, (s) => warn.push(s));
+  assert.deepEqual(Object.keys(clean), ["PATH"]);
+  assert.match(warn[0], /LAERLIG_CLAIMS_DIR, CLAUDE_PROJECTS_DIR ignoreres/);
+  assert.deepEqual([...TEST_OVERRIDES].sort(), ["CLAUDE_PROJECTS_DIR", "CLAUDE_SESSIONS_DIR", "LAERLIG_APPROVALS_DIR", "LAERLIG_CLAIMS_DIR", "LAERLIG_CLAIMS_HOME"]);
+  const root = tmp();
+  try {
+    const repo = join(root, "r"); mkdirSync(repo); sh(["init", "-q"], repo); sh(["remote", "add", "origin", URL_], repo);
+    const fake = join(root, "falsk"); mkdirSync(fake);
+    claim(fake, { branch: "x", session: "FREMMED", task: "T", purpose: "p" });
+    const cli = fileURLToPath(new URL("../../tools/agents/claim.mjs", import.meta.url));
+    const r = spawnSync(process.execPath, [cli, "list"], { cwd: repo, encoding: "utf8", env: { ...process.env, USERPROFILE: root, HOME: root, LAERLIG_CLAIMS_DIR: fake } });
+    assert.match(r.stderr, /LAERLIG_CLAIMS_DIR ignoreres/);
+    assert.doesNotMatch(r.stdout, /FREMMED/, "den falske låsemappe bruges ikke");
+    assert.match(r.stdout, /ingen låse/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
