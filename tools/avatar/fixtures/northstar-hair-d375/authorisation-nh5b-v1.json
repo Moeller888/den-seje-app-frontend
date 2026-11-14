@@ -1,0 +1,142 @@
+{
+  "decision": "D-375",
+  "callId": "NH-5B-hair-topknot",
+  "meta": {
+    "authorisesImageRequest": false,
+    "note": "the binding is the token in D-375's status on origin/main; the send needs the owner's separate execution instruction and --owner-approval=D-375-NH-5B; this file is the budget and the entry"
+  },
+  "budget": {
+    "authorised": 1,
+    "reserve": 0,
+    "retries": 0,
+    "fallback": false,
+    "reusesEarlierPermissions": false,
+    "automaticExtension": false,
+    "separateFrom": "every D-368 and D-371 hair budget (NH-1, NH-1B, NH-2, NH-3, NH-4) and every earlier budget",
+    "enforcedLimit": "one one-shot claim for one call id",
+    "price": {
+      "verifiedAt": "2026-11-12",
+      "source": "https://developers.openai.com/api/docs/pricing (Standard, gpt-image-2.5-sunburst: text input $5.00, image input $8.00, image output $30.00 per 1M tokens), as read for D-371 NH-4 2026-11-12; to be re-read before the send",
+      "perCallEstimate": 0.08,
+      "perCallUpperEstimate": 0.09,
+      "basis": "three 1024×1024 input images ≈ 3,072 image tokens, the prompt ≈ 650 text tokens, the output ≈ 1,756 image tokens (NH-4 measured 3,072 / 620 / 1,756 = about $0.080)",
+      "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
+    },
+    "actuallySent": 0
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "image[]",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "name": "nh5b-d373-base-head-1024.png",
+        "bytes": 137810,
+        "sha256": "35561ceef1d3fa919a1083a247236ca1fcac60c38dfebf86a36d5480872df2f9",
+        "tracked": false
+      },
+      {
+        "role": "Image 2",
+        "name": "nh5b-guide-1024.png",
+        "bytes": 81056,
+        "sha256": "1cac0fd1441a17659477daa3862908f0879a44bb3787568f9dd19af879af915e",
+        "tracked": false
+      },
+      {
+        "role": "Image 3",
+        "name": "nh5-style-body-1024.png",
+        "bytes": 264076,
+        "sha256": "26f87eb4196373ef0d4782f7327e9a8da728d1f51c12f72c63d663844c6508f8",
+        "tracked": false
+      }
+    ]
+  },
+  "frozen": {
+    "plan": {
+      "file": "tools/avatar/fixtures/northstar-hair-d375/plan-nh5b-v1.json",
+      "sha256": "07d8e97ffcc131d17f7ab79cac7e84c2b588678df23e7cdd97d21dde26ac91f3"
+    },
+    "methodFiles": {
+      "tools/avatar/build-r2-torso-occlusion-mask.mjs": "5411d3053733dd043c1f926d9e77bc2c71baf22688fd2f6a7e0aa64ee55c72ac",
+      "tools/avatar/check-r2-torso-candidate.mjs": "ef909f6e37302dcbfbd582a8d31fb2bc50cb800a3c9a514aed21b8840efd0ada",
+      "tools/avatar/fetch-dwebp.mjs": "71803574bed06e71db2783afdb8ce18c728ef799557b7ccba78e3b735c7e43ec",
+      "tools/avatar/northstar-hair-nh4-exception-d372.mjs": "e1b67967b87c4fee19af40464c2d480db7b1035543d22070061fbcaaac1e4c71",
+      "tools/avatar/northstar-hair-nh4-post.mjs": "fce9ee5155362937105f5fefdb080162a05624cc86077e3dcecc53aceee6c1af",
+      "tools/avatar/northstar-hair-nh4-zones.mjs": "97e4c0dd6e591197ef8a6af23fa8642cccc8502ab343381e351eb6e1bcf16cde",
+      "tools/avatar/northstar-hair-nh5.mjs": "d00405af480b5f31f35538177e7f537e86c7afeec2539053657bea06b5f4f661",
+      "tools/avatar/northstar-hair-polish-d368.mjs": "559fb780c20fac846d45044c3406bcacdfd958954eae7c6f4594e614316a3e08",
+      "tools/avatar/northstar-hair-template-d371.mjs": "1724d074e7f968b8b17515970680c00f272e36f7be9cc16bc3a730f9e6109451",
+      "tools/avatar/northstar-hair-trial-d368.mjs": "53624fdb07e5658361e6c8d56a327ce6c2aeaf46473e0e1f8005ca5f70ea3d6a",
+      "tools/avatar/promote-r2-torso-asset.mjs": "c030f74ec58edaa82673887d403caf50d4d3ff791781b6502882ed01258613be",
+      "tools/avatar/r3-eyes-tool.mjs": "98a5c043ebd1aebe64e072d9cca277a9157e054c39c6d7a92b65cfd10efd3b8a",
+      "tools/avatar/r3-face-parts-tool.mjs": "9158b7ed8e2af53f0cea265529e4774765650583911d998801333e78a83339d4",
+      "tools/avatar/r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+      "tools/avatar/r3-hair-tool.mjs": "2c5bf2da27d2c5da49136f60d8289c1730f0bca5934753b394004ed05e5610f9",
+      "tools/avatar/r3-northstar-afro.mjs": "34885a2b1fd47e0b4b3d20cda30c4be7e9a916fcf321379b4f0ab9a4d2bb3723",
+      "tools/avatar/r3-northstar-brow.mjs": "5a8f78967cb48f7d734951ddd0a32ed3afb2a3766f7ceb3017940047b1523706",
+      "tools/avatar/r3-northstar-earfix.mjs": "466616ff4b52804a01f5ee5e30bf7e4b8049e3e6ae1d9aca96d8420ffe6a0ca9",
+      "tools/avatar/r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+      "tools/avatar/r3-northstar-hairstyles.mjs": "79d0a4204db73a2a43126c7cd7a281e14412c95a29a277020a0bdb8985ec64f0",
+      "tools/avatar/r3-northstar-head.mjs": "584db7b2d057168420c5abf0bc0a76ee8bec65e08a2107826b158d432f354401",
+      "tools/avatar/r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+      "tools/avatar/fixtures/northstar-hair-d371/template-v1.json": "034b3f04b5e0d89e3e76bb52056fa6814a5b120b4df975447b6c2f4f9a5e2e9d",
+      "tools/avatar/fixtures/northstar-hair-d371/hair-heads-d373-v1.json": "3b04cff11dacebc818ffc0edda86b9ffe406cd5df7aa5d70e3c014d397bca39c"
+    }
+  },
+  "stopRules": [
+    "one call: no retry, no reserve, no fallback, no other model",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome — never resent",
+    "any HTTP error, moderation block or format error ends the attempt with that outcome",
+    "the executor's stop file NH-STOP.json",
+    "NH-5B is one call: it never authorises designs A or C, any other hairstyle, or any earlier hair call"
+  ],
+  "call": {
+    "callId": "NH-5B-hair-topknot",
+    "style": "topknot",
+    "name": "Topknude (D-373's fælles hovedbase)",
+    "mandateState": "UNSPENT",
+    "outcome": "NOT YET ATTEMPTED",
+    "claim": {
+      "identity": "NH-5B-hair-topknot-claim",
+      "filename": "NH-5B-hair-topknot.claim.json",
+      "eventsFilename": "NH-5B-hair-topknot.events.jsonl"
+    },
+    "prompt": {
+      "sha256": "9156698c9a0a3411d0ed12652e566c86e57d19b825415382e3e64ca944480384"
+    }
+  },
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-hair-nh5b.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-375-NH-5B",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}
