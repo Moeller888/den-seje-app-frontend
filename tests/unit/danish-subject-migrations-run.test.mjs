@@ -68,6 +68,8 @@ async function fixture(t) {
       learning_objective text, target_grade smallint
         CHECK (target_grade IS NULL OR (target_grade >= 3 AND target_grade <= 9)),
       difficulty_band smallint);
+    -- Mirrors live: question text is unique across the whole bank, not per grade.
+    CREATE UNIQUE INDEX unique_question_text ON public.questions ((content ->> 'question'));
     CREATE TABLE public.placement_sessions (
       student_id   uuid        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
       question_ids uuid[]      NOT NULL,
@@ -145,11 +147,9 @@ test("the Danish migrations insert 210 well-formed MC questions, 30 per grade 3-
     }
   }
   assert.deepEqual(perGrade, { 3: 30, 4: 30, 5: 30, 6: 30, 7: 30, 8: 30, 9: 30 });
-  // No question text is repeated within a grade.
-  for (const g of [3, 4, 5, 6, 7, 8, 9]) {
-    const texts = rows.filter((q) => q.target_grade === g).map((q) => q.content.question + "|" + q.content.correct);
-    assert.equal(new Set(texts).size, texts.length, `duplicate question in grade ${g}`);
-  }
+  // No question text is repeated anywhere (live enforces this with unique_question_text).
+  const texts = rows.map((q) => q.content.question);
+  assert.equal(new Set(texts).size, texts.length, "duplicate question text");
   // Every band is used in every grade, and the correct option is not always in the same place.
   for (const g of [3, 4, 5, 6, 7, 8, 9]) {
     const bandsUsed = new Set(rows.filter((q) => q.target_grade === g).map((q) => q.difficulty_band));
