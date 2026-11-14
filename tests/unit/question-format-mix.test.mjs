@@ -511,9 +511,16 @@ test("index.ts: the engine is read inside the request handler — unsetting the 
 test("index.ts: shadow serves v1; a shadow failure is logged and never changes the response", () => {
   const start = INDEX_CODE.indexOf('if (mixEngine === "shadow") {');
   assert.ok(start > INDEX_CODE.indexOf("sortedQuestions = sortByWave("), "shadow runs after v1 has chosen");
-  const shadow = INDEX_CODE.slice(start, INDEX_CODE.indexOf("for (const q of sortedQuestions)"));
+  // The shadow block ends where the D-362 phase gate begins (the gate is the one, separately pinned,
+  // reassignment before the insert loop — gnq-phase-gate.test.mjs).
+  const gate = INDEX_CODE.indexOf("let phaseRepeatIds: string[] = [];");
+  const loop = INDEX_CODE.indexOf("for (const q of sortedQuestions)");
+  assert.ok(gate > start && gate < loop, "the phase gate sits between the shadow block and the insert loop");
+  const shadow = INDEX_CODE.slice(start, gate);
   assert.match(shadow, /try \{[\s\S]*await loadFormatMixPlan\(admin\(\) as unknown as MixReadClient[\s\S]*\} catch \(e\) \{\s*console\.error\("FORMAT_MIX_SHADOW_FAILED:"/);
   assert.equal(/sortedQuestions\s*=/.test(shadow), false, "shadow never reassigns what is served");
+  // Between the shadow block and the loop, the only reassignment is the phase gate's own.
+  assert.deepEqual(INDEX_CODE.slice(gate, loop).match(/sortedQuestions\s*=[^;]*;/g), ["sortedQuestions = gate.allowed;"]);
 });
 
 test("index.ts: both engines feed the same insert loop, public DTO and answer-key path", () => {

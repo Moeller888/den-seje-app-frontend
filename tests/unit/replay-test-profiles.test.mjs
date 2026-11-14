@@ -58,8 +58,24 @@ test("2. the k1 profile changes exactly one decision: K1 skip → apply", () => 
   assert.match(changed[0].reason, /NOT applied in production/);
 });
 
+const F07_FILES = ["20261113170000_phase_repeat_rpc.sql"];
+
+test("2b. the f07 profile changes exactly one decision: the D-362 phase repeat, skip → apply", () => {
+  const base = planReplay(files, readMigration).plan;
+  const f07 = planReplay(files, readMigration, { profile: "f07" }).plan;
+  assert.deepEqual(f07.map((p) => p.file), base.map((p) => p.file), "same files, same order");
+  const changed = f07.filter((p, i) => JSON.stringify(p) !== JSON.stringify(base[i]));
+  assert.deepEqual(changed.map((p) => p.file), F07_FILES);
+  for (const c of changed) {
+    assert.equal(c.action, "apply");
+    assert.equal(c.profile, "f07");
+    assert.match(c.reason, /NOT applied in production/);
+  }
+});
+
 test("3. a profile can only add test-only replays; unknown or production-naming profiles fail loud", () => {
-  assert.deepEqual(Object.keys(TEST_PROFILES), ["k1"]);
+  assert.deepEqual(Object.keys(TEST_PROFILES), ["k1", "f07"]);
+  assert.deepEqual(Object.keys(TEST_PROFILES.f07), F07_FILES);
   assert.deepEqual(Object.keys(TEST_PROFILES.k1), [K1]);
   for (const [name, list] of Object.entries(TEST_PROFILES)) {
     assert.ok(Object.isFrozen(list), `${name} is frozen`);
@@ -109,16 +125,36 @@ test("4. on the full replay: the k1 profile yields K1's schema, the default none
   assert.ok(lane.r.steps.some((s) => s.name === K1 && s.ok), "K1 itself was applied");
 });
 
+test("4b. on the full replay: the f07 profile yields the phase repeat function (question rows are seeded by the spec, never replayed)", async () => {
+  const lane = await replayDb("f07");
+  try {
+    assert.deepEqual(lane.r.failures, [], "the F-07 lane replay builds");
+    assert.ok(lane.r.steps.some((s) => s.name === F07_FILES[0] && s.ok), "the phase repeat migration itself was applied");
+    const fn = (await lane.db.query("SELECT to_regprocedure('public.request_repeat_phase_question_for_student(uuid,text[],uuid[],integer)') IS NOT NULL AS e")).rows[0].e;
+    assert.equal(fn, true);
+  } finally { await lane.db.close(); }
+});
+
 test("5. only the isolated workflow uses a profile, and it is fenced", () => {
   const wf = read(".github/workflows/isolated-e2e.yml");
-  assert.match(wf, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| '' \}\}\)/,
+  // D-362 / F-07 (owner GO 2026-11-14): the matrix comes from the plan job; the default is still the production
+  // mirror plus exactly one k1 entry (test 5b runs the plan step), the F07 suffix only ever names f07 entries.
+  assert.match(wf, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| '' \}\}\$\{\{ matrix\.profile == 'f07' && ', F07-testprofil' \|\| '' \}\}\)/,
     "the production-mirror check name stays 'isolated-e2e (run N)'");
-  assert.match(wf, /profile: \[production\]\n\s+include:\n\s+- run: 1\n\s+profile: k1\n/, "exactly one k1 entry");
+  assert.match(wf, /profile: \$\{\{ fromJSON\(needs\.plan\.outputs\.profiles\) \}\}\n\s+include: \$\{\{ fromJSON\(needs\.plan\.outputs\.include\) \}\}\n/);
   assert.match(wf, /replay\.mjs --db-url "\$ISOLATED_DB_URL" --summary "\$GITHUB_STEP_SUMMARY" --profile "\$REPLAY_PROFILE"/);
   assert.match(wf, /REPLAY_PROFILE: \$\{\{ matrix\.profile \}\}/);
   assert.match(wf, /K1 lane without K1/);
   assert.match(wf, /K1 leaked into the production-mirror lane/);
-  assert.match(wf, /- name: Existing Playwright suite against the isolated stack\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile != 'k1'/);
+  assert.match(wf, /- name: Existing Playwright suite against the isolated stack\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile == 'production'/);
+  // F07: the phase repeat RPC is checked per lane; the F07 lane runs only the F-07 spec and verifies its counts.
+  assert.match(wf, /F07 lane without the phase repeat RPC/);
+  assert.match(wf, /the F-07 phase repeat RPC leaked into the \$REPLAY_PROFILE lane/);
+  assert.match(wf, /- name: Isolated smoke[^\n]*\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile != 'f07'/);
+  assert.match(wf, /- name: F07 lane[^\n]*\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile == 'f07'/);
+  assert.match(wf, /node tests\/isolated\/f07-lane-check\.mjs "\$RUNNER_TEMP\/f07-chromium\.json" "\$RUNNER_TEMP\/f07-firefox\.json" "\$RUNNER_TEMP\/f07-webkit\.json"/);
+  assert.match(wf, /if \[ "\$PROFILE" = "f07" \]; then\n\s+printf '%s\\n' 'LEVEL_ENGINE=v1' 'QUESTION_MIX_ENGINE=shadow' > "\$RUNNER_TEMP\/functions\.env"/,
+    "only the F07 lane replaces the Edge env");
   // The guard step that refuses non-isolated targets precedes everything and is unchanged.
   assert.match(wf, /- name: Guard — refuse anything that is not isolated/);
 

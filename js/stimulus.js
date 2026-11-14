@@ -27,6 +27,7 @@ export const STIMULUS_TEXT = Object.freeze({
   image: "Billede",
   audio: "Lyt",
   showTranscript: "Vis teksten",
+  imageDescription: "Hør eller læs, hvad billedet viser",
   creditPrefix: "Kilde: ",
   audioUnsupported: "Din browser kan ikke afspille lyden. Åbn teksten herunder.",
 });
@@ -108,6 +109,19 @@ export function buildStimulus(doc, stimulus, { mediaBase = STIMULUS_MEDIA_BASE, 
     img.setAttribute("decoding", "async");
     figure.appendChild(img);
     if (nonEmpty(stimulus.caption)) figure.appendChild(el(doc, "p", "stimulus-caption", stimulus.caption.trim()));
+    // F-07 accessibility: the image's information (its alt text) as text a pupil can open and have read aloud —
+    // the same pattern as the audio transcript. For pupils with dyslexia or low vision the picture's labels are
+    // otherwise only readable on the image itself.
+    const description = el(doc, "details", "stimulus-image-description");
+    description.appendChild(el(doc, "summary", "", STIMULUS_TEXT.imageDescription));
+    const descText = el(doc, "p", "stimulus-image-text", stimulus.alt.trim());
+    descText.id = "stimulus-image-text";
+    description.appendChild(descText);
+    figure.appendChild(description);
+    if (typeof attachReadAloud === "function") {
+      const ctx = readAloudContext && typeof readAloudContext === "object" ? { ...readAloudContext, target: "image" } : { target: "image" };
+      try { attachReadAloud(descText, stimulus.alt.trim(), ctx); } catch (_e) { /* fail-soft: the text stays */ }
+    }
   } else if (stimulus.kind === "audio") {
     const audio = el(doc, "audio", "stimulus-audio", STIMULUS_TEXT.audioUnsupported);
     audio.setAttribute("controls", "");

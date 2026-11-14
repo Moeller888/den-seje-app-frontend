@@ -130,7 +130,8 @@ test("workflow: the check runs on both paths, only the exact value skips, the gu
   assert.doesNotMatch(job.slice(0, job.indexOf("    steps:")), /\n    if:/);
   // F10-B2: the production-mirror entries keep the exact name "isolated-e2e (run N)"; only the one
   // K1-lane entry (matrix.profile == 'k1') gets the suffix ", K1-testprofil".
-  assert.match(job, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| '' \}\}\)/);
+  // D-362 / F-07 (owner GO 2026-11-14): the dispatch-only F07 entry (matrix.profile == 'f07') gets ", F07-testprofil".
+  assert.match(job, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| '' \}\}\$\{\{ matrix\.profile == 'f07' && ', F07-testprofil' \|\| '' \}\}\)/);
   const steps = job.split("\n      - ").slice(1);
   const name = (s) => (s.match(/^(?:name|uses): (.*)/) ?? [])[1] ?? "";
   for (const s of steps) {
@@ -145,8 +146,18 @@ test("workflow: the check runs on both paths, only the exact value skips, the gu
     }
     // F10-B2 K1 lane: the frontend suite runs in every production-mirror entry and is skipped ONLY in
     // the k1 entry (which runs the isolated specs, where the H5 tests live). Nothing else may skip.
+    // D-362 / F-07: the suite runs only in the production-mirror entries (not k1, not the dispatch-only f07 entry).
     if (n === "Existing Playwright suite against the isolated stack") {
-      assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile != 'k1'\n"), n);
+      assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'\n"), n);
+      continue;
+    }
+    // D-362 / F-07: the f07 entry runs ONLY its own spec step; the login smoke runs in every other entry.
+    if (n.startsWith("Isolated smoke")) {
+      assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile != 'f07'\n"), n);
+      continue;
+    }
+    if (n.startsWith("F07 lane")) {
+      assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'f07'\n"), n);
       continue;
     }
     // Every other step: skipped ONLY for the exact value "docs-md"; any other value runs it.

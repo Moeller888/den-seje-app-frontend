@@ -144,6 +144,8 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "F-04/F-05 pilot content (D-362), not applied in production and not applicable before 20261108090000: data only, inserts INACTIVE order and categorize pilot questions",
   "20261109151000_set_student_domains_pilot_lock.sql":
     "D-362 pilot lock, not applied in production and to be applied before the pilot_d362 rows are activated: it re-creates set_student_domains so a teacher cannot add a pilot_* domain and a save keeps the pupil's existing pilot_* domains",
+  "20261113170000_phase_repeat_rpc.sql":
+    "D-362 phase repeat (owner decision 2026-11-13), not applied in production and to be applied before the get-next-question deploy that calls it: it adds request_repeat_phase_question_for_student (backend only), which reopens a wrong answer of the current phase",
   "20261020170001_english_level_batch5_1.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020170002_english_level_batch5_2.sql":
@@ -302,6 +304,13 @@ export const TEST_PROFILES = Object.freeze({
   k1: Object.freeze({
     "20261103110000_l1_k1_attempt_context.sql":
       "TEST PROFILE k1: L1 K1 is NOT applied in production; replayed only in the isolated K1 lane so H5 submissions (p_mode/p_hints_used → 9/10-parameter _v2) can be tested (D-341)",
+  }),
+  // D-362 / F-07 (owner 2026-11-14: browser E2E for all seven pilot questions): the phase repeat function, so
+  // tests/isolated/f07-phase-progression.isolated.spec.mjs can run the whole pilot (the replay filters question rows;
+  // the spec seeds the seven pilot rows itself from the migration). How to run: docs/operations/f07-isolated-e2e.md.
+  f07: Object.freeze({
+    "20261113170000_phase_repeat_rpc.sql":
+      "TEST PROFILE f07: the D-362 phase repeat is NOT applied in production; replayed only in the isolated F-07 lane",
   }),
 });
 

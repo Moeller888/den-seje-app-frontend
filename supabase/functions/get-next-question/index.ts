@@ -7,6 +7,7 @@ import { deriveQuestionScope } from "./scope.ts";
 import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
 import { checkRequestedStep, historyFromRows, nextStep, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
 import { sortByWave } from "./wave-order.ts";
+import { MAX_REPEATS, applyPhaseGate, type PhaseReadClient } from "./phase-gate.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
 import { servableWireFormat } from "../_shared/interaction-kinds.ts";
@@ -410,6 +411,8 @@ serve(async (req) => {
     // "shadow" and "v2" need migration 20261019150000 applied first; without it their RPC fails loudly.
     // (mixEngine and wireFormat are resolved before step 1.)
     let sortedQuestions: any[];
+    // The pupil's level from the level engine (LEVEL_ENGINE=v1), for the phase gate's per-course candidates.
+    let pupilLevel: number | null = null;
 
     if (route.newQuestions === "level" || route.newQuestions === "level+mix") {
       // LEVEL_ENGINE=v1: the pupil's server-owned level for the subject, nearest-level candidates, no
@@ -428,6 +431,7 @@ serve(async (req) => {
         newly_folded: level.newlyFolded, seed_source: level.seedSource, candidates: ordered.length, mix_kind: mixKind,
       }));
       sortedQuestions = ordered;
+      pupilLevel = level.level;
     } else if (mixEngine === "v2") {
       const { plan, band } = await loadFormatMixPlan(admin() as unknown as MixReadClient, {
         studentId: student_id,
@@ -485,6 +489,30 @@ serve(async (req) => {
         } catch (e) {
           console.error("FORMAT_MIX_SHADOW_FAILED:", (e as { message?: unknown })?.message ?? e);
         }
+      }
+    }
+
+    // Phase gate (D-362 / F-07, ./phase-gate.ts): a question of a phased course is served only in its
+    // pedagogical order (introduktion → forståelsestjek → selvstændig anvendelse); inside the open phase the
+    // order above is kept. Questions without metadata.pilot_phase pass untouched, and nothing is read for them.
+    // When the open phase has nothing new left but a wrong answer may still be practised, the repeat step below
+    // reopens one of THOSE (request_repeat_phase_question_for_student) instead of the generic repeat, which
+    // refuses while later phases are unserved — so a pupil who needs practice is never sent to no_questions.
+    let phaseRepeatIds: string[] = [];
+    {
+      const gate = await applyPhaseGate(admin() as unknown as PhaseReadClient, student_id, sortedQuestions, subjectDomains, { level: pupilLevel });
+      if (gate.applied) {
+        console.log("PHASE_GATE:", JSON.stringify({
+          candidates: sortedQuestions.length, allowed: gate.allowed.length, held: gate.held, unknown_phase: gate.unknownPhase.length,
+          repeat: gate.repeatIds.length,
+          fetched: gate.fetched,
+          // completed / secured / needs support per phase; provisional_indicator is INTERNAL and PROVISIONAL (never
+          // shown as mastery to pupil or teacher — owner decision 2026-11-14).
+          courses: gate.courses.map((c) => ({ current: c.current, phases: c.phases.map((p) => ({ rank: p.rank, n: p.ids.length, completed: p.completed, all_secured: p.allSecured, needs_support: p.needsSupport.length, first_time_correct: p.firstTimeCorrect, provisional_indicator: p.provisionalIndicator })) })),
+        }));
+        if (gate.unknownPhase.length > 0) console.error("PHASE_GATE_UNKNOWN_PHASE:", JSON.stringify(gate.unknownPhase));
+        sortedQuestions = gate.allowed;
+        phaseRepeatIds = gate.repeatIds;
       }
     }
 
@@ -575,12 +603,31 @@ serve(async (req) => {
       });
     }
 
+    // D-362: a wrong answer of the open phase (server-derived ids, wrong answers only, repeats left) is practised
+    // before anything else — the generic repeat below would refuse while later phases are still unserved.
+    const phaseRepeat = !inserted && phaseRepeatIds.length > 0
+      ? await admin().rpc(
+        "request_repeat_phase_question_for_student",
+        { p_student_id: student_id, p_domains: subjectDomains, p_question_ids: phaseRepeatIds, p_max_repeats: MAX_REPEATS }
+      )
+      : null;
+    if (phaseRepeat !== null && !phaseRepeat.error && !phaseRepeat.data) {
+      // Lost a race (D-362): another tab of this pupil reopened or answered the question since the gate read the
+      // state. Never "no_questions" here — the state changed, so the client fetches again (its one automatic retry)
+      // and gets the open round from the due step, or the next phase from a fresh gate.
+      console.log("PHASE_REPEAT_RACE:", JSON.stringify({ repeat: phaseRepeatIds.length }));
+      return new Response(JSON.stringify({ error: "phase_state_changed" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 409,
+      });
+    }
+
     if (!inserted) {
       // v2: "exhausted" means no SERVABLE unserved question is left — the same rule the v2 candidate
       // window uses (public.question_is_servable), so a pool that holds only formats the client cannot
       // show still reaches repeats instead of "no questions". Every other guard is identical.
       // LEVEL_ENGINE=v1: the same guards over the level engine's pool (20261029120000).
-      const { data: repeatId, error: repeatError } = route.repeatArgs !== "student+domains"
+      const { data: repeatId, error: repeatError } = phaseRepeat ?? (route.repeatArgs !== "student+domains"
         ? (mixEngine === "v2"
           ? await admin().rpc(
             "request_repeat_question_servable_for_student",
@@ -593,7 +640,7 @@ serve(async (req) => {
         : await admin().rpc(
           "request_repeat_level_question_for_student",
           { p_student_id: student_id, p_domains: subjectDomains }
-        );
+        ));
 
       if (repeatError) throw repeatError;
 
