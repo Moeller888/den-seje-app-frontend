@@ -4,7 +4,7 @@ _How work is done on this project: section workflow, audit-first policy, testing
 Definition of Done. Operationalises the rules in the root `CLAUDE.md`._
 _`CLAUDE.md` (root) is authoritative and **overrides** this file on any conflict; this file explains
 how to apply it day to day._
-_Last reviewed: 2026-06-30._
+_Last reviewed: 2026-11-05 (§11 hovedsession, underagenter og produktionskø tilføjet)._
 
 ---
 
@@ -189,3 +189,85 @@ A section is **done** only when:
 
 If any of these cannot be satisfied, the work is **not done** — stop, surface the blocker, and
 (per `CLAUDE.md`) **refuse rather than ship a rule violation.**
+
+## 11. Hovedsession, underagenter og produktionskø (fra 2026-11-05)
+
+Målet er én primær Claude Code-session, der koordinerer tre spor (A Fundament, B Læring, C Avatar,
+se [ROADMAP.md → Samlet styring](./ROADMAP.md)) i stedet for mange selvstændige sessioner med hver
+deres plan. Root-`CLAUDE.md` og guard-hooks går forud for alt i dette afsnit.
+
+### 11.1 Hovedsessionen
+
+- Ejer backloggen og produktionskøen i ROADMAP og sikkerhedsregistret i `project-state.md`.
+- Starter hver arbejdsdag med en **statuskontrol**, ikke en audit: `git fetch` + `git log origin/main`,
+  `gh pr list`, `list_migrations`, `list_edge_functions` (ezbr + `updated_at`, ikke kun versionsnummer),
+  seneste CI på main, og eventuelle nye filer i `docs/operations/production-actions/`.
+- Er eneste session, der udfører produktionshandlinger, og kun efter ejerens GO for netop den handling.
+- Samler underagenternes resultater, verificerer dem selv (stikprøver på de påstande, der bærer
+  beslutninger) og rapporterer én samlet status til ejeren.
+
+### 11.2 Før en større opgave (proportional kontrol, ikke ny audit)
+
+1. Findes problemet allerede i backloggen, sikkerhedsregistret, en åben PR (`gh pr list`) eller en
+   D-fil? Så genbruges den ejer og den plan.
+2. Klassificér risikoen:
+   - **L** — UI, tekst eller indhold uden skemaændring: kun funktionelle tests.
+   - **M** — nyt opgaveformat, der følger formatkontrakten (serverside-facit, DTO-allowlist,
+     `interaction-kinds.ts`, kanonisk svar → `process_question_attempt`, fælles belønning, H5-request
+     når aktiveret, eksisterende oplæsning): funktionelle tests + den centrale sikkerhedstest. **Ingen
+     ny sikkerhedsaudit.**
+   - **H** — migration, RPC, grants/RLS, Edge-autentificering, secrets, deploy eller anden
+     produktionshandling: fuldt review og GO pr. handling.
+3. Skriv acceptkriteriet i backlogrækken, før arbejdet starter.
+4. Et nyt sikkerhedsprojekt kræver dokumentation for en konkret risiko, som eksisterende kontrakter
+   ikke dækker.
+
+### 11.3 Underagenter, worktrees og filejerskab
+
+- Én underagent = ét afgrænset ansvar = ét isoleret git-worktree = én branch fra `origin/main` = én PR.
+- Ingen to agenter skriver til samme fil samtidig. Fast ejerskab:
+
+  | Filer | Ejer |
+  |---|---|
+  | `supabase/functions/get-next-question/**`, `supabase/functions/process-event/**`, migrationer for `question_attempts`/`_v2`/bedømmelses-RPC'er | Hovedsessionen (spor A) — én ændring ad gangen |
+  | `tests/isolated/schema/replay-plan.mjs` | Den PR, der tilføjer en migration; kun én sådan PR ad gangen pr. agentbølge |
+  | `supabase/functions/_shared/interaction-kinds.ts`, `js/answer-input.js`, format-renderere, `_shared/<format>.ts` | Spor B — ét format ad gangen |
+  | `tools/avatar/**`, `assets/**` (avatar), avatar-specs og -goldens | Spor C |
+  | `app.js`, `hub.html`, `js/flags.js`, `docs/ROADMAP.md`, `docs/project-state.md`, dette dokument | Hovedsessionen koordinerer; kun én åben PR ad gangen pr. fil |
+
+- Underagenter må ikke udføre produktionshandlinger, reservere D-numre eller starte nye audits uden
+  begrundelse. De rører aldrig hovedcheckoutens arbejdstræ (regel 47).
+- En opgave, der overlapper en aktiv ekstern sessions område, venter på overdragelse.
+
+### 11.4 PR'er og tests
+
+- Små PR'er, der kan reviewes hver for sig. Merge kræver ejerens GO; grøn CI er en betingelse, ikke en
+  tilladelse.
+- Lokalt: de berørte unit-tests og offline-specs, commit kun på grøn exitkode. Den produktionsrettede
+  Playwright-suite er en produktionsskrivning (D-313) og køres kun med GO; `isolated-e2e` i CI er den
+  funktionelle gatekeeper.
+- Statusord i PR'er og rapporter: PLANLAGT · UNDER UDVIKLING · IMPLEMENTERET · TESTET · PR ÅBEN ·
+  MERGET · DEPLOYET/ANVENDT · PRODUKTIONSVERIFICERET. Skriv aldrig "færdig" om en plan.
+
+### 11.5 Produktionskøen
+
+Gælder migrationer, Edge-deploys, secrets, JWT/nøgler, feature flags, aktivering, sletning af
+produktionsfunktioner og autentificeringsændringer.
+
+1. Én produktionshandling ad gangen, i ROADMAP-køens rækkefølge.
+2. Ingen handling under et andet spors observationsvindue uden koordinering.
+3. Før deploy: `list_edge_functions` + diff mellem den deployede kode og det, der skal deployes. Main kan
+   indeholde mere end den tilsigtede ændring (fx nøgleresolveren eller RPC'er, der ikke er anvendt).
+4. Efter handlingen: verifikation og én fil i `docs/operations/production-actions/` (D-313-formatet).
+5. Hver handling kræver sit eget GO. Et GO gælder kun den navngivne handling.
+6. Guard-hooks omgås aldrig. En blokeret handling rapporteres til ejeren.
+7. Secret-ændringer tæller alle Edge Functions én version op uden ny kode. Brug derfor `ezbr_sha256` og
+   `updated_at` som bevis for kode, ikke versionsnummeret.
+
+### 11.6 Sessioner og oprydning
+
+- Andre sessioner lukkes kun af ejeren, og først når deres arbejde er pushet til en branch eller
+  udtrykkeligt kasseret.
+- Worktrees og branches ryddes kun efter en read-only klassifikation (merget/umerget, reelle ændringer
+  vs. kun linjeskift, commits der ikke findes på nogen remote) og et GO pr. trin. Prune, fjernelse og
+  sletning er separate handlinger.
