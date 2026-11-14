@@ -39,6 +39,19 @@ af browseren.
 | backend 3 (chromium): en fane fik `no_questions` | Kapløb i den rækkefølge, testen ikke dækkede: fane A genåbner S1, efter at fane B's due-trin har læst "ingen åben runde", men før B's fasespærre læser. B's spærre ser S1 som åben og tilbyder ingen fasegentagelse, og den generelle gentagelse afviser, fordi der er en åben runde. Det samme sker, hvis A åbner en ny opgave, så B's indsættelse rammer `idx_one_open_question` | Produktfejl (get-next-question) | Når fasespærren har kørt, læser get-next-question lige før `no_questions` friskt elevens åbne runde (kun id). Findes en, svares `409 phase_state_changed`, og klientens automatiske genforsøg får runden fra due-trinnet |
 | browser (firefox, webkit): intet kald til get-next-question inden for 30 s | Den syntetiske elev havde ingen valgt avataridentitet. `index.html` viser så identitetsprompten (Section 152C) og venter på et valg, før første opgave hentes | Testfejl | Testeleven får `avatar_identity` med `chosen_at` som en tilbagevendende elev, og testen kontrollerer, at prompten er skjult |
 | chromium: backend 4 og browser "did not run" | Specen kørte serielt, så én fejl stoppede resten | Testfejl | Ikke længere seriel; `beforeAll` er idempotent |
+| browser (alle tre, run 43630449252 på `33c617dc`): "page.waitForResponse: Test ended" efter at alle syv var besvaret og alle assertions bestået | Løkken oprettede en ventetid på kaldet efter 7. svar og ventede aldrig på den | Testfejl | Testen venter nu på kaldet og verificerer produktets kontrakt (se nedenfor) |
+
+**Efter 7. svar (produktets kontrakt):**
+- `app.js` henter altid næste opgave 600 ms efter et rigtigt svar; klienten ved ikke, at forløbet er slut.
+- Serveren: forløbet er afsluttet, og elevens eneste domæne er `pilot_d362`. Den eksisterende generelle gentagelse
+  (`request_repeat_level_question_for_student`) genåbner derfor den ældste rigtige opgave, S1, med `is_repeat: true`
+  og `round_no` 2.
+- Eleven ser S1 igen som en almindelig opgave. `app.js` læser ikke `is_repeat`, så der er ingen
+  gentagelsesmarkering. Det er eksisterende adfærd, som ikke er ændret her.
+
+**Kapløbet mellem to faner:** hvilken rækkefølge to samtidige kald tager, kan ikke styres over HTTP. Begge
+rækkefølger er dækket deterministisk i `tests/unit/f07-phase-progression.test.mjs`. F07-banen skriver kun som
+evidens, hvor mange gange Edge-loggen viser `PHASE_REPEAT_RACE` og `PHASE_OPEN_RACE`.
 
 Kørslen havde ingen traces eller fejlkontekst, fordi de lå uden for de uploadede mapper. F07-banen gemmer nu begge
 i `test-results-isolated/f07-<browser>`, og browsertesten vedhæfter URL, konsolfejl og fejlede kald til JSON-rapporten.

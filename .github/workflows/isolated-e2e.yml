@@ -501,6 +501,14 @@ jobs:
             sg "$ISOLATED_GROUP" -c "npx playwright test -c tests/isolated/playwright.isolated.config.mjs tests/isolated/f07-phase-progression.isolated.spec.mjs --project=$b --reporter=list,json --output=test-results-isolated/f07-$b --trace=retain-on-failure" || { status=1; echo "::error::F-07 spec failed on $b"; }
             echo "::endgroup::"
           done
+          # Evidence only (never a pass/fail rule — which interleaving two concurrent requests take is not
+          # controllable over HTTP; both are covered deterministically in tests/unit/f07-phase-progression.test.mjs):
+          # which race path the Edge Function logged in this run.
+          if [ -f "$RUNNER_TEMP/functions.log" ]; then
+            awk '/PHASE_REPEAT_RACE/ { r++ } /PHASE_OPEN_RACE/ { o++ } END { printf "F07 race paths in functions.log: PHASE_REPEAT_RACE=%d PHASE_OPEN_RACE=%d\n", r, o }' "$RUNNER_TEMP/functions.log" | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "F07 race paths: functions.log missing" | tee -a "$GITHUB_STEP_SUMMARY"; status=1
+          fi
           mkdir -p test-results-isolated/f07-reports && cp "$RUNNER_TEMP"/f07-*.json test-results-isolated/f07-reports/ || status=1
           node tests/isolated/f07-lane-check.mjs "$RUNNER_TEMP/f07-chromium.json" "$RUNNER_TEMP/f07-firefox.json" "$RUNNER_TEMP/f07-webkit.json" | tee -a "$GITHUB_STEP_SUMMARY" || status=1
           exit "$status"

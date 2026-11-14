@@ -296,6 +296,24 @@ test("browser: the quiz shows each of the seven stimuli and the pupil answers al
     }
     await expect(page.locator("#feedback")).toHaveText("Ja! 🎯");
   }
+  // After the seventh answer. The product contract (CI run 43630449252 left this wait pending → "Test ended"):
+  //   app.js: a right answer ALWAYS schedules loadAndRenderQuestion() after 600 ms → get-next-question (the client does
+  //   not know the course is over; `pending` was created before the click, so the call cannot be missed);
+  //   server: the course is finished and this pupil's only domain is pilot_d362 → nothing new, no phase repeat, so the
+  //   EXISTING generic level repeat (request_repeat_level_question_for_student) reopens the oldest right answer = S1
+  //   (wrong answers first, then answered_at ASC), served on the repeat path with is_repeat: true (index.ts);
+  //   UI: S1 is shown again as a normal question (app.js does not read is_repeat — no repeat label).
+  const after = await pending;
+  expect(after.status(), "the fetch after the seventh answer").toBe(200);
+  const afterBody = await after.json();
+  const afterMeta = BY_QUESTION.get(afterBody?.content?.question);
+  console.log(`F07 browser (${testInfo.project.name}) after the course: ${JSON.stringify({ step: afterBody?.step ?? null, label: afterMeta?.label ?? null, is_repeat: afterBody?.is_repeat ?? null, round_no: afterBody?.round_no ?? null })}`);
+  expect(afterBody?.step, "the finished course does not end in no_questions for a pupil with repeats left").toBeUndefined();
+  expect(afterMeta?.label, "the generic repeat reopens the oldest right answer").toBe("S1");
+  expect(afterBody.is_repeat, "served on the repeat path").toBe(true);
+  expect(afterBody.round_no, "S1's second round").toBe(2);
+  await expect(page.locator('#question[data-state="ready"]')).toBeVisible({ timeout: 20000 });
+  await expect(page.locator("#question")).toContainText(afterMeta.row.content.question);
   console.log(`F07 browser (${testInfo.project.name}): ${seen.join(" ")}; read-aloud control — source: ${sourceHasPlayer}, image description: ${imageHasPlayer}`);
   expect(new Set(seen).size, `all seven met: ${seen.join(" ")}`).toBe(7);
   expect(seen[0]).toBe("S1");
