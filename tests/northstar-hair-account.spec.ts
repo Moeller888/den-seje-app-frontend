@@ -1,9 +1,9 @@
-// D-373 — the hairstyle on the Northstar figure, SAVED ON THE TEST PUPIL'S ACCOUNT, with this browser's opt-in (the flag is off):
+// D-373 — the hairstyle on the Northstar figure, SAVED ON THE TEST PUPIL'S ACCOUNT, open by default (D-374: no opt-in, no ?northstarhair=1):
 // chosen in place on Avatar, kept after a manual reload and a new login, and drawn the same on Avatar, Hub and in the quiz; a part keeps
 // the hairstyle; an older choice without a hairstyle gets the standard hair.
-// Runs against the suite's environment (the isolated stack in CI, where the D-373 migration is replayed as REPO_AHEAD_OF_PRODUCTION) with
-// the slot's test pupil. A database without the migration (production today) refuses the key: the test is then skipped with that reason,
-// and nothing is written. Choices go through the UI; only the probe and the older choice are written directly. The pupil's choice is
+// Runs against the suite's environment (the isolated stack in CI, which replays the D-373 migration; production has it since 2026-11-13,
+// 20261113053515) with the slot's test pupil. A database without the migration refuses the key: the test is then skipped with that
+// reason, and nothing is written. Choices go through the UI; only the probe and the older choice are written directly. The pupil's choice is
 // cleared at the end, also when a step fails.
 
 import { test, expect, Page, BrowserContext, Browser } from "@playwright/test";
@@ -21,7 +21,6 @@ const CARDS = 82;   // the 79 parts and the 3 hairstyles
 
 async function signedIn(browser: Browser): Promise<{ ctx: BrowserContext; page: Page }> {
   const ctx = await browser.newContext({ reducedMotion: "reduce" });
-  await ctx.addInitScript(() => { localStorage.setItem("avatar_northstar_hair", "1"); });   // this browser's opt-in; the flag stays off
   const page = await ctx.newPage();
   await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
@@ -67,6 +66,7 @@ test("D-373: a hairstyle is saved on the account with the outfit, kept after a r
     const refused = await directSave(page, { outfit: "FRI", top: "top-tee-hip-blue", pants: "bottom-trousers-square-navy", shoes: "shoes-sneakers-white", hair: "standard" });
     test.skip(refused !== null, "this database's validate_avatar_identity has no D-373 migration: " + refused);
     await openWardrobe(page);
+    expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair")), "no opt-in in this browser").toBe(null);
     let loads = 0, saves = 0;
     page.on("load", () => { loads++; });
     page.on("request", (r) => { if (r.url().includes("/rest/v1/rpc/set_avatar_northstar")) saves++; });

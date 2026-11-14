@@ -81,19 +81,19 @@ test("D-355 one stored choice: a top of the 33 where its whole outfit is listed;
 
 test("D-355 the stored choice on every surface; outside the list the own top with the choice kept; ?northstar=0 forgets it; D-357: the account decides", () => {
   const on = { avatar_northstar: "1", avatar_northstar_outfit: "K01", avatar_northstar_sweater: "TK-MUSTARD-DOTS" };
-  for (const s of ["avatar", "quiz", "hub"]) { const r = withStorage(on, () => L.northstarRenderFor(s, [])); assert.deepEqual([r.key, r.sweater, r.tee], ["K01+TK-MUSTARD-DOTS", "TK-MUSTARD-DOTS", null]);
+  for (const s of ["avatar", "quiz", "hub"]) { const r = withStorage(on, () => L.northstarRenderFor(s, [])); assert.deepEqual([r.key, r.sweater, r.tee], ["K01+TK-MUSTARD-DOTS+hair:standard", "TK-MUSTARD-DOTS", null]);
     assert.ok(r.plan.some((p) => p.src.endsWith("/top-tank-mustard-dots-top-body-v1.webp"))); }
-  withStorage({ ...on, avatar_northstar_outfit: "K04" }, (m) => { assert.equal(L.northstarRenderFor("hub", []).key, "K04"); assert.equal(m.get("avatar_northstar_sweater"), "TK-MUSTARD-DOTS"); });
-  assert.equal(withStorage({ ...on, avatar_northstar_outfit: "K04", avatar_northstar_sweater: "TEE-MINT-TEAPOT" }, () => L.northstarRenderFor("quiz", [])).key, "K04+TEE-MINT-TEAPOT");
-  assert.equal(withStorage({ ...on, avatar_northstar_sweater: "LS2-NAVY" }, () => L.northstarRenderFor("hub", [])).key, "K01+LS2-NAVY", "an approved sweater as before");
+  withStorage({ ...on, avatar_northstar_outfit: "K04" }, (m) => { assert.equal(L.northstarRenderFor("hub", []).key, "K04+hair:standard"); assert.equal(m.get("avatar_northstar_sweater"), "TK-MUSTARD-DOTS"); });
+  assert.equal(withStorage({ ...on, avatar_northstar_outfit: "K04", avatar_northstar_sweater: "TEE-MINT-TEAPOT" }, () => L.northstarRenderFor("quiz", [])).key, "K04+TEE-MINT-TEAPOT+hair:standard");
+  assert.equal(withStorage({ ...on, avatar_northstar_sweater: "LS2-NAVY" }, () => L.northstarRenderFor("hub", [])).key, "K01+LS2-NAVY+hair:standard", "an approved sweater as before");
   withStorage({ ...on }, (m) => { applyNorthstarUrlOptIn("?northstar=0"); assert.equal(m.has("avatar_northstar_sweater"), false); });
   // D-357: the flag is on and the named pupil's account decides — a top of the 33 from the account, never another pupil's browser choice
   assert.equal(L.AVATAR_NORTHSTAR_WARDROBE, true);
   L.northstarUseAccount({ v: 1, northstar: { outfit: "K01", top: "TEE-SAND-FOX" } });
-  for (const s of ["avatar", "quiz", "hub"]) assert.equal(withStorage({ avatar_northstar_outfit: "K07", avatar_northstar_sweater: "TK-NAVY" }, () => L.northstarRenderFor(s, [])).key, "K01+TEE-SAND-FOX");
+  for (const s of ["avatar", "quiz", "hub"]) assert.equal(withStorage({ avatar_northstar_outfit: "K07", avatar_northstar_sweater: "TK-NAVY" }, () => L.northstarRenderFor(s, [])).key, "K01+TEE-SAND-FOX+hair:standard");
   L.northstarUseAccount({ v: 1, northstar: { outfit: "K04", top: "LS2-SAND-FOX" } });
-  assert.equal(withStorage({}, () => L.northstarRenderFor("hub", [])).key, "K04", "a sweater of the 33 is not listed with the shorts: the own top");
-  for (const bad of ["TEE-CHARCOAL-PLANET", "LS2-CHARCOAL-PLANET", "top-tank-sand-fox"]) { L.northstarUseAccount({ v: 1, northstar: { outfit: "K01", top: bad } }); assert.equal(withStorage({}, () => L.northstarRenderFor("hub", [])).key, "K01", bad + " is ignored"); }
+  assert.equal(withStorage({}, () => L.northstarRenderFor("hub", [])).key, "K04+hair:standard", "a sweater of the 33 is not listed with the shorts: the own top");
+  for (const bad of ["TEE-CHARCOAL-PLANET", "LS2-CHARCOAL-PLANET", "top-tank-sand-fox"]) { L.northstarUseAccount({ v: 1, northstar: { outfit: "K01", top: bad } }); assert.equal(withStorage({}, () => L.northstarRenderFor("hub", [])).key, "K01+hair:standard", bad + " is ignored"); }
   L.northstarUseAccount({ v: 1 }); assert.equal(withStorage({ avatar_northstar_outfit: "K01", avatar_northstar_sweater: "TEE-SAND-FOX" }, () => L.northstarRenderFor("hub", [])), null, "no choice on the account: today's avatar");
 });
 

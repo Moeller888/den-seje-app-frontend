@@ -44,11 +44,11 @@ test("D-331 the whole effective outfit decides; outside the list, unknown or una
 
 test("D-331 the stored choice: shown where allowed, ignored elsewhere and on every reload; removing it returns; no opt-in, nothing", () => {
   const on = { avatar_northstar: "1", avatar_northstar_outfit: "K16", avatar_northstar_shoes: "AB1-BOOT-ORIGINAL" };
-  for (const s of ["avatar", "quiz", "hub"]) { const r = withStorage(on, () => L.northstarRenderFor(s, [])); assert.deepEqual([r.key, r.shoe], ["K16+AB1-BOOT-ORIGINAL", "AB1-BOOT-ORIGINAL"]); }
-  const c = withStorage({ ...on, avatar_northstar_outfit: "K04", avatar_northstar_tee: "TP-FOX-NAV", avatar_northstar_pants: "TS-SND" }, () => L.northstarRenderFor("quiz", [])); assert.equal(c.key, "K04+TP-FOX-NAV+TS-SND+AB1-BOOT-ORIGINAL");
+  for (const s of ["avatar", "quiz", "hub"]) { const r = withStorage(on, () => L.northstarRenderFor(s, [])); assert.deepEqual([r.key, r.shoe], ["K16+AB1-BOOT-ORIGINAL+hair:standard", "AB1-BOOT-ORIGINAL"]); }
+  const c = withStorage({ ...on, avatar_northstar_outfit: "K04", avatar_northstar_tee: "TP-FOX-NAV", avatar_northstar_pants: "TS-SND" }, () => L.northstarRenderFor("quiz", [])); assert.equal(c.key, "K04+TP-FOX-NAV+TS-SND+AB1-BOOT-ORIGINAL+hair:standard");
   // a stored unapproved or unknown ID: the outfit's own shoes, read again on each load (two reads = a reload), the stored value untouched
-  for (const bad of ["AB1-BOOT-BLACKGUM", "AB1-BOOT-ORANGE"]) for (const load of [1, 2]) withStorage({ ...on, avatar_northstar_shoes: bad }, (m) => { const r = L.northstarRenderFor("hub", []); assert.deepEqual([r.key, r.shoe], ["K16", null], bad + " load " + load); assert.equal(m.get("avatar_northstar_shoes"), bad); });
-  assert.equal(withStorage({ ...on, avatar_northstar_shoes: "AB1-BOOT-ORIGINAL" }, (m) => { m.delete("avatar_northstar_shoes"); return L.northstarRenderFor("hub", []); }).key, "K16");
+  for (const bad of ["AB1-BOOT-BLACKGUM", "AB1-BOOT-ORANGE"]) for (const load of [1, 2]) withStorage({ ...on, avatar_northstar_shoes: bad }, (m) => { const r = L.northstarRenderFor("hub", []); assert.deepEqual([r.key, r.shoe], ["K16+hair:standard", null], bad + " load " + load); assert.equal(m.get("avatar_northstar_shoes"), bad); });
+  assert.equal(withStorage({ ...on, avatar_northstar_shoes: "AB1-BOOT-ORIGINAL" }, (m) => { m.delete("avatar_northstar_shoes"); return L.northstarRenderFor("hub", []); }).key, "K16+hair:standard");
   assert.equal(withStorage({ avatar_northstar_outfit: "K16", avatar_northstar_shoes: "AB1-BOOT-ORIGINAL" }, () => L.northstarRenderFor("hub", [])), null);
   withStorage({ ...on }, (m) => { applyNorthstarUrlOptIn("?northstar=0"); assert.equal(m.has("avatar_northstar_shoes"), false); assert.equal(m.has("avatar_northstar"), false); });
 });
