@@ -16,7 +16,17 @@ const SRC = new URL("../../tools/agents/approvals.mjs", import.meta.url);
 const REPO = "github.com__example__repo";
 const SA = "aaaaaaaa-0000-4000-8000-000000000001";
 const SB = "bbbbbbbb-0000-4000-8000-000000000002";
+// Den simulerede "nu"-tid. Alle kald får den: biblioteksfunktionerne via `now`, og CLI-kaldene (main() tager intet
+// `now`) via et mocket Date-ur (t.mock.timers), så ingen test afhænger af computerens rigtige dato og tid.
 const T0 = Date.parse("2026-11-14T12:00:00Z");
+const HOUR = 3_600_000;
+// Beskeder skrives 60 s før T0 (typed()); et GO udløber `timer` timer efter beskedens tidspunkt (standard 24).
+const expiryOf = (hours) => T0 - 60_000 + hours * HOUR;
+// Fryser Date.now()/new Date() på `now` i denne test (nulstilles automatisk bagefter), og beviser, at uret er mocket.
+function freezeClock(t, now) {
+  t.mock.timers.enable({ apis: ["Date"], now });
+  assert.equal(Date.now(), now, "uret er kontrolleret");
+}
 const g = (args, cwd) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 
 function world() {
@@ -286,7 +296,64 @@ test("udløb regnes fra beskedens tidspunkt: et gammelt GO kan hverken registrer
   } finally { w.done(); }
 });
 
-test("CLI: omfang kan ikke angives af agenten, --head afvises, testvariabler ignoreres, rådgivende besked står altid", async () => {
+// Grænsen er `expiresAt <= now` ⇒ udløbet: 1 ms før accepteres, præcis på og 1 ms efter afvises — for
+// standardperioden (24 t) og en kort timer=, ved registrering, kontrol og forbrug. Et afvist forbrug forbruger intet.
+test("udløbsgrænsen: 1 ms før accepteres; præcis ved og 1 ms efter afvises (record, check, use)", () => {
+  for (const [extra, hours] of [["", 24], [" timer=2", 2]]) {
+    const E = expiryOf(hours);
+    const w = world();
+    try {
+      w.typed(SA, w.go(extra));
+      assert.equal(record(w.dir, { repo: REPO }, w.opts(SA, { now: E })).code, AEXIT.EXPIRED, `record ved udløb (${hours} t)`);
+      assert.equal(record(w.dir, { repo: REPO }, w.opts(SA, { now: E + 1 })).code, AEXIT.EXPIRED, `record efter udløb (${hours} t)`);
+      assert.equal(list(w.dir).length, 0, "et udløbet GO registreres ikke");
+      const r = record(w.dir, { repo: REPO }, w.opts(SA, { now: E - 1 }));
+      assert.equal(r.code, AEXIT.OK, `record 1 ms før udløb (${hours} t): ${r.reason}`);
+      assert.equal(r.approval.expiresAt, new Date(E).toISOString(), "udløbet er beskedens tidspunkt + perioden");
+      const id = r.approval.id;
+      assert.equal(check(w.dir, id, MERGE, w.opts(SA, { now: E - 1 })).code, AEXIT.OK, "check 1 ms før");
+      assert.equal(check(w.dir, id, MERGE, w.opts(SA, { now: E })).code, AEXIT.EXPIRED, "check ved udløb");
+      assert.equal(check(w.dir, id, MERGE, w.opts(SA, { now: E + 1 })).code, AEXIT.EXPIRED, "check efter udløb");
+      assert.equal(use(w.dir, id, MERGE, w.opts(SA, { now: E })).code, AEXIT.EXPIRED, "use ved udløb");
+      assert.equal(use(w.dir, id, MERGE, w.opts(SA, { now: E + 1 })).code, AEXIT.EXPIRED, "use efter udløb");
+      assert.equal(use(w.dir, id, MERGE, w.opts(SA, { now: E - 1 })).code, AEXIT.OK, "use 1 ms før — det afviste forsøg forbrugte intet");
+      assert.equal(use(w.dir, id, MERGE, w.opts(SA, { now: E - 1 })).code, AEXIT.USED, "derefter brugt");
+    } finally { w.done(); }
+  }
+});
+
+// Samme grænse gennem CLI'en, som læser uret selv: med det kontrollerede ur 1 ms før udløb lykkes `record`, præcis på
+// udløbet afvises den (22). Det beviser også, at CLI'en bruger det kontrollerede ur — det rigtige ur ligger forbi grænsen.
+test("CLI med kontrolleret ur: record 1 ms før udløb lykkes; præcis ved og efter udløb afvises", async (t) => {
+  const E = expiryOf(24);
+  const run = async (now) => {
+    const w = world();
+    try {
+      const repoDir = join(w.root, "repo");
+      mkdirSync(repoDir);
+      g(["init", "-q"], repoDir);
+      g(["remote", "add", "origin", "https://github.com/Example/Repo.git"], repoDir);
+      w.typed(SA, w.go());
+      t.mock.timers.setTime(now);
+      const log = [];
+      const io = { env: { ...w.env, LAERLIG_APPROVALS_DIR: w.dir }, cwd: repoDir, out: (s) => log.push(s), err: (s) => log.push(s), identity: w.as(SA) };
+      return { code: await main(["record"], io), log: log.join("\n") };
+    } finally { w.done(); }
+  };
+  freezeClock(t, T0);
+  const before = await run(E - 1);
+  assert.equal(before.code, AEXIT.OK, before.log);
+  assert.match(before.log, new RegExp(`udløber ${new Date(E).toISOString()}`));
+  for (const now of [E, E + 1]) {
+    const r = await run(now);
+    assert.equal(r.code, AEXIT.EXPIRED, r.log);
+    assert.match(r.log, new RegExp(`GO'et udløb ${new Date(E).toISOString()}`));
+  }
+});
+
+test("CLI: omfang kan ikke angives af agenten, --head afvises, testvariabler ignoreres, rådgivende besked står altid", async (t) => {
+  // CLI'en læser uret selv (main() tager intet `now`): frys det på T0, så testen ikke afhænger af den rigtige dato.
+  freezeClock(t, T0);
   const w = world();
   try {
     const repoDir = join(w.root, "repo");
