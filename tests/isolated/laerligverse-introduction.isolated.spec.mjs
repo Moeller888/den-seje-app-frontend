@@ -36,7 +36,10 @@ const ITEMS = JSON.parse(readFileSync(new URL("./fixtures/kildekritik-questions.
 // A SEPARATE test objective: the other isolated specs use the fixture's objective in a sequence and must never meet
 // an introduction there. The content is the approved fixture verbatim.
 const OBJECTIVE = `${INTRO.learning_objective}_intro_e2e`;
-const PRACTICE = ITEMS.find((r) => r.learning_step === "guided_practice");
+// The reviewed guided-practice item, under this objective. questions has a unique index on the question text, and
+// the fixture's own row exists under the fixture's objective, so this copy carries a visibly marked test text.
+const SOURCE = ITEMS.find((r) => r.learning_step === "guided_practice");
+const PRACTICE = { ...SOURCE, content: { ...SOURCE.content, question: `${SOURCE.content.question} (introduktionsforløb, testkopi)` } };
 
 test.describe.configure({ mode: "serial" });
 test.beforeEach(({}, testInfo) => {
