@@ -54,12 +54,12 @@ test("D-348 one top choice: a tank or a sweater, each by its own list; the sweat
 
 test("D-348 the stored choice: shown where allowed; outside the list the own top with the choice kept, on every load; ?northstar=0 forgets it", () => {
   const on = { avatar_northstar: "1", avatar_northstar_outfit: "K01", avatar_northstar_sweater: "TK-NAVY-FOX" };
-  for (const s of ["avatar", "quiz", "hub"]) { const r = withStorage(on, () => L.northstarRenderFor(s, [])); assert.deepEqual([r.key, r.sweater, r.tee], ["K01+TK-NAVY-FOX", "TK-NAVY-FOX", null]);
+  for (const s of ["avatar", "quiz", "hub"]) { const r = withStorage(on, () => L.northstarRenderFor(s, [])); assert.deepEqual([r.key, r.sweater, r.tee], ["K01+TK-NAVY-FOX+hair:standard", "TK-NAVY-FOX", null]);
     assert.ok(r.plan.some((p) => p.src.endsWith("/top-tank-navy-fox-top-body-v1.webp"))); }
-  assert.equal(withStorage({ ...on, avatar_northstar_pants: "TS-NAV", avatar_northstar_shoes: "AB1-BOOT-LIGHTSAND" }, () => L.northstarRenderFor("hub", [])).key, "K01+TS-NAV+AB1-BOOT-LIGHTSAND+TK-NAVY-FOX");
-  for (const load of [1, 2]) withStorage({ ...on, avatar_northstar_outfit: "K16" }, (m) => { const r = L.northstarRenderFor("quiz", []); assert.deepEqual([r.key, r.sweater], ["K16", null], "load " + load); assert.equal(m.get("avatar_northstar_sweater"), "TK-NAVY-FOX"); });
-  withStorage({ ...on, avatar_northstar_outfit: "K04" }, (m) => { assert.equal(L.northstarRenderFor("hub", []).key, "K04"); assert.equal(m.get("avatar_northstar_sweater"), "TK-NAVY-FOX"); });
-  assert.equal(withStorage({ ...on, avatar_northstar_sweater: "LS2-NAVY" }, () => L.northstarRenderFor("hub", [])).key, "K01+LS2-NAVY", "a stored sweater as before");
+  assert.equal(withStorage({ ...on, avatar_northstar_pants: "TS-NAV", avatar_northstar_shoes: "AB1-BOOT-LIGHTSAND" }, () => L.northstarRenderFor("hub", [])).key, "K01+TS-NAV+AB1-BOOT-LIGHTSAND+TK-NAVY-FOX+hair:standard");
+  for (const load of [1, 2]) withStorage({ ...on, avatar_northstar_outfit: "K16" }, (m) => { const r = L.northstarRenderFor("quiz", []); assert.deepEqual([r.key, r.sweater], ["K16+hair:standard", null], "load " + load); assert.equal(m.get("avatar_northstar_sweater"), "TK-NAVY-FOX"); });
+  withStorage({ ...on, avatar_northstar_outfit: "K04" }, (m) => { assert.equal(L.northstarRenderFor("hub", []).key, "K04+hair:standard"); assert.equal(m.get("avatar_northstar_sweater"), "TK-NAVY-FOX"); });
+  assert.equal(withStorage({ ...on, avatar_northstar_sweater: "LS2-NAVY" }, () => L.northstarRenderFor("hub", [])).key, "K01+LS2-NAVY+hair:standard", "a stored sweater as before");
   assert.equal(withStorage({ avatar_northstar_outfit: "K01", avatar_northstar_sweater: "TK-NAVY" }, () => L.northstarRenderFor("hub", [])), null, "no opt-in: today's avatar");
   withStorage({ ...on }, (m) => { applyNorthstarUrlOptIn("?northstar=0"); assert.equal(m.has("avatar_northstar_sweater"), false); });
 });

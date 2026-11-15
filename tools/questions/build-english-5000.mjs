@@ -61,6 +61,17 @@ export function extractJsonArray(sql, file) {
   return JSON.parse(sql.slice(from, end));
 }
 
+// Explanations corrected after their source migration was applied in production. The applied source
+// files stay byte for byte as applied; the correction lives in
+// 20261113120000_english_review_text_corrections.sql, and the reverse questions built from these
+// entries inherit the corrected text from here. Each must match exactly one source entry.
+export const REVIEW_TEXT_CORRECTIONS = Object.freeze({
+  "Hvad betyder 'unanimous'?": {
+    from: "unanimous = enstemmig; 'anonym' bliver en reel fælde.",
+    to: "'Unanimous' betyder enstemmig: alle er enige. Pas på, det ligner 'anonym', men anonym hedder 'anonymous' på engelsk.",
+  },
+});
+
 export function loadSourceEntries() {
   const files = readdirSync(MIGRATIONS).filter((file) => SOURCE_PATTERN.test(file)).sort();
   if (files.length !== 18) fail(`expected 18 source migrations, found ${files.length}`);
@@ -69,6 +80,11 @@ export function loadSourceEntries() {
     for (const entry of extractJsonArray(readFileSync(join(MIGRATIONS, file), "utf8"), file)) entries.push(entry);
   }
   if (entries.length !== 3000) fail(`expected 3,000 source questions, found ${entries.length}`);
+  for (const [question, { from, to }] of Object.entries(REVIEW_TEXT_CORRECTIONS)) {
+    const matches = entries.filter((entry) => entry.q === question && entry.r === from);
+    if (matches.length !== 1) fail(`review text correction must match exactly one source entry, found ${matches.length}: ${question}`);
+    matches[0].r = to;
+  }
   return entries;
 }
 

@@ -20,6 +20,7 @@
 //   questionContent  { [question id]: content } returned by the questions lookup
 //   questionFormat   { [question id]: answer_format } added to that lookup's rows (absent: no
 //                    answer_format field, as a row without the column would come back)
+//   courseProgress / courseProgressError  what get_course_progress answers (absent: null = refused)
 //   createResponse  "ok" | { status, code } — what create-student answers
 //   signInError    when set, signInWithPassword fails with it
 //   updateUserError  when set, auth.updateUser fails with it
@@ -160,6 +161,10 @@ export function createClient() {
       }
       if (fn === "get_student_overview") {
         return { data: f.overview ? [{ ...f.overview }] : [], error: null };
+      }
+      if (fn === "get_course_progress") {
+        if (f.courseProgressError) return { data: null, error: { message: f.courseProgressError } };
+        return { data: "courseProgress" in f ? f.courseProgress : null, error: null };
       }
       return { data: null, error: null };
     },

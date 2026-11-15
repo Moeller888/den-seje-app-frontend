@@ -370,6 +370,11 @@ const REVIEWED_LATER_REPEAT_USERS = {
     "or clears presented_at (NULL on a reopen): it never changes answered, repeat_count, correct_answer or any other " +
     "column. mark_presented reads repeat_count only to name the current round and writes only presented_at " +
     "(laerligverse-k9-presented-migration-run).",
+  "20261109120000_laerligverse_course_progress_read.sql":
+    "Lærligverse F10-B2 (not applied): the read RPC get_course_progress only READS repeat_count, to know " +
+    "that a legacy instance without attempt 1 in the H5 log has had its first answer overwritten (its first " +
+    "answer is then reported as unknown, never guessed). It defines and calls none of the repeat functions, " +
+    "writes nothing and does not touch question_instances' structure.",
 };
 
 // The only question_instances statements a reviewed later user may contain, each exactly once.
@@ -431,7 +436,9 @@ test("reviewed later repeat users redefine none of this migration's functions", 
       "20261029120000_difficulty_scale_b.sql", "20261029150000_teacher_stats_from_answers.sql",
       "20261030211428_question_attempts_v2.sql", "20261101190000_question_attempts_v2_bootstrap.sql",
       "20261101190100_question_attempts_v2_align_grading.sql", "20261103110000_l1_k1_attempt_context.sql",
-      "20261108043500_laerligverse_served_mode_hint_log.sql", "20261109043500_laerligverse_presented_at.sql"],
+      "20261108043500_laerligverse_served_mode_hint_log.sql",
+      "20261109043500_laerligverse_presented_at.sql",
+      "20261109120000_laerligverse_course_progress_read.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);

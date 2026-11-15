@@ -12,6 +12,11 @@
 //       - a client cannot supply hints: the wrappers have no such parameter, and API roles cannot call them;
 //       - the wrapper's jsonb is _v2's jsonb (the same answer on a twin pupil gives the same result);
 //       - after a repeat reopen, only the new round's hints count, and the reopened round has no served mode.
+//   * LEARNING INTEGRITY (mastery and level): a pupil with a known mastery and level state is unchanged — in EVERY
+//     public row that carries their id — by valid hints, replayed and repeated hints and late hints (closed round,
+//     stale round); a twin who answers the same way WITHOUT hints ends with exactly the same XP, coins, streak,
+//     mastery and subject level, fold by fold. A negative control (a planted hint side effect, rolled back) proves
+//     the check would catch a hint that moved mastery or level.
 //   * question_attempts is immutable: no role (not service_role, not even the table owner) can UPDATE hints_used.
 //   * SECURITY (positive and negative), as the roles the paths really run as:
 //       - a pupil can neither read nor change served_mode, nor UPDATE any instance (RLS: 0 rows), nor read or write
@@ -222,6 +227,174 @@ test("the anti-guess cooldown (#610) works through the wrapper: LQ429 inside the
   assert.equal(refused.code, "LQ429");
   assert.deepEqual(await attempts(refused.qi), [], "the refused answer registered nothing");
   assert.equal((await one(`SELECT answered FROM public.question_instances WHERE id = $1`, [refused.qi])).answered, false);
+});
+
+// ── Learning integrity: a hint never moves mastery, level or any reward ────────────────────────────────
+// Every public table (and profiles) that carries the pupil's id, except the hint log itself. Read as the owner,
+// so RLS hides nothing. A hint that touched ANY of these rows — student_progress (xp, coins, level, mastery_level,
+// mastery_balance, mastery_score, streaks), student_subject_level, student_level_fold_log, quests, achievements,
+// events, attempts, instances — changes the fingerprint.
+async function pupilFingerprint(p) {
+  const tables = (await db.query(`SELECT c.table_name t, c.column_name k FROM information_schema.columns c
+    JOIN information_schema.tables t ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+    WHERE c.table_schema = 'public' AND t.table_type = 'BASE TABLE' AND c.table_name <> 'question_hint_requests'
+      AND ((c.column_name = 'student_id' AND c.data_type = 'uuid') OR (c.table_name = 'profiles' AND c.column_name = 'id'))
+    ORDER BY 1`)).rows;
+  const out = {};
+  for (const { t, k } of tables) {
+    out[t] = (await one(`SELECT count(*)::int n, md5(coalesce(string_agg(x::text, '|' ORDER BY x::text), '')) m
+      FROM public.${t} x WHERE x.${k} = $1`, [p]));
+  }
+  return out;
+}
+// The learning state that may legitimately move on an ANSWER, without identities or wall-clock times, so two
+// twin pupils can be compared value for value.
+async function learningState(p) {
+  const progress = await one(`SELECT xp, coins, level, correct_answers, total_correct_answers, total_attempts,
+      mastery_level, mastery_balance, mastery_score::text mastery_score, current_streak, longest_streak,
+      best_session_streak, prestige_score FROM public.student_progress WHERE student_id = $1`, [p]);
+  const subject = (await db.query(`SELECT subject, level, answered FROM public.student_subject_level
+    WHERE student_id = $1 ORDER BY subject`, [p])).rows;
+  const folds = (await db.query(`SELECT subject, was_correct, level_before, level_after FROM public.student_level_fold_log
+    WHERE student_id = $1 ORDER BY folded_at, level_before, level_after`, [p])).rows;
+  const counts = {};
+  for (const [t, f] of Object.entries(await pupilFingerprint(p))) counts[t] = f.n;
+  return { progress, subject, folds, counts };
+}
+const fold = async (p) => (await as("service_role", `SELECT * FROM public.advance_student_level($1, 'historie', 7::smallint)`, [p]))[0];
+async function knownState(p) {
+  // A known, non-default mastery and level state: the seed fold creates the subject level (grade 7 → band 1).
+  await db.query(`UPDATE public.student_progress SET level = 4, mastery_level = 3, mastery_balance = 2, mastery_score = 1234,
+    current_streak = 2, longest_streak = 5, correct_answers = 7, total_correct_answers = 9, total_attempts = 12 WHERE student_id = $1`, [p]);
+  await fold(p);
+}
+
+test("learning integrity: hints — valid, replayed, repeated, out of order, out of round or late — change no mastery, level, XP, coins or streak", async () => {
+  const p = await addPupil();
+  await knownState(p);
+  const q1 = await addQuestion();
+  const q2 = await addQuestion();
+  const qi = await serve(p, q1);
+  const before = await pupilFingerprint(p);
+  const stateBefore = await learningState(p);
+  assert.ok(stateBefore.subject.length === 1 && stateBefore.subject[0].level > 0, "a known subject level exists");
+  assert.equal(stateBefore.progress.mastery_level, 3);
+
+  // Valid hints, the same request replayed (a retried connection), the same level under a new id, a skipped level.
+  const rid = randomUUID();
+  const outcomes = [];
+  outcomes.push((await hint(p, qi, 1, 1, rid)).outcome);
+  outcomes.push((await hint(p, qi, 1, 1, rid)).outcome);
+  outcomes.push((await hint(p, qi, 1, 1)).outcome);
+  outcomes.push((await hint(p, qi, 1, 3)).outcome);
+  outcomes.push((await hint(p, qi, 1, 2)).outcome);
+  outcomes.push((await hint(p, qi, 1, 3)).outcome);
+  outcomes.push((await hint(p, qi, 1, 3)).outcome);
+  outcomes.push((await hint(p, qi, 2, 1)).outcome);
+  assert.deepEqual(outcomes, ["recorded", "replay", "already_recorded", "invalid_request", "recorded", "recorded",
+    "already_recorded", "invalid_request"]);
+  assert.equal((await one(`SELECT count(*)::int c FROM public.question_hint_requests WHERE question_instance_id = $1`, [qi])).c, 3);
+  assert.deepEqual(await pupilFingerprint(p), before, "hints alone: every row carrying the pupil's id is byte-identical");
+  assert.deepEqual(await fold(p).then(() => learningState(p)), stateBefore, "a fold after hints alone moves no level");
+
+  // The answer is processed by the existing rules and does move progression (the test does not block learning).
+  const r = await answerMc(p, qi, "a", 1);
+  assert.equal(r.status, "correct");
+  await fold(p);
+  const afterAnswer = await learningState(p);
+  assert.ok(afterAnswer.progress.xp > stateBefore.progress.xp, "a correct answer still pays XP");
+  assert.ok(afterAnswer.subject[0].level > stateBefore.subject[0].level, "a correct first answer still raises the level");
+  assert.equal(afterAnswer.folds.length, 1);
+  assert.deepEqual((await attempts(qi)).map((a) => a.hints_used), [3], "the hints are recorded as evidence, nothing more");
+
+  // Late and delayed hints: a replayed request and new requests after the answer (closed round), and a request for
+  // a round that has not started — none of them changes anything, and a later fold folds nothing new. (A stale round
+  // after a repeat reopen is refused in the repeat test above.)
+  const settled = await pupilFingerprint(p);
+  const late = [];
+  late.push((await hint(p, qi, 1, 1, rid)).outcome);
+  late.push((await hint(p, qi, 1, 1)).outcome);
+  late.push((await hint(p, qi, 1, 2)).outcome);
+  late.push((await hint(p, qi, 2, 1)).outcome);
+  for (const o of late) assert.ok(["replay", "already_recorded", "round_closed", "invalid_request"].includes(o), o);
+  assert.equal(late[2], "round_closed", "a new hint after the answer is refused");
+  assert.equal((await fold(p)).newly_folded, 0);
+  assert.deepEqual(await pupilFingerprint(p), settled, "late hints and a re-fold change nothing");
+
+  // A second round that is answered wrong: hints before, then the answer moves the level DOWN by the usual rule.
+  const qj = await serve(p, q2);
+  const beforeHints2 = await pupilFingerprint(p);
+  await hint(p, qj, 1, 1);
+  await hint(p, qj, 1, 2);
+  assert.deepEqual(await pupilFingerprint(p), beforeHints2);
+  assert.equal((await answerMc(p, qj, "b", 1)).status, "incorrect");
+  await fold(p);
+  const afterWrong = await learningState(p);
+  assert.ok(afterWrong.subject[0].level < afterAnswer.subject[0].level, "a wrong first answer still lowers the level");
+});
+
+test("learning integrity: a twin who answers the same way WITHOUT hints ends with identical XP, coins, streak, mastery and level", async () => {
+  const withHints = await addPupil();
+  const without = await addPupil();
+  await knownState(withHints);
+  await knownState(without);
+  const start = await learningState(withHints);
+  assert.deepEqual(start, await learningState(without), "identical starting points");
+  const sequence = [["a", "correct"], ["b", "incorrect"], ["a", "correct"]];
+  for (const [answer, status] of sequence) {
+    const q = await addQuestion();
+    const qh = await serve(withHints, q);
+    const qn = await serve(without, q);
+    const rid = randomUUID();
+    await hint(withHints, qh, 1, 1, rid);
+    await hint(withHints, qh, 1, 1, rid);
+    await hint(withHints, qh, 1, 2);
+    await hint(withHints, qh, 1, 3);
+    const sh = randomUUID();
+    const rh = await answerMc(withHints, qh, answer, 1, sh);
+    const rn = await answerMc(without, qn, answer, 1);
+    assert.equal(rh.status, status);
+    assert.deepEqual(rh, rn, `the answer's result is the same with and without hints (${answer})`);
+    // A replayed submission (a retried request) returns the original result and pays nothing again.
+    assert.deepEqual({ ...(await answerMc(withHints, qh, answer, 1, sh)), outcome: "recorded" }, rh);
+    await hint(withHints, qh, 1, 1);
+    await fold(withHints);
+    await fold(without);
+    assert.deepEqual(await learningState(withHints), await learningState(without), `after the ${status} answer`);
+    assert.deepEqual((await attempts(qh)).map((a) => a.hints_used), [3]);
+    assert.deepEqual((await attempts(qn)).map((a) => a.hints_used), [0]);
+  }
+  const end = await learningState(withHints);
+  assert.equal(end.folds.length, 3, "every first answer folded once");
+  assert.notEqual(end.subject[0].level, start.subject[0].level, "the sequence really moved the level");
+  assert.ok(end.progress.xp > start.progress.xp, "and paid XP: the comparison is not between two untouched states");
+});
+
+test("learning integrity, negative control: a planted hint side effect on mastery or level IS detected (rolled back)", async () => {
+  const p = await addPupil();
+  await knownState(p);
+  const qi = await serve(p, await addQuestion());
+  const before = await pupilFingerprint(p);
+  const stateBefore = await learningState(p);
+  await db.exec("BEGIN");
+  try {
+    await db.exec(`CREATE FUNCTION public.zz_planted_hint_side_effect() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+      SET search_path = public AS $f$ BEGIN
+        UPDATE public.student_progress SET mastery_level = mastery_level + 1 WHERE student_id = NEW.student_id;
+        UPDATE public.student_subject_level SET level = level + 1 WHERE student_id = NEW.student_id;
+        RETURN NEW; END $f$`);
+    await db.exec(`CREATE TRIGGER zz_planted AFTER INSERT ON public.question_hint_requests
+      FOR EACH ROW EXECUTE FUNCTION public.zz_planted_hint_side_effect()`);
+    assert.equal((await hint(p, qi, 1, 1)).outcome, "recorded");
+    assert.notDeepEqual(await pupilFingerprint(p), before, "the fingerprint catches it");
+    const s = await learningState(p);
+    assert.equal(s.progress.mastery_level, stateBefore.progress.mastery_level + 1);
+    assert.equal(s.subject[0].level, stateBefore.subject[0].level + 1);
+  } finally {
+    await db.exec("ROLLBACK");
+  }
+  assert.deepEqual(await pupilFingerprint(p), before, "rolled back: the database is as before");
+  assert.equal((await one(`SELECT count(*)::int c FROM pg_proc WHERE proname = 'zz_planted_hint_side_effect'`)).c, 0);
 });
 
 // ── Security review: who can do what, as the roles the paths run as ─────────────────────────────────────

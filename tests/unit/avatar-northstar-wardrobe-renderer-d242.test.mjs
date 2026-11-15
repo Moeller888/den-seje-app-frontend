@@ -67,7 +67,7 @@ test("D-242 cosmetics: aura and back keep their C2 z; any other equipped slot ke
   const on = { avatar_northstar: "1", avatar_northstar_outfit: "K16" };
   const aura = { slot: "aura", src: "/assets/avatar/aura/aura-gold.svg", z: L.C2_LAYER_Z.aura }, back = { slot: "back", src: "/assets/avatar/body/wings-dragon.svg", z: L.C2_LAYER_Z.back };
   const r = withStorage(on, () => L.northstarRenderFor("hub", [aura, back, null, { slot: "aura" }]));
-  assert.equal(r.key, "K16"); assert.deepEqual(r.cosmetics.map((c) => [c.src, c.z]), [[aura.src, -30], [back.src, -20]]);
+  assert.equal(r.key, "K16+hair:standard"); assert.deepEqual(r.cosmetics.map((c) => [c.src, c.z]), [[aura.src, -30], [back.src, -20]]);
   for (const slot of ["headwear", "eyes", "face", "torso", "neck", "body"]) assert.equal(withStorage(on, () => L.northstarRenderFor("hub", [aura, { slot, src: "/x.svg", z: 5 }])), null, slot);
   for (const s of ["shop", "verify", undefined, ""]) assert.equal(withStorage(on, () => L.northstarRenderFor(s, [])), null, String(s));
   for (const st of [{}, { avatar_northstar_outfit: "K16" }, { avatar_northstar: "1" }, { avatar_northstar: "1", avatar_northstar_outfit: "K99" }])

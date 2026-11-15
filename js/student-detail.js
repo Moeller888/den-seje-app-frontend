@@ -1,6 +1,12 @@
 import { supabase } from "./supabase.js";
 import { describeReviewItem } from "./teacher-answer-display.js";
 
+// Lærligverse F10-B2: the separate "Kursusforløb" section (js/course-progress-view.js). DEFAULT OFF.
+// A constant on purpose: no localStorage key, URL parameter or other browser override. With it off the
+// page makes no extra request (the module is imported only inside the flag's branch) and its DOM is
+// unchanged. Turning it on needs the owner's product GO AND the applied read RPC get_course_progress.
+const ENABLE_COURSE_PROGRESS_VIEW = false;
+
 // ========================
 // AUTH CHECK
 // ========================
@@ -296,7 +302,76 @@ async function fetchStudent() {
 
   await fetchBandHistory();
   await fetchDomainProgress();
+  // COURSE-PROGRESS-VIEW BEGIN
+  if (ENABLE_COURSE_PROGRESS_VIEW === true) {
+    await loadCourseProgressSection();
+  }
+  // COURSE-PROGRESS-VIEW END
   await fetchQuestionInstances();
+}
+
+// ========================
+// COURSE PROGRESS (Lærligverse F10-B2, behind ENABLE_COURSE_PROGRESS_VIEW)
+// ========================
+
+// A separate section directly under "Fremskridt per domæne". It never changes the ordinary figures and
+// never throws: every failure ends in an explicit message inside its own section.
+async function loadCourseProgressSection() {
+  const domainPanel = document.getElementById("domainProgressPanel");
+  const domainBox = domainPanel ? domainPanel.closest(".box") : null;
+  if (!domainBox || !domainBox.parentNode) {
+    console.error("Course progress: the domain section is missing; nothing rendered.");
+    return;
+  }
+
+  if (!document.querySelector('link[href="css/course-progress.css"]')) {
+    const css = document.createElement("link");
+    css.rel = "stylesheet";
+    css.href = "css/course-progress.css";
+    document.head.appendChild(css);
+  }
+
+  const section = document.createElement("section");
+  section.className = "box course-progress-box";
+  section.id = "courseProgressSection";
+  section.setAttribute("aria-labelledby", "courseProgressTitle");
+  const title = document.createElement("h3");
+  title.id = "courseProgressTitle";
+  title.textContent = "Kursusforløb";
+  const panel = document.createElement("div");
+  panel.id = "courseProgressPanel";
+  panel.setAttribute("aria-live", "polite");
+  panel.textContent = "Indlæser...";
+  section.appendChild(title);
+  section.appendChild(panel);
+  domainBox.insertAdjacentElement("afterend", section);
+
+  let view;
+  try {
+    view = await import("./course-progress-view.js");
+  } catch (e) {
+    console.error("Course progress module error:", e);
+    panel.textContent = "Kursusforløbet kunne ikke indlæses.";
+    return;
+  }
+
+  let data = null;
+  let error = null;
+  try {
+    const res = await supabase.rpc("get_course_progress", { p_student_id: studentId });
+    data = res?.data ?? null;
+    error = res?.error ?? null;
+  } catch (e) {
+    error = e;
+  }
+  if (error) console.error("Course progress fetch error:", error);
+
+  try {
+    view.renderCourseProgress(panel, view.buildCourseProgressView(data, error, Date.now()), document);
+  } catch (e) {
+    console.error("Course progress render error:", e);
+    panel.textContent = "Kursusdata har et uventet format og kan ikke vises.";
+  }
 }
 
 // ========================

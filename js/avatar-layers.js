@@ -1338,12 +1338,12 @@ export function northstarFitPiece(item) {
   return Object.freeze({ top: o.top, bottom: o.bottom, shoes: o.shoes, choice: Object.freeze({ outfit: NORTHSTAR_FREE, top: o.top, pants: o.bottom, shoes: o.shoes, ...(hair ? { hair } : {}) }), changed: Object.freeze([]) });
 }
 // D-373: the hair choice on the figure — one shared head base with three hairstyles (assets/avatar-northstar-hair/, rebuilt by
-// tools/avatar/build-northstar-hair-heads-d373.mjs). OFF: the figure keeps today's head (figure-head-v1.webp) and the wardrobe shows no
-// hair. A browser can opt in for testing: localStorage avatar_northstar_hair = "1" (or avatar.html?northstarhair=1; =0 removes it). On,
-// every figure stands on the shared base, and a stored choice without a hairstyle (every saved avatar today) gets the standard hair. The
-// hairstyle is saved with the outfit (avatar_identity.northstar.hair through set_avatar_northstar); the database accepts the key only
-// with D-373's migration (not applied in production).
-export const NORTHSTAR_HAIR_CHOICE = false;
+// tools/avatar/build-northstar-hair-heads-d373.mjs). ON by default since D-374: every figure stands on the shared base, and a stored
+// choice without a hairstyle (every avatar saved before D-374) gets the standard hair. OFF (false): the figure keeps today's head
+// (figure-head-v1.webp) and the wardrobe shows no hair; a browser can then opt in for testing: localStorage avatar_northstar_hair = "1"
+// (or avatar.html?northstarhair=1; =0 removes it). The hairstyle is saved with the outfit (avatar_identity.northstar.hair through
+// set_avatar_northstar); the database accepts the key through D-373's migration (applied in production 2026-11-13, 20261113053515).
+export const NORTHSTAR_HAIR_CHOICE = true;
 export const NORTHSTAR_HAIR_OPT_IN_KEY = "avatar_northstar_hair";
 export const NORTHSTAR_HAIR_BASE_PATH = "/assets/avatar-northstar-hair";
 export const NORTHSTAR_HAIR_DEFAULT = "standard";
