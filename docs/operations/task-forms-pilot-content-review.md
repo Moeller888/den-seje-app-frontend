@@ -10,15 +10,127 @@ kun en elev, hvis `active_domains` indeholder `pilot_d362`, kan få rækkerne (s
 
 ## F-07 Stimulus — `20261108090100_stimulus_pilot_content.sql` (7 rækker, kan gemmes i dag)
 
-| # | Form | Niveau (bånd) | Træner | Facit | Tvivl |
+**Faglig revision 2026-11-15** (ejerens GO, oven på rettelserne fra 2026-11-09). Rækkerne er stadig **ikke anvendt**:
+produktionens migrationsliste har ingen post for filen (kontrolleret read-only 2026-11-15), og den står i
+`NOT_IN_PRODUCTION` (`tests/isolated/schema/replay-plan.mjs`). Filen er rettet på stedet, fordi den aldrig er kørt.
+Fordeling: 6 MC og 1 tal (S3). Kun S1 har billede (tidslinjen); S2 er en fortælling, S3–S7 er kilder.
+Ingen ottende opgave.
+
+| # | Fase | Form | Niveau (bånd) | Eleven skal | Facit |
 |---|---|---|---|---|---|
-| S1 | Billede (tidslinje) + MC | 5.800 (1) | Introduktion: styreformen før 1849 | Enevælde | Rettet 2026-11-09: feedbacken forklarer 1849 som begyndelsen på overgangen til folkestyre, med begrænset valgret og kvinders valgret først i 1915. Rettet igen: billedet (`assets/stimulus/grundloven-1849-tidslinje.svg`) viser ikke længere fuldt folkestyre fra 1849. Den grønne bjælke hedder "MOD FOLKESTYRE", under 1849 står "På vej mod folkestyre.", og titel, beskrivelse, alt-tekst (S1, S5 og eksemplerne) og billedtekst ("Fra enevælde mod folkestyre.") er tilpasset. Billedet bruges af ingen aktive opgaver: 0 rækker i produktionen har stimulus. |
-| S2 | Kilde (fortælling) + MC | 5.900 (1) | Introduktion: hvem fik ikke valgret | Kvinden på 40 år | Fortællingen er lydklippets tekst, vist som tekst, da lydfilen mangler. |
-| S3 | Kilde (§ 35) + tal | 6.100 (2) | Forståelsestjek: finde alderskravet i kilden | 30 | – |
-| S4 | Kilde (§ 35) + MC | 6.200 (2) | Forståelsestjek: finde ordet, der begrænser valgretten til mænd | Mand | Rettet 2026-11-09: spørgsmålet er nu positivt ("viser, at kun mænd kunne få valgret"). Rettet igen 2026-11-09: review-teksten følger nu § 35 i betydning. Det generelle krav er indfødsret og 30 år. Undtagelserne a–d gælder tjeneste uden egen husstand, fattighjælp, der hverken er betalt tilbage eller eftergivet, manglende rådighed over boet og under et års fast bopæl. Der er intet generelt krav om egen husstand. |
-| S5 | Billede (tidslinje) + tal | 6.250 (2) | Forståelsestjek: enevældens varighed | 189 (1849 − 1660) | – |
-| S6 | Kilde (§ 35) + MC | 6.450 (3) | Anvendelse: § 35 på fire personer | Hans | Rettet 2026-11-09: spørgsmålet siger nu, at alle råder over deres bo, og at ingen har fået fattighjælp, medmindre det står. Review-teksten gennemgår a–d for Hans, så han tydeligt opfylder alle krav. Rettet igen: bopælskravet hedder nu "valgkreds" som i § 35 d, ikke "sogn", både i Hans' svarmulighed og i feedbacken ("har haft fast bopæl i valgkredsen i mere end et år"). |
-| S7 | Kilde (§ 2) + MC | 6.700 (4) | Anvendelse: § 2 på et tilfælde (Rigsdagen vedtager en lov, kongen vil ikke skrive under) | "Nej, for kongen og Rigsdagen skal være enige" | Rettet 2026-11-09: opgaven kræver nu, at eleven bruger § 2 på et tilfælde og ikke bare finder ordene. Kongens underskrift var nødvendig efter 1849. Verificeret 2026-11-09 mod flere udgaver af 1849-teksten: "Den lovgivende Magt er hos Kongen og Rigsdagen i Forening …". Titlen siger nu "(gengivet med nutidig retskrivning)". |
+| S1 | Introduktion | Billede (tidslinje) + MC | 5.800 (1) | Kende enevælde som styreformen før 1849 | Enevælde |
+| S2 | Introduktion | Kilde (fortælling) + MC | 5.900 (1) | Bruge valgretsreglerne fra teksten på fire personer | Anders, 34 år, daglejer, bor i sit eget hus med sin familie |
+| S3 | Forståelsestjek | Kilde (§ 35) + tal | 6.100 (2) | Læse alderskravet i den gamle kildetekst | 30 |
+| S4 | Forståelsestjek | Kilde (§ 35) + MC | 6.200 (2) | Forstå undtagelse b om fattighjælp | Når hjælpen var betalt tilbage eller eftergivet |
+| S5 | Forståelsestjek | Kilde (§ 2) + MC | 6.250 (2) | Bruge magtens tredeling på et tænkt tilfælde | Domstolene |
+| S6 | Anvendelse | Kilde (§ 35) + MC | 6.450 (3) | Bruge alle krav i § 35, også undtagelse b | Niels, 50 år, smed med eget hjem, har betalt sin fattighjælp tilbage |
+| S7 | Anvendelse | Kilde (§ 2 og § 29) + MC | 6.700 (4) | Bruge den lovgivende magt på et tænkt tilfælde | Nej, for loven kræver også kongens ja |
+
+**Progression:** S1 giver begrebet enevælde. S2 giver valgretsreglerne og Rigsdagens to dele. S3 og S4 læser § 35,
+og S4 forbereder S6. S5 introducerer § 2, og S7 bygger på S5.
+
+### Hvorfor hvert svar er rigtigt eller forkert
+
+**S1** (stimulus uændret fra 2026-11-09: "MOD FOLKESTYRE", "Fra enevælde mod folkestyre.").
+- *Enevælde* (rigtigt): kongen havde al magt fra 1660 (Kongeloven af 1665) til Grundloven 1849.
+- *Folkestyre* (forkert): fandtes ikke før 1849. Også efter 1849 havde kun en del af mændene valgret.
+- *Republik* (forkert): Danmark havde konge hele perioden.
+- *Kongedømme med valgt rigsdag* (forkert): det er netop det, der kom efter 1849 (§ 1: "Regjeringsformen er
+  indskrænket-monarkisk"; § 2). Svarmuligheden erstatter "Diktatur", som ligger tæt op ad enevælde og kunne
+  forsvares af en dygtig elev. Feedbacken siger nu, at Danmark efter 1849 stadig var et monarki, men ikke længere
+  et enevældigt.
+
+**S2** (ny opgave). Fælles forudsætninger i spørgsmålet: indfødsret, ikke straffet, styrer selv penge og
+ejendele, mange års bopæl i valgkredsen og ingen fattighjælp. Hver forkert person falder på præcis ét krav, som
+står i fortællingen.
+- *Anders, 34 år, daglejer med eget hus* (rigtigt): mand, over 30, eget hjem, så han er ikke tjenestefolk uden
+  egen husstand (§ 35 a). Ejendom var ikke et krav, og det siger teksten nu.
+- *Karen, 45 år, enke med egen gård* (forkert): kvinde. § 35 giver kun valgret til "enhver uberygtet Mand".
+- *Ole, 28 år, smed med eget hus* (forkert): under 30 år.
+- *Mads, 50 år, tjenestekarl, der bor hos sin arbejdsgiver* (forkert): privat tjeneste uden egen husstand (§ 35 a).
+- **Mod gæt:** facit er hverken den ældste, den eneste ejer eller den eneste mand.
+- **Fortællingen er rettet:** valget gjaldt Folketinget, som var den ene af Rigsdagens to dele. Fortællingen
+  forklarer også indfødsret og kravet om et års bopæl, og at kun omkring 15 procent af befolkningen fik valgret
+  (danmarkshistorien.lex.dk).
+
+**S3** (talopgave, ny formulering).
+- *30* (rigtigt): "naar han har fyldt sit 30te Aar" (§ 35).
+- **Folketinget forklares:** spørgsmålet siger, at Folketinget dengang var den ene af Rigsdagens to dele (§ 34), og
+  feedbacken siger, at det ikke var det samme som Folketinget i dag.
+- **Svarformat:** "Skriv kun tallet". Brugerfladen sender ikke "30 år". Den viser "Skriv kun cifre (0–9)", og
+  eleven kan rette svaret (`js/number-answer.js`, kontrolleret 2026-11-15). Et svar med enhed bliver derfor aldrig
+  bedømt som forkert, og svarmotoren skal ikke ændres.
+
+**S4** (ny opgave).
+- *Når hjælpen var betalt tilbage eller eftergivet* (rigtigt): § 35 b udelukker kun den, der har fået understøttelse,
+  "som ikke er enten eftergiven eller tilbagebetalt".
+- *Når han havde fyldt 40 år og fået eget hjem* (forkert): alder og hjem ændrer intet ved b.
+- *Når han blev tjenestekarl og flyttede ind hos en gårdmand* (forkert): så var han udelukket efter a.
+- *Aldrig, for hjælpen tog valgretten for altid* (forkert): b nævner netop, at hjælpen kan være betalt tilbage
+  eller eftergivet.
+- **Ordforklaringer:** "eftergiven" er tilføjet (han behøvede ikke at betale hjælpen tilbage), og det samme er
+  indfødsret, privat tjenesteforhold, "ude af Raadigheden over sit Bo", valgkreds og stad. Ordforklaringerne er de
+  samme i S3, S4 og S6.
+
+**S5** (ny opgave; erstatter 1849 − 1660, som var et regnestykke uden historisk forståelse).
+- *Domstolene* (rigtigt): § 2: "Den dømmende Magt er hos Domstolene".
+- *Kongen* (forkert): kongen havde den udøvende magt og var med i den lovgivende.
+- *Rigsdagen* (forkert): Rigsdagen var med i den lovgivende magt.
+- *Kongen og Rigsdagen sammen* (forkert): det er den lovgivende magt.
+- **Tænkt tilfælde:** tyveriet er tydeligt markeret med "Forestil dig". Spørgsmålet spørger om skyld, ikke om
+  straf, fordi kongen efter § 31 kunne benåde.
+- **Ingen nutid:** feedbacken forklarer kun forholdene efter § 2 i 1849.
+- **Bevidst udeladt:** retspleje og forvaltning blev først adskilt senere (§ 76: "efter de Regler, der fastsættes ved
+  Lov"). Det er for detaljeret til 7. klasse og ændrer ikke svaret efter § 2.
+
+**S6** (ny version). Fælles forudsætninger i spørgsmålet: uberygtet, indfødsret, styrer selv penge og ejendele,
+mange års bopæl i valgkredsen og ingen fattighjælp, medmindre andet står.
+- *Niels, 50 år, smed med eget hjem, har betalt sin fattighjælp tilbage* (rigtigt): b udelukker ham ikke, fordi
+  hjælpen er betalt tilbage. Han opfylder alder, a, c og d.
+- *Peder, 40 år, tjenestekarl, bor hos den gårdmand, han arbejder for* (forkert): a.
+- *Hans, 45 år, gårdmand med eget hjem, flyttede til valgkredsen for et halvt år siden* (forkert): d, under et års
+  fast bopæl.
+- *Jens, 29 år, købmand med eget hjem og egen butik* (forkert): under 30 år.
+- **Mod genkendelse:** facit er den, der ved første øjekast ser udelukket ud (fattighjælp). Den mest "velstillede",
+  Hans, er forkert.
+
+**S7** (justeret; bygger på S5).
+- *Nej, for loven kræver også kongens ja* (rigtigt): § 2 ("i Forening") og § 29: "Kongens Samtykke udfordres til
+  at give en Rigsdagsbeslutning Lovskraft". § 29 er nu med i kilden med nutidig retskrivning.
+- *Ja, for kongen har kun den udøvende magt* (forkert): efter § 2 var kongen også med i den lovgivende magt.
+- *Ja, hvis domstolene siger god for loven* (forkert): domstolene har den dømmende magt.
+- *Ja, for Rigsdagen er valgt af vælgerne* (forkert): et valg erstatter ikke kongens samtykke (§ 29).
+- **Tænkt tilfælde:** skoleloven i 1850 er markeret med "Forestil dig". "Begge dele af Rigsdagen" svarer til
+  § 48: hvert ting vedtager love for sit vedkommende.
+
+### Kontrol
+
+- **Længdehint** (`tools/question-quality/length-cue.mjs`): ingen i de seks MC-opgaver. Længder i tegn
+  (facit i parentes):
+
+  | Opgave | Svarmuligheder | Facit |
+  |---|---|---|
+  | S1 | 10/8/8/28 | (8) |
+  | S2 | 40/36/65/59 | (59) |
+  | S4 | 43/57/47/44 | (47) |
+  | S5 | 10/6/9/26 | (10) |
+  | S6 | 66/68/83/48 | (68) |
+  | S7 | 40/38/37/39 | (37) |
+
+  Facit er den længste i 2 af 6 opgaver og den korteste i 1.
+- **Facits plads:** 1, 3, 2, 0, 1, 2. Alle fire pladser bruges, som testen kræver, fordi browseren viser
+  svarmulighederne i den gemte rækkefølge.
+- **Kilder:**
+  - § 1, § 2, § 29, §§ 34–40, § 48 og §§ 74–78 er sammenholdt med en fuld transskription af Danmarks Riges Grundlov
+    af 5. juni 1849 (danmarkshistorien.dk's udgave med kildeintroduktion; § 35 er ordret som i rækkerne).
+  - § 35 blev også sammenholdt med en transskription 2026-11-13.
+  - Kvinders valgret i 1915 og enevælde fra 1660/1665 er gængse skolefakta.
+- **Oplæsning:** opgaverne er skrevet i korte sætninger. Gammel retskrivning findes kun i kilden til § 35, og den har
+  ordforklaringer.
+  - **Ikke afprøvet:** hvordan stemmen udtaler "Folkethinget", "Huusstand" og "30te Aar". Det bør lyttes igennem
+    før aktivering.
+- **Eksemplerne** i `tools/stimulus/examples/` er demonstrationsmateriale for de mockede browsertests og er ikke
+  pilotrækkerne. De er ikke ændret ud over S1's billedtekst fra 2026-11-09.
 
 ## F-04 Rækkefølge og F-05 Kategorisering — `20261108090200_order_categorize_pilot_content.sql` (8 rækker)
 
