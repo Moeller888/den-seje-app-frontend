@@ -105,7 +105,15 @@ async function signIn(request, p) {
 }
 /** Sign in through the REAL login page; the page after login is not loaded (no app code runs for this pupil). */
 async function browserSignIn(page, p) {
-  await page.route(/\/(hub|index|teacher|admin|reset-password)\.html/, (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<!doctype html><title>stop</title>" }));
+  // The navigation login.js starts after sign-in is ABORTED, so the pupil stays on the real login.html of the local
+  // build (served from 127.0.0.1). A page fulfilled by the test instead has no network address, and Chromium then
+  // refuses its requests to the loopback stack (local network access): run 43709089926, "Failed to fetch".
+  let redirected;
+  const redirect = new Promise((resolve) => { redirected = resolve; });
+  await page.route(/\/(hub|index|teacher|admin|reset-password)\.html/, (route) => {
+    redirected(route.request().url());
+    return route.abort();
+  });
   await page.goto(`${BASE}/login.html`, { waitUntil: "domcontentloaded" });
   const auth = page.waitForResponse((r) => r.url().startsWith(`${SUPA}/auth/v1/token`) && r.request().method() === "POST");
   await page.fill("#email", p.email);
@@ -115,8 +123,9 @@ async function browserSignIn(page, p) {
   expect(res.status(), "sign-in must be answered by the LOCAL Auth").toBe(200);
   const token = (await res.json()).access_token;
   expect(typeof token).toBe("string");
-  // login.js sends a pupil to the Hub; the stub page above stops there, so no app code runs for this pupil.
-  await page.waitForURL(/\/hub\.html/);
+  // login.js sends a pupil to the Hub; that navigation is aborted above, so no app code runs for this pupil.
+  expect(await redirect, "a pupil is sent to the Hub").toMatch(/\/hub\.html/);
+  expect(new URL(page.url()).pathname).toMatch(/\/login\.html$/);
   return token;
 }
 /** A call from the BROWSER (the app's origin, CORS included) with the pupil's own session. */
