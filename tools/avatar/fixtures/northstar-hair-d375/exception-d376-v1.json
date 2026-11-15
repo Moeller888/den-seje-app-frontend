@@ -1,0 +1,337 @@
+{
+  "decision": "D-376",
+  "relatesTo": "D-375",
+  "callId": "NH-5B-hair-topknot",
+  "kind": "ONE_TIME_EXCEPTION",
+  "status": "PROPOSED — NOT MERGED; NOT PROMOTED, NOT ACTIVATED",
+  "ownerVisualApproval": "owner 2026-11-14: approved the top knot's look in the local avatar trial, in neutral grey and in Northstar brown, and asked for a one-time exception for exactly that candidate",
+  "scope": "only NH-5B's one returned image, lifted by D-375's locked post-processing unchanged, in neutral grey and in Northstar's brown — exactly the bound files below; no other image, no other extraction, no retouching, no rule change",
+  "newImageCall": false,
+  "tool": "tools/avatar/northstar-hair-nh5b-exception-d376.mjs",
+  "historicalThresholds": "GATES of tools/avatar/northstar-hair-nh5.mjs, unchanged and locked by plan-nh5b-v1.json (D-375)",
+  "inputs": [
+    {
+      "role": "raw",
+      "name": "nh.image-1.png",
+      "folder": "hair-nh5-round/NH-5B-hair-topknot",
+      "tracked": false,
+      "sha256": "162715dce4c99a077beb8aae60ff066c86b4b56143a622037150bd88ace0c295"
+    },
+    {
+      "role": "base",
+      "name": "d373-base-figure.png",
+      "folder": "hair-nh5-round/references",
+      "tracked": false,
+      "sha256": "454b56aa6dee471d9be83ee1ce8365589f79b8b9cb4f2a4b959ac26729ac3b8a"
+    },
+    {
+      "role": "ear",
+      "name": "clean-head-ear-on-top-mask.png",
+      "folder": "hair-nh5-round/references",
+      "tracked": false,
+      "sha256": "955806ec039dafc7f1f7f16696b28c57722eb579e691e7498cea472fa9508840"
+    },
+    {
+      "role": "nh4",
+      "name": "nh4-temple-tip-grey-hair-layer.png",
+      "folder": "hair-nh5-round/references",
+      "tracked": false,
+      "sha256": "84a596d07209802cdb6beeead014015a94a5b75f3e2548b842aeca761afcf1ed"
+    }
+  ],
+  "outputs": {
+    "greyLayer": {
+      "name": "nh5b-d376-grey-hair-layer.png",
+      "bound": true,
+      "tracked": false,
+      "sha256": "40eefccad471c898226834b64ba64c309eb55596626f2526b53cc63c967e3ef9"
+    },
+    "brownLayer": {
+      "name": "nh5b-d376-brown-hair-layer.png",
+      "bound": true,
+      "tracked": false,
+      "sha256": "902b4c31af0f2f2f832ab1b212c722ba8c1ccc3cac67c7cf8276134073503165"
+    },
+    "greyHeadPng": {
+      "name": "nh5b-d376-grey-head.png",
+      "bound": true,
+      "tracked": false,
+      "sha256": "d4ee9d2b6ea0ad03607e0926fdab4f9a3bfd37b67a8fdafbeb7a6f551512dfa0"
+    },
+    "brownHeadPng": {
+      "name": "nh5b-d376-brown-head.png",
+      "bound": true,
+      "tracked": false,
+      "sha256": "d70bacd7765ab37e9fb98555cadd11b06409170884e5e786cde95178047266b8"
+    },
+    "greyHeadWebp": {
+      "name": "nh5b-d376-grey-head.webp",
+      "bound": true,
+      "tracked": false,
+      "sha256": "c18f7f1e4b7f6c174ae75606185b161336cb822b53421ed274fa5b7f2497a126"
+    },
+    "brownHeadWebp": {
+      "name": "nh5b-d376-brown-head.webp",
+      "bound": true,
+      "tracked": false,
+      "sha256": "e98666ccb90545ab766386919b3bd10e1745bb139c14c1826775ed1bb0127323"
+    }
+  },
+  "historical": {
+    "note": "D-375's recorded result under its unchanged thresholds; nothing here is re-scored",
+    "source": "authorisation-nh5b-v1.json call.result.extractionV1",
+    "failed": [
+      "P2",
+      "P3",
+      "P4",
+      "P8",
+      "P9",
+      "P11",
+      "P12"
+    ],
+    "passed": [
+      "P1",
+      "P5",
+      "P6",
+      "P7",
+      "P10"
+    ],
+    "checks": {
+      "P1": {
+        "scale": 1,
+        "dx": 0,
+        "dy": 0,
+        "faceErr": 6.45,
+        "pass": true
+      },
+      "P2": {
+        "covered": 0.8673,
+        "pass": false
+      },
+      "P12": {
+        "largestHolePx": 2196,
+        "at": [
+          416,
+          185,
+          606,
+          212
+        ],
+        "pass": false
+      },
+      "P3": {
+        "rawOnBrowsPx": 42,
+        "layerOnBrowsPx": 0,
+        "layerOnEyesPx": 0,
+        "gapPx": {
+          "left": 1000000000,
+          "right": 1000000000
+        },
+        "pass": false
+      },
+      "P4": {
+        "rawOnEarsPx": 16,
+        "layerOnEarsPx": 0,
+        "earSoftEdges": 321,
+        "earSoftIdentical": 321,
+        "faceAndNeckBelowEarTopsPx": 0,
+        "pass": false
+      },
+      "P5": {
+        "hairPx": 29374,
+        "largestShare": 0.9992,
+        "pass": true
+      },
+      "P6": {
+        "px": 1542739,
+        "identical": 1542739,
+        "pass": true
+      },
+      "P7": {
+        "candidates": 26913,
+        "greyShare": 0.9494,
+        "pass": true
+      },
+      "P8": {
+        "iou": {
+          "standard": 0.297,
+          "nh4": 0.429,
+          "design": 0.583
+        },
+        "pass": false
+      },
+      "P9": {
+        "rawGreyPx": 27340,
+        "spillPx": 2764,
+        "spillShare": 0.1011,
+        "pass": false
+      },
+      "P10": {
+        "cutEdgePx": 0,
+        "longestRun": 0,
+        "longestBy": {},
+        "pass": true
+      },
+      "P11": {
+        "largestSpillClusterPx": 2687,
+        "at": [
+          460,
+          25,
+          577,
+          114
+        ],
+        "pass": false
+      }
+    }
+  },
+  "exceptedChecks": {
+    "P2": "86.73 % against ≥ 98 %: the band of bare forehead between the result's higher hairline and the guide's line (23–27 px over the forehead), not a hole in the hair",
+    "P12": "2,196 px against ≤ 40 px: the same forehead band (x 416–606, y 185–212) counted as one uncovered piece of the design's scalp",
+    "P3": "42 grey px in the RAW result on the brows' keep-clear zone against ≤ 10; the finished candidate's brow zone, brows and eyes are the base's own pixels and the layer has no alpha there",
+    "P4": "16 grey px in the RAW result at the ears' skin margin against ≤ 10; the finished candidate's ears are the base's own pixels, soft edges identical, no hair on face or neck",
+    "P8": "IoU 0.583 with design B against ≥ 0.60, because the bun is larger and higher; the own-look limits hold: 0.297 with the standard hair and 0.429 with NH-4 (≤ 0.75)",
+    "P9": "10.11 % outside the zone against ≤ 3 %: the bun above the guide's circle",
+    "P11": "one 2,687 px cluster against ≤ 60 px: the bun's extra height (x 460–577, y 25–114)"
+  },
+  "notExcepted": "P1, P5, P6, P7 and P10 passed and stay required: registration, one piece, base unchanged outside the layer, greyscale, and 0 px of cut",
+  "finished": {
+    "browZoneIdentical": [
+      4233,
+      4233
+    ],
+    "browsIdentical": [
+      2298,
+      2298
+    ],
+    "eyesIdentical": [
+      12317,
+      12317
+    ],
+    "earsIdentical": [
+      5386,
+      5386
+    ],
+    "earSoftEdgesIdentical": [
+      321,
+      321
+    ],
+    "layerAlphaOnBrowZonePx": 0,
+    "gapAboveBrowsAnyAlphaPx": {
+      "left": 32,
+      "right": 34
+    },
+    "hairOnFaceAndNeckBelowEarTopsPx": 0,
+    "belowY430DiffersFromBasePx": 0,
+    "alphaDiffGreyVsBrownPx": 0,
+    "greyLayerNonNeutralPx": 0
+  },
+  "deviations": {
+    "hairlineColumns": [
+      [
+        400,
+        230,
+        237
+      ],
+      [
+        420,
+        209,
+        226
+      ],
+      [
+        440,
+        195,
+        221
+      ],
+      [
+        470,
+        190,
+        216
+      ],
+      [
+        500,
+        190,
+        215
+      ],
+      [
+        512,
+        191,
+        214
+      ],
+      [
+        530,
+        188,
+        215
+      ],
+      [
+        560,
+        190,
+        217
+      ],
+      [
+        590,
+        199,
+        223
+      ],
+      [
+        610,
+        217,
+        230
+      ],
+      [
+        625,
+        235,
+        245
+      ]
+    ],
+    "hairlineColumnsAre": "[x, the result's lowest hair y, the guide's hairline y]",
+    "bun": {
+      "result": {
+        "px": 9862,
+        "centre": [
+          518,
+          81.4
+        ],
+        "box": [
+          426,
+          25,
+          594,
+          134
+        ]
+      },
+      "guide": {
+        "px": 5104,
+        "centre": [
+          511.7,
+          90.7
+        ],
+        "box": [
+          434,
+          50,
+          585,
+          134
+        ]
+      }
+    },
+    "templeLowestHairY": {
+      "left": 305,
+      "right": 305
+    },
+    "guideTempleEndY": [
+      298,
+      298
+    ]
+  },
+  "trialEvidence": {
+    "what": "the private local trial in the real avatar picker (avatar.html at origin/main 28f8ab6e, fictitious pupil on 127.0.0.1, two in-memory hair entries)",
+    "heads": "greyHeadWebp and brownHeadWebp above",
+    "result": "drawn by the app with a cream T-shirt and a navy tank top: against the app's NH-4 head 0 px on the ears and 0 px on the neck and everything below y 430; only the hair differs; no page errors",
+    "images": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/avatar-trial/check-3/ (app-size figures, hairline 1:1, temples and ear junctions 4× on light and dark, neck 3× with T-shirt and tank top); not tracked",
+    "ownerVisualApproval": "owner 2026-11-14: approved the top knot's look in the local avatar trial, in neutral grey and in Northstar brown, and asked for a one-time exception for exactly that candidate"
+  },
+  "rebuild": {
+    "runs": 2,
+    "byteIdentical": true,
+    "command": "node tools/avatar/northstar-hair-nh5b-exception-d376.mjs --raw … --base … --ear … --nh4 … --cwebp … --dwebp … --out <empty dir outside the repository>"
+  },
+  "neverPromoted": true,
+  "activation": "a separate owner decision; this exception publishes, promotes and activates nothing"
+}
