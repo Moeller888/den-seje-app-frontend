@@ -16,7 +16,9 @@ const SRC = new URL("../../tools/agents/approvals.mjs", import.meta.url);
 const REPO = "github.com__example__repo";
 const SA = "aaaaaaaa-0000-4000-8000-000000000001";
 const SB = "bbbbbbbb-0000-4000-8000-000000000002";
-const T0 = Date.parse("2026-11-14T12:00:00Z");
+// T0 er kørselstidspunktet (hele sekunder), ikke en fast dato: CLI-testen nedenfor bruger værktøjets rigtige ur, og en fast
+// dato fik dens GO til at udløbe 24 timer senere (2026-11-15T11:59Z). Udløbstestene regner med faste forskydninger fra T0.
+const T0 = Math.floor(Date.now() / 1000) * 1000;
 const g = (args, cwd) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 
 function world() {
