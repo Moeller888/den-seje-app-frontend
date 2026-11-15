@@ -1,6 +1,6 @@
 # F-07: undervisningsforløb, afslutning og tilmelding
 
-**Status:** lokal prototype på #706, ikke committet. Ingen migration er anvendt, intet er deployet.
+**Status:** #706 `e70b6f3e` (draft; isoleret F07-kørsel 43727666938 grøn i Chromium, Firefox og WebKit). Lokal integrationskandidat 2026-11-15 (main `8d691545` + #671 + #706, ikke pushet), se "Integrationskandidat" nedenfor. Ingen migration er anvendt, intet er deployet.
 
 **Beslutninger:** ejeren 2026-11-15:
 - adgang og aktuelt forløb er to forskellige ting;
@@ -147,14 +147,37 @@ ring og få 2 XP og 1 mønt hver gang. Det gælder alle fag.
 
 **Rettet 2026-11-15:** et fagskift lukker en åben fasegentagelse med `was_correct NULL`. Fasegentagelsen genåbnede kun `false`, så eleven fik 409 i løkke. Nu genåbner den også en runde, der blev lukket uden dom.
 
-## Deployment-rækkefølge (hvert trin kræver ejerens særskilte GO, D-110)
+## Integrationskandidat (lokal, 2026-11-15)
 
-1. Migration `20261113170000` (fasegentagelsen, med rettelsen ovenfor).
-2. Migration `20261115130000` (forløb og tilmelding).
-3. Get-next-question (kandidatmanifest `af15587f…`, 23 filer). Strategy A-kandidaten skal opdateres med de samme ændringer.
-4. Frontenden (merge til main deployer Cloudflare).
-5. Tilmeldingen af testkontoen: `grant_course_enrolment` som super_admin, eller en `INSERT` som ejer.
-6. Aktivering af pilotrækkerne (#671).
+**Rækkefølge:** main → #671 (indhold, konfliktfri) → #706 (kode). #671 først, så #706's tests og spec kører mod det reviderede indhold.
+
+| Konflikt | Årsag | Løsning |
+|---|---|---|
+| `get-next-question/index.ts` (2 steder) | L3's `hintsCount` og D-362's `courseTag` blev tilføjet i samme svarobjekt (due og ny opgave) | Begge bevaret; felterne `hints_available` og `course_id` er uafhængige. Begge siders øvrige ændringer er bevaret linje for linje |
+| `get-next-question-release-gate.test.mjs` | Manifestet voksede på begge sider | 24 filer: `hints.ts` (L3) + `phase-gate.ts` og `course.ts` (D-362) |
+| `question-attempts-v2-bootstrap`, `quiz-repeat-when-pool-exhausted` | Begge sider udvidede listerne over gennemgåede migrationer | Foreningsmængden |
+| `level-engine-rollout.md` | Ny kandidatrække på begge sider | Ny række `30d2bdc5…` (24 filer); de to tidligere rækker som "forrige kandidat" |
+
+**Tilpasset til #671:** `f07-pilot-seven-items.test.mjs` (6 mc og 1 tal; S5 er mc om § 2), adgangskommentaren i `20261108090100` (kun kommentar), og den isolerede spec kontrollerer emnenavnene i opsummeringen.
+
+## Deployment-rækkefølge (plan, IKKE udført; hvert trin kræver ejerens særskilte GO, D-110)
+
+**Forudsætning:** en gendannelig backup og en verificeret rollback. Uden dem anbefales ingen produktionsrelease.
+
+| Trin | Handling | Kontrol bagefter | Rollback |
+|---|---|---|---|
+| 0 | Backup af produktionen, og en gendannelse prøvet i et andet projekt | Gendannelsen lykkes | – |
+| 1 | Migration `20261113170000` (`apply_migration`) | Funktionen findes; kun service_role har EXECUTE | `DROP FUNCTION` (intet kalder den endnu) |
+| 2 | Migration `20261115130000` | Tabeller, RLS, privilegier; ét katalogforløb, 0 tilmeldinger | FJERNELSE-blokken i filen (kun før første tilmelding) |
+| 3 | Migration `20261108090100` (#671, 7 INAKTIVE rækker) | 7 rækker, alle inaktive, markør findes | `DELETE` af de 7 rækker via markøren (kun før aktivering) |
+| 4 | Get-next-question: manifest `30d2bdc5…` (24 filer) eller en opdateret Strategy A-kandidat (beslutning) | Paritetstest mod den deployede version; manifest måles read-only | Deploy forrige version (manifest i `level-engine-rollout.md` §3.1) |
+| 5 | Frontenden (merge til main deployer Cloudflare) | Quiz, tilbud vises kun for tilmeldte | Rul main tilbage |
+| 6 | Tilmelding af ejerens testkonto (`grant_course_enrolment`) | Én aktiv tilmelding | `revoke_course_enrolment` |
+| 7 | Aktivering af de 7 rækker (`is_active = true`, kun markør) | Testkontoen gennemfører forløbet | `is_active = false` |
+
+- **Trin 4 kræver en beslutning:** main's get-next-question indeholder også Lærligverse L3/L5 (bag slukkede flag) og D-329/D-338. Enten deployes integrationskandidaten, eller Strategy A-kandidaten opdateres med F-07-ændringerne. Det skal besluttes, før deploy.
+- **L3/L5-migrationen `20261108043500`** er ikke anvendt og ikke en forudsætning for F-07; L3/L5 er slukket uden den.
+- **`20261109151000` (pilotlåsen)** indgår ikke; den er afløst og må ikke anvendes uden en ny beslutning.
 
 ## Kompatibilitet mellem gammel og ny frontend og backend
 
