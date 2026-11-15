@@ -129,6 +129,10 @@ mange års bopæl i valgkredsen og ingen fattighjælp, medmindre andet står.
   ordforklaringer.
   - **Ikke afprøvet:** hvordan stemmen udtaler "Folkethinget", "Huusstand" og "30te Aar". Det bør lyttes igennem
     før aktivering.
+- **Emnenavn pr. opgave** (`metadata.pilot_skill`, til forløbets opsummering): S1 "Styreformen før 1849: enevælde",
+  S2 "Hvem fik valgret i 1849", S3 "Alderskravet i Grundlovens § 35", S4 "Reglen om fattighjælp i § 35",
+  S5 "Magtens tredeling i § 2", S6 "Brug af § 35 på fire personer", S7 "Hvem giver lovene efter § 2".
+  Feltet bruges ikke af udvælgelsen eller bedømmelsen og sendes ikke til eleven (`PUBLIC_METADATA_KEYS`; testet).
 - **Eksemplerne** i `tools/stimulus/examples/` er demonstrationsmateriale for de mockede browsertests og er ikke
   pilotrækkerne. De er ikke ændret ud over S1's billedtekst fra 2026-11-09.
 
