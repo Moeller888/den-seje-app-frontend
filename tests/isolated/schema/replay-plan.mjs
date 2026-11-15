@@ -194,8 +194,6 @@ export const REPO_AHEAD_OF_PRODUCTION = Object.freeze({
     "repository ahead of production: the repository's request-password-help calls public.reserve_password_help, which production does not have (catalog, 2026-10-25) — open production task D-243",
   "20261030211428_question_attempts_v2.sql":
     "repository ahead of production: the repository's process-event calls process_question_attempt_v2 / process_text_answer_v2 behind the H5 switch, which production does not have (catalog, 2026-11-01) — open production task D-266/D-273 (H5)",
-  "20261115090000_avatar_northstar_hair_nh5b_d377.sql":
-    "repository ahead of production: the repository's Northstar wardrobe can save the top knot (avatar_identity.northstar.hair = nh5b-grey / nh5b-brown) through set_avatar_northstar, its cards hidden behind NORTHSTAR_HAIR_NH5B, which production's validate_avatar_identity refuses — open production task D-377 (apply before the cards are opened)",
 });
 
 // Every timestamped migration from ACCOUNTED_FROM on must be accounted for in exactly one place:
@@ -251,6 +249,7 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261106120000_avatar_northstar_choice.sql": "20261106151348",
   "20261112150000_avatar_northstar_hair_d373.sql": "20261113053515",
   "20261113120000_english_review_text_corrections.sql": "20261114141653",
+  "20261115090000_avatar_northstar_hair_nh5b_d377.sql": "20261115131725",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),
