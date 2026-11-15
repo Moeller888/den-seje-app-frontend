@@ -269,7 +269,10 @@ test("CLI: exitkoderne er kontrakten, som agenter stopper på", async () => {
 test("værktøjet indeholder ingen skrivende git-kommando (push/merge/reset/…): de skal stå i agentens egen kommando, synlige for LÆRLIG-GUARD", () => {
   const src = readFileSync(new URL("../../tools/agents/claim.mjs", import.meta.url), "utf8");
   const gitCalls = [...src.matchAll(/run\(\["([a-z-]+)"/g)].map((m) => m[1]);
-  assert.deepEqual([...new Set(gitCalls)].sort(), ["diff", "ls-remote", "merge-base", "rev-parse", "status"]);
+  assert.deepEqual([...new Set(gitCalls)].sort(), ["config", "diff", "ls-remote", "merge-base", "rev-parse", "status"]);
+  // `config` kun som læsning af origin-URL'en (repo-nøglen til den fælles låsemappe).
+  const configCalls = [...src.matchAll(/run\(\["config", ([^\]]*)\]/g)].map((m) => m[1]);
+  assert.ok(configCalls.length >= 1 && configCalls.every((a) => a === '"--get", "remote.origin.url"'), configCalls.join(" | "));
   assert.doesNotMatch(src, /execFileSync\("git", \[\s*"(push|merge|reset|checkout|branch|commit|rebase|stash|clean)/);
 });
 

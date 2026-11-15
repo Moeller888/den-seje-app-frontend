@@ -20,9 +20,10 @@
       "perCallEstimate": 0.08,
       "perCallUpperEstimate": 0.09,
       "basis": "three 1024×1024 input images ≈ 3,072 image tokens, the prompt ≈ 650 text tokens, the output ≈ 1,756 image tokens (NH-4 measured 3,072 / 620 / 1,756 = about $0.080)",
-      "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
+      "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page",
+      "reReadAt": "2026-11-14 before the send: unchanged (text input $5.00, image input $8.00, image output $30.00 per 1M tokens)"
     },
-    "actuallySent": 0
+    "actuallySent": 1
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -120,8 +121,8 @@
     "callId": "NH-5B-hair-topknot",
     "style": "topknot",
     "name": "Topknude (D-373's fælles hovedbase)",
-    "mandateState": "UNSPENT",
-    "outcome": "NOT YET ATTEMPTED",
+    "mandateState": "SPENT",
+    "outcome": "RECEIVED_FOR_PLACEMENT",
     "claim": {
       "identity": "NH-5B-hair-topknot-claim",
       "filename": "NH-5B-hair-topknot.claim.json",
@@ -129,6 +130,230 @@
     },
     "prompt": {
       "sha256": "9156698c9a0a3411d0ed12652e566c86e57d19b825415382e3e64ca944480384"
+    },
+    "neverReuse": true,
+    "closedBy": "owner 2026-11-14: one send approved and made; the locked extraction REJECTED on P2, P3, P4, P8, P9, P11 and P12; recorded as spent",
+    "result": {
+      "sentAt": "2026-11-14",
+      "originMainSha": "28f8ab6edb36d42f204b3c9bc9f9ac8c7a38a00e",
+      "httpStatus": 200,
+      "requestId": "req_e138dd4e65e9458caf1a7e919d424d37",
+      "usage": {
+        "imageInputTokens": 3072,
+        "textInputTokens": 688,
+        "imageOutputTokens": 1756
+      },
+      "priceAtVerifiedRates": 0.081,
+      "retries": 0,
+      "image": {
+        "sha256": "162715dce4c99a077beb8aae60ff066c86b4b56143a622037150bd88ace0c295",
+        "size": "1024x1024",
+        "bytes": 961215,
+        "tracked": false,
+        "location": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/NH-5B-hair-topknot/ (raw image, receipt, request, response, the post-processing output and the review images kept private)",
+        "note": "the model left a soft glow round the head in RGB only: every glow pixel has alpha 0 (invisible)"
+      },
+      "extractionV1": {
+        "tool": "tools/avatar/northstar-hair-nh5.mjs --post (the locked method, unchanged)",
+        "verdict": "REJECTED",
+        "failed": [
+          "P2",
+          "P3",
+          "P4",
+          "P8",
+          "P9",
+          "P11",
+          "P12"
+        ],
+        "passed": [
+          "P1",
+          "P5",
+          "P6",
+          "P7",
+          "P10"
+        ],
+        "thresholdsUnchanged": true,
+        "checks": {
+          "P1": {
+            "scale": 1,
+            "dx": 0,
+            "dy": 0,
+            "faceErr": 6.45,
+            "pass": true
+          },
+          "P2": {
+            "covered": 0.8673,
+            "pass": false
+          },
+          "P12": {
+            "largestHolePx": 2196,
+            "at": [
+              416,
+              185,
+              606,
+              212
+            ],
+            "pass": false
+          },
+          "P3": {
+            "rawOnBrowsPx": 42,
+            "layerOnBrowsPx": 0,
+            "layerOnEyesPx": 0,
+            "gapPx": {
+              "left": 1000000000,
+              "right": 1000000000
+            },
+            "pass": false
+          },
+          "P4": {
+            "rawOnEarsPx": 16,
+            "layerOnEarsPx": 0,
+            "earSoftEdges": 321,
+            "earSoftIdentical": 321,
+            "faceAndNeckBelowEarTopsPx": 0,
+            "pass": false
+          },
+          "P5": {
+            "hairPx": 29374,
+            "largestShare": 0.9992,
+            "pass": true
+          },
+          "P6": {
+            "px": 1542739,
+            "identical": 1542739,
+            "pass": true
+          },
+          "P7": {
+            "candidates": 26913,
+            "greyShare": 0.9494,
+            "pass": true
+          },
+          "P8": {
+            "iou": {
+              "standard": 0.297,
+              "nh4": 0.429,
+              "design": 0.583
+            },
+            "pass": false
+          },
+          "P9": {
+            "rawGreyPx": 27340,
+            "spillPx": 2764,
+            "spillShare": 0.1011,
+            "pass": false
+          },
+          "P10": {
+            "cutEdgePx": 0,
+            "longestRun": 0,
+            "longestBy": {},
+            "pass": true
+          },
+          "P11": {
+            "largestSpillClusterPx": 2687,
+            "at": [
+              460,
+              25,
+              577,
+              114
+            ],
+            "pass": false
+          }
+        },
+        "layers": [
+          "nh5b-hair-grey-layer.png (the separate transparent grey layer)",
+          "nh5b-hair-layer.png (Northstar brown, the same layer tinted)",
+          "nh5b-on-base-full.png",
+          "checks.json"
+        ]
+      },
+      "deviationsFromGuide": {
+        "hairline": {
+          "what": "the hair's lower edge lies higher than the guide's dark-blue line",
+          "forehead": "23–27 px higher across x 440–590 (figure grid)",
+          "sides": "7–17 px higher at x 400–420 and x 610–625",
+          "columns": [
+            [
+              400,
+              230,
+              237
+            ],
+            [
+              420,
+              209,
+              226
+            ],
+            [
+              440,
+              195,
+              221
+            ],
+            [
+              470,
+              190,
+              216
+            ],
+            [
+              500,
+              190,
+              215
+            ],
+            [
+              512,
+              191,
+              214
+            ],
+            [
+              530,
+              188,
+              215
+            ],
+            [
+              560,
+              190,
+              217
+            ],
+            [
+              590,
+              199,
+              223
+            ],
+            [
+              610,
+              217,
+              230
+            ],
+            [
+              625,
+              235,
+              245
+            ]
+          ],
+          "columnsAre": "[x, the result's lowest hair y, the guide's hairline y]",
+          "gates": "P2 (86.73 % covered against ≥ 98 %) and P12 (2,196 px band at x 416–606, y 185–212) measure this band of bare forehead under the guide's hairline — not a hole inside the hair"
+        },
+        "bun": {
+          "what": "the bun is larger and sits higher than the guide's circle (centre 512, 90; radius 40)",
+          "result": "hair outside the head above y 135: 9,862 px, box x 426–594, y 25–134, centre (518.0, 81.4)",
+          "guide": "5,104 px, top y 50, x 434–585",
+          "gates": "P11 (one 2,687 px cluster at x 460–577, y 25–114) and P9 (10.1 % outside the zone) measure the bun's extra height; P8's IoU with design B is 0.583 against ≥ 0.60 for the same reason"
+        },
+        "temples": "both temple tips end at y 305, 7 px below the guide's temple ends (y 298) and above the ear tops (y 307 / 308)"
+      },
+      "compositeFacts": {
+        "what": "what the finished composite on D-373's base actually shows (measured on nh5b-on-base-full.png)",
+        "browsAndEyes": "P3's 42 px are grey pixels in the RAW result on the brows' keep-clear zone; in the composite the brow zone (4,233 of 4,233 px), the brows (2,298 of 2,298) and the eyes (12,317 of 12,317) are the base's own pixels; the layer has no alpha on the brow zone; the nearest hair of any alpha lies 32 px (left) and 34 px (right) above the brows",
+        "ears": "P4's 16 px are grey pixels in the RAW result at the ears' skin margin; in the composite the ears are the base's own pixels (5,386 of 5,386), the soft edges 321 of 321 identical, 0 px of hair on the face and neck below the ear tops",
+        "passed": "P1 registration (scale 1, shift 0, face error 6.45), P5 one piece (99.92 %), P6 base unchanged outside the layer (1,542,739 of 1,542,739 px), P7 greyscale (94.94 %), P10 no cut (0 px)",
+        "ownLook": "IoU 0.297 with the standard hair and 0.429 with NH-4 (both ≤ 0.75)"
+      },
+      "privateTrial": {
+        "what": "the real avatar picker (avatar.html at origin/main 28f8ab6e, a fictitious pupil on 127.0.0.1) with two extra in-memory hair entries; the existing layer on D-373's base as lossless WebP, grey c18f7f1e… and brown e98666cc…",
+        "result": "against the app's NH-4 head, drawn by the app with a cream T-shirt and a navy tank top: ears 0 px, neck and everything below y 430 0 px; only the hair changes; no page errors",
+        "location": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/avatar-trial/ (not tracked)"
+      },
+      "assessment": "EXTRACTION_V1_REJECTED",
+      "neverPromoted": true,
+      "next": "the owner decides whether this raw image gets a documented exception (as D-372 did for NH-4) or a new, separately approved call; nothing is retouched to pass"
     }
   },
   "adapterImplementations": {
