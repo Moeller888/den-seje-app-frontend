@@ -1,0 +1,153 @@
+# Beskyttet environment `e2e-prod` til produktions-secrets (fase 1A)
+
+**Status:** forberedt i kode, **ikke aktiv.** Workflow-ændringen må først merges, når ejeren har oprettet og beskyttet
+environmentet (afsnit 3) og godkendt den samlede plan. Indtil secrets er flyttet (fase 1B), henter jobbene fortsat
+repository-secrets.
+
+Overordnet plan for adskillelse af ejerens og agenternes GitHub-rettigheder: fase 0-rapporten (2026-11-15).
+Relaterede dokumenter: `docs/CLAUDE_WORKFLOW.md` (manuelle produktionskørsler, D-261),
+`docs/operations/sec-key-01-key-migration-runbook.md` (Supabase-nøgler, kun fremad).
+
+## 1. Hvorfor
+Repository-secrets er tilgængelige for **alle** jobs i alle workflows, også for kode på en branch. En aktør med
+push-ret til en branch kan ændre et workflow eller et script, som et job kører, og få produktionens
+`SUPABASE_SERVICE_ROLE_KEY` udleveret. Det sker ved `pull_request` fra en branch i repoet eller ved
+`workflow_dispatch` mod branchen. `confirm_production` og `dispatch-guard.mjs` er inputvalidering i branchens egen kode
+og **ingen** sikkerhedsgrænse.
+
+Environment-secrets udleveres kun til et job, der refererer environmentet, og først når dets beskyttelsesregler er
+opfyldt (GitHub-dokumentation: "A workflow job cannot access environment secrets until approval is granted by required
+approvers").
+
+## 2. Hvad koden gør (denne PR)
+| Job | Trigger | Ændring |
+|---|---|---|
+| `playwright.yml` → `test` | kun `workflow_dispatch` (`if:` springer jobbet over ved push og PR) | `environment: e2e-prod` + trinnet `e2e-prod preflight` lige efter dispatch-guarden |
+| `update-avatar-goldens.yml` → `update` | kun `workflow_dispatch` | `environment: e2e-prod` + `e2e-prod preflight` lige efter checkout |
+
+- **Almindelig CI er uberørt.** Ingen andre jobs har et environment. `test` springes over ved push og PR via `if:`.
+  At GitHub evaluerer `if:` før environmentet, så et oversprunget job aldrig venter på godkendelse, er SANDSYNLIGT. Det
+  bevises af D6 i afsnit 5 og af PR-kørslen for denne ændring.
+- **Preflight** (`.github/ci/e2e-prod-preflight.mjs`, regel i `.github/ci/e2e-prod-environment.mjs`) stopper jobbet før
+  `npm ci` og ethvert Supabase-kald, hvis:
+  - variablen `E2E_PROD_ENVIRONMENT` ikke er præcis `e2e-prod`. Den findes **kun** på environment-niveau, så den
+    beviser, at jobbet kører i det beskyttede environment;
+  - en af de 7 credentials mangler.
+  Trinnet udskriver kun navne og "sat"/"mangler", aldrig en værdi, en hash eller en længde. Det er en
+  verifikation, ikke en sikkerhedsgrænse.
+- **Kontrakttest** (`tests/unit/ci-e2e-prod-environment.test.mjs`) fastlåser:
+  - kun de to jobs har produktions-credentials, og begge kører i `e2e-prod`;
+  - uden for dem har kun `adventure-engine.yml:cr01` secrets (de 8 denylist-dele);
+  - ingen andre jobs har et environment;
+  - ingen `pull_request_target` eller `workflow_run`;
+  - preflight-placeringen;
+  - at intet udskrives.
+- **SHA-pinning af actions er bevidst udeladt.** De to jobs bruger kun GitHubs egne actions (`actions/*`). Kontrakttests
+  låser `@v4`-formen (`ci-e2e-slots`, `ci-e2e-lock-setup`). Pinning er en selvstændig ændring med egen test og
+  vedligeholdelsesplan. Den eneste tredjepartsaction, `supabase/setup-cli@v1`, bruges kun i `isolated-e2e`, som ikke
+  har secrets.
+
+## 3. Ejerens procedure i GitHub (før merge)
+Settings → Environments → **New environment** → navn `e2e-prod`. Kun ejeren kan gøre dette.
+
+1. **Required reviewers:** tilføj `Moeller888`.
+2. **Prevent self-review:** **slå FRA** (se afsnit 4).
+3. **Allow administrators to bypass configured protection rules:** **slå FRA**. Standard er TIL.
+4. **Wait timer:** ingen.
+5. **Deployment branches and tags:** vælg **Selected branches and tags** → tilføj branch-reglen `main`. Vælg **ikke**
+   "Protected branches only"; det er uafklaret, om en branch beskyttet af et ruleset tæller med. Tilføj ingen tag-regler
+   og ikke `refs/pull/*`.
+6. **Environment variables:** `E2E_PROD_ENVIRONMENT` = `e2e-prod`. Opret den **ikke** som repository-variabel.
+7. **Environment secrets:** ingen endnu (det er fase 1B).
+
+Kontrol af ejeren eller Claude (read-only API), før merge:
+- `GET /repos/{repo}/environments/e2e-prod` → `protection_rules` indeholder `required_reviewers` med Moeller888 og
+  `prevent_self_review: false`, samt `branch_policy`.
+- `can_admins_bypass: false`.
+- `deployment_branch_policy.custom_branch_policies: true`.
+- `GET …/environments/e2e-prod/deployment-branch-policies` → præcis `main` (type `branch`).
+- `GET /repos/{repo}/actions/variables` indeholder **ikke** `E2E_PROD_ENVIRONMENT`.
+
+**Hvorfor environmentet skal oprettes først:** en workflow-reference til et environment, der ikke findes, opretter det
+automatisk **uden** beskyttelsesregler.
+
+## 4. Selv-godkendelse, når ejeren er eneste menneskelige administrator
+- **Hvorfor Prevent self-review skal være slået fra:** "Prevent self-review" forhindrer den, der startede kørslen, i at
+  godkende den. Ejeren er den eneste mulige reviewer, så med den slået til kunne ejerens egne dispatches aldrig
+  godkendes.
+- **Hvor beskyttelsen så ligger:**
+  1. Branch-reglen `main`: kun kode på main får secrets. main ændres kun via merge, som ejeren udfører.
+  2. Ejerens bevidste godkendelse af hver kørsel i GitHubs brugerflade ("Review deployments").
+  3. Agenterne starter fremover ingen kørsler: agent-appen får ikke Actions: write (fase 3/5).
+- **Ingen automatisk godkendelse.** Ingen workflow, app eller token må godkende environment-kørsler. Det gælder også
+  `POST …/pending_deployments` og "Allow GitHub Actions to create and approve pull requests" (er FRA og skal forblive
+  det).
+
+**Overgangsrisiko:** så længe agenterne kører med ejerens token, kan en agent teknisk set godkende en ventende
+deployment via API'et som ejeren. LÆRLIG-GUARD blokerer skrivende `gh api`, men det er ikke en hård grænse. Den
+egentlige lukning er fase 5 (agenterne uden ejerens credentials).
+
+## 5. Demonstration af beskyttelsen før flytning af secrets (fase 1A-verifikation, efter merge)
+Kør, mens `e2e-prod` **ingen** secrets har. Hver dispatch udføres af ejeren eller med ejerens særskilte GO.
+
+| # | Handling | Forventet | Bevis |
+|---|---|---|---|
+| D1 | Dispatch `Playwright Tests` mod en anden branch end `main` | Jobbet `test` afvises af branch-reglen, før noget trin kører | kørselsloggen viser afvisning fra environmentets branch-regel; ingen trin kørt |
+| D2 | Dispatch `Playwright Tests` mod `main` med tom `confirm_production` | Jobbet venter på godkendelse | "Waiting for review" |
+| D3 | Ejeren **afviser** D2 | Jobbet kører ingen trin | status `failure`/rejected |
+| D4 | Ny dispatch som D2 → ejeren godkender | checkout → dispatch-guarden afviser (tom bekræftelse) → intet `npm ci`, intet Supabase-kald | log: guard `::error::` |
+| D5 | Dispatch `Update Avatar Goldens` mod en anden branch end `main` | afvises af branch-reglen | log |
+| D6 | Normal PR-kørsel (en vilkårlig PR) | Ingen ventende godkendelse; `unit` og `isolated-e2e` som før | PR-checks |
+
+D4 rammer ikke produktionen: jobbet afvises i guarden, før credentials bruges, og repo-secrets står uændret. Kør ikke
+`Update Avatar Goldens` mod `main` som demonstration. Jobbet ændrer slot-0-testeleven i produktionen.
+
+## 6. Secrets, der flyttes i fase 1B (kun navne)
+| Navn | Værdiens kilde | Bemærkning |
+|---|---|---|
+| `SUPABASE_URL` | Supabase-projektets URL (ikke hemmelig) | kopiér |
+| `SUPABASE_ANON_KEY` | Supabase → API keys → publishable key | kopiér |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → API keys → **ny dedikeret secret key** (fx `github_actions_e2e_prod`) | Ejeren behøver ikke den nuværende værdi (`github_actions_ci`, sat 2026-11-09). Kun fremad: den gamle nøgle tilbagekaldes først, når environmentet er grønt |
+| `TEST_STUDENT_EMAIL` | kendt testkonto | kopiér |
+| `TEST_STUDENT_PASSWORD`, `TEST_TEACHER_PASSWORD`, `TEST_STUDENT2_PASSWORD` | ejerens egen opbevaring | GitHub kan aldrig vise en secret igen. Kender ejeren ikke værdien, kræver det nulstilling af testkontoen, som er en særskilt produktionshandling med eget GO |
+
+**Sådan verificeres det, uden at værdier vises:** findes en secret med samme navn på flere niveauer, vinder det laveste
+niveau ("If a secret with the same name exists at multiple levels, the secret at the lowest level takes precedence …
+the environment-level secret takes precedence"). En grøn, godkendt produktionskørsel på main, efter at de 7 er lagt i
+`e2e-prod`, beviser derfor, at **environment-værdierne** virker. Preflight viser kun "sat".
+
+**Repository-secrets slettes først (fase 2), når:**
+- en godkendt kørsel med environment-secrets er grøn;
+- agenterne ikke længere har ejerens credentials;
+- ejeren har givet GO.
+
+Indtil da kan alt rulles tilbage ved at revertere workflow-ændringen.
+
+## 7. `adventure-engine.yml` → `cr01` (separat vurdering)
+- **Hvad jobbet gør:** kører på `pull_request` (stifilter `adventure-engine/**`), på push til main og ved dispatch, når
+  `vars.REQUIRE_CLEAN_ROOM_DENYLIST == '1'` (sat i dag). Det giver de 8 denylist-dele til kode fra PR-branchen. Fork-PR'er
+  springes over.
+- **Hvad en agent kan:** med push-ret kan en agent ændre koden og læse hele denylisten.
+- **Følsomhed:** lavere end for produktionsnøglerne. Ingen data- eller systemadgang. Men den, der kender listen, kan
+  målrettet undgå den, og clean-room-kontrollen svækkes.
+- **Muligheder:**
+
+  | Mulighed | Konsekvens |
+  |---|---|
+  | (a) behold som nu | Kontrollen virker før merge, men listen er tilgængelig for agenter |
+  | (b) eget environment med reviewer | Hver adventure-engine-PR venter på ejeren; ændrer PR-forløbet |
+  | (c) kun på main/dispatch | Listen beskyttes; kontrollen kommer først efter merge |
+  | (d) `pull_request_target` med main-kode og PR-diff som data | Kontrol før merge uden PR-kode med secrets. Kendt "pwn request"-risiko, hvis PR-kode nogensinde køres. Kræver egen gennemgang |
+
+- **Anbefaling:** ingen ændring i fase 1A. Mulighed (c) som minimum, eller (d) efter selvstændig gennemgang. Det er ejerens
+  beslutning med eget GO. Kontrakttesten gør i dag `cr01` til den eneste, udtrykkelige undtagelse.
+
+## 8. Rollback
+| Situation | Handling |
+|---|---|
+| Fejl efter merge, før fase 1B | Revertér PR'en. Jobbene bruger igen repository-secrets (uændrede) |
+| `e2e-prod` fejlkonfigureret | Ret environmentet. Preflight stopper jobbet, før noget rammer produktionen |
+| Efter fase 1B, environment-secrets forkerte | Ret værdierne i `e2e-prod` (repository-secrets findes stadig) |
+| Ny Supabase-nøgle virker ikke | Opret en ny dedikeret nøgle. Genaktivér aldrig en tilbagekaldt nøgle (SEC-KEY-01) |
+
+Intet i denne ændring berører Cloudflare Workers Builds, Supabase-funktioner, rulesets eller andre workflows.

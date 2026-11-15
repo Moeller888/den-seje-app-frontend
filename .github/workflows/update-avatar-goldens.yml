@@ -23,6 +23,11 @@ jobs:
     # Pinned: ubuntu-latest became ubuntu-26.04 (image 20261101.186.1), where Playwright 1.59.1 does not support chromium
     # ("Playwright does not support chromium on ubuntu26.04-x64", 2026-11-12). Unpin together with a Playwright upgrade.
     runs-on: ubuntu-24.04
+    # Production credentials come from the protected GitHub environment `e2e-prod` (fase 1A): branch
+    # `main` only and a required reviewer. Create and protect the environment BEFORE this line
+    # reaches main — a reference to an environment that does not exist creates it WITHOUT protection
+    # rules. docs/operations/e2e-prod-environment.md
+    environment: e2e-prod
     env:
       SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
       SUPABASE_ANON_KEY:         ${{ secrets.SUPABASE_ANON_KEY }}
@@ -37,6 +42,12 @@ jobs:
       E2E_SLOT:                  "0"
     steps:
       - uses: actions/checkout@v4
+      # Before npm ci or any Supabase call: the job must run in the protected `e2e-prod`
+      # environment and have every credential set. Prints names only.
+      - name: e2e-prod preflight
+        env:
+          E2E_PROD_ENVIRONMENT: ${{ vars.E2E_PROD_ENVIRONMENT }}
+        run: node .github/ci/e2e-prod-preflight.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*

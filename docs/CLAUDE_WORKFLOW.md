@@ -75,6 +75,8 @@ Tests are the **gatekeeper** and **ground truth** (CLAUDE.md rules 1, 34, 41–4
   `confirm_production` = `production-e2e` (plus `confirm_provisioning` for an inactive slot); anything
   else fails before `npm ci` or any Supabase call. `update-avatar-goldens.yml` stays a manual workflow
   that changes the live slot-0 test student — dispatch it deliberately, never beside a live run.
+  Both jobs are bound to the protected GitHub environment `e2e-prod` (branch `main` only, owner as required
+  reviewer); see `docs/operations/e2e-prod-environment.md`.
 - **Offline run (safe beside any live run):** `npm run test:e2e:offline`
   (`playwright.offline.config.ts`) runs only the specs in `tests/offline-specs.mjs` — no
   `globalSetup`, no `.env`, credentials stripped, every `*.supabase.co` request answered locally.

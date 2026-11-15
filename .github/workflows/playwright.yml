@@ -319,6 +319,13 @@ jobs:
   test:
     needs: classify
     if: always() && github.event_name == 'workflow_dispatch'
+    # Production credentials come from the protected GitHub environment `e2e-prod` (fase 1A): branch
+    # `main` only and a required reviewer, so code on another branch never receives them. The `if`
+    # above is evaluated first, so push and pull_request runs skip this job and never wait for an
+    # approval. Create and protect the environment BEFORE this line reaches main — a reference to an
+    # environment that does not exist creates it WITHOUT protection rules. The preflight step below
+    # fails the job if it does not run in `e2e-prod`. docs/operations/e2e-prod-environment.md
+    environment: e2e-prod
     # 90, not 60: the suite outgrew the old ceiling. Measured on 860d653 — 816 tests, 705 resolved
     # (454 passed, 251 skipped) and **0 failures** when the job was killed at 60 minutes. It was a
     # clock limit, not a test result. `workers: 1` stays because every e2e test shares ONE Supabase
@@ -402,6 +409,12 @@ jobs:
         DISPATCH_CONFIRMATION: ${{ inputs.confirm_provisioning }}
         E2E_SLOT_COUNT: ${{ vars.E2E_SLOT_COUNT }}
       run: node .github/ci/dispatch-guard.mjs
+    # Right after the guard and before npm ci or any Supabase call: the job must run in the
+    # protected `e2e-prod` environment and have every credential set. Prints names only.
+    - name: e2e-prod preflight
+      env:
+        E2E_PROD_ENVIRONMENT: ${{ vars.E2E_PROD_ENVIRONMENT }}
+      run: node .github/ci/e2e-prod-preflight.mjs
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
