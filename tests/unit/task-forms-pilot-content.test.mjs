@@ -115,6 +115,18 @@ test("inactive and marked: is_active is a literal false in both INSERTs; every r
   for (const r of OC_ROWS) assert.equal(r.metadata.pilot_form, r.answer_format, label(r));
 });
 
+test("course summary label: every stimulus row has its own short pilot_skill, and it never reaches the pupil's payload", () => {
+  const skills = STIMULUS_ROWS.map((r) => r.metadata.pilot_skill);
+  for (const [i, s] of skills.entries()) {
+    assert.ok(typeof s === "string" && s.trim() === s && s.length >= 5 && s.length <= 40, `S${i + 1}: pilot_skill "${s}"`);
+  }
+  assert.equal(new Set(skills).size, skills.length, "a pilot_skill is repeated");
+  for (const r of STIMULUS_ROWS) {
+    const meta = toPublicQuestion(r.content, r.answer_format, r.metadata, undefined).metadata;
+    assert.equal(meta?.pilot_skill, undefined, `${label(r)}: pilot_skill is server-side only`);
+  }
+});
+
 test("level: every row is on the 1–10,000 scale and in its §4.1 cell (grade 7)", () => {
   for (const r of ALL_ROWS) {
     const { difficulty_band: band, difficulty_level: level } = r;
