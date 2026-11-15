@@ -35,7 +35,7 @@ import { dirname, join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { replaySchema } from "../isolated/schema/replay.mjs";
 import { bootstrapMarkerSql } from "../isolated/seed/seed-guard.mjs";
-import { deriveQuestionScope, HISTORY_DOMAINS } from "../../supabase/functions/get-next-question/scope.ts";
+import { courseScope, deriveQuestionScope, HISTORY_DOMAINS } from "../../supabase/functions/get-next-question/scope.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const MIGRATIONS = join(ROOT, "supabase", "migrations");
@@ -126,18 +126,27 @@ test("a. deriveQuestionScope never yields pilot_d362 for a regular pupil, whatev
   }
 });
 
-test("a. deriveQuestionScope yields pilot_d362 only when the profile's active_domains contains it (history subject)", () => {
-  const approved = { selected_grade: GRADE, active_domains: [PILOT] };
+// Course model (owner decision 2026-11-15, migration 20261115130000): access to the pilot is an ENROLMENT, never
+// active_domains. A pilot_* entry there grants nothing and does not narrow the pupil's history: [pilot_d362] alone is
+// "all history" (like NULL). Only a verified course request narrows to the pilot (courseScope, index.ts).
+test("a. active_domains is no access path: pilot_d362 there never reaches the scope, and never narrows history", () => {
+  const legacy = { selected_grade: GRADE, active_domains: [PILOT] };
   for (const subject of [undefined, null, "historie", PILOT, "garbage"]) {
-    assert.deepEqual(deriveQuestionScope(approved, subject).subjectDomains, [PILOT], `subject ${JSON.stringify(subject)}`);
+    assert.deepEqual(deriveQuestionScope(legacy, subject).subjectDomains, [...HISTORY_DOMAINS], `subject ${JSON.stringify(subject)}: all history, no pilot`);
   }
-  assert.deepEqual(deriveQuestionScope({ selected_grade: GRADE, active_domains: ["vikings", PILOT] }, "historie").subjectDomains,
-    ["vikings", PILOT]);
-  // English and Danish use their fixed domain even for the approved account.
-  assert.deepEqual(deriveQuestionScope(approved, "engelsk").subjectDomains, ["english"]);
-  assert.deepEqual(deriveQuestionScope(approved, "dansk").subjectDomains, ["danish"]);
-  // releaseDomains (fagskift) is subject-level and never the teacher filter, so it never holds pilot_d362.
-  assert.equal(deriveQuestionScope(approved, "historie").releaseDomains.includes(PILOT), false);
+  assert.deepEqual(deriveQuestionScope({ selected_grade: GRADE, active_domains: ["vikings", PILOT] }, "historie").subjectDomains, ["vikings"]);
+  assert.deepEqual(deriveQuestionScope(legacy, "engelsk").subjectDomains, ["english"]);
+  assert.deepEqual(deriveQuestionScope(legacy, "dansk").subjectDomains, ["danish"]);
+  // releaseDomains: unchanged for every profile (regular requests are byte-identical); a course round is kept by the
+  // course request (courseScope) or the verified keep_course_rounds of index.ts.
+  assert.deepEqual(deriveQuestionScope(legacy, "historie").releaseDomains, [...HISTORY_DOMAINS]);
+  assert.deepEqual(deriveQuestionScope(legacy, "engelsk").releaseDomains, ["english"]);
+  // The course request's scope: only the course's objective for new questions; regular history rounds kept.
+  for (const profile of [{ selected_grade: GRADE, active_domains: null }, { selected_grade: GRADE, active_domains: ["vikings"] }, legacy]) {
+    const c = courseScope(deriveQuestionScope(profile, "historie"), PILOT);
+    assert.deepEqual(c.subjectDomains, [PILOT], JSON.stringify(profile));
+    assert.ok(c.releaseDomains.includes(PILOT) && HISTORY_DOMAINS.every((d) => c.releaseDomains.includes(d)), JSON.stringify(profile));
+  }
 });
 
 // ── b. regular scope: no selection RPC returns a pilot row ──────────────────────────────────────────
@@ -221,8 +230,9 @@ test("c. positive control: p_domains = ['pilot_d362'] serves pilot rows of all t
     got.forEach((id) => seen.add(id));
   }
   assert.deepEqual(await formsOf([...seen]), ["categorize", "order", "stimulus"]);
-  // The approved profile, through scope.ts, reaches the same rows.
-  const scope = deriveQuestionScope({ selected_grade: GRADE, active_domains: [PILOT] }, "historie");
+  // The approved (enrolled) pupil's COURSE request, through scope.ts, reaches the same rows (courseScope; the
+  // enrolment check is index.ts's, migration 20261115130000).
+  const scope = courseScope(deriveQuestionScope({ selected_grade: GRADE, active_domains: null }, "historie"), PILOT);
   assert.deepEqual(await formsOf(await level(6300, scope.subjectDomains)), ["categorize", "order", "stimulus"]);
 });
 
@@ -299,7 +309,9 @@ test("e. KNOWN GAP before the lock migration (D-362, open in production until 20
   }
   assert.equal(await activeDomainsOf(PUPIL), null);
 
-  // Once active: accepted. This is the residual the owner must close (plan in D-362), pinned so a fix shows.
+  // Once active: the database still ACCEPTS the assignment (production's set_student_domains), but since the course
+  // model (owner 2026-11-15) it grants NOTHING: scope.ts ignores pilot_* in active_domains, the pupil keeps all
+  // history and is never served a pilot row. The gap is closed in get-next-question; access is an enrolment.
   await db.exec("BEGIN");
   try {
     await as(TEACHER, async () => {
@@ -308,8 +320,8 @@ test("e. KNOWN GAP before the lock migration (D-362, open in production until 20
     assert.deepEqual(await activeDomainsOf(PUPIL), [PILOT]);
     const profile = (await db.query("SELECT active_domains, selected_grade FROM public.profiles WHERE id = $1", [PUPIL])).rows[0];
     const scope = deriveQuestionScope(profile, "historie");
-    assert.deepEqual(scope.subjectDomains, [PILOT]);
-    assert.equal(pilotRowsIn(await level(6300, scope.subjectDomains)).length > 0, true);
+    assert.deepEqual(scope.subjectDomains, [...HISTORY_DOMAINS], "all history, no pilot");
+    assert.equal(pilotRowsIn(await level(6300, scope.subjectDomains)).length, 0, "no pilot row through a teacher assignment");
   } finally {
     await db.exec("ROLLBACK");
   }
@@ -347,7 +359,8 @@ test("e. after the lock migration (20261109151000, applied here in a rolled-back
     await db.exec("RESET ROLE");
     assert.deepEqual(await activeDomainsOf(PUPIL), ["revolutions_democracy", PILOT]);
     const profile = (await db.query("SELECT active_domains, selected_grade FROM public.profiles WHERE id = $1", [PUPIL])).rows[0];
-    assert.deepEqual(deriveQuestionScope(profile, "historie").subjectDomains, ["revolutions_democracy", PILOT]);
+    // Course model: the kept pilot_* entry grants nothing (access is an enrolment).
+    assert.deepEqual(deriveQuestionScope(profile, "historie").subjectDomains, ["revolutions_democracy"]);
   } finally {
     await db.exec("ROLLBACK");
   }

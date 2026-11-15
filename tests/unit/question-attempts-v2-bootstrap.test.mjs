@@ -109,6 +109,9 @@ const H5_SURFACE = /\bFUNCTION\s+public\.(process_question_attempt|process_text_
 // Lærligverse F10-B2 (20261109120000, not applied) was reviewed: get_course_progress only READS question_attempts
 // (attempt_no, was_correct, answered_at, grading and, when K1's columns exist, mode / hints_used) for one gated
 // pupil; it defines no answer, repeat or _v2 function and writes nothing (course-progress-rpc-migration-run).
+// D-362 phase repeat (20261113170000) was reviewed: a NEW request_repeat_* function whose single reopen UPDATE is
+// exactly what H5's round guard admits (answered true -> false with repeat_count + 1); it touches no question_attempts
+// object and re-creates no existing function (phase-repeat-rpc-migration-run).
 const REVIEWED_H5_SURFACE_AFTER_D280 = Object.freeze([G1, BOOTSTRAP, ALIGN, "20261102100000_release_open_rounds_on_inactive_questions.sql",
   "20261103100000_question_attempts_history_no_action.sql",
   "20261103110000_l1_k1_attempt_context.sql",
@@ -116,7 +119,8 @@ const REVIEWED_H5_SURFACE_AFTER_D280 = Object.freeze([G1, BOOTSTRAP, ALIGN, "202
   // md5), names question_attempts only in that guard, and adds two SECURITY INVOKER wrappers that CALL the _v2
   // functions unchanged; it redefines no H5 function and writes no attempt itself (laerligverse-l3-l5-attempt-wrapper-run).
   "20261108043500_laerligverse_served_mode_hint_log.sql",
-  "20261109120000_laerligverse_course_progress_read.sql"]);
+  "20261109120000_laerligverse_course_progress_read.sql",
+  "20261113170000_phase_repeat_rpc.sql"]);
 
 test("the two files: unique versions, after their prerequisites, adjacent; later H5-surface changes need review", () => {
   const files = readdirSync(join(ROOT, "supabase", "migrations")).filter((f) => /^\d{14}_.+\.sql$/.test(f)).sort();

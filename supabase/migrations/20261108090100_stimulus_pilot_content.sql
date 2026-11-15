@@ -9,12 +9,14 @@
 -- Emne: Grundloven 1849 (fagligt revolutions_democracy, som metadata.domain angiver), 7. klasse,
 -- sværhedsniveau 5.800–6.700 på skalaen 1–10.000 (target_grade/difficulty_band er cellen i
 -- docs/difficulty-scale-design.md §4.1).
--- ADGANG: learning_objective er 'pilot_d362', ikke 'revolutions_democracy'. Pilotens adgang: kun en elev,
--- hvis active_domains indeholder pilot_d362. get-next-question bygger domænerne på serveren
--- (scope.ts: profilens active_domains eller de faste HISTORY_DOMAINS), og alle udvælgelses-RPC'er
--- filtrerer på learning_objective = ANY(p_domains). Eleven kan ikke selv skrive active_domains.
--- Kendt rest: elevens lærer kan tildele pilot_d362 via set_student_domains, når rækkerne er aktive
--- (docs/decisions/D-362.md). Tests: tests/unit/task-forms-pilot-scope.test.mjs.
+-- ADGANG (ændret 2026-11-15, tilmeldingsmodellen): learning_objective er 'pilot_d362', ikke
+-- 'revolutions_democracy'. Kun en elev med en AKTIV tilmelding i public.course_enrolments (migration
+-- 20261115130000; tildelt af en super_admin) og et kald med course = 'pilot_d362' får disse rækker.
+-- get-next-question (scope.ts courseScope) sætter så scopet til forløbet, og alle udvælgelses-RPC'er filtrerer
+-- på learning_objective = ANY(p_domains). Et 'pilot_*' i active_domains giver IKKE adgang (scope.ts ignorerer
+-- det), så lærerens tidligere hul via set_student_domains er lukket; pilotlåsen 20261109151000 er afløst.
+-- Tests: tests/unit/task-forms-pilot-scope.test.mjs og tests/unit/f07-course-completion.test.mjs.
+-- Kontrakt: docs/operations/f07-course-completion.md.
 -- Faglig oversigt til ejerens review: docs/operations/task-forms-pilot-content-review.md.
 -- Faglig revision 2026-11-15 (ejerens GO): S2, S4, S5 og S6 er skrevet om, S1, S3 og S7 justeret. S5 er nu mc
 -- med § 2 (magtens tredeling) i stedet for et regnestykke på tidslinjen: 6 mc og 1 tal (S3), kun S1 har billede.

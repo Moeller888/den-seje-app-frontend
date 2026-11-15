@@ -268,7 +268,9 @@ test("D1 plan: exactly one run per push to main and per PR; dispatch on main sti
     const out = join(dir, "out");
     writeFileSync(out, "");
     const r = spawnSync("bash", ["-c", script], { env: { ...process.env, PARALLEL: "", ...env, GITHUB_OUTPUT: out }, encoding: "utf8" });
-    const runs = r.status === 0 ? JSON.parse(readFileSync(out, "utf8").trim().replace(/^runs=/, "")).length : null;
+    // D-362 / F-07: the step also writes profiles= and include= (tests/unit/f07-ci-lane.test.mjs); read runs= alone.
+    const line = readFileSync(out, "utf8").split("\n").find((l) => l.startsWith("runs="));
+    const runs = r.status === 0 ? JSON.parse(line.slice("runs=".length)).length : null;
     rmSync(dir, { recursive: true, force: true });
     return runs;
   };

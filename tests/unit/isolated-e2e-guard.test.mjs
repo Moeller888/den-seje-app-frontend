@@ -178,7 +178,8 @@ test("no false green, and the order that makes the job fail-closed", () => {
   for (let i = 1; i < order.length; i++) assert.ok(order[i] > order[i - 1], `step ${i} in order`);
   // Tests run with the locked-down group as primary group, never with the runner's own group.
   const testLines = job.split("\n").filter((l) => /playwright test|run-suite\.mjs/.test(l) && !l.trim().startsWith("#"));
-  assert.equal(testLines.length, 2);
+  // 3 since D-362 / F-07 (owner GO 2026-11-14): the smoke, the dispatch-only F-07 spec, the suite — all via sg.
+  assert.equal(testLines.length, 3);
   for (const line of testLines) assert.match(line, /^\s+sg "\$ISOLATED_GROUP" -c "(npx playwright test|node tests\/isolated\/run-suite\.mjs)/, line);
   const fw = read("tests/isolated/egress-firewall.sh");
   assert.match(fw, /-m owner --gid-owner "\$GROUP_NAME" -j ISO_EGRESS_USER\n/);

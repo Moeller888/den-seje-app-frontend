@@ -151,8 +151,10 @@ export function attachReadAloudControl(container, text, context) {
     restart.type = "button";
     restart.className = "read-aloud-restart";
     restart.textContent = "↺ Forfra";
-    // F-07: a stimulus source gets its own name, so a screen reader never says "spørgsmålet" for it.
-    const what = context && typeof context === "object" && context.target === "source" ? "kilden" : "spørgsmålet";
+    // F-07: a stimulus source and an image description get their own name, so a screen reader never says
+    // "spørgsmålet" for them.
+    const target = context && typeof context === "object" ? context.target : null;
+    const what = target === "source" ? "kilden" : target === "image" ? "billedbeskrivelsen" : "spørgsmålet";
     restart.setAttribute("aria-label", `Læs ${what} forfra`);
 
     const rateField = labelledSelect("Tempo", "read-aloud-rate");

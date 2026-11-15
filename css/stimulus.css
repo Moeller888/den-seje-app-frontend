@@ -56,7 +56,8 @@
 }
 
 #stimulus .stimulus-caption,
-#stimulus .stimulus-transcript-text {
+#stimulus .stimulus-transcript-text,
+#stimulus .stimulus-image-text {
   margin: 8px 0 0;
   font-size: 15px;
   line-height: 1.5;
@@ -70,11 +71,13 @@
   min-height: 44px;
 }
 
-#stimulus .stimulus-transcript {
+#stimulus .stimulus-transcript,
+#stimulus .stimulus-image-description {
   margin-top: 8px;
 }
 
-#stimulus .stimulus-transcript summary {
+#stimulus .stimulus-transcript summary,
+#stimulus .stimulus-image-description summary {
   cursor: pointer;
   min-height: 44px;
   display: flex;
@@ -83,7 +86,8 @@
   font-weight: bold;
 }
 
-#stimulus .stimulus-transcript summary:focus-visible {
+#stimulus .stimulus-transcript summary:focus-visible,
+#stimulus .stimulus-image-description summary:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }

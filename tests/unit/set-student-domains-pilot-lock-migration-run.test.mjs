@@ -25,7 +25,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { replaySchema } from "../isolated/schema/replay.mjs";
 import { bootstrapMarkerSql } from "../isolated/seed/seed-guard.mjs";
 import { NOT_IN_PRODUCTION } from "../isolated/schema/replay-plan.mjs";
-import { deriveQuestionScope } from "../../supabase/functions/get-next-question/scope.ts";
+import { courseScope, deriveQuestionScope } from "../../supabase/functions/get-next-question/scope.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const MIGRATIONS = join(ROOT, "supabase", "migrations");
@@ -406,7 +406,11 @@ test("6. the header names the three guard hashes and the migration is listed as 
 
 // ── 7. scope.ts with the lock applied ──────────────────────────────────────────────────────────────
 
-test("7. with the lock, scope.ts yields pilot_d362 only for the pupil whose profile has it", async () => {
+// Course model (owner decision 2026-11-15, migration 20261115130000): pilot access is an ENROLMENT. scope.ts ignores
+// pilot_* in active_domains, so even an owner-granted pilot_d362 there grants nothing; only a verified course request
+// (courseScope, index.ts) reaches pilot rows. The lock migration therefore no longer guards access — it only keeps a
+// teacher's save from touching pilot_* entries (to be withdrawn or kept by the owner; it is not applied).
+test("7. with the lock, scope.ts never yields pilot_d362 from active_domains; only the course scope reaches pilot rows", async () => {
   await setDomainsAsOwner(PUPIL, [PILOT, "vikings"]);       // owner grant (test account)
   await as(TEACHER, async () => {
     await db.query("SELECT public.set_student_domains($1::uuid, ARRAY['revolutions_democracy'])", [PUPIL]);
@@ -414,8 +418,9 @@ test("7. with the lock, scope.ts yields pilot_d362 only for the pupil whose prof
     await assert.rejects(db.query("SELECT public.set_student_domains($1::uuid, ARRAY['pilot_d362'])", [PUPIL_REGULAR]), PILOT_ERROR);
   });
   const profileOf = async (id) => (await db.query("SELECT active_domains, selected_grade FROM public.profiles WHERE id = $1", [id])).rows[0];
-  const pilotScope = deriveQuestionScope(await profileOf(PUPIL), "historie");
-  assert.deepEqual(pilotScope.subjectDomains, ["revolutions_democracy", PILOT]);
+  assert.deepEqual(deriveQuestionScope(await profileOf(PUPIL), "historie").subjectDomains, ["revolutions_democracy"], "the kept pilot_* entry grants nothing");
+  const pilotScope = courseScope(deriveQuestionScope(await profileOf(PUPIL), "historie"), PILOT);
+  assert.deepEqual(pilotScope.subjectDomains, [PILOT]);
   const regularScope = deriveQuestionScope(await profileOf(PUPIL_REGULAR), "historie");
   assert.deepEqual(regularScope.subjectDomains, ["revolutions_democracy", "vikings"]);
   for (const subject of [undefined, null, "historie", "engelsk", "dansk", PILOT]) {

@@ -3,11 +3,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { publishableKey, serviceKey } from "../_shared/supabase-keys.ts";
 import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
-import { deriveQuestionScope } from "./scope.ts";
+import { courseScope, deriveQuestionScope } from "./scope.ts";
+import { COURSE_OBJECTIVES, courseCompleteBody, enrolmentFrom, isCourseCompleted, parseCourseRequest, practiceAvailable, type Enrolment } from "./course.ts";
+import type { CourseState } from "./phase-gate.ts";
 import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
 import { checkRequestedStep, historyFromRows, nextStep, stepDef, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
 import { hintsAvailable } from "../_shared/hints.ts";
 import { sortByWave } from "./wave-order.ts";
+import { MAX_REPEATS, applyPhaseGate, type PhaseReadClient } from "./phase-gate.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
 import { servableWireFormat } from "../_shared/interaction-kinds.ts";
@@ -182,6 +185,54 @@ serve(async (req) => {
       console.log("OBJECTIVE_TARGETING:", { objective: targeting.objective });
     }
 
+    // Undervisningsforløb (D-362, ./course.ts, migration 20261115130000). Only when the request names a course: the
+    // server verifies an ACTIVE enrolment of THIS pupil in an ACTIVE catalogued course (the client's `course` selects,
+    // never grants) and narrows the scope to the course's own objective. Without `course` nothing here runs or reads.
+    const courseReq = parseCourseRequest(body, scope.subject, targeting.mode === "on");
+    if (courseReq.mode === "error") {
+      return new Response(JSON.stringify({ error: courseReq.error }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: courseReq.status,
+      });
+    }
+    let enrolment: Enrolment | null = null;
+    if (courseReq.mode === "course") {
+      const { data: enrolRows, error: enrolError } = await admin()
+        .from("course_enrolments")
+        .select("status, completed_at, summary_acknowledged_at, courses!inner(title, topics, is_active)")
+        .eq("student_id", student_id)
+        .eq("course_id", courseReq.course)
+        .limit(1);
+      if (enrolError) throw enrolError;
+      enrolment = enrolmentFrom(courseReq.course, enrolRows);
+      if (enrolment === null) {
+        return new Response(JSON.stringify({ error: "course_not_available" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+        });
+      }
+      const narrowed = courseScope(scope, enrolment.course);
+      scope.subjectDomains = narrowed.subjectDomains;
+      scope.releaseDomains = narrowed.releaseDomains;
+      console.log("COURSE:", JSON.stringify({ course: enrolment.course, action: courseReq.action, completed: enrolment.completedAt !== null }));
+    }
+    // Outside a course: a new client of an enrolled pupil may ask to KEEP the pupil's open course round while it serves
+    // regular history (no deletion on a switch). Verified here: only ACTIVE enrolments count. Absent: no read.
+    if (courseReq.mode === "none" && courseReq.keep && scope.subject === "historie") {
+      const { data: keepRows, error: keepError } = await admin()
+        .from("course_enrolments")
+        .select("course_id")
+        .eq("student_id", student_id)
+        .eq("status", "active");
+      if (keepError) throw keepError;
+      for (const r of (Array.isArray(keepRows) ? keepRows : []) as { course_id?: unknown }[]) {
+        const c = r?.course_id;
+        if (typeof c === "string" && COURSE_OBJECTIVES.includes(c) && !scope.releaseDomains.includes(c)) scope.releaseDomains = [...scope.releaseDomains, c];
+      }
+    }
+    // Marks a served question as part of the course (the client's "Gentagelse" label is limited to courses).
+    const courseTag = (objective: unknown) => (enrolment !== null && objective === enrolment.course ? { course_id: enrolment.course } : {});
+
     // Server-directed sequence (D-338, ../_shared/learning-sequence.ts): OFF unless the Edge secret
     // LAERLIGVERSE_SEQUENCE is "on", objective targeting is on, AND the request asks for it. The SERVER derives
     // the pupil's current step from its own history in the objective; the client may only name the step it
@@ -320,7 +371,7 @@ serve(async (req) => {
         id,
         repeat_count,
         next_review_at,
-        questions (${targeting.mode === "on" ? "\n          learning_objective," : ""}
+        questions (${targeting.mode === "on" || enrolment !== null ? "\n          learning_objective," : ""}
           content,
           answer_format,
           answer_type,
@@ -399,6 +450,8 @@ serve(async (req) => {
             ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
             // L3: the hint count of the served (delivered) content, only in a sequence with LAERLIGVERSE_HINTS=on.
             ...hintsCount(q.content),
+            // D-362: the course this round belongs to (only for an enrolled pupil in the course).
+            ...courseTag(instance.questions.learning_objective),
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -423,6 +476,8 @@ serve(async (req) => {
     // "shadow" and "v2" need migration 20261019150000 applied first; without it their RPC fails loudly.
     // (mixEngine and wireFormat are resolved before step 1.)
     let sortedQuestions: any[];
+    // The pupil's level from the level engine (LEVEL_ENGINE=v1), for the phase gate's per-course candidates.
+    let pupilLevel: number | null = null;
 
     if (route.newQuestions === "level" || route.newQuestions === "level+mix") {
       // LEVEL_ENGINE=v1: the pupil's server-owned level for the subject, nearest-level candidates, no
@@ -441,6 +496,7 @@ serve(async (req) => {
         newly_folded: level.newlyFolded, seed_source: level.seedSource, candidates: ordered.length, mix_kind: mixKind,
       }));
       sortedQuestions = ordered;
+      pupilLevel = level.level;
     } else if (mixEngine === "v2") {
       const { plan, band } = await loadFormatMixPlan(admin() as unknown as MixReadClient, {
         studentId: student_id,
@@ -498,6 +554,61 @@ serve(async (req) => {
         } catch (e) {
           console.error("FORMAT_MIX_SHADOW_FAILED:", (e as { message?: unknown })?.message ?? e);
         }
+      }
+    }
+
+    // Phase gate (D-362 / F-07, ./phase-gate.ts): a question of a phased course is served only in its
+    // pedagogical order (introduktion → forståelsestjek → selvstændig anvendelse); inside the open phase the
+    // order above is kept. Questions without metadata.pilot_phase pass untouched, and nothing is read for them.
+    // When the open phase has nothing new left but a wrong answer may still be practised, the repeat step below
+    // reopens one of THOSE (request_repeat_phase_question_for_student) instead of the generic repeat, which
+    // refuses while later phases are unserved — so a pupil who needs practice is never sent to no_questions.
+    let phaseRepeatIds: string[] = [];
+    let phaseGateApplied = false;
+    let courseState: CourseState | undefined;
+    {
+      const gate = await applyPhaseGate(admin() as unknown as PhaseReadClient, student_id, sortedQuestions, subjectDomains, { level: pupilLevel });
+      if (gate.applied) {
+        phaseGateApplied = true;
+        console.log("PHASE_GATE:", JSON.stringify({
+          candidates: sortedQuestions.length, allowed: gate.allowed.length, held: gate.held, unknown_phase: gate.unknownPhase.length,
+          repeat: gate.repeatIds.length,
+          fetched: gate.fetched,
+          // completed / secured / needs support per phase; provisional_indicator is INTERNAL and PROVISIONAL (never
+          // shown as mastery to pupil or teacher — owner decision 2026-11-14).
+          courses: gate.courses.map((c) => ({ current: c.current, phases: c.phases.map((p) => ({ rank: p.rank, n: p.ids.length, completed: p.completed, all_secured: p.allSecured, needs_support: p.needsSupport.length, first_time_correct: p.firstTimeCorrect, provisional_indicator: p.provisionalIndicator })) })),
+        }));
+        if (gate.unknownPhase.length > 0) console.error("PHASE_GATE_UNKNOWN_PHASE:", JSON.stringify(gate.unknownPhase));
+        sortedQuestions = gate.allowed;
+        phaseRepeatIds = gate.repeatIds;
+        if (enrolment !== null) courseState = gate.courses.find((c) => c.objective === enrolment!.course);
+      }
+    }
+
+    // After the course (./course.ts): never the generic repeat on its own. The first completion is recorded once;
+    // "practice" reopens one question whose latest answer is not right — only if there is one.
+    let coursePractice = false;
+    if (enrolment !== null && isCourseCompleted(courseState)) {
+      const { data: completedAt, error: completionError } = await admin().rpc("record_course_completion", { p_student_id: student_id, p_course_id: enrolment.course });
+      if (completionError) throw completionError;
+      if (completedAt === null) {
+        return new Response(JSON.stringify({ error: "course_not_available" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+        });
+      }
+      if (courseReq.mode === "course" && courseReq.action === "practice" && practiceAvailable(courseState)) {
+        coursePractice = true;
+        sortedQuestions = [];
+        phaseRepeatIds = [];
+        console.log("COURSE_PRACTICE:", JSON.stringify({ course: enrolment.course }));
+      } else {
+        const done = courseCompleteBody(enrolment, courseState, enrolment.acknowledged);
+        console.log("COURSE_COMPLETE:", JSON.stringify({ course: enrolment.course, acknowledged: done.acknowledged, ...done.summary, items: undefined }));
+        return new Response(JSON.stringify(done), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
       }
     }
 
@@ -591,12 +702,31 @@ serve(async (req) => {
       });
     }
 
+    // D-362: a wrong answer of the open phase (server-derived ids, wrong answers only, repeats left) is practised
+    // before anything else — the generic repeat below would refuse while later phases are still unserved.
+    const phaseRepeat = !inserted && phaseRepeatIds.length > 0
+      ? await admin().rpc(
+        "request_repeat_phase_question_for_student",
+        { p_student_id: student_id, p_domains: subjectDomains, p_question_ids: phaseRepeatIds, p_max_repeats: MAX_REPEATS }
+      )
+      : null;
+    if (phaseRepeat !== null && !phaseRepeat.error && !phaseRepeat.data) {
+      // Lost a race (D-362): another tab of this pupil reopened or answered the question since the gate read the
+      // state. Never "no_questions" here — the state changed, so the client fetches again (its one automatic retry)
+      // and gets the open round from the due step, or the next phase from a fresh gate.
+      console.log("PHASE_REPEAT_RACE:", JSON.stringify({ repeat: phaseRepeatIds.length }));
+      return new Response(JSON.stringify({ error: "phase_state_changed" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 409,
+      });
+    }
+
     if (!inserted) {
       // v2: "exhausted" means no SERVABLE unserved question is left — the same rule the v2 candidate
       // window uses (public.question_is_servable), so a pool that holds only formats the client cannot
       // show still reaches repeats instead of "no questions". Every other guard is identical.
       // LEVEL_ENGINE=v1: the same guards over the level engine's pool (20261029120000).
-      const { data: repeatId, error: repeatError } = route.repeatArgs !== "student+domains"
+      const { data: repeatId, error: repeatError } = phaseRepeat ?? (route.repeatArgs !== "student+domains"
         ? (mixEngine === "v2"
           ? await admin().rpc(
             "request_repeat_question_servable_for_student",
@@ -609,7 +739,7 @@ serve(async (req) => {
         : await admin().rpc(
           "request_repeat_level_question_for_student",
           { p_student_id: student_id, p_domains: subjectDomains }
-        );
+        ));
 
       if (repeatError) throw repeatError;
 
@@ -676,6 +806,7 @@ serve(async (req) => {
                   ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
                   // D-338: the server's step and activity mode, only in a sequence.
                   ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
+                  ...courseTag(enrolment?.course),
                   is_repeat: true,
                 }),
                 {
@@ -692,6 +823,36 @@ serve(async (req) => {
             }
           }
         }
+      }
+    }
+
+    if (!inserted && coursePractice && courseState !== undefined && enrolment !== null) {
+      // Practice lost a race (another tab answered the last wrong question): show the summary, never a right answer.
+      return new Response(JSON.stringify(courseCompleteBody(enrolment, courseState, enrolment.acknowledged)), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    if (!inserted && phaseGateApplied) {
+      // D-362 (CI run 43619749472, two tabs): the due step above read "no open round", but another request of this
+      // pupil opened one since — a phase repeat (then this gate saw the question "open" and offered no repeat) or a
+      // new question (then this request's insert hit idx_one_open_question). Every later step refuses while that round
+      // is open, so "no_questions" here would be false: the pupil can continue. A FRESH read decides; with an open
+      // round the client's automatic retry gets it from the due step. Only for phased courses (the gate ran).
+      const { data: openRows, error: openError } = await admin()
+        .from("question_instances")
+        .select("id")
+        .eq("student_id", student_id)
+        .eq("answered", false)
+        .limit(1);
+      if (openError) throw openError;
+      if (Array.isArray(openRows) && openRows.length > 0) {
+        console.log("PHASE_OPEN_RACE:", JSON.stringify({ repeat: phaseRepeatIds.length }));
+        return new Response(JSON.stringify({ error: "phase_state_changed" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        });
       }
     }
 
@@ -723,6 +884,8 @@ serve(async (req) => {
         ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
         // L3: the hint count of the served content, only in a sequence with LAERLIGVERSE_HINTS=on.
         ...hintsCount(inserted.question?.content),
+        // D-362: the course this round belongs to (only for an enrolled pupil in the course).
+        ...courseTag(inserted.question?.learning_objective),
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

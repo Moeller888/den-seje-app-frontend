@@ -24,6 +24,7 @@ import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 import { attachReadAloudControl, attachOptionReadAloudControl, stopReadAloud } from "./js/read-aloud/adapters/quiz.js";
 import { installFlagDiagnostics } from "./js/flags.js";
+import { COURSE_CHOICE_KEY_PREFIX, buildCourseOffer, buildCourseSummary, isCourseRepeat, readCourseComplete, readEnrolments } from "./js/course-summary.js";
 // H5 PR 4 (D-266, D-273): OFF by default and not switchable from the browser — see the module header.
 import {
   isH5SubmissionsEnabled, isH5Eligible, createSubmission, savePending, persistAndVerify, loadPending, clearPending,
@@ -261,6 +262,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   let placementBand = null;  // result of the former placement test, if the pupil took it
   let persistedBand = null;  // earned level, updated every 10 questions
   let activeDomains = null;  // teacher-assigned domain filter (null = all domains)
+  // D-362 undervisningsforløb (js/course-summary.js): the pupil's ACTIVE enrolments (RLS: own rows; none on an older
+  // backend), the course this session works in (null = regular history), a one-shot course_action, and whether the
+  // pupil is in the practice flow started from the summary (then the summary is shown again afterwards).
+  let courseEnrolments = [];
+  let courseMode = null;
+  let pendingCourseAction = null;
+  let coursePracticeFlow = false;
 
   // Subject (fag) chosen on spil.html via ?fag=historie|engelsk|dansk. Unknown/missing = historie.
   const SUBJECT_LABEL = { engelsk: "Engelsk", dansk: "Dansk" };
@@ -361,6 +369,51 @@ document.addEventListener("DOMContentLoaded", async () => {
     english:               "Engelsk",
     danish:                "Dansk",
   };
+
+  // D-362: only historie has courses. A failed read (or a backend without the table) means "no course".
+  async function loadCourseEnrolments() {
+    if (currentSubject !== "historie") return;
+    try {
+      const { data, error } = await supabase
+        .from("course_enrolments")
+        .select("course_id, status, summary_acknowledged_at, courses(title)")
+        .eq("student_id", studentId)
+        .eq("status", "active");
+      courseEnrolments = readEnrolments(data, error);
+    } catch (_e) {
+      courseEnrolments = [];
+    }
+  }
+
+  const courseChoiceKey = (id) => COURSE_CHOICE_KEY_PREFIX + id;
+  function storedCourseChoice(id) {
+    try { return safeSessionStorage()?.getItem(courseChoiceKey(id)) ?? null; } catch (_e) { return null; }
+  }
+  function storeCourseChoice(id, choice) {
+    try { safeSessionStorage()?.setItem(courseChoiceKey(id), choice); } catch (_e) { /* per-tab convenience only */ }
+  }
+  // The course the pupil is offered: enrolled and the summary not yet acknowledged (server state). The choice for
+  // this tab ("course" / "regular") is a convenience in sessionStorage; the server decides everything else.
+  function openCourse() {
+    return courseEnrolments.find((c) => !c.acknowledged) ?? null;
+  }
+  async function acknowledgeCourse(id) {
+    try {
+      const { error } = await supabase.rpc("acknowledge_course_summary", { p_course_id: id });
+      if (error) console.error("COURSE ACK ERROR:", error);
+    } catch (e) {
+      console.error("COURSE ACK ERROR:", e);
+    }
+    const c = courseEnrolments.find((x) => x.id === id);
+    if (c) c.acknowledged = true;
+    storeCourseChoice(id, "regular");
+  }
+  function leaveCourse(id) {
+    courseMode = null;
+    pendingCourseAction = null;
+    coursePracticeFlow = false;
+    if (id) storeCourseChoice(id, "regular");
+  }
 
   async function loadActiveDomains() {
     const { data } = await supabase
@@ -1530,6 +1583,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function getNextQuestion() {
     setUIState(UI_STATES.LOADING_QUESTION);
 
+    // D-362: the course fields (the server verifies the enrolment; a regular pupil sends none).
+    const courseFields = courseMode
+      ? { course: courseMode, ...(pendingCourseAction ? { course_action: pendingCourseAction } : {}) }
+      : (courseEnrolments.length > 0 ? { keep_course_rounds: true } : {});
+    pendingCourseAction = null;
+
     const sessionContext = {
       wave_phase: sessionWavePhase,
       consecutive_incorrect: sessionConsecutiveIncorrect,
@@ -1539,11 +1598,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let { data, error } = await supabase.functions.invoke(
       "get-next-question",
-      { body: { session_context: sessionContext, selected_grade: selectedGrade, current_difficulty_band: currentDifficultyBand, subject: currentSubject } }
+      { body: { session_context: sessionContext, selected_grade: selectedGrade, current_difficulty_band: currentDifficultyBand, subject: currentSubject, ...courseFields } }
     );
 
     if (error) {
       await new Promise(resolve => setTimeout(resolve, 500));
+      ({ data, error } = await supabase.functions.invoke("get-next-question", { body: { subject: currentSubject, ...courseFields } }));
+    }
+
+    // D-362: the course is no longer available (access revoked): regular history, visibly logged.
+    if (error && courseMode && error?.context?.status === 403) {
+      console.error("COURSE NOT AVAILABLE:", courseMode);
+      leaveCourse(courseMode);
+      courseEnrolments = [];
       ({ data, error } = await supabase.functions.invoke("get-next-question", { body: { subject: currentSubject } }));
     }
 
@@ -1562,6 +1629,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (parsed.step === "no_questions") {
       return { step: "no_questions" };
+    }
+
+    if (parsed.step === "course_complete") {
+      const summary = readCourseComplete(parsed);
+      if (!summary) { console.error("INVALID COURSE SUMMARY:", parsed); return null; }
+      return { step: "course_complete", summary };
     }
 
     if (!parsed.content || !parsed.content.question) {
@@ -1859,7 +1932,50 @@ document.addEventListener("DOMContentLoaded", async () => {
     // here, at the transition, before the next question is fetched.
     if (await offerBreakIfDue()) return;
 
+    // D-362: an enrolled pupil whose course summary is not yet acknowledged chooses, once per tab, between the
+    // course and regular history. The server decides what the course serves.
+    const offered = courseMode === null ? openCourse() : null;
+    if (offered) {
+      const choice = storedCourseChoice(offered.id);
+      if (choice === "course") {
+        courseMode = offered.id;
+      } else if (choice !== "regular") {
+        uiState = "IDLE";
+        questionElement.textContent = "";
+        questionElement.dataset.state = "course-offer";
+        feedback.textContent = "";
+        optionsContainer.innerHTML = "";
+        optionsContainer.appendChild(buildCourseOffer(document, offered, {
+          onCourse: () => { storeCourseChoice(offered.id, "course"); courseMode = offered.id; loadAndRenderQuestion(); },
+          onRegular: () => { storeCourseChoice(offered.id, "regular"); loadAndRenderQuestion(); },
+        }));
+        return;
+      }
+    }
+
     const question = await getNextQuestion();
+
+    if (question && question.step === "course_complete") {
+      const s = question.summary;
+      if (s.acknowledged && !coursePracticeFlow) {
+        // Already seen and chosen (another tab, a reload after "Fortsæt"): straight on with regular history.
+        leaveCourse(s.course.id);
+        loadAndRenderQuestion();
+        return;
+      }
+      uiState = "IDLE";
+      questionElement.textContent = "";
+      questionElement.dataset.state = "course-complete";
+      feedback.textContent = "";
+      feedback.className = "";
+      optionsContainer.innerHTML = "";
+      optionsContainer.appendChild(buildCourseSummary(document, s, {
+        onPractice: () => { coursePracticeFlow = true; pendingCourseAction = "practice"; loadAndRenderQuestion(); },
+        onContinue: async () => { await acknowledgeCourse(s.course.id); leaveCourse(s.course.id); loadAndRenderQuestion(); },
+        onHub: async () => { await acknowledgeCourse(s.course.id); window.location.href = "hub.html"; },
+      }));
+      return;
+    }
 
     if (!question) {
       // The state machine is stuck at LOADING_QUESTION with no valid exit.
@@ -1947,6 +2063,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     questionElement.textContent = question.content.question;
+    // D-362: "Gentagelse" only for a repeated course round (round 2+); regular quizzes look exactly as before.
+    document.getElementById("course-repeat-badge")?.remove();
+    if (isCourseRepeat(question)) {
+      const badge = document.createElement("p");
+      badge.id = "course-repeat-badge";
+      badge.className = "course-repeat-badge";
+      badge.textContent = "Gentagelse";
+      questionElement.parentNode?.insertBefore(badge, questionElement);
+    }
     // 157O: optional read-aloud control — no-op when ENABLE_READ_ALOUD is off; fail-soft.
     attachReadAloudControl(questionElement, question.content.question, { subject: currentSubject });
     feedback.textContent = "";
@@ -1983,6 +2108,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // else: currentDifficultyBand stays at GRADE_START_BAND[grade] set by loadGrade()
 
   await loadActiveDomains(); // show domain focus indicator if teacher has assigned domains
+  await loadCourseEnrolments(); // D-362: an enrolled pupil may work in a course (none: the quiz is unchanged)
 
   const avatarDisplay = document.getElementById("avatar-display");
   if (avatarDisplay) {
