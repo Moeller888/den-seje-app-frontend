@@ -13,9 +13,12 @@
 // "mastered" (what the approved rules derive from answers). The introduction pays nothing and is not evidence.
 //
 // HONEST LIMIT: the Lærligverse host and game have no SERVER introduction view yet (the archive prototype shows its own
-// local intro cards; the bridge has no introduction message). So the pupil signs in through the real login page in the
-// browser, and the browser then calls the Edge Functions with the pupil's own session — the requests a host will
-// make. Rendering a server introduction inside the host is a separate frontend step.
+// local intro cards; the bridge has no introduction message). So this is a BROWSER-BASED INTEGRATION / API TEST: the
+// pupil signs in through the real login page in the browser, and the test then makes the requests a host will make, over
+// HTTP with that sign-in's own session token. It does not test what the pupil sees. Rendering a server introduction
+// inside the host is a separate frontend step. (Calls made with fetch from inside the login page failed in this lane
+// with "Failed to fetch" before reaching the Edge Runtime — runs 43709089926 and 43711249866; cause not established,
+// recorded as an open observation, not worked around in the product.)
 import { test, expect } from "@playwright/test";
 import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -128,11 +131,6 @@ async function browserSignIn(page, p) {
   expect(new URL(page.url()).pathname).toMatch(/\/login\.html$/);
   return token;
 }
-/** A call from the BROWSER (the app's origin, CORS included) with the pupil's own session. */
-const fromPage = (page, token, fn, body) => page.evaluate(async ({ url, anon, token, body }) => {
-  const r = await fetch(url, { method: "POST", headers: { apikey: anon, authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(body) });
-  return { status: r.status, body: await r.json().catch(() => null) };
-}, { url: `${SUPA}/functions/v1/${fn}`, anon: ANON, token, body });
 const post = async (request, token, fn, body, headers = {}) => {
   const r = await request.post(`${SUPA}/functions/v1/${fn}`, { headers: { apikey: ANON, authorization: `Bearer ${token}`, ...json, ...headers }, data: body });
   return { status: r.status(), body: await r.json().catch(() => null) };
@@ -166,7 +164,7 @@ test("the chain: browser sign-in → introduction served → 'shown' registered 
   const unchanged = async (label) => expect(await rewardState(request, p), `${label}: no XP, coins, mastery, level, attempt or event`).toEqual(start);
 
   // 1. The server serves the introduction (no task exists yet), with the approved content and no answer key.
-  const intro = await fromPage(page, token, "get-next-question", next());
+  const intro = await post(request, token, "get-next-question", next());
   expect(intro.status, JSON.stringify(intro.body)).toBe(200);
   expect(intro.body).toMatchObject({ step: "introduction", learning_objective: OBJECTIVE, learning_step: "introduction" });
   expect(intro.body.content).toEqual(INTRO.content);
@@ -179,14 +177,14 @@ test("the chain: browser sign-in → introduction served → 'shown' registered 
   await unchanged("served");
 
   // 2. A refresh, and a pupil who asks straight for the task: the SAME introduction again, still no task.
-  const again = await fromPage(page, token, "get-next-question", next({ learning_step: "guided_practice" }));
+  const again = await post(request, token, "get-next-question", next({ learning_step: "guided_practice" }));
   expect(again.body).toMatchObject({ step: "introduction", introduction_round_id: roundId });
   expect(await instances(request, p)).toEqual([]);
   expect(await rounds(request, p)).toHaveLength(1);
 
   // 3. "Shown" is reported and registered once, in server time.
   const rid = randomUUID();
-  const shown = await fromPage(page, token, "introduction-progress", { action: "presented", round_id: roundId, request_id: rid });
+  const shown = await post(request, token, "introduction-progress", { action: "presented", round_id: roundId, request_id: rid });
   expect(shown.status, JSON.stringify(shown.body)).toBe(200);
   expect(shown.body.outcome).toBe("recorded");
   rs = await rounds(request, p);
@@ -195,23 +193,23 @@ test("the chain: browser sign-in → introduction served → 'shown' registered 
   expect(Date.parse(presentedAt)).toBeGreaterThanOrEqual(Date.parse(rs[0].served_at));
   await unchanged("shown");
   // 4. The SAME report again (a retry after a lost reply): the original time; a NEW id: the time never moves.
-  const replay = await fromPage(page, token, "introduction-progress", { action: "presented", round_id: roundId, request_id: rid });
+  const replay = await post(request, token, "introduction-progress", { action: "presented", round_id: roundId, request_id: rid });
   expect(replay).toEqual({ status: 200, body: { outcome: "replay", at: shown.body.at } });
-  const otherId = await fromPage(page, token, "introduction-progress", { action: "presented", round_id: roundId, request_id: randomUUID() });
+  const otherId = await post(request, token, "introduction-progress", { action: "presented", round_id: roundId, request_id: randomUUID() });
   expect(otherId).toEqual({ status: 200, body: { outcome: "already_recorded", at: shown.body.at } });
   rs = await rounds(request, p);
   expect(rs).toHaveLength(1);
   expect([rs[0].presented_at, rs[0].presented_request_id]).toEqual([presentedAt, rid]);
   // Shown is not completed: the sequence still serves the introduction.
-  expect((await fromPage(page, token, "get-next-question", next())).body.step).toBe("introduction");
+  expect((await post(request, token, "get-next-question", next())).body.step).toBe("introduction");
   await unchanged("shown again");
 
   // 5. Completed (and its retry): the sequence may move on — still nothing paid.
   const cid = randomUUID();
-  const done = await fromPage(page, token, "introduction-progress", { action: "completed", round_id: roundId, request_id: cid });
+  const done = await post(request, token, "introduction-progress", { action: "completed", round_id: roundId, request_id: cid });
   expect(done.status).toBe(200);
   expect(done.body.outcome).toBe("recorded");
-  expect(await fromPage(page, token, "introduction-progress", { action: "completed", round_id: roundId, request_id: cid }))
+  expect(await post(request, token, "introduction-progress", { action: "completed", round_id: roundId, request_id: cid }))
     .toEqual({ status: 200, body: { outcome: "replay", at: done.body.at } });
   rs = await rounds(request, p);
   expect(rs[0].completion_request_id).toBe(cid);
@@ -219,7 +217,7 @@ test("the chain: browser sign-in → introduction served → 'shown' registered 
   await unchanged("completed");
 
   // 6. The server's next step: the first guided-practice task, in practice mode.
-  const task = await fromPage(page, token, "get-next-question", next());
+  const task = await post(request, token, "get-next-question", next());
   expect(task.status, JSON.stringify(task.body)).toBe(200);
   expect(task.body).toMatchObject({ learning_objective: OBJECTIVE, learning_step: "guided_practice", mode: "practice" });
   expect(task.body.content.question).toBe(PRACTICE.content.question);
@@ -228,7 +226,7 @@ test("the chain: browser sign-in → introduction served → 'shown' registered 
   expect(inst[0]).toMatchObject({ id: task.body.question_instance_id, answered: false, presented_at: null });
   await unchanged("first task served");
   // The task's own "shown" (K9) is not an answer either.
-  const taskShown = await fromPage(page, token, "introduction-progress", { action: "presented", question_instance_id: task.body.question_instance_id, round_no: task.body.round_no });
+  const taskShown = await post(request, token, "introduction-progress", { action: "presented", question_instance_id: task.body.question_instance_id, round_no: task.body.round_no });
   expect(taskShown.status, JSON.stringify(taskShown.body)).toBe(200);
   expect(taskShown.body.outcome).toBe("recorded");
   expect((await instances(request, p))[0].answered).toBe(false);
@@ -237,7 +235,7 @@ test("the chain: browser sign-in → introduction served → 'shown' registered 
   // 7. Only the ANSWER moves progression, by the existing rules: correct pays the server's reward, once.
   const sub = randomUUID();
   const answer = { question_instance_id: task.body.question_instance_id, answer: PRACTICE.content.correct, question_shown_at: Date.now(), round_no: task.body.round_no, submission_id: sub };
-  const graded = await fromPage(page, token, "process-event", answer);
+  const graded = await post(request, token, "process-event", answer);
   expect(graded.status, JSON.stringify(graded.body)).toBe(200);
   expect(graded.body).toMatchObject({ outcome: "recorded", status: "correct" });
   const at = await attempts(request, p);
@@ -248,8 +246,8 @@ test("the chain: browser sign-in → introduction served → 'shown' registered 
   expect(after.xp - start.progress[0].xp).toBe(at[0].xp_awarded);
   expect(after.coins - start.progress[0].coins).toBe(at[0].coins_awarded);
   // A replayed answer (a retried request) pays nothing again; a late introduction report changes nothing.
-  expect((await fromPage(page, token, "process-event", answer)).body.outcome).toBe("replay");
-  expect((await fromPage(page, token, "introduction-progress", { action: "presented", round_id: roundId, request_id: rid })).body.outcome).toBe("replay");
+  expect((await post(request, token, "process-event", answer)).body.outcome).toBe("replay");
+  expect((await post(request, token, "introduction-progress", { action: "presented", round_id: roundId, request_id: rid })).body.outcome).toBe("replay");
   expect(await attempts(request, p)).toHaveLength(1);
   expect((await rows(request, `student_progress?select=xp,coins&student_id=eq.${p.id}`))[0]).toEqual(after);
   expect((await rounds(request, p))[0].presented_at).toBe(presentedAt);
