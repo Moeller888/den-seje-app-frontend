@@ -309,6 +309,19 @@ export const TEST_PROFILES = Object.freeze({
     "20261103110000_l1_k1_attempt_context.sql":
       "TEST PROFILE k1: L1 K1 is NOT applied in production; replayed only in the isolated K1 lane so H5 submissions (p_mode/p_hints_used → 9/10-parameter _v2) can be tested (D-341)",
   }),
+  // F10-B2 (owner GO 2026-11-15, PR #664): the introduction lane. Exactly the chain the introduction step needs, in
+  // its binding order K1 → L3/L5 → K9 → introductions (each file's own guard refuses a wrong order). None of the four
+  // is applied in production; the lane is the only place they are replayed together.
+  introduction: Object.freeze({
+    "20261103110000_l1_k1_attempt_context.sql":
+      "TEST PROFILE introduction: L1 K1 (NOT applied in production) — served_at and the H5 attempt context K9 builds on",
+    "20261108043500_laerligverse_served_mode_hint_log.sql":
+      "TEST PROFILE introduction: Lærligverse L3/L5 (NOT applied in production) — K9's guard requires it (served_mode, the hint log, no client UPDATE on question_instances)",
+    "20261109043500_laerligverse_presented_at.sql":
+      "TEST PROFILE introduction: Lærligverse K9 (NOT applied in production) — question_instances.presented_at and mark_presented",
+    "20261110043500_laerligverse_introductions.sql":
+      "TEST PROFILE introduction: Lærligverse LP-13/K9 introductions (NOT applied in production) — learning_introductions, introduction_rounds and the serve/mark/complete functions",
+  }),
 });
 
 export function profileFiles(profile = DEFAULT_PROFILE) {

@@ -85,7 +85,14 @@ Svarkoder:
 - En ugyldig body giver 400.
 - Alt andet giver 500 uden detaljer.
 
-## 5. Ikke bygget
+## 5. Testbevis og CI-bane (PR #664)
+
+- **Påkrævet `unit`-kontrol:** `tests/unit/laerligverse-introduction-flow-run.test.mjs` bygger replay-profilen `introduction` (K1 → L3/L5 → K9 → introduktioner) i PGlite. Testen viser, at visning, genindlæsning, registrering, gentagelse, afviste kald og gennemførelse ikke ændrer nogen række med elevens id uden for `introduction_rounds`, og at et senere svar følger de gældende regler. En tvilling uden introduktion ender med samme XP, mønter, mastery og niveau, og en plantet belønning bliver opdaget og rullet tilbage. `tests/unit/laerligverse-introduction-concurrency.test.mjs` kører samtidige kald mod PostgreSQL 17 (kun i CI).
+- **Isoleret bane `isolated-e2e (run 1, introduktion-testprofil)`:** samme isolerede stak med profilen `introduction`. `LAERLIGVERSE_INTRODUCTION` og `LAERLIGVERSE_PRESENTED` er kun tændt i denne bane. `tests/isolated/laerligverse-introduction.isolated.spec.mjs` kører hele kæden med databasen som orakel, og `tests/isolated/require-complete-run.mjs` får banen til at fejle, hvis en test bliver sprunget over eller mangler.
+- **Grænse:** eleven logger ind gennem den rigtige login-side, men introduktionen vises ikke i værten. Browseren kalder Edge Functions med elevens egen session, sådan som værten vil gøre.
+- **Mergebetingelse:** indtil banen er et påkrævet check, merges #664 kun, når `isolated-e2e (run 1, introduktion-testprofil)` er grøn på den head, der merges.
+
+## 6. Ikke bygget
 
 - Værtens og spillets brug: broen kender ikke `step: "introduction"` endnu.
 - Forståelsestjekket som servertrin.
