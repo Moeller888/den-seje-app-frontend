@@ -331,17 +331,27 @@ test("simultaneous requests and a lost connection: one round, one registration, 
   const done = await Promise.all([randomUUID(), randomUUID()].map((id) => post(request, token, "introduction-progress", { action: "completed", round_id: roundId, request_id: id })));
   expect(done.map((d) => d.body.outcome).sort()).toEqual(["already_completed", "recorded"]);
   expect(await rewardState(request, p)).toEqual(start);
-  // The first task, asked for by four tabs at once: ONE open instance, the same for all.
+  // The first task, asked for by four tabs at once: ONE open instance. The contract for a tab that loses the race for
+  // idx_one_open_question is an explicit 409 open_question_exists (get-next-question/objective-target.ts), never a
+  // second instance and never "exhausted"; its retry gets the winner's instance.
   const tasks = await Promise.all([0, 1, 2, 3].map(() => post(request, token, "get-next-question", next())));
-  for (const t of tasks) expect(t.body, JSON.stringify(t.body)).toMatchObject({ learning_step: "guided_practice", mode: "practice" });
-  expect(new Set(tasks.map((t) => t.body.question_instance_id)).size).toBe(1);
+  const won = tasks.filter((t) => t.status === 200);
+  for (const t of tasks) {
+    if (t.status === 200) expect(t.body, JSON.stringify(t.body)).toMatchObject({ learning_step: "guided_practice", mode: "practice" });
+    else expect(t, JSON.stringify(t)).toEqual({ status: 409, body: { error: "open_question_exists" } });
+  }
+  expect(won.length, "at least one tab gets the task").toBeGreaterThanOrEqual(1);
+  expect(new Set(won.map((t) => t.body.question_instance_id)).size, "every winner got the same instance").toBe(1);
+  const retry = await post(request, token, "get-next-question", next());
+  expect(retry.status).toBe(200);
+  expect(retry.body.question_instance_id, "a losing tab's retry gets the same instance").toBe(won[0].body.question_instance_id);
   expect(await instances(request, p)).toHaveLength(1);
   // The connection is lost; the pupil signs in again (a new session): the same task, the same content, no new
   // introduction and no new instance — the server, not the browser, holds the state.
   const fresh = await signIn(request, p);
   const resumed = await post(request, fresh, "get-next-question", next());
-  expect(resumed.body).toMatchObject({ question_instance_id: tasks[0].body.question_instance_id, learning_step: "guided_practice", round_no: tasks[0].body.round_no });
-  expect(resumed.body.content).toEqual(tasks[0].body.content);
+  expect(resumed.body).toMatchObject({ question_instance_id: retry.body.question_instance_id, learning_step: "guided_practice", round_no: retry.body.round_no });
+  expect(resumed.body.content).toEqual(retry.body.content);
   expect(await instances(request, p)).toHaveLength(1);
   expect(await rounds(request, p)).toHaveLength(1);
   expect(await rewardState(request, p)).toEqual(start);
