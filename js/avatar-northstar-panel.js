@@ -18,7 +18,7 @@
 // the same store, so at most one sweater or tank top is chosen; the same rule and fallback.
 // D-359: with the flag on pupils get mountNorthstarWardrobe below: single parts in the right-hand column, no sets. The K panel is what
 // the local opt-in shows while the flag is off, and what the verifiers drive.
-import { northstarPieces, northstarPieceLayers, northstarFitPiece, northstarOutfitNow, NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_TOP_CHOICES, NORTHSTAR_SELECTABLE_TOPS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor, northstarUseAccount, northstarAccountChoice, isNorthstarHairOn, northstarHairNow, northstarFitHair, northstarHeadSrc, NORTHSTAR_HAIRS, NORTHSTAR_HAIR_OPT_IN_KEY, NORTHSTAR_HAIR_ITEM_CATEGORY } from "./avatar-layers.js";
+import { northstarPieces, northstarPieceLayers, northstarFitPiece, northstarOutfitNow, NORTHSTAR_OUTFITS, NORTHSTAR_OPT_IN_KEY, NORTHSTAR_OUTFIT_KEY, NORTHSTAR_TEE_KEY, NORTHSTAR_PANTS_KEY, NORTHSTAR_SHOES_KEY, NORTHSTAR_PRINT_TEES, NORTHSTAR_SOLID_PANTS, NORTHSTAR_SHOE_CHOICES, NORTHSTAR_SWEATER_KEY, NORTHSTAR_LS2_SWEATERS, NORTHSTAR_TANKS, NORTHSTAR_TOP_CHOICES, NORTHSTAR_SELECTABLE_TOPS, isNorthstarWardrobeOn, northstarSelectedOutfit, northstarSelectedTee, northstarSelectedPants, northstarSelectedShoe, northstarTeeAllowed, northstarPantsAllowed, northstarShoeAllowed, northstarSelectedSweater, northstarSweaterAllowed, northstarOutfitFor, northstarUseAccount, northstarAccountChoice, isNorthstarHairOn, northstarHairNow, northstarFitHair, northstarHeadSrc, NORTHSTAR_HAIR_OPT_IN_KEY, NORTHSTAR_HAIR_ITEM_CATEGORY, NORTHSTAR_HAIR_NH5B_OPT_IN_KEY, northstarSelectableHairs } from "./avatar-layers.js";
 
 function store(key, value) {
   try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch (_e) { return false; }
@@ -34,6 +34,11 @@ export function applyNorthstarUrlOptIn(search) {
   try { h = new URLSearchParams(search || "").get("northstarhair"); } catch (_e) { h = null; }
   if (h === "1") store(NORTHSTAR_HAIR_OPT_IN_KEY, "1");
   else if (h === "0") store(NORTHSTAR_HAIR_OPT_IN_KEY, null);
+  // D-377: this browser's opt-in to the top knot's two cards while their flag is off (?northstarnh5b=1 / =0)
+  let k = null;
+  try { k = new URLSearchParams(search || "").get("northstarnh5b"); } catch (_e) { k = null; }
+  if (k === "1") store(NORTHSTAR_HAIR_NH5B_OPT_IN_KEY, "1");
+  else if (k === "0") store(NORTHSTAR_HAIR_NH5B_OPT_IN_KEY, null);
   return v;
 }
 
@@ -343,7 +348,7 @@ export function mountNorthstarWardrobe(root, preview, { saveChoice, cardsRoot = 
     grid.className = "inventory-grid";
     grid.dataset.wardrobeCategory = "hair";
     grid.dataset.itemCategory = NORTHSTAR_HAIR_ITEM_CATEGORY;
-    for (const [id, h] of Object.entries(NORTHSTAR_HAIRS)) {
+    for (const [id, h] of Object.entries(northstarSelectableHairs())) {   // D-377: the top knot only while its cards are on
       const card = document.createElement("div");
       card.className = "item-card";
       card.dataset.rarity = "common"; card.dataset.hair = id;
