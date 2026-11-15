@@ -1,8 +1,12 @@
 # Beskyttet environment `e2e-prod` til produktions-secrets (fase 1A)
 
 **Status:** forberedt i kode, **ikke aktiv.** Workflow-ændringen må først merges, når ejeren har oprettet og beskyttet
-environmentet (afsnit 3) og godkendt den samlede plan. Indtil secrets er flyttet (fase 1B), henter jobbene fortsat
-repository-secrets.
+environmentet (afsnit 3) og godkendt den samlede plan.
+
+**Ingen fallback (metode B):** de to jobs læser **kun** environmentets egne secrets med præfikset `E2E_PROD_`, aldrig
+repository-secrets. Fra merge og indtil de 7 `E2E_PROD_*`-secrets ligger i `e2e-prod` (fase 1B), stopper preflight
+derfor enhver manuel produktionskørsel (`Playwright Tests` via dispatch, `Update Avatar Goldens`) før `npm ci`.
+Almindelig PR- og main-CI berøres ikke. Se afsnit 6 om rækkefølgen.
 
 Overordnet plan for adskillelse af ejerens og agenternes GitHub-rettigheder: fase 0-rapporten (2026-11-15).
 Relaterede dokumenter: `docs/CLAUDE_WORKFLOW.md` (manuelle produktionskørsler, D-261),
@@ -26,17 +30,30 @@ approvers").
 | `update-avatar-goldens.yml` → `update` | kun `workflow_dispatch` | `environment: e2e-prod` + `e2e-prod preflight` lige efter checkout |
 
 - **Almindelig CI er uberørt.** Ingen andre jobs har et environment. `test` springes over ved push og PR via `if:`.
-  At GitHub evaluerer `if:` før environmentet, så et oversprunget job aldrig venter på godkendelse, er SANDSYNLIGT. Det
-  bevises af D6 i afsnit 5 og af PR-kørslen for denne ændring.
+  At GitHub evaluerer `if:` før environmentet, så et oversprunget job aldrig venter på godkendelse og ikke opretter
+  environmentet, er VERIFICERET for PR-tilfældet. I PR #714's kørsel (2026-11-15) var `test` SKIPPED, uden deployment og
+  uden automatisk oprettet `e2e-prod`. D6 i afsnit 5 bekræfter det igen efter merge.
+- **Ingen fallback til repository-secrets (metode B).** GitHub slår et secret-navn op på det laveste niveau, der
+  definerer det. Mangler et environment-secret, får jobbet derfor stille repository-secretet med samme navn. Derfor:
+  - environmentets secrets har egne navne: `E2E_PROD_` + programnavnet (`SECRET_SOURCES` i
+    `.github/ci/e2e-prod-environment.mjs`). De må **aldrig** oprettes på repository-niveau;
+  - jobbene mapper dem eksplicit til de navne, programmerne læser, fx
+    `SUPABASE_URL: ${{ secrets.E2E_PROD_SUPABASE_URL }}`;
+  - mangler et `E2E_PROD_*`-secret, bliver værdien tom, og preflight stopper jobbet.
 - **Preflight** (`.github/ci/e2e-prod-preflight.mjs`, regel i `.github/ci/e2e-prod-environment.mjs`) stopper jobbet før
   `npm ci` og ethvert Supabase-kald, hvis:
   - variablen `E2E_PROD_ENVIRONMENT` ikke er præcis `e2e-prod`. Den findes **kun** på environment-niveau, så den
     beviser, at jobbet kører i det beskyttede environment;
-  - en af de 7 credentials mangler.
+  - en af de 7 credentials mangler. Fejlen navngiver det manglende `E2E_PROD_*`-secret.
   Trinnet udskriver kun navne og "sat"/"mangler", aldrig en værdi, en hash eller en længde. Det er en
   verifikation, ikke en sikkerhedsgrænse.
 - **Kontrakttest** (`tests/unit/ci-e2e-prod-environment.test.mjs`) fastlåser:
   - kun de to jobs har produktions-credentials, og begge kører i `e2e-prod`;
+  - hvert credential mappes præcis én gang, i job-env, fra præcis `${{ secrets.E2E_PROD_<NAVN> }}`. Ingen
+    trin-niveau-overskrivning;
+  - ethvert secret-udtryk i ethvert workflow er et rent `${{ secrets.NAVN }}`. Altså ingen `||`-fallback,
+    `toJSON(secrets)` eller `secrets['…']`;
+  - intet workflow refererer et produktions-credential under programnavnet (repository-navnet);
   - uden for dem har kun `adventure-engine.yml:cr01` secrets (de 8 denylist-dele);
   - ingen andre jobs har et environment;
   - ingen `pull_request_target` eller `workflow_run`;
@@ -67,6 +84,9 @@ Kontrol af ejeren eller Claude (read-only API), før merge:
 - `deployment_branch_policy.custom_branch_policies: true`.
 - `GET …/environments/e2e-prod/deployment-branch-policies` → præcis `main` (type `branch`).
 - `GET /repos/{repo}/actions/variables` indeholder **ikke** `E2E_PROD_ENVIRONMENT`.
+- `GET /repos/{repo}/actions/secrets` (kun navne og datoer) indeholder **intet** navn, der begynder med `E2E_PROD_`.
+  Et repository-secret med et af de navne ville genindføre fallback. Gentag kontrollen før og efter fase 1B.
+  Repoet ejes af en personlig konto, så der findes ingen organisations-secrets.
 
 **Hvorfor environmentet skal oprettes først:** en workflow-reference til et environment, der ikke findes, opretter det
 automatisk **uden** beskyttelsesregler.
@@ -88,7 +108,9 @@ deployment via API'et som ejeren. LÆRLIG-GUARD blokerer skrivende `gh api`, men
 egentlige lukning er fase 5 (agenterne uden ejerens credentials).
 
 ## 5. Demonstration af beskyttelsen før flytning af secrets (fase 1A-verifikation, efter merge)
-Kør, mens `e2e-prod` **ingen** secrets har. Hver dispatch udføres af ejeren eller med ejerens særskilte GO.
+Helst, mens `e2e-prod` **ingen** secrets har. Det er også sikkert med `E2E_PROD_*` på plads: D1, D3 og D5 kører
+ingen trin, og i D4 afviser guarden før `npm ci`. Uden secrets ville D4 alternativt stoppe i preflight. Hver dispatch
+udføres af ejeren eller med ejerens særskilte GO.
 
 | # | Handling | Forventet | Bevis |
 |---|---|---|---|
@@ -102,19 +124,35 @@ Kør, mens `e2e-prod` **ingen** secrets har. Hver dispatch udføres af ejeren el
 D4 rammer ikke produktionen: jobbet afvises i guarden, før credentials bruges, og repo-secrets står uændret. Kør ikke
 `Update Avatar Goldens` mod `main` som demonstration. Jobbet ændrer slot-0-testeleven i produktionen.
 
-## 6. Secrets, der flyttes i fase 1B (kun navne)
-| Navn | Værdiens kilde | Bemærkning |
-|---|---|---|
-| `SUPABASE_URL` | Supabase-projektets URL (ikke hemmelig) | kopiér |
-| `SUPABASE_ANON_KEY` | Supabase → API keys → publishable key | kopiér |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → API keys → **ny dedikeret secret key** (fx `github_actions_e2e_prod`) | Ejeren behøver ikke den nuværende værdi (`github_actions_ci`, sat 2026-11-09). Kun fremad: den gamle nøgle tilbagekaldes først, når environmentet er grønt |
-| `TEST_STUDENT_EMAIL` | kendt testkonto | kopiér |
-| `TEST_STUDENT_PASSWORD`, `TEST_TEACHER_PASSWORD`, `TEST_STUDENT2_PASSWORD` | ejerens egen opbevaring | GitHub kan aldrig vise en secret igen. Kender ejeren ikke værdien, kræver det nulstilling af testkontoen, som er en særskilt produktionshandling med eget GO |
+## 6. Environment-secrets i fase 1B (kun navne)
+Alle oprettes **kun** som environment-secrets i `e2e-prod`, aldrig på repository-niveau.
 
-**Sådan verificeres det, uden at værdier vises:** findes en secret med samme navn på flere niveauer, vinder det laveste
-niveau ("If a secret with the same name exists at multiple levels, the secret at the lowest level takes precedence …
-the environment-level secret takes precedence"). En grøn, godkendt produktionskørsel på main, efter at de 7 er lagt i
-`e2e-prod`, beviser derfor, at **environment-værdierne** virker. Preflight viser kun "sat".
+| Environment-secret | Læses af programmet som | Værdiens kilde | Bemærkning |
+|---|---|---|---|
+| `E2E_PROD_SUPABASE_URL` | `SUPABASE_URL` | Supabase-projektets URL (ikke hemmelig) | |
+| `E2E_PROD_SUPABASE_ANON_KEY` | `SUPABASE_ANON_KEY` | Supabase → API keys → publishable key | |
+| `E2E_PROD_SUPABASE_SERVICE_ROLE_KEY` | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → API keys → **ny dedikeret secret key** (fx `github_actions_e2e_prod`) | Ejeren behøver ikke den nuværende værdi (`github_actions_ci`, sat 2026-11-09). Kun fremad: den gamle nøgle tilbagekaldes først, når environmentet er grønt |
+| `E2E_PROD_TEST_STUDENT_EMAIL` | `TEST_STUDENT_EMAIL` | kendt testkonto | |
+| `E2E_PROD_TEST_STUDENT_PASSWORD`, `E2E_PROD_TEST_TEACHER_PASSWORD`, `E2E_PROD_TEST_STUDENT2_PASSWORD` | `TEST_*_PASSWORD` | ejerens egen opbevaring | GitHub kan aldrig vise en secret igen. Kender ejeren ikke værdien, kræver det nulstilling af testkontoen, som er en særskilt produktionshandling med eget GO |
+
+**Rækkefølge.** Environment-secrets kan lægges i `e2e-prod`, så snart environmentet er oprettet. Det kan ske allerede
+før merge, for ingen kode på main refererer dem endnu. Gøres det, virker manuelle produktionskørsler uden afbrydelse
+efter merge. Ellers er de stoppet af preflight fra merge til fase 1B (se Status). Ejeren vælger rækkefølgen.
+
+**Sådan verificeres det, uden at værdier vises:**
+1. **Navne via API:** `GET /repos/{repo}/environments/e2e-prod/secrets` returnerer kun navne og datoer. Krav: præcis de
+   7 `E2E_PROD_*`-navne. Samtidig må `GET /repos/{repo}/actions/secrets` ikke indeholde noget `E2E_PROD_*`-navn.
+2. **Ved kørsel:** jobbene kan kun få værdierne fra `e2e-prod`. Kontrakttesten forhindrer fallback i koden, og punkt 1
+   forhindrer et repository-secret med samme navn. Derfor beviser preflightens "sat" for alle 7, at environment-secrets
+   findes. En grøn, godkendt kørsel på main beviser, at de virker. Mangler ét, stopper jobbet før `npm ci` med navnet på
+   det manglende secret.
+3. **Supplerende evidens fra Supabase (ikke et bevis):** siden API keys i Supabase-dashboardet har "last used"-
+   indikatorer pr. nøgle (Supabase-dokumentationen anbefaler dem til at se, om en nøgle stadig bruges). Bruges den nye
+   dedikerede nøgle efter en godkendt kørsel, støtter det, at environment-værdien blev brugt. Men det kan ikke knyttes
+   entydigt til en bestemt GitHub-kørsel: indikatoren angiver ikke, hvem der kaldte, og opløsningen er UKENDT.
+   Nøglen kan også være brugt fra en anden kilde, hvis den er kopieret. Brug det kun som støtte.
+
+Ingen hashes, fingeraftryk eller længder af værdier i logs. De maskeres ikke, og korte testpasswords kan gættes.
 
 **Repository-secrets slettes først (fase 2), når:**
 - en godkendt kørsel med environment-secrets er grøn;
@@ -146,8 +184,9 @@ Indtil da kan alt rulles tilbage ved at revertere workflow-ændringen.
 | Situation | Handling |
 |---|---|
 | Fejl efter merge, før fase 1B | Revertér PR'en. Jobbene bruger igen repository-secrets (uændrede) |
+| Manuel produktionskørsel nødvendig før fase 1B | Læg `E2E_PROD_*` i `e2e-prod` (fase 1B) eller revertér PR'en. Tilføj **aldrig** en fallback i workflowet (kontrakttesten afviser det) |
 | `e2e-prod` fejlkonfigureret | Ret environmentet. Preflight stopper jobbet, før noget rammer produktionen |
-| Efter fase 1B, environment-secrets forkerte | Ret værdierne i `e2e-prod` (repository-secrets findes stadig) |
+| Efter fase 1B, environment-secrets forkerte | Ret værdierne i `e2e-prod` (repository-secrets findes stadig til revert) |
 | Ny Supabase-nøgle virker ikke | Opret en ny dedikeret nøgle. Genaktivér aldrig en tilbagekaldt nøgle (SEC-KEY-01) |
 
 Intet i denne ændring berører Cloudflare Workers Builds, Supabase-funktioner, rulesets eller andre workflows.
