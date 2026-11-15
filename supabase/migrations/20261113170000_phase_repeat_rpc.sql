@@ -12,7 +12,9 @@
 --
 -- Hvad den gør: genåbner præcis én af elevens egne, besvarede, automatisk bedømte instanser blandt de spørgsmål,
 -- get-next-question har udledt som den aktuelle fases (p_question_ids, server-afledt — aldrig fra klienten), og
--- KUN hvis det seneste svar er forkert og instansen har færre end p_max_repeats gentagelser. Ældste svar først.
+-- KUN hvis det seneste svar ikke er rigtigt (forkert, eller lukket uden dom ved et fagskift: release_open_question_outside
+-- lukker en åben gentagelsesrunde med was_correct NULL; fundet 2026-11-15, ellers 409 i løkke) og instansen har færre
+-- end p_max_repeats gentagelser. Ældste svar først.
 -- Samme vagter som request_repeat_level_question_for_student i øvrigt: ingen åben instans, aktivt spørgsmål med
 -- niveau, i elevens domæner, serverbart, ikke fritekst/lærerbedømt. Rigtige svar kan aldrig genåbnes her, så
 -- belønningen for en gentagelse (2 XP + 1 mønt) kan ikke høstes på opgaver, eleven allerede kan.
@@ -50,7 +52,8 @@ BEGIN
   ) THEN
     RETURN NULL;
   END IF;
-  -- Only a WRONG latest answer of a question of the current phase, with repeats left. Oldest answer first.
+  -- Only a latest answer that is NOT right (wrong, or closed without a verdict by a subject switch —
+  -- release_open_question_outside) of a question of the current phase, with repeats left. Oldest answer first.
   SELECT qi.id
   INTO v_instance_id
   FROM public.question_instances qi
@@ -58,7 +61,7 @@ BEGIN
   WHERE qi.student_id   = p_student_id
     AND qi.question_id  = ANY (p_question_ids)
     AND qi.answered     = true
-    AND qi.was_correct  = false
+    AND qi.was_correct IS NOT TRUE
     AND qi.repeat_count < p_max_repeats
     AND qi.teacher_score IS NULL
     AND q.is_active
@@ -82,7 +85,7 @@ BEGIN
   WHERE id = v_instance_id
     AND student_id = p_student_id
     AND answered = true
-    AND was_correct = false;
+    AND was_correct IS NOT TRUE;
   IF NOT FOUND THEN
     RETURN NULL;
   END IF;

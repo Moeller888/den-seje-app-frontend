@@ -20,6 +20,13 @@
 // Browser (every project): each of the seven stimuli is shown; the image description opens (and has a read-aloud
 //   control whenever the source text has one — audio itself cannot play without a voice in CI); all seven are
 //   answered in the quiz (MC by click, numbers by typing) in phase order.
+//
+// COURSE MODEL (owner decisions 2026-11-15, migration 20261115130000, also replayed by TEST_PROFILES.f07): access is an
+// ENROLMENT granted through grant_course_enrolment by a (synthetic) super_admin; active_domains is untouched — the
+// pupils here have active_domains = NULL ("all history"). The course is requested with `course: "pilot_d362"`; after
+// the seventh task the server answers course_complete (the pupil's real figures), never the generic S1 repeat. In the
+// browser the pupil chooses the course, sees the summary, chooses "Fortsæt med historie" and gets REGULAR history (one
+// regular row is seeded for that), and a reload shows neither the summary nor the offer again.
 import { test, expect } from "@playwright/test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -48,13 +55,29 @@ const GRADING_KEYS = ["correct", "accepted_answers", "review_text", "correct_ans
 // Not serial: one failing test must not hide the others (CI run 43619749472: backend 3 failed and backend 4 + the
 // browser test "did not run"). With one worker, a failure restarts the worker and beforeAll runs again (idempotent).
 let inProfile = false;
+let ADMIN = null;
+const REGULAR_CONTENT = { type: "mc", question: "F07 E2E almindelig historie: Hvornår blev Grundloven underskrevet?", options: ["1660", "1849", "1915", "1953"], correct: "1849", accepted_answers: ["1849"] };
 test.beforeAll(async ({ request }) => {
   expect(PILOT.length, "the pilot migration holds seven rows").toBe(7);
   const fn = await request.post(`${SUPA}/rest/v1/rpc/request_repeat_phase_question_for_student`,
     { headers: { ...svc, ...json }, data: { p_student_id: null, p_domains: null, p_question_ids: null, p_max_repeats: 2 } });
   if (fn.status() === 404 && !F07_LANE) return; // another lane: nothing to test here
   expect(fn.status(), `F07 lane: the phase repeat function must exist (${await fn.text()})`).toBe(200);
+  const cat = await request.get(`${SUPA}/rest/v1/courses?select=course_id,title&course_id=eq.${OBJECTIVE}`, { headers: svc });
+  expect(cat.status(), `F07 lane: the course catalogue must exist (${await cat.text()})`).toBe(200);
+  expect((await cat.json()).length, "the approved pilot course is catalogued").toBe(1);
   inProfile = true;
+  ADMIN = await makeUser(request, `admin-${Date.now()}`, "super_admin");
+  // One REGULAR history row, so "Fortsæt med historie" has something to serve (the replay stores no question rows).
+  const reg = await (await request.get(`${SUPA}/rest/v1/questions?select=id&metadata->>f07_e2e=eq.regular`, { headers: svc })).json();
+  if (reg.length === 0) {
+    const ins = await request.post(`${SUPA}/rest/v1/questions`, { headers: { ...svc, ...json, prefer: "return=minimal" }, data: [{
+      type: "mc_single", content: REGULAR_CONTENT, answer_format: "mc", answer_type: "short", metadata: { f07_e2e: "regular" },
+      difficulty: 2, question_type: "auto", is_active: true, learning_objective: "revolutions_democracy", target_grade: 7,
+      difficulty_band: 2, difficulty_level: 6000,
+    }] });
+    expect(ins.status(), await ins.text()).toBe(201);
+  }
   // Seed the seven pilot rows ACTIVE (the later, separate owner activation — here only), once per stack.
   const have = await (await request.get(`${SUPA}/rest/v1/questions?select=id&learning_objective=eq.${OBJECTIVE}&metadata->>pilot_form=eq.stimulus`, { headers: svc })).json();
   if (have.length !== 7) {
@@ -81,7 +104,18 @@ test.afterEach(async ({}, testInfo) => {
   browserEvidence = null;
 });
 
-async function makePupil(request, tag, domains = [OBJECTIVE]) {
+// A synthetic pupil (active_domains NULL = all history unless given), enrolled in the course through the authorised
+// server path (grant_course_enrolment as the synthetic super_admin) unless enrol is false.
+async function makePupil(request, tag, { domains = null, enrol = true } = {}) {
+  const p = await makeUser(request, tag, "student", domains);
+  if (enrol) {
+    const g = await request.post(`${SUPA}/rest/v1/rpc/grant_course_enrolment`, { headers: { ...asPupil(ADMIN), ...json }, data: { p_student_id: p.id, p_course_id: OBJECTIVE } });
+    expect(g.status(), await g.text()).toBe(200);
+    expect(await g.json(), "the super_admin grants the course").toBe("granted");
+  }
+  return p;
+}
+async function makeUser(request, tag, role, domains = null) {
   const email = `f07-phase-${tag}-${RUN}@${SYNTHETIC_EMAIL_DOMAIN}`;
   const password = createHash("sha256").update(`isolated-f07-phase-${tag}:${RUN}`).digest("base64url");
   const created = await request.post(`${SUPA}/auth/v1/admin/users`, { headers: svc, data: { email, password, email_confirm: true } });
@@ -92,7 +126,7 @@ async function makePupil(request, tag, domains = [OBJECTIVE]) {
     // A pupil who has already chosen an avatar identity, like every returning pupil: without chosen_at, index.html
     // shows the identity prompt (Section 152C) and waits for a choice BEFORE the first question is fetched (CI run
     // 43619749472: no get-next-question call in firefox/webkit). The prompt itself is not part of F-07.
-    data: { id, role: "student", full_name: `Syntetisk F-07-elev ${tag}`, selected_grade: 7, active_domains: domains, equipped_slots: {}, active_theme: "default",
+    data: { id, role, full_name: `Syntetisk F-07-${role} ${tag}`, selected_grade: role === "student" ? 7 : null, active_domains: domains, equipped_slots: {}, active_theme: "default",
       avatar_identity: { v: 1, body_type: "neutral", chosen_at: "2026-11-14T00:00:00.000Z" } },
   });
   expect(profile.status(), await profile.text()).toBe(201);
@@ -105,11 +139,13 @@ const progressOf = async (request, p) => (await (await request.get(`${SUPA}/rest
 const keysDeep = (v, out = new Set()) => { if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) { out.add(k); keysDeep(x, out); } return out; };
 
 // One raw call of the real Edge Function, as app.js makes it.
-const gnqRaw = (request, p) => request.post(`${SUPA}/functions/v1/get-next-question`, { headers: { ...asPupil(p), ...json }, data: { subject: "historie" } });
+// Course requests by default (`course`, as app.js sends it in the course); `{}` = a regular historie request.
+const IN_COURSE = { course: OBJECTIVE };
+const gnqRaw = (request, p, extra = IN_COURSE) => request.post(`${SUPA}/functions/v1/get-next-question`, { headers: { ...asPupil(p), ...json }, data: { subject: "historie", ...extra } });
 // With the client's behaviour: one retry after an error (409 phase_state_changed after a lost race).
-async function nextQuestion(request, p) {
+async function nextQuestion(request, p, extra = IN_COURSE) {
   for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await gnqRaw(request, p);
+    const res = await gnqRaw(request, p, extra);
     if (res.status() === 409 && attempt === 0) continue;
     expect(res.status(), await res.text()).toBe(200);
     return await res.json();
@@ -146,6 +182,9 @@ test("backend 1: all seven in phase order; a reload keeps the open round; a wron
       expect(again.question_instance_id, "the open pilot round survives a second request (reload)").toBe(q.question_instance_id);
     }
     const k = (tries.get(meta.label) ?? 0) + 1; tries.set(meta.label, k);
+    // Every course round is tagged with the course; a phase repeat is round 2+ — what app.js shows as "Gentagelse".
+    expect(q.course_id, "a course round carries the course").toBe(OBJECTIVE);
+    expect(q.round_no, `${meta.label}: round ${k}`).toBe(k);
     const right = !(meta.label === "S1" && k === 1); // S1 wrong once, everything else right
     const res = await answer(request, p, q.question_instance_id, right ? meta.row.content.correct : wrongFor(meta.row));
     expect(res.status(), await res.text()).toBe(200);
@@ -164,14 +203,27 @@ test("backend 1: all seven in phase order; a reload keeps the open round; a wron
   expect(nonDecreasing(path.map((s) => Number(s.split("@")[1]))), `phases never step back: ${path.join(" ")}`).toBe(true);
   expect(path.slice(0, 3).map((s) => s.split("@")[0]), "S1 first; S2 (spacing), then the S1 repeat, before any later phase").toEqual(["S1-", "S2+", "S1r+"]);
   expect(secured.size).toBe(7);
-  expect((await progressOf(request, p)).xp - start.xp, "10 XP per right first answer, 2 per right repeat").toBe(expectXp);
+  const paid = await progressOf(request, p);
+  expect(paid.xp - start.xp, "10 XP per right first answer, 2 per right repeat").toBe(expectXp);
+  // The summary: the pupil's real figures (S1 right after its repeat, the other six right first time), no XP for it.
+  const done = await nextQuestion(request, p);
+  expect(done.step).toBe("course_complete");
+  expect([done.summary.total, done.summary.completed, done.summary.first_try_correct, done.summary.correct_after_repetition, done.summary.needs_support]).toEqual([7, 7, 6, 1, 0]);
+  expect(done.choices.practice, "nothing wrong left → no practice").toBe(false);
+  const again = await nextQuestion(request, p);
+  expect(again.step, "a reload: the same summary, no new completion").toBe("course_complete");
+  const after = await progressOf(request, p);
+  expect([after.xp, after.coins], "opening the summary pays nothing").toEqual([paid.xp, paid.coins]);
 });
 
 test("backend 2: a pupil without the pilot domain is never served a pilot row", async ({ request }, testInfo) => {
   test.skip(testInfo.project.name !== "chromium", "backend path: once per run");
-  const p = await makePupil(request, "noaccess", ["revolutions_democracy"]);
+  const p = await makePupil(request, "noaccess", { domains: ["revolutions_democracy"], enrol: false });
+  const denied = await gnqRaw(request, p);
+  expect(denied.status(), "a course request without an enrolment").toBe(403);
+  expect((await denied.json()).error).toBe("course_not_available");
   for (let i = 0; i < 3; i++) {
-    const q = await nextQuestion(request, p);
+    const q = await nextQuestion(request, p, {});
     if (q.step === "no_questions") break;
     expect(BY_QUESTION.has(q?.content?.question), "a regular pupil got a pilot question").toBe(false);
     const qi = q.question_instance_id;
@@ -180,6 +232,36 @@ test("backend 2: a pupil without the pilot domain is never served a pilot row", 
   const rows = await (await request.get(`${SUPA}/rest/v1/question_instances?select=question_id&student_id=eq.${p.id}`, { headers: svc })).json();
   const pilotIds = (await (await request.get(`${SUPA}/rest/v1/questions?select=id&learning_objective=eq.${OBJECTIVE}`, { headers: svc })).json()).map((r) => r.id);
   expect(rows.filter((r) => pilotIds.includes(r.question_id)), "no pilot instance for a regular pupil").toEqual([]);
+  // The pupil cannot enrol themself: neither through the grant function nor by writing the table.
+  const self = await request.post(`${SUPA}/rest/v1/rpc/grant_course_enrolment`, { headers: { ...asPupil(p), ...json }, data: { p_student_id: p.id, p_course_id: OBJECTIVE } });
+  expect(self.status(), "self-enrolment through the function").not.toBe(200);
+  expect(await self.text()).toContain("not_authorized");
+  const write = await request.post(`${SUPA}/rest/v1/course_enrolments`, { headers: { ...asPupil(p), ...json, prefer: "return=minimal" }, data: { student_id: p.id, course_id: OBJECTIVE } });
+  expect(write.status(), "self-enrolment by writing the table").not.toBe(201);
+  expect((await gnqRaw(request, p)).status(), "still no course").toBe(403);
+
+  // Revoked mid-course: an enrolled pupil with an open course round loses the course on the next request, and gets
+  // regular history (never a pilot row) — the course progress already answered stays in place.
+  const r = await makePupil(request, "revoked");
+  const first = await nextQuestion(request, r);
+  expect(first.course_id).toBe(OBJECTIVE);
+  expect((await (await answer(request, r, first.question_instance_id, metaOf(first).row.content.correct)).json()).status).toBe("correct");
+  const open = await nextQuestion(request, r);
+  expect(open.course_id, "a second course round is open").toBe(OBJECTIVE);
+  const rv = await request.post(`${SUPA}/rest/v1/rpc/revoke_course_enrolment`, { headers: { ...asPupil(ADMIN), ...json }, data: { p_student_id: r.id, p_course_id: OBJECTIVE } });
+  expect(await rv.json(), "the super_admin revokes").toBe("revoked");
+  const gone = await gnqRaw(request, r);
+  expect(gone.status(), "the course after a revoke").toBe(403);
+  expect((await gone.json()).error).toBe("course_not_available");
+  for (let i = 0; i < 2; i++) {
+    const q = await nextQuestion(request, r, { keep_course_rounds: true });
+    if (q.step === "no_questions") break;
+    expect(BY_QUESTION.has(q?.content?.question), "a revoked pupil got a pilot question").toBe(false);
+    expect(q.course_id).toBeUndefined();
+    await answer(request, r, q.question_instance_id, "x");
+  }
+  const kept = await (await request.get(`${SUPA}/rest/v1/question_instances?select=id&student_id=eq.${r.id}&answered=eq.true&id=eq.${first.question_instance_id}`, { headers: svc })).json();
+  expect(kept.length, "the answered course round is kept after the revoke").toBe(1);
 });
 
 test("backend 3: two tabs at once when a phase repeat is due get the SAME open round, never no_questions", async ({ request }, testInfo) => {
@@ -237,6 +319,38 @@ test("backend 4: all answers wrong — at most 1 + 2 attempts per question, the 
   for (const [label, k] of tries) expect(k, `${label}: 1 + ${MAX_REPEATS} attempts`).toBe(1 + MAX_REPEATS);
   const end = await progressOf(request, p);
   expect([end.xp - start.xp, end.coins - start.coins], "wrong answers pay nothing").toEqual([0, 0]);
+  // The course is complete: the summary with the pupil's actual figures, never the generic repeat on its own.
+  const done = await nextQuestion(request, p);
+  expect(done.step, "after the course: the summary").toBe("course_complete");
+  expect([done.summary.total, done.summary.completed, done.summary.first_try_correct, done.summary.correct_after_repetition, done.summary.needs_support]).toEqual([7, 7, 0, 0, 7]);
+  expect(done.choices.practice, "there is something to practise").toBe(true);
+  expect(done.acknowledged).toBe(false);
+  for (const k of ["correct", "accepted_answers", "review_text", "options"]) expect(keysDeep(done).has(k), `summary carries ${k}`).toBe(false);
+  const completedAt = async () => (await (await request.get(`${SUPA}/rest/v1/course_enrolments?select=completed_at,summary_acknowledged_at&student_id=eq.${p.id}`, { headers: svc })).json())[0];
+  const first = await completedAt();
+  expect(first.completed_at, "the first completion is recorded").toBeTruthy();
+
+  // "Øv det, jeg er usikker på": one wrong answer is reopened (a tagged repeat round); a right answer pays the repeat
+  // amount; then the UPDATED summary — never a right answer reopened, never a new completion.
+  const practice = await nextQuestion(request, p, { course: OBJECTIVE, course_action: "practice" });
+  expect(practice.course_id, "practice serves a course round").toBe(OBJECTIVE);
+  expect(practice.round_no > 1, "a repeat round").toBe(true);
+  const before = await progressOf(request, p);
+  expect((await (await answer(request, p, practice.question_instance_id, metaOf(practice).row.content.correct)).json()).status).toBe("correct");
+  expect((await progressOf(request, p)).xp - before.xp, "a right repeat: 2 XP").toBe(2);
+  const updated = await nextQuestion(request, p);
+  expect(updated.step).toBe("course_complete");
+  expect([updated.summary.completed, updated.summary.correct_after_repetition, updated.summary.needs_support]).toEqual([7, 1, 6]);
+  expect((await completedAt()).completed_at, "practice never moves the completion").toBe(first.completed_at);
+
+  // "Fortsæt med historie" / "Gå til hub": acknowledged once; from then on the course answers acknowledged: true, so
+  // the client never shows the summary on its own again (no loop).
+  const ack = await request.post(`${SUPA}/rest/v1/rpc/acknowledge_course_summary`, { headers: { ...asPupil(p), ...json }, data: { p_course_id: OBJECTIVE } });
+  expect(await ack.json()).toBe(true);
+  const seen = await nextQuestion(request, p);
+  expect([seen.step, seen.acknowledged]).toEqual(["course_complete", true]);
+  const regular = await nextQuestion(request, p, { keep_course_rounds: true });
+  expect(regular.step === "no_questions" || !BY_QUESTION.has(regular?.content?.question), "regular history after the course").toBe(true);
 });
 
 async function login(page, p) {
@@ -260,9 +374,12 @@ test("browser: the quiz shows each of the seven stimuli and the pupil answers al
   const p = await makePupil(request, `ui-${testInfo.project.name}`);
   await login(page, p);
   const isGnq = (r) => r.url().startsWith(`${SUPA}/functions/v1/get-next-question`) && r.request().method() === "POST";
-  let pending = page.waitForResponse(isGnq, { timeout: 30000 });
   await page.goto(`${BASE}/index.html`);
   await expect(page.locator("#identity-overlay"), "no identity prompt for a pupil who has chosen").toBeHidden();
+  // The enrolled pupil chooses the course (the offer appears before any question is fetched).
+  await expect(page.locator("#course-offer")).toBeVisible({ timeout: 20000 });
+  let pending = page.waitForResponse(isGnq, { timeout: 30000 });
+  await page.locator("#course-start-btn").click();
   const seen = [];
   let sourceHasPlayer = null;
   let imageHasPlayer = null;
@@ -296,24 +413,33 @@ test("browser: the quiz shows each of the seven stimuli and the pupil answers al
     }
     await expect(page.locator("#feedback")).toHaveText("Ja! 🎯");
   }
-  // After the seventh answer. The product contract (CI run 43630449252 left this wait pending → "Test ended"):
-  //   app.js: a right answer ALWAYS schedules loadAndRenderQuestion() after 600 ms → get-next-question (the client does
-  //   not know the course is over; `pending` was created before the click, so the call cannot be missed);
-  //   server: the course is finished and this pupil's only domain is pilot_d362 → nothing new, no phase repeat, so the
-  //   EXISTING generic level repeat (request_repeat_level_question_for_student) reopens the oldest right answer = S1
-  //   (wrong answers first, then answered_at ASC), served on the repeat path with is_repeat: true (index.ts);
-  //   UI: S1 is shown again as a normal question (app.js does not read is_repeat — no repeat label).
+  // After the seventh answer (owner decision 2026-11-15): app.js fetches again after 600 ms (`pending` was created
+  // before the click, so the call cannot be missed); the course is complete → course_complete with the pupil's real
+  // figures, and the summary replaces the question. No S1 repeat.
   const after = await pending;
   expect(after.status(), "the fetch after the seventh answer").toBe(200);
   const afterBody = await after.json();
-  const afterMeta = BY_QUESTION.get(afterBody?.content?.question);
-  console.log(`F07 browser (${testInfo.project.name}) after the course: ${JSON.stringify({ step: afterBody?.step ?? null, label: afterMeta?.label ?? null, is_repeat: afterBody?.is_repeat ?? null, round_no: afterBody?.round_no ?? null })}`);
-  expect(afterBody?.step, "the finished course does not end in no_questions for a pupil with repeats left").toBeUndefined();
-  expect(afterMeta?.label, "the generic repeat reopens the oldest right answer").toBe("S1");
-  expect(afterBody.is_repeat, "served on the repeat path").toBe(true);
-  expect(afterBody.round_no, "S1's second round").toBe(2);
-  await expect(page.locator('#question[data-state="ready"]')).toBeVisible({ timeout: 20000 });
-  await expect(page.locator("#question")).toContainText(afterMeta.row.content.question);
+  console.log(`F07 browser (${testInfo.project.name}) after the course: ${JSON.stringify({ step: afterBody?.step ?? null, summary: afterBody?.summary ? { ...afterBody.summary, items: afterBody.summary.items?.length } : null, acknowledged: afterBody?.acknowledged ?? null })}`);
+  expect(afterBody.step).toBe("course_complete");
+  expect([afterBody.summary.completed, afterBody.summary.first_try_correct, afterBody.summary.needs_support]).toEqual([7, 7, 0]);
+  await expect(page.locator("#course-summary")).toBeVisible({ timeout: 20000 });
+  await expect(page.locator("#course-summary-title")).toHaveText("Du har gennemført forløbet om Grundloven af 1849!");
+  await expect(page.locator("#course-summary-completed")).toHaveText("Du har svaret på 7 af 7 opgaver.");
+  await expect(page.locator("#course-summary-first-try")).toHaveText("Rigtigt første gang: 7");
+  await expect(page.locator("#course-practice-btn"), "nothing to practise → no practice button").toHaveCount(0);
+  // "Fortsæt med historie": the summary is acknowledged, and the next question is REGULAR history.
+  const regular = page.waitForResponse(isGnq, { timeout: 30000 });
+  await page.locator("#course-continue-btn").click();
+  const reg = await (await regular).json();
+  expect(reg?.content?.question, "regular history after the course").toBe(REGULAR_CONTENT.question);
+  expect(reg.course_id, "not a course question").toBeUndefined();
+  await expect(page.locator("#question")).toContainText(REGULAR_CONTENT.question);
+  await expect(page.locator("#course-repeat-badge")).toHaveCount(0);
+  // A reload shows neither the offer nor the summary again.
+  await page.reload();
+  await expect(page.locator("#question")).toContainText(REGULAR_CONTENT.question, { timeout: 20000 });
+  await expect(page.locator("#course-offer")).toHaveCount(0);
+  await expect(page.locator("#course-summary")).toHaveCount(0);
   console.log(`F07 browser (${testInfo.project.name}): ${seen.join(" ")}; read-aloud control — source: ${sourceHasPlayer}, image description: ${imageHasPlayer}`);
   expect(new Set(seen).size, `all seven met: ${seen.join(" ")}`).toBe(7);
   expect(seen[0]).toBe("S1");

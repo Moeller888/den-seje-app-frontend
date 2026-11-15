@@ -143,9 +143,11 @@ export const NOT_IN_PRODUCTION = Object.freeze({
   "20261108090200_order_categorize_pilot_content.sql":
     "F-04/F-05 pilot content (D-362), not applied in production and not applicable before 20261108090000: data only, inserts INACTIVE order and categorize pilot questions",
   "20261109151000_set_student_domains_pilot_lock.sql":
-    "D-362 pilot lock, not applied in production and to be applied before the pilot_d362 rows are activated: it re-creates set_student_domains so a teacher cannot add a pilot_* domain and a save keeps the pupil's existing pilot_* domains",
+    "D-362 pilot lock, not applied in production and SUPERSEDED by 20261115130000 (course enrolments, 2026-11-15; active_domains no longer grants a pilot): not to be applied without a new owner decision. It re-creates set_student_domains so a teacher cannot add a pilot_* domain and a save keeps the pupil's existing pilot_* domains",
   "20261113170000_phase_repeat_rpc.sql":
     "D-362 phase repeat (owner decision 2026-11-13), not applied in production and to be applied before the get-next-question deploy that calls it: it adds request_repeat_phase_question_for_student (backend only), which reopens a wrong answer of the current phase",
+  "20261115130000_course_enrolments.sql":
+    "D-362 course enrolments (owner decisions 2026-11-15), not applied in production and to be applied after 20261113170000 and before the get-next-question deploy with courses: courses catalogue, course_enrolments (RLS) and the grant/revoke/record/acknowledge functions",
   "20261020170001_english_level_batch5_1.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020170002_english_level_batch5_2.sql":
@@ -311,6 +313,8 @@ export const TEST_PROFILES = Object.freeze({
   f07: Object.freeze({
     "20261113170000_phase_repeat_rpc.sql":
       "TEST PROFILE f07: the D-362 phase repeat is NOT applied in production; replayed only in the isolated F-07 lane",
+    "20261115130000_course_enrolments.sql":
+      "TEST PROFILE f07: the D-362 course enrolments are NOT applied in production; replayed only in the isolated F-07 lane",
   }),
 });
 

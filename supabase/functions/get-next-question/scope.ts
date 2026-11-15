@@ -16,6 +16,12 @@
 //
 // Pure TypeScript with no Deno or network imports, so the Node unit suite tests exactly what the
 // Edge Function runs.
+//
+// COURSES (D-362, owner 2026-11-15): access to a course is an enrolment (./course.ts), never active_domains. A
+// pilot_* entry in active_domains grants nothing and does not narrow the pupil's history (an array of only pilot_*
+// entries means "all history", like NULL). Keeping an open course round across a switch to regular history is
+// get-next-question's job (keep_course_rounds, verified against the enrolment) — a regular request is unchanged here.
+const isCourseDomain = (d: string) => d.startsWith("pilot_");
 
 // Subjects (fag). English questions use learning_objective = "english", Danish questions
 // learning_objective = "danish"; every other domain is history. Must match teacher.js ALL_DOMAINS.
@@ -76,22 +82,27 @@ export function deriveQuestionScope(profile: unknown, requestedSubject: unknown)
     subjectDomains = [DANISH_DOMAIN];
   } else {
     assignedHistory = activeDomains !== null
-      ? activeDomains.filter((d) => d !== ENGLISH_DOMAIN && d !== DANISH_DOMAIN)
+      ? activeDomains.filter((d) => d !== ENGLISH_DOMAIN && d !== DANISH_DOMAIN && !isCourseDomain(d))
       : [];
     subjectDomains = assignedHistory.length > 0 ? assignedHistory : [...HISTORY_DOMAINS];
   }
 
   // The fagskift release (release_open_question_outside) closes or deletes the pupil's open round when its
   // question lies OUTSIDE these domains. For historie that set is the fixed HISTORY_DOMAINS PLUS the pupil's
-  // own assigned history domains — so an open round in a domain the pupil is still assigned (e.g. the D-362
-  // pilot domain pilot_d362, which is not in HISTORY_DOMAINS) survives a reload or a second
-  // get-next-question call, and an old tab can still answer it (owner decision 2026-11-13, D-362 P1).
-  // Only server-side profile data is added (active_domains is not client-writable). A domain the teacher
-  // removes is no longer added, so its open round is released as before. For a regular pupil every assigned
-  // domain is already in HISTORY_DOMAINS, so the result is exactly HISTORY_DOMAINS (unchanged behaviour).
+  // own assigned history domains (pilot_* entries excluded: they grant nothing). Only server-side profile data is
+  // added (active_domains is not client-writable). A domain the teacher removes is no longer added, so its open
+  // round is released as before. For a regular pupil every assigned domain is already in HISTORY_DOMAINS, so the
+  // result is exactly HISTORY_DOMAINS (unchanged behaviour). A course's open round is kept by courseScope (in the
+  // course) and by get-next-question's verified keep_course_rounds (outside it) — owner decision 2026-11-15.
   const releaseDomains = subject === "engelsk" ? [ENGLISH_DOMAIN]
     : subject === "dansk" ? [DANISH_DOMAIN]
     : [...HISTORY_DOMAINS, ...assignedHistory.filter((d, i, all) => !HISTORY_DOMAINS.includes(d) && all.indexOf(d) === i)];
 
   return { subject, grade, activeDomains, subjectDomains, releaseDomains };
+}
+
+// The scope of a course request (./course.ts; the enrolment is verified by the caller): new questions and repeats
+// come only from the course's own learning_objective; the open rounds of regular history are kept.
+export function courseScope(scope: QuestionScope, course: string): QuestionScope {
+  return { ...scope, subjectDomains: [course], releaseDomains: scope.releaseDomains.includes(course) ? [...scope.releaseDomains] : [...scope.releaseDomains, course] };
 }

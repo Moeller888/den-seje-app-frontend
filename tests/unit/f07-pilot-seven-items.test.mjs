@@ -24,7 +24,7 @@ import { dirname, join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { replaySchema } from "../isolated/schema/replay.mjs";
 import { bootstrapMarkerSql } from "../isolated/seed/seed-guard.mjs";
-import { HISTORY_DOMAINS, deriveQuestionScope } from "../../supabase/functions/get-next-question/scope.ts";
+import { HISTORY_DOMAINS, courseScope, deriveQuestionScope } from "../../supabase/functions/get-next-question/scope.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8").split("\r\n").join("\n");
@@ -162,8 +162,12 @@ test("mc rows: grading ignores case and surrounding space, as production's body 
 // get-next-question reads the pupil's profile, derives the scope (deriveQuestionScope) and calls
 // release_open_question_outside(scope.releaseDomains) before anything else (index.ts). These tests do the same.
 const profileOf = async (p) => (await db.query("SELECT selected_grade, active_domains FROM public.profiles WHERE id = $1", [p])).rows[0];
-const releaseAs = async (p, subject = "historie") => {
-  const domains = deriveQuestionScope(await profileOf(p), subject).releaseDomains;
+// Course model (owner 2026-11-15): { course: true } = a course request (index.ts narrows with courseScope after the
+// enrolment check); { keep: true } = a regular historie request with keep_course_rounds of an ENROLLED pupil (index.ts
+// adds the verified course). Neither = a regular request, which keeps no course round (active_domains grants nothing).
+const releaseAs = async (p, subject = "historie", { course = false, keep = false } = {}) => {
+  const base = deriveQuestionScope(await profileOf(p), subject);
+  const domains = course ? courseScope(base, "pilot_d362").releaseDomains : keep ? [...base.releaseDomains, "pilot_d362"] : base.releaseDomains;
   return as(p, async () => (await db.query("SELECT public.release_open_question_outside($1::text[]) AS n", [domains])).rows[0].n);
 };
 const instanceRow = async (id) => (await db.query("SELECT answered, was_correct, user_answer FROM public.question_instances WHERE id = $1", [id])).rows[0] ?? null;
@@ -184,8 +188,9 @@ test("RELEASE: a pilot pupil's open round survives a reload / a second get-next-
   assert.ok(!HISTORY_DOMAINS.includes("pilot_d362"), "pilot_d362 is not a history domain");
   const p = await pupil(); // active_domains = ['pilot_d362']
   const open = await instance(p, ROWS[0]);
-  assert.equal(await releaseAs(p), 0, "first call releases nothing");
-  assert.equal(await releaseAs(p), 0, "second call (reload, second tab) releases nothing");
+  assert.equal(await releaseAs(p, "historie", { course: true }), 0, "first call (in the course) releases nothing");
+  assert.equal(await releaseAs(p, "historie", { course: true }), 0, "second call (reload, second tab) releases nothing");
+  assert.equal(await releaseAs(p, "historie", { keep: true }), 0, "a switch to regular history (verified keep) releases nothing");
   assert.ok(await instanceRow(open), "the open pilot round still exists");
   const before0 = await progress(p);
   const r = await submit(p, open, ROWS[0].correct);          // the 'old tab' answers the round it was shown
@@ -199,17 +204,17 @@ test("RELEASE: a pilot pupil's open round survives a reload / a second get-next-
 test("RELEASE: a pilot pupil's open REPEAT round is not closed", async () => {
   const p = await pupil();
   const open = await instance(p, ROWS[1], 1);
-  assert.equal(await releaseAs(p), 0);
+  assert.equal(await releaseAs(p, "historie", { course: true }), 0);
+  assert.equal(await releaseAs(p, "historie", { keep: true }), 0);
   const row = await instanceRow(open);
   assert.equal(row.answered, false, "repeat round still open");
   assert.equal(row.was_correct, null);
 });
 
-test("RELEASE: when the teacher removes pilot_d362, the open pilot round IS released (no access to a removed domain)", async () => {
+test("RELEASE: without an active enrolment (revoked, or an old client without keep), a regular request releases the open pilot round", async () => {
   const p = await pupil();
   const open = await instance(p, ROWS[2]);
-  await db.query("UPDATE public.profiles SET active_domains = ARRAY['revolutions_democracy'] WHERE id = $1", [p]);
-  assert.equal(await releaseAs(p), 1);
+  assert.equal(await releaseAs(p), 1, "pilot_d362 in active_domains keeps nothing: it is not an access path any more");
   assert.equal(await instanceRow(open), null, "round-1 instance without an answer is removed, as for any foreign domain");
 });
 

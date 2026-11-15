@@ -519,8 +519,9 @@ test("index.ts: shadow serves v1; a shadow failure is logged and never changes t
   const shadow = INDEX_CODE.slice(start, gate);
   assert.match(shadow, /try \{[\s\S]*await loadFormatMixPlan\(admin\(\) as unknown as MixReadClient[\s\S]*\} catch \(e\) \{\s*console\.error\("FORMAT_MIX_SHADOW_FAILED:"/);
   assert.equal(/sortedQuestions\s*=/.test(shadow), false, "shadow never reassigns what is served");
-  // Between the shadow block and the loop, the only reassignment is the phase gate's own.
-  assert.deepEqual(INDEX_CODE.slice(gate, loop).match(/sortedQuestions\s*=[^;]*;/g), ["sortedQuestions = gate.allowed;"]);
+  // Between the shadow block and the loop, the only reassignments are the phase gate's own and — D-362 course
+  // practice after a completed course (owner 2026-11-15) — the emptying that sends the request to the repeat step.
+  assert.deepEqual(INDEX_CODE.slice(gate, loop).match(/sortedQuestions\s*=[^;]*;/g), ["sortedQuestions = gate.allowed;", "sortedQuestions = [];"]);
 });
 
 test("index.ts: both engines feed the same insert loop, public DTO and answer-key path", () => {

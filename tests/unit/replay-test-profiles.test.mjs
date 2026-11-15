@@ -58,9 +58,10 @@ test("2. the k1 profile changes exactly one decision: K1 skip → apply", () => 
   assert.match(changed[0].reason, /NOT applied in production/);
 });
 
-const F07_FILES = ["20261113170000_phase_repeat_rpc.sql"];
+// D-362 (owner 2026-11-15): the f07 lane also replays the course enrolments (courses, course_enrolments, RLS).
+const F07_FILES = ["20261113170000_phase_repeat_rpc.sql", "20261115130000_course_enrolments.sql"];
 
-test("2b. the f07 profile changes exactly one decision: the D-362 phase repeat, skip → apply", () => {
+test("2b. the f07 profile changes exactly its decisions: the D-362 phase repeat and course enrolments, skip → apply", () => {
   const base = planReplay(files, readMigration).plan;
   const f07 = planReplay(files, readMigration, { profile: "f07" }).plan;
   assert.deepEqual(f07.map((p) => p.file), base.map((p) => p.file), "same files, same order");
@@ -132,6 +133,9 @@ test("4b. on the full replay: the f07 profile yields the phase repeat function (
     assert.ok(lane.r.steps.some((s) => s.name === F07_FILES[0] && s.ok), "the phase repeat migration itself was applied");
     const fn = (await lane.db.query("SELECT to_regprocedure('public.request_repeat_phase_question_for_student(uuid,text[],uuid[],integer)') IS NOT NULL AS e")).rows[0].e;
     assert.equal(fn, true);
+    assert.ok(lane.r.steps.some((s) => s.name === F07_FILES[1] && s.ok), "the course enrolments migration itself was applied");
+    const t = (await lane.db.query("SELECT to_regclass('public.course_enrolments') IS NOT NULL AS e, (SELECT count(*)::int FROM public.courses) AS n")).rows[0];
+    assert.deepEqual([t.e, t.n], [true, 1], "course_enrolments exists and the catalogue holds the one approved course");
   } finally { await lane.db.close(); }
 });
 

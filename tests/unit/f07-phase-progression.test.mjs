@@ -20,7 +20,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { replaySchema } from "../isolated/schema/replay.mjs";
 import { bootstrapMarkerSql } from "../isolated/seed/seed-guard.mjs";
 import { loadLevelPlan } from "../../supabase/functions/get-next-question/level-flow.ts";
-import { deriveQuestionScope } from "../../supabase/functions/get-next-question/scope.ts";
+import { courseScope, deriveQuestionScope } from "../../supabase/functions/get-next-question/scope.ts";
 import { applyPhaseGate, phaseRank, MAX_REPEATS } from "../../supabase/functions/get-next-question/phase-gate.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -109,7 +109,11 @@ async function walk(profile, { gate, answer = () => true, maxSteps = 40, useLeve
   let expectXp = 0, end = "max_steps", lastCourses = [];
   for (let step = 0; step < maxSteps; step++) {
     const prof = (await db.query("SELECT selected_grade, active_domains FROM public.profiles WHERE id = $1", [p])).rows[0];
-    const scope = deriveQuestionScope(prof, "historie");
+    // Course model (owner 2026-11-15): access is an enrolment, and a course request narrows the scope with courseScope
+    // (index.ts). This harness marks its pilot pupils with pilot_d362 in active_domains only to choose that request —
+    // active_domains itself grants nothing any more (scope.ts ignores pilot_* there).
+    const base = deriveQuestionScope(prof, "historie");
+    const scope = (prof.active_domains ?? []).includes("pilot_d362") ? courseScope(base, "pilot_d362") : base;
     const plan = await loadLevelPlan(client, { studentId: p, subject: "historie", grade: scope.grade, domains: scope.subjectDomains, wavePhase: wave.phase, lastMisconceptionType: null, mixEngine: "shadow" });
     let list = plan.ordered, repeatIds = [];
     if (gate) {

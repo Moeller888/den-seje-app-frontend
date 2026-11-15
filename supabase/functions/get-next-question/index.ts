@@ -3,7 +3,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { publishableKey, serviceKey } from "../_shared/supabase-keys.ts";
 import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
-import { deriveQuestionScope } from "./scope.ts";
+import { courseScope, deriveQuestionScope } from "./scope.ts";
+import { COURSE_OBJECTIVES, courseCompleteBody, enrolmentFrom, isCourseCompleted, parseCourseRequest, practiceAvailable, type Enrolment } from "./course.ts";
+import type { CourseState } from "./phase-gate.ts";
 import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
 import { checkRequestedStep, historyFromRows, nextStep, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
 import { sortByWave } from "./wave-order.ts";
@@ -182,6 +184,54 @@ serve(async (req) => {
       console.log("OBJECTIVE_TARGETING:", { objective: targeting.objective });
     }
 
+    // Undervisningsforløb (D-362, ./course.ts, migration 20261115130000). Only when the request names a course: the
+    // server verifies an ACTIVE enrolment of THIS pupil in an ACTIVE catalogued course (the client's `course` selects,
+    // never grants) and narrows the scope to the course's own objective. Without `course` nothing here runs or reads.
+    const courseReq = parseCourseRequest(body, scope.subject, targeting.mode === "on");
+    if (courseReq.mode === "error") {
+      return new Response(JSON.stringify({ error: courseReq.error }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: courseReq.status,
+      });
+    }
+    let enrolment: Enrolment | null = null;
+    if (courseReq.mode === "course") {
+      const { data: enrolRows, error: enrolError } = await admin()
+        .from("course_enrolments")
+        .select("status, completed_at, summary_acknowledged_at, courses!inner(title, topics, is_active)")
+        .eq("student_id", student_id)
+        .eq("course_id", courseReq.course)
+        .limit(1);
+      if (enrolError) throw enrolError;
+      enrolment = enrolmentFrom(courseReq.course, enrolRows);
+      if (enrolment === null) {
+        return new Response(JSON.stringify({ error: "course_not_available" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+        });
+      }
+      const narrowed = courseScope(scope, enrolment.course);
+      scope.subjectDomains = narrowed.subjectDomains;
+      scope.releaseDomains = narrowed.releaseDomains;
+      console.log("COURSE:", JSON.stringify({ course: enrolment.course, action: courseReq.action, completed: enrolment.completedAt !== null }));
+    }
+    // Outside a course: a new client of an enrolled pupil may ask to KEEP the pupil's open course round while it serves
+    // regular history (no deletion on a switch). Verified here: only ACTIVE enrolments count. Absent: no read.
+    if (courseReq.mode === "none" && courseReq.keep && scope.subject === "historie") {
+      const { data: keepRows, error: keepError } = await admin()
+        .from("course_enrolments")
+        .select("course_id")
+        .eq("student_id", student_id)
+        .eq("status", "active");
+      if (keepError) throw keepError;
+      for (const r of (Array.isArray(keepRows) ? keepRows : []) as { course_id?: unknown }[]) {
+        const c = r?.course_id;
+        if (typeof c === "string" && COURSE_OBJECTIVES.includes(c) && !scope.releaseDomains.includes(c)) scope.releaseDomains = [...scope.releaseDomains, c];
+      }
+    }
+    // Marks a served question as part of the course (the client's "Gentagelse" label is limited to courses).
+    const courseTag = (objective: unknown) => (enrolment !== null && objective === enrolment.course ? { course_id: enrolment.course } : {});
+
     // Server-directed sequence (D-338, ../_shared/learning-sequence.ts): OFF unless the Edge secret
     // LAERLIGVERSE_SEQUENCE is "on", objective targeting is on, AND the request asks for it. The SERVER derives
     // the pupil's current step from its own history in the objective; the client may only name the step it
@@ -310,7 +360,7 @@ serve(async (req) => {
         id,
         repeat_count,
         next_review_at,
-        questions (${targeting.mode === "on" ? "\n          learning_objective," : ""}
+        questions (${targeting.mode === "on" || enrolment !== null ? "\n          learning_objective," : ""}
           content,
           answer_format,
           answer_type,
@@ -387,6 +437,7 @@ serve(async (req) => {
             ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
             // D-338: the server's step and activity mode, only in a sequence.
             ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
+            ...courseTag(instance.questions.learning_objective),
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -500,6 +551,7 @@ serve(async (req) => {
     // refuses while later phases are unserved — so a pupil who needs practice is never sent to no_questions.
     let phaseRepeatIds: string[] = [];
     let phaseGateApplied = false;
+    let courseState: CourseState | undefined;
     {
       const gate = await applyPhaseGate(admin() as unknown as PhaseReadClient, student_id, sortedQuestions, subjectDomains, { level: pupilLevel });
       if (gate.applied) {
@@ -515,6 +567,34 @@ serve(async (req) => {
         if (gate.unknownPhase.length > 0) console.error("PHASE_GATE_UNKNOWN_PHASE:", JSON.stringify(gate.unknownPhase));
         sortedQuestions = gate.allowed;
         phaseRepeatIds = gate.repeatIds;
+        if (enrolment !== null) courseState = gate.courses.find((c) => c.objective === enrolment!.course);
+      }
+    }
+
+    // After the course (./course.ts): never the generic repeat on its own. The first completion is recorded once;
+    // "practice" reopens one question whose latest answer is not right — only if there is one.
+    let coursePractice = false;
+    if (enrolment !== null && isCourseCompleted(courseState)) {
+      const { data: completedAt, error: completionError } = await admin().rpc("record_course_completion", { p_student_id: student_id, p_course_id: enrolment.course });
+      if (completionError) throw completionError;
+      if (completedAt === null) {
+        return new Response(JSON.stringify({ error: "course_not_available" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+        });
+      }
+      if (courseReq.mode === "course" && courseReq.action === "practice" && practiceAvailable(courseState)) {
+        coursePractice = true;
+        sortedQuestions = [];
+        phaseRepeatIds = [];
+        console.log("COURSE_PRACTICE:", JSON.stringify({ course: enrolment.course }));
+      } else {
+        const done = courseCompleteBody(enrolment, courseState, enrolment.acknowledged);
+        console.log("COURSE_COMPLETE:", JSON.stringify({ course: enrolment.course, acknowledged: done.acknowledged, ...done.summary, items: undefined }));
+        return new Response(JSON.stringify(done), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
       }
     }
 
@@ -709,6 +789,7 @@ serve(async (req) => {
                   ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
                   // D-338: the server's step and activity mode, only in a sequence.
                   ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
+                  ...courseTag(enrolment?.course),
                   is_repeat: true,
                 }),
                 {
@@ -726,6 +807,14 @@ serve(async (req) => {
           }
         }
       }
+    }
+
+    if (!inserted && coursePractice && courseState !== undefined && enrolment !== null) {
+      // Practice lost a race (another tab answered the last wrong question): show the summary, never a right answer.
+      return new Response(JSON.stringify(courseCompleteBody(enrolment, courseState, enrolment.acknowledged)), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     if (!inserted && phaseGateApplied) {
@@ -776,6 +865,7 @@ serve(async (req) => {
         ...(targeting.mode === "on" ? { learning_objective: targeting.objective } : {}),
         // D-338: the server's step and activity mode, only in a sequence.
         ...(sequence !== null ? { learning_step: sequence.step, mode: sequence.mode } : {}),
+        ...courseTag(inserted.question?.learning_objective),
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -351,6 +351,11 @@ jobs:
           echo "replay profile $REPLAY_PROFILE: F-07 phase repeat RPC = $r"
           if [ "$REPLAY_PROFILE" = "f07" ]; then [ "$r" = "1" ] || { echo "F07 lane without the phase repeat RPC" >&2; exit 1; }
           else [ "$r" = "0" ] || { echo "the F-07 phase repeat RPC leaked into the $REPLAY_PROFILE lane" >&2; exit 1; }; fi
+          # D-362 / F-07: the course tables (20261115130000, NOT_IN_PRODUCTION) likewise exist in the f07 lane only.
+          c=$(psql "$ISOLATED_DB_URL" -X -A -t -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('courses', 'course_enrolments')")
+          echo "replay profile $REPLAY_PROFILE: F-07 course tables = $c"
+          if [ "$REPLAY_PROFILE" = "f07" ]; then [ "$c" = "2" ] || { echo "F07 lane without the course tables" >&2; exit 1; }
+          else [ "$c" = "0" ] || { echo "the F-07 course tables leaked into the $REPLAY_PROFILE lane" >&2; exit 1; }; fi
 
       - name: Seed — synthetic questions (INSERT-only, behind the target check)
         if: needs.plan.outputs.scope != 'docs-md'
@@ -506,6 +511,13 @@ jobs:
           # which race path the Edge Function logged in this run.
           if [ -f "$RUNNER_TEMP/functions.log" ]; then
             awk '/PHASE_REPEAT_RACE/ { r++ } /PHASE_OPEN_RACE/ { o++ } END { printf "F07 race paths in functions.log: PHASE_REPEAT_RACE=%d PHASE_OPEN_RACE=%d\n", r, o }' "$RUNNER_TEMP/functions.log" | tee -a "$GITHUB_STEP_SUMMARY"
+            # A rule, not evidence: the level engine (LEVEL_ENGINE=v1, production's setting) must actually have served
+            # (its log line is written only on the v1 route), and the course must actually have completed.
+            v1=$(awk '/LEVEL_ENGINE:/ { n++ } END { print n + 0 }' "$RUNNER_TEMP/functions.log")
+            cc=$(awk '/COURSE_COMPLETE:/ { n++ } END { print n + 0 }' "$RUNNER_TEMP/functions.log")
+            echo "F07 functions.log: LEVEL_ENGINE (v1 route)=$v1 COURSE_COMPLETE=$cc" | tee -a "$GITHUB_STEP_SUMMARY"
+            [ "$v1" -gt 0 ] || { echo "::error::F07 lane: the v1 level engine never served"; status=1; }
+            [ "$cc" -gt 0 ] || { echo "::error::F07 lane: no course_complete was served"; status=1; }
           else
             echo "F07 race paths: functions.log missing" | tee -a "$GITHUB_STEP_SUMMARY"; status=1
           fi

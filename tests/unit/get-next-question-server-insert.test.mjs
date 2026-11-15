@@ -157,6 +157,13 @@ test("the admin client is used only for the instance insert and the server-only 
   assert.match(INDEX_CODE, /await insertQuestionInstance\(makeAdminClient, \{/);
   const adminUses = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.(from|rpc)\(\s*"([a-z_]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
   assert.deepEqual(adminUses, [
+    // D-362 courses (owner 2026-11-15, migration 20261115130000), course requests only (body.course): the VERIFIED
+    // pupil's enrolment in the named course (status, completion, acknowledgement, the course's title/topics/active;
+    // no content, no key). A regular request never makes this read.
+    "from:course_enrolments",
+    // D-362 courses, regular historie requests with keep_course_rounds only: the VERIFIED pupil's ACTIVE enrolments
+    // (course ids only), so an open course round is kept across a switch. Absent flag: no read.
+    "from:course_enrolments",
     // D-338, sequence requests only (LAERLIGVERSE_SEQUENCE=on + targeting + body.sequence): the pupil's own
     // history in the objective — answered, verdict, time and the question's step tag; no content, no key.
     "from:question_instances",
@@ -168,6 +175,9 @@ test("the admin client is used only for the instance insert and the server-only 
     "from:question_instances",
     "from:question_instances",
     "rpc:get_unserved_questions_for_student",
+    // D-362 courses, course requests only, once every phase is completed: records the FIRST completion of the active
+    // enrolment, set once (service_role only, SECURITY DEFINER, student-scoped; never moves on a later call).
+    "rpc:record_course_completion",
     // D-329, targeted requests only: the lost-race check reads ONLY the id of the verified pupil's open
     // instance (no key), before "objective_exhausted" may be claimed; it never reaches the repeat RPCs below.
     "from:question_instances",
@@ -203,8 +213,8 @@ test("the admin client is used only for the instance insert and the server-only 
   // student) are pinned in gnq-phase-gate.test.mjs; with no phased candidate and no pilot_* domain nothing is read.
   assert.equal((INDEX_CODE.match(/await applyPhaseGate\(admin\(\) as unknown as PhaseReadClient, student_id, sortedQuestions, subjectDomains, \{ level: pupilLevel \}\)/g) ?? []).length, 1,
     "the phase gate call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 16,
-    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the D-362 phase gate, the 15th the D-362 phase repeat, the 16th the D-362 id-only open check before no_questions)");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 19,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the D-362 phase gate, the 15th the D-362 phase repeat, the 16th the D-362 id-only open check before no_questions, the 17th the D-362 course enrolment read, the 18th the verified keep_course_rounds read, the 19th the D-362 first-completion record — owner 2026-11-15)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {

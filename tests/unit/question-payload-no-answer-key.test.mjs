@@ -153,7 +153,7 @@ test("the key-bearing reads run on the backend client, scoped to the verified st
     "answered, was_correct, answered_at, questions!inner(learning_objective, metadata)", // D-338 step history (sequence only)
     "correct_answer",                                                          // Match par's key (match only)
     "served_snapshot",                                                         // L1 K1's delivered version
-    'id, repeat_count, next_review_at, questions (${targeting.mode === "on" ? "\\n learning_objective," : ""} content, answer_format, answer_type, metadata, is_active )', // due (+ D-329's objective)
+    'id, repeat_count, next_review_at, questions (${targeting.mode === "on" || enrolment !== null ? "\\n learning_objective," : ""} content, answer_format, answer_type, metadata, is_active )', // due (+ D-329's objective; + the D-362 course tag in course requests)
     "id",                                                                      // D-329 lost-race check
     "id, repeat_count, questions ( content, answer_format, answer_type, metadata, is_active )",                 // repeat
     "id",                                                                      // D-362 open check before no_questions (phased courses)

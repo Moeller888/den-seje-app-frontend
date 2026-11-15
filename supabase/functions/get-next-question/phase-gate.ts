@@ -67,9 +67,13 @@ export function itemStatus(h: ItemHistory | undefined, maxRepeats = MAX_REPEATS)
   return h.repeatCount >= maxRepeats ? "needs_support" : "retry";
 }
 
+// One question of a phase, for the course summary (D-362, owner 2026-11-15): never an answer key, only the pupil's own
+// state and the server-side label metadata.pilot_skill. Ordered by difficulty_level (the authored order).
+export type PhaseItem = { id: string; status: ItemStatus; firstCorrect: boolean | null; repeatCount: number; skill: string | null };
 export type PhaseState = {
   rank: number; ids: string[]; statuses: Record<string, ItemStatus>;
   completed: boolean; allSecured: boolean; needsSupport: string[]; firstTimeCorrect: number; provisionalIndicator: boolean;
+  items: PhaseItem[];
 };
 export type CourseState = { objective: string; current: number | null; phases: PhaseState[]; repeatIds: string[] };
 
@@ -78,7 +82,12 @@ export type CourseState = { objective: string; current: number | null; phases: P
 // then an unserved row outside it is counted as pending instead of unservable.
 export function courseState(objective: string, phaseRows: readonly Row[], history: ReadonlyMap<string, ItemHistory>, servable: ReadonlySet<string>, maxRepeats = MAX_REPEATS, windowFull = false): CourseState {
   const byRank = new Map<number, string[]>();
+  const meta = new Map<string, { skill: string | null; level: number }>();
   for (const r of phaseRows) {
+    if (typeof r?.id === "string") {
+      const sk = (r.metadata as Record<string, unknown> | null | undefined)?.pilot_skill;
+      meta.set(r.id, { skill: typeof sk === "string" && sk.trim() !== "" ? sk : null, level: Number(r.difficulty_level ?? 0) });
+    }
     const rank = phaseRank(r?.metadata);
     if (typeof r?.id !== "string" || rank === null || rank < 0) continue;
     if (!history.has(r.id) && !servable.has(r.id) && !windowFull) continue; // provably never answerable
@@ -97,6 +106,10 @@ export function courseState(objective: string, phaseRows: readonly Row[], histor
       completed: vals.every((s) => s === "secured" || s === "needs_support"),
       needsSupport: ids.filter((id) => statuses[id] === "needs_support"),
       provisionalIndicator: allSecured && firstTimeCorrect * 2 >= ids.length,
+      items: [...ids].sort((a, b) => (meta.get(a)?.level ?? 0) - (meta.get(b)?.level ?? 0)).map((id) => ({
+        id, status: statuses[id], firstCorrect: history.get(id)?.firstCorrect ?? null,
+        repeatCount: history.get(id)?.repeatCount ?? 0, skill: meta.get(id)?.skill ?? null,
+      })),
     };
   });
   const cur = phases.find((p) => !p.completed) ?? null;

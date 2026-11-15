@@ -41,7 +41,29 @@ af browseren.
 | chromium: backend 4 og browser "did not run" | Specen kørte serielt, så én fejl stoppede resten | Testfejl | Ikke længere seriel; `beforeAll` er idempotent |
 | browser (alle tre, run 43630449252 på `33c617dc`): "page.waitForResponse: Test ended" efter at alle syv var besvaret og alle assertions bestået | Løkken oprettede en ventetid på kaldet efter 7. svar og ventede aldrig på den | Testfejl | Testen venter nu på kaldet og verificerer produktets kontrakt (se nedenfor) |
 
-**Efter 7. svar (produktets kontrakt):**
+**Ændret 2026-11-15 (lokal prototype, ikke kørt i CI):** eleverne får adgang ved tilmelding (`active_domains` er
+`NULL`), og efter 7. svar svarer serveren `course_complete`. Browsertesten kontrollerer:
+- tilbuddet;
+- opsummeringen;
+- "Fortsæt med historie";
+- en almindelig historieopgave;
+- at en genindlæsning ikke viser opsummeringen igen.
+
+Se [f07-course-completion.md](f07-course-completion.md). Afsnittet nedenfor beskriver kørsel 3.
+
+Backend-testene kontrollerer desuden over HTTP:
+- **backend 1:** hver forløbsrunde har `course_id` og `round_no`; opsummeringen viser 7/7, 6 første gang, 1 efter
+  gentagelse og 0 med behov for støtte; en genindlæsning giver samme opsummering, og den giver ingen XP eller mønter.
+- **backend 2:** eleven kan ikke tilmelde sig selv (hverken via funktionen eller tabellen). En tilmeldt elev, der
+  tilbagekaldes midt i forløbet, får 403 på forløbet og derefter kun almindelig historie; den besvarede runde bevares.
+- **backend 4:** "Øv det, jeg er usikker på" genåbner én forkert opgave (2 XP for et rigtigt svar), opsummeringen
+  opdateres (1 efter gentagelse, 6 med behov for støtte), `completed_at` flytter sig ikke, og efter kvittering svarer
+  forløbet `acknowledged: true`.
+
+Nye regler i F07-banen: skematjekket kræver begge forløbstabeller (og ingen i andre baner), og funktionsloggen skal
+vise mindst én `LEVEL_ENGINE:`-linje (v1-ruten har serveret) og mindst én `COURSE_COMPLETE:`.
+
+**Efter 7. svar (kørsel 3, `77b520cb`, før forløbsmodellen):**
 - `app.js` henter altid næste opgave 600 ms efter et rigtigt svar; klienten ved ikke, at forløbet er slut.
 - Serveren: forløbet er afsluttet, og elevens eneste domæne er `pilot_d362`. Den eksisterende generelle gentagelse
   (`request_repeat_level_question_for_student`) genåbner derfor den ældste rigtige opgave, S1, med `is_repeat: true`
