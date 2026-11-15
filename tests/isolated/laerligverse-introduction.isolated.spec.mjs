@@ -240,7 +240,9 @@ test("the chain: browser sign-in → introduction served → 'shown' registered 
   expect(graded.body).toMatchObject({ outcome: "recorded", status: "correct" });
   const at = await attempts(request, p);
   expect(at).toHaveLength(1);
-  expect(at[0]).toMatchObject({ attempt_no: 1, status: "correct", mode: "practice" });
+  // LAERLIGVERSE_SERVED_MODE is off in this lane (as everywhere), so under K1 process-event records its constant
+  // mode "quiz_v1" — the documented behaviour (migration 20261109120000, HINTS); the introduction changes nothing here.
+  expect(at[0]).toMatchObject({ attempt_no: 1, status: "correct", mode: "quiz_v1" });
   expect(at[0].xp_awarded).toBeGreaterThan(0);
   const after = (await rows(request, `student_progress?select=xp,coins&student_id=eq.${p.id}`))[0];
   expect(after.xp - start.progress[0].xp).toBe(at[0].xp_awarded);
