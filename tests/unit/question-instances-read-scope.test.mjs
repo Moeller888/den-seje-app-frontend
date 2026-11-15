@@ -217,6 +217,11 @@ test("the read-scope classifier catches access changes and ignores pure writes",
 // Later migrations that READ question_instances inside SECURITY DEFINER functions and were
 // reviewed as not widening who may read rows. Each entry names the file and why. The exception
 // covers reads only: an entry may never touch a policy, row level security or table privileges.
+const ENGLISH_ACTIVATION_READER =
+  "English 5,000 phase 2 activation step (owner decision 2026-11-14): an owner-run DO block reads " +
+  "question_instances only as count(*) of the instances of its own inactive portion (a guard that must " +
+  "find 0), returns nothing to anyone and writes only questions.is_active of that portion. No policy, RLS, " +
+  "table privilege or row of question_instances is touched (proven in english-activation-migrations-run.test.mjs).";
 const REVIEWED_LATER_READERS = {
   "20261002000000_quiz_repeat_when_pool_exhausted.sql":
     "request_repeat_question and release_open_question_outside read only the caller's own rows " +
@@ -382,6 +387,11 @@ const REVIEWED_LATER_READERS = {
     "writes only questions.content (question and review_text) of those nine rows. No policy, RLS, table " +
     "privilege or row of question_instances is touched (proven in " +
     "english-review-text-corrections-migration-run.test.mjs).",
+  "20261114203117_english_activate_2a_batch3.sql": ENGLISH_ACTIVATION_READER,
+  "20261114203118_english_activate_2b_pilot.sql": ENGLISH_ACTIVATION_READER,
+  "20261114203119_english_activate_2c_batch2.sql": ENGLISH_ACTIVATION_READER,
+  "20261114203120_english_activate_2d_grade6_9.sql": ENGLISH_ACTIVATION_READER,
+  "20261114203121_english_activate_2e_batch4.sql": ENGLISH_ACTIVATION_READER,
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -525,7 +535,12 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261105090000_minigame_breaks.sql",
      "20261107090000_minigame_break_interval_10min.sql",
      "20261109120000_laerligverse_course_progress_read.sql",
-     "20261113120000_english_review_text_corrections.sql"],
+     "20261113120000_english_review_text_corrections.sql",
+     "20261114203117_english_activate_2a_batch3.sql",
+     "20261114203118_english_activate_2b_pilot.sql",
+     "20261114203119_english_activate_2c_batch2.sql",
+     "20261114203120_english_activate_2d_grade6_9.sql",
+     "20261114203121_english_activate_2e_batch4.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
