@@ -81,7 +81,7 @@ test("every concurrency block on the shared E2E lock sets queue: max and cancel-
     }
   }
   assert.deepEqual(offenders, []);
-  assert.equal(seen, 2, "expected exactly two shared-lock blocks (playwright.yml test job, update-avatar-goldens.yml)");
+  assert.equal(seen, 3, "expected exactly three shared-lock blocks (playwright.yml test job, update-avatar-goldens.yml, e2e-prod-key-check.yml)");
 });
 
 // ── 2. Nothing that can write the shared test data runs outside the lock ─────────────────────
