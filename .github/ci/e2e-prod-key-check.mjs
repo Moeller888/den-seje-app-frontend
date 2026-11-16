@@ -13,8 +13,14 @@
 //   3. Auth admin med secret key: GET /auth/v1/admin/users/<nul-UUID>. Admin-autorisationen kommer før opslaget,
 //      så 404 med error_code "user_not_found" beviser, at nøglen er godkendt som admin — uden at hente en
 //      eneste brugerpost (nul-UUID'en findes ikke).
-//   4. PostgREST med secret key: HEAD på et indholdsbord (ingen body i svaret).
-//   5. Publishable key: GET /auth/v1/settings (offentlige Auth-indstillinger).
+//   4. Auth admin, positivt bevis: GET /auth/v1/admin/users?page=1&per_page=1 — den dokumenterede liste-operation
+//      (Auth OpenAPI "GET /admin/users", parametrene page/per_page med minimum 1; supabase-js auth.admin.listUsers,
+//      som global-setup bruger). Med secret key skal svaret være 200 med headeren X-Total-Count som et heltal:
+//      Auth sætter kun den header, efter at admin-listen faktisk er hentet (addPaginationHeaders). Svarets body
+//      læses ALDRIG: den afbrydes ulæst, og hverken body, antal eller andre headers logges eller gemmes.
+//      Uden nøgle og med publishable key skal samme kald afvises (401/403). Ingen antagelse om sidetal.
+//   5. PostgREST med secret key: HEAD på et indholdsbord (ingen body i svaret).
+//   6. Publishable key: GET /auth/v1/settings (offentlige Auth-indstillinger).
 //
 // Headers (Supabases dokumentation, "API keys" og "Migrating to publishable and secret API keys"): de nye
 // nøgler sendes i `apikey`-headeren. De er ikke JWT'er og kan ikke sendes alene i `Authorization: Bearer`. Den
@@ -30,6 +36,8 @@
 //   - Intet secret, ingen URL, ingen header, ingen response body og ingen fejltekst fra netværket logges — kun
 //     kontrollens navn, HTTP-status og en fast dansk beskrivelse. Den eneste body, der læses, er fejlsvaret fra
 //     nul-UUID-opslaget (højst 4 KB, kun feltet error_code sammenlignes), og den logges aldrig.
+//   - I GitHub Actions kører kontrollen kun som workflow_dispatch fra main OG i environmentet e2e-prod
+//     (variablen E2E_PROD_ENVIRONMENT, som kun findes på environment-niveau) — ellers exit 2 uden netværkskald.
 //
 // Exitkoder: 0 = alle kontroller bestået · 1 = mindst én kontrol fejlede · 2 = forkert kørselskontekst.
 
@@ -51,6 +59,9 @@ export const PUBLISHABLE_PREFIX = "sb_publishable_";
 export const ALLOWED_METHODS = Object.freeze(["GET", "HEAD"]);
 export const NIL_UUID = "00000000-0000-0000-0000-000000000000";
 export const REST_PROBE_PATH = "/rest/v1/questions?select=id&limit=1";
+export const ADMIN_LIST_PATH = "/auth/v1/admin/users?page=1&per_page=1";
+export const ENVIRONMENT_NAME = "e2e-prod";
+export const ENVIRONMENT_MARKER = "E2E_PROD_ENVIRONMENT";
 export const TIMEOUT_MS = 15_000;
 const MAX_BODY_BYTES = 4096;
 
@@ -161,6 +172,16 @@ async function readErrorCode(res) {
   }
 }
 
+// Kun om headeren findes og er et ikke-negativt heltal. Værdien (antallet af brugere) returneres aldrig.
+function hasTotalCount(res) {
+  try {
+    const value = res && res.headers && typeof res.headers.get === "function" ? res.headers.get("x-total-count") : null;
+    return typeof value === "string" && /^\d+$/.test(value);
+  } catch {
+    return false;
+  }
+}
+
 function errorCategory(err) {
   if (err instanceof MethodNotAllowedError) return "ikke-tilladt metode";
   const name = err && typeof err.name === "string" ? err.name : "";
@@ -177,13 +198,20 @@ const supabaseJsForm = (key) => ({ apikey: key, Authorization: `Bearer ${key}` }
 export function buildChecks(config) {
   const adminPath = `/auth/v1/admin/users/${NIL_UUID}`;
   const refused = [401, 403];
+  const listChecks = [
+    { id: "auth-admin-liste-uden-noegle", text: "Auth admin-liste afviser et kald uden nøgle", method: "GET", path: ADMIN_LIST_PATH, headers: {}, expect: refused },
+    { id: "auth-admin-liste-publishable", text: "Auth admin-liste afviser publishable key", method: "GET", path: ADMIN_LIST_PATH, headers: apikeyOnly(config.publishable), expect: refused },
+    { id: "auth-admin-liste-secret", text: "Auth admin-liste (listUsers) virker med secret key (apikey)", method: "GET", path: ADMIN_LIST_PATH, headers: apikeyOnly(config.secret), expect: [200], totalCount: true },
+  ];
   return [
     { id: "auth-admin-uden-noegle", text: "Auth admin afviser et kald uden nøgle", method: "GET", path: adminPath, headers: {}, expect: refused },
     { id: "auth-admin-publishable", text: "Auth admin afviser publishable key", method: "GET", path: adminPath, headers: apikeyOnly(config.publishable), expect: refused },
     { id: "auth-admin-secret", text: "Auth admin godkender secret key (apikey)", method: "GET", path: adminPath, headers: apikeyOnly(config.secret), expect: [404], errorCode: "user_not_found" },
+    ...listChecks,
     { id: "rest-head-secret", text: "PostgREST HEAD med secret key (apikey)", method: "HEAD", path: REST_PROBE_PATH, headers: apikeyOnly(config.secret), expect: [200, 206] },
     { id: "auth-settings-publishable", text: "Publishable key virker (Auth settings, apikey)", method: "GET", path: "/auth/v1/settings", headers: apikeyOnly(config.publishable), expect: [200] },
     { id: "auth-admin-secret-supabase-js-form", text: "supabase-js-form: Auth admin med secret key (apikey + Bearer)", method: "GET", path: adminPath, headers: supabaseJsForm(config.secret), expect: [404], errorCode: "user_not_found" },
+    { id: "auth-admin-liste-secret-supabase-js-form", text: "supabase-js-form: Auth admin-liste med secret key (apikey + Bearer)", method: "GET", path: ADMIN_LIST_PATH, headers: supabaseJsForm(config.secret), expect: [200], totalCount: true },
     { id: "rest-head-secret-supabase-js-form", text: "supabase-js-form: PostgREST HEAD med secret key (apikey + Bearer)", method: "HEAD", path: REST_PROBE_PATH, headers: supabaseJsForm(config.secret), expect: [200, 206] },
     { id: "auth-settings-publishable-supabase-js-form", text: "supabase-js-form: publishable key (apikey + Bearer)", method: "GET", path: "/auth/v1/settings", headers: supabaseJsForm(config.publishable), expect: [200] },
   ];
@@ -199,7 +227,14 @@ async function runOne(fetchImpl, origin, check) {
   const status = typeof res?.status === "number" ? res.status : null;
   let ok = status !== null && check.expect.includes(status);
   let detail = ok ? "som forventet" : `forventet ${check.expect.join(" eller ")}`;
-  if (ok && check.errorCode) {
+  if (ok && check.totalCount) {
+    // Kun headeren kontrolleres; body'en (en brugerpost) afbrydes ulæst nedenfor.
+    if (!hasTotalCount(res)) {
+      ok = false;
+      detail = `HTTP ${status}, men uden headeren X-Total-Count fra admin-listen`;
+    }
+    await discardBody(res);
+  } else if (ok && check.errorCode) {
     const code = await readErrorCode(res);
     if (code !== check.errorCode) {
       ok = false;
@@ -224,6 +259,10 @@ export async function runKeyCheck({ env, fetchImpl, log }) {
   if (env.GITHUB_ACTIONS === "true") {
     if (env.GITHUB_EVENT_NAME !== "workflow_dispatch" || env.GITHUB_REF !== "refs/heads/main") {
       out("FEJL kontekst: kontrollen må kun køre som workflow_dispatch fra main");
+      return { exitCode: EXIT.CONTEXT, lines, results: [] };
+    }
+    if (env[ENVIRONMENT_MARKER] !== ENVIRONMENT_NAME) {
+      out(`FEJL kontekst: jobbet kører ikke i environmentet ${ENVIRONMENT_NAME} (variablen ${ENVIRONMENT_MARKER})`);
       return { exitCode: EXIT.CONTEXT, lines, results: [] };
     }
   }

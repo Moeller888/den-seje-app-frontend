@@ -9,6 +9,10 @@ name: E2E prod key check
 # - Kun GET og HEAD mod Supabase: ingen global-setup, ingen Playwright, intet login, ingen afhængigheder
 #   (intet npm ci), ingen skrivning i produktionen.
 # - Kun de tre secrets nedenfor. Intet secret, ingen URL og ingen response body logges.
+# - Scriptet kræver desuden variablen E2E_PROD_ENVIRONMENT = e2e-prod (findes kun på environment-niveau), så
+#   et job uden for environmentet stopper med exit 2 før ethvert netværkskald.
+# - Kontrakten, at kun de tre godkendte jobs må få produktions-credentials, ligger i
+#   tests/unit/ci-e2e-prod-environment.test.mjs (dette job må kun få de tre E2E_PROD_SUPABASE_*-secrets).
 # - Den delte E2E-lås: alle workflows, der får service-nøglen, tager låsen (tests/unit/ci-e2e-queue.test.mjs).
 #   Kontrollen skriver intet, men holder sig til samme regel i stedet for en undtagelse.
 
@@ -38,6 +42,7 @@ jobs:
           node-version: lts/*
       - name: Kontrollér Supabase-secrets (kun GET/HEAD)
         env:
+          E2E_PROD_ENVIRONMENT: ${{ vars.E2E_PROD_ENVIRONMENT }}
           E2E_PROD_SUPABASE_URL: ${{ secrets.E2E_PROD_SUPABASE_URL }}
           E2E_PROD_SUPABASE_ANON_KEY: ${{ secrets.E2E_PROD_SUPABASE_ANON_KEY }}
           E2E_PROD_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_PROD_SUPABASE_SERVICE_ROLE_KEY }}

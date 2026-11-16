@@ -28,6 +28,7 @@ approvers").
 |---|---|---|
 | `playwright.yml` → `test` | kun `workflow_dispatch` (`if:` springer jobbet over ved push og PR) | `environment: e2e-prod` + trinnet `e2e-prod preflight` lige efter dispatch-guarden |
 | `update-avatar-goldens.yml` → `update` | kun `workflow_dispatch` | `environment: e2e-prod` + `e2e-prod preflight` lige efter checkout |
+| `e2e-prod-key-check.yml` → `key-check` (A7, smallere) | kun `workflow_dispatch`, jobbet kun fra `main` | `environment: e2e-prod`; **kun** de tre `E2E_PROD_SUPABASE_*`-secrets, ingen testkonti, intet `npm ci`; scriptet kræver selv `E2E_PROD_ENVIRONMENT = e2e-prod` og laver kun GET/HEAD |
 
 - **Almindelig CI er uberørt.** Ingen andre jobs har et environment. `test` springes over ved push og PR via `if:`.
   At GitHub evaluerer `if:` før environmentet, så et oversprunget job aldrig venter på godkendelse og ikke opretter
@@ -48,7 +49,9 @@ approvers").
   Trinnet udskriver kun navne og "sat"/"mangler", aldrig en værdi, en hash eller en længde. Det er en
   verifikation, ikke en sikkerhedsgrænse.
 - **Kontrakttest** (`tests/unit/ci-e2e-prod-environment.test.mjs`) fastlåser:
-  - kun de to jobs har produktions-credentials, og begge kører i `e2e-prod`;
+  - kun de tre godkendte jobs har produktions-credentials, og alle kører i `e2e-prod`. Det tredje,
+    `e2e-prod-key-check.yml:key-check`, må kun have de tre `E2E_PROD_SUPABASE_*`-secrets, kun køre fra `main` og kun
+    startes manuelt;
   - hvert credential mappes præcis én gang, i job-env, fra præcis `${{ secrets.E2E_PROD_<NAVN> }}`. Ingen
     trin-niveau-overskrivning;
   - ethvert secret-udtryk i ethvert workflow er et rent `${{ secrets.NAVN }}`. Altså ingen `||`-fallback,

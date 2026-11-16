@@ -9,7 +9,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 import {
+  ADMIN_LIST_PATH,
   ALLOWED_METHODS,
+  ENVIRONMENT_MARKER,
+  ENVIRONMENT_NAME,
   ENV_NAMES,
   EXIT,
   EXPECTED_HOST,
@@ -47,20 +50,29 @@ const actionsEnv = (over = {}) => goodEnv({
   GITHUB_ACTIONS: "true",
   GITHUB_EVENT_NAME: "workflow_dispatch",
   GITHUB_REF: "refs/heads/main",
+  [ENVIRONMENT_MARKER]: ENVIRONMENT_NAME,
   ...over,
 });
 
 // ── attrap af Supabase: opfører sig som den dokumenterede platform ───────────────────────────────
 
-const response = (status, bodyText = "") => {
+const response = (status, bodyText = "", headers = {}) => {
   let cancelled = false;
+  let read = false;
+  const lower = Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]));
   return {
     status,
+    headers: { get: (name) => (Object.hasOwn(lower, name.toLowerCase()) ? lower[name.toLowerCase()] : null) },
     body: { cancel: async () => { cancelled = true; } },
-    text: async () => bodyText,
+    text: async () => { read = true; return bodyText; },
     get cancelled() { return cancelled; },
+    get read() { return read; },
   };
 };
+
+// Et bevidst genkendeligt antal: det må aldrig nå loggen.
+const FAKE_TOTAL = "73519";
+const LIST_BODY = JSON.stringify({ users: [{ id: "u1", email: FAKE_EMAIL }], aud: "authenticated" });
 
 // Svarene indeholder bevidst følsomme strenge (nøglen ekko'et, en e-mailadresse): de må aldrig nå loggen.
 function fakeSupabase({ rejectBearer = false, overrides = {} } = {}) {
@@ -78,6 +90,11 @@ function fakeSupabase({ rejectBearer = false, overrides = {} } = {}) {
       if (key !== FAKE_SECRET) return response(403, JSON.stringify({ msg: `User not allowed ${key}` }));
       return response(404, JSON.stringify({ code: 404, error_code: "user_not_found", msg: `User not found ${FAKE_EMAIL}` }));
     }
+    if (u.pathname === "/auth/v1/admin/users" && u.search === "?page=1&per_page=1") {
+      if (key === undefined) return response(401, JSON.stringify({ message: "No API key found in request" }));
+      if (key !== FAKE_SECRET) return response(403, JSON.stringify({ msg: `User not allowed ${key}` }));
+      return response(200, LIST_BODY, { "X-Total-Count": FAKE_TOTAL, Link: `<${u}>; rel="last"` });
+    }
     if (u.pathname === "/rest/v1/questions") return response(key === FAKE_SECRET ? 200 : 401);
     if (u.pathname === "/auth/v1/settings") return response(key === FAKE_PUBLISHABLE ? 200 : 401, JSON.stringify({ external: { email: true }, echo: key }));
     return response(404, "not found");
@@ -92,7 +109,7 @@ async function run(env, fake = fakeSupabase()) {
 }
 
 // "Bearer " efterfulgt af noget andet end ")" ville være en header-værdi; "(apikey + Bearer)" er kun en beskrivelse.
-const SENSITIVE = [FAKE_SECRET, FAKE_PUBLISHABLE, FAKE_EMAIL, "Bearer sb", "Bearer ey", "FAKEfake", "FAKEpub", "Invalid JWT", "User not found", "No API key"];
+const SENSITIVE = [FAKE_SECRET, FAKE_PUBLISHABLE, FAKE_EMAIL, FAKE_TOTAL, "rel=", "authenticated", "Bearer sb", "Bearer ey", "FAKEfake", "FAKEpub", "Invalid JWT", "User not found", "No API key"];
 function assertNothingSensitive(lines) {
   const text = lines.join("\n");
   for (const s of SENSITIVE) assert.ok(!text.includes(s), `loggen må ikke indeholde ${JSON.stringify(s)}`);
@@ -212,13 +229,18 @@ test("safeFetch sender ingen body, følger ingen omdirigering og har en tidsgræ
 
 test("hvert planlagt kald er GET eller HEAD mod projektets egen vært, og ingen sender en body", () => {
   const checks = buildChecks({ origin: FAKE_URL, secret: FAKE_SECRET, publishable: FAKE_PUBLISHABLE });
-  assert.equal(checks.length, 8);
+  assert.equal(checks.length, 12);
   for (const c of checks) {
     assert.ok(ALLOWED_METHODS.includes(c.method), c.id);
     assert.ok(c.path.startsWith("/auth/v1/") || c.path.startsWith("/rest/v1/"), c.id);
     assert.equal("body" in c, false, c.id);
   }
   assert.ok(checks.some((c) => c.method === "HEAD" && c.path === REST_PROBE_PATH));
+  // Den positive admin-kontrol er den dokumenterede liste-operation med de mindst mulige, gyldige parametre.
+  assert.equal(ADMIN_LIST_PATH, "/auth/v1/admin/users?page=1&per_page=1");
+  assert.deepEqual(checks.filter((c) => c.path === ADMIN_LIST_PATH).map((c) => c.id), [
+    "auth-admin-liste-uden-noegle", "auth-admin-liste-publishable", "auth-admin-liste-secret", "auth-admin-liste-secret-supabase-js-form",
+  ]);
 });
 
 test("kildekoden: præcis ét kald ud på netværket, og ingen skrivende metode nævnes", () => {
@@ -236,13 +258,13 @@ test("kildekoden: præcis ét kald ud på netværket, og ingen skrivende metode 
 
 // ── 3. hele kontrollen mod attrappen ────────────────────────────────────────────────────────────
 
-test("glad sti: 8/8 kontroller bestået, exit 0, og kun GET/HEAD mod projektets vært", async () => {
+test("glad sti: 12/12 kontroller bestået, exit 0, og kun GET/HEAD mod projektets vært", async () => {
   const r = await run(actionsEnv());
   assert.equal(r.exitCode, EXIT.OK);
-  assert.equal(r.results.length, 8);
+  assert.equal(r.results.length, 12);
   assert.ok(r.results.every((x) => x.ok), JSON.stringify(r.results));
-  assert.match(r.logged.at(-1), /^RESULTAT: GODKENDT — 8\/8/);
-  assert.equal(r.calls.length, 8);
+  assert.match(r.logged.at(-1), /^RESULTAT: GODKENDT — 12\/12/);
+  assert.equal(r.calls.length, 12);
   for (const { url, init } of r.calls) {
     assert.ok(ALLOWED_METHODS.includes(init.method));
     assert.equal(new URL(url).host, EXPECTED_HOST);
@@ -256,12 +278,15 @@ test("headers: den dokumenterede form sender nøglen KUN i apikey; supabase-js-f
   const byPath = r.calls.map(({ init }) => init.headers);
   const plain = r.calls.filter(({ init }) => init.headers.Authorization === undefined);
   const jsForm = r.calls.filter(({ init }) => init.headers.Authorization !== undefined);
-  assert.equal(plain.length, 5);
-  assert.equal(jsForm.length, 3);
+  assert.equal(plain.length, 8);
+  assert.equal(jsForm.length, 4);
+  // sb_secret_ og sb_publishable_ sendes i den dokumenterede form KUN i apikey, aldrig alene som Bearer.
+  for (const { init } of plain) assert.deepEqual(Object.keys(init.headers).filter((h) => h !== "apikey"), []);
+  assert.ok(r.calls.every(({ init }) => init.headers.Authorization === undefined || init.headers.apikey !== undefined), "aldrig Bearer uden apikey");
   for (const { init } of jsForm) assert.equal(init.headers.Authorization, `Bearer ${init.headers.apikey}`);
   assert.ok(byPath.some((h) => h.apikey === undefined), "den negative kontrol sender ingen nøgle");
   const ids = r.results.map((x) => x.id);
-  assert.deepEqual(ids.filter((id) => id.endsWith("supabase-js-form")).length, 3);
+  assert.deepEqual(ids.filter((id) => id.endsWith("supabase-js-form")).length, 4);
 });
 
 test("negativ kontrol: svarer Auth admin 200 uden nøgle, er kontrollen IKKE godkendt", async () => {
@@ -292,20 +317,22 @@ test("en afvist secret key (fx tilbagekaldt) giver IKKE GODKENDT og navngiver de
   const fake = fakeSupabase({ overrides: {
     [`GET /auth/v1/admin/users/${NIL_UUID}`]: (init) => (init.headers.apikey === FAKE_SECRET ? response(401, `{"msg":"bad ${FAKE_SECRET}"}`) : null),
     [`HEAD ${REST_PROBE_PATH}`]: () => response(401),
+    [`GET ${ADMIN_LIST_PATH}`]: (init) => (init.headers.apikey === FAKE_SECRET ? response(401, `{"msg":"bad ${FAKE_SECRET}"}`) : null),
   } });
   const r = await run(goodEnv(), fake);
   assert.equal(r.exitCode, EXIT.FAILED);
   assert.deepEqual(r.results.filter((x) => !x.ok).map((x) => x.id).sort(), [
+    "auth-admin-liste-secret", "auth-admin-liste-secret-supabase-js-form",
     "auth-admin-secret", "auth-admin-secret-supabase-js-form", "rest-head-secret", "rest-head-secret-supabase-js-form",
   ]);
   assertNothingSensitive(r.logged);
 });
 
-test("afviser platformen Bearer-formen, fejler præcis de tre supabase-js-kontroller — den dokumenterede form består", async () => {
+test("afviser platformen Bearer-formen, fejler præcis de fire supabase-js-kontroller — den dokumenterede form består", async () => {
   const r = await run(goodEnv(), fakeSupabase({ rejectBearer: true }));
   assert.equal(r.exitCode, EXIT.FAILED);
   assert.deepEqual(r.results.filter((x) => !x.ok).map((x) => x.id).sort(), [
-    "auth-admin-secret-supabase-js-form", "auth-settings-publishable-supabase-js-form", "rest-head-secret-supabase-js-form",
+    "auth-admin-liste-secret-supabase-js-form", "auth-admin-secret-supabase-js-form", "auth-settings-publishable-supabase-js-form", "rest-head-secret-supabase-js-form",
   ]);
   assert.ok(r.results.filter((x) => !x.id.endsWith("supabase-js-form")).every((x) => x.ok));
   assertNothingSensitive(r.logged);
@@ -331,9 +358,10 @@ test("formatfejl: intet netværkskald, exit 1", async () => {
   assertNothingSensitive(r.logged);
 });
 
-test("kontekst: i GitHub Actions kun workflow_dispatch fra main — ellers exit 2 uden netværkskald", async () => {
+test("kontekst: i GitHub Actions kun workflow_dispatch fra main i e2e-prod — ellers exit 2 uden netværkskald", async () => {
   for (const over of [{ GITHUB_EVENT_NAME: "push" }, { GITHUB_EVENT_NAME: "pull_request" }, { GITHUB_REF: "refs/heads/feature" },
-    { GITHUB_REF: "refs/pull/1/merge" }, { GITHUB_EVENT_NAME: undefined }]) {
+    { GITHUB_REF: "refs/pull/1/merge" }, { GITHUB_EVENT_NAME: undefined },
+    { [ENVIRONMENT_MARKER]: undefined }, { [ENVIRONMENT_MARKER]: "" }, { [ENVIRONMENT_MARKER]: "Production" }, { [ENVIRONMENT_MARKER]: "e2e-prod " }]) {
     const r = await run(actionsEnv(over));
     assert.equal(r.exitCode, EXIT.CONTEXT, JSON.stringify(over));
     assert.equal(r.calls.length, 0);
@@ -348,6 +376,40 @@ test("svar-bodies kasseres uden at blive læst, undtagen det ene error_code-svar
   const notCancelled = responses.filter(({ res }) => !res.cancelled);
   assert.equal(notCancelled.length, 2, "kun de to admin-kald med secret key læser body (error_code)");
   for (const { i } of notCancelled) assert.equal(i.headers.apikey, FAKE_SECRET);
+});
+
+test("admin-listen: body læses aldrig, antallet logges aldrig, og kun et 200 MED X-Total-Count godkendes", async () => {
+  const responses = [];
+  const fake = fakeSupabase();
+  const wrapped = { calls: fake.calls, fetchImpl: async (u, i) => { const res = await fake.fetchImpl(u, i); responses.push({ u, res }); return res; } };
+  const ok = await run(actionsEnv(), wrapped);
+  assert.equal(ok.exitCode, EXIT.OK);
+  const list = responses.filter(({ u }) => u.endsWith(ADMIN_LIST_PATH));
+  assert.equal(list.length, 4);
+  for (const { res } of list) {
+    assert.equal(res.read, false, "admin-listens body læses aldrig");
+    assert.equal(res.cancelled, true, "admin-listens body afbrydes");
+  }
+  assertNothingSensitive(ok.logged);
+
+  for (const headers of [{}, { "X-Total-Count": "" }, { "X-Total-Count": "-1" }, { "X-Total-Count": "12abc" }, { "X-Total-Count": "1.5" },
+    // Ugyldige værdier, der indeholder et rigtigt antal (fx to sammenflettede headers): må heller ikke logges.
+    { "X-Total-Count": `${FAKE_TOTAL}, ${FAKE_TOTAL}` }, { "X-Total-Count": ` ${FAKE_TOTAL}` }]) {
+    const f = fakeSupabase({ overrides: { [`GET ${ADMIN_LIST_PATH}`]: (init) => (init.headers.apikey === FAKE_SECRET ? response(200, LIST_BODY, headers) : null) } });
+    const r = await run(goodEnv(), f);
+    assert.equal(r.exitCode, EXIT.FAILED, JSON.stringify(headers));
+    assert.deepEqual(r.results.filter((x) => !x.ok).map((x) => x.id).sort(), ["auth-admin-liste-secret", "auth-admin-liste-secret-supabase-js-form"]);
+    assertNothingSensitive(r.logged);
+  }
+});
+
+test("admin-listen: negative kontroller fejler, hvis listen svarer uden nøgle eller med publishable key", async () => {
+  const leak = (cond) => fakeSupabase({ overrides: { [`GET ${ADMIN_LIST_PATH}`]: (init) => (cond(init) ? response(200, LIST_BODY, { "X-Total-Count": FAKE_TOTAL }) : null) } });
+  const noKey = await run(goodEnv(), leak((i) => i.headers.apikey === undefined));
+  assert.deepEqual(noKey.results.filter((x) => !x.ok).map((x) => x.id), ["auth-admin-liste-uden-noegle"]);
+  const pub = await run(goodEnv(), leak((i) => i.headers.apikey === FAKE_PUBLISHABLE));
+  assert.deepEqual(pub.results.filter((x) => !x.ok).map((x) => x.id), ["auth-admin-liste-publishable"]);
+  for (const r of [noKey, pub]) { assert.equal(r.exitCode, EXIT.FAILED); assertNothingSensitive(r.logged); }
 });
 
 test("step-summary indeholder kun de færdige linjer", async () => {
@@ -396,7 +458,10 @@ test("workflow: præcis de tre secrets, hver én gang, i ren form og mappet til 
     assert.equal(lines[0], `          ${name}: \${{ secrets.${name} }}`, name);
   }
   assert.doesNotMatch(WF_CODE, /secrets\s*\[|secrets:\s*inherit|toJSON\(\s*secrets/);
-  assert.equal([...WF_CODE.matchAll(/\$\{\{[^}]*\}\}/g)].length, 3, "ingen andre udtryk end de tre secrets");
+  const exprs = [...WF_CODE.matchAll(/\$\{\{[^}]*\}\}/g)].map((m) => m[0]);
+  assert.equal(exprs.length, 4, "ingen andre udtryk end de tre secrets og environment-markøren");
+  const markerLines = WF_CODE.split("\n").filter((l) => l.includes("vars."));
+  assert.deepEqual(markerLines, ["          E2E_PROD_ENVIRONMENT: ${{ vars.E2E_PROD_ENVIRONMENT }}"]);
 });
 
 test("workflow: ingen afhængigheder, ingen Playwright, ingen global-setup, ingen artefakter — kun scriptet", () => {
