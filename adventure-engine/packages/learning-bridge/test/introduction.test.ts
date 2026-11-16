@@ -263,6 +263,49 @@ describe("bridge/2 compatibility — an old (or non-introduction) game", () => {
     expect(p.hostRejects.filter((r) => r === "invalid")).toHaveLength(2);
     expect(p.svc.reports).toEqual([]);
     expect(p.svc.completedBy).toBeNull();
+    // Both ends agree on the negotiated version; requestStep needs the explicit introductions option.
+    expect(p.client.protocol).toBe(PROTOCOL_V2);
+    await expect(p.client.requestStep(CHECK)).rejects.toMatchObject({ code: "unsupported_protocol" });
+  });
+
+  it("a backend that returns an introduction where a task is expected (bridge/2 session) is refused, reported, never shown", async () => {
+    const errors: unknown[] = [];
+    class LeakyService extends IntroService {
+      override async fetchTask(q: TaskQuery): Promise<ServiceTask> {
+        return (await this.fetchStep(q)) as ServiceTask; // a faulty adapter: lets the introduction through
+      }
+    }
+    const service = new LeakyService();
+    const p = pair({ service, client: { introductions: false }, host: { onServiceError: (e) => errors.push(e) } });
+    const c = p.client.connect();
+    await flush();
+    await c;
+    const t = p.client.requestTask(CHECK);
+    await flush();
+    await expect(t).rejects.toMatchObject({ code: "task_unavailable" });
+    expect(String(errors.at(-1))).toMatch(/cannot show/);
+    expect(p.toGame.some((m: HostMessage) => m.type === "intro.present")).toBe(false);
+  });
+
+  it("without a store the host keeps the report ids in memory: the same id for every retry of the same event", async () => {
+    const service = new IntroService();
+    // The harness passes a store by default; an explicit undefined removes it for this host.
+    const p = pair({ service, host: { store: undefined, retryDelaysMs: [0, 0, 0] } as never });
+    const c = p.client.connect();
+    await flush();
+    await c;
+    expect(p.client.protocol).toBe(PROTOCOL);
+    const s = p.client.requestStep(CHECK);
+    await flush();
+    const m = (await s) as IntroPresentMsg;
+    service.failReports.push(new ServiceError("network", true));
+    const shown = p.client.introShown(m.introToken);
+    await sleep(20);
+    await flush();
+    await shown;
+    expect(service.reports).toHaveLength(2);
+    expect(service.reports[0]?.requestId).toBe(service.reports[1]?.requestId);
+    expect(p.store.map.size).toBe(0);
   });
 
   it("a game that speaks only an unknown version is refused explicitly", async () => {

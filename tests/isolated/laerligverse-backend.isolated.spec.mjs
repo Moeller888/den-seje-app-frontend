@@ -104,6 +104,9 @@ function world(service, hostOptions = {}) {
   });
   ctx.client = new BridgeClient({
     hostOrigin: HOST_ORIGIN, hostWindow: hostWin, randomId, kinds: ["choice", "short_text"], contentId: "arkivskabet", contentVersion: "0_1_0",
+    // F11-B: this game speaks the newest version (bridge/3), so the raw replays built with PROTOCOL are exact copies of
+    // what it sends (a session accepts only its negotiated version). The task chain itself is unchanged.
+    introductions: true,
     post: (m) => { const data = structuredClone(m); queueMicrotask(() => void ctx.host.onMessage({ origin: GAME_ORIGIN, source: gameWin, data })); },
   });
   const raw = (data, origin = GAME_ORIGIN, source = gameWin) => ctx.host.onMessage({ origin, source, data: structuredClone(data) });
