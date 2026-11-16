@@ -172,6 +172,15 @@ ring og få 2 XP og 1 mønt hver gang. Det gælder alle fag.
 
 `get-next-question/index.ts` merges automatisk; både main's og kandidatens ændringer er bevaret linje for linje. Introduktionen ligger i sekvensblokken (`targeting` + `LAERLIGVERSE_SEQUENCE`), som et F-07-forløb aldrig når (`course` sammen med målretning giver 400).
 
+**Main `48932c1d` merget ind 2026-11-16** (efter grøn PR-CI på `84ce1a73`: Playwright Tests 43897383990 og Isolated E2E 43897384045). Main bragte D-379 (#720, kun avatar), de fem engelske aktiveringsmigrationer (#712, ikke anvendt) og e2e-prod-environment (#714, kun CI-workflows og deres tests). Integrationsgrundlaget er præcis `48932c1d`; senere commits på main er ikke med.
+
+| Konflikt | Løsning |
+|---|---|
+| `question-instances-read-scope.test.mjs` | Begge siders gennemgåede læsere bevaret i versionsorden: `20261113170000` (F-07) før `20261114203117…203121` (#712) |
+| `replay-plan.mjs` (automatisk merget) | De fem engelske filer står kun i NOT_IN_PRODUCTION og i ingen profil, så de springes over i alle profiler. Planen evalueret mod migrationsmappen: produktionsspejl 128, `k1` 129, `introduction` 132, `f07` 130 anvendte filer, alle i sorteret rækkefølge; F07-profilen tilføjer kun `20261113170000` og `20261115130000` |
+
+Ingen Edge- eller frontendfil er ændret af dette merge; manifestet er fortsat `3ff5b50e…` (25 filer).
+
 ## Deployment-rækkefølge (plan, IKKE udført; hvert trin kræver ejerens særskilte GO, D-110)
 
 **Forudsætning:** en gendannelig backup og en verificeret rollback. Uden dem anbefales ingen produktionsrelease.
