@@ -93,14 +93,25 @@ test("NH-5C plan: design C, the frozen prompt, the three private images in order
   assert.equal(Object.keys(PLAN.rehearsal.cases).length, 12); assert.deepEqual(plain(PLAN.rehearsal.assembly.gates), plain(C.DRESS_GATES)); assert.ok(PLAN.visualStop.some((v) => /nothing is retouched to pass/.test(v)));
 });
 
-test("NH-5C authorisation: one unspent call, its own budget, the frozen plan; the decision carries the token and every pin", () => {
-  assert.deepEqual([AUTH.decision, AUTH.callId, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions, AUTH.budget.actuallySent], ["D-379", ID, false, 1, 0, 0, false, false, 0]);
-  assert.deepEqual([AUTH.call.callId, AUTH.call.style, AUTH.call.mandateState, AUTH.call.outcome, AUTH.call.prompt.sha256], [ID, "nape-locks", "UNSPENT", "NOT YET ATTEMPTED", PLAN.prompt.sha256]);
-  for (const k of ["neverReuse", "closedBy", "result"]) assert.ok(!(k in AUTH.call), k);
+test("NH-5C authorisation: one call, its own budget, the frozen plan; sent once and spent, the locked extraction rejected with its measurements and the thresholds unchanged; the decision carries the token and every pin", () => {
+  assert.deepEqual([AUTH.decision, AUTH.callId, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions, AUTH.budget.actuallySent], ["D-379", ID, false, 1, 0, 0, false, false, 1]);
+  // NH-5C was sent once (2026-11-16); it is never an active permission again; its locked extraction is rejected
+  assert.deepEqual([AUTH.call.callId, AUTH.call.style, AUTH.call.mandateState, AUTH.call.outcome, AUTH.call.neverReuse, AUTH.call.prompt.sha256], [ID, "nape-locks", "SPENT", "RECEIVED_FOR_PLACEMENT", true, PLAN.prompt.sha256]);
+  const r = AUTH.call.result, x = r.extractionV1;
+  assert.deepEqual([r.httpStatus, r.retries, r.originMainSha, r.image.tracked, r.neverPromoted, r.assessment, r.receipt.verdict], [200, 0, "87ac52a30a4b84b8f4c12f34eee3ed887072817a", false, true, "EXTRACTION_V1_REJECTED", "RECEIVED_FOR_PLACEMENT"]);
+  assert.deepEqual([x.verdict, x.failed, x.passed, x.thresholdsUnchanged], ["REJECTED", ["P3", "P4", "P5", "P8", "P9", "P10", "P11", "P12", "P13"], ["P1", "P2", "P6", "P7"], true]);
+  assert.deepEqual(Object.keys(x.checks).sort(), Object.keys(C.GATES).sort(), "every gate's measurement is recorded");
+  for (const [k, v] of Object.entries(x.checks)) assert.equal(v.pass, !x.failed.includes(k), k);
+  const k = x.checks, Gt = C.GATES;
+  assert.deepEqual([k.P3.rawOnBrowsPx, k.P5.largestShare, k.P8.iou.design, k.P10.longestRun, k.P11.largestSpillClusterPx, k.P12.largestHolePx, k.P13.left.shown, k.P13.right.shown], [571, 0.9181, 0.563, 38, 945, 66, 0.221, 0.2282]);
+  assert.ok(k.P3.rawOnBrowsPx > Gt.P3.maxRaw && k.P5.largestShare < Gt.P5.min && k.P8.iou.design < Gt.P8.minDesign && k.P9.spillShare > Gt.P9.max && k.P10.longestRun > Gt.P10.maxRun
+    && k.P11.largestSpillClusterPx > Gt.P11.max && k.P12.largestHolePx > Gt.P12.max && k.P13.left.shown < Gt.P13.min && k.P13.right.shown < Gt.P13.min, "the recorded rejection holds against the unchanged thresholds");
+  assert.ok(r.assembly.allPass && Object.keys(r.assembly.tops).length === 3 && Object.values(r.assembly.tops).every((t) => t.G1_locksOverClothesPx === 0 && t.G6_minGapToClothesPx >= 20));
   assert.deepEqual(AUTH.call.claim, { identity: ID + "-claim", filename: ID + ".claim.json", eventsFilename: ID + ".events.jsonl" });
   assert.equal(AUTH.frozen.plan.sha256, sha256(readFileSync(repoFile(PLAN_REL)))); assert.deepEqual(AUTH.frozen.methodFiles, PLAN.method.files);
   assert.deepEqual(AUTH.request.images, PLAN.request.images.map((i) => ({ role: i.role, name: i.name, bytes: i.bytes, sha256: i.sha256, tracked: false })));
-  const status = /^status: (.*)$/m.exec(DECISION)[1].split(" — ").map((x) => x.trim()); assert.ok(status.includes(TOKEN), TOKEN); assert.ok(status.some((s) => /NOT SENT/.test(s)));
+  const status = /^status: (.*)$/m.exec(DECISION)[1].split(" — ").map((x) => x.trim()); assert.ok(status.includes(TOKEN), TOKEN); assert.ok(status.some((s) => /NH-5C SENT 2026-11-16 \(MANDATE SPENT, NEVER RESENT\)/.test(s)));
+  for (const n of ["req_8e8ce0b13d644e8792465242b1e22f65", r.image.sha256, r.receipt.sha256, "87ac52a30a4b84b8f4c12f34eee3ed887072817a"]) assert.ok(DECISION.includes(n), n);
   for (const n of [ID, "--owner-approval=D-379-NH-5C", MODEL, ADAPTER_REL, AUTH.frozen.plan.sha256, "1024x1024", PLAN.prompt.sha256, PLAN.method.files["tools/avatar/northstar-hair-nh5c.mjs"], ...PLAN.request.images.map((i) => i.sha256)]) assert.ok(DECISION.includes(n), n);
   assert.ok(AUTH.budget.price.perCallUpperEstimate <= 0.09); assert.match(AUTH.budget.price.note, /estimate, not a guaranteed maximum/);
   assert.deepEqual([AUTH.adapterImplementations.adapter, AUTH.adapterImplementations.ownerApprovalFlag, AUTH.adapterImplementations.status, AUTH.adapterImplementations.mergeIsNotAnInstruction], [ADAPTER_REL, "--owner-approval=D-379-NH-5C", "IMPLEMENTED — NOT EXECUTED", true]);
@@ -146,6 +157,9 @@ function sandbox({ base: mod } = {}) {
   writeFileSync(sb.gitconfig, "[core]\n\tautocrlf = false\n[init]\n\tdefaultBranch = main\n"); writeFileSync(sb.mock, MOCK_SRC); writeFileSync(sb.log, ""); writeFileSync(sb.png, png(1024, 1024));
   const rd = join(sb.out, "references"); mkdirSync(rd, { recursive: true }); for (const i of PLAN.request.images) copyFileSync(join(REFS, i.name), join(rd, i.name));
   for (const rel of TRACKED) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  // the adapter's behaviour is tested on the authorisation as merged, before NH-5C was spent (2026-11-16)
+  { const p = join(sb.repo, ...AUTH_REL.split("/")), a = JSON.parse(readFileSync(p, "utf8")), e = a.call; a.budget.actuallySent = 0;
+    e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; for (const k of ["neverReuse", "closedBy", "result"]) delete e[k]; writeFileSync(p, JSON.stringify(a, null, 2) + "\n"); }
   if (mod) mod(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb; }
