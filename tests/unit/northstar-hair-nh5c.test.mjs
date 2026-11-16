@@ -1,13 +1,14 @@
 // D-379 NH-5C — the nape locks on D-373's shared head base: design C, its layer order, the call's inputs and the post-processing
 // (tools/avatar/northstar-hair-nh5c.mjs), the frozen plan (plan-nh5c-v1.json) and one one-shot call (authorisation-nh5c-v1.json,
-// tools/avatar/openai-send-northstar-hair-nh5c.mjs). The static tests run everywhere. The input images, the rehearsal and the mocked sends
-// need the private files kept outside the clones: they run only where those exist — skipped in CI, never faked. A dummy key and a mocked
+// tools/avatar/openai-send-northstar-hair-nh5c.mjs). The static tests run everywhere. The input images and the mocked sends need the private
+// files kept outside the clones: they run only where those exist — skipped in CI, never faked. The twelve-case rehearsal decodes the
+// published layers with a vendored program, so it is not a unit test (D-094): it is the private command in plan-nh5c-v1.json rehearsal. A dummy key and a mocked
 // fetch only; the real key is never read (D-142). 0 image calls.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, existsSync, copyFileSync, realpathSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { spawnSync, execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { join, dirname, relative, isAbsolute, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir, homedir } from "node:os";
@@ -27,11 +28,9 @@ const ARGS = ["--call-id=" + ID, "--claim-identity=" + ID + "-claim"], SEND = ["
 const KEY_READ = "process.env." + "OPENAI_API" + "_KEY";   // spelt in parts so this file never reads it (the D-142 guard)
 const TOKEN = "D-379 NH-5C: 1 CALL BOUND (NAPE LOCKS, D-373 BASE)";
 const REFS = join(homedir(), "Documents", "DenSejeApp-artefacts", "hair-nh5-round", "references");
-const DWEBP = repoFile("tools/avatar/vendor/dwebp.exe");
 const have = (list) => list.every((i) => existsSync(join(REFS, i.name)) && sha256(readFileSync(join(REFS, i.name))) === i.sha256);
 const SKIP_SEND = have(PLAN.request.images) ? false : "the three input images are kept outside the clones; write them with northstar-hair-nh5c.mjs --inputs to run the mocked sends";
 const SKIP_POST = have(PLAN.post.inputs) && have(PLAN.request.images) ? false : "D-373's base, the ear mask and NH-4's layer are kept outside the clones";
-const SKIP_REHEARSAL = SKIP_POST || (existsSync(DWEBP) ? false : "the rehearsal decodes the published layers with tools/avatar/vendor/dwebp.exe (node tools/avatar/fetch-dwebp.mjs)");
 const isInside = (c, p) => { const r = relative(p, c); return r === "" || (!r.startsWith("..") && !isAbsolute(r)); };
 const plain = (o) => JSON.parse(JSON.stringify(o));
 const priv = (name) => decodePng(readFileSync(join(REFS, name))).px;
@@ -71,24 +70,6 @@ test("NH-5C inputs: Image 1 and Image 3 are NH-5B's own files; Image 2 is the to
   assert.equal(sha256(encodePng(1024, 1024, C.guideImage(base, ear))), PLAN.request.images[1].sha256);
   assert.equal(sha256(readFileSync(join(REFS, C.NAMES.style))), PLAN.request.images[2].sha256);
   const nh5b = json("tools/avatar/fixtures/northstar-hair-d375/plan-nh5b-v1.json"); assert.deepEqual([PLAN.request.images[0], PLAN.request.images[2]].map((i) => i.sha256), [nh5b.request.images[0].sha256, nh5b.request.images[2].sha256]);
-});
-
-test("NH-5C rehearsal: twelve simulated results — the planned locks pass and are dressed with three tops; hair over the ears, the face or the collar, and cuts at the parting, a temple and the nape are found where they are", { skip: SKIP_REHEARSAL }, async () => {
-  const tmp = mkdtempSync(join(tmpdir(), "nh5c-test-")), cache = new Map(); let n = 0;
-  const decode = (rel) => { if (!cache.has(rel)) { const p = join(tmp, (n++) + ".png"); execFileSync(DWEBP, ["-quiet", repoFile(rel), "-o", p]); cache.set(rel, decodePng(readFileSync(p)).px); } return cache.get(rel); };
-  try {
-    const AL = await import(pathToFileURL(repoFile("js/avatar-layers.js")).href), base = priv(C.NAMES.base), ear = priv("clean-head-ear-on-top-mask.png");
-    const r = C.rehearsal({ base, ear, nh4: NH5.alphaMask(priv("nh4-temple-tip-grey-hair-layer.png")), nh5b: C.topknotMask(base, ear, decode(C.TOPKNOT_HEAD)), AL, decode });
-    assert.equal(r.rows.length, 12); for (const row of r.rows) assert.ok(row.asExpected && row.assemblyAsExpected !== false, JSON.stringify(row));
-    const by = Object.fromEntries(r.rows.map((x) => [x.case, x]));
-    assert.deepEqual([by.A.measured.P13.left[0], by.A.measured.P13.right[0]], [1, 1], "the planned locks are shown in full");
-    assert.deepEqual(by.A.measured.P4, { ears: 0, overFace: 0, hiddenBehindFace: 0, belowJaw: 0 });
-    for (const a of Object.values(by.A.assembly)) assert.deepEqual([a.G1_locksOverClothesPx, a.G2_opaqueEarPxChanged, a.G3_facePxChanged, a.G4_changedOutsideHairPx, a.pass], [0, 0, 0, 0, true]);
-    assert.ok(by.D.measured.P4.ears > 10 && by.E.measured.P4.overFace > 10 && by.G.measured.P4.belowJaw > 20, "hair over an ear, over the face and down over the collar");
-    assert.ok(by.C.measured.P10.parting > 6 && by.F.measured.P10["right temple"] > 6 && by.G.measured.P10["right nape"] > 6, "the cuts are found at the parting, the temple and the nape");
-    for (const a of Object.values(by.G.assembly)) assert.equal(a.pass, false);
-    assert.deepEqual(by.B.measured.P1, [1.02, 10, -6]);
-  } finally { rmSync(tmp, { recursive: true, force: true }); }
 });
 
 test("NH-5C plan: design C, the frozen prompt, the three private images in order, no hair input, the layer order, the post-processing and P1–P13, the locked method", () => {
