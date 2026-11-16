@@ -372,6 +372,12 @@ const REVIEWED_LATER_READERS = {
     "D-347's (one instance by id AND student_id = auth.uid(), no instance column returned, no write). EXECUTE " +
     "stays revoked from PUBLIC and anon. No policy, RLS or table privilege on question_instances is touched " +
     "(proven in minigame-break-interval-10min-migration-run.test.mjs, tests 1 and 4).",
+  "20261109043500_laerligverse_presented_at.sql":
+    "Lærligverse K9 prototype (not applied): mark_presented (SECURITY INVOKER, EXECUTE for service_role only) " +
+    "reads ONE instance matched on id AND student_id FOR UPDATE and returns only an outcome, the round and the " +
+    "server time it stored; another pupil's instance answers exactly like a missing one. The new column " +
+    "presented_at carries no client privilege (L3/L5 moved UPDATE to column level). No policy, RLS or table " +
+    "privilege on question_instances is touched (proven in laerligverse-k9-presented-migration-run.test.mjs).",
   "20261109120000_laerligverse_course_progress_read.sql":
     "Lærligverse F10-B2 (not applied): adds get_course_progress, SECURITY DEFINER with an EMPTY search_path, " +
     "behind get_student_overview's gate (signed in; caller's profiles.role teacher/super_admin; the target a " +
@@ -588,6 +594,7 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261103110000_l1_k1_attempt_context.sql",
      "20261105090000_minigame_breaks.sql",
      "20261107090000_minigame_break_interval_10min.sql",
+     "20261109043500_laerligverse_presented_at.sql",
      "20261109120000_laerligverse_course_progress_read.sql",
      "20261113120000_english_review_text_corrections.sql",
      "20261114203117_english_activate_2a_batch3.sql",

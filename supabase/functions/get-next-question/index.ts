@@ -7,6 +7,7 @@ import { deriveQuestionScope } from "./scope.ts";
 import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
 import { checkRequestedStep, historyFromRows, nextStep, stepDef, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
 import { hintsAvailable } from "../_shared/hints.ts";
+import { INTRODUCTION_ENV, decideIntroduction, on as introOn } from "../_shared/introduction.ts";
 import { sortByWave } from "./wave-order.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
@@ -188,6 +189,28 @@ serve(async (req) => {
     // expects (a stale or manipulated one is refused). Off: no read, no change — the calls are as before.
     let sequence: Extract<SequenceDecision, { state: "step" }> | null = null;
     if (targeting.mode === "on" && Deno.env.get("LAERLIGVERSE_SEQUENCE") === "on" && body?.sequence === true) {
+      // LP-13 / K9 prototype (Edge secret LAERLIGVERSE_INTRODUCTION, ../_shared/introduction.ts, migration
+      // 20261110043500): before the first step, the objective's introduction — a separate server round without an
+      // answer key, so it never blocks the quiz (idx_one_open_question) and no grading path can see it. A refresh
+      // resumes the same round; only the explicit "completed" action (introduction-progress) moves on. Off: no call.
+      if (introOn(Deno.env.get(INTRODUCTION_ENV))) {
+        const { data: introData, error: introError } = await admin().rpc("serve_introduction", {
+          p_student_id: student_id, p_learning_objective: targeting.objective,
+        });
+        if (introError) throw introError;
+        const intro = decideIntroduction(introData);
+        if (intro.kind === "error") throw new Error(`introduction: ${intro.problem}`);
+        if (intro.kind === "show") {
+          console.log("LEARNING_SEQUENCE:", { step: "introduction" });
+          return new Response(JSON.stringify({
+            step: "introduction", learning_objective: targeting.objective, learning_step: "introduction",
+            introduction_round_id: intro.roundId, content_sha256: intro.contentSha256, content: { cards: intro.cards },
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+      }
       const { data: historyRows, error: historyError } = await admin()
         .from("question_instances")
         .select("answered, was_correct, answered_at, questions!inner(learning_objective, metadata)")

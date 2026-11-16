@@ -130,7 +130,8 @@ test("workflow: the check runs on both paths, only the exact value skips, the gu
   assert.doesNotMatch(job.slice(0, job.indexOf("    steps:")), /\n    if:/);
   // F10-B2: the production-mirror entries keep the exact name "isolated-e2e (run N)"; only the one
   // K1-lane entry (matrix.profile == 'k1') gets the suffix ", K1-testprofil".
-  assert.match(job, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| '' \}\}\)/);
+  // PR #664: the introduction-lane entry (matrix.profile == 'introduction') gets ", introduktion-testprofil".
+  assert.match(job, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| matrix\.profile == 'introduction' && ', introduktion-testprofil' \|\| '' \}\}\)/);
   const steps = job.split("\n      - ").slice(1);
   const name = (s) => (s.match(/^(?:name|uses): (.*)/) ?? [])[1] ?? "";
   for (const s of steps) {
@@ -143,10 +144,15 @@ test("workflow: the check runs on both paths, only the exact value skips, the gu
       assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && steps.pwcache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'\n"), n);
       continue;
     }
-    // F10-B2 K1 lane: the frontend suite runs in every production-mirror entry and is skipped ONLY in
-    // the k1 entry (which runs the isolated specs, where the H5 tests live). Nothing else may skip.
+    // F10-B2 K1 lane / PR #664 introduction lane: the frontend suite runs in every production-mirror entry and is
+    // skipped ONLY in the test-profile entries (which run the isolated specs). Nothing else may skip.
     if (n === "Existing Playwright suite against the isolated stack") {
-      assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile != 'k1'\n"), n);
+      assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'\n"), n);
+      continue;
+    }
+    // PR #664: the introduction chain runs ONLY in the introduction lane (and must run completely there).
+    if (n === "Introduction E2E — the chain must run completely (introduction lane)") {
+      assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'introduction'\n"), n);
       continue;
     }
     // Every other step: skipped ONLY for the exact value "docs-md"; any other value runs it.
