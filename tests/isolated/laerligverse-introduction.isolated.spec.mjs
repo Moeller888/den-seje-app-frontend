@@ -16,9 +16,10 @@
 // local intro cards; the bridge has no introduction message). So this is a BROWSER-BASED INTEGRATION / API TEST: the
 // pupil signs in through the real login page in the browser, and the test then makes the requests a host will make, over
 // HTTP with that sign-in's own session token. It does not test what the pupil sees. Rendering a server introduction
-// inside the host is a separate frontend step. (Calls made with fetch from inside the login page failed in this lane
-// with "Failed to fetch" before reaching the Edge Runtime — runs 43709089926 and 43711249866; cause not established,
-// recorded as an open observation, not worked around in the product.)
+// inside the host is a separate frontend step (F11-B: laerligverse-intro-visible.isolated.spec.mjs). Calls made with
+// fetch from inside the login page failed in this lane with "Failed to fetch" (runs 43709089926 and 43711249866).
+// F11-A (run 43878328954) established the cause: the TEST's documents — a route.fulfill() stub without a network
+// address, then route.abort()'s Chromium error page — tripped Chromium's Local Network Access; not the product.
 import { test, expect } from "@playwright/test";
 import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
