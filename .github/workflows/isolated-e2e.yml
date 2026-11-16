@@ -467,6 +467,17 @@ jobs:
         run: |
           sg "$ISOLATED_GROUP" -c "npx playwright test -c tests/isolated/playwright.isolated.config.mjs"
 
+      # F11-A DIAGNOSIS ONLY (branch d110/par-f11a-fetch-diagnosis, never merged): did the f11a-marked requests
+      # (preflights included) reach the local gateway / Edge Runtime? Request lines only; bearer-like strings masked.
+      - name: F11-A diagnosis — gateway and Edge Runtime log lines with the f11a marker
+        if: always() && needs.plan.outputs.scope != 'docs-md'
+        run: |
+          for c in $(docker ps --format '{{.Names}}' | grep -E 'kong|edge_runtime'); do
+            echo "== $c"
+            docker logs "$c" 2>&1 | grep -E 'f11a=' | sed -E 's/eyJ[A-Za-z0-9._-]+/<masked>/g' | tail -200 || true
+          done
+          grep -E 'f11a=' "$RUNNER_TEMP/functions.log" | sed -E 's/eyJ[A-Za-z0-9._-]+/<masked>/g' | tail -50 || true
+
       # PR #664: the introduction chain, run ONLY in the introduction lane (the spec skips itself everywhere else)
       # and required to RUN: the report must show every test passed and none skipped, flaky or missing.
       - name: Introduction E2E — the chain must run completely (introduction lane)
