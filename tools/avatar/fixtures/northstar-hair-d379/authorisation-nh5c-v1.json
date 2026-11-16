@@ -20,9 +20,10 @@
       "perCallEstimate": 0.08,
       "perCallUpperEstimate": 0.09,
       "basis": "three 1024×1024 input images ≈ 3,072 image tokens, the prompt ≈ 760 text tokens (3,051 B; NH-5B's 2,774 B measured 688), the output ≈ 1,756 image tokens (NH-5B measured 3,072 / 688 / 1,756 = about $0.081)",
-      "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page"
+      "note": "an estimate, not a guaranteed maximum; the billed amount is read on the OpenAI usage page",
+      "reReadAt": "2026-11-16 before the send: unchanged (text input $5.00, image input $8.00, image output $30.00 per 1M tokens)"
     },
-    "actuallySent": 0
+    "actuallySent": 1
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -122,8 +123,8 @@
     "callId": "NH-5C-hair-nape-locks",
     "style": "nape-locks",
     "name": "Nakkelokker (D-373's fælles hovedbase)",
-    "mandateState": "UNSPENT",
-    "outcome": "NOT YET ATTEMPTED",
+    "mandateState": "SPENT",
+    "outcome": "RECEIVED_FOR_PLACEMENT",
     "claim": {
       "identity": "NH-5C-hair-nape-locks-claim",
       "filename": "NH-5C-hair-nape-locks.claim.json",
@@ -131,6 +132,301 @@
     },
     "prompt": {
       "sha256": "b57068ada2f2b41c685758d1f402a0a057605e92043956119d631bc5e28c5753"
+    },
+    "neverReuse": true,
+    "closedBy": "owner 2026-11-16: one send approved and made; the locked extraction REJECTED on P3, P4, P5, P8, P9, P10, P11, P12, P13; recorded as spent",
+    "result": {
+      "sentAt": "2026-11-16T14:49:40Z",
+      "answeredAt": "2026-11-16T14:50:15Z",
+      "originMainSha": "87ac52a30a4b84b8f4c12f34eee3ed887072817a",
+      "httpStatus": 200,
+      "requestId": "req_8e8ce0b13d644e8792465242b1e22f65",
+      "usage": {
+        "imageInputTokens": 3072,
+        "textInputTokens": 748,
+        "imageOutputTokens": 1756
+      },
+      "priceAtVerifiedRates": 0.081,
+      "retries": 0,
+      "image": {
+        "sha256": "53f9d7bca5ed498d877398e5d38562b13063ce5f04d89d653915f1646d461ba9",
+        "size": "1024x1024",
+        "bytes": 984152,
+        "tracked": false,
+        "location": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/NH-5C-hair-nape-locks/ (raw image, receipt, request, response) — kept private, never in Git"
+      },
+      "receipt": {
+        "file": "nh.receipt.json",
+        "sha256": "95a541f7064c8d474aed15e5301872277d08a68cb37fc5f2790d0bfa37110164",
+        "verdict": "RECEIVED_FOR_PLACEMENT",
+        "problems": []
+      },
+      "extractionV1": {
+        "tool": "tools/avatar/northstar-hair-nh5c.mjs --post (the locked method, unchanged)",
+        "verdict": "REJECTED",
+        "failed": [
+          "P3",
+          "P4",
+          "P5",
+          "P8",
+          "P9",
+          "P10",
+          "P11",
+          "P12",
+          "P13"
+        ],
+        "passed": [
+          "P1",
+          "P2",
+          "P6",
+          "P7"
+        ],
+        "thresholdsUnchanged": true,
+        "checks": {
+          "P1": {
+            "scale": 0.9975,
+            "dx": 0,
+            "dy": 0,
+            "faceErr": 11.4,
+            "pass": true
+          },
+          "P2": {
+            "covered": 0.9908,
+            "pass": true
+          },
+          "P12": {
+            "largestHolePx": 66,
+            "at": [
+              474,
+              179,
+              498,
+              191
+            ],
+            "pass": false
+          },
+          "P3": {
+            "rawOnBrowsPx": 571,
+            "layerOnBrowsPx": 0,
+            "layerOnEyesPx": 0,
+            "gapPx": {
+              "left": 3,
+              "right": 3
+            },
+            "pass": false
+          },
+          "P4": {
+            "rawOnEarsPx": 49,
+            "rawOverFacePx": 6,
+            "layerOnEarsPx": 0,
+            "earsInFront": {
+              "earOpaque": 5065,
+              "earOpaqueSame": 5065,
+              "earSoft": 321,
+              "earSoftOver": 321,
+              "filledBehindPx": 708
+            },
+            "layerHiddenBehindFacePx": 53,
+            "layerBelowJawlinePx": 0,
+            "pass": false
+          },
+          "P5": {
+            "hairPx": 34590,
+            "largestShare": 0.9181,
+            "pass": false
+          },
+          "P6": {
+            "px": 1536245,
+            "identical": 1536245,
+            "pass": true
+          },
+          "P7": {
+            "candidates": 32444,
+            "greyShare": 0.9782,
+            "pass": true
+          },
+          "P8": {
+            "iou": {
+              "standard": 0.3,
+              "nh4": 0.605,
+              "topknot": 0.407,
+              "design": 0.563
+            },
+            "pass": false
+          },
+          "P9": {
+            "rawGreyPx": 33341,
+            "spillPx": 1930,
+            "spillShare": 0.0579,
+            "pass": false
+          },
+          "P10": {
+            "cutEdgePx": 80,
+            "longestRun": 38,
+            "longestBy": {
+              "parting": 0,
+              "forehead": 38,
+              "left temple": 0,
+              "right temple": 0,
+              "left nape": 4,
+              "right nape": 2
+            },
+            "top": [
+              {
+                "px": 38,
+                "box": [
+                  396,
+                  246,
+                  422,
+                  272
+                ],
+                "where": "forehead"
+              },
+              {
+                "px": 13,
+                "box": [
+                  601,
+                  245,
+                  613,
+                  253
+                ],
+                "where": "forehead"
+              },
+              {
+                "px": 12,
+                "box": [
+                  583,
+                  241,
+                  594,
+                  243
+                ],
+                "where": "forehead"
+              },
+              {
+                "px": 8,
+                "box": [
+                  428,
+                  245,
+                  435,
+                  246
+                ],
+                "where": "forehead"
+              },
+              {
+                "px": 4,
+                "box": [
+                  388,
+                  306,
+                  391,
+                  306
+                ],
+                "where": "left nape"
+              },
+              {
+                "px": 2,
+                "box": [
+                  636,
+                  308,
+                  637,
+                  308
+                ],
+                "where": "right nape"
+              }
+            ],
+            "pass": false
+          },
+          "P11": {
+            "largestSpillClusterPx": 945,
+            "at": [
+              564,
+              219,
+              632,
+              287
+            ],
+            "pass": false
+          },
+          "P13": {
+            "left": {
+              "lockZonePx": 3661,
+              "shown": 0.221,
+              "lowestY": 427,
+              "pass": false
+            },
+            "right": {
+              "lockZonePx": 3602,
+              "shown": 0.2282,
+              "lowestY": 427,
+              "pass": false
+            },
+            "pass": false
+          }
+        },
+        "layers": [
+          "nh5c-hair-grey-layer.png (the separate transparent grey layer)",
+          "nh5c-hair-layer.png (Northstar brown, the same layer tinted)",
+          "nh5c-on-base-full.png",
+          "checks.json"
+        ],
+        "location": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/NH-5C-post-1/ (not tracked)"
+      },
+      "assembly": {
+        "what": "the V1 layer on D-373's base in C's layer order, dressed with the app's own northstarCompose (G1–G6); grey and brown measure the same",
+        "tops": {
+          "T-shirt": {
+            "G1_locksOverClothesPx": 0,
+            "G2_opaqueEarPxChanged": 0,
+            "G2_opaqueEarPx": 5065,
+            "G3_facePxChanged": 0,
+            "G3_facePx": 8005,
+            "G4_changedOutsideHairPx": 0,
+            "G5_locksAlongJawPx": {
+              "left": 1682,
+              "right": 1688
+            },
+            "G6_minGapToClothesPx": 34,
+            "pass": true
+          },
+          "tanktop": {
+            "G1_locksOverClothesPx": 0,
+            "G2_opaqueEarPxChanged": 0,
+            "G2_opaqueEarPx": 5065,
+            "G3_facePxChanged": 0,
+            "G3_facePx": 8005,
+            "G4_changedOutsideHairPx": 0,
+            "G5_locksAlongJawPx": {
+              "left": 1682,
+              "right": 1688
+            },
+            "G6_minGapToClothesPx": 37,
+            "pass": true
+          },
+          "sweater": {
+            "G1_locksOverClothesPx": 0,
+            "G2_opaqueEarPxChanged": 0,
+            "G2_opaqueEarPx": 5065,
+            "G3_facePxChanged": 0,
+            "G3_facePx": 8005,
+            "G4_changedOutsideHairPx": 0,
+            "G5_locksAlongJawPx": {
+              "left": 1682,
+              "right": 1688
+            },
+            "G6_minGapToClothesPx": 33,
+            "pass": true
+          }
+        },
+        "allPass": true
+      },
+      "visualReview": {
+        "readsAs": "at app size a centre parting, an open forehead and curtains framing the face; the locks lie behind both ears and end in soft tips along the jaw, clear of the collar with all three tops; distinguishable from the standard hair, NH-4 and the top knot",
+        "sendsBack": [
+          "a light rim round the left brow, visible at 1:1 (P3: 571 px of the raw result's hair on the brows' keep-clear zone; P10: a 38 px cut at the forehead, x 396–422, y 246–272)",
+          "a short horizontal edge in the hair just above each ear (near y 306), visible at 3–4×"
+        ],
+        "location": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/NH-5C-review-1/ (not tracked)"
+      },
+      "assessment": "EXTRACTION_V1_REJECTED",
+      "neverPromoted": true,
+      "next": "nothing is retouched to pass; any later variant made from this raw image is a separate, private trial and needs the owner's decision; never a resend"
     }
   },
   "adapterImplementations": {
