@@ -105,7 +105,7 @@ jobs:
           case "$REF_NAME" in d110/par-*) default=1 ;; esac
           n="${PARALLEL:-$default}"
           case "$n" in 1|3|6|9) ;; *) echo "invalid parallel: $n" >&2; exit 1 ;; esac
-          # Lanes. Default: the production mirror × runs plus ONE K1 entry — exactly as before. The F07 lane only on
+          # Lanes. Default: the production mirror × runs plus ONE K1 entry and ONE introduction entry (PR #664) — as on main. The F07 lane only on
           # an explicit dispatch with profile=f07, and then it is the only job (one run, no mirror, no K1).
           profile="${PROFILE:-standard}"
           case "$profile" in standard|f07) ;; *) echo "invalid profile: $profile" >&2; exit 1 ;; esac
@@ -113,7 +113,7 @@ jobs:
             [ "$EVENT" = "workflow_dispatch" ] || { echo "the F07 lane runs only on workflow_dispatch" >&2; exit 1; }
             n=1; profiles='["f07"]'; include='[]'
           else
-            profiles='["production"]'; include='[{"run":1,"profile":"k1"}]'
+            profiles='["production"]'; include='[{"run":1,"profile":"k1"},{"run":1,"profile":"introduction"}]'
           fi
           echo "runs=$(node -e "console.log(JSON.stringify(Array.from({length: $n}, (_, i) => i + 1)))")" >> "$GITHUB_OUTPUT"
           echo "profiles=$profiles" >> "$GITHUB_OUTPUT"
@@ -126,8 +126,11 @@ jobs:
     # (owner GO 2026-11-07, F10-B2) is ONE extra entry with replay profile k1: the same isolated stack
     # plus L1 K1 (NOT applied in production), running only the isolated specs (tests/isolated), where
     # the H5 tests live. tests/isolated/schema/replay-plan.mjs TEST_PROFILES documents the rules.
+    # The introduction lane (owner GO 2026-11-15, PR #664) is a second extra entry with replay profile
+    # introduction (K1 → L3/L5 → K9 → introductions, none applied in production) and the introduction flags
+    # on in this runner only; its check name is "isolated-e2e (run 1, introduktion-testprofil)".
     # The F07 lane (owner GO 2026-11-14, D-362) is dispatch-only (input profile=f07) and then the only job.
-    name: isolated-e2e (run ${{ matrix.run }}${{ matrix.profile == 'k1' && ', K1-testprofil' || '' }}${{ matrix.profile == 'f07' && ', F07-testprofil' || '' }})
+    name: isolated-e2e (run ${{ matrix.run }}${{ matrix.profile == 'k1' && ', K1-testprofil' || matrix.profile == 'introduction' && ', introduktion-testprofil' || matrix.profile == 'f07' && ', F07-testprofil' || '' }})
     # Pinned: ubuntu-latest became ubuntu-26.04 (image 20261101.186.1), where Playwright 1.59.1 does not support chromium
     # ("Playwright does not support chromium on ubuntu26.04-x64", 2026-11-12). Unpin together with a Playwright upgrade.
     runs-on: ubuntu-24.04
@@ -136,7 +139,7 @@ jobs:
       fail-fast: false
       matrix:
         run: ${{ fromJSON(needs.plan.outputs.runs) }}
-        # Default (every pull_request and push): profile [production] and include [{ run: 1, profile: k1 }].
+        # Default (every pull_request and push): profile [production] and include [{ run: 1, profile: k1 }, { run: 1, profile: introduction }] (PR #664).
         profile: ${{ fromJSON(needs.plan.outputs.profiles) }}
         include: ${{ fromJSON(needs.plan.outputs.include) }}
     steps:
@@ -335,8 +338,9 @@ jobs:
           REPLAY_PROFILE: ${{ matrix.profile }}
         run: node tests/isolated/schema/replay.mjs --db-url "$ISOLATED_DB_URL" --summary "$GITHUB_STEP_SUMMARY" --profile "$REPLAY_PROFILE"
 
-      # Fail loud if the lane does not have the schema it claims: K1's columns must exist in the k1
-      # lane and must NOT exist in the production mirror (which would mean K1 leaked into it).
+      # Fail loud if the lane does not have the schema it claims: K1's columns must exist in the k1 and
+      # introduction lanes and must NOT exist in the production mirror (which would mean K1 leaked into it);
+      # L3/L5's hint log, K9's presented_at and the introduction tables exist ONLY in the introduction lane.
       - name: Schema — verify the replay profile (K1 present only in the K1 lane)
         if: needs.plan.outputs.scope != 'docs-md'
         env:
@@ -344,8 +348,14 @@ jobs:
         run: |
           n=$(psql "$ISOLATED_DB_URL" -X -A -t -c "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'question_attempts' AND column_name IN ('mode', 'hints_used')")
           echo "replay profile $REPLAY_PROFILE: K1 columns on question_attempts = $n"
+          intro=$(psql "$ISOLATED_DB_URL" -X -A -t -c "SELECT (to_regclass('public.question_hint_requests') IS NOT NULL)::int + (to_regprocedure('public.mark_presented(uuid,uuid,integer)') IS NOT NULL)::int + (to_regclass('public.introduction_rounds') IS NOT NULL)::int + (to_regprocedure('public.mark_introduction_presented(uuid,uuid,uuid)') IS NOT NULL)::int")
+          echo "replay profile $REPLAY_PROFILE: L3/L5, K9 and introduction objects = $intro"
           if [ "$REPLAY_PROFILE" = "k1" ]; then [ "$n" = "2" ] || { echo "K1 lane without K1" >&2; exit 1; }
-          else [ "$n" = "0" ] || { echo "K1 leaked into the production-mirror lane" >&2; exit 1; }; fi
+            [ "$intro" = "0" ] || { echo "introduction objects leaked into the K1 lane" >&2; exit 1; }
+          elif [ "$REPLAY_PROFILE" = "introduction" ]; then [ "$n" = "2" ] || { echo "introduction lane without K1" >&2; exit 1; }
+            [ "$intro" = "4" ] || { echo "introduction lane without L3/L5, K9 or the introductions" >&2; exit 1; }
+          else [ "$n" = "0" ] || { echo "K1 leaked into the production-mirror lane" >&2; exit 1; }
+            [ "$intro" = "0" ] || { echo "introduction objects leaked into the production-mirror lane" >&2; exit 1; }; fi
           # D-362 / F-07: the phase repeat RPC (20261113170000, NOT_IN_PRODUCTION) exists in the f07 lane only.
           r=$(psql "$ISOLATED_DB_URL" -X -A -t -c "SELECT count(*) FROM pg_proc p JOIN pg_namespace s ON s.oid = p.pronamespace WHERE s.nspname = 'public' AND p.proname = 'request_repeat_phase_question_for_student'")
           echo "replay profile $REPLAY_PROFILE: F-07 phase repeat RPC = $r"
@@ -365,6 +375,7 @@ jobs:
         if: needs.plan.outputs.scope != 'docs-md'
         env:
           PROFILE: ${{ matrix.profile }}
+          REPLAY_PROFILE: ${{ matrix.profile }}
         run: |
           set -euo pipefail
           # The edge-runtime container can die while booting (SIGBUS, "Bus error (core dumped)", exit 135:
@@ -375,12 +386,18 @@ jobs:
           echo 'LAERLIGVERSE_OBJECTIVE_TARGETING=on' > "$RUNNER_TEMP/functions.env"
           # D-338: the server-directed sequence, likewise ON only in the isolated stack.
           echo 'LAERLIGVERSE_SEQUENCE=on' >> "$RUNNER_TEMP/functions.env"
+          # PR #664: the introduction step and the "shown" signal, ON only in the introduction lane (its schema has
+          # the tables they need; unset — off — in every other lane and everywhere else).
+          if [ "$REPLAY_PROFILE" = "introduction" ]; then
+            echo 'LAERLIGVERSE_INTRODUCTION=on' >> "$RUNNER_TEMP/functions.env"
+            echo 'LAERLIGVERSE_PRESENTED=on' >> "$RUNNER_TEMP/functions.env"
+          fi
           # D-362 / F-07: the F07 lane uses production's selection settings instead (LEVEL_ENGINE=v1,
           # QUESTION_MIX_ENGINE=shadow, no Lærligverse flag). Every other lane keeps the two lines above.
           if [ "$PROFILE" = "f07" ]; then
             printf '%s\n' 'LEVEL_ENGINE=v1' 'QUESTION_MIX_ENGINE=shadow' > "$RUNNER_TEMP/functions.env"
           fi
-          echo "functions.env ($PROFILE): $(cut -d= -f1 "$RUNNER_TEMP/functions.env" | tr '\n' ' ')"
+          echo "edge flags: $(cut -d= -f1 "$RUNNER_TEMP/functions.env" | paste -sd ' ')"
           ready=no
           for attempt in 1 2 3; do
             nohup supabase functions serve --env-file "$RUNNER_TEMP/functions.env" >> "$RUNNER_TEMP/functions.log" 2>&1 &
@@ -525,6 +542,16 @@ jobs:
           node tests/isolated/f07-lane-check.mjs "$RUNNER_TEMP/f07-chromium.json" "$RUNNER_TEMP/f07-firefox.json" "$RUNNER_TEMP/f07-webkit.json" | tee -a "$GITHUB_STEP_SUMMARY" || status=1
           exit "$status"
 
+      # PR #664: the introduction chain, run ONLY in the introduction lane (the spec skips itself everywhere else)
+      # and required to RUN: the report must show every test passed and none skipped, flaky or missing.
+      - name: Introduction E2E — the chain must run completely (introduction lane)
+        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'introduction'
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ runner.temp }}/introduction-report.json
+        run: |
+          sg "$ISOLATED_GROUP" -c "REPLAY_PROFILE=introduction npx playwright test -c tests/isolated/playwright.isolated.config.mjs laerligverse-introduction.isolated.spec.mjs --project=chromium --reporter=list,json"
+          node tests/isolated/require-complete-run.mjs "$PLAYWRIGHT_JSON_OUTPUT_NAME" laerligverse-introduction.isolated.spec.mjs
+
       - name: Existing Playwright suite against the isolated stack
         if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'
         id: suite
@@ -542,7 +569,7 @@ jobs:
         if: always() && needs.plan.outputs.scope != 'docs-md'
         uses: actions/upload-artifact@v4
         with:
-          name: isolated-report-run-${{ matrix.run }}${{ matrix.profile == 'k1' && '-k1' || '' }}${{ matrix.profile == 'f07' && '-f07' || '' }}
+          name: isolated-report-run-${{ matrix.run }}${{ matrix.profile != 'production' && format('-{0}', matrix.profile) || '' }}
           path: |
             playwright-report-isolated/
             test-results-isolated/

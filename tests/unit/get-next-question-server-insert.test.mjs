@@ -164,6 +164,9 @@ test("the admin client is used only for the instance insert and the server-only 
     // D-362 courses, regular historie requests with keep_course_rounds only: the VERIFIED pupil's ACTIVE enrolments
     // (course ids only), so an open course round is kept across a switch. Absent flag: no read.
     "from:course_enrolments",
+    // LP-13/K9 prototype (LAERLIGVERSE_INTRODUCTION=on, sequence requests only): the objective's introduction
+    // round for the verified pupil (serve_introduction, service_role only); an introduction carries no key.
+    "rpc:serve_introduction",
     // D-338, sequence requests only (LAERLIGVERSE_SEQUENCE=on + targeting + body.sequence): the pupil's own
     // history in the objective — answered, verdict, time and the question's step tag; no content, no key.
     "from:question_instances",
@@ -213,8 +216,8 @@ test("the admin client is used only for the instance insert and the server-only 
   // student) are pinned in gnq-phase-gate.test.mjs; with no phased candidate and no pilot_* domain nothing is read.
   assert.equal((INDEX_CODE.match(/await applyPhaseGate\(admin\(\) as unknown as PhaseReadClient, student_id, sortedQuestions, subjectDomains, \{ level: pupilLevel \}\)/g) ?? []).length, 1,
     "the phase gate call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 19,
-    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the D-362 phase gate, the 15th the D-362 phase repeat, the 16th the D-362 id-only open check before no_questions, the 17th the D-362 course enrolment read, the 18th the verified keep_course_rounds read, the 19th the D-362 first-completion record — owner 2026-11-15)");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 20,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call, the 15th the D-362 phase gate, the 16th the D-362 phase repeat, the 17th the D-362 id-only open check before no_questions, the 18th the D-362 course enrolment read, the 19th the verified keep_course_rounds read, the 20th the D-362 first-completion record — owner 2026-11-15)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {

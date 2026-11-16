@@ -172,8 +172,5 @@ merge ikke længere kan afspille en uanvendt fil ved en forglemmelse. En fil fly
 `20261112150000_avatar_northstar_hair_d373` (D-373) stod i `REPO_AHEAD_OF_PRODUCTION`, indtil den blev anvendt i
 produktionen 2026-11-13 som `20261113053515`. Den står nu i `APPLIED_IN_PRODUCTION`.
 
-`20261115090000_avatar_northstar_hair_nh5b_d377` (D-377) er ikke anvendt i produktionen. Repositoryets
-Northstar-garderobe kan gemme topknuden (`avatar_identity.northstar.hair` = `nh5b-grey` / `nh5b-brown`) gennem
-`set_avatar_northstar`, med de to kort skjult bag `NORTHSTAR_HAIR_NH5B`, og produktionens `validate_avatar_identity`
-afviser værdierne. Den står derfor i `REPO_AHEAD_OF_PRODUCTION` som åben produktionsopgave under D-377. Den skal
-anvendes, før kortene åbnes.
+`20261115090000_avatar_northstar_hair_nh5b_d377` (D-377) stod i `REPO_AHEAD_OF_PRODUCTION`, indtil den blev anvendt
+i produktionen 2026-11-15 som `20261115131725`. Den står nu i `APPLIED_IN_PRODUCTION`.

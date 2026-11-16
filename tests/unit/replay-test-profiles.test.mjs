@@ -33,6 +33,9 @@ import { bootstrapMarkerSql } from "../isolated/seed/seed-guard.mjs";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
 const K1 = "20261103110000_l1_k1_attempt_context.sql";
+// PR #664: the introduction lane's chain, in its binding order.
+const INTRO_CHAIN = [K1, "20261108043500_laerligverse_served_mode_hint_log.sql", "20261109043500_laerligverse_presented_at.sql",
+  "20261110043500_laerligverse_introductions.sql"];
 const files = migrationFiles();
 
 test("1. default = production mirror: no profile, 'production' and the old call give the same plan; K1 skipped", () => {
@@ -58,10 +61,26 @@ test("2. the k1 profile changes exactly one decision: K1 skip → apply", () => 
   assert.match(changed[0].reason, /NOT applied in production/);
 });
 
+test("2b. the introduction profile changes exactly its four decisions (K1 → L3/L5 → K9 → introductions) skip → apply", () => {
+  const base = planReplay(files, readMigration).plan;
+  const intro = planReplay(files, readMigration, { profile: "introduction" }).plan;
+  assert.deepEqual(intro.map((p) => p.file), base.map((p) => p.file), "same files, same order");
+  const changed = intro.filter((p, i) => JSON.stringify(p) !== JSON.stringify(base[i]));
+  assert.deepEqual(changed.map((p) => p.file), INTRO_CHAIN, "exactly the chain, in the binding order");
+  for (const p of changed) {
+    assert.equal(p.action, "apply");
+    assert.equal(p.profile, "introduction");
+    assert.match(p.reason, /NOT applied in production/);
+    assert.equal(base.find((b) => b.file === p.file).action, "skip", `${p.file} is skipped in the mirror`);
+  }
+  // The course-progress read (#665), also NOT_IN_PRODUCTION, stays out of the lane: a profile names only what it needs.
+  assert.equal(intro.find((p) => p.file === "20261109120000_laerligverse_course_progress_read.sql").action, "skip");
+});
+
 // D-362 (owner 2026-11-15): the f07 lane also replays the course enrolments (courses, course_enrolments, RLS).
 const F07_FILES = ["20261113170000_phase_repeat_rpc.sql", "20261115130000_course_enrolments.sql"];
 
-test("2b. the f07 profile changes exactly its decisions: the D-362 phase repeat and course enrolments, skip → apply", () => {
+test("2c. the f07 profile changes exactly its decisions: the D-362 phase repeat and course enrolments, skip → apply", () => {
   const base = planReplay(files, readMigration).plan;
   const f07 = planReplay(files, readMigration, { profile: "f07" }).plan;
   assert.deepEqual(f07.map((p) => p.file), base.map((p) => p.file), "same files, same order");
@@ -75,9 +94,10 @@ test("2b. the f07 profile changes exactly its decisions: the D-362 phase repeat 
 });
 
 test("3. a profile can only add test-only replays; unknown or production-naming profiles fail loud", () => {
-  assert.deepEqual(Object.keys(TEST_PROFILES), ["k1", "f07"]);
+  assert.deepEqual(Object.keys(TEST_PROFILES), ["k1", "introduction", "f07"]);
   assert.deepEqual(Object.keys(TEST_PROFILES.f07), F07_FILES);
   assert.deepEqual(Object.keys(TEST_PROFILES.k1), [K1]);
+  assert.deepEqual(Object.keys(TEST_PROFILES.introduction), INTRO_CHAIN);
   for (const [name, list] of Object.entries(TEST_PROFILES)) {
     assert.ok(Object.isFrozen(list), `${name} is frozen`);
     for (const f of Object.keys(list)) {
@@ -141,11 +161,12 @@ test("4b. on the full replay: the f07 profile yields the phase repeat function (
 
 test("5. only the isolated workflow uses a profile, and it is fenced", () => {
   const wf = read(".github/workflows/isolated-e2e.yml");
-  // D-362 / F-07 (owner GO 2026-11-14): the matrix comes from the plan job; the default is still the production
-  // mirror plus exactly one k1 entry (test 5b runs the plan step), the F07 suffix only ever names f07 entries.
-  assert.match(wf, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| '' \}\}\$\{\{ matrix\.profile == 'f07' && ', F07-testprofil' \|\| '' \}\}\)/,
-    "the production-mirror check name stays 'isolated-e2e (run N)'");
+  // D-362 / F-07 (owner GO 2026-11-14): the matrix comes from the plan job; the default is the production mirror plus
+  // exactly one k1 and one introduction entry (PR #664; f07-ci-lane runs the plan step), the F07 suffix only ever names f07.
+  assert.match(wf, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| matrix\.profile == 'introduction' && ', introduktion-testprofil' \|\| matrix\.profile == 'f07' && ', F07-testprofil' \|\| '' \}\}\)/,
+    "the production-mirror check name stays 'isolated-e2e (run N)'; the lanes get their suffix");
   assert.match(wf, /profile: \$\{\{ fromJSON\(needs\.plan\.outputs\.profiles\) \}\}\n\s+include: \$\{\{ fromJSON\(needs\.plan\.outputs\.include\) \}\}\n/);
+  assert.ok(wf.includes(`include='[{"run":1,"profile":"k1"},{"run":1,"profile":"introduction"}]'`), "exactly one k1 entry and one introduction entry");
   assert.match(wf, /replay\.mjs --db-url "\$ISOLATED_DB_URL" --summary "\$GITHUB_STEP_SUMMARY" --profile "\$REPLAY_PROFILE"/);
   assert.match(wf, /REPLAY_PROFILE: \$\{\{ matrix\.profile \}\}/);
   assert.match(wf, /K1 lane without K1/);
@@ -159,6 +180,16 @@ test("5. only the isolated workflow uses a profile, and it is fenced", () => {
   assert.match(wf, /node tests\/isolated\/f07-lane-check\.mjs "\$RUNNER_TEMP\/f07-chromium\.json" "\$RUNNER_TEMP\/f07-firefox\.json" "\$RUNNER_TEMP\/f07-webkit\.json"/);
   assert.match(wf, /if \[ "\$PROFILE" = "f07" \]; then\n\s+printf '%s\\n' 'LEVEL_ENGINE=v1' 'QUESTION_MIX_ENGINE=shadow' > "\$RUNNER_TEMP\/functions\.env"/,
     "only the F07 lane replaces the Edge env");
+  for (const m of ["introduction lane without K1", "introduction lane without L3/L5, K9 or the introductions",
+    "introduction objects leaked into the K1 lane", "introduction objects leaked into the production-mirror lane"]) assert.ok(wf.includes(m), m);
+  // The frontend suite runs only in the production mirror (every test lane runs the isolated specs instead).
+  assert.match(wf, /- name: Existing Playwright suite against the isolated stack\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile == 'production'/);
+  // The introduction flags are switched on in the introduction lane ONLY, and nowhere else in any workflow.
+  const edge = wf.split("- name: Edge Functions")[1].split("\n      - name:")[0];
+  assert.match(edge, /REPLAY_PROFILE: \$\{\{ matrix\.profile \}\}/);
+  assert.match(edge, /if \[ "\$REPLAY_PROFILE" = "introduction" \]; then\n\s+echo 'LAERLIGVERSE_INTRODUCTION=on' >> "\$RUNNER_TEMP\/functions\.env"\n\s+echo 'LAERLIGVERSE_PRESENTED=on' >> "\$RUNNER_TEMP\/functions\.env"\n\s+fi\n/);
+  assert.equal(wf.split("LAERLIGVERSE_INTRODUCTION=on").length - 1, 1);
+  assert.equal(wf.split("LAERLIGVERSE_PRESENTED=on").length - 1, 1);
   // The guard step that refuses non-isolated targets precedes everything and is unchanged.
   assert.match(wf, /- name: Guard — refuse anything that is not isolated/);
 
@@ -167,6 +198,7 @@ test("5. only the isolated workflow uses a profile, and it is fenced", () => {
     const body = readFileSync(join(dir, f), "utf8");
     if (f !== "isolated-e2e.yml") assert.ok(!/--profile|replay\.mjs/.test(body), `${f} must not run the replay or pass a profile`);
     assert.ok(!/functions deploy|apply_migration|supabase\s+db\s+(push|reset --linked)/.test(body), `${f} must not deploy or apply migrations`);
+    if (f !== "isolated-e2e.yml") assert.ok(!/LAERLIGVERSE_(INTRODUCTION|PRESENTED)/.test(body), `${f} must not switch on the introduction`);
   }
 
   const engine = read("tests/isolated/schema/replay.mjs");

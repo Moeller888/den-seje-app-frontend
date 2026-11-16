@@ -36,9 +36,9 @@ function planLanes(env) {
   }
 }
 
-const STD = { profiles: '["production"]', include: '[{"run":1,"profile":"k1"}]' };
+const STD = { profiles: '["production"]', include: '[{"run":1,"profile":"k1"},{"run":1,"profile":"introduction"}]' }; // + the introduction lane (PR #664)
 
-test("1. plan step: pull_request, push and a standard dispatch keep their lanes (mirror × runs + one k1)", () => {
+test("1. plan step: pull_request, push and a standard dispatch keep their lanes (mirror × runs + one k1 + one introduction)", () => {
   for (const [env, runs] of [
     [{ EVENT: "pull_request" }, "[1]"],
     [{ EVENT: "push", REF_NAME: "main" }, "[1]"],

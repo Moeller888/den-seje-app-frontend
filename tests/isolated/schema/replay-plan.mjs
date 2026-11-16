@@ -136,6 +136,10 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "Lærligverse L5 + L3, not applied in production: it needs L1 K1 (not applied either) and adds question_instances.served_mode, the hint log question_hint_requests and request_question_hint; every reader is behind an Edge flag that is off",
   "20261105130000_quiz_anti_guess_cooldown.sql":
     "anti-gætte-pause, not applied in production: it adds quiz_cooldown_* and two triggers on question_instances; not replayed in the isolated stack, where shared synthetic pupils answer many questions wrong in a row (the frontend treats the missing get_my_quiz_cooldown as no pause)",
+  "20261110043500_laerligverse_introductions.sql":
+    "Lærligverse LP-13/K9 prototype, not applied in production: introductions as a separate server step without an answer key (learning_introductions, introduction_rounds, serve/complete/mark functions); every reader is behind an Edge flag that is off",
+  "20261109043500_laerligverse_presented_at.sql":
+    "Lærligverse K9 prototype, not applied in production: it needs K1 and L3/L5 (neither applied) and adds question_instances.presented_at and mark_presented; nothing calls it",
   "20261105120000_true_false_activation.sql":
     "F-02 Sandt/falsk activation, not applied in production and not to be applied before the get-next-question deploy that makes true_false servable: it admits true_false rows in questions and flips question_is_servable for them",
   "20261108090000_order_categorize_activation.sql":
@@ -198,8 +202,6 @@ export const REPO_AHEAD_OF_PRODUCTION = Object.freeze({
     "repository ahead of production: the repository's request-password-help calls public.reserve_password_help, which production does not have (catalog, 2026-10-25) — open production task D-243",
   "20261030211428_question_attempts_v2.sql":
     "repository ahead of production: the repository's process-event calls process_question_attempt_v2 / process_text_answer_v2 behind the H5 switch, which production does not have (catalog, 2026-11-01) — open production task D-266/D-273 (H5)",
-  "20261115090000_avatar_northstar_hair_nh5b_d377.sql":
-    "repository ahead of production: the repository's Northstar wardrobe can save the top knot (avatar_identity.northstar.hair = nh5b-grey / nh5b-brown) through set_avatar_northstar, its cards hidden behind NORTHSTAR_HAIR_NH5B, which production's validate_avatar_identity refuses — open production task D-377 (apply before the cards are opened)",
 });
 
 // Every timestamped migration from ACCOUNTED_FROM on must be accounted for in exactly one place:
@@ -255,6 +257,7 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261106120000_avatar_northstar_choice.sql": "20261106151348",
   "20261112150000_avatar_northstar_hair_d373.sql": "20261113053515",
   "20261113120000_english_review_text_corrections.sql": "20261114141653",
+  "20261115090000_avatar_northstar_hair_nh5b_d377.sql": "20261115131725",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),
@@ -310,6 +313,19 @@ export const TEST_PROFILES = Object.freeze({
   k1: Object.freeze({
     "20261103110000_l1_k1_attempt_context.sql":
       "TEST PROFILE k1: L1 K1 is NOT applied in production; replayed only in the isolated K1 lane so H5 submissions (p_mode/p_hints_used → 9/10-parameter _v2) can be tested (D-341)",
+  }),
+  // F10-B2 (owner GO 2026-11-15, PR #664): the introduction lane. Exactly the chain the introduction step needs, in
+  // its binding order K1 → L3/L5 → K9 → introductions (each file's own guard refuses a wrong order). None of the four
+  // is applied in production; the lane is the only place they are replayed together.
+  introduction: Object.freeze({
+    "20261103110000_l1_k1_attempt_context.sql":
+      "TEST PROFILE introduction: L1 K1 (NOT applied in production) — served_at and the H5 attempt context K9 builds on",
+    "20261108043500_laerligverse_served_mode_hint_log.sql":
+      "TEST PROFILE introduction: Lærligverse L3/L5 (NOT applied in production) — K9's guard requires it (served_mode, the hint log, no client UPDATE on question_instances)",
+    "20261109043500_laerligverse_presented_at.sql":
+      "TEST PROFILE introduction: Lærligverse K9 (NOT applied in production) — question_instances.presented_at and mark_presented",
+    "20261110043500_laerligverse_introductions.sql":
+      "TEST PROFILE introduction: Lærligverse LP-13/K9 introductions (NOT applied in production) — learning_introductions, introduction_rounds and the serve/mark/complete functions",
   }),
   // D-362 / F-07 (owner 2026-11-14: browser E2E for all seven pilot questions): the phase repeat function, so
   // tests/isolated/f07-phase-progression.isolated.spec.mjs can run the whole pilot (the replay filters question rows;

@@ -513,8 +513,10 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (integration 2026-11-15, lokal: main `8d691545` med Lærligverse L5 + L3 + #671 + #706 — faseforløb `phase-gate.ts`, fasegentagelse, undervisningsforløb `course.ts`; kræver migrationerne 20261113170000 og 20261115130000 før deploy) — **ikke deployet, ikke pushet** | dette repository | 24 | `30d2bdc5bc236b5b516eee6a366f947f1959c6926d1dd4b59b5c29135e321c0c` |
-| Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `1df8cd79`: `served_mode` ved indsættelsen og antal hints i et sekvenssvar, begge slukket) — ikke deployet | main `8d691545` | 22 | `5854770231cf0f7440963969ca1c8eeee512b5647bfc77f485fa330298e73c0b` |
+| Kandidat (integration 2026-11-16, lokal: main `506dcde7` med Lærligverse L5 + L3 og LP-13/K9-introduktionen (bag slukkede flag) + #671 + #706 — faseforløb `phase-gate.ts`, fasegentagelse, undervisningsforløb `course.ts`; kræver migrationerne 20261113170000 og 20261115130000 før deploy) — **ikke deployet, ikke pushet** | dette repository | 25 | `3ff5b50e08b49197d875d5348bee5c33a62f846d2b67aae1fe0e57236ab55fee` |
+| Forrige kandidat (LP-13/K9-prototype oven på L5 + L3: introduktionen som særskilt serverrunde bag `LAERLIGVERSE_INTRODUCTION`, ny `_shared/introduction.ts`) — ikke deployet | main `506dcde7` | 23 | `00e180368681fa5571a74aa7b7d0b4c2e0dd38847322668196c559000ef1ce6f` |
+| Forrige kandidat (integration 2026-11-15, lokal: main `8d691545` med Lærligverse L5 + L3 + #671 + #706 — faseforløb `phase-gate.ts`, fasegentagelse, undervisningsforløb `course.ts`; kræver migrationerne 20261113170000 og 20261115130000 før deploy) — ikke deployet | #706 `bfd27e0b` | 24 | `30d2bdc5bc236b5b516eee6a366f947f1959c6926d1dd4b59b5c29135e321c0c` |
+| Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `1df8cd79`: `served_mode` ved indsættelsen og antal hints i et sekvenssvar, begge slukket) — ikke deployet | #653 `807a9e10` | 22 | `5854770231cf0f7440963969ca1c8eeee512b5647bfc77f485fa330298e73c0b` |
 | Forrige kandidat (main med D-362: faseforløb `phase-gate.ts`, fasegentagelse og undervisningsforløb `course.ts` med tilmelding, afslutning og kvittering; `scope.ts` giver ingen adgang via `pilot_*` i `active_domains`; kræver migrationerne 20261113170000 og 20261115130000 før deploy, 2026-11-15) — ikke deployet | #706 `e70b6f3e` | 23 | `af15587fc7b4524a9e29cef4d56bb23c5a8e5d17a6ae730a1540a39c9b3a34a4` |
 | Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `b6d65cdd`, før D-362) — ikke deployet | #653 `9296ac7f` | 22 | `ac5bef7dba2ee43ed25818b703107ec4f573fa5ce55287cfc26fb34612a81029` |
 | Forrige kandidat (Lærligverse-integration lag 3 oven på main med D-362; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | lag 4 `1df8cd79` | 21 | `ea8072da934530fbf3dc39a29599f6026f3b8ed995a157eeb424023aed61ca8b` |
@@ -622,6 +624,10 @@ aldrig teksten) i et sekvenssvar. Slukket, eller uden et sekvenstrin, er indsæt
 præcis som før (`tests/unit/laerligverse-served-mode-gnq.test.mjs`). `LAERLIGVERSE_SERVED_MODE` må først
 slås til, når migration `20261108043500` (og før den K1) er anvendt. Ingen af dem sættes i produktionen
 uden ejerens særskilte GO.
+LP-13/K9-prototypen ændrer grafen fra 22 til 23 filer: `_shared/introduction.ts` er ny (det offentlige
+introduktionsindhold, kun kort med titel og tekst), og `index.ts` kalder `serve_introduction`, når Edge-secret'en
+`LAERLIGVERSE_INTRODUCTION` er præcis `on` og en serverstyret sekvens er i gang. Slukket er kaldene præcis som før
+(`tests/unit/laerligverse-introduction-gnq.test.mjs`). Kræver migration `20261110043500` (ikke anvendt).
 Et deploy af kandidaten kræver ejerens særskilte godkendelse; punkt 4 under "Før deploy" skal da
 kontrollere version 180 (`a6a874…`) i stedet for version 179. Unit-testen kræver, at kandidatmanifestet i
 tabellen er dette træs manifest: ændres en fil i grafen, skal manifestet opdateres her, og gaten

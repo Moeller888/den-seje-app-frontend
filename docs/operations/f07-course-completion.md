@@ -160,6 +160,18 @@ ring og få 2 XP og 1 mønt hver gang. Det gælder alle fag.
 
 **Tilpasset til #671:** `f07-pilot-seven-items.test.mjs` (6 mc og 1 tal; S5 er mc om § 2), adgangskommentaren i `20261108090100` (kun kommentar), og den isolerede spec kontrollerer emnenavnene i opsummeringen.
 
+**Main `506dcde7` merget ind 2026-11-16** (efter grøn F07-kørsel 43732933631 på `bfd27e0b`). Main bragte urrettelsen af `agent-approvals.test.mjs` (#717, uændret overtaget) og Lærligverse LP-13/K9-introduktionen (#664, bag slukkede flag) med sin egen isolerede bane.
+
+| Konflikt | Løsning |
+|---|---|
+| `isolated-e2e.yml` | Main hårdkodede matrixen med en ny introduktionspost; #706 bygger matrixen i plan-jobbet. Plan-jobbets standard er nu produktionsspejl + én k1- + én introduktionspost (som main). Kontrolnavnet får både introduktions- og F07-suffiks. Skematjekket: main's introduktionskontrol efterfulgt af F-07's RPC- og tabelkontrol. Edge-miljøet: main's introduktionsflag (kun introduktionsbanen) og F-07's v1-erstatning (kun F07-banen). Begge trin (introduktionskæden og F07-banen) bevaret |
+| `replay-plan.mjs` | Tre testprofiler: `k1`, `introduction`, `f07` |
+| `get-next-question-release-gate.test.mjs` | Manifest 25 filer (`3ff5b50e…`): + `_shared/introduction.ts` |
+| `get-next-question-server-insert.test.mjs` | 20 `admin()`-kald: main's `serve_introduction` (14.) + F-07's seks |
+| `isolated-e2e-guard`, `isolated-scope`, `replay-test-profiles`, `quiz-repeat-when-pool-exhausted`, `f07-ci-lane` | Foreningsmængder: fire testlinjer i workflowet, begge banetrin, tre profiler, gennemgåede migrationer inkl. `20261109043500` |
+
+`get-next-question/index.ts` merges automatisk; både main's og kandidatens ændringer er bevaret linje for linje. Introduktionen ligger i sekvensblokken (`targeting` + `LAERLIGVERSE_SEQUENCE`), som et F-07-forløb aldrig når (`course` sammen med målretning giver 400).
+
 ## Deployment-rækkefølge (plan, IKKE udført; hvert trin kræver ejerens særskilte GO, D-110)
 
 **Forudsætning:** en gendannelig backup og en verificeret rollback. Uden dem anbefales ingen produktionsrelease.
@@ -170,7 +182,7 @@ ring og få 2 XP og 1 mønt hver gang. Det gælder alle fag.
 | 1 | Migration `20261113170000` (`apply_migration`) | Funktionen findes; kun service_role har EXECUTE | `DROP FUNCTION` (intet kalder den endnu) |
 | 2 | Migration `20261115130000` | Tabeller, RLS, privilegier; ét katalogforløb, 0 tilmeldinger | FJERNELSE-blokken i filen (kun før første tilmelding) |
 | 3 | Migration `20261108090100` (#671, 7 INAKTIVE rækker) | 7 rækker, alle inaktive, markør findes | `DELETE` af de 7 rækker via markøren (kun før aktivering) |
-| 4 | Get-next-question: manifest `30d2bdc5…` (24 filer) eller en opdateret Strategy A-kandidat (beslutning) | Paritetstest mod den deployede version; manifest måles read-only | Deploy forrige version (manifest i `level-engine-rollout.md` §3.1) |
+| 4 | Get-next-question: manifest `3ff5b50e…` (25 filer) eller en opdateret Strategy A-kandidat (beslutning) | Paritetstest mod den deployede version; manifest måles read-only | Deploy forrige version (manifest i `level-engine-rollout.md` §3.1) |
 | 5 | Frontenden (merge til main deployer Cloudflare) | Quiz, tilbud vises kun for tilmeldte | Rul main tilbage |
 | 6 | Tilmelding af ejerens testkonto (`grant_course_enrolment`) | Én aktiv tilmelding | `revoke_course_enrolment` |
 | 7 | Aktivering af de 7 rækker (`is_active = true`, kun markør) | Testkontoen gennemfører forløbet | `is_active = false` |
