@@ -44,7 +44,7 @@ test("methodV2 authorises nothing: no call, no capacity, no claim, no adapter; R
   assert.equal(LIVE.architecture.defaultEnabled, false);
   assert.equal(LIVE.meta.authorisesImageRequest, false);
   // D-179 added no adapter; D-180, D-183 and D-371 (NH-1…NH-3, NH-1B and NH-4) and D-375 (NH-5B) later added the ones for their own authorised calls.
-  assert.deepEqual(readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*hair|hair.*send/i.test(f)).sort(), ["openai-send-northstar-hair-d371.mjs", "openai-send-northstar-hair-nh1b.mjs", "openai-send-northstar-hair-nh4.mjs", "openai-send-northstar-hair-nh5b.mjs", "openai-send-r3-hair-d175.mjs", "openai-send-r3-hair-d177.mjs", "openai-send-r3-hair-d180.mjs", "openai-send-r3-hair-d183.mjs"], "no send adapter except D-175's, D-177's, D-180's, D-183's and D-371's (NH-1…NH-3, NH-1B and NH-4) and D-375's (NH-5B)");
+  assert.deepEqual(readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*hair|hair.*send/i.test(f)).sort(), ["openai-send-northstar-hair-d371.mjs", "openai-send-northstar-hair-nh1b.mjs", "openai-send-northstar-hair-nh4.mjs", "openai-send-northstar-hair-nh5b.mjs", "openai-send-northstar-hair-nh5c.mjs", "openai-send-r3-hair-d175.mjs", "openai-send-r3-hair-d177.mjs", "openai-send-r3-hair-d180.mjs", "openai-send-r3-hair-d183.mjs"], "no send adapter except D-175's, D-177's, D-180's, D-183's and D-371's (NH-1…NH-3, NH-1B and NH-4), D-375's (NH-5B) and D-379's (NH-5C)");
   for (const x of ["an image request or upload", "capacity, a call-id or a claim", "a frozen prompt v3", "the D-177 sheet under v2", "a new runtime layer for the nape lock"]) assert.ok(V2.notApproved.includes(x), x);
 });
 

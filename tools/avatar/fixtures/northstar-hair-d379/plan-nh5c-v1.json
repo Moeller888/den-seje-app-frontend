@@ -1,0 +1,280 @@
+{
+  "decision": "D-379",
+  "kind": "northstar-hair-on-d373-base",
+  "callId": "NH-5C-hair-nape-locks",
+  "design": "C",
+  "authorisesImageRequest": false,
+  "purpose": "one new hairstyle, the nape locks (design C of the NH-5 round), with its own look at app size; the model EDITS D-373's shared head base and only its grey hair is kept as a separate transparent layer, composed in C's fixed layer order: the face, jaw, brows, ears, skin and neck of the composite always come from the base; a trial for the owner's assessment — not a promotion, not an asset, not an activation",
+  "excludedFromDesignAndInput": [
+    "Northstar's standard hair layer",
+    "NH-4, the top knot (NH-5B) and every D-368/D-371/D-375 hair layer, sketch or candidate",
+    "the hair reference northstar-hair-reference-1024.png",
+    "the private NH-5C sketch (a painted zone, never an input)"
+  ],
+  "comparedOnlyWith": [
+    "Northstar's standard hair (R3 figure layer), NH-4's D-373 grey layer and the live top knot (head-nh5b-grey-v1.webp): P8 and the comparison sheets"
+  ],
+  "designs": {
+    "A": "Blød opstrøget top (not part of this call)",
+    "B": "Topknude (D-375, sent; not part of this call)",
+    "C": "Nakkelokker — this call"
+  },
+  "layerOrder": {
+    "app": "the app's plan, unchanged: body · shoes · trousers · top · arms · sleeves → THE HEAD IMAGE → shadows (northstarCompose shades only the figure's own layers, never the head)",
+    "headImage": [
+      "the locks: all hair at or below the ear tops (y ≥ 306), BEHIND the base",
+      "the base: face, jaw outline, neck",
+      "the front hair: scalp, parting, temples (y < 306)",
+      "the ears: the base's own pixels, each drawn once, on top"
+    ],
+    "softEdges": "the hair continues behind the half-transparent soft edge of each ear and of the jaw (the mean of the layer hair within 3 px), so no light seam shows; the ear and the jaw stay on top",
+    "clothes": "the locks end at the jawline (y ≤ 424 in the design); the clothes start at y ≥ 455, so no lock reaches a collar or a shoulder"
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1024",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "image[]",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSent": [
+      "mask",
+      "input_fidelity",
+      "any other image"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "name": "nh5b-d373-base-head-1024.png",
+        "bytes": 137810,
+        "sha256": "35561ceef1d3fa919a1083a247236ca1fcac60c38dfebf86a36d5480872df2f9",
+        "width": 1024,
+        "height": 1024,
+        "location": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/references/",
+        "tracked": false,
+        "what": "THE HEAD TO EDIT: D-373's shared head base (the clean head above y 430, the app's bald runtime neck below) on transparency, in the D-371 square ×2 — byte for byte NH-5B's Image 1 (design-independent)",
+        "made": "northstar-hair-nh5c.mjs --inputs (NH-5's inputImages().head)"
+      },
+      {
+        "role": "Image 2",
+        "name": "nh5c-guide-1024.png",
+        "bytes": 81976,
+        "sha256": "43f8ee2951e6e43c6295479fa4a7075b058cab822c5455e2b0e16e5b4b9674fd",
+        "width": 1024,
+        "height": 1024,
+        "location": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/references/",
+        "tracked": false,
+        "what": "GUIDE: the base faded; design C's front zone over the skull (light blue), the locks behind the ears and the jaw (turquoise), the hairline and the centre parting (dark blue, a dot where the hair meets each ear's top), keep-clear on brows, eyes and both ears (red)",
+        "made": "northstar-hair-nh5c.mjs --inputs (guideImage())"
+      },
+      {
+        "role": "Image 3",
+        "name": "nh5-style-body-1024.png",
+        "bytes": 264076,
+        "sha256": "26f87eb4196373ef0d4782f7327e9a8da728d1f51c12f72c63d663844c6508f8",
+        "width": 1024,
+        "height": 1024,
+        "location": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/references/",
+        "tracked": false,
+        "what": "STYLE: Northstar's own painted body in the cream tee (published runtime layers, figure y 430–941 ×2) — no head, no hair; byte for byte NH-5B's Image 3",
+        "made": "northstar-hair-nh5c.mjs --inputs (NH-5's styleImage())"
+      }
+    ]
+  },
+  "prompt": {
+    "text": "Image 1 is the HEAD to draw on: the character without hair, on a transparent background, in a 1024x1024 frame. Image 2 is the GUIDE for Image 1, in the same frame and at the same scale: the light-blue area is where the hair on the skull goes; the dark-blue line is the hair's lower edge along the forehead and the temples, and the short dark-blue line running up from its highest point is the centre parting; the two dark-blue dots are where the hair meets the top of each ear; the turquoise areas on both sides are where the locks hang BEHIND the ears and behind the jaw; the red areas (brows, eyes and both ears) must stay completely free of hair. Image 3 is a STYLE sample of the same character's painted body: it shows the line weight, the cel shading and the level of detail to match. Image 3 contains no hair and is not part of the result.\n\nEdit Image 1: add a new hairstyle on the head and change nothing else. Keep the frame, the position, the scale and the transparent background exactly as in Image 1: no shift, no zoom, no tilt, no crop. Keep the face, the eyes, the brows, the nose, the mouth, the ears, the jaw, the skin, the neck and every outline of Image 1 exactly as they are.\n\nTHE HAIRSTYLE: soft nape locks with a centre parting. A clear centre parting runs from the middle of the hairline up over the top of the head. From the parting the hair falls in two soft, smooth curtains to each side, leaving the forehead open in the middle, and frames the temples. Behind each ear the hair continues down in soft, gently curved locks that hang behind the ear and behind the jaw and end in a few soft, rounded tips at the level of the jawline. Each ear stays fully visible in front of the hair, with its own outline unchanged; the jaw's outline stays in front of the locks. No hair lies on the forehead's open middle, the brows, the eyes, the ears, the cheeks, the chin or the neck, and nothing reaches the shoulders.\n\nSHAPE: the hair fills the light-blue area of Image 2 over the whole skull; its lower edge lies exactly ON the dark-blue line, with no band of bare skull between the line and the hair; the parting follows the short dark-blue line. The locks fill the turquoise areas and end where they end. Nothing in the red areas. Nothing below the turquoise areas.\n\nSTYLE: paint the hair in the same hand as Image 1's face and Image 3's body: the same confident dark outline of the same weight, the same cel shading in a few clear value steps, a little shadow along the parting and where the locks pass behind the ears, highlight shapes that follow the skull's rounding and the locks' fall, the same level of detail. Not photoreal, no texture noise, no soft airbrush, no spikes, no straight-cut fringe.\n\nCOLOUR: draw the hair in neutral greyscale only (white, greys and near-black), no hue at all. The hair is a luminance map that is tinted later. Everything else keeps Image 1's own colours.\n\nThe hair is one connected shape with no detached specks. Keep at least 16 pixels of empty transparent margin on all four sides of the image.\n",
+    "bytes": 3051,
+    "sha256": "b57068ada2f2b41c685758d1f402a0a057605e92043956119d631bc5e28c5753"
+  },
+  "placement": "the result is registered on the base by its face (scale ±4 %, shift ±40 px in the call frame), then placed as D-371: ÷2 by the premultiplied 2×2 box at (256, 0); nothing is retouched",
+  "post": {
+    "tool": "tools/avatar/northstar-hair-nh5c.mjs",
+    "inputs": [
+      {
+        "role": "D-373 base",
+        "name": "d373-base-figure.png",
+        "bytes": 119693,
+        "sha256": "454b56aa6dee471d9be83ee1ce8365589f79b8b9cb4f2a4b959ac26729ac3b8a",
+        "location": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/references/",
+        "tracked": false,
+        "what": "D-373's shared head base (1024×1536), rebuilt by --inputs and checked against both published NH-4 heads"
+      },
+      {
+        "role": "ear mask",
+        "name": "clean-head-ear-on-top-mask.png",
+        "bytes": 6651,
+        "sha256": "955806ec039dafc7f1f7f16696b28c57722eb579e691e7498cea472fa9508840",
+        "location": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/references/",
+        "tracked": false,
+        "what": "the clean head's ear-on-top mask (1024×1536), D-373's pinned input"
+      },
+      {
+        "role": "NH-4 layer",
+        "name": "nh4-temple-tip-grey-hair-layer.png",
+        "bytes": 59257,
+        "sha256": "84a596d07209802cdb6beeead014015a94a5b75f3e2548b842aeca761afcf1ed",
+        "location": "<Documents>/DenSejeApp-artefacts/hair-nh5-round/references/",
+        "tracked": false,
+        "what": "D-373's NH-4 grey hair layer (pinned in hair-heads-d373-v1.json), used ONLY by P8"
+      }
+    ],
+    "comparedAlso": {
+      "role": "the live top knot",
+      "file": "assets/avatar-northstar-hair/head-nh5b-grey-v1.webp",
+      "tracked": true,
+      "what": "D-377's grey top-knot head; its hair (the head minus the base, outside the ears) is P8's third comparison; pinned in method.files"
+    },
+    "gates": {
+      "P1": {
+        "rule": "registration on the face: |scale − 1| ≤ 0.04, |shift| ≤ 40 px (call frame), mean face error ≤ 14",
+        "maxScale": 0.04,
+        "maxShift": 40,
+        "maxErr": 14
+      },
+      "P2": {
+        "rule": "scalp covered: ≥ 98 % of the design's scalp has visible hair alpha ≥ 250 (the parting's band ±3 px is not counted)",
+        "min": 0.98
+      },
+      "P3": {
+        "rule": "brows and eyes free: ≤ 10 px of grey hair on the brows' keep-clear zone in the RESULT; 0 px on brows and eyes in the layer; ≥ 6 px gap above each brow",
+        "maxRaw": 10,
+        "minGap": 6
+      },
+      "P4": {
+        "rule": "ears and face: in the RESULT ≤ 10 px of grey hair on the ears (their opaque pixels and their skin margin) and ≤ 10 px over the face below the ear tops (3 px inside its outline, the eyes excepted: P3 covers them); no hair on the ears in the layer; the ears in front (an opaque ear pixel is the base's own, a soft-edge ear pixel is exactly the ear over the hair behind it); ≤ 20 px of layer hair (alpha ≥ 32) on the face below the ear tops 3 px inside its outline (it would lie hidden behind the jaw) and ≤ 20 px below the jawline (y ≥ 433)",
+        "maxRaw": 10,
+        "maxLayer": 20
+      },
+      "P5": {
+        "rule": "one piece: the largest piece holds ≥ 98 % of the hair",
+        "min": 0.98
+      },
+      "P6": {
+        "rule": "the base is unchanged wherever the composed hair layer is empty (pixel for pixel)"
+      },
+      "P7": {
+        "rule": "greyscale: ≥ 90 % of the lifted hair pixels are neutral grey (saturation < 0.12)",
+        "min": 0.9
+      },
+      "P8": {
+        "rule": "its own look at app size (÷4): silhouette IoU ≤ 0.75 with the standard hair, NH-4 and the live top knot, and ≥ 0.60 with design C",
+        "max": 0.75,
+        "minDesign": 0.6
+      },
+      "P9": {
+        "rule": "the shape is followed overall: ≤ 3 % of the result's grey hair lies more than 8 px outside the design's zone",
+        "max": 0.03
+      },
+      "P10": {
+        "rule": "no cut: where the VISIBLE hair ends although the result's grey hair continues (not under an ear), the longest connected run ≤ 6 px, reported for the parting, the forehead, each temple and each nape",
+        "maxRun": 6
+      },
+      "P11": {
+        "rule": "no local spill: the largest connected cluster of grey hair more than 8 px outside the zone ≤ 60 px",
+        "max": 60
+      },
+      "P12": {
+        "rule": "no local hole: the largest connected uncovered piece of the scalp ≤ 40 px (the parting's band excepted)",
+        "max": 40
+      },
+      "P13": {
+        "rule": "the planned nape locks: on each side ≥ 70 % of the lock zone behind the ear (y 330–412) is visible hair, and the lock ends at the jawline (its lowest visible hair at y 405–432)",
+        "min": 0.7,
+        "endFrom": 405,
+        "endTo": 432
+      }
+    },
+    "tint": "northstar-hair-nh4-post.mjs northstarTint (Northstar's own value steps); the grey layer is kept as well",
+    "layers": [
+      "nh5c-hair-grey-layer.png (the separate transparent grey hair layer)",
+      "nh5c-hair-layer.png (tinted)",
+      "nh5c-on-base-full.png (composite, in C's layer order)",
+      "checks.json"
+    ],
+    "command": "node tools/avatar/northstar-hair-nh5c.mjs --post --result <the returned image> --base <D-373 base> --ear <ear mask> --nh4 <D-373 NH-4 grey layer> --dwebp <dwebp.exe> --out <a new directory outside both clones>"
+  },
+  "rehearsal": {
+    "command": "node tools/avatar/northstar-hair-nh5c.mjs --rehearsal --base <D-373 base> --ear <ear mask> --nh4 <D-373 NH-4 grey layer> --dwebp <dwebp.exe> --out <a new directory outside both clones>",
+    "cases": {
+      "A exact, with forehead tips and the locks behind both ears": "passes; the assembly with the three tops passes",
+      "B moved +10/−6 px and scaled 1.02": "passes",
+      "C a tuft from the parting down over the forehead between the brows (a local cut at the parting)": "P10 (P10's cut found at the parting)",
+      "D grey painted over the right ear": "P4",
+      "E the left lock laid forward over the cheek and the jaw (hair over the face)": "P4",
+      "F the right temple's lock drawn down over the brow's end (a local cut at the temple)": "P3, P10 (P10's cut found at the right temple)",
+      "G the right lock too long: down over the collar and the shoulder (a local cut at the nape)": "P4, P10 (P10's cut found at the right nape); the assembly with the three tops rejected",
+      "H one loose tuft outside the zone": "P11",
+      "I one hole in the scalp": "P12",
+      "J no locks: the hair ends at the ear tops": "P13",
+      "K the standard hair's silhouette": "P8",
+      "L no hair": "P2, P5, P7, P13"
+    },
+    "assembly": {
+      "tops": [
+        "T-shirt (top-tee-hip-cream)",
+        "tanktop (top-tank-navy)",
+        "sweater (top-sweater-ls2-heather)"
+      ],
+      "compositing": "the app's own northstarCompose (js/avatar-layers.js, read at rehearsal time; not part of the post-processing)",
+      "gates": {
+        "G1": "no lock over the clothes: 0 px where the hair changes the head image and the clothes (or the arms) lie under it",
+        "G2": "the ears in front: every opaque ear pixel of the dressed figure is as with the bald base (the soft edge shows the ear over the hair)",
+        "G3": "the jaw and the face in front: every opaque face pixel below the ear tops is as with the bald base",
+        "G4": "only the hair changes: 0 px changed outside the hair layer",
+        "G5": "the locks show along the jaw: ≥ 300 visible px per side in the band y 385–424",
+        "G6": "room to the clothes: ≥ 20 px from the lowest lock to the clothes' top edge in the same column"
+      }
+    }
+  },
+  "visualStop": [
+    "the composite is shown beside the standard hair, NH-4 and the top knot at 1:1, ½ and ¼ (app size), dressed in the T-shirt, the tank top and the sweater; both ear junctions, the parting and the hairline at 4×",
+    "a hairstyle that is not nape locks with a centre parting, not distinguishable at app size, or not in Northstar's painted style sends it back, also when P1–P13 pass",
+    "a straight cut at the parting, the hairline, a temple or a nape, a skin flap, light seam or double line at an ear or the jaw, hair on the face, the neck, a collar or a shoulder, or a loose speck sends it back",
+    "nothing is retouched to pass: the post-processing is fixed before the call and applied unchanged; a failing result is a result of the trial"
+  ],
+  "method": {
+    "files": {
+      "tools/avatar/build-r2-torso-occlusion-mask.mjs": "5411d3053733dd043c1f926d9e77bc2c71baf22688fd2f6a7e0aa64ee55c72ac",
+      "tools/avatar/check-r2-torso-candidate.mjs": "ef909f6e37302dcbfbd582a8d31fb2bc50cb800a3c9a514aed21b8840efd0ada",
+      "tools/avatar/fetch-dwebp.mjs": "71803574bed06e71db2783afdb8ce18c728ef799557b7ccba78e3b735c7e43ec",
+      "tools/avatar/northstar-hair-nh4-exception-d372.mjs": "e1b67967b87c4fee19af40464c2d480db7b1035543d22070061fbcaaac1e4c71",
+      "tools/avatar/northstar-hair-nh4-post.mjs": "fce9ee5155362937105f5fefdb080162a05624cc86077e3dcecc53aceee6c1af",
+      "tools/avatar/northstar-hair-nh4-zones.mjs": "97e4c0dd6e591197ef8a6af23fa8642cccc8502ab343381e351eb6e1bcf16cde",
+      "tools/avatar/northstar-hair-nh5.mjs": "d00405af480b5f31f35538177e7f537e86c7afeec2539053657bea06b5f4f661",
+      "tools/avatar/northstar-hair-nh5c.mjs": "65d8cb18479acd0d4fb42ec544913b30417decb8787839d5b66832c2e4656d6d",
+      "tools/avatar/northstar-hair-polish-d368.mjs": "559fb780c20fac846d45044c3406bcacdfd958954eae7c6f4594e614316a3e08",
+      "tools/avatar/northstar-hair-template-d371.mjs": "1724d074e7f968b8b17515970680c00f272e36f7be9cc16bc3a730f9e6109451",
+      "tools/avatar/northstar-hair-trial-d368.mjs": "53624fdb07e5658361e6c8d56a327ce6c2aeaf46473e0e1f8005ca5f70ea3d6a",
+      "tools/avatar/promote-r2-torso-asset.mjs": "c030f74ec58edaa82673887d403caf50d4d3ff791781b6502882ed01258613be",
+      "tools/avatar/r3-eyes-tool.mjs": "98a5c043ebd1aebe64e072d9cca277a9157e054c39c6d7a92b65cfd10efd3b8a",
+      "tools/avatar/r3-face-parts-tool.mjs": "9158b7ed8e2af53f0cea265529e4774765650583911d998801333e78a83339d4",
+      "tools/avatar/r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+      "tools/avatar/r3-hair-tool.mjs": "2c5bf2da27d2c5da49136f60d8289c1730f0bca5934753b394004ed05e5610f9",
+      "tools/avatar/r3-northstar-afro.mjs": "34885a2b1fd47e0b4b3d20cda30c4be7e9a916fcf321379b4f0ab9a4d2bb3723",
+      "tools/avatar/r3-northstar-brow.mjs": "5a8f78967cb48f7d734951ddd0a32ed3afb2a3766f7ceb3017940047b1523706",
+      "tools/avatar/r3-northstar-earfix.mjs": "466616ff4b52804a01f5ee5e30bf7e4b8049e3e6ae1d9aca96d8420ffe6a0ca9",
+      "tools/avatar/r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+      "tools/avatar/r3-northstar-hairstyles.mjs": "79d0a4204db73a2a43126c7cd7a281e14412c95a29a277020a0bdb8985ec64f0",
+      "tools/avatar/r3-northstar-head.mjs": "584db7b2d057168420c5abf0bc0a76ee8bec65e08a2107826b158d432f354401",
+      "tools/avatar/r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+      "tools/avatar/fixtures/northstar-hair-d371/template-v1.json": "034b3f04b5e0d89e3e76bb52056fa6814a5b120b4df975447b6c2f4f9a5e2e9d",
+      "tools/avatar/fixtures/northstar-hair-d371/hair-heads-d373-v1.json": "3b04cff11dacebc818ffc0edda86b9ffe406cd5df7aa5d70e3c014d397bca39c",
+      "assets/avatar-northstar-hair/head-nh5b-grey-v1.webp": "c18f7f1e4b7f6c174ae75606185b161336cb822b53421ed274fa5b7f2497a126"
+    }
+  }
+}
