@@ -23,20 +23,33 @@ jobs:
     # Pinned: ubuntu-latest became ubuntu-26.04 (image 20261101.186.1), where Playwright 1.59.1 does not support chromium
     # ("Playwright does not support chromium on ubuntu26.04-x64", 2026-11-12). Unpin together with a Playwright upgrade.
     runs-on: ubuntu-24.04
+    # Production credentials come from the protected GitHub environment `e2e-prod` (fase 1A): branch
+    # `main` only and a required reviewer. Create and protect the environment BEFORE this line
+    # reaches main — a reference to an environment that does not exist creates it WITHOUT protection
+    # rules. docs/operations/e2e-prod-environment.md
+    environment: e2e-prod
+    # Only from the environment's own E2E_PROD_* secrets — never from a repository secret (no
+    # fallback); the e2e-prod preflight stops the job if one is missing.
     env:
-      SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
-      SUPABASE_ANON_KEY:         ${{ secrets.SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      TEST_STUDENT_EMAIL:        ${{ secrets.TEST_STUDENT_EMAIL }}
-      TEST_STUDENT_PASSWORD:     ${{ secrets.TEST_STUDENT_PASSWORD }}
+      SUPABASE_URL:              ${{ secrets.E2E_PROD_SUPABASE_URL }}
+      SUPABASE_ANON_KEY:         ${{ secrets.E2E_PROD_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_PROD_SUPABASE_SERVICE_ROLE_KEY }}
+      TEST_STUDENT_EMAIL:        ${{ secrets.E2E_PROD_TEST_STUDENT_EMAIL }}
+      TEST_STUDENT_PASSWORD:     ${{ secrets.E2E_PROD_TEST_STUDENT_PASSWORD }}
       # global-setup provisions the teacher-flow accounts here too, and their passwords are
       # required secrets with no default (tests/test-credentials.mjs).
-      TEST_TEACHER_PASSWORD:     ${{ secrets.TEST_TEACHER_PASSWORD }}
-      TEST_STUDENT2_PASSWORD:    ${{ secrets.TEST_STUDENT2_PASSWORD }}
+      TEST_TEACHER_PASSWORD:     ${{ secrets.E2E_PROD_TEST_TEACHER_PASSWORD }}
+      TEST_STUDENT2_PASSWORD:    ${{ secrets.E2E_PROD_TEST_STUDENT2_PASSWORD }}
       # Always slot 0 — the goldens are taken on the original accounts, under the lock above.
       E2E_SLOT:                  "0"
     steps:
       - uses: actions/checkout@v4
+      # Before npm ci or any Supabase call: the job must run in the protected `e2e-prod`
+      # environment and have every credential set. Prints names only.
+      - name: e2e-prod preflight
+        env:
+          E2E_PROD_ENVIRONMENT: ${{ vars.E2E_PROD_ENVIRONMENT }}
+        run: node .github/ci/e2e-prod-preflight.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*

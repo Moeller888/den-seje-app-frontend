@@ -86,13 +86,18 @@ test("every concurrency block on the shared E2E lock sets queue: max and cancel-
 
 // ── 2. Nothing that can write the shared test data runs outside the lock ─────────────────────
 test("every workflow that receives the service-role key takes the shared E2E lock", () => {
+  // The key is read as secrets.E2E_PROD_SUPABASE_SERVICE_ROLE_KEY from the e2e-prod environment
+  // (docs/operations/e2e-prod-environment.md); either name counts as receiving it.
   const offenders = [];
+  const holders = [];
   for (const f of workflowFiles()) {
     const src = readWorkflow(f);
-    if (!src.includes("secrets.SUPABASE_SERVICE_ROLE_KEY")) continue;
+    if (!/\bsecrets\.(?:E2E_PROD_)?SUPABASE_SERVICE_ROLE_KEY\b/.test(src)) continue;
+    holders.push(f);
     if (sharedBlocks(src).length === 0) offenders.push(f);
   }
   assert.deepEqual(offenders, []);
+  for (const f of ["playwright.yml", "update-avatar-goldens.yml"]) assert.ok(holders.includes(f), `${f} is seen as a key holder`);
 });
 
 // ── 3. The lock itself is unchanged ──────────────────────────────────────────────────────────

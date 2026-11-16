@@ -342,12 +342,18 @@ test("every E2E lock queues FIFO (queue: max) and never cancels — waiting jobs
 });
 
 test("every workflow that receives the service-role key takes an E2E lock", () => {
+  // The key is read as secrets.E2E_PROD_SUPABASE_SERVICE_ROLE_KEY from the e2e-prod environment
+  // (docs/operations/e2e-prod-environment.md); either name counts as receiving it.
   const offenders = [];
+  const holders = [];
   for (const f of workflowFiles()) {
     const src = readWorkflow(f);
-    if (src.includes("secrets.SUPABASE_SERVICE_ROLE_KEY") && e2eBlocks(src).length === 0) offenders.push(f);
+    if (!/\bsecrets\.(?:E2E_PROD_)?SUPABASE_SERVICE_ROLE_KEY\b/.test(src)) continue;
+    holders.push(f);
+    if (e2eBlocks(src).length === 0) offenders.push(f);
   }
   assert.deepEqual(offenders, []);
+  for (const f of ["playwright.yml", "update-avatar-goldens.yml"]) assert.ok(holders.includes(f), `${f} is seen as a key holder`);
 });
 
 const PLAYWRIGHT = readWorkflow("playwright.yml");

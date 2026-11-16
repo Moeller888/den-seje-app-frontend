@@ -186,6 +186,16 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020220003_english_level_batch10_3.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
+  "20261114203117_english_activate_2a_batch3.sql":
+    "English 5,000 phase 2, step 2a (owner decision 2026-11-14), not applied in production: data only, activates the 500 batch3 rows behind locked count, order and content-fingerprint guards; each step needs its own owner GO",
+  "20261114203118_english_activate_2b_pilot.sql":
+    "English 5,000 phase 2, step 2b (owner decision 2026-11-14), not applied in production: data only, activates the 500 pilot rows after 2a, behind locked count, order and content-fingerprint guards; each step needs its own owner GO",
+  "20261114203119_english_activate_2c_batch2.sql":
+    "English 5,000 phase 2, step 2c (owner decision 2026-11-14), not applied in production: data only, activates the 500 batch2 rows after 2b, behind locked count, order and content-fingerprint guards; each step needs its own owner GO",
+  "20261114203120_english_activate_2d_grade6_9.sql":
+    "English 5,000 phase 2, step 2d (owner decision 2026-11-14), not applied in production: data only, activates the 120 grade6_9 rows after 2c, behind locked count, order and content-fingerprint guards; each step needs its own owner GO",
+  "20261114203121_english_activate_2e_batch4.sql":
+    "English 5,000 phase 2, step 2e (owner decision 2026-11-14), not applied in production: data only, activates the 500 batch4 rows after 2d and the teacher sample, behind locked count, order and content-fingerprint guards; each step needs its own owner GO",
 });
 
 // Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
