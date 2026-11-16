@@ -1,7 +1,7 @@
-// D-377 — the top knot ("Topknude · gråt" / "Topknude · brunt") SAVED ON THE TEST PUPIL'S ACCOUNT. Its two cards are hidden by default
-// (NORTHSTAR_HAIR_NH5B = false), so this browser opts in through the page itself (avatar.html?northstarnh5b=1): both colours are chosen
-// in place on Avatar; the outfit stays; a part keeps the top knot; it is kept after a manual reload and after a new login in a fresh
-// browser WITHOUT the opt-in, and drawn the same on Avatar, Hub and in the quiz; an older choice without a hairstyle gets the standard hair.
+// D-377 — the top knot ("Topknude · gråt" / "Topknude · brunt") SAVED ON THE TEST PUPIL'S ACCOUNT. Its two cards are shown by default
+// since D-378 (NORTHSTAR_HAIR_NH5B = true), so no opt-in is used: both colours are chosen in place on Avatar; the outfit stays; a part
+// keeps the top knot; it is kept after a manual reload and after a new login in a fresh browser, and drawn the same on Avatar, Hub and in
+// the quiz; an older choice without a hairstyle gets the standard hair.
 // Runs against the suite's environment (the isolated stack in CI, which replays D-377's migration — REPO_AHEAD_OF_PRODUCTION) with the
 // slot's test pupil. A database without the migration (production until it is applied) refuses the value: the test is then skipped with
 // that reason, and nothing is written. After the production migration this is the test with the test pupil. Choices go through the UI;
@@ -18,8 +18,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
-const CARDS = 82;          // the 79 parts and D-373's 3 hairstyles
-const CARDS_OPTED = 84;    // and the two top knots, with this browser's opt-in
+const CARDS = 84;          // the 79 parts, D-373's 3 hairstyles and the two top knots (D-378)
 
 async function signedIn(browser: Browser): Promise<{ ctx: BrowserContext; page: Page }> {
   const ctx = await browser.newContext({ reducedMotion: "reduce" });
@@ -32,10 +31,9 @@ async function signedIn(browser: Browser): Promise<{ ctx: BrowserContext; page: 
   await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
   return { ctx, page };
 }
-async function openWardrobe(page: Page, optIn: boolean) {
-  await page.goto(`${PROD}/avatar.html${optIn ? "?northstarnh5b=1" : ""}`, { waitUntil: "domcontentloaded" });
-  const opted = optIn || (await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_nh5b"))) === "1";   // an earlier opt-in in this browser
-  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(opted ? CARDS_OPTED : CARDS, { timeout: 30000 });
+async function openWardrobe(page: Page) {
+  await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(CARDS, { timeout: 30000 });
 }
 const hairCard = (page: Page, hair: string) => page.locator(`#northstarWardrobeCards .item-card[data-hair='${hair}']`);
 const outfitNow = (page: Page) => page.evaluate(async () => { const L: any = await import("/js/avatar-layers.js"); const o = L.northstarOutfitNow(); return o ? [o.top, o.bottom, o.shoes].join("+") : null; });
@@ -51,7 +49,7 @@ async function shownOn(page: Page, url: string, element: string, surface: string
 }
 /** Clears the pupil's wardrobe choice through the page's own button, and waits until the account no longer holds one. */
 async function clearChoice(page: Page) {
-  await openWardrobe(page, false);
+  await openWardrobe(page);
   const back = page.getByRole("button", { name: "Brug min nuværende avatar", exact: true });
   if (await back.isVisible()) {
     await back.click();
@@ -70,11 +68,10 @@ test("D-377: both top knots are saved on the account with the outfit, kept after
     const refused = await directSave(page, { outfit: "FRI", top: "top-tee-hip-blue", pants: "bottom-trousers-square-navy", shoes: "shoes-sneakers-white", hair: "nh5b-grey" });
     test.skip(refused !== null, "this database's validate_avatar_identity has no D-377 migration: " + refused);
     expect(await directSave(page, { outfit: "FRI", top: "top-tee-hip-blue", pants: "bottom-trousers-square-navy", shoes: "shoes-sneakers-white" })).toBe(null);
-    // hidden by default: no top-knot card without the opt-in
-    await openWardrobe(page, false);
-    expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_nh5b")), "no opt-in in this browser yet").toBe(null);
-    await expect(hairCard(page, "nh5b-grey")).toHaveCount(0);
-    await openWardrobe(page, true);
+    // open by default: both top-knot cards without any opt-in
+    await openWardrobe(page);
+    expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_nh5b")), "no opt-in in this browser").toBe(null);
+    for (const k of ["nh5b-grey", "nh5b-brown"]) await expect(hairCard(page, k)).toHaveCount(1);
     let loads = 0, saves = 0;
     page.on("load", () => { loads++; });
     page.on("request", (r) => { if (r.url().includes("/rest/v1/rpc/set_avatar_northstar")) saves++; });
@@ -95,9 +92,9 @@ test("D-377: both top knots are saved on the account with the outfit, kept after
     const sweater = { ...grey, top: "top-sweater-ls2-heather" };
     await expect.poll(() => stored(page), { timeout: 15000 }).toEqual(sweater);
     const sweaterOutfit = "top-sweater-ls2-heather+bottom-trousers-square-navy+shoes-sneakers-white";
-    // a manual reload, then a new login in a fresh browser session WITHOUT the opt-in; Avatar, Hub and the quiz draw the same
+    // a manual reload, then a new login in a fresh browser session; Avatar, Hub and the quiz draw the same
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(CARDS_OPTED, { timeout: 30000 });
+    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(CARDS, { timeout: 30000 });
     await page.getByRole("tab", { name: "Hoved", exact: true }).click();
     await expect(hairCard(page, "nh5b-grey")).toHaveClass(/equipped/);
     await ctx.close();
@@ -106,8 +103,8 @@ test("D-377: both top knots are saved on the account with the outfit, kept after
     expect(await shownOn(page, "avatar.html", "avatar-preview", "avatar"), "on Avatar after a new login").toEqual(want);
     expect(await shownOn(page, "hub.html", "profileAvatar", "hub"), "on Hub").toEqual(want);
     expect(await shownOn(page, "index.html", "avatar-display", "quiz"), "in the quiz").toEqual(want);
-    // the brown (opted in again), then after another new login; then an older choice without a hairstyle: the standard hair everywhere
-    await openWardrobe(page, true);
+    // the brown, then after another new login; then an older choice without a hairstyle: the standard hair everywhere
+    await openWardrobe(page);
     await page.getByRole("tab", { name: "Hoved", exact: true }).click();
     await hairCard(page, "nh5b-brown").locator(".equip-btn").click();
     await expect.poll(() => stored(page), { timeout: 15000 }).toEqual({ ...sweater, hair: "nh5b-brown" });
