@@ -277,10 +277,12 @@ test("the golden-regeneration workflow uploads golden images only", () => {
 });
 
 test("both E2E workflows pass the required test-account secrets from GitHub Secrets", () => {
+  // From the e2e-prod environment's own E2E_PROD_* secrets — no repository-secret fallback
+  // (docs/operations/e2e-prod-environment.md; pinned in full by ci-e2e-prod-environment.test.mjs).
   for (const wf of [".github/workflows/playwright.yml", ".github/workflows/update-avatar-goldens.yml"]) {
     const text = read(wf);
     for (const name of ["TEST_STUDENT_EMAIL", "TEST_STUDENT_PASSWORD", "TEST_TEACHER_PASSWORD", "TEST_STUDENT2_PASSWORD", "SUPABASE_SERVICE_ROLE_KEY"]) {
-      assert.match(text, new RegExp(`${name}:\\s*\\$\\{\\{\\s*secrets\\.${name}\\s*\\}\\}`), `${wf} must pass ${name} from secrets`);
+      assert.match(text, new RegExp(`${name}:\\s*\\$\\{\\{\\s*secrets\\.E2E_PROD_${name}\\s*\\}\\}`), `${wf} must pass ${name} from secrets.E2E_PROD_${name}`);
     }
   }
 });

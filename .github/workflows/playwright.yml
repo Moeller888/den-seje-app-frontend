@@ -319,6 +319,13 @@ jobs:
   test:
     needs: classify
     if: always() && github.event_name == 'workflow_dispatch'
+    # Production credentials come from the protected GitHub environment `e2e-prod` (fase 1A): branch
+    # `main` only and a required reviewer, so code on another branch never receives them. The `if`
+    # above is evaluated first, so push and pull_request runs skip this job and never wait for an
+    # approval. Create and protect the environment BEFORE this line reaches main — a reference to an
+    # environment that does not exist creates it WITHOUT protection rules. The preflight step below
+    # fails the job if it does not run in `e2e-prod`. docs/operations/e2e-prod-environment.md
+    environment: e2e-prod
     # 90, not 60: the suite outgrew the old ceiling. Measured on 860d653 — 816 tests, 705 resolved
     # (454 passed, 251 skipped) and **0 failures** when the job was killed at 60 minutes. It was a
     # clock limit, not a test result. `workers: 1` stays because every e2e test shares ONE Supabase
@@ -354,21 +361,22 @@ jobs:
       # Must stay paired with cancel-in-progress: false. Guarded by tests/unit/ci-e2e-slots.test.mjs.
       queue: max
     # E2E global-setup (tests/global-setup.ts) reads Supabase + test-account creds from
-    # process.env via repository Actions secrets. Values live ONLY in GitHub Secrets. If a
-    # secret is unset the reference resolves to empty and CI stays red at global-setup (no
-    # regression); it goes green once secrets are provisioned. Not exposed to fork PRs.
+    # process.env. Values live ONLY in the secrets of the `e2e-prod` environment, under their own
+    # E2E_PROD_* names that never exist at repository level, mapped here to the names the programs
+    # read. No fallback: a missing environment secret resolves to empty and the e2e-prod preflight
+    # stops the job before npm ci (docs/operations/e2e-prod-environment.md). Not exposed to fork PRs.
     env:
-      SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
-      SUPABASE_ANON_KEY:         ${{ secrets.SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      TEST_STUDENT_EMAIL:        ${{ secrets.TEST_STUDENT_EMAIL }}
-      TEST_STUDENT_PASSWORD:     ${{ secrets.TEST_STUDENT_PASSWORD }}
+      SUPABASE_URL:              ${{ secrets.E2E_PROD_SUPABASE_URL }}
+      SUPABASE_ANON_KEY:         ${{ secrets.E2E_PROD_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_PROD_SUPABASE_SERVICE_ROLE_KEY }}
+      TEST_STUDENT_EMAIL:        ${{ secrets.E2E_PROD_TEST_STUDENT_EMAIL }}
+      TEST_STUDENT_PASSWORD:     ${{ secrets.E2E_PROD_TEST_STUDENT_PASSWORD }}
       # Teacher-flow passwords. Required, with no default anywhere in the repository: an unset
       # secret stops global-setup (tests/test-credentials.mjs) instead of falling back to a value
       # that anyone can read in this public repository. Set them to the values the accounts already
       # have; rotating them is a separate, explicitly authorised step.
-      TEST_TEACHER_PASSWORD:     ${{ secrets.TEST_TEACHER_PASSWORD }}
-      TEST_STUDENT2_PASSWORD:    ${{ secrets.TEST_STUDENT2_PASSWORD }}
+      TEST_TEACHER_PASSWORD:     ${{ secrets.E2E_PROD_TEST_TEACHER_PASSWORD }}
+      TEST_STUDENT2_PASSWORD:    ${{ secrets.E2E_PROD_TEST_STUDENT2_PASSWORD }}
       # Where the E2E suite points. A repository VARIABLE, not a secret — a hostname is not
       # sensitive, and a variable stays visible and auditable in the repo settings.
       # UNSET IS SAFE: the reference resolves to an empty string, and tests/helpers.ts treats
@@ -402,6 +410,12 @@ jobs:
         DISPATCH_CONFIRMATION: ${{ inputs.confirm_provisioning }}
         E2E_SLOT_COUNT: ${{ vars.E2E_SLOT_COUNT }}
       run: node .github/ci/dispatch-guard.mjs
+    # Right after the guard and before npm ci or any Supabase call: the job must run in the
+    # protected `e2e-prod` environment and have every credential set. Prints names only.
+    - name: e2e-prod preflight
+      env:
+        E2E_PROD_ENVIRONMENT: ${{ vars.E2E_PROD_ENVIRONMENT }}
+      run: node .github/ci/e2e-prod-preflight.mjs
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
