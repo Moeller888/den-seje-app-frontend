@@ -8,8 +8,23 @@
  *
  * KONSTRUERET UNDERVISNINGSMATERIALE: the cards are written for this prototype and must be checked by a
  * history teacher before any pupil sees them (D-310 §Lærergennemgang).
+ *
+ * F11-B — the SERVER's introduction (`showServer`): the cards come from the server through the host (bridge/3
+ * `intro.present`), in the server's order, rendered as TEXT (textContent, never HTML). `onPresented` fires once the
+ * first card is on screen (the host then reports "shown"); the final control calls `onFinish` (the host reports
+ * "done" and waits for the server) and the view closes only when that succeeded — on a failure it stays open with
+ * the error and the same control, so there is no dead end and nothing moves on without the server. The local check
+ * (INTRO_CHECK) is not part of the server's introduction. Neither path is evidence.
  */
-import { INTRO_CARDS, INTRO_CHECK } from "./intro-content.ts";
+import { INTRO_CARDS, INTRO_CHECK, type IntroCard } from "./intro-content.ts";
+
+export interface ServerIntro {
+  readonly cards: readonly IntroCard[];
+  /** The first card is rendered and visible. */
+  readonly onPresented: () => void;
+  /** The pupil pressed the final control; resolve when the server registered it, reject to keep the view open. */
+  readonly onFinish: () => Promise<void>;
+}
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<string, string> = {}, text?: string): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -24,6 +39,10 @@ export class IntroView {
   private readonly next: HTMLButtonElement;
   private step = 0;
   private done: (() => void) | null = null;
+  /** F11-B: the server's introduction being shown, or null for the local prototype introduction. */
+  private server: ServerIntro | null = null;
+  private finishing = false;
+  private readonly status: HTMLElement;
 
   constructor(host: HTMLElement) {
     this.root = el("section", { id: "lv-intro", class: "lv-task", "aria-labelledby": "lv-intro-title", "data-step": "0" });
@@ -34,9 +53,12 @@ export class IntroView {
     this.body = el("div", { id: "lv-intro-body" });
     this.next = el("button", { id: "lv-intro-next", type: "button", class: "lv-primary" }, "Videre");
     const note = el("p", { class: "lv-note" }, "Konstrueret undervisningsmateriale · tæller ikke som prøve");
+    this.status = el("p", { id: "lv-intro-status", class: "lv-status", role: "status", "aria-live": "polite" });
+    // Hidden while empty, so the local introduction looks exactly as before.
+    this.status.hidden = true;
     const actions = el("div", { class: "lv-actions" });
     actions.append(this.next);
-    sheet.append(head, this.body, actions, note);
+    sheet.append(head, this.body, this.status, actions, note);
     this.root.append(sheet);
     host.append(this.root);
     this.next.addEventListener("click", () => this.advance());
@@ -44,6 +66,9 @@ export class IntroView {
 
   /** Shows the cards and the check; resolves when the pupil has seen both cards and answered the check. */
   show(): Promise<void> {
+    this.server = null;
+    this.root.dataset["source"] = "local";
+    this.setStatus("");
     this.step = 0;
     this.root.hidden = false;
     this.render();
@@ -52,7 +77,35 @@ export class IntroView {
     });
   }
 
+  /**
+   * F11-B: shows the SERVER's cards (1–10, in this order). Resolves once the pupil finished and `onFinish` succeeded.
+   */
+  showServer(intro: ServerIntro): Promise<void> {
+    if (!Array.isArray(intro.cards) || intro.cards.length === 0) return Promise.reject(new Error("intro view: no cards"));
+    this.server = intro;
+    this.finishing = false;
+    this.root.dataset["source"] = "server";
+    this.root.dataset["cards"] = String(intro.cards.length);
+    this.setStatus("");
+    this.step = 0;
+    this.root.hidden = false;
+    this.renderServer();
+    // Reported only once the first card can actually be seen: after the browser has painted it.
+    const presented = intro.onPresented;
+    const paint = typeof requestAnimationFrame === "function" ? (f: () => void) => requestAnimationFrame(() => requestAnimationFrame(f)) : (f: () => void) => f();
+    paint(() => {
+      if (this.server === intro && !this.root.hidden) presented();
+    });
+    return new Promise((resolve) => {
+      this.done = resolve;
+    });
+  }
+
   private advance(): void {
+    if (this.server !== null) {
+      this.advanceServer(this.server);
+      return;
+    }
     this.step++;
     if (this.step > INTRO_CARDS.length + 1) {
       this.root.hidden = true;
@@ -92,6 +145,57 @@ export class IntroView {
       (group.querySelector("button") as HTMLButtonElement).focus();
       return;
     }
+  }
+
+  private advanceServer(intro: ServerIntro): void {
+    if (this.finishing) return;
+    if (this.step < intro.cards.length - 1) {
+      this.step++;
+      this.renderServer();
+      return;
+    }
+    // The final control: the server must register "done" before the pupil moves on.
+    this.finishing = true;
+    this.next.disabled = true;
+    this.setStatus("Gemmer …");
+    intro.onFinish().then(
+      () => {
+        this.finishing = false;
+        this.server = null;
+        this.setStatus("");
+        this.root.hidden = true;
+        this.done?.();
+        this.done = null;
+      },
+      (err: unknown) => {
+        this.finishing = false;
+        this.setStatus(`Introduktionen kunne ikke gemmes (${err instanceof Error ? err.message : String(err)}). Prøv igen.`);
+        this.next.disabled = false;
+        this.next.focus();
+      },
+    );
+  }
+
+  private renderServer(): void {
+    const intro = this.server as ServerIntro;
+    const card = intro.cards[this.step] as IntroCard;
+    this.root.dataset["step"] = String(this.step);
+    this.body.replaceChildren();
+    // Text only: textContent never interprets markup.
+    this.body.append(
+      el("p", { class: "lv-note", id: "lv-intro-progress" }, `Kort ${this.step + 1} af ${intro.cards.length}`),
+      el("h3", { class: "lv-card-title", "data-card-title": String(this.step) }, card.title),
+      el("p", { class: "lv-prompt", "data-card": String(this.step) }, card.text),
+    );
+    const last = this.step === intro.cards.length - 1;
+    this.next.textContent = last ? "Afslut introduktionen" : "Videre";
+    this.next.disabled = false;
+    this.next.focus();
+  }
+
+  private setStatus(text: string): void {
+    this.status.textContent = text;
+    this.status.hidden = text === "";
   }
 
   private renderExplanation(): void {

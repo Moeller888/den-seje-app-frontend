@@ -1,5 +1,7 @@
 import {
+  HELLO_PROTOCOL,
   PROTOCOL,
+  PROTOCOL_V2,
   SUPPORTED_PROTOCOLS,
   parseAction,
   parseHostMessage,
@@ -10,6 +12,8 @@ import {
   type HostMessage,
   type InboundEvent,
   type InteractionKind,
+  type IntroPresentMsg,
+  type IntroRecordedMsg,
   type PresentBody,
   type Purpose,
   type RejectReason,
@@ -39,6 +43,11 @@ export interface BridgeClientOptions {
   readonly post: (message: GameMessage) => void;
   readonly randomId: () => string;
   readonly kinds: readonly InteractionKind[];
+  /**
+   * F11-B: this game can show the server's introduction (IntroView). Offers bridge/3 in the hello and enables
+   * `requestStep`, `introShown` and `introDone`. Absent/false: bridge/2 only, as before.
+   */
+  readonly introductions?: boolean;
   readonly contentId: string;
   readonly contentVersion: string;
   readonly timers?: Timers;
@@ -56,7 +65,7 @@ export interface BridgeClientOptions {
 
 interface Waiter {
   readonly message: GameMessage & { requestId: string };
-  readonly expect: HostMessage["type"];
+  readonly expect: readonly HostMessage["type"][];
   readonly resolve: (m: HostMessage) => void;
   readonly reject: (e: BridgeError) => void;
   resends: number;
@@ -69,7 +78,10 @@ const defaultTimers: Timers = {
 };
 
 /**
- * Game end of `laerligverse.bridge/2` (D-306). The game asks for tasks, reports committed actions and
+ * Game end of `laerligverse.bridge/3`, which also speaks `/2` (D-306, F11-B). The version is the one the host
+ * answers `init` in; in a bridge/2 session the introduction calls refuse locally and no introduction can arrive.
+ *
+ * Original contract (bridge/2): The game asks for tasks, reports committed actions and
  * waits for verdicts. It has no session, no instance id and no answer key, and no message lets it grant
  * XP, coins, mastery or evidence: those fields do not exist in the protocol.
  */
@@ -77,6 +89,8 @@ export class BridgeClient {
   private readonly o: BridgeClientOptions;
   private readonly timers: Timers;
   private nonce: string | null = null;
+  /** The version the host chose in its init (null before the handshake). */
+  private proto: string | null = null;
   private helloId: string | null = null;
   private seq = 0;
   private readonly waiters = new Map<string, Waiter>();
@@ -92,10 +106,16 @@ export class BridgeClient {
     return this.statusNow;
   }
 
+  /** The negotiated bridge version (null before the handshake). */
+  get protocol(): string | null {
+    return this.proto;
+  }
+
   /** Handshake. Resolves with the instance still open on the server (resumption), or null. */
   connect(): Promise<PresentBody | null> {
     if (this.connectWaiter !== null) return Promise.reject(new BridgeError("closed"));
     this.nonce = null;
+    this.proto = null;
     this.setStatus("connecting");
     return new Promise((resolve, reject) => {
       this.connectWaiter = { resolve, reject, timer: null, attempts: 0 };
@@ -103,16 +123,43 @@ export class BridgeClient {
     });
   }
 
+  /** Asks for the next task at a decision point (a game that does not show introductions; unchanged since bridge/2). */
   requestTask(q: { objectiveId: string; purpose: Purpose; surface: Surface; contextKey: string }): Promise<TaskPresentMsg> {
-    return this.request<TaskPresentMsg>("task.present", (nonce, requestId) => ({ protocol: PROTOCOL, type: "task.request", nonce, requestId, ...q }));
+    return this.request<TaskPresentMsg>(["task.present"], (nonce, requestId, protocol) => ({ protocol, type: "task.request", nonce, requestId, ...q }));
+  }
+
+  /**
+   * F11-B, only for a game built with `introductions: true`: the next step at a decision point — a task, or, in a
+   * bridge/3 session, the server's introduction (`intro.present`). For an introduction: show the cards, then
+   * `introShown`, then — after the pupil's final control — `introDone`, and ask again.
+   */
+  requestStep(q: { objectiveId: string; purpose: Purpose; surface: Surface; contextKey: string }): Promise<TaskPresentMsg | IntroPresentMsg> {
+    if (this.o.introductions !== true) return Promise.reject(new BridgeError("unsupported_protocol"));
+    return this.request<TaskPresentMsg | IntroPresentMsg>(["task.present", "intro.present"], (nonce, requestId, protocol) => ({ protocol, type: "task.request", nonce, requestId, ...q }));
+  }
+
+  /** bridge/3: the introduction's cards are on the screen now. Resolves when the host has the server's answer. */
+  introShown(introToken: string): Promise<IntroRecordedMsg> {
+    return this.introReport("intro.shown", introToken);
+  }
+
+  /** bridge/3: the pupil finished the introduction. Never evidence; only lets the server's sequence move on. */
+  introDone(introToken: string): Promise<IntroRecordedMsg> {
+    return this.introReport("intro.done", introToken);
+  }
+
+  private introReport(type: "intro.shown" | "intro.done", introToken: string): Promise<IntroRecordedMsg> {
+    // Never in a bridge/2 session, and never from a game that did not declare it shows introductions.
+    if (this.o.introductions !== true || (this.nonce !== null && this.proto !== PROTOCOL)) return Promise.reject(new BridgeError("unsupported_protocol"));
+    return this.request<IntroRecordedMsg>(["intro.recorded"], (nonce, requestId, protocol) => ({ protocol, type, nonce, requestId, introToken }));
   }
 
   /** Sends a committed action. Resolves with the server's verdict (`aborted` when the host gave up retrying). */
   act(instanceToken: string, action: Action): Promise<TaskResultMsg> {
     const clean = parseAction(action);
     const clientSeq = ++this.seq;
-    return this.request<TaskResultMsg>("task.result", (nonce, requestId) => ({
-      protocol: PROTOCOL,
+    return this.request<TaskResultMsg>(["task.result"], (nonce, requestId, protocol) => ({
+      protocol,
       type: "task.action",
       nonce,
       requestId,
@@ -123,7 +170,7 @@ export class BridgeClient {
   }
 
   hint(instanceToken: string, level: number): Promise<HintShowMsg> {
-    return this.request<HintShowMsg>("hint.show", (nonce, requestId) => ({ protocol: PROTOCOL, type: "hint.request", nonce, requestId, instanceToken, level }));
+    return this.request<HintShowMsg>(["hint.show"], (nonce, requestId, protocol) => ({ protocol, type: "hint.request", nonce, requestId, instanceToken, level }));
   }
 
   /** Feed every `message` event of the game window here. */
@@ -140,6 +187,7 @@ export class BridgeClient {
       this.timers.clearTimeout(w.timer);
       this.connectWaiter = null;
       this.nonce = m.nonce;
+      this.proto = m.protocol;
       this.setStatus("ready");
       w.resolve(m.openTask);
       return;
@@ -156,6 +204,7 @@ export class BridgeClient {
       return this.reject("state", `error ${m.code}`);
     }
     if (this.nonce === null || m.nonce !== this.nonce) return this.reject("nonce", m.type);
+    if (m.protocol !== this.proto) return this.reject("invalid", `${m.type}: protocol ${m.protocol} in a ${String(this.proto)} session`);
 
     const w = this.waiters.get(m.requestId as string);
     if (w === undefined) return this.reject("state", `no request waits for ${m.type}`); // late duplicate: ignored
@@ -168,7 +217,7 @@ export class BridgeClient {
     this.waiters.delete(w.message.requestId);
     if (this.waiters.size === 0) this.setStatus("ready");
     if (m.type === "error") return w.reject(new BridgeError(m.code));
-    if (m.type !== w.expect) return w.reject(new BridgeError("invalid_message"));
+    if (!w.expect.includes(m.type)) return w.reject(new BridgeError("invalid_message"));
     w.resolve(m);
   }
 
@@ -187,10 +236,13 @@ export class BridgeClient {
     // Every hello has a fresh id; only an init answering the latest one is accepted.
     this.helloId = this.o.randomId();
     this.o.post({
-      protocol: PROTOCOL,
+      // The negotiation travels in the bridge/2 envelope, which every host since bridge/2 reads.
+      protocol: HELLO_PROTOCOL,
       type: "hello",
       msgId: this.helloId,
-      supports: [...SUPPORTED_PROTOCOLS],
+      // Only a game that shows introductions offers bridge/3; any other game stays on bridge/2, where the host never
+      // sends an introduction (it answers task_unavailable instead).
+      supports: this.o.introductions === true ? [...SUPPORTED_PROTOCOLS] : [PROTOCOL_V2],
       kinds: [...this.o.kinds],
       contentId: this.o.contentId,
       contentVersion: this.o.contentVersion,
@@ -198,9 +250,12 @@ export class BridgeClient {
     w.timer = this.timers.setTimeout(() => this.sendHello(), this.o.helloIntervalMs ?? 500);
   }
 
-  private request<T extends HostMessage>(expect: HostMessage["type"], build: (nonce: string, requestId: string) => GameMessage & { requestId: string }): Promise<T> {
-    if (this.nonce === null) return Promise.reject(new BridgeError("not_ready"));
-    const message = build(this.nonce, this.o.randomId());
+  private request<T extends HostMessage>(
+    expect: readonly HostMessage["type"][],
+    build: (nonce: string, requestId: string, protocol: string) => GameMessage & { requestId: string },
+  ): Promise<T> {
+    if (this.nonce === null || this.proto === null) return Promise.reject(new BridgeError("not_ready"));
+    const message = build(this.nonce, this.o.randomId(), this.proto);
     return new Promise<T>((resolve, reject) => {
       const w: Waiter = { message, expect, resolve: resolve as (m: HostMessage) => void, reject, resends: 0, timer: null };
       this.waiters.set(message.requestId, w);

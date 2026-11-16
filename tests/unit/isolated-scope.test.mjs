@@ -151,7 +151,8 @@ test("workflow: the check runs on both paths, only the exact value skips, the gu
       continue;
     }
     // PR #664: the introduction chain runs ONLY in the introduction lane (and must run completely there).
-    if (n === "Introduction E2E — the chain must run completely (introduction lane)") {
+    // F11-B: likewise the visible introduction (real browser, three engines), ONLY in the introduction lane.
+    if (n === "Introduction E2E — the chain must run completely (introduction lane)" || n === "Visible introduction E2E — Chromium, Firefox and WebKit (introduction lane)") {
       assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'introduction'\n"), n);
       continue;
     }

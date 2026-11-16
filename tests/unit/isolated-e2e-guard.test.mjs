@@ -178,8 +178,8 @@ test("no false green, and the order that makes the job fail-closed", () => {
   for (let i = 1; i < order.length; i++) assert.ok(order[i] > order[i - 1], `step ${i} in order`);
   // Tests run with the locked-down group as primary group, never with the runner's own group.
   const testLines = job.split("\n").filter((l) => /playwright test|run-suite\.mjs/.test(l) && !l.trim().startsWith("#"));
-  // The isolated smoke, the introduction lane's chain (PR #664) and the frontend suite.
-  assert.equal(testLines.length, 3);
+  // The isolated smoke, the introduction lane's chain (PR #664), its visible introduction (F11-B) and the frontend suite.
+  assert.equal(testLines.length, 4);
   for (const line of testLines) assert.match(line, /^\s+sg "\$ISOLATED_GROUP" -c "(npx playwright test|REPLAY_PROFILE=introduction npx playwright test|node tests\/isolated\/run-suite\.mjs)/, line);
   const fw = read("tests/isolated/egress-firewall.sh");
   assert.match(fw, /-m owner --gid-owner "\$GROUP_NAME" -j ISO_EGRESS_USER\n/);

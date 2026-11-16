@@ -1,23 +1,43 @@
 /**
- * Learning bridge, protocol `laerligverse.bridge/2` (D-306).
+ * Learning bridge, protocol `laerligverse.bridge/3` (D-306; F11-B), which also speaks `laerligverse.bridge/2`.
  *
  * The game (an iframe on its own origin) and the host page (which holds the pupil's session) talk only
  * through these messages. The game never sees a token, an answer key or an evaluator; it sends
  * *claims about actions* and receives the server's verdict. Every message is validated strictly:
  * unknown fields, wrong types, oversized payloads and unknown message types are rejected (fail loud).
  *
+ * Versions (F11-B): bridge/3 = bridge/2 plus the server-directed introduction (`intro.present` → `intro.shown`,
+ * `intro.done` → `intro.recorded`). The game's `hello` lists the versions it speaks; the host picks the newest one
+ * both speak and answers `init` in it; every later message of that session must carry exactly that version, and the
+ * introduction messages exist only in a bridge/3 session. A bridge/2 game therefore never receives an introduction
+ * and can never report one as shown or completed. The `hello` itself is sent in the bridge/2 envelope, which every
+ * host since bridge/2 reads.
+ *
  * Pure module: no DOM, no timers, no randomness.
  */
 
-export const PROTOCOL = "laerligverse.bridge/2";
-/** Versions this build can speak. bridge/1 was a design only (never built), so there is no N−1 yet. */
-export const SUPPORTED_PROTOCOLS: readonly string[] = Object.freeze([PROTOCOL]);
+export const PROTOCOL = "laerligverse.bridge/3";
+export const PROTOCOL_V2 = "laerligverse.bridge/2";
+/** Versions this build can speak, newest first. bridge/1 was a design only (never built). */
+export const SUPPORTED_PROTOCOLS: readonly string[] = Object.freeze([PROTOCOL, PROTOCOL_V2]);
+/** The envelope of a `hello` (the version negotiation itself) and of replies before a session exists. */
+export const HELLO_PROTOCOL = PROTOCOL_V2;
 
 /** Largest serialised message accepted in either direction (bytes of UTF-8 JSON). */
 export const MAX_MESSAGE_BYTES = 8192;
 export const MAX_TEXT_ANSWER = 200;
 export const MAX_ORDER_ITEMS = 12;
 export const MAX_OPTIONS = 12;
+/** Introduction cards (bridge/3): the server allows 1–10 cards; the bridge also bounds each field. */
+export const MAX_INTRO_CARDS = 10;
+export const MAX_INTRO_TITLE = 120;
+export const MAX_INTRO_TEXT = 1200;
+
+/** The newest version both ends speak (host side), or null. */
+export function negotiate(gameSupports: readonly string[]): string | null {
+  for (const p of SUPPORTED_PROTOCOLS) if (gameSupports.includes(p)) return p;
+  return null;
+}
 
 /** Interaction kinds a world can render. Grading for every kind stays on the server. */
 export const INTERACTION_KINDS = Object.freeze(["choice", "short_text", "order"] as const);
@@ -128,7 +148,23 @@ export interface HintRequestMsg {
   readonly instanceToken: string;
   readonly level: number;
 }
-export type GameMessage = HelloMsg | TaskRequestMsg | TaskActionMsg | HintRequestMsg;
+/** bridge/3: the introduction's content is on the pupil's screen now (sent once the first card is rendered). */
+export interface IntroShownMsg {
+  readonly protocol: string;
+  readonly type: "intro.shown";
+  readonly nonce: string;
+  readonly requestId: string;
+  readonly introToken: string;
+}
+/** bridge/3: the pupil finished the introduction with its final control. Never evidence (D-330). */
+export interface IntroDoneMsg {
+  readonly protocol: string;
+  readonly type: "intro.done";
+  readonly nonce: string;
+  readonly requestId: string;
+  readonly introToken: string;
+}
+export type GameMessage = HelloMsg | TaskRequestMsg | TaskActionMsg | HintRequestMsg | IntroShownMsg | IntroDoneMsg;
 
 // ── Host → game ────────────────────────────────────────────────────────────────
 
@@ -183,7 +219,34 @@ export interface ErrorMsg {
   readonly requestId: string | null;
   readonly code: ErrorCode;
 }
-export type HostMessage = InitMsg | AckMsg | TaskPresentMsg | HintShowMsg | TaskResultMsg | ErrorMsg;
+/** One introduction card: plain text only (the game renders it as text, never as HTML). */
+export interface IntroCard {
+  readonly title: string;
+  readonly text: string;
+}
+/**
+ * bridge/3, the answer to a `task.request` when the SERVER chose the introduction step. The round id stays in the
+ * host: the game gets an opaque `introToken`, valid only in this bridge session and only for this round.
+ */
+export interface IntroPresentMsg {
+  readonly protocol: string;
+  readonly type: "intro.present";
+  readonly nonce: string;
+  readonly requestId: string;
+  readonly introToken: string;
+  readonly contextKey: string;
+  readonly cards: readonly IntroCard[];
+}
+/** bridge/3: the server registered the report (`shown` or `done`); a repeat gets the same answer. */
+export interface IntroRecordedMsg {
+  readonly protocol: string;
+  readonly type: "intro.recorded";
+  readonly nonce: string;
+  readonly requestId: string;
+  readonly introToken: string;
+  readonly event: "shown" | "done";
+}
+export type HostMessage = InitMsg | AckMsg | TaskPresentMsg | HintShowMsg | TaskResultMsg | ErrorMsg | IntroPresentMsg | IntroRecordedMsg;
 
 // ── Validation ─────────────────────────────────────────────────────────────────
 
@@ -302,11 +365,25 @@ function parsePresentBody(m: Obj, where: string): PresentBody {
 
 const PRESENT_KEYS = ["instanceToken", "kind", "stimulus", "mode", "hintsAvailable", "contextKey"] as const;
 
+/** bridge/3 introduction cards: 1–10 objects of exactly {title, text}, plain non-blank strings within bounds. */
+export function parseIntroCards(v: unknown, where = "cards"): readonly IntroCard[] {
+  if (!Array.isArray(v) || v.length < 1 || v.length > MAX_INTRO_CARDS) fail(`${where}: invalid list`);
+  return v.map((c, i) => {
+    const r = obj(c, `${where}[${i}]`, ["title", "text"]);
+    const title = str(r.title, `${where}[${i}].title`, MAX_INTRO_TITLE);
+    const text = str(r.text, `${where}[${i}].text`, MAX_INTRO_TEXT);
+    if (title.trim() === "" || text.trim() === "") fail(`${where}[${i}]: blank`);
+    return { title, text };
+  });
+}
+
 function envelope(raw: unknown): { m: Obj; type: string } {
   if (messageBytes(raw) > MAX_MESSAGE_BYTES) fail("message too large");
   if (!isPlain(raw)) fail("message: not an object");
   if (typeof raw.type !== "string") fail("message: missing type");
-  if (raw.protocol !== PROTOCOL) fail("message: wrong protocol");
+  if (typeof raw.protocol !== "string" || !SUPPORTED_PROTOCOLS.includes(raw.protocol)) fail("message: wrong protocol");
+  // The introduction exists only in bridge/3: a bridge/2 envelope can never carry it.
+  if (raw.type.startsWith("intro.") && raw.protocol !== PROTOCOL) fail(`${raw.type}: needs ${PROTOCOL}`);
   return { m: raw, type: raw.type };
 }
 
@@ -385,6 +462,10 @@ export function parseGameMessage(raw: unknown): Validation<GameMessage> {
           instanceToken: id(m.instanceToken, "instanceToken"),
           level: int(m.level, "level", 1, 3),
         };
+      case "intro.shown":
+      case "intro.done":
+        obj(m, type, ["protocol", "type", "nonce", "requestId", "introToken"]);
+        return { protocol: p, type, nonce: id(m.nonce, "nonce"), requestId: id(m.requestId, "requestId"), introToken: id(m.introToken, "introToken") };
       default:
         return fail(`unknown game message type "${type}"`);
     }
@@ -449,6 +530,27 @@ export function parseHostMessage(raw: unknown): Validation<HostMessage> {
           nonce: m.nonce === null ? null : id(m.nonce, "nonce"),
           requestId: m.requestId === null ? null : id(m.requestId, "requestId"),
           code: oneOf(m.code, "code", ERROR_CODES),
+        };
+      case "intro.present":
+        obj(m, type, ["protocol", "type", "nonce", "requestId", "introToken", "contextKey", "cards"]);
+        return {
+          protocol: p,
+          type,
+          nonce: id(m.nonce, "nonce"),
+          requestId: id(m.requestId, "requestId"),
+          introToken: id(m.introToken, "introToken"),
+          contextKey: id(m.contextKey, "contextKey"),
+          cards: parseIntroCards(m.cards),
+        };
+      case "intro.recorded":
+        obj(m, type, ["protocol", "type", "nonce", "requestId", "introToken", "event"]);
+        return {
+          protocol: p,
+          type,
+          nonce: id(m.nonce, "nonce"),
+          requestId: id(m.requestId, "requestId"),
+          introToken: id(m.introToken, "introToken"),
+          event: oneOf(m.event, "event", ["shown", "done"] as const),
         };
       default:
         return fail(`unknown host message type "${type}"`);

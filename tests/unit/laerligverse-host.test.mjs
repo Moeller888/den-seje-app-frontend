@@ -216,3 +216,76 @@ test("D-330: the evidence classifier is served to the host (never the test adapt
   assert.equal(plain.objectiveMap, null, "off by default");
   assert.equal(plain.h5, false, "off by default");
 });
+
+// ── F11-B: the server's introduction through the GENERATED host bridge (bridge/3) ─────────────────
+const P3 = "laerligverse.bridge/3";
+const ROUND = "11111111-2222-4333-8444-555555555555";
+const OBJ = "test_kildekritik_intro";
+const CARDS = [{ title: "Morgenen den 9. april 1940", text: "Tyske soldater gik over grænsen." }, { title: "Sådan spørger man en kilde", text: "Hvem? Hvornår? Til hvem? Hvorfor?" }];
+
+test("F11-B: introduction-progress is callable ONLY when the host shows introductions, and only with the server sequence", async () => {
+  const f = fakeFetch([{ match: "/functions/v1/", status: 200, body: {} }]);
+  const plain = createEdgeCaller({ supabaseUrl: SUPA, anonKey: "anon", session: { getAccessToken: async () => "t" }, fetchImpl: f.fn });
+  await assert.rejects(plain("introduction-progress", {}), /unknown function/);
+  await assert.rejects(plain("request-hint", {}), /unknown function/);
+  const base = { gameOrigin: GAME, gameWindow: {}, postToGame: () => {}, session: { getAccessToken: async () => "t" }, supabaseUrl: SUPA, anonKey: "anon", flags: { laerligverseBackend: true }, randomId: () => "r" };
+  assert.throws(() => createLaerligverseHost({ ...base, introductions: true }), /need the server-directed sequence/);
+  assert.throws(() => renderHostPage({ mode: "isolated-test", gameOrigin: GAME, gameUrl: `${GAME}/game.html`, supabaseUrl: SUPA, anonKey: "k", introductions: true }), /need the server sequence/);
+  const cfg = JSON.parse(renderHostPage({ mode: "isolated-test", gameOrigin: GAME, gameUrl: `${GAME}/game.html`, supabaseUrl: SUPA, anonKey: "k" }).match(/<script type="application\/json" id="lv-config">([\s\S]*?)<\/script>/)[1]);
+  assert.equal(cfg.introductions, false, "off by default");
+});
+
+function introHarness({ introductions = true } = {}) {
+  const gameWindow = { w: "game" };
+  const posted = [];
+  const progress = [];
+  const f = fakeFetch([
+    { match: "get-next-question", status: 200, body: { step: "introduction", learning_objective: OBJ, learning_step: "introduction", introduction_round_id: ROUND, content_sha256: "c".repeat(64), content: { cards: CARDS } } },
+    { match: "introduction-progress", status: 200, body: (init) => { const b = JSON.parse(init.body); progress.push(b); return { outcome: "recorded", at: "2026-11-16T10:00:00Z" }; } },
+  ]);
+  const store = new Map();
+  let n = 0;
+  const host = createLaerligverseHost({
+    gameOrigin: GAME, gameWindow, postToGame: (m) => posted.push(structuredClone(m)),
+    session: { getAccessToken: async () => TOKEN }, supabaseUrl: SUPA, anonKey: "anon",
+    flags: { laerligverseBackend: true }, objectiveMap: { "hist.h4": OBJ }, sequence: { contextOfStep: { guided_practice: "arkivskab" } }, introductions,
+    randomId: () => `00000000-0000-4000-8000-${String(++n).padStart(12, "0")}`,
+    store: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) },
+    fetchImpl: f.fn,
+  });
+  const send = (data) => host.handleMessage({ origin: GAME, source: gameWindow, data });
+  return { posted, progress, f, send, store };
+}
+
+test("F11-B: a bridge/3 game gets the cards and an opaque token; shown/done reach introduction-progress with stable ids; the game never sees the round", async () => {
+  const h = introHarness();
+  await h.send({ protocol: P, type: "hello", msgId: "h1", supports: [P3, P], kinds: ["choice"], contentId: "arkivskabet", contentVersion: "1" });
+  const init = h.posted.at(-1);
+  assert.equal(init.protocol, P3);
+  const nonce = init.nonce;
+  await h.send({ protocol: P3, type: "task.request", nonce, requestId: "q1", objectiveId: "hist.h4", purpose: "check", surface: "world", contextKey: "arkivskab" });
+  const present = h.posted.find((m) => m.type === "intro.present");
+  assert.ok(present, JSON.stringify(h.posted.at(-1)));
+  assert.deepEqual(present.cards, CARDS);
+  await h.send({ protocol: P3, type: "intro.shown", nonce, requestId: "q2", introToken: present.introToken });
+  await h.send({ protocol: P3, type: "intro.done", nonce, requestId: "q3", introToken: present.introToken });
+  assert.deepEqual(h.posted.filter((m) => m.type === "intro.recorded").map((m) => m.event), ["shown", "done"]);
+  assert.deepEqual(h.progress.map((b) => [b.action, b.round_id]), [["presented", ROUND], ["completed", ROUND]]);
+  assert.notEqual(h.progress[0].request_id, h.progress[1].request_id);
+  assert.equal(h.store.get(`lvb3:intro:${ROUND}:done`), h.progress[1].request_id);
+  assert.ok(h.f.calls.every((c) => c.init.headers.authorization === `Bearer ${TOKEN}`));
+  const seenByGame = JSON.stringify(h.posted);
+  for (const secret of [TOKEN, "Bearer", ROUND, "c".repeat(64), OBJ, "authorization"]) assert.ok(!seenByGame.includes(secret), `the game saw ${secret}`);
+});
+
+test("F11-B: a bridge/2 game on the same host gets task_unavailable and introduction-progress is never called", async () => {
+  const h = introHarness();
+  await h.send({ protocol: P, type: "hello", msgId: "h1", supports: [P], kinds: ["choice"], contentId: "arkivskabet", contentVersion: "1" });
+  const nonce = h.posted.at(-1).nonce;
+  assert.equal(h.posted.at(-1).protocol, P);
+  await h.send({ protocol: P, type: "task.request", nonce, requestId: "q1", objectiveId: "hist.h4", purpose: "check", surface: "world", contextKey: "arkivskab" });
+  assert.deepEqual(h.posted.at(-1), { protocol: P, type: "error", nonce, requestId: "q1", code: "task_unavailable" });
+  await h.send({ protocol: P3, type: "intro.done", nonce, requestId: "q2", introToken: "x" });
+  assert.equal(h.posted.at(-1).code, "invalid_message");
+  assert.equal(h.progress.length, 0);
+});

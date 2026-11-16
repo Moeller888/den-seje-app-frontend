@@ -4,7 +4,7 @@ import "@adventure-engine/app/style.css";
 import "./game.css";
 import { Game, type SaveServices } from "@adventure-engine/app/game";
 import { gameReady } from "@adventure-engine/app/ready";
-import { BridgeClient, BridgeError, type Action, type ClientStatus, type PresentBody } from "@adventure-engine/learning-bridge";
+import { BridgeClient, BridgeError, type Action, type ClientStatus, type IntroPresentMsg, type PresentBody } from "@adventure-engine/learning-bridge";
 import { MemoryStorage } from "@adventure-engine/save";
 import { HOST_ORIGIN, randomId } from "./config.ts";
 import { CONTEXT_KEY, DRAWER_KEY, TASK_REQUEST_GLOBAL, archiveContent, archiveManifest } from "./content.ts";
@@ -58,6 +58,8 @@ async function boot(): Promise<void> {
     kinds: [...KINDS],
     contentId: archiveContent.game.id,
     contentVersion: archiveContent.game.version.replace(/[^A-Za-z0-9_-]/g, "_"),
+    // F11-B: this game shows the server's introduction (bridge/3); with a bridge/2 host nothing changes.
+    introductions: true,
     onStatus: (s) => {
       statusBadge.textContent = STATUS_TEXT[s];
       document.body.dataset["bridge"] = s;
@@ -100,14 +102,46 @@ async function boot(): Promise<void> {
     context = key;
     root.inert = true;
     return client
-      .requestTask({ objectiveId: point.objectiveId, purpose: point.purpose, surface: "world", contextKey: key })
-      .then(open)
+      .requestStep({ objectiveId: point.objectiveId, purpose: point.purpose, surface: "world", contextKey: key })
+      .then((step) => (step.type === "intro.present" ? serverIntro(step, key) : open(step)))
       .catch((err: unknown) => {
         root.inert = true;
         // D-338: a revisit the server says is not due yet is not a failure: say so, and offer it again afterwards.
         const revisitNotYet = key === REVISIT_KEY;
         view.show({ instanceToken: "none", kind: "choice", stimulus: { prompt: revisitNotYet ? "Genbesøget er ikke klar endnu." : "Arkivaren kunne ikke finde en opgave.", options: null }, mode: "practice", hintsAvailable: 0, contextKey: key });
         view.error(revisitNotYet ? "Arkivaren kommer tilbage senere. Prøv igen, når der er gået tid." : err instanceof BridgeError ? `Ingen opgave lige nu (${err.code}).` : String(err));
+      });
+  };
+
+  /**
+   * F11-B: the SERVER chose its introduction. Its cards are shown as text; "shown" is reported once the first card is
+   * on screen, "done" after the pupil's final control — the view closes only when the server registered it, and then
+   * the world asks again (the server decides the next step). Nothing here is evidence or pays anything.
+   */
+  const serverIntro = (msg: IntroPresentMsg, key: string): Promise<void> => {
+    root.inert = true;
+    let shown: Promise<unknown> | null = null;
+    const reportShown = (): Promise<unknown> => {
+      shown = client.introShown(msg.introToken).catch((err: unknown) => {
+        shown = null;
+        throw err;
+      });
+      return shown;
+    };
+    return intro
+      .showServer({
+        cards: msg.cards,
+        onPresented: () => {
+          reportShown().catch((err: unknown) => console.warn("[bridge] intro.shown failed; retried before completing", err));
+        },
+        onFinish: async () => {
+          await (shown ?? reportShown());
+          await client.introDone(msg.introToken);
+        },
+      })
+      .then(() => {
+        game.engine.setGlobal("intro_seen", true);
+        return request(key);
       });
   };
 
