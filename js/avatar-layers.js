@@ -1353,11 +1353,12 @@ export const NORTHSTAR_HAIRS = Object.freeze({
   "nh4-brown": Object.freeze({ file: "head-nh4-brown-v1.webp", label: "Kort pjusket hår · brunt" }),
 });
 // D-377: the top knot (D-375 NH-5B, excepted by D-376) in neutral grey and Northstar's brown, two more heads on the same shared base
-// (the files are byte for byte D-376's bound WebP heads). Its two cards are HIDDEN by default (NORTHSTAR_HAIR_NH5B = false): until
-// the flag is turned on only a browser that opts in shows them, for testing after the production migration: localStorage
+// (the files are byte for byte D-376's bound WebP heads). Its two cards are SHOWN by default since D-378 (NORTHSTAR_HAIR_NH5B = true),
+// last under Hoved. OFF (false): the cards are hidden, and only a browser that opts in shows them: localStorage
 // avatar_northstar_hair_nh5b = "1" (or avatar.html?northstarnh5b=1; =0 removes it). A stored top knot is drawn on every surface
-// whatever the flag (Avatar, Hub, quiz). The database accepts the two values only through D-377's migration.
-export const NORTHSTAR_HAIR_NH5B = false;
+// whatever the flag (Avatar, Hub, quiz). The database accepts the two values through D-377's migration (applied in production
+// 2026-11-15, 20261115131725).
+export const NORTHSTAR_HAIR_NH5B = true;
 export const NORTHSTAR_HAIR_NH5B_OPT_IN_KEY = "avatar_northstar_hair_nh5b";
 export const NORTHSTAR_HAIRS_NH5B = Object.freeze({
   "nh5b-grey": Object.freeze({ file: "head-nh5b-grey-v1.webp", label: "Topknude · gråt" }),
