@@ -10,6 +10,7 @@
 
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { createE2EAdminClient } from "./e2e-admin.mjs";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
@@ -21,7 +22,6 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
 const SUPABASE_URL  = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // C2 base body file per body_type (medium skin — these identities carry no
 // skin_tone, so baseSrcForC2 resolves to the medium variant). AVATAR_V2/C2 render
@@ -42,9 +42,7 @@ const CHOSEN_NEUTRAL = () => ({
 const UNCHOSEN_NEUTRAL = { v: 1, body_type: "neutral", chosen_at: null };
 
 test.beforeAll(async () => {
-  adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  adminClient = createE2EAdminClient();
 
   const student = await findAuthUserByEmail(adminClient, STUDENT_EMAIL);
   if (!student) throw new Error(`Test student not found: ${STUDENT_EMAIL}`);

@@ -12,6 +12,7 @@
 
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { createE2EAdminClient } from "./e2e-admin.mjs";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
@@ -21,7 +22,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const SUPABASE_URL              = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // Public anon key — already in deployed frontend JS, not a secret.
 const SUPABASE_ANON_KEY = PUBLIC_API_KEY;
@@ -43,9 +43,7 @@ test.beforeAll(async () => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  adminClient = createE2EAdminClient();
 
   // Separate throwaway client for the student sign-in.
   const loginClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -76,6 +74,7 @@ test("1. anon cannot read student_answers or question_attempt_audit", async ({
     const { data, error } = await anonClient.from(table).select("*").limit(1);
 
     expect(error, `anon SELECT on ${table} must be rejected`).not.toBeNull();
+    expect(error?.code, `anon SELECT on ${table} must be refused by privileges (42501), not by a constraint, a missing table or a network error`).toBe("42501");
     expect(data ?? null, `anon SELECT on ${table} must return no rows`).toBeNull();
   }
 });
@@ -87,6 +86,7 @@ test("2. authenticated student cannot read either table", async ({ browserName }
     const { data, error } = await studentClient.from(table).select("*").limit(1);
 
     expect(error, `student SELECT on ${table} must be rejected`).not.toBeNull();
+    expect(error?.code, `student SELECT on ${table} must be refused by privileges (42501), not by a constraint, a missing table or a network error`).toBe("42501");
     expect(data ?? null, `student SELECT on ${table} must return no rows`).toBeNull();
   }
 });
@@ -102,6 +102,7 @@ test("3. anon cannot write to either table", async ({ browserName }) => {
     answer_text: "rls-test",
   });
   expect(saError, "anon INSERT on student_answers must be rejected").not.toBeNull();
+  expect(saError?.code, `anon INSERT on student_answers must be refused by privileges (42501), not by a constraint, a missing table or a network error`).toBe("42501");
 
   const { error: qaError } = await anonClient.from("question_attempt_audit").insert({
     student_id: "00000000-0000-0000-0000-000000000000",
@@ -109,6 +110,7 @@ test("3. anon cannot write to either table", async ({ browserName }) => {
     already_processed: false,
   });
   expect(qaError, "anon INSERT on question_attempt_audit must be rejected").not.toBeNull();
+  expect(qaError?.code, `anon INSERT on question_attempt_audit must be refused by privileges (42501), not by a constraint, a missing table or a network error`).toBe("42501");
 });
 
 test("4. service_role still reads both tables", async ({ browserName }) => {

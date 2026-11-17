@@ -4,11 +4,12 @@
  * Tests teacher authentication, student visibility, domain focus editor
  * (save/reset/validation) and DB state verification via admin client.
  *
- * Requires: global-setup has run and created teacher-test@hotmail.com
- * and student-teacher-test@hotmail.com. No additional configuration needed.
+ * Requires: the marked test teacher (TEST_TEACHER_EMAIL) and its pupil (TEST_STUDENT2_EMAIL),
+ * verified by global-setup (tests/e2e-accounts.mjs). global-setup never creates them.
  */
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { createE2EAdminClient } from "./e2e-admin.mjs";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
@@ -26,7 +27,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const SUPABASE_URL             = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 let teacherId: string;
 let student2Id: string;
@@ -35,9 +35,7 @@ let adminSupabase: ReturnType<typeof createClient>;
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 test.beforeAll(async () => {
-  adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  adminSupabase = createE2EAdminClient();
 
   const teacher = await findAuthUserByEmail(adminSupabase, TEACHER_EMAIL);
   const student2 = await findAuthUserByEmail(adminSupabase, STUDENT2_EMAIL);

@@ -19,6 +19,7 @@
 
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { createE2EAdminClient } from "./e2e-admin.mjs";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
@@ -30,7 +31,6 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
 const SUPABASE_URL  = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // Public anon key — already in deployed frontend JS, not a secret.
 const SUPABASE_ANON_KEY = PUBLIC_API_KEY;
@@ -46,9 +46,7 @@ let originalIdentity: any;
 let originalGender: string;
 
 test.beforeAll(async () => {
-  adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  adminClient = createE2EAdminClient();
 
   // Pristine anon client — must NEVER sign in (a signIn would store the
   // session in-memory and silently authenticate later anon assertions).

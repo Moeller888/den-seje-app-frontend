@@ -15,6 +15,7 @@
 
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { createE2EAdminClient } from "./e2e-admin.mjs";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
@@ -30,7 +31,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const SUPABASE_URL           = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 // Public anon key — already shipped in frontend JS, not a secret.
 const SUPABASE_ANON_KEY = PUBLIC_API_KEY;
 
@@ -40,9 +40,7 @@ let student2Id:    string;
 let originalGrade: number | null;
 
 test.beforeAll(async () => {
-  adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  adminClient = createE2EAdminClient();
 
   // Resolve student2 ID
   const s2 = await findAuthUserByEmail(adminClient, STUDENT2_EMAIL);

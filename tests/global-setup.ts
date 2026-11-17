@@ -1,31 +1,24 @@
-import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
 import { missingSecrets, readRequiredSecret } from "./test-credentials.mjs";
-import { parseSlot, OWNER_VAR, ensureSlotUser } from "./e2e-slot.mjs";
+import { resolveAccountRegistry } from "./e2e-accounts.mjs";
+import { verifyAndOpenAdmin } from "./e2e-admin.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-// E2E account slot (tests/e2e-slot.mjs). playwright.config.ts has already rewritten the TEST_*_EMAIL
-// variables below for slots 1..3; slot 0 is the original accounts, untouched.
-const E2E_SLOT = parseSlot(process.env.E2E_SLOT);
-
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const TEST_STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
-const TEST_STUDENT_PASSWORD = process.env.TEST_STUDENT_PASSWORD!;
-
-// ── Section 97: Teacher test account constants ────────────────────────────────
-// The e-mail addresses can be overridden via .env (TEST_TEACHER_EMAIL, TEST_STUDENT2_EMAIL) and
-// default to the public test identifiers. The passwords (TEST_TEACHER_PASSWORD,
-// TEST_STUDENT2_PASSWORD) have NO default: they are required secrets, checked up front in
-// globalSetup() and read through tests/test-credentials.mjs. Behaviour is otherwise unchanged —
-// the value written to an existing account is whatever the secret holds, exactly as before.
-const TEST_TEACHER_EMAIL   = process.env.TEST_TEACHER_EMAIL   ?? "teacher-test@hotmail.com";
-const TEST_STUDENT2_EMAIL  = process.env.TEST_STUDENT2_EMAIL  ?? "student-teacher-test@hotmail.com";
+// ── E2E accounts (A1/A2/A3) ───────────────────────────────────────────────────
+// The four accounts of this run's slot (primary pupil, test teacher, student2, password-less owner
+// teacher) come from ONE registry, tests/e2e-accounts.mjs: explicit addresses only, on a domain
+// Lærlig controls. Before this setup writes anything it verifies, read-only, that each account
+// already exists and carries app_metadata.laerlig_e2e = { v: 1, slot, kind }, has the expected role
+// and the expected teacher relation. Any problem stops the run before the first write.
+//
+// This setup NEVER creates or deletes a user and never upserts a profile: accounts are provisioned
+// separately, with an explicit authorisation. The only auth write is putting the configured password
+// back on the three verified accounts that have one. Every write below goes through the guarded
+// service-role client (tests/e2e-guard.mjs) and can only reach the verified accounts.
 
 // ── Section 133: Question Pool Health Check ──────────────────────────────────
 //
@@ -202,190 +195,45 @@ async function checkQuestionPoolHealth(supabase: any): Promise<void> {
   );
 }
 
-// auth.admin.listUsers() is paginated (default 50/page): page through every user, matching the
-// address case-insensitively and trimmed (GoTrue stores it lowercased). Capped at 100 pages so an
-// API that ignored `page` cannot loop forever. Slot provisioning adds accounts, so a first-page-only
-// lookup would stop finding existing accounts and fail on a duplicate createUser.
-async function findUserByEmail(supabase: any, email: string, label: string): Promise<any | null> {
-  const wanted = email.trim().toLowerCase();
-  for (let page = 1; page <= 100; page++) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
-    if (error) {
-      throw new Error(`${label}: listUsers failed — ${error.message}`);
-    }
-    const users: any[] = data?.users ?? [];
-    const match = users.find((u: any) => (u.email ?? "").trim().toLowerCase() === wanted);
-    if (match) return match;
-    if (users.length === 0) break;
-  }
-  return null;
-}
-
-// ── E2E slots 1..3: account provisioning ─────────────────────────────────────
-// Slot 0 is never touched here. The create-or-verify rule (app_metadata marker; an unmarked account
-// is refused, never reset; no address or password is logged) lives in ensureSlotUser() in
-// tests/e2e-slot.mjs, where tests/unit/e2e-slot-accounts.test.mjs proves it with fakes.
-
-async function ensureSlotAccounts(supabase: any, slot: number): Promise<string> {
-  const ownerEmail = process.env[OWNER_VAR];
-  if (typeof ownerEmail !== "string" || ownerEmail === "") {
-    throw new Error(`slot-setup[${slot}]: ${OWNER_VAR} is not set — was the slot applied by playwright.config.ts?`);
-  }
-  const deps = {
-    findUser: (email: string) => findUserByEmail(supabase, email, `slot-setup[${slot}]`),
-    createUser: (attributes: Record<string, unknown>) => supabase.auth.admin.createUser(attributes),
-    log: (line: string) => console.log(line),
+// ── Pupil baseline ────────────────────────────────────────────────────────────
+// Reset grade, placement_band (prevents overlays), current_band (fresh session), active_domains
+// (prevents domain-focus-bar layout shift) and avatar_identity with chosen_at SET (Section 152C:
+// prevents the identity prompt overlay from blocking quiz-flow specs). hairstyle: "default" pinned
+// explicitly (Section 152D) so hair-decoupling goldens always see hair-default.svg regardless of what
+// prior tests wrote. Identity-prompt specs explicitly null chosen_at in their own fixtures.
+function pupilBaseline() {
+  return {
+    selected_grade: 9,
+    placement_band: 2,
+    current_band: null,
+    active_domains: null,
+    avatar_identity: {
+      v: 1,
+      body_type: "neutral",
+      hairstyle: "default",
+      chosen_at: new Date().toISOString(),
+    },
   };
-  await ensureSlotUser({ slot, kind: "primary", email: TEST_STUDENT_EMAIL, password: TEST_STUDENT_PASSWORD, ...deps });
-  await ensureSlotUser({ slot, kind: "teacher", email: TEST_TEACHER_EMAIL, password: readRequiredSecret("TEST_TEACHER_PASSWORD"), ...deps });
-  await ensureSlotUser({ slot, kind: "student2", email: TEST_STUDENT2_EMAIL, password: readRequiredSecret("TEST_STUDENT2_PASSWORD"), ...deps });
-  // No password: nobody can sign in as the owner. It only anchors the primary student's teacher_id.
-  const ownerId = await ensureSlotUser({ slot, kind: "owner", email: ownerEmail, password: null, ...deps });
-
-  const { error: ownerProfileErr } = await supabase.from("profiles").upsert(
-    {
-      id: ownerId,
-      role: "teacher",
-      full_name: `Test Lærer Slot ${slot} Ejer`,
-      equipped_slots: {},
-      active_theme: "default",
-    },
-    { onConflict: "id" }
-  );
-  if (ownerProfileErr) {
-    throw new Error(`slot-setup[${slot}/owner]: profile upsert failed — ${ownerProfileErr.message}`);
-  }
-  console.log(`[global-setup] E2E slot ${slot} accounts ready (owner teacher ${ownerId})`);
-  return ownerId;
 }
 
-// ── Section 97: Teacher test account provisioning ────────────────────────────
-// Creates dedicated isolated teacher + student accounts for teacher-dashboard
-// tests. Does NOT touch the existing test student or their teacher relationship.
-// Idempotent: safe to run on every test suite invocation.
-
-async function ensureTeacherTestAccounts(supabase: any): Promise<void> {
-  const TEST_TEACHER_PASSWORD  = readRequiredSecret("TEST_TEACHER_PASSWORD");
-  const TEST_STUDENT2_PASSWORD = readRequiredSecret("TEST_STUDENT2_PASSWORD");
-
-  // ── Test teacher ─────────────────────────────────────────────────────────
-
-  let teacherUser = await findUserByEmail(supabase, TEST_TEACHER_EMAIL, "teacher-setup");
-  let teacherId: string;
-
-  if (!teacherUser) {
-    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
-      email: TEST_TEACHER_EMAIL,
-      password: TEST_TEACHER_PASSWORD,
-      email_confirm: true,
-    });
-    if (createErr) {
-      throw new Error(`teacher-setup: createUser (teacher) failed — ${createErr.message}`);
-    }
-    teacherId = created.user.id;
-    console.log(`[global-setup] Created test teacher ${TEST_TEACHER_EMAIL} (${teacherId})`);
-  } else {
-    teacherId = teacherUser.id;
-    // Ensure password matches the constant so tests can always log in.
-    await supabase.auth.admin.updateUserById(teacherId, { password: TEST_TEACHER_PASSWORD });
+async function resetPupil(admin: any, kind: string, id: string): Promise<void> {
+  const { error: deleteError } = await admin.from("question_instances").delete().eq("student_id", id);
+  if (deleteError) {
+    throw new Error(`global-setup: ${kind}: question_instances delete failed — ${deleteError.message}`);
   }
-
-  // Upsert teacher profile (equipped_slots and active_theme have DB defaults
-  // but we supply them explicitly to avoid NOT NULL violations).
-  const { error: teacherProfileErr } = await supabase.from("profiles").upsert(
-    {
-      id: teacherId,
-      role: "teacher",
-      full_name: "Test Lærer Auto",
-      equipped_slots: {},
-      active_theme: "default",
-    },
-    { onConflict: "id" }
-  );
-  if (teacherProfileErr) {
-    throw new Error(`teacher-setup: teacher profile upsert failed — ${teacherProfileErr.message}`);
+  const { error: updateError } = await admin.from("profiles").update(pupilBaseline()).eq("id", id);
+  if (updateError) {
+    throw new Error(`global-setup: ${kind}: baseline update failed — ${updateError.message}`);
   }
-
-  // ── Test student for teacher ─────────────────────────────────────────────
-
-  let student2User = await findUserByEmail(supabase, TEST_STUDENT2_EMAIL, "teacher-setup");
-  let student2Id: string;
-
-  if (!student2User) {
-    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
-      email: TEST_STUDENT2_EMAIL,
-      password: TEST_STUDENT2_PASSWORD,
-      email_confirm: true,
-    });
-    if (createErr) {
-      throw new Error(`teacher-setup: createUser (student2) failed — ${createErr.message}`);
-    }
-    student2Id = created.user.id;
-    console.log(`[global-setup] Created test student2 ${TEST_STUDENT2_EMAIL} (${student2Id})`);
-  } else {
-    student2Id = student2User.id;
-  }
-
-  // Upsert student2 profile — grade 9 is valid per profiles_selected_grade_check.
-  // avatar_identity chosen_at SET so the Section 152C identity prompt never
-  // blocks teacher-flow specs that log in as student2.
-  const { error: s2ProfileErr } = await supabase.from("profiles").upsert(
-    {
-      id: student2Id,
-      role: "student",
-      teacher_id: teacherId,
-      full_name: "Test Elev Auto",
-      selected_grade: 9,
-      placement_band: 2,
-      current_band: null,
-      active_domains: null,
-      equipped_slots: {},
-      active_theme: "default",
-      avatar_identity: {
-        v: 1,
-        body_type: "neutral",
-        hairstyle: "default",
-        chosen_at: new Date().toISOString(),
-      },
-    },
-    { onConflict: "id" }
-  );
-  if (s2ProfileErr) {
-    throw new Error(`teacher-setup: student2 profile upsert failed — ${s2ProfileErr.message}`);
-  }
-
-  // Reset student2 question instances and active_domains on every run
-  await supabase.from("question_instances").delete().eq("student_id", student2Id);
-  await supabase.from("profiles")
-    .update({ active_domains: null, current_band: null })
-    .eq("id", student2Id);
-
-  console.log(
-    `[global-setup] Teacher test accounts ready — ` +
-    `teacher: ${teacherId}, student2: ${student2Id}`
-  );
+  // Logged by user id only — never an address.
+  console.log(`[global-setup] ${kind} (${id}): question_instances deleted, baseline set (grade 9, band 2, identity chosen)`);
 }
 
 // ── Main setup ────────────────────────────────────────────────────────────────
 
 export default async function globalSetup() {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error(
-      "global-setup: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing in .env"
-    );
-  }
-
-  // Fail loud once, before any worker/test runs, if the test student credentials
-  // are not provided via the gitignored .env (no secrets are hardcoded in specs).
-  if (!process.env.TEST_STUDENT_EMAIL || !process.env.TEST_STUDENT_PASSWORD) {
-    throw new Error(
-      "global-setup: TEST_STUDENT_EMAIL or TEST_STUDENT_PASSWORD missing in .env (see .env.example)"
-    );
-  }
-
-  // Every required secret, named at once, before any account or row is touched. There are no
-  // fallback passwords any more: a missing secret stops the run instead of writing a value that is
-  // readable in the public repository onto a live account.
+  // Every required secret, named at once, before any network call. There are no fallback values:
+  // a missing secret stops the run instead of writing a value readable in the public repository.
   const missing = missingSecrets();
   if (missing.length > 0) {
     throw new Error(
@@ -393,135 +241,35 @@ export default async function globalSetup() {
     );
   }
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  // A1: every account address, checked before any network call (throws naming every problem).
+  resolveAccountRegistry(process.env);
 
-  // Health check runs first — fail before touching any test state
-  await checkQuestionPoolHealth(supabase);
-
-  // Slots 1..3: create/verify this slot's own accounts before anything below finds and resets them.
-  // Slot 0 skips this entirely.
-  const slotOwnerTeacherId = E2E_SLOT === 0 ? null : await ensureSlotAccounts(supabase, E2E_SLOT);
-
-  // Provision teacher test accounts (idempotent)
-  await ensureTeacherTestAccounts(supabase);
-
-  // Primary test student — provision idempotently (same Section 97 pattern as the
-  // teacher/student2 accounts) so CI does not depend on a pre-existing account.
-  // global-setup fully resets this student's state below, so no historical data is
-  // required. Secret values are never logged (only the resulting user id).
-  // auth.admin.listUsers() is paginated (default 50/page); page through all users so
-  // an existing student on a later page is found rather than duplicated (which would
-  // otherwise throw "already registered" on createUser). Capped to avoid an infinite
-  // loop if the API were to ignore the page parameter.
-  // GoTrue stores emails normalized (lowercased); compare case-insensitively (and
-  // trimmed) so a secret whose casing differs from the stored email still matches
-  // instead of falling through to a duplicate createUser.
-  const wantedEmail = TEST_STUDENT_EMAIL.trim().toLowerCase();
-  let user: any = null;
-  for (let page = 1; page <= 100; page++) {
-    const { data: pageData, error: listError } =
-      await supabase.auth.admin.listUsers({ page, perPage: 200 });
-    if (listError) {
-      throw new Error(`global-setup: listUsers failed — ${listError.message}`);
-    }
-    const pageUsers: any[] = pageData?.users ?? [];
-    user = pageUsers.find((u: any) => (u.email ?? "").trim().toLowerCase() === wantedEmail);
-    if (user || pageUsers.length === 0) break;
-  }
-
-  if (!user) {
-    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
-      email: TEST_STUDENT_EMAIL,
-      password: TEST_STUDENT_PASSWORD,
-      email_confirm: true,
-    });
-    if (createErr) {
-      throw new Error(`global-setup: createUser (test student) failed — ${createErr.message}`);
-    }
-    user = created.user;
-    console.log(`[global-setup] Created primary test student (${user.id})`);
-  } else {
-    // Ensure the password matches the secret so login always works.
-    await supabase.auth.admin.updateUserById(user.id, { password: TEST_STUDENT_PASSWORD });
-  }
-
-  // Guarantee a student profile row exists WITHOUT modifying an existing one:
-  // ignoreDuplicates → INSERT ... ON CONFLICT DO NOTHING. A fresh account gets a
-  // valid row (role + the columns that have NOT NULL/defaults); an existing account
-  // keeps all its data (equipped_slots, teacher_id, name, cosmetics). The reset
-  // block below then sets the deterministic test fields on either path.
-  const { error: ensureProfileErr } = await supabase.from("profiles").upsert(
-    {
-      id: user.id,
-      role: "student",
-      full_name: "Test Elev Primary",
-      equipped_slots: {},
-      active_theme: "default",
-    },
-    { onConflict: "id", ignoreDuplicates: true }
-  );
-  if (ensureProfileErr) {
-    throw new Error(`global-setup: student profile ensure failed — ${ensureProfileErr.message}`);
-  }
-
-  const { error } = await supabase
-    .from("question_instances")
-    .delete()
-    .eq("student_id", user.id);
-
-  if (error) {
-    throw new Error(`global-setup: delete failed — ${error.message}`);
-  }
-
-  // Logged by user id only. The address comes from a secret (and for slots 1..3 is derived from
-  // one), so it never goes into a log line, masked or not.
+  // A2: read-only verification of all four accounts; publishes E2E_VERIFIED_ACCOUNTS for the specs.
+  // A3: `admin` is the guarded client — it can only write to the verified accounts.
+  const { admin, verified } = await verifyAndOpenAdmin(process.env);
   console.log(
-    `[global-setup] Deleted all question_instances for the primary test student (${user.id}, slot ${E2E_SLOT})`
+    `[global-setup] E2E accounts verified for slot ${verified.slot}: ` +
+    `primary ${verified.ids.primary}, teacher ${verified.ids.teacher}, ` +
+    `student2 ${verified.ids.student2}, owner ${verified.ids.owner}`
   );
 
-  // Reset grade, placement_band (prevents overlays), current_band (fresh session),
-  // active_domains (prevents domain-focus-bar layout shift in test 5), and
-  // avatar_identity with chosen_at SET (Section 152C: prevents the identity
-  // prompt overlay from blocking quiz-flow specs — same pattern as grade).
-  // hairstyle: "default" pinned explicitly (Section 152D) so hair-decoupling
-  // goldens always see hair-default.svg regardless of what prior tests wrote.
-  // Identity-prompt specs explicitly null chosen_at in their own fixtures.
-  const { error: gradeError } = await supabase
-    .from("profiles")
-    .update({
-      selected_grade: 9,
-      placement_band: 2,
-      current_band: null,
-      active_domains: null,
-      avatar_identity: {
-        v: 1,
-        body_type: "neutral",
-        hairstyle: "default",
-        chosen_at: new Date().toISOString(),
-      },
-    })
-    .eq("id", user.id);
+  // Health check runs before any write — fail before touching any test state.
+  await checkQuestionPoolHealth(admin);
 
-  if (gradeError) {
-    throw new Error(`global-setup: grade update failed — ${gradeError.message}`);
+  await resetPupil(admin, "primary", verified.ids.primary);
+  await resetPupil(admin, "student2", verified.ids.student2);
+
+  // A5: a password spec that was interrupted mid-run may have left a temporary password on an
+  // account. Put each verified account's configured password back (error-checked), so the run starts
+  // from a known state. The guarded client allows exactly this — { password } on these three ids.
+  const configured = [
+    ["primary", readRequiredSecret("TEST_STUDENT_PASSWORD")],
+    ["teacher", readRequiredSecret("TEST_TEACHER_PASSWORD")],
+    ["student2", readRequiredSecret("TEST_STUDENT2_PASSWORD")],
+  ] as const;
+  for (const [kind, secret] of configured) {
+    const { error } = await admin.auth.admin.updateUserById(verified.ids[kind], { password: secret });
+    if (error) throw new Error(`global-setup: ${kind}: password restore failed — ${error.message}`);
   }
-
-  console.log(
-    `[global-setup] Set selected_grade=9, placement_band=2, current_band=null, active_domains=null, avatar_identity=neutral(chosen) for the primary test student (${user.id}, slot ${E2E_SLOT})`
-  );
-
-  // Slots 1..3: the primary student belongs to the slot's password-less owner teacher — never to the
-  // slot's test teacher. password-help.spec.ts needs a teacher to restore; teacher-password-reset.spec.ts
-  // needs the test teacher to be refused on this student. Slot 0 keeps its existing teacher.
-  if (slotOwnerTeacherId !== null) {
-    const { error: ownerErr } = await supabase
-      .from("profiles")
-      .update({ teacher_id: slotOwnerTeacherId })
-      .eq("id", user.id);
-    if (ownerErr) {
-      throw new Error(`slot-setup[${E2E_SLOT}]: primary teacher_id update failed — ${ownerErr.message}`);
-    }
-  }
+  console.log("[global-setup] passwords of primary, teacher and student2 restored to the configured secrets");
 }
