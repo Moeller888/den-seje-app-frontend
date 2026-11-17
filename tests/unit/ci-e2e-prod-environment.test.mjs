@@ -2,7 +2,9 @@
 //
 // What is pinned:
 //   1. the ONLY jobs in any workflow that reference a production credential are playwright.yml
-//      `test` and update-avatar-goldens.yml `update`, and both run in `environment: e2e-prod`;
+//      `test`, update-avatar-goldens.yml `update` and — narrower — e2e-prod-key-check.yml `key-check`
+//      (A7: only the three E2E_PROD_SUPABASE_* secrets, main only, manual dispatch only), and all
+//      three run in `environment: e2e-prod`;
 //   2. no other job names an environment, and no workflow uses pull_request_target/workflow_run;
 //   3. both jobs only run on a manual dispatch (push/pull_request never reach the environment, so
 //      ordinary CI never waits for an approval);
@@ -31,6 +33,13 @@ const WORKFLOWS = Object.fromEntries(
     .map((f) => [f, readFileSync(new URL(f, WF_DIR), "utf8").replace(/\r\n/g, "\n")]),
 );
 const PROTECTED = [["playwright.yml", "test"], ["update-avatar-goldens.yml", "update"]];
+// The third, NARROWER authorised job (A7): the read-only key check. It runs in e2e-prod like the two
+// above, but may only receive the three Supabase secrets — never a test-account credential — and has
+// no preflight (its script checks the environment marker itself, before any network call).
+const KEY_CHECK = ["e2e-prod-key-check.yml", "key-check"];
+const KEY_CHECK_SECRETS = ["E2E_PROD_SUPABASE_ANON_KEY", "E2E_PROD_SUPABASE_SERVICE_ROLE_KEY", "E2E_PROD_SUPABASE_URL"];
+const AUTHORISED = [...PROTECTED, KEY_CHECK];
+const isAuthorised = (file, job) => AUTHORISED.some(([f, j]) => f === file && j === job);
 const CLI = fileURLToPath(new URL("../../.github/ci/e2e-prod-preflight.mjs", import.meta.url));
 
 // Jobs of a workflow: every key at two-space indentation under the top-level `jobs:` key, with its
@@ -91,7 +100,7 @@ test("the reader sees every workflow and the protected jobs", () => {
   }
 });
 
-test("only the two protected jobs reference production credentials, and both run in e2e-prod", () => {
+test("only the three authorised jobs reference production credentials, and all run in e2e-prod", () => {
   const holders = [];
   for (const [file, text] of Object.entries(WORKFLOWS)) {
     for (const [job, block] of Object.entries(jobsOf(text))) {
@@ -99,13 +108,48 @@ test("only the two protected jobs reference production credentials, and both run
       if (secretNames(block).some(prod)) holders.push(`${file}:${job}`);
     }
   }
-  assert.deepEqual(holders.sort(), PROTECTED.map(([f, j]) => `${f}:${j}`).sort());
+  assert.deepEqual(holders.sort(), AUTHORISED.map(([f, j]) => `${f}:${j}`).sort());
   for (const [file, job] of PROTECTED) {
     const block = stripComments(jobsOf(WORKFLOWS[file])[job]);
     assert.equal((block.match(/^    environment: e2e-prod$/gm) ?? []).length, 1, `${file}:${job} runs in e2e-prod`);
     assert.deepEqual(secretNames(block), Object.values(SECRET_SOURCES).sort(), `${file}:${job} reads exactly the E2E_PROD_* secrets`);
   }
   assert.equal(ENVIRONMENT_NAME, "e2e-prod");
+});
+
+test("the key-check job is narrower: e2e-prod, main only, manual dispatch only, exactly the three Supabase secrets", () => {
+  const [file, job] = KEY_CHECK;
+  const text = WORKFLOWS[file];
+  assert.ok(text, `${file} exists`);
+  const jobs = jobsOf(text);
+  assert.deepEqual(Object.keys(jobs), [job], `${file} has exactly one job`);
+  const block = stripComments(jobs[job]);
+  // Environment, branch guard, permissions.
+  assert.equal((block.match(/^    environment: e2e-prod$/gm) ?? []).length, 1, "runs in e2e-prod");
+  assert.equal((block.match(/^\s+environment:/gm) ?? []).length, 1, "no second environment");
+  assert.match(block, /^    if: github\.ref == 'refs\/heads\/main'$/m, "the job runs only from main");
+  const code = stripComments(text);
+  assert.match(code, /\npermissions:\n  contents: read\n/);
+  assert.ok(!/^\s+permissions:/m.test(block), "no job-level permissions");
+  // Triggers: workflow_dispatch only, without inputs.
+  const afterOn = code.slice(code.indexOf("\non:\n") + "\non:\n".length);
+  const triggers = afterOn.slice(0, afterOn.search(/\n[A-Za-z]/) + 1);
+  assert.deepEqual(triggers.split("\n").filter((l) => l.trim() !== ""), ["  workflow_dispatch:"]);
+  // Secrets: exactly the three Supabase secrets, each once, as a plain expression mapped to its own name.
+  assert.deepEqual(secretNames(block), KEY_CHECK_SECRETS);
+  assert.deepEqual(KEY_CHECK_SECRETS, ["SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_URL"].map((n) => SECRET_SOURCES[n]));
+  for (const name of KEY_CHECK_SECRETS) {
+    const defs = block.match(new RegExp(`^.*\\bsecrets\\.${name}\\b.*$`, "gm")) ?? [];
+    assert.deepEqual(defs, [`          ${name}: \${{ secrets.${name} }}`], `${name} mapped exactly once, to its own name`);
+  }
+  for (const n of REQUIRED_SECRETS) {
+    if (n.startsWith("TEST_")) assert.ok(!block.includes(n), `no test-account credential: ${n}`);
+  }
+  // No program-name credential in the job env, no dependencies, no Playwright.
+  for (const n of REQUIRED_SECRETS) assert.ok(!new RegExp(`^\\s+${n}\\s*:`, "m").test(block), `${n} is not set by program name`);
+  for (const banned of [/npm\s+(?:ci|install|i)\b/, /\bnpx\b/, /playwright/i, /global-setup/]) assert.doesNotMatch(block, banned);
+  assert.deepEqual([...block.matchAll(/^\s+run:\s*(.*)$/gm)].map((m) => m[1].trim()), ["node .github/ci/e2e-prod-key-check.mjs"]);
+  assert.ok(block.includes("E2E_PROD_ENVIRONMENT: ${{ vars.E2E_PROD_ENVIRONMENT }}"), "the script receives the environment marker");
 });
 
 // Metode B. GitHub resolves a secret name at the lowest level that defines it, so a MISSING
@@ -158,7 +202,7 @@ test("outside the protected jobs, only adventure-engine.yml:cr01 holds secrets �
   const found = {};
   for (const [file, text] of Object.entries(WORKFLOWS)) {
     for (const [job, block] of Object.entries(jobsOf(text))) {
-      if (PROTECTED.some(([f, j]) => f === file && j === job)) continue;
+      if (isAuthorised(file, job)) continue;
       const names = secretNames(block);
       if (names.length > 0) found[`${file}:${job}`] = names;
     }
@@ -175,7 +219,7 @@ test("no other job names an environment, and no workflow runs base-branch code o
     assert.ok(!/\bpull_request_target\b/.test(code), `${file}: no pull_request_target`);
     assert.ok(!/^\s+workflow_run:/m.test(code), `${file}: no workflow_run`);
     for (const [job, block] of Object.entries(jobsOf(text))) {
-      if (PROTECTED.some(([f, j]) => f === file && j === job)) continue;
+      if (isAuthorised(file, job)) continue;
       assert.ok(!/^\s+environment:/m.test(stripComments(block)), `${file}:${job} must not name an environment`);
     }
   }
@@ -219,10 +263,18 @@ test("the preflight runs before npm ci and any Supabase call; in `test` right af
   }
 });
 
-test("vars.E2E_PROD_ENVIRONMENT is read only by the two preflight steps", () => {
+test("vars.E2E_PROD_ENVIRONMENT is read only by the two preflight steps and the key-check step", () => {
+  const readers = {};
+  for (const [file, text] of Object.entries(WORKFLOWS)) {
+    for (const [job, block] of Object.entries(jobsOf(text))) {
+      const n = (stripComments(block).match(/vars\.E2E_PROD_ENVIRONMENT\b/g) ?? []).length;
+      if (n > 0) readers[`${file}:${job}`] = n;
+    }
+  }
+  assert.deepEqual(readers, Object.fromEntries(AUTHORISED.map(([f, j]) => [`${f}:${j}`, 1])));
   let count = 0;
   for (const text of Object.values(WORKFLOWS)) count += (stripComments(text).match(/vars\.E2E_PROD_ENVIRONMENT\b/g) ?? []).length;
-  assert.equal(count, 2);
+  assert.equal(count, 3);
   assert.equal(MARKER, "E2E_PROD_ENVIRONMENT");
 });
 

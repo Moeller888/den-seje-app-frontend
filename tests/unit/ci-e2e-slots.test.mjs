@@ -338,7 +338,7 @@ test("every E2E lock queues FIFO (queue: max) and never cancels — waiting jobs
     }
   }
   assert.deepEqual(offenders, []);
-  assert.equal(seen, 2, "expected the playwright.yml test job and update-avatar-goldens.yml");
+  assert.equal(seen, 3, "expected the playwright.yml test job, update-avatar-goldens.yml and e2e-prod-key-check.yml");
 });
 
 test("every workflow that receives the service-role key takes an E2E lock", () => {
@@ -353,7 +353,7 @@ test("every workflow that receives the service-role key takes an E2E lock", () =
     if (e2eBlocks(src).length === 0) offenders.push(f);
   }
   assert.deepEqual(offenders, []);
-  for (const f of ["playwright.yml", "update-avatar-goldens.yml"]) assert.ok(holders.includes(f), `${f} is seen as a key holder`);
+  for (const f of ["playwright.yml", "update-avatar-goldens.yml", "e2e-prod-key-check.yml"]) assert.ok(holders.includes(f), `${f} is seen as a key holder`);
 });
 
 const PLAYWRIGHT = readWorkflow("playwright.yml");

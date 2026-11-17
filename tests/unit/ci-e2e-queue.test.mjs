@@ -81,7 +81,7 @@ test("every concurrency block on the shared E2E lock sets queue: max and cancel-
     }
   }
   assert.deepEqual(offenders, []);
-  assert.equal(seen, 2, "expected exactly two shared-lock blocks (playwright.yml test job, update-avatar-goldens.yml)");
+  assert.equal(seen, 3, "expected exactly three shared-lock blocks (playwright.yml test job, update-avatar-goldens.yml, e2e-prod-key-check.yml)");
 });
 
 // ── 2. Nothing that can write the shared test data runs outside the lock ─────────────────────
@@ -97,7 +97,7 @@ test("every workflow that receives the service-role key takes the shared E2E loc
     if (sharedBlocks(src).length === 0) offenders.push(f);
   }
   assert.deepEqual(offenders, []);
-  for (const f of ["playwright.yml", "update-avatar-goldens.yml"]) assert.ok(holders.includes(f), `${f} is seen as a key holder`);
+  for (const f of ["playwright.yml", "update-avatar-goldens.yml", "e2e-prod-key-check.yml"]) assert.ok(holders.includes(f), `${f} is seen as a key holder`);
 });
 
 // ── 3. The lock itself is unchanged ──────────────────────────────────────────────────────────
