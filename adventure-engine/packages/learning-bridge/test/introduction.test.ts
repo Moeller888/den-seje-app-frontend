@@ -12,7 +12,7 @@ import {
   type HostMessage,
   type IntroPresentMsg,
 } from "../src/protocol.ts";
-import { ServiceError, type IntroductionReport, type ServiceIntroduction, type ServiceTask, type TaskQuery } from "../src/service.ts";
+import { ServiceError, showsIntroductions, type IntroductionReport, type ServiceIntroduction, type ServiceTask, type TaskQuery } from "../src/service.ts";
 import { FakeTaskService } from "../src/test-service.ts";
 import { ITEMS, MemoryStore, flush, pair } from "./harness.ts";
 
@@ -315,16 +315,36 @@ describe("bridge/2 compatibility — an old (or non-introduction) game", () => {
     expect(p.host.sessionProtocol).toBeNull();
   });
 
-  it("an introduction-capable game still runs the ordinary task flow on a bridge/3 host", async () => {
+  it("a host WITHOUT introductions keeps an introduction-capable game on bridge/2, and the ordinary task flow runs", async () => {
+    // F11-B: bridge/3 is negotiated only by a host that shows the server's introduction, so a bridge/3 session always
+    // means "the server's introduction is authoritative" (the game then never shows its local cards as a second one).
     const p = pair({ service: new FakeTaskService(ITEMS) });
     const c = p.client.connect();
     await flush();
     await c;
-    expect(p.host.sessionProtocol).toBe(PROTOCOL);
+    expect(p.host.sessionProtocol).toBe(PROTOCOL_V2);
+    expect(p.client.protocol).toBe(PROTOCOL_V2);
     const t = p.client.requestStep(CHECK);
     await flush();
     const task = await t;
     expect(task.type).toBe("task.present");
+  });
+
+  it("a host WITH introductions negotiates bridge/3 with the same game", async () => {
+    const p = pair({ service: new IntroService() });
+    const c = p.client.connect();
+    await flush();
+    await c;
+    expect(p.host.sessionProtocol).toBe(PROTOCOL);
+    expect(p.client.protocol).toBe(PROTOCOL);
+  });
+
+  it("a game offering ONLY bridge/3 still gets a session on a host without introductions (bridge/3 carries all of /2)", async () => {
+    const p = pair({ service: new FakeTaskService(ITEMS) });
+    await p.rawToHost({ protocol: PROTOCOL_V2, type: "hello", msgId: "h3", supports: [PROTOCOL], kinds: ["choice"], contentId: "a", contentVersion: "1" });
+    await flush();
+    expect(p.host.sessionProtocol).toBe(PROTOCOL);
+    expect(p.toGame.at(-1)).toMatchObject({ type: "init", protocol: PROTOCOL });
   });
 });
 
@@ -374,6 +394,15 @@ describe("LaerligTaskService — the server's introduction step (mock HTTP)", ()
     const s = new LaerligTaskService({ call, subject: "historie", objectiveMap: { "hist.besaettelsen.h4": OBJ }, sequence: { contextOfStep: { guided_practice: "arkivskab" } }, introductions });
     return { s, calls };
   }
+
+  it("the service's introductions switch decides whether a host may negotiate bridge/3", () => {
+    expect(svc([], true).s.introductions).toBe(true);
+    expect(showsIntroductions(svc([], true).s)).toBe(true);
+    expect(svc([], false).s.introductions).toBe(false);
+    expect(showsIntroductions(svc([], false).s)).toBe(false);
+    expect(showsIntroductions(new FakeTaskService(ITEMS))).toBe(false);
+    expect(showsIntroductions(new IntroService())).toBe(true);
+  });
 
   it("fetchStep returns a separate introduction (round id kept, cards in order); fetchTask refuses it explicitly", async () => {
     const a = svc([{ status: 200, body: REPLY }]);

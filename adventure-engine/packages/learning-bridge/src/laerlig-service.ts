@@ -164,6 +164,10 @@ export class LaerligTaskService implements TaskService {
    * return the stored verdict and pay nothing (production body md5 2e05e769…, read 2026-11-02).
    */
   readonly submitRetry = "server-idempotent" as const;
+  /** F11-B: whether this host shows the server's introduction; false keeps every game on bridge/2. */
+  get introductions(): boolean {
+    return this.o.introductions === true;
+  }
   private readonly o: LaerligServiceOptions;
   private readonly served = new Map<string, Served>();
   private open: Served | null = null;

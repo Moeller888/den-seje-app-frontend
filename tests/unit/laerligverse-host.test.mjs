@@ -289,3 +289,15 @@ test("F11-B: a bridge/2 game on the same host gets task_unavailable and introduc
   assert.equal(h.posted.at(-1).code, "invalid_message");
   assert.equal(h.progress.length, 0);
 });
+
+test("F11-B: a host WITHOUT introductions keeps a bridge/3-capable game on bridge/2 (the game then keeps its local introduction); the server's introduction is refused, never shown", async () => {
+  const h = introHarness({ introductions: false });
+  await h.send({ protocol: P, type: "hello", msgId: "h1", supports: [P3, P], kinds: ["choice"], contentId: "arkivskabet", contentVersion: "1" });
+  const init = h.posted.at(-1);
+  assert.equal(init.type, "init");
+  assert.equal(init.protocol, P, "bridge/3 means: the server's introduction is authoritative — only a host that shows it offers it");
+  await h.send({ protocol: P, type: "task.request", nonce: init.nonce, requestId: "q1", objectiveId: "hist.h4", purpose: "check", surface: "world", contextKey: "arkivskab" });
+  assert.deepEqual(h.posted.at(-1), { protocol: P, type: "error", nonce: init.nonce, requestId: "q1", code: "task_unavailable" });
+  assert.equal(h.posted.some((m) => m.type === "intro.present"), false);
+  assert.equal(h.f.calls.some((c) => String(c.url).includes("introduction-progress")), false);
+});

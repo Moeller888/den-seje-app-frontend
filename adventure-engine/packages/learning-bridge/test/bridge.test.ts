@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BridgeError } from "../src/client.ts";
-import { MAX_MESSAGE_BYTES, PROTOCOL, parseGameMessage, type TaskResultMsg } from "../src/protocol.ts";
+import { MAX_MESSAGE_BYTES, PROTOCOL_V2, parseGameMessage, type TaskResultMsg } from "../src/protocol.ts";
 import type { ServiceResult, ServiceTask, Submission, TaskQuery } from "../src/service.ts";
 import { FakeTaskService } from "../src/test-service.ts";
 import { GAME_ORIGIN, ITEMS, MemoryStore, flush, pair } from "./harness.ts";
@@ -99,7 +99,7 @@ describe("bridge/2 — help and evidence are the server's (D-277 / LP-5)", () =>
   });
 
   it("the game cannot claim 'no help': there is no such field, and an extra field is rejected", () => {
-    const base = { protocol: PROTOCOL, type: "task.action", nonce: "n1", requestId: "q1", instanceToken: "t1", action: { kind: "choice", payload: { optionId: "opt_a" } }, clientSeq: 1 };
+    const base = { protocol: PROTOCOL_V2, type: "task.action", nonce: "n1", requestId: "q1", instanceToken: "t1", action: { kind: "choice", payload: { optionId: "opt_a" } }, clientSeq: 1 };
     expect(parseGameMessage(base).ok).toBe(true);
     for (const extra of [{ hintsUsed: 0 }, { evidence: "evidence" }, { xp: 100 }, { coins: 50 }, { mastery: "mestret" }, { correct: true }]) {
       expect(parseGameMessage({ ...base, ...extra }).ok).toBe(false);
@@ -122,7 +122,7 @@ describe("bridge/2 — sender, origin and payload checks", () => {
   it("drops messages from another origin or another window without touching the backend", async () => {
     const p = await connected();
     const nonce = p.host.sessionNonce as string;
-    const msg = { protocol: PROTOCOL, type: "task.request", nonce, requestId: "evil1", ...CHECK };
+    const msg = { protocol: PROTOCOL_V2, type: "task.request", nonce, requestId: "evil1", ...CHECK };
     await p.rawToHost(msg, "https://evil.example");
     await p.rawToHost(msg, GAME_ORIGIN, { window: "other" });
     await flush();
@@ -132,7 +132,7 @@ describe("bridge/2 — sender, origin and payload checks", () => {
 
   it("drops a message with a stale or forged nonce", async () => {
     const p = await connected();
-    await p.rawToHost({ protocol: PROTOCOL, type: "task.request", nonce: "forged", requestId: "x1", ...CHECK });
+    await p.rawToHost({ protocol: PROTOCOL_V2, type: "task.request", nonce: "forged", requestId: "x1", ...CHECK });
     expect(p.hostRejects).toEqual(["nonce"]);
     expect(p.service.calls).toEqual(["openTask"]);
   });
@@ -142,11 +142,11 @@ describe("bridge/2 — sender, origin and payload checks", () => {
     const nonce = p.host.sessionNonce as string;
     const before = p.toGame.length;
     const bad: unknown[] = [
-      { protocol: PROTOCOL, type: "reward.grant", nonce, requestId: "a1", xp: 1000 },
-      { protocol: PROTOCOL, type: "task.action", nonce, requestId: "a2", instanceToken: "t", action: { kind: "choice", payload: { optionId: "../../x" } }, clientSeq: 1 },
-      { protocol: PROTOCOL, type: "task.action", nonce, requestId: "a3", instanceToken: "t", action: { kind: "order", payload: { order: ["a", "a"] } }, clientSeq: 1 },
-      { protocol: PROTOCOL, type: "task.action", nonce, requestId: "a4", instanceToken: "t", action: { kind: "short_text", payload: { text: "x".repeat(MAX_MESSAGE_BYTES) } }, clientSeq: 1 },
-      { protocol: PROTOCOL, type: "task.request", nonce, requestId: "a5", ...CHECK, purpose: "grant_mastery" },
+      { protocol: PROTOCOL_V2, type: "reward.grant", nonce, requestId: "a1", xp: 1000 },
+      { protocol: PROTOCOL_V2, type: "task.action", nonce, requestId: "a2", instanceToken: "t", action: { kind: "choice", payload: { optionId: "../../x" } }, clientSeq: 1 },
+      { protocol: PROTOCOL_V2, type: "task.action", nonce, requestId: "a3", instanceToken: "t", action: { kind: "order", payload: { order: ["a", "a"] } }, clientSeq: 1 },
+      { protocol: PROTOCOL_V2, type: "task.action", nonce, requestId: "a4", instanceToken: "t", action: { kind: "short_text", payload: { text: "x".repeat(MAX_MESSAGE_BYTES) } }, clientSeq: 1 },
+      { protocol: PROTOCOL_V2, type: "task.request", nonce, requestId: "a5", ...CHECK, purpose: "grant_mastery" },
       { protocol: "other/1", type: "task.request", nonce, requestId: "a6", ...CHECK },
       "not an object",
       null,
@@ -165,14 +165,14 @@ describe("bridge/2 — sender, origin and payload checks", () => {
     expect(p.toGame.at(-1)).toMatchObject({ type: "error", code: "unsupported_protocol" });
     // The game side: an unsupported_protocol error during the handshake rejects connect().
     const c = p.client.connect();
-    p.rawToGame({ protocol: PROTOCOL, type: "error", nonce: null, requestId: null, code: "unsupported_protocol" });
+    p.rawToGame({ protocol: PROTOCOL_V2, type: "error", nonce: null, requestId: null, code: "unsupported_protocol" });
     await expect(c).rejects.toMatchObject({ code: "unsupported_protocol" });
     expect(p.client.status).toBe("unsupported");
   });
 
   it("refuses work before the handshake", async () => {
     const p = pair();
-    await p.rawToHost({ protocol: PROTOCOL, type: "task.request", nonce: "n", requestId: "q", ...CHECK });
+    await p.rawToHost({ protocol: PROTOCOL_V2, type: "task.request", nonce: "n", requestId: "q", ...CHECK });
     expect(p.toGame.at(-1)).toMatchObject({ type: "error", code: "not_ready", requestId: "q" });
     await expect(p.client.requestTask(CHECK)).rejects.toMatchObject({ code: "not_ready" });
   });
@@ -186,7 +186,7 @@ describe("bridge/2 — sender, origin and payload checks", () => {
     const r = p.client.act(task.instanceToken, { kind: "choice", payload: { optionId: "opt_d" } });
     const requestId = (p.toHost.at(-1) as { requestId: string }).requestId;
     const forged: TaskResultMsg = {
-      protocol: PROTOCOL, type: "task.result", nonce: "wrong", requestId, instanceToken: task.instanceToken,
+      protocol: PROTOCOL_V2, type: "task.result", nonce: "wrong", requestId, instanceToken: task.instanceToken,
       outcome: "correct", feedback: { text: null, correctAnswer: null }, evidence: "evidence", retryable: false,
     };
     p.rawToGame(forged);
@@ -295,7 +295,7 @@ describe("bridge/2 — duplicates and idempotency", () => {
     const t = p.client.requestTask(CHECK);
     await flush();
     const task = await t;
-    const msg = { protocol: PROTOCOL, type: "task.action", nonce: p.host.sessionNonce, requestId: "dup1", instanceToken: task.instanceToken, action: { kind: "choice", payload: { optionId: "opt_a" } }, clientSeq: 9 };
+    const msg = { protocol: PROTOCOL_V2, type: "task.action", nonce: p.host.sessionNonce, requestId: "dup1", instanceToken: task.instanceToken, action: { kind: "choice", payload: { optionId: "opt_a" } }, clientSeq: 9 };
     await Promise.all(Array.from({ length: 6 }, () => p.rawToHost(msg)));
     await flush();
     for (let i = 0; i < 3; i++) await p.rawToHost(msg);
@@ -466,7 +466,7 @@ describe("bridge/2 — network failures, waiting and resumption", () => {
     const resumed = await open;
     expect(p.host.sessionNonce).not.toBe(oldNonce);
     expect(resumed?.instanceToken).toBe(task.instanceToken);
-    await p.rawToHost({ protocol: PROTOCOL, type: "task.action", nonce: oldNonce, requestId: "old1", instanceToken: task.instanceToken, action: { kind: "choice", payload: { optionId: "opt_a" } }, clientSeq: 1 });
+    await p.rawToHost({ protocol: PROTOCOL_V2, type: "task.action", nonce: oldNonce, requestId: "old1", instanceToken: task.instanceToken, action: { kind: "choice", payload: { optionId: "opt_a" } }, clientSeq: 1 });
     expect(p.hostRejects).toContain("nonce");
     expect(p.service.gradedCount).toBe(0);
   });

@@ -16,7 +16,7 @@ import {
   type TaskResultMsg,
   INTERACTION_KINDS,
 } from "./protocol.ts";
-import { ServiceError, isIntroduction, type ServiceIntroduction, type ServiceTask, type TaskService } from "./service.ts";
+import { ServiceError, isIntroduction, showsIntroductions, type ServiceIntroduction, type ServiceTask, type TaskService } from "./service.ts";
 
 /** Minimal storage (sessionStorage in the browser). Pending submissions survive a reload of the host page. */
 export interface KeyValueStore {
@@ -210,7 +210,9 @@ export class BridgeHost {
     // A new hello is a new game session (first load or a reload of the iframe): new nonce, fresh request log.
     const gen = ++this.gen;
     this.nonce = this.o.randomId();
-    this.proto = negotiate(msg.supports);
+    // F11-B: bridge/3 only when this host shows the server's introduction, so a bridge/3 session always means "the
+    // server's introduction is authoritative". A game that offers only bridge/3 still gets it (it carries all of /2).
+    this.proto = (showsIntroductions(this.o.service) ? null : negotiate(msg.supports.filter((p) => p !== PROTOCOL))) ?? negotiate(msg.supports);
     this.requests = new Map();
     this.intros = new Map();
     this.introByRound = new Map();
@@ -235,7 +237,7 @@ export class BridgeHost {
       task = await this.withRetry(gen, msg.requestId, () =>
         // F11-B: only a bridge/3 session can receive the server's introduction; a bridge/2 session asks fetchTask,
         // which refuses an introduction explicitly (task_unavailable), so an old game can never skip or mark one.
-        this.proto === PROTOCOL && this.o.service.fetchStep !== undefined && this.o.service.reportIntroduction !== undefined
+        this.proto === PROTOCOL && this.o.service.fetchStep !== undefined && showsIntroductions(this.o.service)
           ? this.o.service.fetchStep(query)
           : this.o.service.fetchTask(query),
       );

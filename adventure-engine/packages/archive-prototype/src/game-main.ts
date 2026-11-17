@@ -9,7 +9,7 @@ import { MemoryStorage } from "@adventure-engine/save";
 import { HOST_ORIGIN, randomId } from "./config.ts";
 import { CONTEXT_KEY, DRAWER_KEY, TASK_REQUEST_GLOBAL, archiveContent, archiveManifest } from "./content.ts";
 import { IntroView } from "./intro-view.ts";
-import { DECISION_POINTS, REVISION_KEY, REVISIT_KEY, TRANSFER_KEY, type DecisionPoint } from "./sequence.ts";
+import { DECISION_POINTS, REVISION_KEY, REVISIT_KEY, TRANSFER_KEY, showsLocalIntroduction, type DecisionPoint } from "./sequence.ts";
 import { ArchiveCardView, ReflectionView, RevisitView } from "./sequence-views.ts";
 import { TaskView } from "./task-view.ts";
 
@@ -117,6 +117,8 @@ async function boot(): Promise<void> {
    * F11-B: the SERVER chose its introduction. Its cards are shown as text; "shown" is reported once the first card is
    * on screen, "done" after the pupil's final control — the view closes only when the server registered it, and then
    * the world asks again (the server decides the next step). Nothing here is evidence or pays anything.
+   * In a bridge/3 session this REPLACES the local introduction (INTRO_CARDS): the server's is the authoritative one, so
+   * the pupil never meets two. The local archive-card practice (D-322 step 1, never evidence) follows it, as before.
    */
   const serverIntro = (msg: IntroPresentMsg, key: string): Promise<void> => {
     root.inert = true;
@@ -139,6 +141,7 @@ async function boot(): Promise<void> {
           await client.introDone(msg.introToken);
         },
       })
+      .then(() => (key === CONTEXT_KEY ? archiveCard.show() : undefined))
       .then(() => {
         game.engine.setGlobal("intro_seen", true);
         return request(key);
@@ -227,7 +230,7 @@ async function boot(): Promise<void> {
 
   // Resumption: the server's open instance (one per pupil) comes with the handshake.
   let resume: PresentBody | null = null;
-  client
+  const connected = client
     .connect()
     .then((openTask) => {
       if (openTask !== null && DECISION_POINTS[openTask.contextKey] !== undefined) resume = openTask;
@@ -257,17 +260,21 @@ async function boot(): Promise<void> {
     context = req;
     // Step 1: the pupil is introduced before the first task, never tested on what was not introduced;
     // the archive card then practises the four questions locally (never evidence).
-    let introduced: Promise<void> = Promise.resolve();
-    if (req === CONTEXT_KEY && game.engine.globals.get("intro_seen") !== true) {
-      root.inert = true;
-      introduced = intro
-        .show()
-        .then(() => archiveCard.show())
-        .then(() => {
-          game.engine.setGlobal("intro_seen", true);
-        });
-    }
-    void introduced.then(() => request(req));
+    // F11-B: only in a bridge/2 session (the host does not show the server's introduction). In a bridge/3 session the
+    // SERVER decides: it sends its introduction (serverIntro, then the archive card) or, when the pupil has completed
+    // it or the objective has none, the task — never the local cards as a second, competing introduction.
+    root.inert = true;
+    void connected
+      .then(() => {
+        if (!showsLocalIntroduction(req, game.engine.globals.get("intro_seen") === true, client.protocol)) return;
+        return intro
+          .show()
+          .then(() => archiveCard.show())
+          .then(() => {
+            game.engine.setGlobal("intro_seen", true);
+          });
+      })
+      .then(() => request(req));
   };
   requestAnimationFrame(tick);
 }

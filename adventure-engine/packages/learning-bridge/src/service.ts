@@ -131,4 +131,15 @@ export interface TaskService {
   hint(instanceId: string, level: number): Promise<ServiceHint>;
   /** F11-B: report an introduction round's "shown" or "done". Absent = the backend has no introductions. */
   reportIntroduction?(report: IntroductionReport): Promise<IntroductionReportOutcome>;
+  /**
+   * F11-B: false = this service has fetchStep/reportIntroduction but its introductions are switched off. The host then
+   * never negotiates bridge/3, so a bridge/3 session always means "the server's introduction is authoritative" and the
+   * game keeps its local (prototype) introduction for bridge/2 only. Absent = decided by fetchStep/reportIntroduction.
+   */
+  readonly introductions?: boolean;
+}
+
+/** F11-B: can this service show the server's introduction (and so may the host negotiate bridge/3)? */
+export function showsIntroductions(service: TaskService): boolean {
+  return service.fetchStep !== undefined && service.reportIntroduction !== undefined && service.introductions !== false;
 }

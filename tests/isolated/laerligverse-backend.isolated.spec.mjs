@@ -15,7 +15,7 @@ import { assertIsolated, SYNTHETIC_EMAIL_DOMAIN } from "./isolation-guard.mjs";
 import {
   BridgeClient,
   BridgeHost,
-  PROTOCOL,
+  PROTOCOL_V2,
   ServiceError,
   createLaerligTaskService,
 } from "../../adventure-engine/packages/learning-bridge/src/index.ts";
@@ -104,9 +104,6 @@ function world(service, hostOptions = {}) {
   });
   ctx.client = new BridgeClient({
     hostOrigin: HOST_ORIGIN, hostWindow: hostWin, randomId, kinds: ["choice", "short_text"], contentId: "arkivskabet", contentVersion: "0_1_0",
-    // F11-B: this game speaks the newest version (bridge/3), so the raw replays built with PROTOCOL are exact copies of
-    // what it sends (a session accepts only its negotiated version). The task chain itself is unchanged.
-    introductions: true,
     post: (m) => { const data = structuredClone(m); queueMicrotask(() => void ctx.host.onMessage({ origin: GAME_ORIGIN, source: gameWin, data })); },
   });
   const raw = (data, origin = GAME_ORIGIN, source = gameWin) => ctx.host.onMessage({ origin, source, data: structuredClone(data) });
@@ -218,7 +215,9 @@ test("duplicates: a replayed postMessage, a double click and two racing commits 
   const task = await w.client.requestTask(CHECK); // the open instance from the previous test
   const optionId = await optionFor(request, A, task, true);
   const before = await progress(request, A);
-  const msg = { protocol: PROTOCOL, type: "task.action", nonce: w.host.sessionNonce, requestId: `dup${RUN.replace(/\W/g, "")}`, instanceToken: task.instanceToken, action: { kind: "choice", payload: { optionId } }, clientSeq: 1 };
+  // The raw replays must be exact copies of what the game sends, or they would be refused for their version instead.
+  expect(w.host.sessionProtocol).toBe(PROTOCOL_V2);
+  const msg = { protocol: PROTOCOL_V2, type: "task.action", nonce: w.host.sessionNonce, requestId: `dup${RUN.replace(/\W/g, "")}`, instanceToken: task.instanceToken, action: { kind: "choice", payload: { optionId } }, clientSeq: 1 };
   await Promise.all([w.raw(msg), w.raw(msg), w.raw(msg), w.client.act(task.instanceToken, msg.action), w.client.act(task.instanceToken, msg.action)]);
   await expect.poll(() => w.toGame.filter((m) => m.type === "task.result").length).toBeGreaterThanOrEqual(3);
   for (let i = 0; i < 3; i++) await w.raw(msg); // replays after the verdict
@@ -306,7 +305,8 @@ test("security: forged origin, wrong window, wrong nonce, unknown token, manipul
   const task = await w.client.requestTask(CHECK);
   const before = await progress(request, A);
   const rows = await instances(request, A);
-  const good = { protocol: PROTOCOL, type: "task.action", nonce: w.host.sessionNonce, requestId: "sec1", instanceToken: task.instanceToken, action: { kind: "choice", payload: { optionId: "o1" } }, clientSeq: 1 };
+  expect(w.host.sessionProtocol).toBe(PROTOCOL_V2);
+  const good = { protocol: PROTOCOL_V2, type: "task.action", nonce: w.host.sessionNonce, requestId: "sec1", instanceToken: task.instanceToken, action: { kind: "choice", payload: { optionId: "o1" } }, clientSeq: 1 };
   await w.raw(good, "https://evil.example");
   await w.raw({ ...good, requestId: "sec2" }, GAME_ORIGIN, { w: "other" });
   await w.raw({ ...good, requestId: "sec3", nonce: "forged" });
@@ -316,7 +316,7 @@ test("security: forged origin, wrong window, wrong nonce, unknown token, manipul
   expect(task.kind, "cold_war is multiple choice only").toBe("choice");
   await expect(w.client.act(task.instanceToken, { kind: "choice", payload: { optionId: "o99" } })).rejects.toMatchObject({ code: "invalid_message" });
   await expect(w.client.act(task.instanceToken, { kind: "short_text", payload: { text: rows.at(-1).correct_answer } })).rejects.toMatchObject({ code: "kind_mismatch" });
-  for (const forged of [{ protocol: PROTOCOL, type: "reward.grant", xp: 999, coins: 999 }, { ...good, requestId: "sec4", xp: 999 }, { ...good, requestId: "sec5", evidence: "evidence" }]) await w.raw(forged);
+  for (const forged of [{ protocol: PROTOCOL_V2, type: "reward.grant", xp: 999, coins: 999 }, { ...good, requestId: "sec4", xp: 999 }, { ...good, requestId: "sec5", evidence: "evidence" }]) await w.raw(forged);
   await expect(w.client.hint(task.instanceToken, 1)).rejects.toMatchObject({ code: "hint_unavailable" });
   expect(log.filter((l) => l.fn === "process-event")).toHaveLength(0);
   expect(await progress(request, A)).toEqual(before);
