@@ -40,7 +40,7 @@ const marked = (slot, kind, extra = {}) => ({ [MARKER_KEY]: { v: 1, slot, kind }
 
 // In-memory GoTrue + PostgREST. `opts` injects faults.
 function fakeSupabase({ users = [], profiles = [], pageSize = null, failCreate = new Set(), failProfile = new Set(),
-  dropProfiles = false, endlessPages = false, mangleCreate = null } = {}) {
+  dropProfiles = false, endlessPages = false, mangleCreate = null, raceCreate = null, raceProfile = null } = {}) {
   const state = {
     users: users.map((u) => structuredClone(u)),
     profiles: profiles.map((p) => structuredClone(p)),
@@ -76,6 +76,11 @@ function fakeSupabase({ users = [], profiles = [], pageSize = null, failCreate =
     }
     if (init.method === "POST" && u.pathname === "/auth/v1/admin/users") {
       if (failCreate.has(body.email)) return reply(500, { msg: "boom" });
+      // A concurrent run creates the same account first (GoTrue keeps e-mail addresses unique).
+      if (raceCreate === body.email) {
+        raceCreate = null;
+        state.users.push({ id: newId(), email: body.email, app_metadata: { ...body.app_metadata } });
+      }
       if (state.users.some((x) => x.email.toLowerCase() === body.email.toLowerCase())) return reply(422, { error_code: "email_exists" });
       const user = { id: newId(), email: body.email, app_metadata: { provider: "email", providers: ["email"], ...body.app_metadata }, user_metadata: {} };
       state.users.push(user);
@@ -84,6 +89,11 @@ function fakeSupabase({ users = [], profiles = [], pageSize = null, failCreate =
     if (init.method === "POST" && u.pathname === "/rest/v1/profiles") {
       const owner = state.users.find((x) => x.id === body.id);
       if (failProfile.has(owner?.email)) return reply(500, { message: "boom" });
+      // A concurrent run inserts the same profile first (profiles.id is the primary key).
+      if (raceProfile !== null && owner?.email === raceProfile) {
+        raceProfile = null;
+        state.profiles.push(structuredClone(body));
+      }
       if (state.profiles.some((p) => p.id === body.id)) return reply(409, { code: "23505" });
       if (!owner) return reply(409, { code: "23503" });
       if (!dropProfiles) state.profiles.push(structuredClone(body));
@@ -222,6 +232,30 @@ test("partial creation: a failed createUser stops the run; the next run creates 
   assert.equal(again.state.users.length, 4);
 });
 
+test("concurrent runs: an account created by another run between plan and apply stops this run — no duplicate", async () => {
+  const fake = fakeSupabase({ raceCreate: ADDR.teacher });
+  const r = await run(APPLY, prodEnv(), fake);
+  assert.equal(r.exitCode, 1);
+  assert.match(r.out, /teacher: kontoen kunne ikke oprettes \(status 422\)/);
+  assert.equal(fake.state.users.filter((u) => u.email === ADDR.teacher).length, 1, "exactly one teacher account");
+  assert.equal(userOf(fake, "student2"), undefined, "nothing after the stop");
+  assert.equal(userOf(fake, "primary"), undefined);
+  // The next run sees the other run's (marked, profile-less) account and resumes it — still one of each.
+  const next = fakeSupabase({ users: fake.state.users, profiles: fake.state.profiles });
+  assert.equal((await run(APPLY, prodEnv(), next)).exitCode, 0);
+  for (const k of CREATE_ORDER) assert.equal(next.state.users.filter((u) => u.email === ADDR[k]).length, 1, k);
+  assert.equal(next.state.profiles.length, 4);
+});
+
+test("concurrent runs: a profile inserted by another run first stops this run — the profile is never overwritten", async () => {
+  const fake = fakeSupabase({ raceProfile: ADDR.owner });
+  const r = await run(APPLY, prodEnv(), fake);
+  assert.equal(r.exitCode, 1);
+  assert.match(r.out, /owner: profilen kunne ikke indsættes \(status 409\)/);
+  assert.equal(fake.state.profiles.length, 1);
+  assert.equal(fake.state.users.length, 1, "no further account after the stop");
+});
+
 test("a created account that does not come back marked stops before its profile", async () => {
   const fake = fakeSupabase({ mangleCreate: (u) => ({ ...u, app_metadata: { provider: "email" } }) });
   const r = await run(APPLY, prodEnv(), fake);
@@ -264,8 +298,10 @@ async function refused(users, profiles, reason, env = prodEnv()) {
 }
 
 test("an existing UNMARKED account at a configured address is never adopted", async () => {
-  await refused([{ id: newId(), email: ADDR.teacher, app_metadata: { provider: "email" } }], [], /teacher \(.*\): adressen findes allerede UDEN markør/);
-  await refused([{ id: newId(), email: ADDR.primary.toUpperCase(), app_metadata: {} }], [], /primary .*UDEN markør/);
+  const foreignId = newId();
+  const r = await refused([{ id: foreignId, email: ADDR.teacher, app_metadata: { provider: "email" } }], [], /teacher: adressen findes allerede UDEN markør/);
+  assert.ok(!r.out.includes(foreignId), "the id of an account that is not ours is never logged");
+  await refused([{ id: newId(), email: ADDR.primary.toUpperCase(), app_metadata: {} }], [], /primary: adressen findes allerede UDEN markør/);
 });
 
 test("a wrong marker (slot, kind, version, extra key) is refused", async () => {
@@ -277,7 +313,7 @@ test("a wrong marker (slot, kind, version, extra key) is refused", async () => {
     { [MARKER_KEY]: "teacher" },
     { [MARKER_KEY]: null },
   ];
-  for (const meta of cases) await refused([{ id: newId(), email: ADDR.teacher, app_metadata: meta }], [], /teacher .*med en anden markør/);
+  for (const meta of cases) await refused([{ id: newId(), email: ADDR.teacher, app_metadata: meta }], [], /teacher: adressen findes allerede med en anden markør/);
 });
 
 test("an account marked as this slot's kind at ANOTHER address is refused", async () => {

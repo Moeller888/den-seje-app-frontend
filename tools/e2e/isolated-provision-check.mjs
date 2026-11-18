@@ -64,6 +64,19 @@ async function createRawUser(email, appMetadata) {
   return (await res.json()).id;
 }
 
+async function profilesById(idList) {
+  const ids = idList.filter((x) => typeof x === "string").join(",");
+  const res = await fetch(`${URL_}/rest/v1/profiles?select=id,role,teacher_id&id=in.(${ids})`, { headers, redirect: "error" });
+  if (!res.ok) throw new Error(`profiles: status ${res.status}`);
+  return res.json();
+}
+// A write that MUST be refused by the stack (duplicate). Returns the status only.
+async function rawPost(path, body) {
+  const res = await fetch(`${URL_}${path}`, { method: "POST", headers: { ...headers, Prefer: "return=minimal" }, redirect: "error", body: JSON.stringify(body) });
+  await res.text();
+  return res.status;
+}
+
 let failures = 0;
 const check = (cond, what) => {
   console.log(`${cond ? "ok  " : "FEJL"} ${what}`);
@@ -90,6 +103,23 @@ const same = (a, b) => a.users === b.users && a.profiles === b.profiles;
   const users = await allUsers();
   const expected = [slotEmail(BASE.primary, 1), slotEmail(BASE.teacher, 1), slotEmail(BASE.student2, 1), ownerAddressFor(slotEmail(BASE.teacher, 1), 1)];
   check(expected.every((e) => users.some((u) => u.email === e && u.app_metadata?.[MARKER_KEY]?.slot === 1)), "slot 1: alle fire adresser bærer slot 1-markøren");
+  // The final state, read directly: roles, markers and teacher–pupil relations.
+  const byEmail = new Map(users.map((u) => [u.email, u]));
+  const ids = { primary: byEmail.get(expected[0])?.id, teacher: byEmail.get(expected[1])?.id, student2: byEmail.get(expected[2])?.id, owner: byEmail.get(expected[3])?.id };
+  const profs = await profilesById(Object.values(ids));
+  const p = (k) => profs.find((r) => r.id === ids[k]);
+  check(["primary", "teacher", "student2", "owner"].every((k) => {
+    const m = byEmail.get(expected[["primary", "teacher", "student2", "owner"].indexOf(k)])?.app_metadata?.[MARKER_KEY];
+    return m && m.v === 1 && m.slot === 1 && m.kind === k && Object.keys(m).length === 3;
+  }), "slot 1: præcis markør { v: 1, slot: 1, kind } på alle fire");
+  check(p("owner")?.role === "teacher" && p("owner")?.teacher_id === null && p("teacher")?.role === "teacher" && p("teacher")?.teacher_id === null
+    && p("student2")?.role === "student" && p("student2")?.teacher_id === ids.teacher && p("primary")?.role === "student" && p("primary")?.teacher_id === ids.owner,
+    "slot 1: roller og lærer-elev-relationer som i registret");
+  // Database identities that stop a concurrent second run: GoTrue keeps addresses unique, profiles.id is the key.
+  const dupUser = await rawPost("/auth/v1/admin/users", { email: expected[1], email_confirm: true, app_metadata: { [MARKER_KEY]: expectedMarker(1, "teacher") } });
+  const dupProfile = await rawPost("/rest/v1/profiles", { id: ids.teacher, role: "student", full_name: "dublet" });
+  check(dupUser >= 400 && dupProfile >= 400 && same(s1, await snapshot()), `slot 1: dublet-konto (${dupUser}) og dublet-profil (${dupProfile}) afvises af stakken, intet ændret`);
+  check((await profilesById([ids.teacher]))[0]?.role === "teacher", "slot 1: lærerens profil er uændret efter dublet-forsøget");
   const again = await main([], env, quiet);
   check(again.exitCode === 0 && again.lines.some((l) => /alle fire konti er klar/.test(l)), "slot 1 dry-run efter apply: alle klar");
   const reapply = await main(["--mode=apply", `--confirm=${confirmationFor(1)}`], env, quiet);
@@ -103,7 +133,7 @@ const same = (a, b) => a.users === b.users && a.profiles === b.profiles;
   const id = await createRawUser(teacherAddr, {});
   const s0 = await snapshot();
   const res = await main(["--mode=apply", `--confirm=${confirmationFor(2)}`], env, quiet);
-  check(res.exitCode === 1 && res.lines.some((l) => /teacher .*UDEN markør/.test(l)), "slot 2: umarkeret konto afvist");
+  check(res.exitCode === 1 && res.lines.some((l) => /teacher: adressen findes allerede UDEN markør/.test(l)), "slot 2: umarkeret konto afvist");
   check(same(s0, await snapshot()), "slot 2: intet skrevet");
   const after = (await allUsers()).find((u) => u.id === id);
   check(after && after.app_metadata?.[MARKER_KEY] === undefined && after.email === teacherAddr, "slot 2: den umarkerede konto er uændret");

@@ -111,4 +111,9 @@ test("6. only this workflow runs the provisioning script; the isolated check is 
   assert.match(stepBlock, /run: \|\n          sg "\$ISOLATED_GROUP" -c "node tools\/e2e\/isolated-provision-check\.mjs"\n/);
   assert.ok(iso.indexOf("      - name: Provisioning (A4)") > iso.indexOf("      - name: Existing Playwright suite against the isolated stack"), "after the suite");
   assert.doesNotMatch(stepBlock, /secrets\./);
+  // The isolated check refuses a non-isolated environment before its first request, and never names production.
+  const check = read("tools/e2e/isolated-provision-check.mjs").split("\n").filter((l) => !/^\s*\/\//.test(l)).join("\n");
+  const guard = check.indexOf("assertIsolated(process.env);");
+  assert.ok(guard > 0 && guard < check.indexOf("fetch(") && guard < check.indexOf("await main("), "isolation guard first");
+  assert.doesNotMatch(check, /E2E_PROD_|supabase\.co|tjzbehwfagiwpwodsgwg/);
 });

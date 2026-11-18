@@ -385,7 +385,8 @@ export async function planProvisioning(registry, deps) {
     if (!isUuid(u.id)) { problems.push(`${kind}: den eksisterende konto har ikke et gyldigt bruger-id`); continue; }
     if (!hasExactMarker(u, slot, kind)) {
       const what = markerOf(u) === undefined ? "findes allerede UDEN markør" : "findes allerede med en anden markør";
-      problems.push(`${kind} (${u.id}): adressen ${what} — kontoen overtages, ændres og slettes aldrig`);
+      // No id: the account is not (or not exactly) one of ours, so nothing about it is logged.
+      problems.push(`${kind}: adressen ${what} — kontoen overtages, ændres og slettes aldrig (dens id logges ikke)`);
     }
   }
   if (problems.length > 0) return Object.freeze({ slot, steps: Object.freeze([]), problems: Object.freeze(problems) });

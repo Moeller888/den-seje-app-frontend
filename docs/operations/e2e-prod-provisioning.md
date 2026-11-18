@@ -54,6 +54,22 @@ Næste kørsel viser kontoen som "findes markeret uden profil", og `apply` inds�
 er altid owner → teacher → student2 → primary. Hver elev oprettes efter sin lærer. Til sidst verificeres alle fire konti
 med samme kontrol som global-setup. Mislykkes den, er exitkoden 1.
 
+## 3a. To samtidige kørsler
+Tre lag forhindrer dobbeltoprettelse:
+1. **Workflowet** tager den delte E2E-lås (`concurrency: e2e-shared-supabase`, `queue: max`,
+   `cancel-in-progress: false`). To godkendte provisioneringskørsler, eller en provisionering og en produktions-E2E,
+   kører derfor efter hinanden, aldrig samtidig. Uden for workflowet kan værktøjet slet ikke nå produktion.
+2. **Databasens identiteter** gælder, selv hvis to kørsler alligevel overlapper. GoTrue tillader kun én konto pr.
+   e-mailadresse, så den anden oprettelse afvises med 422, og `profiles.id` er primærnøgle, så den anden indsættelse
+   afvises med 409. Værktøjet stopper ved begge og skriver intet mere. Det er vist i den isolerede stak (dublet-forsøg
+   afvist, intet ændret) og i unit-testene "concurrent runs".
+3. **Genverifikation.** Den tabende kørsel stopper. Næste kørsel ser den vindende kørsels konto som markeret og
+   genoptager den, eller genbruger den. En konto, der er markeret til slottens type, men har en anden adresse, stopper
+   planen.
+
+Resultatet er højst én konto pr. type og adresse. Et overlap kan efterlade en markeret konto uden profil, men den
+genoptages af næste kørsel.
+
 ## 4. Forudsætninger (ikke oprettet af A4)
 Disse environment-secrets i `e2e-prod` skal pege på de **nye** adresser. Ejeren opretter eller ændrer dem i C2, når
 adresserne er besluttet.
@@ -92,8 +108,34 @@ Afbrydes trin 3, startes det igen med samme input. Værktøjet genoptager, se af
   genoptagelse.
 - `node tools/e2e-safety/mutate-guards.mjs`: mutationerne P01–P29 og W01–W07 skal alle fanges.
 
-## 7. Åbent punkt før første fulde produktionskørsel
-Den isolerede seed giver hovedeleven 1 rigtigt svar og genstanden `aura-gold`, fordi to specs forudsætter den tilstand
-(`hub-avatar-living.spec.ts` test 2 og avatar-golden "shop first item preview"). En nyoprettet produktionselev har den
-ikke. Om de to specs derfor fejler mod den nye konto, er UAFKLARET. Det afklares under A6 og den første godkendte
-kørsel. A4 opretter kun konti og profiler.
+## 7. Testdata: hører ikke til A4 (beslutning og anbefaling)
+To specs forudsætter en tilstand hos hovedeleven, som de ikke selv sætter op. Den isolerede seed
+(`tests/isolated/seed/primary-account.mjs`) sætter den derfor:
+
+| Spec | Forudsætning | Hvorfor |
+|---|---|---|
+| `hub-avatar-living.spec.ts` test 2 ("Achievement unlock …") | mindst 1 rigtigt svar (`student_progress.correct_answers ≥ 1`) | testen sletter `first_correct` og venter på, at `evaluate_achievements` låser den op igen. Det sker kun ved mindst 1 rigtigt svar |
+| `avatar-hair-decoupling.spec.ts` golden "shop first item preview" | eleven ejer `aura-gold` (`user_items`) | butikkens første genstand er tegnet som ejet (`.shop-card.is-owned`, opacity 0.68) i den committede baseline |
+
+global-setup sætter ingen af delene, og A4 gør det heller ikke. En nyoprettet produktionselev har derfor ikke
+tilstanden, og de to specs kan fejle mod den nye konto ved første kørsel. Det er UAFKLARET, indtil det er kørt.
+
+**Beslutning:** A4 opretter og verificerer kun konti og profiler. Belønninger, testresultater og avatargenstande
+skrives ikke.
+
+**Anbefaling til A6** (kræver eget GO, ingen produktionsændring nu): hver af de to specs sætter selv sin
+forudsætning op gennem den beskyttede klient og afgrænset til den verificerede elev, ligesom de øvrige specs gør, og
+gendanner den bagefter. `user_items` og `student_progress` er allerede gennemgåede tabeller i `tests/e2e-guard.mjs`
+(ejerkolonne `user_id` og `student_id`), så det kræver ingen udvidelse af guarden.
+Alternativet, et fast fixture-trin i global-setup, er mindre tydeligt, fordi tilstanden så ikke står ved den test,
+der kræver den.
+
+## 8. Forældet tekst i `playwright.yml` (til A6)
+Inputtet `confirm_provisioning` i `playwright.yml` beskrives stadig som "to allow creating its accounts", og
+header-kommentaren og `.github/ci/e2e-slot.mjs` siger, at en kørsel på en inaktiv slot "can create that slot's
+production accounts". Det har ikke været rigtigt siden #725: global-setup opretter aldrig konti, og kontiene oprettes
+kun af A4.
+
+Inputtet virker stadig som en bevidst spærre for kørsler på en inaktiv slot. Kun teksten er forældet. Den er ikke
+rettet her, fordi A4 ikke ændrer det eksisterende produktions-workflow. A6 ændrer `playwright.yml` alligevel og retter
+teksten der. Kontrakten i `tests/unit/ci-e2e-slots.test.mjs` fastlåser kun beskrivelsens begyndelse.
