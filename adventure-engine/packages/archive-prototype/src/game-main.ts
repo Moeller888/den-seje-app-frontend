@@ -4,7 +4,7 @@ import "@adventure-engine/app/style.css";
 import "./game.css";
 import { Game, type SaveServices } from "@adventure-engine/app/game";
 import { gameReady } from "@adventure-engine/app/ready";
-import { BridgeClient, BridgeError, type Action, type ClientStatus, type IntroPresentMsg, type PresentBody } from "@adventure-engine/learning-bridge";
+import { BridgeClient, BridgeError, PROTOCOL as BRIDGE_3, type Action, type ClientStatus, type IntroPresentMsg, type PresentBody } from "@adventure-engine/learning-bridge";
 import { MemoryStorage } from "@adventure-engine/save";
 import { HOST_ORIGIN, randomId } from "./config.ts";
 import { CONTEXT_KEY, DRAWER_KEY, TASK_REQUEST_GLOBAL, archiveContent, archiveManifest } from "./content.ts";
@@ -266,7 +266,7 @@ async function boot(): Promise<void> {
     root.inert = true;
     void connected
       .then(() => {
-        if (!showsLocalIntroduction(req, game.engine.globals.get("intro_seen") === true, client.protocol)) return;
+        if (!showsLocalIntroduction(req, game.engine.globals.get("intro_seen") === true, client.protocol === BRIDGE_3)) return;
         return intro
           .show()
           .then(() => archiveCard.show())

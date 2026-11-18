@@ -6,7 +6,6 @@
  * those live only on the host (host-items.ts). The archive-card exercise below is local PRACTICE with
  * explanations; it never counts as evidence and never reaches the server.
  */
-import { PROTOCOL as BRIDGE_3 } from "@adventure-engine/learning-bridge";
 import { CONTEXT_KEY, DRAWER_KEY, DRAWER_RESULT_ACTION, RESULT_ACTION, REVISIT_RESULT_ACTION, TRANSFER_RESULT_ACTION } from "./content.ts";
 
 /** What an activity is, and what it may ever count for. Shown to the pupil as a badge. */
@@ -119,8 +118,10 @@ export function parseSourceBack(detail: string): Array<{ field: string; value: s
  * Only at the first decision point, once, and only in a bridge/2 session. A host negotiates bridge/3 only when it shows
  * the SERVER's introduction, which is then the authoritative one: the server sends it (or, once completed, the task),
  * and the pupil never meets the local cards as a second, competing introduction. With the server's introduction
- * switched off (a bridge/2 session) the prototype behaves exactly as before.
+ * switched off (a bridge/2 session) the prototype behaves exactly as before. `serverIntroduction` is true exactly when
+ * the session is bridge/3; the caller (game-main.ts) decides that, so this module stays dependency-free for the
+ * headless root unit tests.
  */
-export function showsLocalIntroduction(contextKey: string, introSeen: boolean, sessionProtocol: string | null): boolean {
-  return contextKey === CONTEXT_KEY && !introSeen && sessionProtocol !== BRIDGE_3;
+export function showsLocalIntroduction(contextKey: string, introSeen: boolean, serverIntroduction: boolean): boolean {
+  return contextKey === CONTEXT_KEY && !introSeen && !serverIntroduction;
 }
