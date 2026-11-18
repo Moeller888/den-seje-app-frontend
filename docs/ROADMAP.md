@@ -926,7 +926,12 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
     deaktivering (runbookens §2.8, fase 2).
   - En lærer laver en stikprøve af `batch4`'s C1-opgaver før sidste trin.
   - Batch 5–10 er fortsat sat på pause.
-  - Hvert trin kræver sit eget GO. Aktiveringsmigrationerne er endnu ikke skrevet, og intet er aktiveret.
+  - Hvert trin kræver sit eget GO. De fem aktiveringsmigrationer er merget med #712 (`b4b0a18e`).
+- **Trin 2a anvendt 2026-11-16:** `batch3` er aktiveret (`20261114203117_english_activate_2a_batch3`, ledger
+  `20261116163535`). De 500 `batch3`-opgaver er aktive, og engelsk har nu 1.588 aktive opgaver (før 1.088).
+  `pilot`, `batch2`, `grade6_9` og `batch4` er fortsat inaktive, og batch 5–10 er fortsat sat på pause.
+  Observationen på mindst tre skoledage er i gang siden 2026-11-16. Trin 2b (`pilot`) venter på, at den afsluttes
+  uden stopkriterier, og kræver sit eget GO.
 - Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
   `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.

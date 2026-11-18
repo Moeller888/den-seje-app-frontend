@@ -186,8 +186,6 @@ export const NOT_IN_PRODUCTION = Object.freeze({
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
   "20261020220003_english_level_batch10_3.sql":
     "English 5,000 (owner decision 2026-11-05), not applied in production: data only, inserts inactive English questions (metadata.level_batch)",
-  "20261114203117_english_activate_2a_batch3.sql":
-    "English 5,000 phase 2, step 2a (owner decision 2026-11-14), not applied in production: data only, activates the 500 batch3 rows behind locked count, order and content-fingerprint guards; each step needs its own owner GO",
   "20261114203118_english_activate_2b_pilot.sql":
     "English 5,000 phase 2, step 2b (owner decision 2026-11-14), not applied in production: data only, activates the 500 pilot rows after 2a, behind locked count, order and content-fingerprint guards; each step needs its own owner GO",
   "20261114203119_english_activate_2c_batch2.sql":
@@ -263,6 +261,7 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261106120000_avatar_northstar_choice.sql": "20261106151348",
   "20261112150000_avatar_northstar_hair_d373.sql": "20261113053515",
   "20261113120000_english_review_text_corrections.sql": "20261114141653",
+  "20261114203117_english_activate_2a_batch3.sql": "20261116163535",
   "20261115090000_avatar_northstar_hair_nh5b_d377.sql": "20261115131725",
   "20261118090000_avatar_northstar_hair_nh5c_d381.sql": "20261118135103",
 });
