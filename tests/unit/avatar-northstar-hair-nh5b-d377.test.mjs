@@ -42,7 +42,7 @@ test("D-378 open: the two top-knot cards are shown by default, last under Hoved,
   const L = await layers(false);
   assert.equal(L.NORTHSTAR_HAIR_NH5B, true, "the cards are shown by default (D-378)");
   assert.equal(L.isNorthstarHairNh5bOn(), true);
-  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), ["standard", "nh4-grey", "nh4-brown", ...KNOTS], "five cards, the top knot last");
+  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), ["standard", "nh4-grey", "nh4-brown", ...KNOTS, "nh5c-grey", "nh5c-brown"], "seven cards, the top knot before D-381's nape locks");
   L.northstarUseAccount({ northstar: { ...FREE } });
   for (const k of KNOTS) assert.deepEqual(L.northstarFitHair(k).choice, { ...FREE, hair: k }, k + " goes on and keeps the outfit");
 });
@@ -54,7 +54,7 @@ test("D-377 catalogue: two top-knot hairstyles with their Danish labels; with th
   assert.deepEqual(JSON.parse(JSON.stringify(L.NORTHSTAR_HAIRS_NH5B)), { "nh5b-grey": { file: "head-nh5b-grey-v1.webp", label: "Topknude · gråt" }, "nh5b-brown": { file: "head-nh5b-brown-v1.webp", label: "Topknude · brunt" } });
   assert.deepEqual(Object.keys(L.NORTHSTAR_HAIRS), ["standard", "nh4-grey", "nh4-brown"], "D-373's catalogue is unchanged");
   assert.equal(L.isNorthstarHairNh5bOn(), false);
-  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), ["standard", "nh4-grey", "nh4-brown"], "no top-knot card without the opt-in");
+  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), ["standard", "nh4-grey", "nh4-brown", "nh5c-grey", "nh5c-brown"], "no top-knot card without the opt-in (D-381's nape locks stay)");
   L.northstarUseAccount({ northstar: { ...FREE } });
   for (const k of KNOTS) assert.equal(L.northstarFitHair(k), null, k + " cannot be put on while its cards are hidden");
   assert.deepEqual(L.northstarFitHair("nh4-grey").choice, { ...FREE, hair: "nh4-grey" }, "D-373's hairstyles still go on");
@@ -63,10 +63,10 @@ test("D-377 catalogue: two top-knot hairstyles with their Danish labels; with th
 test("D-377 with the flag off, a browser's opt-in shows the cards; on by default (D-378): both colours can be put on and keep the outfit; a part keeps the top knot; only the head differs; Avatar, Hub and the quiz draw it", async () => {
   const O = await layers(true, { flagOff: true });
   assert.equal(O.isNorthstarHairNh5bOn(), true, "the opt-in still shows the cards with the flag off");
-  assert.deepEqual(Object.keys(O.northstarSelectableHairs()), ["standard", "nh4-grey", "nh4-brown", ...KNOTS]);
+  assert.deepEqual(Object.keys(O.northstarSelectableHairs()), ["standard", "nh4-grey", "nh4-brown", ...KNOTS, "nh5c-grey", "nh5c-brown"]);
   const L = await layers(false);
   assert.equal(L.isNorthstarHairNh5bOn(), true);
-  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), ["standard", "nh4-grey", "nh4-brown", ...KNOTS], "five cards, the top knot last");
+  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), ["standard", "nh4-grey", "nh4-brown", ...KNOTS, "nh5c-grey", "nh5c-brown"], "seven cards, the top knot before D-381's nape locks");
   const plans = {};
   for (const hair of ["standard", ...KNOTS]) {
     L.northstarUseAccount({ northstar: { ...FREE } });

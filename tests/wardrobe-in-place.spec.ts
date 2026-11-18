@@ -93,7 +93,7 @@ async function openAvatar(browser: any, pupil: Pupil, width: number) {
   const errs: string[] = [];
   page.on("pageerror", (e) => errs.push(String(e)));
   await page.goto(`${baseUrl}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(84, { timeout: 30000 });   // D-378: the 79 parts and the 5 hairstyles (D-374's 3 and the 2 top knots)
+  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(86, { timeout: 30000 });   // D-381: the 79 parts and the 7 hairstyles (D-374's 3, D-378's 2 top knots and D-381's 2 nape locks)
   return { ctx, page, errs };
 }
 
@@ -194,7 +194,7 @@ for (const width of [1100, 390]) {
 
     // kept after a manual reload, and in a new session
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(84, { timeout: 30000 });   // D-378: the 79 parts and the 5 hairstyles (D-374's 3 and the 2 top knots)
+    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(86, { timeout: 30000 });   // D-381: the 79 parts and the 7 hairstyles (D-374's 3, D-378's 2 top knots and D-381's 2 nape locks)
     expect(await outfitNow(page)).toBe(final);
     await ctx.close();
     const again = await openAvatar(browser, pupil, width);

@@ -2,7 +2,7 @@
 // SELF-SERVED + FIXTURE-INTERCEPTED (as wardrobe-in-place.spec.ts): a local static server serves this branch's code; every *.supabase.co
 // call is answered from a fictitious, stateful pupil (the stored choice changes as set_avatar_northstar is called). No real backend,
 // account or token. It proves:
-//   - on by default, WITHOUT any opt-in (no ?northstarhair=1, no localStorage): the hair cards under Hoved (three, and the two top knots since D-378); a hairstyle goes on in place (no reload), the outfit stays and the
+//   - on by default, WITHOUT any opt-in (no ?northstarhair=1, no localStorage): the hair cards under Hoved (three, the two top knots since D-378 and the two nape locks since D-381); a hairstyle goes on in place (no reload), the outfit stays and the
 //     hairstyle is saved with it; a part keeps the hairstyle; after a reload the hairstyle stays; Hub and the quiz draw the same head;
 //   - saved avatars: an older K choice and a free choice without a hairstyle get the standard hair; a pupil without a choice keeps
 //     today's avatar;
@@ -139,14 +139,14 @@ test("D-373 on by default, without the opt-in: a hairstyle goes on in place, kee
   test.setTimeout(120000);
   const pupil: Pupil = { northstar: { ...FREE }, sent: [] };
   const { ctx, page, errs } = await openPage(browser, pupil, { optIn: false });
-  await openAvatar(page, 84);
+  await openAvatar(page, 86);
   expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair")), "no opt-in in this browser").toBe(null);
   await page.waitForLoadState("load");
   await expect.poll(async () => { const f = await figure(page); return f.rendered && f.path === "northstar" && !!f.src; }, { timeout: 30000 }).toBe(true);
   expect(await headOn(page, "avatar")).toEqual({ hair: "standard", head: ["/assets/avatar-northstar-hair/head-standard-v1.webp"] });
-  // the hairstyles under Hoved, nowhere else: D-373's three and, since D-378, the two top knots
+  // the hairstyles under Hoved, nowhere else: D-373's three, since D-378 the two top knots and since D-381 the two nape locks
   await page.getByRole("tab", { name: "Hoved", exact: true }).click();
-  await expect(page.locator("#northstarWardrobeCards [data-wardrobe-category='hair'] .item-card")).toHaveCount(5);
+  await expect(page.locator("#northstarWardrobeCards [data-wardrobe-category='hair'] .item-card")).toHaveCount(7);
   await expect(page.locator("#northstarWardrobeCards [data-wardrobe-category='hair']")).toBeVisible();
   await expect(page.locator("#northstarWardrobeCards [data-wardrobe-category='top']")).toBeHidden();
   await expect(hairCard(page, "standard")).toHaveClass(/equipped/);
@@ -172,7 +172,7 @@ test("D-373 on by default, without the opt-in: a hairstyle goes on in place, kee
   expect(JSON.parse(pupil.sent[2])).toEqual({ ...FREE, top: "top-tank-navy", hair: "nh4-brown" });
   // a reload, then Hub and the quiz
   await page.reload({ waitUntil: "domcontentloaded" });
-  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(84, { timeout: 30000 });
+  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(86, { timeout: 30000 });
   expect(await headOn(page, "avatar")).toEqual({ hair: "nh4-brown", head: ["/assets/avatar-northstar-hair/head-nh4-brown-v1.webp"] });
   expect(await outfitNow(page), "the part stays after the reload").toBe("top-tank-navy+bottom-trousers-square-navy+shoes-sneakers-white");
   await page.getByRole("tab", { name: "Hoved", exact: true }).click();
@@ -185,7 +185,7 @@ test("D-373 on by default, without the opt-in: a hairstyle goes on in place, kee
   await expect.poll(() => pupil.sent.length).toBe(4);
   expect(JSON.parse(pupil.sent[3])).toEqual({ ...FREE, top: "top-tank-navy", hair: "nh4-grey" });
   await page.reload({ waitUntil: "domcontentloaded" });
-  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(84, { timeout: 30000 });
+  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(86, { timeout: 30000 });
   expect(await headOn(page, "avatar")).toEqual({ hair: "nh4-grey", head: ["/assets/avatar-northstar-hair/head-nh4-grey-v1.webp"] });
   expect(await outfitNow(page), "the part stays after the hairstyle and a reload").toBe("top-tank-navy+bottom-trousers-square-navy+shoes-sneakers-white");
   for (const [url, el, surface] of [["hub.html", "profileAvatar", "hub"], ["index.html", "avatar-display", "quiz"]]) {
@@ -203,7 +203,7 @@ test("D-373 on by default: saved avatars — an older K choice and a choice with
   for (const [choice, path] of [[{ outfit: "K01" }, "northstar"], [{ ...FREE }, "northstar"], [null, null]] as const) {
     const pupil: Pupil = { northstar: choice ? { ...choice } : null, sent: [] };
     const { ctx, page, errs } = await openPage(browser, pupil, { optIn: false });
-    await openAvatar(page, 84);
+    await openAvatar(page, 86);
     if (path) {
       await expect.poll(async () => (await figure(page)).path, { timeout: 30000 }).toBe("northstar");
       expect(await headOn(page, "avatar")).toEqual({ hair: "standard", head: ["/assets/avatar-northstar-hair/head-standard-v1.webp"] });
@@ -231,7 +231,7 @@ test("D-373 on by default: with a T-shirt, a tank top and a sweater, a hairstyle
     await a.ctx.close();
     const pupil: Pupil = { northstar: { ...FREE, top }, sent: [] };
     const { ctx, page, errs } = await openPage(browser, pupil, { optIn: false });
-    await openAvatar(page, 84);
+    await openAvatar(page, 86);
     await expect.poll(async () => { const f = await figure(page); return f.rendered && f.path === "northstar"; }, { timeout: 30000 }).toBe(true);
     await page.getByRole("tab", { name: "Hoved", exact: true }).click();
     const px: Record<string, Uint8ClampedArray> = { standard: await figurePixels(page) };
