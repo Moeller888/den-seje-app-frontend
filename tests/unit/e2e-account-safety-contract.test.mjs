@@ -88,7 +88,24 @@ test("2. E2E_VERIFIED_ACCOUNTS is written only by publishVerified()", () => {
   // Only e2e-admin's verifyAndOpenAdmin publishes, right after a successful verification.
   const users = sources.filter((s) => s.file !== "tests/e2e-accounts.mjs" && /\bpublishVerified\(/.test(code(s.src))).map((s) => s.file);
   assert.deepEqual(users, ["tests/e2e-admin.mjs"]);
-  assert.match(code(read("tests/e2e-admin.mjs")), /const verified = await verifyAccounts\(registry, readDeps\(raw\)\);[^\n]*\n\s*publishVerified\(env, verified\);/);
+  // Published only after a successful verification: directly, or after the one controlled repair
+  // followed by a FULL re-verification (never after the repair alone).
+  const setup = code(read("tests/e2e-admin.mjs"));
+  const open = setup.slice(setup.indexOf("export async function verifyAndOpenAdmin"), setup.indexOf("export function createE2EAdminClient"));
+  assert.match(open, /try \{\s*verified = await verifyAccounts\(registry, readDeps\(raw\)\);[^\n]*\n\s*\} catch \(err\) \{\s*if \(!\(err instanceof E2EAccountError\) \|\| !err\.repair\) throw err;\s*await repairDetachedPupils\(raw, err\.repair, log\);[\s\S]*?verified = await verifyAccounts\(registry, readDeps\(raw\)\);\s*\}\s*publishVerified\(env, verified\);/);
+  assert.equal(open.split("publishVerified(").length - 1, 1, "one publish");
+});
+
+test("2. the only repair is a guarded profiles.teacher_id update, and specs never repair", () => {
+  const c = code(read("tests/e2e-admin.mjs"));
+  const repair = c.slice(c.indexOf("async function repairDetachedPupils"), c.indexOf("export async function verifyAndOpenAdmin"));
+  assert.match(repair, /const guarded = guardAdminClient\(raw, provisional, /);
+  const writes = repair.match(/\.(insert|update|upsert|delete|createUser|updateUserById|deleteUser|rpc)\(/g) ?? [];
+  assert.deepEqual(writes, [".update("]);
+  assert.match(repair, /guarded\.from\("profiles"\)\.update\(\{ teacher_id: teacherId \}\)\.eq\("id", id\)/);
+  assert.doesNotMatch(repair, /\braw\.(from|auth)\b/, "the repair never writes through the raw client");
+  const spec = c.slice(c.indexOf("export function createE2EAdminClient"));
+  assert.doesNotMatch(spec, /repair/i);
 });
 
 test("2. the spec client re-verifies before its first write and compares the ids", () => {
@@ -99,7 +116,8 @@ test("2. the spec client re-verifies before its first write and compares the ids
   assert.match(fn, /fresh\.ids\[k\] !== verified\.ids\[k\]/);
   assert.match(fn, /return guardAdminClient\(raw, verified, \{ confirm \}\);/);
   // readDeps can only read.
-  const deps = c.slice(c.indexOf("function readDeps"), c.indexOf("export async function verifyAndOpenAdmin"));
+  const deps = c.slice(c.indexOf("function readDeps"), c.indexOf("async function repairDetachedPupils"));
+  assert.ok(deps.length > 0 && deps.includes("listUsers"), "readDeps found");
   assert.doesNotMatch(deps, /\.(insert|update|upsert|delete|createUser|updateUserById|deleteUser|rpc)\(/);
 });
 

@@ -247,13 +247,22 @@ export async function verifyAccounts(registry, deps) {
     if (!p) { problems.push(`${kind} (${ids[kind]}): har ingen profil`); continue; }
     if (p.role !== EXPECTED_ROLE[kind]) problems.push(`${kind} (${ids[kind]}): har rollen ${JSON.stringify(p.role)}, forventet "${EXPECTED_ROLE[kind]}"`);
   }
+  // Every problem up to here is "hard": identity, marker, profile or role. A DETACHED pupil — a marked
+  // pupil whose teacher_id is exactly null while its marked teacher has no pupil at all — is the one
+  // state an interrupted password-help run leaves behind (its test 4 sets teacher_id = null on the
+  // primary pupil). It is reported like every other problem, but marked as repairable (see below).
+  let hard = problems.length;
+  const detached = [];
   for (const [pupil, teacherKind] of Object.entries(TEACHER_OF)) {
     const p = byId.get(ids[pupil]);
-    if (p && p.teacher_id !== ids[teacherKind]) problems.push(`${pupil} (${ids[pupil]}): tilhører ikke ${teacherKind}`);
+    if (!p || p.teacher_id === ids[teacherKind]) continue;
+    problems.push(`${pupil} (${ids[pupil]}): tilhører ikke ${teacherKind}`);
+    if (p.teacher_id === null && p.role === EXPECTED_ROLE[pupil]) detached.push(pupil);
+    else hard++;
   }
   for (const kind of ["teacher", "owner"]) {
     const p = byId.get(ids[kind]);
-    if (p && p.teacher_id !== null && p.teacher_id !== undefined) problems.push(`${kind} (${ids[kind]}): har selv en lærer`);
+    if (p && p.teacher_id !== null && p.teacher_id !== undefined) { problems.push(`${kind} (${ids[kind]}): har selv en lærer`); hard++; }
   }
   const { data: pupils, error: pupErr } = await deps.selectPupilsOfTeachers([ids.teacher, ids.owner]);
   if (pupErr || !Array.isArray(pupils)) throw new E2EAccountError(["lærernes elever kunne ikke læses"]);
@@ -261,9 +270,25 @@ export async function verifyAccounts(registry, deps) {
     const mine = pupils.filter((r) => r?.teacher_id === ids[teacherKind]).map((r) => r.id).sort();
     if (mine.length !== 1 || mine[0] !== ids[pupil]) {
       problems.push(`${teacherKind} (${ids[teacherKind]}): skal have præcis én elev, ${pupil} — har ${mine.length}`);
+      // Repairable only when the teacher has NO pupil and its own marked pupil is the detached one.
+      if (!(mine.length === 0 && detached.includes(pupil))) hard++;
     }
   }
-  if (problems.length > 0) throw new E2EAccountError(problems);
+  if (problems.length > 0) {
+    const err = new E2EAccountError(problems);
+    if (hard === 0 && detached.length > 0) {
+      // Nothing else is wrong: all four accounts exist, carry the exact marker, have distinct ids and
+      // their expected roles. The only fix is the relation the marker itself defines. The plan names
+      // the verified ids, so a caller can repair through the guarded client — and must re-verify.
+      err.repair = Object.freeze({
+        v: MARKER_VERSION,
+        slot,
+        ids: Object.freeze({ ...ids }),
+        pupils: Object.freeze(detached.map((pupil) => Object.freeze({ kind: pupil, id: ids[pupil], teacherId: ids[TEACHER_OF[pupil]] }))),
+      });
+    }
+    throw err;
+  }
 
   return Object.freeze({
     v: MARKER_VERSION,

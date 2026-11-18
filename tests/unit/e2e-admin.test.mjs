@@ -48,7 +48,15 @@ function fakeWorld(mutate = () => {}) {
     const entry = { table, op, args, chain: [] };
     const b = {};
     for (const m of ["eq", "in", "match", "select", "single", "maybeSingle"]) b[m] = (...a) => { entry.chain.push([m, a]); return b; };
-    b.then = (f, r) => { w.sent.push(entry); return Promise.resolve({ data: null, error: null }).then(f, r); };
+    b.then = (f, r) => {
+      w.sent.push(entry);
+      // Apply profile updates filtered on id, so a repair is visible to the re-verification.
+      if (table === "profiles" && op === "update" && !w.ignoreUpdates) {
+        const ids = entry.chain.filter(([m, a]) => m === "eq" && a[0] === "id").map(([, a]) => a[1]);
+        for (const p of w.profiles) if (ids.includes(p.id)) Object.assign(p, args[0]);
+      }
+      return Promise.resolve({ data: null, error: w.failUpdates ? { message: "fail" } : null }).then(f, r);
+    };
     return b;
   };
   const raw = {
@@ -116,6 +124,72 @@ test("global-setup path: an unmarked account stops the run — nothing published
     assert.equal(env[VERIFIED_ENV], undefined);
     assert.deepEqual(w.sent, []);
   }
+});
+
+// Priority 3: an interrupted password-help run (killed inside test 4, before its finally-block)
+// leaves the marked primary pupil with teacher_id = null. global-setup re-attaches it to its MARKED
+// owner teacher through the guarded client, then verifies everything again.
+test("global-setup path: a detached marked pupil is re-attached to its marked teacher, then re-verified", async () => {
+  for (const kind of ["primary", "student2"]) {
+    const w = fakeWorld((w) => { w.profiles.find((p) => p.id === ID[kind]).teacher_id = null; });
+    const env = baseEnv();
+    const logs = [];
+    const { verified } = await verifyAndOpenAdmin(env, { rawClient: w.rawClient, log: (m) => logs.push(m) });
+    const teacher = kind === "primary" ? ID.owner : ID.teacher;
+    assert.deepEqual(verified.ids, ID);
+    assert.deepEqual(w.sent.map((s) => [s.table, s.op, s.args[0], s.chain]), [["profiles", "update", { teacher_id: teacher }, [["eq", ["id", ID[kind]]]]]]);
+    assert.equal(w.profiles.find((p) => p.id === ID[kind]).teacher_id, teacher);
+    assert.equal(logs.length, 1);
+    assert.match(logs[0], new RegExp(`${kind} \\(${ID[kind]}\\) had teacher_id = null`));
+    assert.deepEqual(JSON.parse(env[VERIFIED_ENV]).ids, ID);
+  }
+});
+
+test("global-setup path: no repair unless the ONLY problem is a detached marked pupil", async () => {
+  const detach = (w) => { w.profiles.find((p) => p.id === ID.primary).teacher_id = null; };
+  for (const [label, mutate] of [
+    ["pupil points at another teacher", (w) => { w.profiles.find((p) => p.id === ID.primary).teacher_id = ID.teacher; }],
+    ["pupil points at an unknown teacher", (w) => { w.profiles.find((p) => p.id === ID.primary).teacher_id = STRANGER; }],
+    ["detached pupil, but the owner has a stranger as pupil", (w) => { detach(w); w.profiles.find((p) => p.id === STRANGER).teacher_id = ID.owner; }],
+    ["detached pupil, but a marker is missing", (w) => { detach(w); w.users.find((u) => u.id === ID.student2).app_metadata = {}; }],
+    ["detached pupil, but a pupil has the wrong role", (w) => { detach(w); w.profiles.find((p) => p.id === ID.primary).role = "teacher"; }],
+    ["detached pupil, but a teacher has a teacher", (w) => { detach(w); w.profiles.find((p) => p.id === ID.owner).teacher_id = ID.teacher; }],
+    // Isolated: a teacher OUTSIDE the verified set, so no pupil count changes — only the
+    // "has a teacher itself" rule can stop the repair.
+    ["detached pupil, but the owner has an outside teacher", (w) => { detach(w); w.profiles.find((p) => p.id === ID.owner).teacher_id = "66666666-6666-4666-8666-666666666666"; }],
+    ["detached pupil, but the owner account is missing", (w) => { detach(w); w.users = w.users.filter((u) => u.id !== ID.owner); }],
+  ]) {
+    const w = fakeWorld(mutate);
+    const env = baseEnv();
+    await assert.rejects(verifyAndOpenAdmin(env, { rawClient: w.rawClient, log: () => {} }), /E2E-konti/, label);
+    assert.deepEqual(w.sent, [], `${label}: nothing written`);
+    assert.equal(env[VERIFIED_ENV], undefined, `${label}: nothing published`);
+  }
+});
+
+test("global-setup path: a failed repair write stops the run, nothing is published", async () => {
+  const w = fakeWorld((w) => { w.profiles.find((p) => p.id === ID.primary).teacher_id = null; w.failUpdates = true; });
+  const env = baseEnv();
+  await assert.rejects(verifyAndOpenAdmin(env, { rawClient: w.rawClient, log: () => {} }), /teacher_id kunne ikke gendannes/);
+  assert.equal(env[VERIFIED_ENV], undefined);
+});
+
+test("global-setup path: a repair that reports success but changes nothing is caught by the re-verification", async () => {
+  // PostgREST reports no error for an UPDATE that matched zero rows: only the re-read proves it.
+  const w = fakeWorld((w) => { w.profiles.find((p) => p.id === ID.primary).teacher_id = null; w.ignoreUpdates = true; });
+  const env = baseEnv();
+  await assert.rejects(verifyAndOpenAdmin(env, { rawClient: w.rawClient, log: () => {} }), /primary \(.*\): tilhører ikke owner/);
+  assert.equal(w.sent.length, 1, "exactly one repair attempt, never a second");
+  assert.equal(env[VERIFIED_ENV], undefined);
+});
+
+test("spec path: a detached pupil is never repaired by a spec client — it stops before writing", async () => {
+  const w = fakeWorld();
+  const env = { ...baseEnv(), [VERIFIED_ENV]: record(ID) };
+  const admin = createE2EAdminClient(env, { rawClient: w.rawClient });
+  w.profiles.find((p) => p.id === ID.primary).teacher_id = null;
+  await assert.rejects(admin.from("question_instances").delete().eq("student_id", ID.student2), /tilhører ikke owner/);
+  assert.deepEqual(w.sent, []);
 });
 
 test("spec path: the real record works — after a fresh verification, before the first write", async () => {

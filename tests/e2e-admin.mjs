@@ -2,7 +2,9 @@
 //
 //   verifyAndOpenAdmin()   global-setup only: resolve the account registry (A1, no network), verify the
 //                          four accounts read-only (A2), publish E2E_VERIFIED_ACCOUNTS for the workers,
-//                          and return the GUARDED client (A3) for the setup's own resets.
+//                          and return the GUARDED client (A3) for the setup's own resets. Its one
+//                          repair: a marked pupil left with teacher_id = null by an interrupted run is
+//                          re-attached to its marked teacher, then everything is verified again.
 //   createE2EAdminClient() every spec: the guarded client for the accounts global-setup verified.
 //                          It throws when E2E_VERIFIED_ACCOUNTS is missing or malformed, and before its
 //                          first write it re-runs the read-only verification and requires the very same
@@ -16,7 +18,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { readRequiredSecret } from "./test-credentials.mjs";
 import {
-  ACCOUNT_KINDS, E2EAccountError, publishVerified, readVerified, resolveAccountRegistry, verifyAccounts,
+  ACCOUNT_KINDS, E2EAccountError, EXPECTED_ROLE, publishVerified, readVerified, resolveAccountRegistry, verifyAccounts,
 } from "./e2e-accounts.mjs";
 import { guardAdminClient } from "./e2e-guard.mjs";
 
@@ -35,10 +37,34 @@ function readDeps(raw) {
   };
 }
 
-export async function verifyAndOpenAdmin(env = process.env, { rawClient = rawServiceClient } = {}) {
+// Controlled recovery of a DETACHED marked pupil (teacher_id = null, left behind when a run is killed
+// inside password-help test 4 before its finally-block). Only for a plan from verifyAccounts(): every
+// account was found, carries its exact marker and role, and the only problem is that relation. The
+// write goes through the guarded client (profiles UPDATE, id filter, teacher_id = a verified teacher),
+// and the caller re-verifies everything afterwards. An unmarked account can never be part of a plan.
+async function repairDetachedPupils(raw, plan, log) {
+  const roles = Object.freeze(Object.fromEntries(ACCOUNT_KINDS.map((k) => [plan.ids[k], EXPECTED_ROLE[k]])));
+  const provisional = Object.freeze({ v: plan.v, slot: plan.slot, ids: plan.ids, roles });
+  const guarded = guardAdminClient(raw, provisional, { confirm: async () => {} });
+  for (const { kind, id, teacherId } of plan.pupils) {
+    const { error } = await guarded.from("profiles").update({ teacher_id: teacherId }).eq("id", id);
+    if (error) throw new E2EAccountError([`${kind} (${id}): teacher_id kunne ikke gendannes`]);
+    log(`[e2e-admin] ${kind} (${id}) had teacher_id = null (interrupted run); restored to its marked teacher ${teacherId}`);
+  }
+}
+
+export async function verifyAndOpenAdmin(env = process.env, { rawClient = rawServiceClient, log = console.log } = {}) {
   const registry = resolveAccountRegistry(env); // A1: throws before any network call
   const raw = rawClient(env);
-  const verified = await verifyAccounts(registry, readDeps(raw)); // A2: read-only, throws on any problem
+  let verified;
+  try {
+    verified = await verifyAccounts(registry, readDeps(raw)); // A2: read-only, throws on any problem
+  } catch (err) {
+    if (!(err instanceof E2EAccountError) || !err.repair) throw err;
+    await repairDetachedPupils(raw, err.repair, log);
+    // Full re-verification: anything still wrong (or wrong again) stops the run. No second repair.
+    verified = await verifyAccounts(registry, readDeps(raw));
+  }
   publishVerified(env, verified);
   // Verified a moment ago, by this very call: nothing further to confirm.
   return { admin: guardAdminClient(raw, verified, { confirm: async () => {} }), verified, registry };
