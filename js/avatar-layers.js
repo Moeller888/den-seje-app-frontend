@@ -1364,6 +1364,17 @@ export const NORTHSTAR_HAIRS_NH5B = Object.freeze({
   "nh5b-grey": Object.freeze({ file: "head-nh5b-grey-v1.webp", label: "Topknude · gråt" }),
   "nh5b-brown": Object.freeze({ file: "head-nh5b-brown-v1.webp", label: "Topknude · brunt" }),
 });
+// D-381: the nape locks (D-379 NH-5C, V2 excepted by D-380) in neutral grey and Northstar's brown, two more heads on the same shared base
+// (the files are byte for byte D-380's bound WebP heads). Its two cards are HIDDEN by default (NORTHSTAR_HAIR_NH5C = false): until the
+// flag is turned on only a browser that opts in shows them, last under Hoved, for testing after the production migration: localStorage
+// avatar_northstar_hair_nh5c = "1" (or avatar.html?northstarnh5c=1; =0 removes it). A stored nape-lock head is drawn on every surface
+// whatever the flag (Avatar, Hub, quiz). The database accepts the two values only through D-381's migration.
+export const NORTHSTAR_HAIR_NH5C = false;
+export const NORTHSTAR_HAIR_NH5C_OPT_IN_KEY = "avatar_northstar_hair_nh5c";
+export const NORTHSTAR_HAIRS_NH5C = Object.freeze({
+  "nh5c-grey": Object.freeze({ file: "head-nh5c-grey-v1.webp", label: "Nakkelokker · gråt" }),
+  "nh5c-brown": Object.freeze({ file: "head-nh5c-brown-v1.webp", label: "Nakkelokker · brunt" }),
+});
 // The item category (ITEM_CATEGORIES) the hairstyles are shown under.
 export const NORTHSTAR_HAIR_ITEM_CATEGORY = "hoved";
 // The flag, or this browser's explicit opt-in. Never throws.
@@ -1377,13 +1388,21 @@ export function isNorthstarHairNh5bOn() {
   if (NORTHSTAR_HAIR_NH5B) return true;
   try { return typeof localStorage !== "undefined" && localStorage.getItem(NORTHSTAR_HAIR_NH5B_OPT_IN_KEY) === "1"; } catch (_e) { return false; }
 }
+// D-381: the nape locks' cards — with the hair choice on, their flag or this browser's explicit opt-in. Never throws.
+export function isNorthstarHairNh5cOn() {
+  if (!isNorthstarHairOn()) return false;
+  if (NORTHSTAR_HAIR_NH5C) return true;
+  try { return typeof localStorage !== "undefined" && localStorage.getItem(NORTHSTAR_HAIR_NH5C_OPT_IN_KEY) === "1"; } catch (_e) { return false; }
+}
 const _nsOwn = (o, h) => typeof h === "string" && Object.prototype.hasOwnProperty.call(o, h);
-// A known hairstyle's entry (D-373's three, then D-377's top knot), or null.
-const _nsHairEntry = (h) => (_nsOwn(NORTHSTAR_HAIRS, h) ? NORTHSTAR_HAIRS[h] : _nsOwn(NORTHSTAR_HAIRS_NH5B, h) ? NORTHSTAR_HAIRS_NH5B[h] : null);
+// A known hairstyle's entry (D-373's three, D-377's top knot, then D-381's nape locks), or null.
+const _nsHairEntry = (h) => (_nsOwn(NORTHSTAR_HAIRS, h) ? NORTHSTAR_HAIRS[h] : _nsOwn(NORTHSTAR_HAIRS_NH5B, h) ? NORTHSTAR_HAIRS_NH5B[h] : _nsOwn(NORTHSTAR_HAIRS_NH5C, h) ? NORTHSTAR_HAIRS_NH5C[h] : null);
 const _nsIsHair = (h) => _nsHairEntry(h) !== null;
-// The hairstyles the wardrobe offers now: D-373's three, and the top knot while its cards are on.
+// The hairstyles the wardrobe offers now: D-373's three, the top knot while its cards are on, and the nape locks (last) while theirs are.
 export function northstarSelectableHairs() {
-  return isNorthstarHairNh5bOn() ? Object.freeze({ ...NORTHSTAR_HAIRS, ...NORTHSTAR_HAIRS_NH5B }) : NORTHSTAR_HAIRS;
+  const nh5b = isNorthstarHairNh5bOn(), nh5c = isNorthstarHairNh5cOn();
+  if (!nh5b && !nh5c) return NORTHSTAR_HAIRS;
+  return Object.freeze({ ...NORTHSTAR_HAIRS, ...(nh5b ? NORTHSTAR_HAIRS_NH5B : {}), ...(nh5c ? NORTHSTAR_HAIRS_NH5C : {}) });
 }
 // The hairstyle the named account has explicitly chosen, or null (also while the hair choice is off).
 function _nsChosenHair() {
@@ -1399,7 +1418,7 @@ export function northstarHeadSrc(hair) {
   return _nsIsHair(hair) ? NORTHSTAR_HAIR_BASE_PATH + "/" + _nsHairEntry(hair).file : _nsSrc(NORTHSTAR_FIGURE.head);
 }
 // Puts a hairstyle on: the outfit worn now (on today's avatar, the start outfit) stays, saved as the three parts with the hairstyle.
-// Null while the hair choice is off, for an unknown hairstyle, or for the top knot while its cards are off (D-377).
+// Null while the hair choice is off, for an unknown hairstyle, or for the top knot or the nape locks while their cards are off (D-377, D-381).
 export function northstarFitHair(hair) {
   if (!isNorthstarHairOn() || !_nsOwn(northstarSelectableHairs(), hair)) return null;
   const o = northstarOutfitNow() || NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT];
