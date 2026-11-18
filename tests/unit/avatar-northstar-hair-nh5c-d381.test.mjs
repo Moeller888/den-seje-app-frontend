@@ -123,8 +123,8 @@ test("D-381 migration: D-377's validation verbatim, the hair list extended with 
   const msgWas = "nh5b-grey, nh5b-brown';", msgNow = "nh5b-grey, nh5b-brown, nh5c-grey, nh5c-brown';";
   assert.equal(body(MIGRATION), body(D377).replace(was, now).replace(msgWas, msgNow), "only the hair list and its message change");
   assert.match(MIGRATION, /md5 b746b99c30198f5208b7fbba44e324ed/, "production's definition read before the change");
-  assert.match(REPO_AHEAD_OF_PRODUCTION[NAME], /open production task D-381/, "not applied in production; the isolated stack replays it");
-  assert.ok(!(NAME in NOT_IN_PRODUCTION) && !(NAME in APPLIED_IN_PRODUCTION));
+  assert.equal(APPLIED_IN_PRODUCTION[NAME], "20261118135103", "applied in production 2026-11-18 (D-381)");
+  assert.ok(!(NAME in NOT_IN_PRODUCTION) && !(NAME in REPO_AHEAD_OF_PRODUCTION));
   const pg = new PGlite();
   await pg.exec(`
     CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;
