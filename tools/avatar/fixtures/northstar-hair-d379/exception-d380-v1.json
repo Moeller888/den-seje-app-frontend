@@ -1,0 +1,97 @@
+{
+  "decision": "D-380",
+  "relatesTo": "D-379",
+  "callId": "NH-5C-hair-nape-locks",
+  "kind": "ONE_TIME_EXCEPTION",
+  "status": "PROPOSED — NOT APPROVED, NOT PROMOTED, NOT ACTIVATED",
+  "ownerVisualApproval": "2026-11-17: the owner tried Nakkelokker V2 in the real avatar picker (private local trial, fictitious pupil) and approved its look in neutral grey and in Northstar brown",
+  "scope": "only NH-5C V2 (Nakkelokker) in neutral grey and in Northstar brown, exactly the two heads the owner tried, bound by the full hashes below; no other image, no other extraction, no rule change",
+  "newImageCall": false,
+  "tool": "tools/avatar/northstar-hair-nh5c-exception-d380.mjs",
+  "historicalThresholds": "GATES and DRESS_GATES of tools/avatar/northstar-hair-nh5c.mjs, unchanged and pinned by plan-nh5c-v1.json",
+  "inputs": [
+    { "role": "raw", "name": "nh.image-1.png", "folder": "NH-5C-hair-nape-locks", "tracked": false, "sha256": "53f9d7bca5ed498d877398e5d38562b13063ce5f04d89d653915f1646d461ba9" },
+    { "role": "base", "name": "d373-base-figure.png", "folder": "references", "tracked": false, "sha256": "454b56aa6dee471d9be83ee1ce8365589f79b8b9cb4f2a4b959ac26729ac3b8a" },
+    { "role": "ear", "name": "clean-head-ear-on-top-mask.png", "folder": "references", "tracked": false, "sha256": "955806ec039dafc7f1f7f16696b28c57722eb579e691e7498cea472fa9508840" },
+    { "role": "nh4", "name": "nh4-temple-tip-grey-hair-layer.png", "folder": "references", "tracked": false, "sha256": "84a596d07209802cdb6beeead014015a94a5b75f3e2548b842aeca761afcf1ed" }
+  ],
+  "adjust": {
+    "brows": "inside a window round each brow the raw image's own hair (registered with the locked post's P1: scale 0.9975, shift 0, 0) is sampled 16 px lower, so each lock's own tip ends 16 px higher; the shift fades in from 0 (50 px above the brow) to 16 (at the brow) and out sideways (30 px past the brow's end, 20 px from its inner end); no sideways move; the brows (+2 px) and the eyes stay hard limits; inside the windows only: specks under 80 px go, pinholes (≥ 6 of 8 neighbours hair) are filled, a 1 px dark outline (grey 34) where the hair meets a brow's or an eye's hard limit",
+    "earStrands": "layer hair connected to the front hair, on the head (not an ear), beside each ear (x 330–425 / 593–690), between the ear top (y 306) and y 345 and with alpha ≥ 32, stays in front instead of going behind at y 306; the ears are still drawn once, on top; the locks along the jaw stay behind",
+    "browShiftUpPx": 16,
+    "browSideShiftPx": 0,
+    "earStrandColumns": [[330, 425], [593, 690]],
+    "earStrandRows": [306, 345],
+    "counts": { "browTrimmedPx": 2038, "browFilledOrOutlinedPx": 69, "earStrandFrontPx": 66 }
+  },
+  "outputs": {
+    "v1GreyLayer": { "name": "nh5c-v1-grey-layer.png", "bound": true, "tracked": false, "what": "the LOCKED extraction's grey layer (D-379 V1, rejected), rebuilt unchanged as the starting point", "sha256": "f21590afff3bebbe594694d2c710d6e7c4c44adeb66715f6dfdd0399df3492ac" },
+    "greyLayer": { "name": "nh5c-d380-v2-grey-hair-layer.png", "bound": true, "tracked": false, "what": "V2's layer, neutral grey", "sha256": "19eb7af3d2bbf0e8a9b0c22d63c48baa57d3bad6459fb9884e5342a4127638ac" },
+    "brownLayer": { "name": "nh5c-d380-v2-brown-hair-layer.png", "bound": true, "tracked": false, "what": "the same layer in Northstar brown (northstarTint), one alpha channel", "sha256": "62569dfee55b72329543ad153d8d320d9c5813aa6133c7f02afda8994a985398" },
+    "greyHeadPng": { "name": "nh5c-d380-v2-grey-head.png", "bound": true, "tracked": false, "what": "the grey head on D-373's shared base, in C's layer order with the ear strands in front", "sha256": "3c395503ba146b097d3156c30d31a4f67e8270437328e980adef39da7d5801ed" },
+    "brownHeadPng": { "name": "nh5c-d380-v2-brown-head.png", "bound": true, "tracked": false, "what": "the brown head on D-373's shared base", "sha256": "2f30df19afd6124ef6e9b3408af7763157e623cae7389a4bbd164f1fed6bd361" },
+    "greyHeadWebp": { "name": "head-nh5c-v2-grey.webp", "bound": true, "tracked": false, "what": "the grey head as the owner saw it in the picker: lossless WebP, D-373's toWebp (decoded back byte for byte)", "sha256": "549bc6aa7aedd902d3bb0aa5859c682a09c7eb74eef41330db7f208d09f92f2d" },
+    "brownHeadWebp": { "name": "head-nh5c-v2-brown.webp", "bound": true, "tracked": false, "what": "the brown head as the owner saw it in the picker", "sha256": "e1225901e00be9adcf22d8e54fee0320faa564be38d167ab0280e445959d00b2" }
+  },
+  "historical": {
+    "note": "D-379's thresholds and its recorded results stand; nothing here is re-scored; extraction V1 stays REJECTED",
+    "extractionV1": { "assessment": "EXTRACTION_V1_REJECTED", "failed": ["P3", "P4", "P5", "P8", "P9", "P10", "P11", "P12", "P13"], "passed": ["P1", "P2", "P6", "P7"] },
+    "rawImageChecks": { "note": "properties of the raw image, not of a layer; unchanged for V2", "P3rawOnBrowsPx": 571, "P4rawOnEarsPx": 49, "P4rawOverFacePx": 6, "P9spillShare": 0.0579, "P11largestSpillClusterPx": 945 }
+  },
+  "v2": {
+    "layerChecksFailed": ["P5", "P8", "P10", "P12", "P13"],
+    "layerChecksPassed": ["P2", "P3layer", "P4layer", "P6"],
+    "P3layer": { "layerOnBrowsPx": 0, "layerOnEyesPx": 0, "gapPx": { "left": 12, "right": 12 }, "minGap": 6 },
+    "P4layer": { "layerOnEarsPx": 0, "earOpaque": 5065, "earOpaqueSame": 5065, "layerHiddenBehindFacePx": 14, "layerShownOverFaceBelowEarTopsPx": 39, "layerBelowJawlinePx": 0, "maxLayer": 20 },
+    "P5": { "largestShare": 0.9138, "min": 0.98 },
+    "P8": { "iou": { "standard": 0.297, "nh4": 0.616, "topknot": 0.424, "design": 0.585 }, "max": 0.75, "minDesign": 0.6 },
+    "P10": { "cutEdgePx": 265, "longestRun": 92, "maxRun": 6, "where": "forehead: along the lock tips moved up over both brows and the temples" },
+    "P12": { "largestHolePx": 66, "max": 40, "sameAsV1": true },
+    "P13": { "left": { "shown": 0.221, "lowestY": 427 }, "right": { "shown": 0.2282, "lowestY": 427 }, "min": 0.7, "lockZonePx": 7263, "shownPx": 1631, "sameAsV1": true },
+    "assembly": {
+      "G1_locksOverClothesPx": { "T-shirt": 0, "tanktop": 0, "sweater": 0 },
+      "G2_opaqueEarPxChanged": { "T-shirt": 0, "tanktop": 0, "sweater": 0 },
+      "G3_facePxChangedOutsideTheEarStrands": { "T-shirt": 0, "tanktop": 0, "sweater": 0 },
+      "G3_facePxChangedByTheEarStrands": { "T-shirt": 66, "tanktop": 66, "sweater": 66 },
+      "G4_changedOutsideHairPx": { "T-shirt": 0, "tanktop": 0, "sweater": 0 },
+      "G6_minGapToClothesPx": { "T-shirt": 36, "tanktop": 38, "sweater": 34 }
+    }
+  },
+  "exceptedChecks": {
+    "P10": "92 px against 6 (265 px in all): the intended shortening — the lock tips over both brows are moved 16 px up, so the layer now ends where the raw image's tips go on; P10 counts the change itself",
+    "G3": "66 face pixels below the ear tops change on all three tops: exactly the ear strands kept in front, running down to the ear's outline as the raw image draws them; 0 other face pixels change",
+    "P13": "22.1 % and 22.8 % of the lock zone shown against 70 %: the raw image draws narrower locks close under the ears than the design's zone; inherited from the raw image (V1 has the same numbers); the locks end at the jaw, y 427",
+    "P5": "the largest piece holds 91.38 % of the hair against 98 % (V1: 91.81 %)",
+    "P8": "IoU 0.585 with design C against ≥ 0.60 (0.297 / 0.616 / 0.424 with standard / NH-4 / top knot, all ≤ 0.75)",
+    "P12": "a 66 px hole at the parting against 40: the same as V1"
+  },
+  "finished": {
+    "alphaDiffGreyVsBrownPx": 0,
+    "greyLayerNonNeutralPx": 0,
+    "earOpaquePx": 5065,
+    "earOpaqueIdenticalBrown": 5065,
+    "earOpaqueIdenticalGrey": 5065
+  },
+  "rebuild": {
+    "runs": 2,
+    "byteIdentical": true,
+    "matchesTrialHeads": true,
+    "how": "the tool's command line, twice, into two new private directories (NH-5C-d380/run-1, run-2): every bound file byte for byte the fixture's hash in both runs, and both WebP heads byte for byte the heads the owner saw in the picker (avatar-trial-nh5c/heads); the WebP step needs the vendored libwebp, so the rebuild is checked by the tool, not by a unit test (D-094)"
+  },
+  "pickerCheck": {
+    "where": "the real avatar.html from a clean checkout of origin/main (445312c1) on 127.0.0.1, a fictitious pupil, the two bound WebP heads as two extra hair entries in memory only; the app's own figures, T-shirt (top-tee-hip-cream), tank top (top-tank-navy) and sweater (top-sweater-ls2-heather), grey and brown",
+    "pageErrors": 0,
+    "perFigure": {
+      "headOpaquePxNotTheBoundHead": 0,
+      "earOpaquePx": 5065,
+      "earOpaqueChangedPx": 0,
+      "earSoftEdgePx": 321,
+      "earSoftEdgeDiffersFromNH4Px": 88,
+      "earSoftEdgeDiffersWithoutHairBehindPx": 0,
+      "belowY430DiffersFromNH4Px": 0
+    },
+    "reading": "the same numbers for all six figures: the app draws exactly the bound head; every opaque ear pixel, the outline included, is the base's own; the soft ear edge differs from the live NH-4 head only where V2's hair lies behind it; below y 430 (neck, collar, clothes) the figure is pixel-identical to the live NH-4 head's figure with the same top, so the collar is free"
+  },
+  "neverPromoted": true,
+  "activation": "a separate owner decision; this exception publishes, promotes and activates nothing (no asset, no catalogue entry, no runtime, shop or database change)"
+}
