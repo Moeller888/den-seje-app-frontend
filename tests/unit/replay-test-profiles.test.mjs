@@ -77,8 +77,25 @@ test("2b. the introduction profile changes exactly its four decisions (K1 → L3
   assert.equal(intro.find((p) => p.file === "20261109120000_laerligverse_course_progress_read.sql").action, "skip");
 });
 
+// D-362 (owner 2026-11-15): the f07 lane also replays the course enrolments (courses, course_enrolments, RLS).
+const F07_FILES = ["20261113170000_phase_repeat_rpc.sql", "20261115130000_course_enrolments.sql"];
+
+test("2c. the f07 profile changes exactly its decisions: the D-362 phase repeat and course enrolments, skip → apply", () => {
+  const base = planReplay(files, readMigration).plan;
+  const f07 = planReplay(files, readMigration, { profile: "f07" }).plan;
+  assert.deepEqual(f07.map((p) => p.file), base.map((p) => p.file), "same files, same order");
+  const changed = f07.filter((p, i) => JSON.stringify(p) !== JSON.stringify(base[i]));
+  assert.deepEqual(changed.map((p) => p.file), F07_FILES);
+  for (const c of changed) {
+    assert.equal(c.action, "apply");
+    assert.equal(c.profile, "f07");
+    assert.match(c.reason, /NOT applied in production/);
+  }
+});
+
 test("3. a profile can only add test-only replays; unknown or production-naming profiles fail loud", () => {
-  assert.deepEqual(Object.keys(TEST_PROFILES), ["k1", "introduction"]);
+  assert.deepEqual(Object.keys(TEST_PROFILES), ["k1", "introduction", "f07"]);
+  assert.deepEqual(Object.keys(TEST_PROFILES.f07), F07_FILES);
   assert.deepEqual(Object.keys(TEST_PROFILES.k1), [K1]);
   assert.deepEqual(Object.keys(TEST_PROFILES.introduction), INTRO_CHAIN);
   for (const [name, list] of Object.entries(TEST_PROFILES)) {
@@ -129,16 +146,40 @@ test("4. on the full replay: the k1 profile yields K1's schema, the default none
   assert.ok(lane.r.steps.some((s) => s.name === K1 && s.ok), "K1 itself was applied");
 });
 
+test("4b. on the full replay: the f07 profile yields the phase repeat function (question rows are seeded by the spec, never replayed)", async () => {
+  const lane = await replayDb("f07");
+  try {
+    assert.deepEqual(lane.r.failures, [], "the F-07 lane replay builds");
+    assert.ok(lane.r.steps.some((s) => s.name === F07_FILES[0] && s.ok), "the phase repeat migration itself was applied");
+    const fn = (await lane.db.query("SELECT to_regprocedure('public.request_repeat_phase_question_for_student(uuid,text[],uuid[],integer)') IS NOT NULL AS e")).rows[0].e;
+    assert.equal(fn, true);
+    assert.ok(lane.r.steps.some((s) => s.name === F07_FILES[1] && s.ok), "the course enrolments migration itself was applied");
+    const t = (await lane.db.query("SELECT to_regclass('public.course_enrolments') IS NOT NULL AS e, (SELECT count(*)::int FROM public.courses) AS n")).rows[0];
+    assert.deepEqual([t.e, t.n], [true, 1], "course_enrolments exists and the catalogue holds the one approved course");
+  } finally { await lane.db.close(); }
+});
+
 test("5. only the isolated workflow uses a profile, and it is fenced", () => {
   const wf = read(".github/workflows/isolated-e2e.yml");
-  assert.match(wf, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| matrix\.profile == 'introduction' && ', introduktion-testprofil' \|\| '' \}\}\)/,
+  // D-362 / F-07 (owner GO 2026-11-14): the matrix comes from the plan job; the default is the production mirror plus
+  // exactly one k1 and one introduction entry (PR #664; f07-ci-lane runs the plan step), the F07 suffix only ever names f07.
+  assert.match(wf, /name: isolated-e2e \(run \$\{\{ matrix\.run \}\}\$\{\{ matrix\.profile == 'k1' && ', K1-testprofil' \|\| matrix\.profile == 'introduction' && ', introduktion-testprofil' \|\| matrix\.profile == 'f07' && ', F07-testprofil' \|\| '' \}\}\)/,
     "the production-mirror check name stays 'isolated-e2e (run N)'; the lanes get their suffix");
-  assert.match(wf, /profile: \[production\]\n\s+include:\n\s+- run: 1\n\s+profile: k1\n\s+- run: 1\n\s+profile: introduction\n\s+steps:/,
-    "exactly one k1 entry and one introduction entry");
+  assert.match(wf, /profile: \$\{\{ fromJSON\(needs\.plan\.outputs\.profiles\) \}\}\n\s+include: \$\{\{ fromJSON\(needs\.plan\.outputs\.include\) \}\}\n/);
+  assert.ok(wf.includes(`include='[{"run":1,"profile":"k1"},{"run":1,"profile":"introduction"}]'`), "exactly one k1 entry and one introduction entry");
   assert.match(wf, /replay\.mjs --db-url "\$ISOLATED_DB_URL" --summary "\$GITHUB_STEP_SUMMARY" --profile "\$REPLAY_PROFILE"/);
   assert.match(wf, /REPLAY_PROFILE: \$\{\{ matrix\.profile \}\}/);
   assert.match(wf, /K1 lane without K1/);
   assert.match(wf, /K1 leaked into the production-mirror lane/);
+  assert.match(wf, /- name: Existing Playwright suite against the isolated stack\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile == 'production'/);
+  // F07: the phase repeat RPC is checked per lane; the F07 lane runs only the F-07 spec and verifies its counts.
+  assert.match(wf, /F07 lane without the phase repeat RPC/);
+  assert.match(wf, /the F-07 phase repeat RPC leaked into the \$REPLAY_PROFILE lane/);
+  assert.match(wf, /- name: Isolated smoke[^\n]*\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile != 'f07'/);
+  assert.match(wf, /- name: F07 lane[^\n]*\n\s+if: needs\.plan\.outputs\.scope != 'docs-md' && matrix\.profile == 'f07'/);
+  assert.match(wf, /node tests\/isolated\/f07-lane-check\.mjs "\$RUNNER_TEMP\/f07-chromium\.json" "\$RUNNER_TEMP\/f07-firefox\.json" "\$RUNNER_TEMP\/f07-webkit\.json"/);
+  assert.match(wf, /if \[ "\$PROFILE" = "f07" \]; then\n\s+printf '%s\\n' 'LEVEL_ENGINE=v1' 'QUESTION_MIX_ENGINE=shadow' > "\$RUNNER_TEMP\/functions\.env"/,
+    "only the F07 lane replaces the Edge env");
   for (const m of ["introduction lane without K1", "introduction lane without L3/L5, K9 or the introductions",
     "introduction objects leaked into the K1 lane", "introduction objects leaked into the production-mirror lane"]) assert.ok(wf.includes(m), m);
   // The frontend suite runs only in the production mirror (every test lane runs the isolated specs instead).

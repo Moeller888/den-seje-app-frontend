@@ -89,8 +89,9 @@ test("index.ts: a targeted request returns objective_exhausted BEFORE the repeat
 
 test("index.ts: an open instance of another objective is a 409 with no release and no other side effect", () => {
   assert.match(INDEX_CODE, /if \(!openInstanceMatches\(targeting, instance\.questions\.learning_objective\)\) \{\s*return new Response\(JSON\.stringify\(\{ error: "open_question_other_objective" \}\), \{[\s\S]{0,120}status: 409,/);
-  // The objective of the open instance is read only when targeting, so the off-path query is unchanged.
-  assert.match(INDEX_CODE, /questions \(\$\{targeting\.mode === "on" \? "\\n {10}learning_objective," : ""\}/);
+  // The objective of the open instance is read only when targeting or in a D-362 course request (owner 2026-11-15:
+  // the course tag), so the regular query is unchanged.
+  assert.match(INDEX_CODE, /questions \(\$\{targeting\.mode === "on" \|\| enrolment !== null \? "\\n {10}learning_objective," : ""\}/);
   // The one release in the function is still the subject-level one.
   assert.equal((INDEX_CODE.match(/release_open_question_outside/g) ?? []).length, 1);
 });

@@ -393,6 +393,12 @@ const REVIEWED_LATER_READERS = {
     "writes only questions.content (question and review_text) of those nine rows. No policy, RLS, table " +
     "privilege or row of question_instances is touched (proven in " +
     "english-review-text-corrections-migration-run.test.mjs).",
+  "20261113170000_phase_repeat_rpc.sql":
+    "D-362 phase repeat: adds request_repeat_phase_question_for_student only (search_path public, pg_temp; " +
+    "EXECUTE revoked from PUBLIC, anon and authenticated, granted to service_role only). It reads question_instances " +
+    "only for the student id it is given (the open-instance check and the selection, both qi.student_id = the given " +
+    "id) and returns only an id; its single reopen UPDATE is scoped to id AND student_id. No policy, RLS, table " +
+    "privilege or existing function on question_instances is touched (proven in phase-repeat-rpc-migration-run.test.mjs).",
   "20261114203117_english_activate_2a_batch3.sql": ENGLISH_ACTIVATION_READER,
   "20261114203118_english_activate_2b_pilot.sql": ENGLISH_ACTIVATION_READER,
   "20261114203119_english_activate_2c_batch2.sql": ENGLISH_ACTIVATION_READER,
@@ -597,6 +603,7 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261109043500_laerligverse_presented_at.sql",
      "20261109120000_laerligverse_course_progress_read.sql",
      "20261113120000_english_review_text_corrections.sql",
+     "20261113170000_phase_repeat_rpc.sql",
      "20261114203117_english_activate_2a_batch3.sql",
      "20261114203118_english_activate_2b_pilot.sql",
      "20261114203119_english_activate_2c_batch2.sql",

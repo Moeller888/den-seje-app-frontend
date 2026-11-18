@@ -157,6 +157,13 @@ test("the admin client is used only for the instance insert and the server-only 
   assert.match(INDEX_CODE, /await insertQuestionInstance\(makeAdminClient, \{/);
   const adminUses = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.(from|rpc)\(\s*"([a-z_]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
   assert.deepEqual(adminUses, [
+    // D-362 courses (owner 2026-11-15, migration 20261115130000), course requests only (body.course): the VERIFIED
+    // pupil's enrolment in the named course (status, completion, acknowledgement, the course's title/topics/active;
+    // no content, no key). A regular request never makes this read.
+    "from:course_enrolments",
+    // D-362 courses, regular historie requests with keep_course_rounds only: the VERIFIED pupil's ACTIVE enrolments
+    // (course ids only), so an open course round is kept across a switch. Absent flag: no read.
+    "from:course_enrolments",
     // LP-13/K9 prototype (LAERLIGVERSE_INTRODUCTION=on, sequence requests only): the objective's introduction
     // round for the verified pupil (serve_introduction, service_role only); an introduction carries no key.
     "rpc:serve_introduction",
@@ -171,9 +178,15 @@ test("the admin client is used only for the instance insert and the server-only 
     "from:question_instances",
     "from:question_instances",
     "rpc:get_unserved_questions_for_student",
+    // D-362 courses, course requests only, once every phase is completed: records the FIRST completion of the active
+    // enrolment, set once (service_role only, SECURITY DEFINER, student-scoped; never moves on a later call).
+    "rpc:record_course_completion",
     // D-329, targeted requests only: the lost-race check reads ONLY the id of the verified pupil's open
     // instance (no key), before "objective_exhausted" may be claimed; it never reaches the repeat RPCs below.
     "from:question_instances",
+    // D-362, phased courses only (the gate's repeat list): reopens a WRONG answer of the open phase among
+    // server-derived ids (migration 20261113170000; service_role only, SECURITY INVOKER, student-scoped guards).
+    "rpc:request_repeat_phase_question_for_student",
     // QUESTION_MIX_ENGINE "v2" only: the same repeat with exhaustion judged on servable formats
     // (migration 20261019150000; service_role only, same student-scoped guards).
     "rpc:request_repeat_question_servable_for_student",
@@ -181,6 +194,9 @@ test("the admin client is used only for the instance insert and the server-only 
     // LEVEL_ENGINE "v1" only: the repeat over the level engine's pool (migration 20261029120000;
     // service_role only, SECURITY INVOKER, same student-scoped guards).
     "rpc:request_repeat_level_question_for_student",
+    "from:question_instances",
+    // D-362 (CI run 43619749472): phased courses only — an id-only read of the VERIFIED pupil's open round right
+    // before no_questions (a concurrent request opened one → 409 phase_state_changed, never a false no_questions).
     "from:question_instances",
   ]);
   // The format mix (QUESTION_MIX_ENGINE "v2"/"shadow") hands the same backend client to
@@ -193,8 +209,15 @@ test("the admin client is used only for the instance insert and the server-only 
   // pinned in level-flow.test.mjs.
   assert.equal((INDEX_CODE.match(/await loadLevelPlan\(admin\(\) as unknown as LevelReadClient, \{\s*studentId: student_id,/g) ?? []).length, 1,
     "the level engine call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 14,
-    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call)");
+  // D-362 phase gate: the same backend client handed to ./phase-gate.ts, whose three reads (active questions'
+  // id/learning_objective/metadata/difficulty_level of the phased objectives — no content, no key — the VERIFIED
+  // pupil's own instance state, and its first-round verdicts in student_level_fold_log) plus, with the level engine's
+  // level, each phased course's own candidates (get_level_questions_for_student for that one domain, the verified
+  // student) are pinned in gnq-phase-gate.test.mjs; with no phased candidate and no pilot_* domain nothing is read.
+  assert.equal((INDEX_CODE.match(/await applyPhaseGate\(admin\(\) as unknown as PhaseReadClient, student_id, sortedQuestions, subjectDomains, \{ level: pupilLevel \}\)/g) ?? []).length, 1,
+    "the phase gate call");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 20,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call, the 15th the D-362 phase gate, the 16th the D-362 phase repeat, the 17th the D-362 id-only open check before no_questions, the 18th the D-362 course enrolment read, the 19th the verified keep_course_rounds read, the 20th the D-362 first-completion record — owner 2026-11-15)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {
