@@ -10,7 +10,7 @@
 -- Må KUN anvendes via apply_migration med særskilt ejer-autorisation (D-110).
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["nemlig","nemli","nemmelig","nämlig"],"correct":"nemlig","accepted_answers":["nemlig"],"review_text":"Nemlig staves med ét m og -lig til sidst."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Man bruger det, når man forklarer noget nærmere.","options":["nemlig","nemli","nemmelig","nämlig"],"correct":"nemlig","accepted_answers":["nemlig"],"review_text":"Nemlig staves med ét m og -lig til sidst."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',6,1
 );
@@ -28,7 +28,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er skrevet rigtigt?","options":["Jul og Påske er højtider.","jul og påske er højtider.","Jul og påske er Højtider.","Jul og påske er højtider."],"correct":"Jul og påske er højtider.","accepted_answers":["Jul og påske er højtider."],"review_text":"Højtider som jul og påske skrives med lille begyndelsesbogstav."}$$::jsonb,
+  $${"question":"Hvilken sætning om højtider er skrevet rigtigt?","options":["Jul og Påske er højtider.","jul og påske er højtider.","Jul og påske er Højtider.","Jul og påske er højtider."],"correct":"Jul og påske er højtider.","accepted_answers":["Jul og påske er højtider."],"review_text":"Højtider som jul og påske skrives med lille begyndelsesbogstav."}$$::jsonb,
   'mc','short',$${"concepts":["tegnsætning"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',6,1
 );
@@ -46,7 +46,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["egentli","eentlig","egentlig","ejentlig"],"correct":"egentlig","accepted_answers":["egentlig"],"review_text":"Egentlig staves med g – selvom man ikke kan høre det."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det betyder 'i virkeligheden'.","options":["egentli","eentlig","egentlig","ejentlig"],"correct":"egentlig","accepted_answers":["egentlig"],"review_text":"Egentlig staves med g – selvom man ikke kan høre det."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',6,1
 );
@@ -64,7 +64,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["selvføllelig","selvfølgelig","selfølgelig","selvfølgeli"],"correct":"selvfølgelig","accepted_answers":["selvfølgelig"],"review_text":"Selvfølgelig er sat sammen af selv og følgelig."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det betyder 'naturligvis'.","options":["selvføllelig","selvfølgelig","selfølgelig","selvfølgeli"],"correct":"selvfølgelig","accepted_answers":["selvfølgelig"],"review_text":"Selvfølgelig er sat sammen af selv og følgelig."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',2,'auto',true,'danish',6,2
 );
@@ -100,7 +100,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["ingenjør","inginiør","ingeniøre","ingeniør"],"correct":"ingeniør","accepted_answers":["ingeniør"],"review_text":"Ingeniør staves i-n-g-e-n-i-ø-r."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det er en person, der fx konstruerer broer og maskiner.","options":["ingenjør","inginiør","ingeniøre","ingeniør"],"correct":"ingeniør","accepted_answers":["ingeniør"],"review_text":"Ingeniør staves i-n-g-e-n-i-ø-r."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',2,'auto',true,'danish',6,2
 );
@@ -112,7 +112,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er skrevet rigtigt?","options":["Hun spurgte om vi ville med?","Hun spurgte, om vi ville med.","Hun spurgte, om vi ville med?","hun spurgte, om vi ville med."],"correct":"Hun spurgte, om vi ville med.","accepted_answers":["Hun spurgte, om vi ville med."],"review_text":"Et indirekte spørgsmål ('om vi ville med') slutter med punktum, ikke spørgsmålstegn."}$$::jsonb,
+  $${"question":"Hvilken sætning med et indirekte spørgsmål er skrevet rigtigt?","options":["Hun spurgte om vi ville med?","Hun spurgte, om vi ville med.","Hun spurgte, om vi ville med?","hun spurgte, om vi ville med."],"correct":"Hun spurgte, om vi ville med.","accepted_answers":["Hun spurgte, om vi ville med."],"review_text":"Et indirekte spørgsmål ('om vi ville med') slutter med punktum, ikke spørgsmålstegn."}$$::jsonb,
   'mc','short',$${"concepts":["tegnsætning"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',3,'auto',true,'danish',6,3
 );
@@ -136,7 +136,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["mærkeli","mærkelig","mærklig","merkelig"],"correct":"mærkelig","accepted_answers":["mærkelig"],"review_text":"Mærkelig staves med æ og -lig til sidst."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det betyder underlig.","options":["mærkeli","mærkelig","mærklig","merkelig"],"correct":"mærkelig","accepted_answers":["mærkelig"],"review_text":"Mærkelig staves med æ og -lig til sidst."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',3,'auto',true,'danish',6,3
 );
@@ -172,7 +172,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["fremed","fræmmed","fremmet","fremmed"],"correct":"fremmed","accepted_answers":["fremmed"],"review_text":"Fremmed staves med to m'er og d til sidst."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det er en person, man ikke kender.","options":["fremed","fræmmed","fremmet","fremmed"],"correct":"fremmed","accepted_answers":["fremmed"],"review_text":"Fremmed staves med to m'er og d til sidst."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',4,'auto',true,'danish',6,4
 );
@@ -190,7 +190,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["unskyld","undskyl","undskyld","undskylld"],"correct":"undskyld","accepted_answers":["undskyld"],"review_text":"Undskyld staves med d to steder: un-d-skyl-d."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Man siger det, når man har gjort noget forkert.","options":["unskyld","undskyl","undskyld","undskylld"],"correct":"undskyld","accepted_answers":["undskyld"],"review_text":"Undskyld staves med d to steder: un-d-skyl-d."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',7,1
 );
@@ -208,7 +208,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er skrevet rigtigt?","options":["Vi har Dansk om mandagen.","Vi har dansk om mandagen.","Vi har dansk om Mandagen.","vi har dansk om mandagen."],"correct":"Vi har dansk om mandagen.","accepted_answers":["Vi har dansk om mandagen."],"review_text":"Skolefag og ugedage skrives med lille begyndelsesbogstav."}$$::jsonb,
+  $${"question":"Hvilken sætning om skoleskemaet er skrevet rigtigt?","options":["Vi har Dansk om mandagen.","Vi har dansk om mandagen.","Vi har dansk om Mandagen.","vi har dansk om mandagen."],"correct":"Vi har dansk om mandagen.","accepted_answers":["Vi har dansk om mandagen."],"review_text":"Skolefag og ugedage skrives med lille begyndelsesbogstav."}$$::jsonb,
   'mc','short',$${"concepts":["tegnsætning"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',7,1
 );
@@ -226,7 +226,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["chauffør","chaufør","sjaufør","chauffeur"],"correct":"chauffør","accepted_answers":["chauffør"],"review_text":"Chauffør staves med ch og to f'er."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det er en person, der kører fx bus eller taxa.","options":["chauffør","chaufør","sjaufør","chauffeur"],"correct":"chauffør","accepted_answers":["chauffør"],"review_text":"Chauffør staves med ch og to f'er."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',7,1
 );
@@ -244,13 +244,13 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["profesionel","professionell","proffesionel","professionel"],"correct":"professionel","accepted_answers":["professionel"],"review_text":"Professionel har ét f, to s'er og ét l til sidst."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det betyder, at man gør noget som sit arbejde.","options":["profesionel","professionell","proffesionel","professionel"],"correct":"professionel","accepted_answers":["professionel"],"review_text":"Professionel har ét f, to s'er og ét l til sidst."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',2,'auto',true,'danish',7,2
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er skrevet rigtigt?","options":["Hun er fra Tyskland og taler tysk.","Hun er fra tyskland og taler tysk.","Hun er fra Tyskland og taler Tysk.","hun er fra Tyskland og taler tysk."],"correct":"Hun er fra Tyskland og taler tysk.","accepted_answers":["Hun er fra Tyskland og taler tysk."],"review_text":"Lande skrives med stort, men sprog skrives med lille."}$$::jsonb,
+  $${"question":"Hvilken sætning om lande og sprog er skrevet rigtigt?","options":["Hun er fra Tyskland og taler tysk.","Hun er fra tyskland og taler tysk.","Hun er fra Tyskland og taler Tysk.","hun er fra Tyskland og taler tysk."],"correct":"Hun er fra Tyskland og taler tysk.","accepted_answers":["Hun er fra Tyskland og taler tysk."],"review_text":"Lande skrives med stort, men sprog skrives med lille."}$$::jsonb,
   'mc','short',$${"concepts":["tegnsætning"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',2,'auto',true,'danish',7,2
 );
@@ -280,7 +280,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["anderkendelse","anerkendelse","anerkendelsse","anerkendelze"],"correct":"anerkendelse","accepted_answers":["anerkendelse"],"review_text":"Anerkendelse staves a-n-e-r-k-e-n-d-e-l-s-e."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det betyder ros og respekt for det, man har gjort.","options":["anderkendelse","anerkendelse","anerkendelsse","anerkendelze"],"correct":"anerkendelse","accepted_answers":["anerkendelse"],"review_text":"Anerkendelse staves a-n-e-r-k-e-n-d-e-l-s-e."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',2,'auto',true,'danish',7,2
 );
@@ -316,7 +316,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["sandsynlivis","sansynligvis","sandsynlighvis","sandsynligvis"],"correct":"sandsynligvis","accepted_answers":["sandsynligvis"],"review_text":"Sandsynligvis staves med d og -ligvis til sidst."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det betyder 'nok' eller 'formentlig'.","options":["sandsynlivis","sansynligvis","sandsynlighvis","sandsynligvis"],"correct":"sandsynligvis","accepted_answers":["sandsynligvis"],"review_text":"Sandsynligvis staves med d og -ligvis til sidst."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',3,'auto',true,'danish',7,3
 );
@@ -334,7 +334,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er skrevet rigtigt?","options":["Hun råbte, »pas på!«","Hun råbte: pas på!","Hun råbte: »Pas på!«","Hun råbte »Pas på«!"],"correct":"Hun råbte: »Pas på!«","accepted_answers":["Hun råbte: »Pas på!«"],"review_text":"Kolon før replikken, anførselstegn om den, stort begyndelsesbogstav og udråbstegnet inden for anførselstegnene."}$$::jsonb,
+  $${"question":"Hvilken sætning med en råbt advarsel er skrevet rigtigt?","options":["Hun råbte, »pas på!«","Hun råbte: pas på!","Hun råbte: »Pas på!«","Hun råbte »Pas på«!"],"correct":"Hun råbte: »Pas på!«","accepted_answers":["Hun råbte: »Pas på!«"],"review_text":"Kolon før replikken, anførselstegn om den, stort begyndelsesbogstav og udråbstegnet inden for anførselstegnene."}$$::jsonb,
   'mc','short',$${"concepts":["tegnsætning"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',4,'auto',true,'danish',7,4
 );
@@ -352,7 +352,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["fasinerende","fascinerende","fascinernde","fashinerende"],"correct":"fascinerende","accepted_answers":["fascinerende"],"review_text":"Fascinerende staves med sc."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det betyder meget spændende og fængslende.","options":["fasinerende","fascinerende","fascinernde","fashinerende"],"correct":"fascinerende","accepted_answers":["fascinerende"],"review_text":"Fascinerende staves med sc."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',4,'auto',true,'danish',7,4
 );
@@ -370,7 +370,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["koncentration","koncentation","konsentration","koncentratjon"],"correct":"koncentration","accepted_answers":["koncentration"],"review_text":"Koncentration staves med c og -tion til sidst."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det er det, man bruger, når man fokuserer på en opgave.","options":["koncentration","koncentation","konsentration","koncentratjon"],"correct":"koncentration","accepted_answers":["koncentration"],"review_text":"Koncentration staves med c og -tion til sidst."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',8,1
 );
@@ -388,7 +388,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er skrevet rigtigt?","options":["Vi læste en artikel i politiken.","vi læste en artikel i Politiken.","Vi læste en Artikel i Politiken.","Vi læste en artikel i Politiken."],"correct":"Vi læste en artikel i Politiken.","accepted_answers":["Vi læste en artikel i Politiken."],"review_text":"Navne på aviser skrives med stort. Almindelige navneord som 'artikel' skrives med lille."}$$::jsonb,
+  $${"question":"Hvilken sætning om en avis er skrevet rigtigt?","options":["Vi læste en artikel i politiken.","vi læste en artikel i Politiken.","Vi læste en Artikel i Politiken.","Vi læste en artikel i Politiken."],"correct":"Vi læste en artikel i Politiken.","accepted_answers":["Vi læste en artikel i Politiken."],"review_text":"Navne på aviser skrives med stort. Almindelige navneord som 'artikel' skrives med lille."}$$::jsonb,
   'mc','short',$${"concepts":["tegnsætning"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',8,1
 );
@@ -406,7 +406,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["kvaletet","kvallitet","kvalitet","qvalitet"],"correct":"kvalitet","accepted_answers":["kvalitet"],"review_text":"Kvalitet staves k-v-a-l-i-t-e-t."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det fortæller, hvor god en ting er.","options":["kvaletet","kvallitet","kvalitet","qvalitet"],"correct":"kvalitet","accepted_answers":["kvalitet"],"review_text":"Kvalitet staves k-v-a-l-i-t-e-t."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',8,1
 );
@@ -424,7 +424,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["miljøe","miljø","milljø","miljö"],"correct":"miljø","accepted_answers":["miljø"],"review_text":"Miljø staves m-i-l-j-ø."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det handler om naturen, luften og vandet omkring os.","options":["miljøe","miljø","milljø","miljö"],"correct":"miljø","accepted_answers":["miljø"],"review_text":"Miljø staves m-i-l-j-ø."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',2,'auto',true,'danish',8,2
 );
@@ -460,7 +460,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["generalt","genereldt","djenerelt","generelt"],"correct":"generelt","accepted_answers":["generelt"],"review_text":"Generelt staves g-e-n-e-r-e-l-t."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det betyder 'som regel' eller 'i det hele taget'.","options":["generalt","genereldt","djenerelt","generelt"],"correct":"generelt","accepted_answers":["generelt"],"review_text":"Generelt staves g-e-n-e-r-e-l-t."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',2,'auto',true,'danish',8,2
 );
@@ -496,7 +496,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["diskution","diskussion","diskusion","dikussion"],"correct":"diskussion","accepted_answers":["diskussion"],"review_text":"Diskussion staves med -ssion til sidst."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det er en samtale, hvor man udveksler forskellige meninger.","options":["diskution","diskussion","diskusion","dikussion"],"correct":"diskussion","accepted_answers":["diskussion"],"review_text":"Diskussion staves med -ssion til sidst."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',3,'auto',true,'danish',8,3
 );
@@ -514,7 +514,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er skrevet rigtigt?","options":["Der var tre ting på listen: mælk, brød og æg.","Der var tre ting på listen, mælk: brød og æg.","Der var: tre ting på listen mælk, brød og æg.","Der var tre ting på listen; mælk, brød, og æg."],"correct":"Der var tre ting på listen: mælk, brød og æg.","accepted_answers":["Der var tre ting på listen: mælk, brød og æg."],"review_text":"Kolon står lige før opremsningen."}$$::jsonb,
+  $${"question":"Hvilken sætning om indkøbslisten er skrevet rigtigt?","options":["Der var tre ting på listen: mælk, brød og æg.","Der var tre ting på listen, mælk: brød og æg.","Der var: tre ting på listen mælk, brød og æg.","Der var tre ting på listen; mælk, brød, og æg."],"correct":"Der var tre ting på listen: mælk, brød og æg.","accepted_answers":["Der var tre ting på listen: mælk, brød og æg."],"review_text":"Kolon står lige før opremsningen."}$$::jsonb,
   'mc','short',$${"concepts":["tegnsætning"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',4,'auto',true,'danish',8,4
 );
@@ -532,7 +532,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["ekspriment","experiment","eksperimant","eksperiment"],"correct":"eksperiment","accepted_answers":["eksperiment"],"review_text":"På dansk staves eksperiment med ks."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det er et forsøg, man laver for at undersøge noget.","options":["ekspriment","experiment","eksperimant","eksperiment"],"correct":"eksperiment","accepted_answers":["eksperiment"],"review_text":"På dansk staves eksperiment med ks."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',4,'auto',true,'danish',8,4
 );
@@ -550,7 +550,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["nødvendivis","nøvendigvis","nødvendigvis","nødvændigvis"],"correct":"nødvendigvis","accepted_answers":["nødvendigvis"],"review_text":"Nødvendigvis staves med d to steder og -igvis til sidst."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det passer her: 'Dyre sko er ikke ___ bedre.'","options":["nødvendivis","nøvendigvis","nødvendigvis","nødvændigvis"],"correct":"nødvendigvis","accepted_answers":["nødvendigvis"],"review_text":"Nødvendigvis staves med d to steder og -igvis til sidst."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',9,1
 );
@@ -568,7 +568,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er skrevet rigtigt?","options":["Jeg er født den 3 maj 2011.","Jeg er født den 3. maj 2011.","Jeg er født den 3. Maj 2011.","Jeg er født den 3.maj 2011."],"correct":"Jeg er født den 3. maj 2011.","accepted_answers":["Jeg er født den 3. maj 2011."],"review_text":"Punktum efter tallet, mellemrum og månedens navn med lille."}$$::jsonb,
+  $${"question":"Hvilken sætning med en dato er skrevet rigtigt?","options":["Jeg er født den 3 maj 2011.","Jeg er født den 3. maj 2011.","Jeg er født den 3. Maj 2011.","Jeg er født den 3.maj 2011."],"correct":"Jeg er født den 3. maj 2011.","accepted_answers":["Jeg er født den 3. maj 2011."],"review_text":"Punktum efter tallet, mellemrum og månedens navn med lille."}$$::jsonb,
   'mc','short',$${"concepts":["tegnsætning"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',9,1
 );
@@ -586,7 +586,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["ansvarlig","ansvarli","ansvalig","anssvarlig"],"correct":"ansvarlig","accepted_answers":["ansvarlig"],"review_text":"Ansvarlig er sat sammen af ansvar og -lig."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det betyder, at man passer på og tager sig af noget.","options":["ansvarlig","ansvarli","ansvalig","anssvarlig"],"correct":"ansvarlig","accepted_answers":["ansvarlig"],"review_text":"Ansvarlig er sat sammen af ansvar og -lig."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',1,'auto',true,'danish',9,1
 );
@@ -604,7 +604,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["konsekvents","konsækvens","kondsekvens","konsekvens"],"correct":"konsekvens","accepted_answers":["konsekvens"],"review_text":"Konsekvens staves k-o-n-s-e-k-v-e-n-s."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det er det, der sker som følge af en handling.","options":["konsekvents","konsækvens","kondsekvens","konsekvens"],"correct":"konsekvens","accepted_answers":["konsekvens"],"review_text":"Konsekvens staves k-o-n-s-e-k-v-e-n-s."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',2,'auto',true,'danish',9,2
 );
@@ -640,7 +640,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["demokrasi","demokrati","demograti","dæmokrati"],"correct":"demokrati","accepted_answers":["demokrati"],"review_text":"Demokrati staves med k og -ti til sidst."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det er en styreform, hvor folket vælger, hvem der bestemmer.","options":["demokrasi","demokrati","demograti","dæmokrati"],"correct":"demokrati","accepted_answers":["demokrati"],"review_text":"Demokrati staves med k og -ti til sidst."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"danish"}$$::jsonb,
   'mc_single',2,'auto',true,'danish',9,2
 );
@@ -652,7 +652,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er skrevet rigtigt?","options":["Han sagde: at han var syg.","Han sagde »at han var syg«.","Han sagde; at han var syg.","Han sagde, at han var syg."],"correct":"Han sagde, at han var syg.","accepted_answers":["Han sagde, at han var syg."],"review_text":"Indirekte tale med 'at' står uden kolon og anførselstegn."}$$::jsonb,
+  $${"question":"Hvilken sætning med indirekte tale er skrevet rigtigt?","options":["Han sagde: at han var syg.","Han sagde »at han var syg«.","Han sagde; at han var syg.","Han sagde, at han var syg."],"correct":"Han sagde, at han var syg.","accepted_answers":["Han sagde, at han var syg."],"review_text":"Indirekte tale med 'at' står uden kolon og anførselstegn."}$$::jsonb,
   'mc','short',$${"concepts":["tegnsætning"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',3,'auto',true,'danish',9,3
 );
@@ -676,7 +676,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["paralel","parralel","parallell","parallel"],"correct":"parallel","accepted_answers":["parallel"],"review_text":"Parallel har to l'er i midten og ét l til sidst."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det bruges om to linjer, der aldrig mødes.","options":["paralel","parralel","parallell","parallel"],"correct":"parallel","accepted_answers":["parallel"],"review_text":"Parallel har to l'er i midten og ét l til sidst."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',3,'auto',true,'danish',9,3
 );
@@ -712,7 +712,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilket ord er stavet rigtigt?","options":["interesere","interessere","intresere","interressere"],"correct":"interessere","accepted_answers":["interessere"],"review_text":"Interessere har ét r og to s'er – ligesom interessant."}$$::jsonb,
+  $${"question":"Hvilket ord er stavet rigtigt? Det passer her: 'Jeg begyndte at ___ mig for musik.'","options":["interesere","interessere","intresere","interressere"],"correct":"interessere","accepted_answers":["interessere"],"review_text":"Interessere har ét r og to s'er – ligesom interessant."}$$::jsonb,
   'mc','short',$${"concepts":["stavning"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"challenge","insight_type":"reframing","domain":"danish"}$$::jsonb,
   'mc_single',4,'auto',true,'danish',9,4
 );
