@@ -150,15 +150,16 @@ test("workflow: the check runs on both paths, only the exact value skips, the gu
       assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'\n"), n);
       continue;
     }
+    // PR #664: the introduction chain runs ONLY in the introduction lane (and must run completely there).
+    if (n === "Introduction E2E — the chain must run completely (introduction lane)") {
+      assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'introduction'\n"), n);
+      continue;
+    }
+
     // A4: the provisioning check against the local stack runs in every production-mirror entry, after the
     // suite (its slots 1–3 never touch the suite's slot-0 accounts). Pinned in full by ci-e2e-prod-provision.
     if (n === "Provisioning (A4) against the isolated stack — dry-run, apply, refusal, resumption") {
       assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'\n"), n);
-      continue;
-    }
-    // PR #664: the introduction chain runs ONLY in the introduction lane (and must run completely there).
-    if (n === "Introduction E2E — the chain must run completely (introduction lane)") {
-      assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'introduction'\n"), n);
       continue;
     }
     // Every other step: skipped ONLY for the exact value "docs-md"; any other value runs it.
