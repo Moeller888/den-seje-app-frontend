@@ -230,9 +230,13 @@ test("derived passwords are deterministic, never equal their base, and satisfy p
 test("global-setup checks every secret before it can reach Supabase, and specs read through the module", () => {
   const setup = read("tests/global-setup.ts");
   const guard = setup.indexOf("missingSecrets()");
-  const client = setup.indexOf("createClient(SUPABASE_URL");
+  // Since A3 the service-role client is created only inside tests/e2e-admin.mjs, which global-setup
+  // reaches through verifyAndOpenAdmin(); the key itself is read there, required, with no default.
+  const client = setup.indexOf("await verifyAndOpenAdmin(");
   assert.ok(guard !== -1 && client !== -1, "both the guard and the client creation must exist");
   assert.ok(guard < client, "missingSecrets() must run before the Supabase client is created");
+  assert.equal(setup.includes("createClient("), false, "global-setup creates no client of its own");
+  assert.match(read("tests/e2e-admin.mjs"), /readRequiredSecret\("SUPABASE_SERVICE_ROLE_KEY", env\)/);
   for (const call of ["auth.admin.createUser", "auth.admin.updateUserById", ".upsert(", ".update(", ".delete("]) {
     const at = setup.indexOf(call, client);
     if (at !== -1) assert.ok(guard < at, `missingSecrets() must run before the first ${call}`);
@@ -315,5 +319,6 @@ test("a fork pull request cannot reach secrets and fails before any data is touc
   assert.deepEqual(missingSecrets(REQUIRED_E2E_SECRETS, env), [...REQUIRED_E2E_SECRETS],
     "with empty secrets every required value must be reported missing, so global-setup throws");
   const setup = read("tests/global-setup.ts");
-  assert.ok(setup.indexOf("missingSecrets()") < setup.indexOf("createClient(SUPABASE_URL"));
+  assert.ok(setup.indexOf("missingSecrets()") !== -1);
+  assert.ok(setup.indexOf("missingSecrets()") < setup.indexOf("await verifyAndOpenAdmin("));
 });

@@ -9,8 +9,9 @@
 //    set to the LOCAL stack, synthetic @e2e.invalid accounts and passwords generated for this run
 //    only. No value comes from a repository secret or variable.
 // 3. suiteViolations() re-checks that environment; any violation refuses before Playwright starts.
-// 4. The primary test pupil is provisioned with the standing state specs rely on
-//    (seed/primary-account.mjs), on the checked local stack only.
+// 4. The four marked E2E accounts (tests/e2e-accounts.mjs) are provisioned, with the primary pupil's
+//    standing state specs rely on (seed/primary-account.mjs), on the checked local stack only.
+//    global-setup.ts never creates accounts: it verifies these and stops if they are not right.
 // 5. Every browser goes through the tripwire proxy; a single refused request fails the run even if
 //    every test passed.
 import { spawn } from "node:child_process";
@@ -89,9 +90,14 @@ async function main(args) {
   const v = suiteViolations(env);
   if (v.length) { await tripwire.close(); throw new Error("REFUSED — suite environment:\n  " + v.join("\n  ")); }
   const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
-  const { ownerId, pupilId } = await provisionPrimaryAccount(admin, { runId, studentEmail: env.TEST_STUDENT_EMAIL, studentPassword: env.TEST_STUDENT_PASSWORD })
-    .catch(async (e) => { await tripwire.close(); throw e; });
+  const { ownerId, pupilId, teacherId, student2Id } = await provisionPrimaryAccount(admin, {
+    runId,
+    studentEmail: env.TEST_STUDENT_EMAIL, studentPassword: env.TEST_STUDENT_PASSWORD,
+    teacherEmail: env.TEST_TEACHER_EMAIL, teacherPassword: env.TEST_TEACHER_PASSWORD,
+    student2Email: env.TEST_STUDENT2_EMAIL, student2Password: env.TEST_STUDENT2_PASSWORD,
+  }).catch(async (e) => { await tripwire.close(); throw e; });
   console.log(`isolated suite: primary pupil ${pupilId} provisioned (owner teacher ${ownerId})`);
+  console.log(`isolated suite: test teacher ${teacherId} and its pupil ${student2Id} provisioned (marked laerlig_e2e, slot 0)`);
   console.log(`isolated suite: accounts on @${SYNTHETIC_EMAIL_DOMAIN}, target ${env.PROD_BASE_URL}, tripwire ${tripwire.url}`);
   const t0 = Date.now();
   const code = await new Promise((ok) => {

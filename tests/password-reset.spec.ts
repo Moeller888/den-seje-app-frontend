@@ -5,6 +5,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { createE2EAdminClient } from './e2e-admin.mjs';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
@@ -16,7 +17,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const SUPABASE_URL             = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // Public anon key — already in deployed frontend JS, not a secret.
 const SUPABASE_ANON_KEY = PUBLIC_API_KEY;
@@ -31,18 +31,26 @@ let adminClient: ReturnType<typeof createClient>;
 let studentId: string;
 
 test.beforeAll(async () => {
-  adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  adminClient = createE2EAdminClient();
   // Resolve student ID so afterAll can restore the password by ID.
   const user = await findAuthUserByEmail(adminClient, STUDENT_EMAIL);
   if (!user) throw new Error(`Test student not found: ${STUDENT_EMAIL}`);
   studentId = user.id;
+  // A5: start from the known password even if an earlier run was interrupted after test 6 left the
+  // temporary one in place. Error-checked: a failed restore stops the file instead of testing on.
+  await restoreStudentPassword();
 });
 
+async function restoreStudentPassword(): Promise<void> {
+  const { error } = await adminClient.auth.admin.updateUserById(studentId, { password: STUDENT_PASS });
+  if (error) throw new Error(`password-reset: password restore failed — ${error.message}`);
+}
+
 test.afterAll(async () => {
-  // Restore original password regardless of which tests passed or failed.
-  await adminClient.auth.admin.updateUserById(studentId, { password: STUDENT_PASS });
+  // No id: beforeAll failed before anything was changed, so there is nothing to restore.
+  if (!studentId) return;
+  // Restore original password regardless of which tests passed or failed. A failure is LOUD.
+  await restoreStudentPassword();
 });
 
 // ── UI tests ─────────────────────────────────────────────────────────────────

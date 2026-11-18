@@ -5,6 +5,7 @@
 
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { createE2EAdminClient } from "./e2e-admin.mjs";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
@@ -24,11 +25,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const SUPABASE_URL              = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const SUPABASE_ANON_KEY = PUBLIC_API_KEY;
 
-// Main test student — NOT owned by teacher-test@hotmail.com
+// Main test student — NOT owned by the test teacher (TEST_TEACHER_EMAIL)
 const MAIN_STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const MAIN_STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
 
@@ -40,11 +40,32 @@ let teacherClient: ReturnType<typeof createClient>;
 let student2Id: string;
 let mainStudentId: string;
 let temporaryPassword: string;
+// Set when test 2's cross-class reset was NOT refused: the main student's password and flag were
+// then changed by the endpoint and must be put back (A5) — at once, and again in afterAll.
+let mainStudentTouched = false;
+
+// Error-checked restores. Each throws loudly; afterAll collects every failure before throwing, so
+// one failed restore never hides another.
+async function restoreStudent2(): Promise<void> {
+  const { error: pwErr } = await adminClient.auth.admin.updateUserById(student2Id, { password: STUDENT2_ORIGINAL_PASS });
+  if (pwErr) throw new Error(`student2 password restore failed — ${pwErr.message}`);
+  const { error: flagErr } = await adminClient.from("profiles")
+    .update({ must_reset_password: false })
+    .eq("id", student2Id);
+  if (flagErr) throw new Error(`student2 must_reset_password restore failed — ${flagErr.message}`);
+}
+
+async function restoreMainStudent(): Promise<void> {
+  const { error: pwErr } = await adminClient.auth.admin.updateUserById(mainStudentId, { password: MAIN_STUDENT_PASS });
+  if (pwErr) throw new Error(`main student password restore failed — ${pwErr.message}`);
+  const { error: flagErr } = await adminClient.from("profiles")
+    .update({ must_reset_password: false })
+    .eq("id", mainStudentId);
+  if (flagErr) throw new Error(`main student must_reset_password restore failed — ${flagErr.message}`);
+}
 
 test.beforeAll(async () => {
-  adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  adminClient = createE2EAdminClient();
 
   const student2 = await findAuthUserByEmail(adminClient, STUDENT2_EMAIL);
   if (!student2) throw new Error(`student2 not found: ${STUDENT2_EMAIL}`);
@@ -54,11 +75,9 @@ test.beforeAll(async () => {
   if (!mainStudent) throw new Error(`main student not found: ${MAIN_STUDENT_EMAIL}`);
   mainStudentId = mainStudent.id;
 
-  // Ensure student2 is in a clean known state before this spec runs.
-  await adminClient.auth.admin.updateUserById(student2Id, { password: STUDENT2_ORIGINAL_PASS });
-  await adminClient.from("profiles")
-    .update({ must_reset_password: false })
-    .eq("id", student2Id);
+  // Ensure student2 is in a clean known state before this spec runs — also after an interrupted
+  // earlier run that left a temporary password or the must_reset_password flag behind.
+  await restoreStudent2();
 
   // Authenticate teacher client once; reused across all API tests.
   teacherClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -72,11 +91,16 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  // Restore student2 to original state regardless of test outcomes.
-  await adminClient.auth.admin.updateUserById(student2Id, { password: STUDENT2_ORIGINAL_PASS });
-  await adminClient.from("profiles")
-    .update({ must_reset_password: false })
-    .eq("id", student2Id);
+  // Restore to original state regardless of test outcomes. Only accounts whose id was resolved can
+  // have been changed; every failure is reported.
+  const failures: string[] = [];
+  if (student2Id) {
+    await restoreStudent2().catch((e) => failures.push(String(e?.message ?? e)));
+  }
+  if (mainStudentTouched && mainStudentId) {
+    await restoreMainStudent().catch((e) => failures.push(String(e?.message ?? e)));
+  }
+  if (failures.length > 0) throw new Error(`teacher-password-reset cleanup: ${failures.join("; ")} — restore manually`);
 });
 
 // ── API tests ─────────────────────────────────────────────────────────────────
@@ -96,8 +120,8 @@ test("1. Teacher can reset own student password", async () => {
 });
 
 test("2. Unauthorized teacher cannot reset another teacher's student", async () => {
-  // teacher-test@hotmail.com attempts to reset the main test student, who
-  // belongs to a different teacher. The ownership check must return 403.
+  // The test teacher attempts to reset the main test student, who belongs to a different teacher
+  // (the slot's owner teacher). The ownership check must return 403.
   const { data, error } = await teacherClient.functions.invoke(
     "reset-student-password",
     { body: { student_id: mainStudentId } }
@@ -105,6 +129,11 @@ test("2. Unauthorized teacher cannot reset another teacher's student", async () 
 
   // A non-2xx response surfaces as a truthy error from functions.invoke.
   const wasRejected = error !== null || data?.error != null;
+  if (!wasRejected) {
+    // Regression: the endpoint changed another teacher's pupil. Put the account back before failing.
+    mainStudentTouched = true;
+    await restoreMainStudent();
+  }
   expect(wasRejected, "cross-class reset must be rejected").toBe(true);
 });
 
@@ -178,10 +207,12 @@ test("7. Student can choose new password via forced-change flow", async ({ brows
   const FRESH_TEMP = STUDENT2_FRESH_TEMP_PASSWORD;
   const NEW_PASS   = STUDENT2_NEW_PASSWORD;
 
-  await adminClient.auth.admin.updateUserById(student2Id, { password: FRESH_TEMP });
-  await adminClient.from("profiles")
+  const { error: freshErr } = await adminClient.auth.admin.updateUserById(student2Id, { password: FRESH_TEMP });
+  expect(freshErr, `fresh temp password could not be set: ${freshErr?.message}`).toBeNull();
+  const { error: flagSetErr } = await adminClient.from("profiles")
     .update({ must_reset_password: true })
     .eq("id", student2Id);
+  expect(flagSetErr, `must_reset_password could not be set: ${flagSetErr?.message}`).toBeNull();
 
   // Step 1: Sign in with the temporary password
   const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -230,7 +261,7 @@ test("7. Student can choose new password via forced-change flow", async ({ brows
   expect(profile?.must_reset_password, "flag must be false after forced change").toBe(false);
 
   // Restore original password for afterAll to clean up correctly.
-  await adminClient.auth.admin.updateUserById(student2Id, { password: STUDENT2_ORIGINAL_PASS });
+  await restoreStudent2();
 });
 
 test("8. Audit record is written for the reset", async ({ browserName }) => {

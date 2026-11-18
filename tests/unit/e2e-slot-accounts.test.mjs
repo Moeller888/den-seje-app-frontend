@@ -6,8 +6,9 @@
 //     slot-0 address; an invalid E2E_SLOT throws instead of falling onto another slot's accounts;
 //   - passwords are never derived, rewritten or logged; the address derived from the secret
 //     TEST_STUDENT_EMAIL is masked in GitHub Actions;
-//   - ensureSlotUser() creates with email_confirm + an app_metadata marker, and REFUSES (never
-//     modifies) an existing account that lacks the matching marker;
+//   - there are NO default addresses (A1): a missing address throws, for every slot;
+//   - nothing here provisions accounts any more (A2): ensureSlotUser and its kinds are gone, and
+//     global-setup creates no user (tests/unit/e2e-account-safety-contract.test.mjs);
 //   - the Playwright config applies the slot before global-setup and any spec.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -15,16 +16,14 @@ import { readFileSync } from "node:fs";
 
 import {
   MAX_SLOTS,
-  DEFAULT_TEACHER_EMAIL,
-  DEFAULT_STUDENT2_EMAIL,
   OWNER_VAR,
   APPLIED_VAR,
   parseSlot,
   slotEmail,
   applySlotToEnv,
   maskCommands,
-  ensureSlotUser,
 } from "../e2e-slot.mjs";
+import * as slotModule from "../e2e-slot.mjs";
 
 // Stand-in secret values are generated, never written as literals (tests/unit/credential-hygiene.test.mjs
 // forbids a literal assigned to a credential name anywhere in the repository).
@@ -32,8 +31,11 @@ const PASSWORD_KEYS = ["TEST_STUDENT_PASSWORD", "TEST_TEACHER_PASSWORD", "TEST_S
 const fakeSecret = (name) => ["fake", name.toLowerCase(), "never", "logged"].join("-");
 const BASE = Object.freeze({
   TEST_STUDENT_EMAIL: "pupil.secret@example.test",
+  TEST_TEACHER_EMAIL: "teacher@example.test",
+  TEST_STUDENT2_EMAIL: "pupil2@example.test",
   ...Object.fromEntries(PASSWORD_KEYS.map((k) => [k, fakeSecret(k)])),
 });
+const read = (p) => readFileSync(new URL("../../" + p, import.meta.url), "utf8");
 const envFor = (slot, extra = {}) => ({ ...BASE, ...(slot === undefined ? {} : { E2E_SLOT: slot }), ...extra });
 
 // ── parseSlot ─────────────────────────────────────────────────────────────────────────────────
@@ -50,8 +52,8 @@ test("parseSlot: unset/empty is 0, '0'..'3' select a slot, anything else throws"
 
 // ── slotEmail ─────────────────────────────────────────────────────────────────────────────────
 test("slotEmail inserts +e2e-slot-<n> before the @, deterministically", () => {
-  assert.equal(slotEmail("teacher-test@hotmail.com", 1), "teacher-test+e2e-slot-1@hotmail.com");
-  assert.equal(slotEmail("teacher-test@hotmail.com", 3, "-owner"), "teacher-test+e2e-slot-3-owner@hotmail.com");
+  assert.equal(slotEmail("teacher@example.test", 1), "teacher+e2e-slot-1@example.test");
+  assert.equal(slotEmail("teacher@example.test", 3, "-owner"), "teacher+e2e-slot-3-owner@example.test");
   assert.equal(slotEmail("a.b@c.dk", 2), "a.b+e2e-slot-2@c.dk");
   assert.equal(slotEmail(" a@c.dk ", 2), "a+e2e-slot-2@c.dk");
   assert.equal(slotEmail("a@c.dk", 0), "a@c.dk");
@@ -68,7 +70,7 @@ test("slotEmail refuses anything that is not a plain local@domain or already tag
 });
 
 test("all slot addresses are unique across slots and account kinds, and never a slot-0 address", () => {
-  const seen = new Set([BASE.TEST_STUDENT_EMAIL, DEFAULT_TEACHER_EMAIL, DEFAULT_STUDENT2_EMAIL]);
+  const seen = new Set([BASE.TEST_STUDENT_EMAIL, BASE.TEST_TEACHER_EMAIL, BASE.TEST_STUDENT2_EMAIL]);
   for (let slot = 1; slot < MAX_SLOTS; slot++) {
     const env = envFor(String(slot));
     applySlotToEnv(env);
@@ -91,14 +93,27 @@ test("slot 0 (unset or '0') leaves the environment exactly as it was", () => {
   }
 });
 
-test("slot 2 derives all four accounts; teacher/student2 from their public defaults when unset", () => {
+test("slot 2 derives all four accounts from the configured addresses", () => {
   const env = envFor("2");
   assert.equal(applySlotToEnv(env), 2);
   assert.equal(env.TEST_STUDENT_EMAIL, "pupil.secret+e2e-slot-2@example.test");
-  assert.equal(env.TEST_TEACHER_EMAIL, "teacher-test+e2e-slot-2@hotmail.com");
-  assert.equal(env.TEST_STUDENT2_EMAIL, "student-teacher-test+e2e-slot-2@hotmail.com");
-  assert.equal(env[OWNER_VAR], "teacher-test+e2e-slot-2-owner@hotmail.com");
+  assert.equal(env.TEST_TEACHER_EMAIL, "teacher+e2e-slot-2@example.test");
+  assert.equal(env.TEST_STUDENT2_EMAIL, "pupil2+e2e-slot-2@example.test");
+  assert.equal(env[OWNER_VAR], "teacher+e2e-slot-2-owner@example.test");
   assert.equal(env[APPLIED_VAR], "2");
+});
+
+test("A1: no default address — a missing or blank teacher/student2 address throws for slots 1..3", () => {
+  for (const name of ["TEST_TEACHER_EMAIL", "TEST_STUDENT2_EMAIL"]) {
+    for (const value of [undefined, "", "   "]) {
+      const env = envFor("1", { [name]: value });
+      if (value === undefined) delete env[name];
+      assert.throws(() => applySlotToEnv(env), (e) => e instanceof Error && e.message.startsWith(name + " is missing or empty (no default address)"), name + "=" + JSON.stringify(value));
+    }
+  }
+  const src = read("tests/e2e-slot.mjs");
+  assert.equal(/hotmail/i.test(src), false, "no hotmail address left in the slot module");
+  assert.equal(/fallback/.test(src), false, "no fallback field left in the slot module");
 });
 
 test("overridden teacher/student2 addresses are honoured as the slot-0 base", () => {
@@ -158,87 +173,16 @@ test("maskCommands masks the secret-derived address in Actions, and only that", 
   assert.deepEqual(maskCommands(envFor("0", { GITHUB_ACTIONS: "true" })), [], "slot 0: GitHub already masks the secret");
 });
 
-// ── ensureSlotUser ────────────────────────────────────────────────────────────────────────────
-function fakeAuth(existing = []) {
-  const users = [...existing];
-  const created = [];
-  const logs = [];
-  return {
-    created,
-    logs,
-    findUser: async (email) => users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase()) ?? null,
-    createUser: async (attributes) => {
-      created.push(attributes);
-      const user = { id: "id-" + created.length, email: attributes.email, app_metadata: attributes.app_metadata };
-      users.push(user);
-      return { data: { user }, error: null };
-    },
-    log: (line) => logs.push(line),
-  };
-}
-
-test("ensureSlotUser creates a confirmed, marked account and logs only slot/kind/id", async () => {
-  const f = fakeAuth();
-  const id = await ensureSlotUser({ slot: 1, kind: "primary", email: "pupil.secret+e2e-slot-1@example.test", password: BASE.TEST_STUDENT_PASSWORD, ...f });
-  assert.equal(id, "id-1");
-  assert.deepEqual(f.created[0], {
-    email: "pupil.secret+e2e-slot-1@example.test",
-    email_confirm: true,
-    app_metadata: { e2e_slot: 1, e2e_account: "primary" },
-    password: BASE.TEST_STUDENT_PASSWORD,
-  });
-  assert.deepEqual(f.logs, ["[global-setup] Created E2E slot 1 primary account (id-1)"]);
-});
-
-test("ensureSlotUser is idempotent: a correctly marked existing account is reused, not recreated", async () => {
-  const f = fakeAuth([{ id: "u9", email: "t+e2e-slot-2@s.dk", app_metadata: { e2e_slot: 2, e2e_account: "teacher" } }]);
-  assert.equal(await ensureSlotUser({ slot: 2, kind: "teacher", email: "T+e2e-slot-2@s.dk", password: fakeSecret("p"), ...f }), "u9");
-  assert.equal(f.created.length, 0);
-  assert.equal(f.logs.length, 0);
-});
-
-test("ensureSlotUser REFUSES an existing account without the matching marker", async () => {
-  for (const app_metadata of [undefined, {}, { e2e_slot: 1, e2e_account: "teacher" }, { e2e_slot: 2, e2e_account: "primary" }, { e2e_slot: "2", e2e_account: "teacher" }]) {
-    const f = fakeAuth([{ id: "stranger", email: "t+e2e-slot-2@s.dk", app_metadata }]);
-    await assert.rejects(
-      ensureSlotUser({ slot: 2, kind: "teacher", email: "t+e2e-slot-2@s.dk", password: fakeSecret("p"), ...f }),
-      /refusing to modify it \(stranger\)/,
-      JSON.stringify(app_metadata),
-    );
-    assert.equal(f.created.length, 0);
-  }
-});
-
-test("ensureSlotUser: the owner has no password; bad inputs are refused before any lookup", async () => {
-  const f = fakeAuth();
-  await ensureSlotUser({ slot: 3, kind: "owner", email: "t+e2e-slot-3-owner@s.dk", password: null, ...f });
-  assert.ok(!("password" in f.created[0]));
-
-  const g = fakeAuth();
-  let looked = 0;
-  const findUser = async () => { looked++; return null; };
-  for (const bad of [
-    { slot: 0, kind: "primary", email: "a+e2e-slot-0@b.c", password: fakeSecret("p") },
-    { slot: 4, kind: "primary", email: "a+e2e-slot-4@b.c", password: fakeSecret("p") },
-    { slot: 1, kind: "admin", email: "a+e2e-slot-1@b.c", password: fakeSecret("p") },
-    { slot: 1, kind: "primary", email: "a@b.c", password: fakeSecret("p") },
-    { slot: 1, kind: "primary", email: "a+e2e-slot-2@b.c", password: fakeSecret("p") },
-    { slot: 1, kind: "primary", email: "a+e2e-slot-1@b.c", password: "" },
-    { slot: 1, kind: "primary", email: "a+e2e-slot-1@b.c", password: undefined },
-  ]) {
-    await assert.rejects(ensureSlotUser({ ...bad, ...g, findUser }), /ensureSlotUser/, JSON.stringify(bad));
-  }
-  assert.equal(looked, 0);
-});
-
-test("ensureSlotUser surfaces createUser errors and a missing id", async () => {
-  const base = { slot: 1, kind: "student2", email: "p+e2e-slot-1@s.dk", password: fakeSecret("p"), findUser: async () => null, log: () => {} };
-  await assert.rejects(ensureSlotUser({ ...base, createUser: async () => ({ data: null, error: { message: "boom" } }) }), /createUser failed — boom/);
-  await assert.rejects(ensureSlotUser({ ...base, createUser: async () => ({ data: { user: {} }, error: null }) }), /no user id/);
+// ── No provisioning ───────────────────────────────────────────────────────────────────────────
+test("A2: the slot module no longer provisions accounts (ensureSlotUser and its kinds are gone)", () => {
+  assert.equal("ensureSlotUser" in slotModule, false);
+  assert.equal("SLOT_ACCOUNT_KINDS" in slotModule, false);
+  assert.equal("DEFAULT_TEACHER_EMAIL" in slotModule, false);
+  assert.equal("DEFAULT_STUDENT2_EMAIL" in slotModule, false);
+  assert.equal(/createUser/.test(read("tests/e2e-slot.mjs")), false);
 });
 
 // ── Wiring ────────────────────────────────────────────────────────────────────────────────────
-const read = (p) => readFileSync(new URL("../../" + p, import.meta.url), "utf8");
 
 test("playwright.config.ts applies the slot after .env and before defineConfig, and prints the masks", () => {
   const cfg = read("playwright.config.ts");
@@ -249,37 +193,29 @@ test("playwright.config.ts applies the slot after .env and before defineConfig, 
   assert.ok(dot !== -1 && apply > dot && mask > apply && define > mask);
 });
 
-test("global-setup provisions slots 1..3 through ensureSlotUser and leaves slot 0 alone", () => {
+test("global-setup takes the slot's accounts from the registry, not from the slot module", () => {
   const gs = read("tests/global-setup.ts");
-  assert.ok(gs.includes('import { parseSlot, OWNER_VAR, ensureSlotUser } from "./e2e-slot.mjs";'));
-  assert.ok(gs.includes("const slotOwnerTeacherId = E2E_SLOT === 0 ? null : await ensureSlotAccounts(supabase, E2E_SLOT);"));
-  assert.ok(gs.includes("if (slotOwnerTeacherId !== null) {"));
-  // The slot code logs no address and no password.
-  const start = gs.indexOf("async function ensureSlotAccounts(");
-  const region = gs.slice(start, gs.indexOf("// ── Section 97: Teacher test account provisioning", start));
-  for (const line of region.split("\n").filter((l) => l.includes("console.log(") || l.includes("throw new Error("))) {
-    for (const forbidden of ["EMAIL}", "PASSWORD", "ownerEmail}", "email}"]) {
-      assert.ok(!line.includes(forbidden), "slot setup must not log " + forbidden + ": " + line.trim());
-    }
-  }
+  assert.ok(gs.includes('import { resolveAccountRegistry } from "./e2e-accounts.mjs";'));
+  assert.ok(gs.includes('import { verifyAndOpenAdmin } from "./e2e-admin.mjs";'));
+  assert.equal(gs.includes("e2e-slot.mjs"), false, "global-setup no longer imports slot provisioning");
 });
 
 // The primary address comes from a secret, and for slots 1..3 is derived from one. GitHub masks only
 // the exact secret string, so the derived form is protected solely by the `::add-mask::` the config
-// prints. Global setup therefore never interpolates it at all: no log line, no error message.
-test("global-setup never puts the primary student address into a log line or message", () => {
+// prints. Global setup therefore never interpolates an address at all: no log line, no error message.
+test("global-setup never puts an account address into a log line or message", () => {
   const gs = read("tests/global-setup.ts");
-  assert.equal(gs.includes("${TEST_STUDENT_EMAIL}"), false);
-  assert.ok(gs.includes("Deleted all question_instances for the primary test student (${user.id}, slot ${E2E_SLOT})"));
-  assert.ok(gs.includes("avatar_identity=neutral(chosen) for the primary test student (${user.id}, slot ${E2E_SLOT})"));
+  for (const forbidden of ["EMAIL}", ".email}", "email}", "accounts.primary", "accounts.teacher", "accounts.student2", "accounts.owner"]) {
+    assert.equal(gs.includes(forbidden), false, forbidden);
+  }
+  assert.ok(gs.includes("`[global-setup] ${kind} (${id}): question_instances deleted"), "logged by kind and user id");
   // Negative control: the check sees the shape it forbids.
-  assert.ok("for ${TEST_STUDENT_EMAIL} (${user.id})".includes("${TEST_STUDENT_EMAIL}"));
+  assert.ok("for ${TEST_STUDENT_EMAIL} (${user.id})".includes("EMAIL}"));
 });
 
-test("helpers and global-setup still read addresses only from TEST_*_EMAIL (which the config rewrites)", () => {
+test("helpers read addresses only through the registry's requiredAddress (no default)", () => {
   const helpers = read("tests/helpers.ts");
-  assert.ok(helpers.includes('export const TEACHER_EMAIL    = process.env.TEST_TEACHER_EMAIL    ?? "teacher-test@hotmail.com";'));
-  assert.ok(helpers.includes('export const STUDENT2_EMAIL   = process.env.TEST_STUDENT2_EMAIL   ?? "student-teacher-test@hotmail.com";'));
-  assert.equal(DEFAULT_TEACHER_EMAIL, "teacher-test@hotmail.com");
-  assert.equal(DEFAULT_STUDENT2_EMAIL, "student-teacher-test@hotmail.com");
+  assert.ok(helpers.includes('export const TEACHER_EMAIL    = requiredAddress("TEST_TEACHER_EMAIL");'));
+  assert.ok(helpers.includes('export const STUDENT2_EMAIL   = requiredAddress("TEST_STUDENT2_EMAIL");'));
+  assert.equal(/hotmail/i.test(helpers), false);
 });

@@ -42,8 +42,10 @@ const ANON_REJECTED = Object.freeze([
   "tests/rls-dormant-tables.spec.ts question_attempt_audit",
 ]);
 // Identifiers that hold a slot account id. `id` is password-help.spec.ts's helper parameter, only
-// ever called with `studentId` (asserted below).
-const SLOT_ID_EXPRS = Object.freeze(["studentId", "student2Id", "teacherId", "user.id", "id", "slotOwnerTeacherId", "ownerId"]);
+// ever called with `studentId` (asserted below); global-setup's resetPupil() gets verified.ids.*.
+// mainStudentId is teacher-password-reset.spec.ts's primary pupil (restored if a regression let the
+// cross-class reset through).
+const SLOT_ID_EXPRS = Object.freeze(["studentId", "student2Id", "teacherId", "mainStudentId", "user.id", "id", "slotOwnerTeacherId", "ownerId"]);
 const KEY_COLUMNS = Object.freeze(["id", "student_id", "user_id"]);
 
 // The statement starting at `start`: up to the first `;` outside (), [], {} and strings.
@@ -128,6 +130,11 @@ test("A. the anonymous inserts really are anonymous and use non-existent ids", (
   assert.ok(src.includes('anonClient.from("question_attempt_audit").insert('));
   assert.ok(src.includes('expect(saError, "anon INSERT on student_answers must be rejected").not.toBeNull();'));
   assert.ok(src.includes('expect(qaError, "anon INSERT on question_attempt_audit must be rejected").not.toBeNull();'));
+  // A5: "rejected" means refused by privileges (42501) — not any error at all, which a network
+  // failure, a missing table or a constraint violation would also produce.
+  assert.ok(src.includes('expect(saError?.code, `anon INSERT on student_answers must be refused by privileges (42501)'));
+  assert.ok(src.includes('expect(qaError?.code, `anon INSERT on question_attempt_audit must be refused by privileges (42501)'));
+  assert.equal(src.split('.toBe("42501")').length - 1, 4, "every negative check in the file pins 42501");
 });
 
 test("A. password-help's `id` helper parameter is only ever given the slot student", () => {
@@ -224,10 +231,12 @@ test("E. specs never create/delete/invite users and change passwords only on slo
       const [, method, firstArg] = m;
       if (method === "listUsers" || method === "getUserById") continue;
       if (method === "updateUserById") passwordWrites++;
-      if (method === "updateUserById" && ["studentId", "student2Id", "teacherId"].includes(firstArg.trim())) continue;
+      if (method === "updateUserById" && ["studentId", "student2Id", "teacherId", "mainStudentId"].includes(firstArg.trim())) continue;
       offenders.push(`${file} auth.admin.${method}(${firstArg.trim()})`);
     }
   }
   assert.deepEqual(offenders, []);
-  assert.ok(passwordWrites >= 5, "negative control: expected the known password restores, found " + passwordWrites);
+  // password-reset (1) and teacher-password-reset (3: the student2 restore, the main-student restore,
+  // test 7's fresh temp password) — the restores are shared helpers since A5.
+  assert.ok(passwordWrites >= 4, "negative control: expected the known password restores, found " + passwordWrites);
 });

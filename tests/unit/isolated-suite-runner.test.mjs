@@ -151,26 +151,50 @@ function fakeAdmin({ catalog = ["aura-gold"], failOn = null } = {}) {
   return { from, auth, writes };
 }
 
-test("primary account: a password-less owner teacher, the pupil under it, 1 correct answer, owns aura-gold", async () => {
+const SEED_ARGS = Object.freeze({
+  runId: "abcd1234",
+  studentEmail: "pupil-abcd1234@e2e.invalid", studentPassword: "p".repeat(24),
+  teacherEmail: "teacher-abcd1234@e2e.invalid", teacherPassword: "t".repeat(24),
+  student2Email: "pupil2-abcd1234@e2e.invalid", student2Password: "s".repeat(24),
+});
+
+test("seed: the four MARKED accounts the registry verifies — owner, teacher, student2, primary — with roles and relations", async () => {
   const { provisionPrimaryAccount, OWNED_ITEM_ID } = await import("../isolated/seed/primary-account.mjs");
+  const { resolveAccountRegistry, hasExactMarker } = await import("../e2e-accounts.mjs");
   const admin = fakeAdmin();
-  const ids = await provisionPrimaryAccount(admin, { runId: "abcd1234", studentEmail: "pupil-abcd1234@e2e.invalid", studentPassword: "x".repeat(24) });
-  assert.deepEqual(ids, { ownerId: "id-1", pupilId: "id-2" });
-  const [owner, ownerProfile, pupil, pupilProfile, progress, item] = admin.writes;
-  assert.deepEqual(owner.row, { email: "owner-abcd1234@e2e.invalid", email_confirm: true }, "no password: nobody can sign in as the owner");
-  assert.equal(ownerProfile.row.role, "teacher");
-  assert.equal(pupil.row.email, "pupil-abcd1234@e2e.invalid");
-  assert.deepEqual([pupilProfile.row.role, pupilProfile.row.teacher_id], ["student", "id-1"]);
+  const ids = await provisionPrimaryAccount(admin, SEED_ARGS);
+  assert.deepEqual(ids, { ownerId: "id-1", teacherId: "id-2", student2Id: "id-3", pupilId: "id-4" });
+  const [owner, ownerProfile, teacher, teacherProfile, s2, s2Profile, pupil, pupilProfile, progress, item] = admin.writes;
+  // The addresses are exactly the ones global-setup's registry derives for slot 0 of this run.
+  const registry = resolveAccountRegistry({
+    ISOLATED_SUITE: "1", SUPABASE_URL: "http://127.0.0.1:54321",
+    TEST_STUDENT_EMAIL: SEED_ARGS.studentEmail, TEST_TEACHER_EMAIL: SEED_ARGS.teacherEmail, TEST_STUDENT2_EMAIL: SEED_ARGS.student2Email,
+  });
+  assert.deepEqual([owner.row.email, teacher.row.email, s2.row.email, pupil.row.email],
+    ["owner", "teacher", "student2", "primary"].map((k) => registry.accounts[k].email));
+  for (const [w, kind] of [[owner, "owner"], [teacher, "teacher"], [s2, "student2"], [pupil, "primary"]]) {
+    assert.equal(w.row.email_confirm, true, kind);
+    assert.ok(hasExactMarker({ app_metadata: w.row.app_metadata }, 0, kind), kind + " carries the exact laerlig_e2e marker");
+  }
+  assert.equal("password" in owner.row, false, "no password: nobody can sign in as the owner");
+  assert.deepEqual([teacher.row.password, s2.row.password, pupil.row.password], [SEED_ARGS.teacherPassword, SEED_ARGS.student2Password, SEED_ARGS.studentPassword]);
+  assert.deepEqual([ownerProfile.row.role, ownerProfile.row.teacher_id], ["teacher", undefined]);
+  assert.deepEqual([teacherProfile.row.role, teacherProfile.row.teacher_id], ["teacher", undefined]);
+  assert.deepEqual([s2Profile.row.role, s2Profile.row.teacher_id], ["student", "id-2"], "student2 belongs to the test teacher");
+  assert.deepEqual([pupilProfile.row.role, pupilProfile.row.teacher_id], ["student", "id-1"], "the primary pupil belongs to the owner");
   assert.deepEqual([progress.table, progress.row.correct_answers], ["student_progress", 1]);
-  assert.deepEqual([item.table, item.row], ["user_items", { user_id: "id-2", item_id: OWNED_ITEM_ID }]);
+  assert.deepEqual([item.table, item.row], ["user_items", { user_id: "id-4", item_id: OWNED_ITEM_ID }]);
   assert.equal(OWNED_ITEM_ID, "aura-gold");
 });
 
-test("primary account fails loud: missing catalog item, non-synthetic address, any refused write", async () => {
+test("seed fails loud: missing catalog item, non-synthetic address, weak password, any refused write", async () => {
   const { provisionPrimaryAccount } = await import("../isolated/seed/primary-account.mjs");
-  const args = { runId: "abcd1234", studentEmail: "pupil-abcd1234@e2e.invalid", studentPassword: "x".repeat(24) };
+  const args = SEED_ARGS;
   await assert.rejects(provisionPrimaryAccount(fakeAdmin({ catalog: [] }), args), /aura-gold is not in the catalog/);
-  await assert.rejects(provisionPrimaryAccount(fakeAdmin(), { ...args, studentEmail: "student-test@hotmail.com" }), /must be on @e2e\.invalid/);
+  await assert.rejects(provisionPrimaryAccount(fakeAdmin(), { ...args, studentEmail: "student-test@hotmail.com" }), /must be on @e2e.invalid/);
+  await assert.rejects(provisionPrimaryAccount(fakeAdmin(), { ...args, teacherEmail: "kontakt@xn--lrlig-sra.dk" }), /must be on @e2e.invalid/);
+  await assert.rejects(provisionPrimaryAccount(fakeAdmin(), { ...args, student2Email: undefined }), /must be on @e2e.invalid/);
+  await assert.rejects(provisionPrimaryAccount(fakeAdmin(), { ...args, teacherPassword: "short" }), /generated password/);
   await assert.rejects(provisionPrimaryAccount(fakeAdmin(), { ...args, runId: "" }), /runId missing/);
   for (const step of ["createUser", "profiles.upsert", "student_progress.upsert", "user_items.insert"]) {
     await assert.rejects(provisionPrimaryAccount(fakeAdmin({ failOn: step }), args), /primary-account: .* failed/, step);
