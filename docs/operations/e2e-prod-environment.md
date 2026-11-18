@@ -29,6 +29,7 @@ approvers").
 | `playwright.yml` → `test` | kun `workflow_dispatch` (`if:` springer jobbet over ved push og PR) | `environment: e2e-prod` + trinnet `e2e-prod preflight` lige efter dispatch-guarden |
 | `update-avatar-goldens.yml` → `update` | kun `workflow_dispatch` | `environment: e2e-prod` + `e2e-prod preflight` lige efter checkout |
 | `e2e-prod-key-check.yml` → `key-check` (A7, smallere) | kun `workflow_dispatch`, jobbet kun fra `main` | `environment: e2e-prod`; **kun** de tre `E2E_PROD_SUPABASE_*`-secrets, ingen testkonti, intet `npm ci`; scriptet kræver selv `E2E_PROD_ENVIRONMENT = e2e-prod` og laver kun GET/HEAD |
+| `e2e-prod-provision.yml` → `provision` (A4, smallere) | kun `workflow_dispatch`, jobbet kun fra `main` | `environment: e2e-prod`; **kun** URL, service-nøgle og de tre adresser (ingen adgangskoder, ingen anon key), intet `npm ci`; dry-run er standard, `apply` kræver `confirm = provision-accounts-slot-<n>`. Se [e2e-prod-provisioning.md](e2e-prod-provisioning.md) |
 
 - **Almindelig CI er uberørt.** Ingen andre jobs har et environment. `test` springes over ved push og PR via `if:`.
   At GitHub evaluerer `if:` før environmentet, så et oversprunget job aldrig venter på godkendelse og ikke opretter
@@ -49,9 +50,10 @@ approvers").
   Trinnet udskriver kun navne og "sat"/"mangler", aldrig en værdi, en hash eller en længde. Det er en
   verifikation, ikke en sikkerhedsgrænse.
 - **Kontrakttest** (`tests/unit/ci-e2e-prod-environment.test.mjs`) fastlåser:
-  - kun de tre godkendte jobs har produktions-credentials, og alle kører i `e2e-prod`. Det tredje,
+  - kun de fire godkendte jobs har produktions-credentials, og alle kører i `e2e-prod`. Det tredje,
     `e2e-prod-key-check.yml:key-check`, må kun have de tre `E2E_PROD_SUPABASE_*`-secrets, kun køre fra `main` og kun
-    startes manuelt;
+    startes manuelt. Det fjerde, `e2e-prod-provision.yml:provision` (A4), må kun have URL, service-nøgle og de tre
+    adresser, kun køre fra `main` og kun startes manuelt (fuld kontrakt: `tests/unit/ci-e2e-prod-provision.test.mjs`);
   - hvert credential mappes præcis én gang, i job-env, fra præcis `${{ secrets.E2E_PROD_<NAVN> }}`. Ingen
     trin-niveau-overskrivning;
   - ethvert secret-udtryk i ethvert workflow er et rent `${{ secrets.NAVN }}`. Altså ingen `||`-fallback,
@@ -137,6 +139,11 @@ Alle oprettes **kun** som environment-secrets i `e2e-prod`, aldrig på repositor
 | `E2E_PROD_SUPABASE_SERVICE_ROLE_KEY` | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → API keys → **ny dedikeret secret key** (fx `github_actions_e2e_prod`) | Ejeren behøver ikke den nuværende værdi (`github_actions_ci`, sat 2026-11-09). Kun fremad: den gamle nøgle tilbagekaldes først, når environmentet er grønt |
 | `E2E_PROD_TEST_STUDENT_EMAIL` | `TEST_STUDENT_EMAIL` | kendt testkonto | |
 | `E2E_PROD_TEST_STUDENT_PASSWORD`, `E2E_PROD_TEST_TEACHER_PASSWORD`, `E2E_PROD_TEST_STUDENT2_PASSWORD` | `TEST_*_PASSWORD` | ejerens egen opbevaring | GitHub kan aldrig vise en secret igen. Kender ejeren ikke værdien, kræver det nulstilling af testkontoen, som er en særskilt produktionshandling med eget GO |
+
+**A4 og C2 (planlagt, ikke oprettet).** Provisioneringen (A4, [e2e-prod-provisioning.md](e2e-prod-provisioning.md)) læser
+desuden to nye adresse-secrets, `E2E_PROD_TEST_TEACHER_EMAIL` og `E2E_PROD_TEST_STUDENT2_EMAIL`, og
+`E2E_PROD_TEST_STUDENT_EMAIL` skal pege på den nye markerede elevkonto. De oprettes eller ændres først i C2, efter at
+ejeren har besluttet adresserne. A6 mapper dem derefter ind i `test` og `update`, og preflight kræver dem.
 
 **Rækkefølge.** Environment-secrets kan lægges i `e2e-prod`, så snart environmentet er oprettet. Det kan ske allerede
 før merge, for ingen kode på main refererer dem endnu. Gøres det, virker manuelle produktionskørsler uden afbrydelse

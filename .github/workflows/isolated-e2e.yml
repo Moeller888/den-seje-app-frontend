@@ -483,6 +483,14 @@ jobs:
         run: |
           sg "$ISOLATED_GROUP" -c "node tests/isolated/run-suite.mjs"
 
+      # A4: the provisioning tool against this run's real local Auth and PostgREST (slots 1–3, own synthetic
+      # addresses; the suite's slot-0 accounts are never touched). Dry-run, refused apply, apply, idempotence,
+      # an unmarked account that must not be adopted, and resumption of an interrupted run.
+      - name: Provisioning (A4) against the isolated stack — dry-run, apply, refusal, resumption
+        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'
+        run: |
+          sg "$ISOLATED_GROUP" -c "node tools/e2e/isolated-provision-check.mjs"
+
       - name: Diagnostics (on failure)
         if: failure() && needs.plan.outputs.scope != 'docs-md'
         run: |
