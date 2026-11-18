@@ -175,8 +175,5 @@ produktionen 2026-11-13 som `20261113053515`. Den står nu i `APPLIED_IN_PRODUCT
 `20261115090000_avatar_northstar_hair_nh5b_d377` (D-377) stod i `REPO_AHEAD_OF_PRODUCTION`, indtil den blev anvendt
 i produktionen 2026-11-15 som `20261115131725`. Den står nu i `APPLIED_IN_PRODUCTION`.
 
-`20261118090000_avatar_northstar_hair_nh5c_d381` (D-381) er ikke anvendt i produktionen. Repositoryets
-Northstar-garderobe kan gemme nakkelokkerne (`avatar_identity.northstar.hair` = `nh5c-grey` / `nh5c-brown`) gennem
-`set_avatar_northstar`, med de to kort skjult bag `NORTHSTAR_HAIR_NH5C`, og produktionens `validate_avatar_identity`
-afviser værdierne. Den står derfor i `REPO_AHEAD_OF_PRODUCTION` som åben produktionsopgave under D-381. Den skal
-anvendes, før kortene åbnes.
+`20261118090000_avatar_northstar_hair_nh5c_d381` (D-381) stod i `REPO_AHEAD_OF_PRODUCTION`, indtil den blev anvendt
+i produktionen 2026-11-18 som `20261118135103`. Den står nu i `APPLIED_IN_PRODUCTION`.
