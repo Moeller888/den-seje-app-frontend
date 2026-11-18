@@ -3,9 +3,10 @@
 // SELF-SERVED + FIXTURE-INTERCEPTED (as northstar-hair-d373.spec.ts): a local static server serves this branch's code; every *.supabase.co
 // call is answered from a fictitious, stateful pupil (the stored choice changes as set_avatar_northstar is called). No real backend,
 // account or token. It proves:
-//   - open by default (D-378), WITHOUT any opt-in: 84 cards, the two top knots last under Hoved; older saved avatars are drawn as before;
-//   - the flag still switches the cards off: this branch's avatar-layers.js served with NORTHSTAR_HAIR_NH5B = false has D-373's 82 cards
-//     and no top knot; a STORED top knot is still drawn on Avatar, Hub and in the quiz; a browser's opt-in (?northstarnh5b=1) shows the
+//   - open by default (D-378), WITHOUT any opt-in: 86 cards since D-381, the two top knots under Hoved before D-381's nape locks; older
+//     saved avatars are drawn as before;
+//   - the flag still switches the cards off: this branch's avatar-layers.js served with NORTHSTAR_HAIR_NH5B = false has 84 cards (D-373's
+//     82 and D-381's nape locks) and no top knot; a STORED top knot is still drawn on Avatar, Hub and in the quiz; a browser's opt-in (?northstarnh5b=1) shows the
 //     cards and ?northstarnh5b=0 hides them again;
 //   - each top knot goes on in place (no reload), the outfit stays and the top knot is saved with it; a part keeps the top knot; after a
 //     reload both stay; Hub and the quiz draw the same head;
@@ -143,9 +144,9 @@ test("D-378 open by default: the two top knots last under Hoved without any opt-
   {
     const pupil: Pupil = { northstar: { ...FREE }, sent: [] };
     const { ctx, page, errs } = await openPage(browser, pupil);
-    await openAvatar(page, 84);
+    await openAvatar(page, 86);
     expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_nh5b")), "no opt-in in this browser").toBe(null);
-    expect(await hairIds(page)).toEqual([["standard", "Standardhår"], ["nh4-grey", "Kort pjusket hår · gråt"], ["nh4-brown", "Kort pjusket hår · brunt"], ["nh5b-grey", "Topknude · gråt"], ["nh5b-brown", "Topknude · brunt"]]);
+    expect(await hairIds(page)).toEqual([["standard", "Standardhår"], ["nh4-grey", "Kort pjusket hår · gråt"], ["nh4-brown", "Kort pjusket hår · brunt"], ["nh5b-grey", "Topknude · gråt"], ["nh5b-brown", "Topknude · brunt"], ["nh5c-grey", "Nakkelokker · gråt"], ["nh5c-brown", "Nakkelokker · brunt"]]);
     expect(pupil.sent, "nothing is saved by looking").toEqual([]);
     expect(errs).toEqual([]);
     await ctx.close();
@@ -153,13 +154,13 @@ test("D-378 open by default: the two top knots last under Hoved without any opt-
   {
     const pupil: Pupil = { northstar: { ...FREE }, sent: [] };
     const { ctx, page, errs } = await openPage(browser, pupil, { nh5bFlagOff: true });
-    await openAvatar(page, 82);
-    expect(await hairIds(page)).toEqual([["standard", "Standardhår"], ["nh4-grey", "Kort pjusket hår · gråt"], ["nh4-brown", "Kort pjusket hår · brunt"]]);
+    await openAvatar(page, 84);
+    expect(await hairIds(page)).toEqual([["standard", "Standardhår"], ["nh4-grey", "Kort pjusket hår · gråt"], ["nh4-brown", "Kort pjusket hår · brunt"], ["nh5c-grey", "Nakkelokker · gråt"], ["nh5c-brown", "Nakkelokker · brunt"]]);
     for (const k of KNOTS) await expect(hairCard(page, k)).toHaveCount(0);
-    await openAvatar(page, 84, "?northstarnh5b=1");
+    await openAvatar(page, 86, "?northstarnh5b=1");
     expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_nh5b"))).toBe("1");
-    expect(await hairIds(page)).toEqual([["standard", "Standardhår"], ["nh4-grey", "Kort pjusket hår · gråt"], ["nh4-brown", "Kort pjusket hår · brunt"], ["nh5b-grey", "Topknude · gråt"], ["nh5b-brown", "Topknude · brunt"]]);
-    await openAvatar(page, 82, "?northstarnh5b=0");
+    expect(await hairIds(page)).toEqual([["standard", "Standardhår"], ["nh4-grey", "Kort pjusket hår · gråt"], ["nh4-brown", "Kort pjusket hår · brunt"], ["nh5b-grey", "Topknude · gråt"], ["nh5b-brown", "Topknude · brunt"], ["nh5c-grey", "Nakkelokker · gråt"], ["nh5c-brown", "Nakkelokker · brunt"]]);
+    await openAvatar(page, 84, "?northstarnh5b=0");
     expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_nh5b"))).toBe(null);
     expect(pupil.sent, "the opt-in saves nothing").toEqual([]);
     expect(errs).toEqual([]);
@@ -168,7 +169,7 @@ test("D-378 open by default: the two top knots last under Hoved without any opt-
   for (const hair of KNOTS) {
     const pupil: Pupil = { northstar: { ...FREE, top: "top-tank-navy", hair }, sent: [] };
     const { ctx, page, errs } = await openPage(browser, pupil, { nh5bFlagOff: true });   // drawn whatever the flag
-    await openAvatar(page, 82);
+    await openAvatar(page, 84);
     await drawn(page);
     expect(await headOn(page, "avatar"), "stored " + hair + " on Avatar").toEqual({ hair, head: [HEAD(hair)] });
     for (const [url, el, surface] of [["hub.html", "profileAvatar", "hub"], ["index.html", "avatar-display", "quiz"]]) {
@@ -184,7 +185,7 @@ test("D-378 open by default: the two top knots last under Hoved without any opt-
   for (const [choice, want] of [[{ outfit: "K01" }, "standard"], [{ ...FREE }, "standard"], [{ ...FREE, hair: "nh4-grey" }, "nh4-grey"], [{ ...FREE, hair: "nh4-brown" }, "nh4-brown"], [null, null]] as const) {
     const pupil: Pupil = { northstar: choice ? { ...choice } : null, sent: [] };
     const { ctx, page, errs } = await openPage(browser, pupil);
-    await openAvatar(page, 84);
+    await openAvatar(page, 86);
     if (want) {
       await expect.poll(async () => (await figure(page)).path, { timeout: 30000 }).toBe("northstar");
       expect(await headOn(page, "avatar"), JSON.stringify(choice)).toEqual({ hair: want, head: [HEAD(want)] });
@@ -203,12 +204,12 @@ test("D-378 on by default: both top knots go on in place, keep the outfit and ar
   test.setTimeout(150000);
   const pupil: Pupil = { northstar: { ...FREE }, sent: [] };
   const { ctx, page, errs } = await openPage(browser, pupil);
-  await openAvatar(page, 84);
+  await openAvatar(page, 86);
   expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_nh5b")), "no opt-in").toBe(null);
   await page.waitForLoadState("load");
   await drawn(page);
   await page.getByRole("tab", { name: "Hoved", exact: true }).click();
-  expect(await hairIds(page)).toEqual([["standard", "Standardhår"], ["nh4-grey", "Kort pjusket hår · gråt"], ["nh4-brown", "Kort pjusket hår · brunt"], ["nh5b-grey", "Topknude · gråt"], ["nh5b-brown", "Topknude · brunt"]]);
+  expect(await hairIds(page)).toEqual([["standard", "Standardhår"], ["nh4-grey", "Kort pjusket hår · gråt"], ["nh4-brown", "Kort pjusket hår · brunt"], ["nh5b-grey", "Topknude · gråt"], ["nh5b-brown", "Topknude · brunt"], ["nh5c-grey", "Nakkelokker · gråt"], ["nh5c-brown", "Nakkelokker · brunt"]]);
   await expect(page.locator("#northstarWardrobeCards [data-wardrobe-category='top']")).toBeHidden();
   await expect(hairCard(page, "standard")).toHaveClass(/equipped/);
   let loads = 0; page.on("load", () => { loads++; });
@@ -231,7 +232,7 @@ test("D-378 on by default: both top knots go on in place, keep the outfit and ar
   await expect.poll(() => pupil.sent.length).toBe(3);
   expect(JSON.parse(pupil.sent[2])).toEqual({ ...FREE, top: "top-tank-navy", hair: "nh5b-brown" });
   await page.reload({ waitUntil: "domcontentloaded" });
-  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(84, { timeout: 30000 });
+  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(86, { timeout: 30000 });
   expect(await headOn(page, "avatar")).toEqual({ hair: "nh5b-brown", head: [HEAD("nh5b-brown")] });
   expect(await outfitNow(page), "the part stays after the reload").toBe("top-tank-navy+bottom-trousers-square-navy+shoes-sneakers-white");
   await page.getByRole("tab", { name: "Hoved", exact: true }).click();
@@ -241,7 +242,7 @@ test("D-378 on by default: both top knots go on in place, keep the outfit and ar
   await expect.poll(() => pupil.sent.length).toBe(4);
   expect(JSON.parse(pupil.sent[3])).toEqual({ ...FREE, top: "top-tank-navy", hair: "nh5b-grey" });
   await page.reload({ waitUntil: "domcontentloaded" });
-  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(84, { timeout: 30000 });
+  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(86, { timeout: 30000 });
   expect(await headOn(page, "avatar")).toEqual({ hair: "nh5b-grey", head: [HEAD("nh5b-grey")] });
   expect(await outfitNow(page)).toBe("top-tank-navy+bottom-trousers-square-navy+shoes-sneakers-white");
   for (const [url, el, surface] of [["hub.html", "profileAvatar", "hub"], ["index.html", "avatar-display", "quiz"]]) {
@@ -266,7 +267,7 @@ test("D-377 ears and neck as in the approved local trial: with a T-shirt and a t
     await a.ctx.close();
     const pupil: Pupil = { northstar: { ...FREE, top }, sent: [] };
     const { ctx, page, errs } = await openPage(browser, pupil);
-    await openAvatar(page, 84);
+    await openAvatar(page, 86);
     await drawn(page);
     await page.getByRole("tab", { name: "Hoved", exact: true }).click();
     const px: Record<string, Uint8ClampedArray> = {};

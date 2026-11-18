@@ -1,6 +1,7 @@
 // D-381: the nape locks (D-379 NH-5C, V2 excepted by D-380) as a hairstyle on the Northstar figure, "Nakkelokker · gråt" and
-// "Nakkelokker · brunt". The two cards are HIDDEN by default (NORTHSTAR_HAIR_NH5C = false) and shown only to a browser that opts in
-// (avatar_northstar_hair_nh5c); a stored nape-lock head is drawn on every surface whatever the flag. D-373's three hairstyles and D-377's
+// "Nakkelokker · brunt". The two cards are SHOWN by default since the owner's approved try-out (NORTHSTAR_HAIR_NH5C = true); with the
+// flag off (a copy of the module with only that line changed) they are hidden and shown only to a browser that opts in
+// (avatar_northstar_hair_nh5c). A stored nape-lock head is drawn on every surface whatever the flag. D-373's three hairstyles and D-377's
 // top knot are unchanged. The published heads are byte for byte D-380's bound WebP heads; the raw image and every intermediate file stay
 // outside the clones. The migration extends D-377's validation (production's definition today) with the two values and keeps every other
 // rule (PGlite). 0 image calls.
@@ -28,22 +29,31 @@ const LOCKS = ["nh5c-grey", "nh5c-brown"];
 const BEFORE = ["standard", "nh4-grey", "nh4-brown", "nh5b-grey", "nh5b-brown"];
 const HEAD = (hair) => "/assets/avatar-northstar-hair/head-" + hair + "-v1.webp";
 
-// a fresh module per case, with or without this browser's opt-in to the nape locks; flagOn: the same module with only the flag line set
-// to true (the module has no imports, so it loads as a data: URL, as in D-377's test)
-const FLAG_OFF = "export const NORTHSTAR_HAIR_NH5C = false;";
-async function layers(optIn, { flagOn = false } = {}) {
+// a fresh module per case, with or without this browser's opt-in to the nape locks; flagOff: the same module with only the flag line set
+// to false (the module has no imports, so it loads as a data: URL, as in D-377's test)
+const FLAG_ON = "export const NORTHSTAR_HAIR_NH5C = true;";
+async function layers(optIn, { flagOff = false } = {}) {
   const store = new Map(optIn ? [["avatar_northstar_hair_nh5c", "1"]] : []);
   globalThis.localStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
-  if (!flagOn) return import("../../js/avatar-layers.js?d381=" + Math.random());
+  if (!flagOff) return import("../../js/avatar-layers.js?d381=" + Math.random());
   const src = read("js/avatar-layers.js").toString("utf8");
-  assert.equal(src.split(FLAG_OFF).length, 2, "the flag line occurs once");
-  return import("data:text/javascript;base64," + Buffer.from(src.replace(FLAG_OFF, "export const NORTHSTAR_HAIR_NH5C = true;") + "\n// " + Math.random()).toString("base64"));
+  assert.equal(src.split(FLAG_ON).length, 2, "the flag line occurs once");
+  return import("data:text/javascript;base64," + Buffer.from(src.replace(FLAG_ON, "export const NORTHSTAR_HAIR_NH5C = false;") + "\n// " + Math.random()).toString("base64"));
 }
 const headOf = (r) => r.plan.filter((s) => s.op === "draw" && /head/.test(s.src)).map((s) => s.src);
 
-test("D-381 catalogue: two nape-lock hairstyles with their Danish labels, hidden by default; D-373's three and D-377's top knot are unchanged and still selectable", async () => {
+test("D-381 open: the two nape-lock cards are shown by default, last under Hoved after the top knot, and go on without any opt-in", async () => {
   const L = await layers(false);
-  assert.equal(L.NORTHSTAR_HAIR_NH5C, false, "the cards are hidden by default");
+  assert.equal(L.NORTHSTAR_HAIR_NH5C, true, "the cards are shown by default");
+  assert.equal(L.isNorthstarHairNh5cOn(), true);
+  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...LOCKS], "seven cards, the nape locks last");
+  L.northstarUseAccount({ northstar: { ...FREE } });
+  for (const k of [...BEFORE, ...LOCKS]) assert.deepEqual(L.northstarFitHair(k).choice, { ...FREE, hair: k }, k + " goes on and keeps the outfit");
+});
+
+test("D-381 catalogue: two nape-lock hairstyles with their Danish labels; with the flag off they are hidden; D-373's three and D-377's top knot are unchanged and still selectable", async () => {
+  const L = await layers(false, { flagOff: true });
+  assert.equal(L.NORTHSTAR_HAIR_NH5C, false, "the copy has the flag off");
   assert.equal(L.NORTHSTAR_HAIR_NH5C_OPT_IN_KEY, "avatar_northstar_hair_nh5c");
   assert.deepEqual(JSON.parse(JSON.stringify(L.NORTHSTAR_HAIRS_NH5C)), { "nh5c-grey": { file: "head-nh5c-grey-v1.webp", label: "Nakkelokker · gråt" }, "nh5c-brown": { file: "head-nh5c-brown-v1.webp", label: "Nakkelokker · brunt" } });
   assert.deepEqual(Object.keys(L.NORTHSTAR_HAIRS), ["standard", "nh4-grey", "nh4-brown"], "D-373's catalogue is unchanged");
@@ -56,10 +66,10 @@ test("D-381 catalogue: two nape-lock hairstyles with their Danish labels, hidden
   for (const k of BEFORE) assert.deepEqual(L.northstarFitHair(k).choice, { ...FREE, hair: k }, k + " still goes on");
 });
 
-test("D-381 opt-in (and the flag turned on): both colours can be put on and keep the outfit; a part keeps the nape locks; only the head differs; Avatar, Hub and the quiz draw it", async () => {
-  for (const [optIn, flagOn] of [[true, false], [false, true]]) {
-    const L = await layers(optIn, { flagOn });
-    assert.equal(L.isNorthstarHairNh5cOn(), true, JSON.stringify({ optIn, flagOn }));
+test("D-381 on by default (and, with the flag off, a browser's opt-in): both colours can be put on and keep the outfit; a part keeps the nape locks; only the head differs; Avatar, Hub and the quiz draw it", async () => {
+  for (const [optIn, flagOff] of [[false, false], [true, true]]) {
+    const L = await layers(optIn, { flagOff });
+    assert.equal(L.isNorthstarHairNh5cOn(), true, JSON.stringify({ optIn, flagOff }));
     assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...LOCKS], "seven cards, the nape locks last");
     const plans = {};
     for (const hair of ["standard", ...LOCKS]) {
@@ -80,9 +90,11 @@ test("D-381 opt-in (and the flag turned on): both colours can be put on and keep
   }
 });
 
-test("D-381 saved avatars: stored nape locks are drawn without any opt-in; every older choice, the top knot included, is drawn as before", async () => {
+test("D-381 saved avatars: stored nape locks are drawn without any opt-in, also with the flag off; every older choice, the top knot included, is drawn as before", async () => {
+  const F = await layers(false, { flagOff: true });
+  for (const hair of LOCKS) { F.northstarUseAccount({ northstar: { ...FREE, hair } }); for (const s of ["avatar", "hub", "quiz"]) assert.deepEqual(headOf(F.northstarRenderFor(s, [])), [HEAD(hair)], hair + " on " + s + " (flag off, no opt-in)"); }
   const L = await layers(false);
-  for (const hair of LOCKS) { L.northstarUseAccount({ northstar: { ...FREE, hair } }); for (const s of ["avatar", "hub", "quiz"]) assert.deepEqual(headOf(L.northstarRenderFor(s, [])), [HEAD(hair)], hair + " on " + s + " (flag off, no opt-in)"); }
+  for (const hair of LOCKS) { L.northstarUseAccount({ northstar: { ...FREE, hair } }); for (const s of ["avatar", "hub", "quiz"]) assert.deepEqual(headOf(L.northstarRenderFor(s, [])), [HEAD(hair)], hair + " on " + s); }
   const cases = [[{ ...FREE }, "standard"], ...BEFORE.map((h) => [{ ...FREE, hair: h }, h]), [{ ...FREE, hair: "nh5c-blue" }, "standard"], [{ outfit: "K01" }, "standard"]];
   for (const [choice, hair] of cases) {
     L.northstarUseAccount({ northstar: choice });

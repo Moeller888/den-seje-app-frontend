@@ -1,8 +1,7 @@
-// D-381 — the nape locks ("Nakkelokker · gråt" / "Nakkelokker · brunt") SAVED ON THE TEST PUPIL'S ACCOUNT. Their two cards are hidden by
-// default (NORTHSTAR_HAIR_NH5C = false), so the choosing browser opts in with ?northstarnh5c=1 (the documented opt-in for the later
-// production test): both colours are chosen in place on Avatar; the outfit stays; a part (tank top, sweater) keeps the nape locks; the
-// choice is kept after a manual reload and after a new login in a fresh browser WITHOUT the opt-in, and drawn the same on Avatar, Hub and
-// in the quiz; an older choice without a hairstyle gets the standard hair.
+// D-381 — the nape locks ("Nakkelokker · gråt" / "Nakkelokker · brunt") SAVED ON THE TEST PUPIL'S ACCOUNT. Their two cards are shown by
+// default since the owner's approved try-out (NORTHSTAR_HAIR_NH5C = true), so no opt-in is used: both colours are chosen in place on
+// Avatar; the outfit stays; a part (tank top, sweater) keeps the nape locks; the choice is kept after a manual reload and after a new
+// login in a fresh browser, and drawn the same on Avatar, Hub and in the quiz; an older choice without a hairstyle gets the standard hair.
 // Runs against the suite's environment (the isolated stack in CI, which replays D-381's migration — REPO_AHEAD_OF_PRODUCTION) with the
 // slot's test pupil. A database without the migration (production until it is applied) refuses the value: the test is then skipped with
 // that reason, and nothing is written. After the production migration this is the test with the test pupil. Choices go through the UI;
@@ -19,8 +18,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
-const CARDS = 84;          // the 79 parts, D-373's 3 hairstyles and the two top knots (D-378); the nape locks hidden
-const CARDS_OPT_IN = 86;   // and the two nape locks with this browser's opt-in (D-381)
+const CARDS = 86;          // the 79 parts, D-373's 3 hairstyles, the two top knots (D-378) and the two nape locks (D-381)
 
 async function signedIn(browser: Browser): Promise<{ ctx: BrowserContext; page: Page }> {
   const ctx = await browser.newContext({ reducedMotion: "reduce" });
@@ -33,9 +31,9 @@ async function signedIn(browser: Browser): Promise<{ ctx: BrowserContext; page: 
   await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
   return { ctx, page };
 }
-async function openWardrobe(page: Page, query = "", cards = CARDS) {
-  await page.goto(`${PROD}/avatar.html${query}`, { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(cards, { timeout: 30000 });
+async function openWardrobe(page: Page) {
+  await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(CARDS, { timeout: 30000 });
 }
 const hairCard = (page: Page, hair: string) => page.locator(`#northstarWardrobeCards .item-card[data-hair='${hair}']`);
 const outfitNow = (page: Page) => page.evaluate(async () => { const L: any = await import("/js/avatar-layers.js"); const o = L.northstarOutfitNow(); return o ? [o.top, o.bottom, o.shoes].join("+") : null; });
@@ -51,7 +49,7 @@ async function shownOn(page: Page, url: string, element: string, surface: string
 }
 /** Clears the pupil's wardrobe choice through the page's own button, and waits until the account no longer holds one. */
 async function clearChoice(page: Page) {
-  await openWardrobe(page, "", (await page.evaluate(() => { try { return localStorage.getItem("avatar_northstar_hair_nh5c"); } catch { return null; } })) === "1" ? CARDS_OPT_IN : CARDS);
+  await openWardrobe(page);
   const back = page.getByRole("button", { name: "Brug min nuværende avatar", exact: true });
   if (await back.isVisible()) {
     await back.click();
@@ -61,7 +59,7 @@ async function clearChoice(page: Page) {
 const HEAD = (hair: string) => "/assets/avatar-northstar-hair/head-" + hair + "-v1.webp";
 const FREE = { outfit: "FRI", top: "top-tee-hip-blue", pants: "bottom-trousers-square-navy", shoes: "shoes-sneakers-white" };
 
-test("D-381: both nape-lock colours are saved on the account with the outfit (opt-in browser), kept after a reload and a new login without the opt-in, and drawn the same on Avatar, Hub and in the quiz", async ({ browser, browserName }) => {
+test("D-381: both nape-lock colours are saved on the account with the outfit, kept after a reload and a new login, and drawn the same on Avatar, Hub and in the quiz", async ({ browser, browserName }) => {
   test.skip(browserName !== "chromium", "UI dedup");
   test.setTimeout(240000);
   let { ctx, page } = await signedIn(browser);
@@ -71,13 +69,10 @@ test("D-381: both nape-lock colours are saved on the account with the outfit (op
     const refused = await directSave(page, { ...FREE, hair: "nh5c-grey" });
     test.skip(refused !== null, "this database's validate_avatar_identity has no D-381 migration: " + refused);
     expect(await directSave(page, { ...FREE })).toBe(null);
-    // hidden by default: no nape-lock card without the opt-in
+    // open by default: both nape-lock cards without any opt-in
     await openWardrobe(page);
-    expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_nh5c")), "no opt-in in this browser yet").toBe(null);
-    for (const k of ["nh5c-grey", "nh5c-brown"]) await expect(hairCard(page, k)).toHaveCount(0);
-    // this browser opts in (the documented opt-in for the production test)
-    await openWardrobe(page, "?northstarnh5c=1", CARDS_OPT_IN);
-    expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_nh5c"))).toBe("1");
+    expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_nh5c")), "no opt-in in this browser").toBe(null);
+    for (const k of ["nh5c-grey", "nh5c-brown"]) await expect(hairCard(page, k)).toHaveCount(1);
     let loads = 0, saves = 0;
     page.on("load", () => { loads++; });
     page.on("request", (r) => { if (r.url().includes("/rest/v1/rpc/set_avatar_northstar")) saves++; });
@@ -100,20 +95,19 @@ test("D-381: both nape-lock colours are saved on the account with the outfit (op
     const sweater = { ...grey, top: "top-sweater-ls2-heather" };
     await expect.poll(() => stored(page), { timeout: 15000 }).toEqual(sweater);
     const sweaterOutfit = "top-sweater-ls2-heather+bottom-trousers-square-navy+shoes-sneakers-white";
-    // a manual reload, then a new login in a fresh browser session without the opt-in; Avatar, Hub and the quiz draw the same
+    // a manual reload, then a new login in a fresh browser session; Avatar, Hub and the quiz draw the same
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(CARDS_OPT_IN, { timeout: 30000 });
+    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(CARDS, { timeout: 30000 });
     await page.getByRole("tab", { name: "Hoved", exact: true }).click();
     await expect(hairCard(page, "nh5c-grey")).toHaveClass(/equipped/);
     await ctx.close();
     ({ ctx, page } = await signedIn(browser));
     const want = { hair: "nh5c-grey", head: HEAD("nh5c-grey"), outfit: sweaterOutfit };
     expect(await shownOn(page, "avatar.html", "avatar-preview", "avatar"), "on Avatar after a new login").toEqual(want);
-    expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_nh5c")), "the new browser has no opt-in").toBe(null);
     expect(await shownOn(page, "hub.html", "profileAvatar", "hub"), "on Hub").toEqual(want);
     expect(await shownOn(page, "index.html", "avatar-display", "quiz"), "in the quiz").toEqual(want);
-    // the brown, chosen in an opt-in browser, then after another new login without it
-    await openWardrobe(page, "?northstarnh5c=1", CARDS_OPT_IN);
+    // the brown, then after another new login
+    await openWardrobe(page);
     await page.getByRole("tab", { name: "Hoved", exact: true }).click();
     await hairCard(page, "nh5c-brown").locator(".equip-btn").click();
     await expect.poll(() => stored(page), { timeout: 15000 }).toEqual({ ...sweater, hair: "nh5c-brown" });

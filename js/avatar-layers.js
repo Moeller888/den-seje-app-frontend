@@ -1365,11 +1365,12 @@ export const NORTHSTAR_HAIRS_NH5B = Object.freeze({
   "nh5b-brown": Object.freeze({ file: "head-nh5b-brown-v1.webp", label: "Topknude · brunt" }),
 });
 // D-381: the nape locks (D-379 NH-5C, V2 excepted by D-380) in neutral grey and Northstar's brown, two more heads on the same shared base
-// (the files are byte for byte D-380's bound WebP heads). Its two cards are HIDDEN by default (NORTHSTAR_HAIR_NH5C = false): until the
-// flag is turned on only a browser that opts in shows them, last under Hoved, for testing after the production migration: localStorage
-// avatar_northstar_hair_nh5c = "1" (or avatar.html?northstarnh5c=1; =0 removes it). A stored nape-lock head is drawn on every surface
-// whatever the flag (Avatar, Hub, quiz). The database accepts the two values only through D-381's migration.
-export const NORTHSTAR_HAIR_NH5C = false;
+// (the files are byte for byte D-380's bound WebP heads). Its two cards are SHOWN by default since the owner approved the try-out
+// (D-381, NORTHSTAR_HAIR_NH5C = true), last under Hoved after the top knot. OFF (false): the cards are hidden, and only a browser that
+// opts in shows them: localStorage avatar_northstar_hair_nh5c = "1" (or avatar.html?northstarnh5c=1; =0 removes it). A stored
+// nape-lock head is drawn on every surface whatever the flag (Avatar, Hub, quiz). The database accepts the two values through D-381's
+// migration (applied in production 2026-11-18, 20261118135103).
+export const NORTHSTAR_HAIR_NH5C = true;
 export const NORTHSTAR_HAIR_NH5C_OPT_IN_KEY = "avatar_northstar_hair_nh5c";
 export const NORTHSTAR_HAIRS_NH5C = Object.freeze({
   "nh5c-grey": Object.freeze({ file: "head-nh5c-grey-v1.webp", label: "Nakkelokker · gråt" }),
