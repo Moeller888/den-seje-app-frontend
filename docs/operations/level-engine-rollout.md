@@ -302,9 +302,11 @@ Planen dækker de 31 migrationer fra designets §11. E5 er gennemført og dokume
   18 filer: resten af trin 1c (`batch5` og `batch6`, `2026102017000[1-3]` og `2026102018000[1-3]`) og hele trin 1d
   (`batch7`–`batch10`). Filerne står fortsat i `NOT_IN_PRODUCTION`. Et GO til en enkelt fil er ikke nok, så længe
   pausen gælder.
-- Trin 1c er dermed udført til og med `batch4`. Fase 2 (aktivering) er ikke påbegyndt.
+- Trin 1c er dermed udført til og med `batch4`. Fase 2 (aktivering) er påbegyndt 2026-11-16 med trin 2a, se fase 2
+  (C) nedenfor.
 - **Ejerbeslutning 2026-11-14: aktiveringsrækkefølgen er `batch3` → `pilot` → `batch2` → `grade6_9` → `batch4`**,
-  med en lærerstikprøve før `batch4`. Se fase 2 (C) nedenfor. Aktiveringsmigrationerne er endnu ikke skrevet.
+  med en lærerstikprøve før `batch4`. Se fase 2 (C) nedenfor. De fem aktiveringsmigrationer er merget med #712
+  (`b4b0a18e`).
 
 **Godkendelser:**
 - Hvert trin herunder kræver sit eget GO fra ejeren (E2, D-110). Det gælder også hver `apply_migration`, hver
@@ -399,6 +401,20 @@ Alle fund er rettet. De ni sidste rettelser blev anvendt 2026-11-14 (`2026111414
 indholdspunkter i §2.8. Efter 2e har engelsk 3.208 aktive opgaver, cirka halvdelen af lasttesten i §4.2 (6.090
 aktive, kandidatvalget under 50 ms). Hvis 2a forløber helt rent, kan 2b og 2c slås sammen, men kun med ejerens GO
 på det tidspunkt.
+
+**Status for fase 2:**
+
+| Trin | Fil | Ledger-version | Anvendt | Aktive i portionen | Aktive engelsk | Log |
+|---|---|---|---|---|---|---|
+| 2a | `20261114203117_english_activate_2a_batch3` | `20261116163535` | 2026-11-16 16:35Z | 500 af 500 | 1.588 | [1635Z](production-actions/2026-11-16T1635Z-english-activate-2a-batch3-applied.md) |
+| 2b–2e | `20261114203118`–`20261114203121` | — | Ikke anvendt | 0 | — | — |
+
+- **Observationen efter 2a er i gang** (start 2026-11-16, mindst tre skoledage). Den kan tidligst afsluttes efter
+  onsdag 2026-11-18. Trin 2b (`pilot`) anvendes først, når observationen er afsluttet uden stopkriterier, og kun
+  med sit eget GO.
+- `pilot`, `batch2`, `grade6_9` og `batch4` er fortsat inaktive med uændret fingeraftryk. Batch 5–10 er fortsat sat
+  på pause.
+- §2.5-målingen af query-planerne efter 2a er ikke taget endnu (køres af ejeren i dashboardet).
 
 **Lærerstikprøve før 2e:** E5 anbefaler, at fundene suppleres af en lærers stikprøve, før de højeste portioner
 aktiveres. Før `batch4` gennemgår en lærer cirka 30 af portionens C1-opgaver. Fund rettes i repoet og i den levende

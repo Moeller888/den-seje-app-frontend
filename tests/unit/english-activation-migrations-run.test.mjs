@@ -17,7 +17,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
-import { NOT_IN_PRODUCTION } from "../isolated/schema/replay-plan.mjs";
+import { APPLIED_IN_PRODUCTION, NOT_IN_PRODUCTION } from "../isolated/schema/replay-plan.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const DIR = join(ROOT, "supabase", "migrations");
@@ -30,6 +30,9 @@ const ORDER = [
   { step: "2d", batch: "grade6_9", size: 120 },
   { step: "2e", batch: "batch4", size: 500 },
 ];
+// Steps applied in production, with the ledger version the server gave them (each with its own owner GO and
+// production log). Every other step must still be in NOT_IN_PRODUCTION.
+const APPLIED_STEPS = { "2a": "20261116163535" };
 const FILE_RE = /^\d{14}_english_activate_(2[a-e])_([a-z0-9_]+)\.sql$/;
 const FILES = readdirSync(DIR).filter((f) => FILE_RE.test(f)).sort();
 const SQL = Object.fromEntries(FILES.map((f) => [f.match(FILE_RE)[1], read(f)]));
@@ -140,7 +143,7 @@ const activeOf = async (pg, batch) => (await pg.query(
   "SELECT count(*)::int AS n FROM public.questions WHERE learning_objective = 'english' AND is_active AND metadata->>'level_batch' = $1",
   [batch])).rows[0].n;
 
-test("five files, one per step, each in NOT_IN_PRODUCTION, in the owner's order and with one shared order list", () => {
+test("five files, one per step, each either applied with its pinned ledger version or in NOT_IN_PRODUCTION, in the owner's order and with one shared order list", () => {
   assert.deepEqual(FILES.map((f) => f.match(FILE_RE).slice(1, 3)), ORDER.map((s) => [s.step, s.batch]));
   const lists = FILES.map((f) => stepsOf(read(f)));
   for (const list of lists) {
@@ -148,8 +151,14 @@ test("five files, one per step, each in NOT_IN_PRODUCTION, in the owner's order 
     assert.deepEqual(list.map(({ step, batch, size }) => ({ step, batch, size })), ORDER);
   }
   for (const f of FILES) {
-    assert.ok(NOT_IN_PRODUCTION[f], `${f} is in NOT_IN_PRODUCTION`);
     const [, step, batch] = f.match(FILE_RE);
+    if (APPLIED_STEPS[step]) {
+      assert.equal(APPLIED_IN_PRODUCTION[f], APPLIED_STEPS[step], `${f} is in APPLIED_IN_PRODUCTION`);
+      assert.equal(NOT_IN_PRODUCTION[f], undefined, `${f} is not also in NOT_IN_PRODUCTION`);
+    } else {
+      assert.ok(NOT_IN_PRODUCTION[f], `${f} is in NOT_IN_PRODUCTION`);
+      assert.equal(APPLIED_IN_PRODUCTION[f], undefined, `${f} is not in APPLIED_IN_PRODUCTION`);
+    }
     const sql = read(f);
     const own = ORDER.find((s) => s.step === step);
     assert.match(sql, new RegExp(`v_own   text    := '${step}';`));
