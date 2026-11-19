@@ -54,8 +54,10 @@ env:
   ISOLATED_SUPABASE_URL: http://127.0.0.1:54321
   ISOLATED_MAIL_URL: http://127.0.0.1:54324
   ISOLATED_GROUP: e2eiso
-  # Supabase's images from Docker Hub instead of public.ecr.aws: N runners pulling at once were
-  # rate-limited there ("toomanyrequests"); Docker Hub does not rate-limit GitHub-hosted runners.
+  # Supabase's images from Docker Hub first: N runners pulling at once were rate-limited on public.ecr.aws
+  # ("toomanyrequests"). Docker Hub limits too (100 anonymous pulls per hour per shared runner address; run
+  # 44384257941, 2026-11-18), so a PULL failure moves the next start attempt to public.ecr.aws, then ghcr.io —
+  # the same images by digest (tests/isolated/ci/registry-fallback.sh). This is only the first registry.
   SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
 
 jobs:
@@ -164,6 +166,13 @@ jobs:
         run: |
           v="$(node -p "require('./package-lock.json').packages['node_modules/playwright'].version")"
           echo "key=pw-browsers-apt-${ImageOS:-unknown}-${ImageVersion:-unknown}-playwright-${v}" >> "$GITHUB_OUTPUT"
+          # A new runner image misses its exact key (the key holds ImageVersion) until a push to main has written it
+          # — and that push misses too. Run 44465246201 (K1 lane, image 20261116.133.1): every system package from
+          # us-east-2.ec2.archive.ubuntu.com, still downloading after 10 min. So a miss restores the newest entry of
+          # the SAME OS (prefix below); the install step uses it only if its Playwright version is ours, and then
+          # only to SEED apt's archive directory — never for the offline install, which needs the exact key.
+          echo "prefix=pw-browsers-apt-${ImageOS:-unknown}-" >> "$GITHUB_OUTPUT"
+          echo "version=${v}" >> "$GITHUB_OUTPUT"
       - name: Restore Playwright browser and apt cache
         if: needs.plan.outputs.scope != 'docs-md'
         id: pwcache
@@ -173,14 +182,34 @@ jobs:
             ~/.cache/ms-playwright
             ~/.cache/pw-apt
           key: ${{ steps.pwver.outputs.key }}
+          restore-keys: ${{ steps.pwver.outputs.prefix }}
       - name: Install Playwright browsers
         if: needs.plan.outputs.scope != 'docs-md'
         timeout-minutes: 15
         env:
           # Logs each download/extract phase, so a stall shows WHERE it stopped (CI-01).
           DEBUG: pw:install
+          CACHE_HIT: ${{ steps.pwcache.outputs.cache-hit }}
+          CACHE_MATCHED: ${{ steps.pwcache.outputs.cache-matched-key }}
+          CACHE_WANTED: ${{ steps.pwver.outputs.key }}
+          PW_VERSION: ${{ steps.pwver.outputs.version }}
         run: |
           set -euo pipefail
+          # What was restored: exact = this image's own entry (cache-first, offline); seed = another image of the same
+          # OS with OUR Playwright version (its .debs only seed apt's archive for the mirror install; apt takes a file
+          # only if package, version and architecture are exactly what this image needs); other = a different
+          # Playwright version (discarded entirely); none = nothing.
+          cache=none
+          if [ "${CACHE_HIT:-}" = true ]; then
+            cache=exact
+          elif [ -n "${CACHE_MATCHED:-}" ]; then
+            case "$CACHE_MATCHED" in
+              *"-playwright-${PW_VERSION}") cache=seed ;;
+              *) cache=other ;;
+            esac
+          fi
+          echo "::notice title=INFRA-CACHE::browser + apt cache: ${cache} (wanted ${CACHE_WANTED}; restored ${CACHE_MATCHED:-nothing})"
+          if [ "$cache" = other ]; then rm -rf ~/.cache/pw-apt ~/.cache/ms-playwright; fi
           # Keep what apt downloads, so a miss on main can refill the cache (same as playwright.yml).
           # Mirror path only: a connection that delivers nothing for 30 s fails and is retried at most 3 times
           # (apt's own default waits 120 s), instead of stalling silently until the step timeout.
@@ -212,8 +241,14 @@ jobs:
             # prints its package list (run 43089224884). So the files go into the archive directory first; the
             # names in ~/.cache/pw-apt are the ones apt gave them when it downloaded them on main.
             sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/
+            if [ "$cache" != exact ]; then
+              # SEED ONLY: these .debs were another runner image's closure, so they are never installed as a set. The
+              # mirror install below takes from the archive directory only a file whose package, version and
+              # architecture are exactly what this image needs, and downloads the rest. Same trust anchor as the exact
+              # entry (written only by a push to main).
+              echo "::notice title=INFRA-CACHE-SEED::${seeded} .deb file(s) from ${CACHE_MATCHED} seed apt's archive; the mirror install downloads only what differs"
             # --no-download: never a mirror. --no-remove: apt aborts instead of removing any installed package.
-            if sudo apt-get install -y --no-download --no-remove --no-install-recommends ~/.cache/pw-apt/*.deb > "$RUNNER_TEMP/apt-cache-install.log" 2>&1 \
+            elif sudo apt-get install -y --no-download --no-remove --no-install-recommends ~/.cache/pw-apt/*.deb > "$RUNNER_TEMP/apt-cache-install.log" 2>&1 \
                && timeout --kill-after=30s 3m npx playwright install > "$RUNNER_TEMP/pw-cache-install.log" 2>&1 \
                && node tests/support/browser-launch-check.mjs; then
               path=cache
@@ -244,10 +279,22 @@ jobs:
               echo "::error title=INFRA-INSTALL::a browser cannot start after the mirror install - no test ran"
               exit 1
             fi
-            find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp {} ~/.cache/pw-apt/ \;
+            # Refill the entry main may save from what is INSTALLED now: seeded files apt did not use (other versions)
+            # must never reach the next offline install (tests/isolated/ci/keep-installed-debs.sh).
+            rm -f ~/.cache/pw-apt/*.deb
+            bash tests/isolated/ci/keep-installed-debs.sh /var/cache/apt/archives ~/.cache/pw-apt
           fi
           echo "::notice title=INFRA-INSTALL-PATH::playwright install: system packages from the ${path}"
-          docker pull curlimages/curl:8.11.1 > /dev/null
+          # The negative controls' curl container (tests/isolated/egress-firewall.sh), pinned by digest: the content
+          # cannot change under the tag. Docker Hub is its only registry (not on public.ecr.aws), so a failed pull is
+          # labelled as infrastructure and fails here, before any test.
+          curl_digest=sha256:c1fe1679c34d9784c1b0d1e5f62ac0a79fca01fb6377cdd33e90473c6f9f9a69
+          if ! docker pull "curlimages/curl@${curl_digest}" > "$RUNNER_TEMP/curl-pull.log" 2>&1; then
+            cat "$RUNNER_TEMP/curl-pull.log"
+            echo "::error title=INFRA-IMAGE::curlimages/curl@${curl_digest} could not be pulled from Docker Hub - no test ran"
+            exit 1
+          fi
+          docker tag "curlimages/curl@${curl_digest}" curlimages/curl:8.11.1
       # Only a push to main writes the ~557 MB entry, and only on a miss — nine PRs saving their own would
       # evict it from the 10 GB cache. Runs before the egress lock; it carries no secret and changes
       # nothing the suite reads.
@@ -277,14 +324,22 @@ jobs:
           t0=$(date +%s)
           # N runners pull the same images at once and the registry rate-limits them
           # ("toomanyrequests"). Stagger by run number and retry ONLY the start/pull, at most 4 times;
-          # nothing after this step is ever retried.
+          # nothing after this step is ever retried. A PULL failure moves the next attempt to the next
+          # registry (same images by digest); any other failure keeps it (tests/isolated/ci/registry-fallback.sh).
+          source tests/isolated/ci/registry-fallback.sh
           sleep $(( (RUN - 1) * 15 ))
           for attempt in 1 2 3 4; do
-            if supabase start -x studio,imgproxy,vector,logflare,realtime,storage-api,postgres-meta,edge-runtime; then break; fi
+            iso_use_registry
+            echo "stack start attempt $attempt: images from $SUPABASE_INTERNAL_IMAGE_REGISTRY"
+            if supabase start -x studio,imgproxy,vector,logflare,realtime,storage-api,postgres-meta,edge-runtime 2>&1 | tee "$RUNNER_TEMP/start-attempt.log"; then break; fi
+            iso_after_failure "$RUNNER_TEMP/start-attempt.log"
+            echo "::warning title=INFRA-IMAGE::stack start attempt $attempt failed ($ISO_FAILURE_CLASS) from $SUPABASE_INTERNAL_IMAGE_REGISTRY"
             supabase stop --no-backup > /dev/null 2>&1 || true
             [ "$attempt" = 4 ] && { echo "local stack did not start after 4 attempts" >&2; exit 1; }
             sleep $(( attempt * 45 + RUN * 7 ))
           done
+          # Later steps run the CLI with the registry the stack came from.
+          echo "SUPABASE_INTERNAL_IMAGE_REGISTRY=$SUPABASE_INTERNAL_IMAGE_REGISTRY" >> "$GITHUB_ENV"
           mv "$RUNNER_TEMP/held-migrations/"* supabase/migrations/
           echo "start_seconds=$(( $(date +%s) - t0 ))" >> "$GITHUB_OUTPUT"
           supabase status -o env > "$RUNNER_TEMP/stack.env"
@@ -360,8 +415,15 @@ jobs:
             echo 'LAERLIGVERSE_PRESENTED=on' >> "$RUNNER_TEMP/functions.env"
           fi
           echo "edge flags: $(cut -d= -f1 "$RUNNER_TEMP/functions.env" | paste -sd ' ')"
+          # A PULL failure of the edge-runtime image (Docker Hub "toomanyrequests", run 44384257941: all three attempts
+          # within one minute) moves the next attempt to the next registry; a runtime that dies booting keeps it.
+          source tests/isolated/ci/registry-fallback.sh
+          touch "$RUNNER_TEMP/functions.log"
           ready=no
           for attempt in 1 2 3; do
+            iso_use_registry
+            log_from=$(( $(wc -l < "$RUNNER_TEMP/functions.log") + 1 ))
+            echo "edge-runtime start attempt $attempt: image from $SUPABASE_INTERNAL_IMAGE_REGISTRY"
             nohup supabase functions serve --env-file "$RUNNER_TEMP/functions.env" >> "$RUNNER_TEMP/functions.log" 2>&1 &
             pid=$!
             for i in $(seq 1 60); do
@@ -374,7 +436,9 @@ jobs:
               sleep 2
             done
             if [ "$ready" = yes ]; then echo "edge-runtime: serving after start attempt $attempt"; break; fi
-            echo "::warning::Edge Runtime not serving (start attempt $attempt): $(tail -n 3 "$RUNNER_TEMP/functions.log" | tr '\n' ' ')"
+            tail -n "+$log_from" "$RUNNER_TEMP/functions.log" > "$RUNNER_TEMP/edge-attempt.log"
+            iso_after_failure "$RUNNER_TEMP/edge-attempt.log"
+            echo "::warning::Edge Runtime not serving (start attempt $attempt, $ISO_FAILURE_CLASS): $(tail -n 3 "$RUNNER_TEMP/functions.log" | tr '\n' ' ')"
             # Evidence for a systematic cause (SIGBUS): runner memory, disk, /dev/shm, the container.
             if ! { echo "--- edge-runtime start attempt $attempt failed: runner resources and container"
               free -m; df -h / /dev/shm; docker ps -a --filter "name=edge_runtime" --format '{{.Names}} {{.Image}} {{.Status}}'
@@ -384,6 +448,10 @@ jobs:
             sleep 5
           done
           [ "$ready" = yes ] || { echo "Edge Runtime did not serve after 3 start attempts" >&2; exit 1; }
+          # Audit trail: which registry served, and the digest of every running Supabase image (compare with the list
+          # in tests/isolated/ci/registry-fallback.sh).
+          echo "::notice title=INFRA-IMAGE-SOURCE::stack and Edge Runtime images from $SUPABASE_INTERNAL_IMAGE_REGISTRY"
+          iso_audit_images
           # Every function with a preflight handler (detected in its source) must answer it with a 2xx.
           # A function without one runs its normal path on an empty OPTIONS request — question-context is
           # Supabase's hello-world template, `await req.json()` on an empty body throws, and the worker may

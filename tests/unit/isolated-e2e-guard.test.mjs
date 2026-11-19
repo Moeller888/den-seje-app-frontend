@@ -156,8 +156,9 @@ test("no false green, and the order that makes the job fail-closed", () => {
   // server (its container can die booting: SIGBUS, run 40650983690). Each is bounded and ends in a
   // hard failure; no test is ever retried here.
   assert.equal((wf.match(/for attempt in/g) || []).length, 2);
-  assert.match(wf, /for attempt in 1 2 3 4; do\n\s+if supabase start /);
-  assert.match(wf, /for attempt in 1 2 3; do\n\s+nohup supabase functions serve /);
+  // Each attempt first picks its registry (a pull failure moves the NEXT attempt on: tests/isolated/ci/registry-fallback.sh).
+  assert.match(wf, /for attempt in 1 2 3 4; do\n\s+iso_use_registry\n[^\n]*\n\s+if supabase start [^\n]*\| tee "\$RUNNER_TEMP\/start-attempt\.log"; then break; fi\n/);
+  assert.match(wf, /for attempt in 1 2 3; do\n\s+iso_use_registry\n[^\n]*\n[^\n]*\n\s+nohup supabase functions serve /);
   assert.match(wf, /\[ "\$ready" = yes \] \|\| \{ echo "Edge Runtime did not serve after 3 start attempts" >&2; exit 1; \}/);
   const job = wf.slice(wf.indexOf("\n  isolated-e2e:\n"));
   const at = (s) => { const i = job.indexOf(s); assert.ok(i > 0, s); return i; };
