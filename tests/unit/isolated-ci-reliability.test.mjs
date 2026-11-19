@@ -48,12 +48,17 @@ test("a rate limit or a failed pull moves the NEXT attempt to the next registry:
 
 test("a runtime that dies booting, or a missing log, keeps the registry: switching would only re-download the same image", () => {
   const out = withLogs(
-    ["Bus error (core dumped)\nedge-runtime exited with code 135", "Error: port 54321 is already allocated"],
-    `iso_after_failure "$DIR/a0.log"; echo "$ISO_FAILURE_CLASS"; iso_after_failure "$DIR/a1.log"; echo "$ISO_FAILURE_CLASS"
+    [
+      "Bus error (core dumped)\nedge-runtime exited with code 135",
+      "Error: port 54321 is already allocated",
+      // An error in a function's own code is never "solved" by another registry.
+      "worker boot error: Uncaught SyntaxError: Unexpected token '}'\n    at file:///home/deno/functions/get-next-question/index.ts:12:3",
+    ],
+    `for i in 0 1 2; do iso_after_failure "$DIR/a$i.log"; echo "$ISO_FAILURE_CLASS"; done
      iso_after_failure "$DIR/missing.log"; echo "$ISO_FAILURE_CLASS"
      iso_use_registry; echo "$SUPABASE_INTERNAL_IMAGE_REGISTRY"`,
   );
-  assert.deepEqual(out, ["other", "other", "other", "docker.io"]);
+  assert.deepEqual(out, ["other", "other", "other", "other", "docker.io"]);
 });
 
 test("a later step starts from the registry the stack came from; an unknown value starts from the first", () => {
@@ -74,6 +79,8 @@ test("the fallback holds no loop, no credential and no other registry: the workf
 test("workflow: both start loops pick the registry per attempt, classify the failure, stay bounded and fail hard", () => {
   const start = step("Start a bare local Supabase (no migrations, no Edge Runtime yet)");
   assert.ok(start.includes("source tests/isolated/ci/registry-fallback.sh"));
+  const pipefail = start.indexOf("set -euo pipefail"), tee = start.indexOf('| tee "$RUNNER_TEMP/start-attempt.log"');
+  assert.ok(pipefail !== -1 && tee > pipefail, "pipefail: a failed start is not hidden by tee's exit code");
   assert.match(start, /\n\s+iso_after_failure "\$RUNNER_TEMP\/start-attempt\.log"\n\s+echo "::warning title=INFRA-IMAGE::[^\n]*\$ISO_FAILURE_CLASS/);
   assert.ok(!/\$\(iso_after_failure/.test(wf), "never in a subshell: the registry move would be lost");
   assert.ok(start.includes('[ "$attempt" = 4 ] && { echo "local stack did not start after 4 attempts" >&2; exit 1; }'));
@@ -142,7 +149,8 @@ function keep(files, installed) {
     for (const f of files) writeFileSync(join(src, f), "");
     // dpkg-deb -f FILE FIELD: the stand-in reads package, version and architecture from apt's file name.
     writeFileSync(join(bin, "dpkg-deb"), `#!/usr/bin/env bash
-b=$(basename "$2" .deb); IFS=_ read -r p v a <<< "$b"; v=\${v//%3a/:}
+b=$(basename "$2" .deb); case "$b" in broken*) echo "dpkg-deb: error: unexpected end of file" >&2; exit 2;; esac
+IFS=_ read -r p v a <<< "$b"; v=\${v//%3a/:}
 case "$3" in Package) echo "$p";; Version) echo "$v";; Architecture) echo "$a";; esac
 `);
     writeFileSync(join(bin, "dpkg-query"), `#!/usr/bin/env bash
@@ -165,6 +173,16 @@ test("refill: only .debs installed in exactly that version are kept; seeded olde
   assert.equal(r.status, 0, r.out);
   assert.deepEqual(r.kept, ["fonts-x_20240101-1_all.deb", "libbar_2%3a4.0-1_amd64.deb", "libfoo1_1.2-3_amd64.deb"]);
   assert.match(r.out, /kept 3, dropped 2/);
+});
+
+test("refill: another architecture, a damaged file and a file without a version are never kept, and do not abort the refill", () => {
+  const r = keep(
+    ["libfoo1_1.2-3_amd64.deb", "libfoo1_1.2-3_arm64.deb", "broken-truncated_1.0_amd64.deb", "nover__amd64.deb"],
+    "libfoo1:amd64=1.2-3 nover:amd64=",
+  );
+  assert.equal(r.status, 0, r.out);
+  assert.deepEqual(r.kept, ["libfoo1_1.2-3_amd64.deb"]);
+  assert.match(r.out, /kept 1, dropped 1 \(not installed in that version\), unreadable 2/);
 });
 
 test("refill fails loudly without an archive directory, and an empty one keeps nothing", () => {

@@ -18,11 +18,16 @@ dest="${2:?cache directory}"
 mkdir -p "$dest"
 kept=0
 dropped=0
+unreadable=0
 for f in "$src"/*.deb; do
   [ -e "$f" ] || continue
-  pkg=$(dpkg-deb -f "$f" Package)
-  ver=$(dpkg-deb -f "$f" Version)
-  arch=$(dpkg-deb -f "$f" Architecture)
+  # A truncated or damaged file (dpkg-deb cannot read its control fields) is never kept, and it does not abort the
+  # refill: the install before this already succeeded, and only files this image installed may enter the entry.
+  if ! pkg=$(dpkg-deb -f "$f" Package 2> /dev/null) || ! ver=$(dpkg-deb -f "$f" Version 2> /dev/null) \
+    || ! arch=$(dpkg-deb -f "$f" Architecture 2> /dev/null) || [ -z "$pkg" ] || [ -z "$ver" ] || [ -z "$arch" ]; then
+    unreadable=$((unreadable + 1))
+    continue
+  fi
   if [ "$arch" = all ]; then q="$pkg"; else q="$pkg:$arch"; fi
   installed=$(dpkg-query -W -f='${Version}' "$q" 2> /dev/null || true)
   if [ -n "$installed" ] && [ "$installed" = "$ver" ]; then
@@ -32,4 +37,4 @@ for f in "$src"/*.deb; do
     dropped=$((dropped + 1))
   fi
 done
-echo "keep-installed-debs: kept $kept, dropped $dropped (not installed in that version)"
+echo "keep-installed-debs: kept $kept, dropped $dropped (not installed in that version), unreadable $unreadable"
