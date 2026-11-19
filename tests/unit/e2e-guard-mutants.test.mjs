@@ -17,8 +17,9 @@ test("every mutant applies exactly once and changes the source", () => {
     assert.ok(!names.has(id), `${id}: duplicate mutant id`);
     names.add(id);
   }
-  assert.ok(MUTANTS.length >= 62, "the 54 original mutants plus the teacher_id-repair mutants");
-  for (const f of ["tests/e2e-guard.mjs", "tests/e2e-accounts.mjs", "tests/e2e-admin.mjs"]) {
+  assert.ok(MUTANTS.length >= 98, "the 54 original mutants, the 8 teacher_id-repair mutants and the 36 A4 provisioning mutants");
+  for (const f of ["tests/e2e-guard.mjs", "tests/e2e-accounts.mjs", "tests/e2e-admin.mjs", "tools/e2e/provision-accounts.mjs",
+    ".github/workflows/e2e-prod-provision.yml"]) {
     assert.ok(MUTANTS.some(([file]) => file === f), `${f} is mutated`);
   }
 });

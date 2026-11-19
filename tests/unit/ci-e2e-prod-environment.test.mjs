@@ -3,8 +3,9 @@
 // What is pinned:
 //   1. the ONLY jobs in any workflow that reference a production credential are playwright.yml
 //      `test`, update-avatar-goldens.yml `update` and — narrower — e2e-prod-key-check.yml `key-check`
-//      (A7: only the three E2E_PROD_SUPABASE_* secrets, main only, manual dispatch only), and all
-//      three run in `environment: e2e-prod`;
+//      (A7: only the three E2E_PROD_SUPABASE_* secrets, main only, manual dispatch only) and
+//      e2e-prod-provision.yml `provision` (A4: URL, service key and the three addresses — no password,
+//      main only, manual dispatch only), and all four run in `environment: e2e-prod`;
 //   2. no other job names an environment, and no workflow uses pull_request_target/workflow_run;
 //   3. both jobs only run on a manual dispatch (push/pull_request never reach the environment, so
 //      ordinary CI never waits for an approval);
@@ -38,7 +39,13 @@ const PROTECTED = [["playwright.yml", "test"], ["update-avatar-goldens.yml", "up
 // no preflight (its script checks the environment marker itself, before any network call).
 const KEY_CHECK = ["e2e-prod-key-check.yml", "key-check"];
 const KEY_CHECK_SECRETS = ["E2E_PROD_SUPABASE_ANON_KEY", "E2E_PROD_SUPABASE_SERVICE_ROLE_KEY", "E2E_PROD_SUPABASE_URL"];
-const AUTHORISED = [...PROTECTED, KEY_CHECK];
+// The fourth, equally NARROW job (A4): provisioning of the marked test accounts. e2e-prod, main only,
+// manual dispatch only, and only the URL, the service key and the three addresses — never a password, never
+// the anon key. Its full contract (inputs, run line, sparse checkout) is tests/unit/ci-e2e-prod-provision.test.mjs.
+const PROVISION = ["e2e-prod-provision.yml", "provision"];
+const PROVISION_SECRETS = ["E2E_PROD_SUPABASE_SERVICE_ROLE_KEY", "E2E_PROD_SUPABASE_URL", "E2E_PROD_TEST_STUDENT2_EMAIL",
+  "E2E_PROD_TEST_STUDENT_EMAIL", "E2E_PROD_TEST_TEACHER_EMAIL"];
+const AUTHORISED = [...PROTECTED, KEY_CHECK, PROVISION];
 const isAuthorised = (file, job) => AUTHORISED.some(([f, j]) => f === file && j === job);
 const CLI = fileURLToPath(new URL("../../.github/ci/e2e-prod-preflight.mjs", import.meta.url));
 
@@ -149,6 +156,35 @@ test("the key-check job is narrower: e2e-prod, main only, manual dispatch only, 
   for (const n of REQUIRED_SECRETS) assert.ok(!new RegExp(`^\\s+${n}\\s*:`, "m").test(block), `${n} is not set by program name`);
   for (const banned of [/npm\s+(?:ci|install|i)\b/, /\bnpx\b/, /playwright/i, /global-setup/]) assert.doesNotMatch(block, banned);
   assert.deepEqual([...block.matchAll(/^\s+run:\s*(.*)$/gm)].map((m) => m[1].trim()), ["node .github/ci/e2e-prod-key-check.mjs"]);
+  assert.ok(block.includes("E2E_PROD_ENVIRONMENT: ${{ vars.E2E_PROD_ENVIRONMENT }}"), "the script receives the environment marker");
+});
+
+test("the provision job is narrow: e2e-prod, main only, manual dispatch only, URL + service key + three addresses", () => {
+  const [file, job] = PROVISION;
+  const text = WORKFLOWS[file];
+  assert.ok(text, `${file} exists`);
+  const jobs = jobsOf(text);
+  assert.deepEqual(Object.keys(jobs), [job], `${file} has exactly one job`);
+  const block = stripComments(jobs[job]);
+  assert.equal((block.match(/^    environment: e2e-prod$/gm) ?? []).length, 1, "runs in e2e-prod");
+  assert.equal((block.match(/^\s+environment:/gm) ?? []).length, 1, "no second environment");
+  assert.match(block, /^    if: github\.ref == 'refs\/heads\/main'$/m, "the job runs only from main");
+  const code = stripComments(text);
+  assert.match(code, /\npermissions:\n  contents: read\n/);
+  assert.ok(!/^\s+permissions:/m.test(block), "no job-level permissions");
+  const afterOn = code.slice(code.indexOf("\non:\n") + "\non:\n".length);
+  const triggers = afterOn.slice(0, afterOn.search(/\n[A-Za-z]/) + 1);
+  assert.deepEqual([...triggers.matchAll(/^  ([a-z_]+):/gm)].map((m) => m[1]), ["workflow_dispatch"], "manual dispatch only");
+  assert.deepEqual(secretNames(block), PROVISION_SECRETS);
+  for (const name of PROVISION_SECRETS) {
+    const defs = block.match(new RegExp(`^.*\\bsecrets\\.${name}\\b.*$`, "gm")) ?? [];
+    assert.deepEqual(defs, [`          ${name}: \${{ secrets.${name} }}`], `${name} mapped exactly once, to its own name`);
+  }
+  for (const n of REQUIRED_SECRETS) {
+    if (/PASSWORD|ANON_KEY/.test(n)) assert.ok(!block.includes(n), `no ${n}`);
+    assert.ok(!new RegExp(`^\\s+${n}\\s*:`, "m").test(block), `${n} is not set by program name`);
+  }
+  for (const banned of [/npm\s+(?:ci|install|i)\b/, /\bnpx\b/, /playwright/i, /global-setup/]) assert.doesNotMatch(block, banned);
   assert.ok(block.includes("E2E_PROD_ENVIRONMENT: ${{ vars.E2E_PROD_ENVIRONMENT }}"), "the script receives the environment marker");
 });
 
@@ -263,7 +299,7 @@ test("the preflight runs before npm ci and any Supabase call; in `test` right af
   }
 });
 
-test("vars.E2E_PROD_ENVIRONMENT is read only by the two preflight steps and the key-check step", () => {
+test("vars.E2E_PROD_ENVIRONMENT is read only by the two preflight steps, the key-check step and the provision step", () => {
   const readers = {};
   for (const [file, text] of Object.entries(WORKFLOWS)) {
     for (const [job, block] of Object.entries(jobsOf(text))) {
@@ -274,7 +310,7 @@ test("vars.E2E_PROD_ENVIRONMENT is read only by the two preflight steps and the 
   assert.deepEqual(readers, Object.fromEntries(AUTHORISED.map(([f, j]) => [`${f}:${j}`, 1])));
   let count = 0;
   for (const text of Object.values(WORKFLOWS)) count += (stripComments(text).match(/vars\.E2E_PROD_ENVIRONMENT\b/g) ?? []).length;
-  assert.equal(count, 3);
+  assert.equal(count, 4);
   assert.equal(MARKER, "E2E_PROD_ENVIRONMENT");
 });
 

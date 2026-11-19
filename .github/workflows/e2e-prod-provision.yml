@@ -1,0 +1,80 @@
+name: E2E prod provision accounts
+
+# A4: separat, eksplicit godkendt provisionering af de fire markerede E2E-testkonti for én slot.
+# Logikken og begrundelserne står i tools/e2e/provision-accounts.mjs; kontrakten i
+# tests/unit/ci-e2e-prod-provision.test.mjs; driftsvejledningen i docs/operations/e2e-prod-provisioning.md.
+#
+# - Kun manuel start (workflow_dispatch), og jobbet kører kun fra main. e2e-prod kræver desuden
+#   godkendelse af en reviewer og tillader kun branchen main. Ingen push-, pull_request- eller
+#   schedule-trigger: almindelig CI kan aldrig nå hverken environmentet eller produktionsnøglen.
+# - Standard er dry-run (kun GET). mode=apply kræver desuden confirm = provision-accounts-slot-<slot>;
+#   scriptet afviser alt andet før første netværkskald.
+# - Inputs sendes som miljøvariabler og citeres i shell'en — de indsættes aldrig i scriptteksten.
+# - Ingen afhængigheder (intet npm ci) og en sparse checkout af præcis de filer, scriptet importerer.
+# - Kun de fem secrets nedenfor: URL, service-nøgle og de tre adresser. Ingen adgangskoder: kontiene
+#   oprettes uden adgangskode, og global-setup sætter adgangskoderne, når kontiene er verificeret.
+# - Den delte E2E-lås (tests/unit/ci-e2e-queue.test.mjs): alle workflows med service-nøglen tager låsen.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run (kun læsning) eller apply (opretter manglende konti)"
+        type: choice
+        options:
+          - dry-run
+          - apply
+        default: dry-run
+      slot:
+        description: "E2E-slot (0–3)"
+        type: choice
+        options:
+          - "0"
+          - "1"
+          - "2"
+          - "3"
+        default: "0"
+      confirm:
+        description: "Kun ved apply: provision-accounts-slot-<slot>"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  provision:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: e2e-prod
+    concurrency:
+      group: e2e-shared-supabase
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            tools/e2e/provision-accounts.mjs
+            tests/e2e-accounts.mjs
+            tests/e2e-slot.mjs
+            .github/ci/e2e-prod-key-check.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Provisionér E2E-konti (dry-run er standard)
+        env:
+          E2E_PROD_ENVIRONMENT: ${{ vars.E2E_PROD_ENVIRONMENT }}
+          PROVISION_MODE: ${{ inputs.mode }}
+          PROVISION_CONFIRM: ${{ inputs.confirm }}
+          E2E_SLOT: ${{ inputs.slot }}
+          E2E_PROD_SUPABASE_URL: ${{ secrets.E2E_PROD_SUPABASE_URL }}
+          E2E_PROD_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_PROD_SUPABASE_SERVICE_ROLE_KEY }}
+          E2E_PROD_TEST_STUDENT_EMAIL: ${{ secrets.E2E_PROD_TEST_STUDENT_EMAIL }}
+          E2E_PROD_TEST_TEACHER_EMAIL: ${{ secrets.E2E_PROD_TEST_TEACHER_EMAIL }}
+          E2E_PROD_TEST_STUDENT2_EMAIL: ${{ secrets.E2E_PROD_TEST_STUDENT2_EMAIL }}
+        run: node tools/e2e/provision-accounts.mjs --mode="$PROVISION_MODE" --confirm="$PROVISION_CONFIRM"
