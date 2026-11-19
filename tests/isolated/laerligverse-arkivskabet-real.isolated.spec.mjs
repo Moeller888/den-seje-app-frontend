@@ -138,21 +138,73 @@ async function recordGameMessages(target) {
     }, true);
   }, GAME_ORIGIN);
 }
-/** The browser's OWN requests to the Edge Functions (all frames), the failed ones, and uncaught page errors. */
-function watch(page) {
+/** Diagnostics never carry a token, a key or a query string (tests/isolated: nothing secret in logs or artifacts). */
+function redact(s) {
+  let out = String(s).replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, "<jwt>").replace(/(https?:\/\/[^\s?"']+)\?[^\s"']*/g, "$1?<query>");
+  for (const [secret, label] of [[SERVICE, "<service-key>"], [ANON, "<anon-key>"]]) if (secret) out = out.split(secret).join(label);
+  return out;
+}
+/** Every watched page of the running test, for the failure report (afterEach). */
+const watched = [];
+/**
+ * The browser's OWN requests to the Edge Functions (all frames), the failed ones, their status codes, uncaught page
+ * errors, and console errors/warnings of the host and the game (the game logs a dropped bridge message as a warning).
+ */
+function watch(page, label = "page") {
   const seen = [];
   const failed = [];
   const errors = [];
+  const statuses = [];
+  const consoleLines = [];
   page.on("request", (r) => {
     const u = r.url();
     if (u.startsWith(`${SUPA}/functions/v1/`) && r.method() === "POST") seen.push(u.split("/functions/v1/")[1].split("?")[0]);
+  });
+  page.on("response", (r) => {
+    const u = r.url();
+    if (u.startsWith(`${SUPA}/functions/v1/`)) statuses.push(`${r.request().method()} ${u.split("/functions/v1/")[1].split("?")[0]} ${r.status()}`);
   });
   page.on("requestfailed", (r) => {
     if (r.url().startsWith(SUPA)) failed.push(`${r.url()} ${r.failure()?.errorText ?? ""}`);
   });
   page.on("pageerror", (e) => errors.push(String(e)));
-  return { seen, failed, errors };
+  page.on("console", (m) => {
+    if (m.type() === "error" || m.type() === "warning") consoleLines.push(`${m.type()} ${new URL(m.location().url || HOST_ORIGIN).origin === GAME_ORIGIN ? "game" : "host"}: ${m.text()}`);
+  });
+  const w = { label, page, seen, failed, errors, statuses, consoleLines };
+  watched.push(w);
+  return w;
 }
+/** What the pupil sees in the game right now: the three views and every visible status line. */
+async function gameState(page) {
+  const fr = gameFrame(page);
+  if (fr === undefined) return { game: "no game frame" };
+  return fr.evaluate(() => {
+    const at = (id) => { const n = document.getElementById(id); return n === null ? "missing" : { hidden: n.hidden, state: n.dataset.state ?? null, source: n.dataset.source ?? null, step: n.dataset.step ?? null }; };
+    const text = (id) => document.getElementById(id)?.textContent ?? null;
+    return { bridge: document.body.dataset.bridge ?? null, connection: text("lv-connection"), intro: at("lv-intro"), introStatus: text("lv-intro-status"), archiveCard: at("lv-archive-card"), task: at("lv-task"), taskStatus: text("lv-status"), notice: text("notice") };
+  }).catch((e) => ({ game: `unreadable: ${e}` }));
+}
+
+test.use({ screenshot: "only-on-failure" });
+test.afterEach(async ({ browserName }, testInfo) => {
+  const pages = watched.splice(0);
+  if (testInfo.status === testInfo.expectedStatus) return;
+  const report = [];
+  for (const w of pages) {
+    report.push({
+      page: w.label,
+      game: w.page.isClosed() ? "page closed" : await gameState(w.page),
+      functionCalls: w.statuses,
+      failedRequests: w.failed,
+      pageErrors: w.errors,
+      console: w.consoleLines,
+    });
+  }
+  const body = redact(JSON.stringify({ browser: browserName, test: testInfo.title, error: testInfo.error?.message ?? null, pages: report }, null, 2).slice(0, 60_000));
+  await testInfo.attach("f11c-diagnostics.json", { body, contentType: "application/json" });
+  console.log(`F11-C DIAGNOSTICS [${browserName}] ${body}`);
+});
 const gameFrame = (page) => page.frames().find((fr) => fr.url().startsWith(GAME_ORIGIN));
 
 // ── Driving the real game (the pupil's own controls, keyboard first) ────────────────────────────────────────────
@@ -303,14 +355,22 @@ test("the real Arkivskabet: sign-in, the SERVER's introduction, shown and done r
   // F: nothing paid, levelled or recorded as an attempt by the introduction (shown + done) or the archive card.
   await unchanged("introduction completed, task served");
 
-  // G2: after "done", a reload of the game and of the host: the introduction never comes back; the server's ONE open
-  // task resumes with the handshake.
+  // G2: after "done", a reload of the game and of the host: the introduction never comes back, and the pupil's ONE open
+  // task comes back — never a second one.
+  // - A GAME reload: the host still holds the open task and hands it over with the handshake (init.openTask).
   await reloadGame(page, f, "task");
   await startGame(page, f);
   await expectPracticeTask(f);
+  // - A HOST reload: the host's openTask() is in memory only (learning-bridge laerlig-service.ts: get-next-question has
+  //   no side-effect-free "peek", it would create an instance), so nothing resumes by itself — the world is idle, no
+  //   task is open. The pupil's next use of the cabinet asks the server, which serves the SAME open instance first.
+  //   (First CI run of F11-C, run 44528177519: expecting a resumption here timed out in all three browsers, and no
+  //   get-next-question call followed the host reload — the test's assumption, not the product, was wrong.)
   await page.reload();
   f = await signIn(page, p);
   await startGame(page, f);
+  await expect(f.locator("#lv-task"), "after a host reload nothing opens by itself").toHaveAttribute("data-state", "closed");
+  await useCabinet(page, f);
   await expectPracticeTask(f);
   expect(await rounds(request, p)).toEqual([done]);
   expect(await instances(request, p)).toEqual(inst);
@@ -349,8 +409,8 @@ test("two tabs of the same pupil in the real game: one round, the first 'shown' 
   try {
     const a = await context.newPage();
     const b = await context.newPage();
-    const wa = watch(a);
-    const wb = watch(b);
+    const wa = watch(a, "tab A");
+    const wb = watch(b, "tab B");
     const fa = await signIn(a, p);
     const fb = await signIn(b, p);
     await startGame(a, fa);
@@ -398,6 +458,7 @@ test("two pupils: A's completed introduction is A's alone — B gets the server'
   const cb = await browser.newContext();
   try {
     const a = await ca.newPage();
+    watch(a, "pupil A");
     let fa = await signIn(a, pa);
     await startGame(a, fa);
     await useCabinet(a, fa);
@@ -410,7 +471,7 @@ test("two pupils: A's completed introduction is A's alone — B gets the server'
 
     // B, with B's own sign-in: the server still introduces B (A's completion is not B's).
     const b = await cb.newPage();
-    const wb = watch(b);
+    const wb = watch(b, "pupil B");
     const fb = await signIn(b, pb);
     await startGame(b, fb);
     await useCabinet(b, fb);
@@ -471,7 +532,7 @@ test("network breaks: no introduction while offline (an explicit Danish error, n
   const context = await browser.newContext();
   try {
     let page = await context.newPage();
-    const w = watch(page);
+    const w = watch(page, "before reload");
     let f = await signIn(page, p);
     await startGame(page, f);
 
@@ -506,7 +567,7 @@ test("network breaks: no introduction while offline (an explicit Danish error, n
     await page.close();
 
     page = await context.newPage();
-    const w2 = watch(page);
+    const w2 = watch(page, "after reload");
     f = await signIn(page, p);
     await startGame(page, f);
     await useCabinet(page, f);
@@ -541,6 +602,7 @@ test("rollback in the WRONG order (host introductions OFF, backend still ON): br
   try {
     const p = await makePupil(request, "rollback", browserName);
     const start = await rewardState(request, p);
+    watch(page, "rollback");
     const f = await signIn(page, p);
     await startGame(page, f);
     await useCabinet(page, f);

@@ -576,7 +576,7 @@ jobs:
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ runner.temp }}/arkivskabet-real-report.json
         run: |
-          sg "$ISOLATED_GROUP" -c "REPLAY_PROFILE=introduction ISOLATED_ARKIVSKABET_DIST=$RUNNER_TEMP/arkivskabet-game npx playwright test -c tests/isolated/playwright.isolated.config.mjs laerligverse-arkivskabet-real.isolated.spec.mjs --reporter=list,json"
+          sg "$ISOLATED_GROUP" -c "REPLAY_PROFILE=introduction ISOLATED_ARKIVSKABET_DIST=$RUNNER_TEMP/arkivskabet-game npx playwright test -c tests/isolated/playwright.isolated.config.mjs laerligverse-arkivskabet-real.isolated.spec.mjs --reporter=list,json --output=$GITHUB_WORKSPACE/test-results-isolated/arkivskabet-real"
           node tests/isolated/require-complete-run.mjs "$PLAYWRIGHT_JSON_OUTPUT_NAME" laerligverse-arkivskabet-real.isolated.spec.mjs
 
       - name: Existing Playwright suite against the isolated stack

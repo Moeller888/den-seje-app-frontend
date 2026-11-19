@@ -222,3 +222,25 @@ test("browser install: cache first without the Ubuntu mirrors, the unchanged ins
   assert.ok(install.includes(`'Acquire::Retries "3";' 'Acquire::http::Timeout "30";' 'Acquire::https::Timeout "30";'`), "a silent mirror fails in 30 s per try");
   assert.match(install, /apt: cached \.deb set sha256 /, "the digest of the restored .deb set stays in the log");
 });
+
+test("F11-C: a failing real-game browser test leaves its screenshots and diagnostics where the job uploads them", () => {
+  // First CI run of F11-C (run 44528177519): the isolated config has no outputDir, so Playwright wrote to
+  // tests/isolated/test-results while the upload step looked in test-results-isolated/ — "No files were found".
+  const wf = read(".github/workflows/isolated-e2e.yml");
+  const at = wf.indexOf("- name: Real Arkivskabet E2E — the actual game, bridge/3, Chromium, Firefox and WebKit (introduction lane)\n");
+  assert.notEqual(at, -1);
+  const step = wf.slice(at, wf.indexOf("\n      - ", at + 10));
+  const out = step.match(/--output=\$GITHUB_WORKSPACE\/([^\s"]+)/);
+  assert.ok(out, "the F11-C run sets its own output directory");
+  const upload = wf.slice(wf.indexOf("- name: Upload report\n"));
+  assert.match(upload, /if: always\(\) && needs\.plan\.outputs\.scope != 'docs-md'\n/);
+  const paths = upload.slice(upload.indexOf("path: |"), upload.indexOf("retention-days")).split("\n").map((l) => l.trim()).filter((l) => l.endsWith("/"));
+  assert.ok(paths.some((p) => `${out[1]}/`.startsWith(p)), `${out[1]} is under an uploaded path (${paths.join(", ")})`);
+  // The spec itself: a screenshot and a redacted state report on failure, never a token or a key.
+  const spec = read("tests/isolated/laerligverse-arkivskabet-real.isolated.spec.mjs");
+  assert.match(spec, /test\.use\(\{ screenshot: "only-on-failure" \}\)/);
+  assert.match(spec, /testInfo\.attach\("f11c-diagnostics\.json", \{ body, contentType: "application\/json" \}\)/);
+  assert.match(spec, /const body = redact\(/);
+  assert.ok(spec.includes(String.raw`replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, "<jwt>")`), "JWTs are redacted");
+  assert.ok(spec.includes('[[SERVICE, "<service-key>"], [ANON, "<anon-key>"]]'), "both keys are redacted");
+});
