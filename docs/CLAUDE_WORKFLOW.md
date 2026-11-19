@@ -180,6 +180,11 @@ For any non-trivial change, before implementing:
 5. **Record** medium/high risks in the risk register (`docs/project-state.md` R-x) and mention them
    in the section summary.
 
+**Autonomy level (AURA T1).** The blast radius also sets how much an agent may do without a new GO. The level is
+computed, never chosen: `node tools/agents/risk-level.mjs` (exit code 1, 2 or 3). Only level 1 is covered by the
+standing authorisation; level 2 and 3 stop for the owner. See
+[operations/autonomy-levels.md](./operations/autonomy-levels.md) and `CLAUDE.md` rule 50.
+
 ## 10. Definition of Done
 
 A section is **done** only when:
