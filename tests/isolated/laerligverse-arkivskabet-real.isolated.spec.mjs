@@ -9,9 +9,10 @@
 //   pupil answers in the real TaskView.
 //
 // F11-B's visible spec (laerligverse-intro-visible) runs the same backend with the D-315 TEST game (a DOM stand-in
-// for the renderer); this spec closes the gap: the game is the pupil's actual client. Nothing is intercepted (no
+// for the renderer); this spec closes the gap: the game is the pupil's actual client. Nothing is faked (no
 // route.fulfill / route.abort, no local-network-access permission — F11-A); a network break is the browser's own
-// offline mode. The database is the oracle, read with the local service key by THIS test process only.
+// offline mode. One exception, in the last test only: the "done" report is HELD (route.fetch sends it unchanged to
+// the real backend; the answer is never fulfilled) so that a reload can happen while it is in flight. The database is the oracle, read with the local service key by THIS test process only.
 // The introduction pays nothing and is not evidence (D-330): "shown" and "done" are registrations, not learning.
 //
 // Runs only in the isolated introduction lane (REPLAY_PROFILE=introduction, ISOLATED_ARKIVSKABET_DIST = the build),
@@ -657,4 +658,67 @@ test("rollback in the WRONG order (host introductions OFF, backend still ON): br
     await harness.close();
     harness = await startHarness({ ...HARNESS, introductions: true });
   }
+});
+
+// ── Interruption: F5 while the server is answering "done" (separate from the five scenarios above) ──────────────
+// The journey (scenario 1) lets the stack answer before its deliberate reloads (settled()); a real pupil does not wait.
+// Scenario 4 covers a "done" that never reaches the server (offline). This covers the other side: the REAL server
+// receives and registers "done", and the browser is reloaded before it has processed the answer. The answer is held
+// back with Playwright's route.fetch() — the request goes to the real isolated backend unchanged; nothing is invented,
+// and the database is the oracle.
+test("F5 while 'done' is in flight: the server registered the completion, the browser never processed its answer — after the reload the server's state stands: no second completion, no introduction again, the first task, nothing paid", async ({ page, request, browserName }) => {
+  test.setTimeout(300_000);
+  const p = await makePupil(request, "inflight", browserName);
+  const start = await rewardState(request, p);
+  const w = watch(page, "in-flight done");
+  let f = await signIn(page, p);
+  await startGame(page, f);
+  await useCabinet(page, f);
+  await expectServerIntro(f);
+  await expect.poll(async () => (await rounds(request, p))[0]?.presented_at ?? null, { timeout: 30_000 }).not.toBeNull();
+  await settled(w, { introductionProgress: 1 });
+  const shown = (await rounds(request, p))[0];
+
+  // Only the "completed" report is held; every other request passes untouched.
+  let serverStatus = null;
+  let release;
+  const held = new Promise((ok) => { release = ok; });
+  await page.route(`${SUPA}/functions/v1/introduction-progress`, async (route) => {
+    const req = route.request();
+    let body = null;
+    try { body = req.postDataJSON(); } catch { body = null; }
+    if (req.method() !== "POST" || body?.action !== "completed") return route.continue();
+    const response = await route.fetch();
+    serverStatus = response.status();
+    // Never fulfilled or aborted by the test (F11-A): the pupil's reload is what cuts the browser's request off.
+    await held;
+  });
+  await workThroughCards(page, f, { last: false });
+  await page.keyboard.press("Enter");
+  await expect.poll(() => serverStatus, { timeout: 30_000, message: "the real server answered the held 'done'" }).toBe(200);
+  const doneRow = (await rounds(request, p))[0];
+  expect(doneRow.completed_at, "the server registered the completion").not.toBeNull();
+  expect(doneRow.completion_request_id).not.toBeNull();
+  await expect(f.locator("#lv-intro"), "the browser has not processed the answer: the view is still open").toBeVisible();
+  await expect(f.locator("#lv-archive-card")).toBeHidden();
+
+  // F5 while the answer is outstanding.
+  await page.reload();
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  release();
+
+  f = await signIn(page, p);
+  await startGame(page, f);
+  await useCabinet(page, f);
+  // The server's state stands: the introduction is not shown again; the server's next step, the first task, opens.
+  await expectPracticeTask(f);
+  await expect(f.locator("#lv-intro")).toBeHidden();
+  const after = await rounds(request, p);
+  expect(after, "one round; 'shown' and 'done' exactly as first registered").toEqual([doneRow]);
+  expect([after[0].presented_at, after[0].presented_request_id]).toEqual([shown.presented_at, shown.presented_request_id]);
+  expect(w.seen.filter((x) => x === "introduction-progress").length, "one 'shown' and one 'done' — no second report after the reload").toBe(2);
+  expect(await instances(request, p), "one open task, never two").toHaveLength(1);
+  expect(await rewardState(request, p), "the introduction (shown + done) paid nothing and recorded no attempt").toEqual(start);
+  expect(w.failed.every((x) => x.includes("/functions/v1/introduction-progress")), `only the held 'done' was cut off: ${w.failed.join(", ")}`).toBe(true);
+  expect(w.errors, "no uncaught error in the host or the game").toEqual([]);
 });
