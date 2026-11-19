@@ -10,8 +10,16 @@
 // (the access token is used by the Worker for authentication and rate limiting only).
 // Word highlighting follows the audio element's own media clock (currentTime), so the
 // timings stay correct at every playback rate and across pause/resume.
+//
+// Long texts (D-362 / F-07): a text over the per-request limit is planned as a few ordinary
+// requests ("parts", js/read-aloud/tts-chunks.js) and read as ONE reading: the parts play one
+// after another on the same audio element (an element started by the pupil's tap may keep
+// playing, also in Safari), the next part is fetched while the current one plays (one part
+// ahead, never all at once), and pause/resume/stop act on the whole reading. A text that fits is
+// one part — the same request and the same cached clip as before.
 
-import { canonicalTtsRequest, ttsKey, ttsClipPaths } from "./tts-key.js";
+import { ttsKey, ttsClipPaths } from "./tts-key.js";
+import { planTtsRequests } from "./tts-chunks.js";
 
 const PROVIDER_ID = "azure-cached";
 const MIN_RATE = 0.5;
@@ -27,13 +35,14 @@ export const TTS_TIMEOUTS = Object.freeze({ metaMs: 8000, synthesizeMs: 25000, p
  * cannot be found is dropped (speech continues, that word is simply not highlighted).
  * @param {string} text
  * @param {{w:string, t:number, d:number}[]} words
+ * @param {number} [from]  where to start searching (the end of the previous part of a long text)
  * @returns {{charIndex:number, charLength:number, t:number, d:number}[]}
  */
-export function alignWords(text, words) {
+export function alignWords(text, words, from = 0) {
   const source = typeof text === "string" ? text : "";
   const lower = source.toLocaleLowerCase("da-DK");
   const timeline = [];
-  let cursor = 0;
+  let cursor = Number.isInteger(from) && from > 0 ? Math.min(from, source.length) : 0;
   for (const word of Array.isArray(words) ? words : []) {
     if (!word || typeof word.w !== "string" || !word.w || !Number.isFinite(word.t)) continue;
     let at = source.indexOf(word.w, cursor);
@@ -90,12 +99,17 @@ export function createAzureProvider(options) {
   const getAccessToken = typeof opts.getAccessToken === "function" ? opts.getAccessToken : defaultAccessToken;
   const timeouts = { ...TTS_TIMEOUTS, ...(opts.timeouts && typeof opts.timeouts === "object" ? opts.timeouts : {}) };
   const memo = new Map();
+  const inflight = new Map();
 
   let _audio = null;
   let _request = null;
   let _finish = null;
   let _timer = null;
   let _generation = 0;
+  // Long texts: between two parts (the next one is loading), and a pause pressed in that gap.
+  let _between = false;
+  let _held = false;
+  let _resumeAction = null;
 
   function notify(req, state) {
     try { if (req && typeof req.onState === "function") req.onState(state); }
@@ -112,6 +126,9 @@ export function createAzureProvider(options) {
     try { if (_audio) { _audio.pause(); _audio.removeAttribute && _audio.removeAttribute("src"); } } catch (_e) { /* ignore */ }
     _audio = null;
     _request = null;
+    _between = false;
+    _held = false;
+    _resumeAction = null;
     const finish = _finish;
     _finish = null;
     try { if (typeof finish === "function") finish("ended"); } catch (_e) { /* ignore */ }
@@ -138,8 +155,7 @@ export function createAzureProvider(options) {
   }
 
   /** Cached metadata, else one synthesis request. Throws on any failure. */
-  async function clipFor(canonical, key) {
-    if (memo.has(key)) return memo.get(key);
+  async function loadClip(canonical, key) {
     const cached = await fetchWithTimeout(ttsClipPaths(key).meta, { headers: { accept: "application/json" } }, timeouts.metaMs);
     let meta = null;
     if (cached.ok) {
@@ -160,6 +176,15 @@ export function createAzureProvider(options) {
     if (!validMeta(meta, key)) throw new Error("invalid_meta");
     remember(key, meta);
     return meta;
+  }
+
+  /** One clip per key: from memory, or one shared load (a prefetch and a restart never ask twice). */
+  function clipFor(canonical, key) {
+    if (memo.has(key)) return Promise.resolve(memo.get(key));
+    if (inflight.has(key)) return inflight.get(key);
+    const pending = loadClip(canonical, key).finally(() => { inflight.delete(key); });
+    inflight.set(key, pending);
+    return pending;
   }
 
   /** Highlighter for one clip: emits a boundary whenever the spoken word changes. */
@@ -183,6 +208,25 @@ export function createAzureProvider(options) {
     tick();
   }
 
+  function applyRate(el, rate) {
+    // Setting a new src resets playbackRate to defaultPlaybackRate, so both are set for every part.
+    try { el.defaultPlaybackRate = rate; } catch (_e) { /* older engines */ }
+    el.playbackRate = rate;
+    el.preservesPitch = true;
+  }
+
+  async function playWithTimeout(el) {
+    let timer = null;
+    const timedOut = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error("play_timeout")), timeouts.playMs);
+    });
+    try {
+      await Promise.race([el.play(), timedOut]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   return {
     id: PROVIDER_ID,
 
@@ -195,10 +239,10 @@ export function createAzureProvider(options) {
       }
     },
 
-    /** Any valid text within the limits can be voiced (cached, or synthesised once). */
+    /** Any valid text within the limits can be voiced (cached, or synthesised once); a long text as parts. */
     canSpeak(req) {
       try {
-        return this.isSupported() && canonicalTtsRequest(req && req.text, req && req.segments).ok === true;
+        return this.isSupported() && planTtsRequests(req && req.text, req && req.segments).ok === true;
       } catch (_e) {
         return false;
       }
@@ -207,19 +251,30 @@ export function createAzureProvider(options) {
     async speak(req) {
       stop();
       const run = _generation;
+      const live = () => run === _generation;
       try {
-        const checked = canonicalTtsRequest(req && req.text, req && req.segments);
-        if (!checked.ok) return false;
-        const key = await ttsKey(checked.value);
-        const meta = await clipFor(checked.value, key);
-        if (run !== _generation) return false; // stopped or replaced while loading
+        const plan = planTtsRequests(req && req.text, req && req.segments);
+        if (!plan.ok) return false;
+        const parts = plan.parts;
+        // One load per part and reading; started for part i+1 while part i plays (one ahead).
+        const loads = new Map();
+        const load = (i) => {
+          if (!loads.has(i)) {
+            const pending = ttsKey(parts[i]).then((key) => clipFor(parts[i], key));
+            pending.catch(() => { /* a failed prefetch is reported only when its part is due */ });
+            loads.set(i, pending);
+          }
+          return loads.get(i);
+        };
+        const first = await load(0);
+        if (!live()) return false; // stopped or replaced while loading
 
-        const timeline = alignWords(req.text, meta.words);
-        const el = new Audio(meta.audio);
+        const text = typeof req.text === "string" ? req.text : "";
+        const wanted = Number(req && req.rate);
+        const rate = Number.isFinite(wanted) ? Math.min(MAX_RATE, Math.max(MIN_RATE, wanted)) : 1;
+        const el = new Audio(first.audio);
         el.preload = "auto";
-        const rate = Number(req && req.rate);
-        el.playbackRate = Number.isFinite(rate) ? Math.min(MAX_RATE, Math.max(MIN_RATE, rate)) : 1;
-        el.preservesPitch = true;
+        applyRate(el, rate);
         _audio = el;
         _request = req;
         let completed = false;
@@ -230,35 +285,66 @@ export function createAzureProvider(options) {
           notify(req, state);
         };
         const end = (state) => {
-          if (run !== _generation) return;
+          if (!live()) return;
           const finish = _finish;
           _finish = null;
           _audio = null;
           _request = null;
+          _between = false;
+          _held = false;
+          _resumeAction = null;
           if (typeof finish === "function") finish(state);
         };
-        const tick = highlighter(el, timeline, req);
-        el.addEventListener("timeupdate", () => { if (run === _generation) tick(); });
-        el.addEventListener("playing", () => {
-          if (run !== _generation) return;
-          notify(req, "speaking");
-          startTicking(tick);
-        });
-        el.addEventListener("ended", () => end("ended"), { once: true });
-        el.addEventListener("error", () => end("error"), { once: true });
 
-        let timer = null;
-        const timedOut = new Promise((_, reject) => {
-          timer = setTimeout(() => reject(new Error("play_timeout")), timeouts.playMs);
+        let index = 0;
+        let cursor = 0;
+        let tick = () => {};
+        // Where part i begins in the shown text (when the text is already NFC, as pupil texts are).
+        const starts = Array.isArray(plan.starts) && text === text.normalize("NFC") ? plan.starts : null;
+        const usePart = (i, meta) => {
+          index = i;
+          if (starts && Number.isInteger(starts[i])) cursor = Math.max(cursor, starts[i]);
+          const timeline = alignWords(text, meta.words, cursor);
+          if (timeline.length > 0) cursor = timeline[timeline.length - 1].charIndex + timeline[timeline.length - 1].charLength;
+          tick = highlighter(el, timeline, req);
+        };
+        const advance = async (i) => {
+          stopTicking();
+          _between = true;
+          let meta;
+          try { meta = await load(i); } catch (_e) { end("error"); return; }
+          if (!live()) return;
+          const go = () => {
+            if (!live()) return;
+            _between = false;
+            usePart(i, meta);
+            el.src = meta.audio;
+            applyRate(el, rate);
+            playWithTimeout(el).catch(() => end("error"));
+          };
+          if (_held) { _resumeAction = go; return; }
+          go();
+        };
+
+        usePart(0, first);
+        el.addEventListener("timeupdate", () => { if (live() && !_between) tick(); });
+        el.addEventListener("playing", () => {
+          if (!live()) return;
+          notify(req, "speaking");
+          startTicking(() => tick());
+          if (index + 1 < parts.length) load(index + 1);
         });
-        try {
-          await Promise.race([el.play(), timedOut]);
-        } finally {
-          clearTimeout(timer);
-        }
-        return run === _generation;
+        el.addEventListener("ended", () => {
+          if (!live() || _between) return;
+          if (index + 1 < parts.length) void advance(index + 1);
+          else end("ended");
+        });
+        el.addEventListener("error", () => { if (live() && !_between) end("error"); });
+
+        await playWithTimeout(el);
+        return live();
       } catch (_e) {
-        if (run === _generation) {
+        if (live()) {
           _finish = null; // a failed start has not "ended"; the caller shows the error state
           stop();
         }
@@ -270,6 +356,12 @@ export function createAzureProvider(options) {
 
     pause() {
       try {
+        if (_between) {
+          // Between two parts of a long text: the next part waits until the pupil resumes.
+          if (!_request) return false;
+          if (!_held) { _held = true; notify(_request, "paused"); }
+          return true;
+        }
         if (!_audio || _audio.paused) return false;
         _audio.pause();
         stopTicking();
@@ -282,6 +374,15 @@ export function createAzureProvider(options) {
 
     resume() {
       try {
+        if (_held) {
+          _held = false;
+          notify(_request, "speaking");
+          const action = _resumeAction;
+          _resumeAction = null;
+          if (typeof action === "function") action(); // else the part still loading starts when it arrives
+          return true;
+        }
+        if (_between) return false;
         if (!_audio || !_audio.paused) return false;
         void _audio.play();
         return true;
