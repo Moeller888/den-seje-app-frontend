@@ -127,16 +127,27 @@ async function pupilToken(request, p) {
 }
 
 // ── Browser evidence ────────────────────────────────────────────────────────────────────────────────────────────
-/** Records, in the GAME frame only, every message the game receives (as text): proof that no token reaches it. */
-async function recordGameMessages(target) {
-  await target.addInitScript((gameOrigin) => {
+/**
+ * Records every message the GAME frame receives (as text), across EVERY game document of the page: proof that no
+ * token reaches it. The record lives in the test process, not in the frame — a game or host reload starts a new
+ * document, and an in-frame buffer would hold only the last one. (Second CI run of F11-C, run 44534141784: the
+ * in-frame buffer lost the introduction's messages after the G2 reloads, in all three browsers.) Only calls from a
+ * frame on the game origin are kept.
+ */
+async function recordGameMessages(page) {
+  const seen = [];
+  await page.exposeBinding("__f11cRecord", ({ frame }, text) => {
+    if (frame && new URL(frame.url()).origin === GAME_ORIGIN) seen.push(String(text));
+  });
+  await page.addInitScript((gameOrigin) => {
     if (location.origin !== gameOrigin) return;
-    const seen = [];
-    window.__f11cReceived = () => seen.slice();
     window.addEventListener("message", (e) => {
-      try { seen.push(JSON.stringify(e.data)); } catch { seen.push("<unserialisable>"); }
+      let text;
+      try { text = JSON.stringify(e.data); } catch { text = "<unserialisable>"; }
+      window.__f11cRecord(text);
     }, true);
   }, GAME_ORIGIN);
+  return seen;
 }
 /** Diagnostics never carry a token, a key or a query string (tests/isolated: nothing secret in logs or artifacts). */
 function redact(s) {
@@ -302,7 +313,7 @@ test("the real Arkivskabet: sign-in, the SERVER's introduction, shown and done r
   const p = await makePupil(request, "main", browserName);
   const start = await rewardState(request, p);
   const unchanged = async (label) => expect(await rewardState(request, p), `${label}: no XP, coins, mastery, level, streak, attempt or event`).toEqual(start);
-  await recordGameMessages(page);
+  const gameMessages = await recordGameMessages(page);
   const w = watch(page);
 
   // E1–E3: sign-in on the real host, bridge/3, the world's decision point, the server's introduction.
@@ -377,7 +388,9 @@ test("the real Arkivskabet: sign-in, the SERVER's introduction, shown and done r
   await unchanged("reloads after the introduction");
 
   // The game received the cards and the task — never a token, a key, the round id or an answer key.
-  const received = (await gameFrame(page).evaluate(() => window.__f11cReceived())).join("\n");
+  // The record spans all five game documents of this journey (first load, two game reloads, two host reloads).
+  expect(gameMessages.filter((m) => m.includes('"type":"init"')).length, "a handshake in every game document").toBeGreaterThanOrEqual(5);
+  const received = gameMessages.join("\n");
   expect(received).toContain('"type":"intro.present"');
   expect(received).toContain('"protocol":"laerligverse.bridge/3"');
   for (const secret of ["eyJ", "Bearer", "access_token", ANON, done.id, "content_sha256", "introduction_round_id", '"correct"', "accepted_answers"]) {
