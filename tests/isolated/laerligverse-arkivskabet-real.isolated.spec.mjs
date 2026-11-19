@@ -167,24 +167,40 @@ function watch(page, label = "page") {
   const errors = [];
   const statuses = [];
   const consoleLines = [];
+  const pending = new Set();
   page.on("request", (r) => {
     const u = r.url();
+    if (u.startsWith(SUPA)) pending.add(r);
     if (u.startsWith(`${SUPA}/functions/v1/`) && r.method() === "POST") seen.push(u.split("/functions/v1/")[1].split("?")[0]);
   });
+  page.on("requestfinished", (r) => pending.delete(r));
   page.on("response", (r) => {
     const u = r.url();
     if (u.startsWith(`${SUPA}/functions/v1/`)) statuses.push(`${r.request().method()} ${u.split("/functions/v1/")[1].split("?")[0]} ${r.status()}`);
   });
   page.on("requestfailed", (r) => {
+    pending.delete(r);
     if (r.url().startsWith(SUPA)) failed.push(`${r.url()} ${r.failure()?.errorText ?? ""}`);
   });
   page.on("pageerror", (e) => errors.push(String(e)));
   page.on("console", (m) => {
     if (m.type() === "error" || m.type() === "warning") consoleLines.push(`${m.type()} ${new URL(m.location().url || HOST_ORIGIN).origin === GAME_ORIGIN ? "game" : "host"}: ${m.text()}`);
   });
-  const w = { label, page, seen, failed, errors, statuses, consoleLines };
+  const w = { label, page, seen, failed, errors, statuses, consoleLines, pending };
   watched.push(w);
   return w;
+}
+/**
+ * Before a deliberate HOST reload: the stack has answered what the page already sent, so the test's own reload never
+ * aborts a request mid-flight (third CI run of F11-C, run 44579228492, Chromium only: page.reload() cut off the
+ * host's replayed "shown" → net::ERR_ABORTED; the database still showed one "shown" and the same round). Event-based,
+ * no fixed wait: first the expected number of answered introduction-progress calls, then nothing pending.
+ */
+async function settled(w, { introductionProgress } = {}) {
+  if (introductionProgress !== undefined) {
+    await expect.poll(() => w.statuses.filter((s) => s === "POST introduction-progress 200").length, { timeout: 30_000 }).toBeGreaterThanOrEqual(introductionProgress);
+  }
+  await expect.poll(() => w.pending.size, { timeout: 30_000 }).toBe(0);
 }
 /** What the pupil sees in the game right now: the three views and every visible status line. */
 async function gameState(page) {
@@ -338,6 +354,8 @@ test("the real Arkivskabet: sign-in, the SERVER's introduction, shown and done r
   await startGame(page, f);
   await useCabinet(page, f);
   await expectServerIntro(f);
+  // The host replays "shown" for the resumed presentation (an idempotent replay on the server); it is answered first.
+  await settled(w, { introductionProgress: 2 });
   await page.reload();
   f = await signIn(page, p);
   await startGame(page, f);
@@ -372,6 +390,7 @@ test("the real Arkivskabet: sign-in, the SERVER's introduction, shown and done r
   await reloadGame(page, f, "task");
   await startGame(page, f);
   await expectPracticeTask(f);
+  await settled(w);
   // - A HOST reload: the host's openTask() is in memory only (learning-bridge laerlig-service.ts: get-next-question has
   //   no side-effect-free "peek", it would create an instance), so nothing resumes by itself — the world is idle, no
   //   task is open. The pupil's next use of the cabinet asks the server, which serves the SAME open instance first.
