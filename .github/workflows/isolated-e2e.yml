@@ -511,6 +511,19 @@ jobs:
           grep -q "createClient" "$RUNNER_TEMP/cdn-supabase.js"
           curl -skf "https://esm.sh/@supabase/supabase-js@2" > /dev/null
 
+      # F11-C: the REAL Arkivskabet game (adventure-engine/packages/archive-prototype, game-main.ts) for the introduction
+      # lane, built BEFORE the network lock (pnpm fetches adventure-engine's locked dependencies). Test-only output in the
+      # runner's temp folder, never in the deploy bundle: one entry (game.html), fixed to the harness's two loopback
+      # origins and checked for host code before anything serves it (tests/isolated/laerligverse-harness/build-arkivskabet.mjs).
+      - name: Real Arkivskabet game — build it for the isolated F3 host (introduction lane)
+        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'introduction'
+        env:
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+        run: |
+          set -euo pipefail
+          (cd adventure-engine && corepack pnpm@9.15.4 install --frozen-lockfile)
+          node tests/isolated/laerligverse-harness/build-arkivskabet.mjs "$RUNNER_TEMP/arkivskabet-game"
+
       # Every protection run against a deliberately wrong configuration must refuse it; a control that
       # passes fails the job (a vacuous check is caught in every run). No control contacts production.
       - name: Negative controls — before the lock
@@ -554,6 +567,17 @@ jobs:
         run: |
           sg "$ISOLATED_GROUP" -c "REPLAY_PROFILE=introduction npx playwright test -c tests/isolated/playwright.isolated.config.mjs laerligverse-intro-visible.isolated.spec.mjs --reporter=list,json"
           node tests/isolated/require-complete-run.mjs "$PLAYWRIGHT_JSON_OUTPUT_NAME" laerligverse-intro-visible.isolated.spec.mjs
+
+      # F11-C: the pupil journey in the REAL game (not the D-315 test game) against this lane's backend — sign-in, the
+      # server's introduction, shown/done, reloads, two tabs, two pupils, network breaks, the first task — in all three
+      # browsers, ONLY in the introduction lane, and required to RUN completely, like the two steps above.
+      - name: Real Arkivskabet E2E — the actual game, bridge/3, Chromium, Firefox and WebKit (introduction lane)
+        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'introduction'
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ runner.temp }}/arkivskabet-real-report.json
+        run: |
+          sg "$ISOLATED_GROUP" -c "REPLAY_PROFILE=introduction ISOLATED_ARKIVSKABET_DIST=$RUNNER_TEMP/arkivskabet-game npx playwright test -c tests/isolated/playwright.isolated.config.mjs laerligverse-arkivskabet-real.isolated.spec.mjs --reporter=list,json"
+          node tests/isolated/require-complete-run.mjs "$PLAYWRIGHT_JSON_OUTPUT_NAME" laerligverse-arkivskabet-real.isolated.spec.mjs
 
       - name: Existing Playwright suite against the isolated stack
         if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'
