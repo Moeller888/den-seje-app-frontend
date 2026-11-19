@@ -356,3 +356,18 @@ prove order, control and error handling in real engines — not how Azure pronou
   metadata takes longer than `TTS_TIMEOUTS.metaMs` (8 s) ends the reading in the error state, also
   when the pupil had paused in the gap.
 - The review text (feedback) and the course summary still have no player (unchanged, not in scope).
+
+### Audio output errors and the CI sound server (PR #736, 2026-11-19)
+
+- **Fix.** Firefox reports a failing audio output as `error` (MEDIA_ERR_DECODE, `OnMediaSinkAudioError`)
+  followed by `ended`. The late `ended` used to start the next part, whose `playing` put the player back on
+  "Læser højt" for good. A reading that has ended (`ended` or `error`) is now over: no later event of its
+  audio element acts. Reproduced in Firefox with Mozilla's test pref `media.cubeb.force_null_context`
+  (no audio backend) and pinned in `tests/unit/read-aloud-long-text.test.mjs`.
+- **CI.** Firefox on Linux plays sound only through a sound server; the GitHub runner has none, so in the
+  isolated suite (run 44581847725) every `<audio>` failed with `NS_ERROR_DOM_MEDIA_MEDIASINK_ERR`.
+  `tests/isolated/ci/virtual-audio.sh` installs and starts a PulseAudio daemon with its automatic null sink —
+  production lane of `isolated-e2e.yml` only, before the network lock, its own small package cache
+  (`~/.cache/pw-audio-apt`, never the browser/apt entry `playwright.yml` shares), verified (`pactl info`, a
+  sink must exist) and failing loud as `INFRA-AUDIO`. Pinned in `tests/unit/isolated-virtual-audio.test.mjs`.
+  Chromium and WebKit play without a sound server.

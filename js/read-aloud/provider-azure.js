@@ -251,7 +251,11 @@ export function createAzureProvider(options) {
     async speak(req) {
       stop();
       const run = _generation;
-      const live = () => run === _generation;
+      // A reading is live while it is the current one AND has not ended. Once it has ended ("ended" or "error"), no
+      // later event of its audio element may act: Firefox, for one, fires "error" and then "ended" when its audio
+      // output fails, and that late "ended" must not start the next part.
+      let over = false;
+      const live = () => run === _generation && !over;
       try {
         const plan = planTtsRequests(req && req.text, req && req.segments);
         if (!plan.ok) return false;
@@ -286,6 +290,9 @@ export function createAzureProvider(options) {
         };
         const end = (state) => {
           if (!live()) return;
+          over = true;
+          try { el.pause(); } catch (_e) { /* already stopped */ }
+          stopTicking();
           const finish = _finish;
           _finish = null;
           _audio = null;
@@ -342,7 +349,9 @@ export function createAzureProvider(options) {
         el.addEventListener("error", () => { if (live() && !_between) end("error"); });
 
         await playWithTimeout(el);
-        return live();
+        // Audio started: true unless another reading replaced this one (a reading that already ended — a very short
+        // clip, or an error reported through onState — still produced audio).
+        return run === _generation;
       } catch (_e) {
         if (live()) {
           _finish = null; // a failed start has not "ended"; the caller shows the error state

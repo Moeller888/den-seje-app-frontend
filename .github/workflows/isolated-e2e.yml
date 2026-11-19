@@ -173,6 +173,8 @@ jobs:
           # only to SEED apt's archive directory — never for the offline install, which needs the exact key.
           echo "prefix=pw-browsers-apt-${ImageOS:-unknown}-" >> "$GITHUB_OUTPUT"
           echo "version=${v}" >> "$GITHUB_OUTPUT"
+          # The runner image alone, for the virtual audio output's own cache key (production lane, below).
+          echo "image=${ImageOS:-unknown}-${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
       - name: Restore Playwright browser and apt cache
         if: needs.plan.outputs.scope != 'docs-md'
         id: pwcache
@@ -306,6 +308,31 @@ jobs:
             ~/.cache/ms-playwright
             ~/.cache/pw-apt
           key: ${{ steps.pwver.outputs.key }}
+
+      # D-362 / #736: a VIRTUAL AUDIO OUTPUT, production lane only (its suite reads texts aloud in all three browsers).
+      # Firefox on Linux plays sound only through a sound server and the runner has none, so every <audio> failed with
+      # NS_ERROR_DOM_MEDIA_MEDIASINK_ERR (run 44581847725). A PulseAudio daemon with its automatic null sink: nothing is
+      # heard, playback advances and ends. Its .debs have their OWN cache entry (~/.cache/pw-audio-apt), never the
+      # browser/apt entry above, whose key playwright.yml shares. Before the network lock: a cache miss may need the
+      # Ubuntu mirrors; the running daemon needs no network. tests/isolated/ci/virtual-audio.sh
+      # One restore-and-save cache step, conditioned on the lane only (D-261: the browser cache save above stays the
+      # job's ONE event-conditioned step). The entry is a few MB of .debs, so a pull request saving its own on a miss
+      # (in its own scope, at the end of a green job) costs nothing worth guarding.
+      - name: Audio — the PulseAudio package cache (production lane)
+        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'
+        id: audiocache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pw-audio-apt
+          key: pw-audio-apt-${{ steps.pwver.outputs.image }}-pulseaudio
+      - name: Audio — a virtual output for the browsers (PulseAudio null sink, production lane)
+        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'
+        timeout-minutes: 10
+        env:
+          AUDIO_CACHE_HIT: ${{ steps.audiocache.outputs.cache-hit }}
+        run: |
+          bash tests/isolated/ci/virtual-audio.sh install
+          bash tests/isolated/ci/virtual-audio.sh start
 
       - uses: supabase/setup-cli@v1
         if: needs.plan.outputs.scope != 'docs-md'

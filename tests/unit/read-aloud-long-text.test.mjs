@@ -456,6 +456,29 @@ test("playback: a double tap never starts two readings at the same time", async 
   provider.stop();
 });
 
+test("playback: an audio-output error followed by 'ended' (Firefox without an audio backend) ends the reading — part 2 never starts", async () => {
+  // Reproduced in Firefox with media.cubeb.force_null_context (and on the CI runner): the element fires "error"
+  // (MEDIA_ERR_DECODE, OnMediaSinkAudioError) and THEN "ended". Before the fix the late "ended" started part 2 and
+  // its "playing" put the player back on "Læser højt" for good.
+  const audio = installAudio();
+  const provider = azure({ fetchImpl: clipServer().fetchImpl });
+  const states = [];
+  assert.equal(await provider.speak({ text: LONG, onState: (s) => states.push(s) }), true);
+  audio[0].emit("error");
+  audio[0].emit("ended");
+  await flush(); await flush();
+  assert.deepEqual(states, ["speaking", "error"], "the reading ends in the calm error state and stays there");
+  assert.equal(audio[0].plays.length, 1, "part 2 is never started");
+  assert.equal(audio[0].paused, true);
+  audio[0].emit("playing");
+  assert.deepEqual(states, ["speaking", "error"], "no later event of the old element revives the player");
+  assert.equal(provider.pause(), false);
+  assert.equal(provider.resume(), false);
+  // The pupil can simply try again: a new reading starts from part 1.
+  assert.equal(await provider.speak({ text: LONG, onState: (s) => states.push(s) }), true);
+  assert.equal(audio.length, 2);
+});
+
 test("playback: a part that fails shows the calm error state; nothing hangs and nothing else speaks", async () => {
   const audio = installAudio();
   const keys = await partKeys(LONG);
