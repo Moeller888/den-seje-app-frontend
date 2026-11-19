@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 400" width="360" height="400" role="img" aria-labelledby="t d">
   <title id="t">Tidslinje: fra enevælde mod folkestyre</title>
-  <desc id="d">Tidslinje 1660–1849. 1660: enevælden indføres, kongen får al magt. 1788: stavnsbåndet ophæves. 5. juni 1849: Grundloven underskrives. Vejen mod folkestyre begynder; valgretten er stadig begrænset.</desc>
+  <desc id="d">Tidslinje 1660–1849. 1660: enevælden indføres, kongen får al magt. 1788: stavnsbåndets ophævelse begynder. 5. juni 1849: Grundloven underskrives. Vejen mod folkestyre begynder; valgretten er stadig begrænset.</desc>
   <rect width="360" height="400" fill="#ffffff"/>
   <g font-family="Arial, Helvetica, sans-serif">
     <rect x="20" y="24" width="30" height="276" rx="6" fill="#c62828"/>
@@ -15,7 +15,8 @@
 
     <line x1="50" y1="170" x2="74" y2="170" stroke="#1a1a1a" stroke-width="3"/>
     <text x="82" y="178" font-size="26" font-weight="bold" fill="#1a1a1a">1788</text>
-    <text x="82" y="204" font-size="19" fill="#1a1a1a">Stavnsbåndet ophæves.</text>
+    <text x="82" y="204" font-size="19" fill="#1a1a1a">Stavnsbåndets ophævelse</text>
+    <text x="82" y="228" font-size="19" fill="#1a1a1a">begynder.</text>
 
     <line x1="50" y1="300" x2="74" y2="300" stroke="#1a1a1a" stroke-width="3"/>
     <text x="82" y="308" font-size="26" font-weight="bold" fill="#1a1a1a">1849</text>

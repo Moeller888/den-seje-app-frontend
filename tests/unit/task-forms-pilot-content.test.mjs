@@ -115,14 +115,19 @@ test("inactive and marked: is_active is a literal false in both INSERTs; every r
   for (const r of OC_ROWS) assert.equal(r.metadata.pilot_form, r.answer_format, label(r));
 });
 
-test("course summary label: every stimulus row has its own short pilot_skill, and it never reaches the pupil's payload", () => {
-  const skills = STIMULUS_ROWS.map((r) => r.metadata.pilot_skill);
+// The O/C rows share learning_objective pilot_d362 and metadata.pilot_phase with S1–S7, so once they are active they
+// are part of the same course (phase-gate.ts reads every ACTIVE phased row of the objective), and the course summary
+// labels each item with pilot_skill or falls back to "Opgave N" (course.ts). Hence all 15 rows carry one.
+test("course summary label: every pilot row (all 15) has its own short pilot_skill, and it never reaches the pupil's payload", () => {
+  const skills = ALL_ROWS.map((r) => r.metadata.pilot_skill);
   for (const [i, s] of skills.entries()) {
-    assert.ok(typeof s === "string" && s.trim() === s && s.length >= 5 && s.length <= 40, `S${i + 1}: pilot_skill "${s}"`);
+    assert.ok(typeof s === "string" && s.trim() === s && s.length >= 5 && s.length <= 40, `row ${i + 1}: pilot_skill "${s}"`);
   }
   assert.equal(new Set(skills).size, skills.length, "a pilot_skill is repeated");
-  for (const r of STIMULUS_ROWS) {
-    const meta = toPublicQuestion(r.content, r.answer_format, r.metadata, undefined).metadata;
+  for (const r of ALL_ROWS) {
+    const key = r.answer_format === "order" ? createOrderKey(parseOrderContent(r.content).items.length)
+      : r.answer_format === "categorize" ? createCategorizeKey(parseCategorizeContent(r.content)) : undefined;
+    const meta = toPublicQuestion(r.content, r.answer_format, r.metadata, key).metadata;
     assert.equal(meta?.pilot_skill, undefined, `${label(r)}: pilot_skill is server-side only`);
   }
 });
@@ -140,7 +145,21 @@ test("level: every row is on the 1–10,000 scale and in its §4.1 cell (grade 7
 
 test("stimulus contract: every stimulus passes publicStimulus with nothing dropped, and its file exists", () => {
   const withStimulus = ALL_ROWS.filter((r) => r.content.stimulus !== undefined);
-  assert.equal(withStimulus.length, 8, "7 stimulus rows + 1 categorize row (O1's source was removed: it gave away the last two items)");
+  // O1's source was removed 2026-11-09 (it gave away the last two items). O4 got a source in the revision of
+  // 2026-11-19: the course introduces neither 1901, 1953 nor 1978, so the pupil reads them there, grouped by theme
+  // (not in date order), and must combine the three parts to place the five changes. O2 got a source in the final
+  // revision of 2026-11-19 for the same reason: the Constituent Assembly is part of the facit again, and the pupil
+  // reads the four events in a source that is not in date order (an honest source-reading + chronology task).
+  assert.equal(withStimulus.length, 10, "7 stimulus rows + C2 (§ 35) + O2 (Fra enevælde til grundlov) + O4 (Demokratiet efter 1849)");
+  const ocWithStimulus = OC_ROWS.filter((r) => r.content.stimulus !== undefined).map((r) => r.metadata.pilot_skill).sort();
+  assert.deepEqual(ocWithStimulus, ["Brug af § 35 på otte personer", "Demokratiet efter 1849", "Vejen til Grundloven 1848–1849"]);
+  // A source over an order task is grouped in themed parts (at least three). That the parts are NOT in facit order is
+  // a review point in docs/operations/task-forms-pilot-content-review.md, not machine-checked here.
+  for (const r of OC_ROWS.filter((x) => x.answer_format === "order" && x.content.stimulus)) {
+    const text = r.content.stimulus.text;
+    const blocks = text.split("\n\n");
+    assert.ok(blocks.length >= 3, `${label(r)}: the source is grouped in parts`);
+  }
   for (const r of STIMULUS_ROWS) assert.ok(r.content.stimulus, `${label(r)}: a stimulus row without a stimulus`);
   for (const r of withStimulus) {
     const { errors, warnings } = checkStimulus(r.content.stimulus);
@@ -174,7 +193,9 @@ test("mc/number contract: the shape production stores today, the answer among th
       assert.match(c.correct, /^\d+$/, `${label(r)}: a number answer is digits`);
     }
   }
-  // The browser shows MC options in the stored order, so the correct one must not always sit in one place.
+  // The quiz shuffles plain "mc" options in the browser (js/answer-options.js; seen in the D-362 browser check
+  // 2026-11-19), so the stored position is not what the pupil sees. Kept as a second guard for any client or
+  // export that shows the stored order: the correct one must not always sit in one place.
   const positions = new Set(STIMULUS_ROWS.filter((r) => r.answer_format === "mc").map((r) => r.content.options.indexOf(r.content.correct)));
   assert.deepEqual([...positions].sort(), [0, 1, 2, 3]);
 });
