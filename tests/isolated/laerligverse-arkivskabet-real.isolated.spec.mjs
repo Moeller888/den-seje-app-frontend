@@ -179,15 +179,19 @@ function watch(page, label = "page") {
     const u = r.url();
     if (u.startsWith(`${SUPA}/functions/v1/`)) statuses.push(`${r.request().method()} ${u.split("/functions/v1/")[1].split("?")[0]} ${r.status()}`);
   });
+  const failedRequests = [];
   page.on("requestfailed", (r) => {
     pending.delete(r);
-    if (r.url().startsWith(SUPA)) failed.push(`${r.url()} ${r.failure()?.errorText ?? ""}`);
+    if (r.url().startsWith(SUPA)) {
+      failed.push(`${r.url()} ${r.failure()?.errorText ?? ""}`);
+      failedRequests.push(r);
+    }
   });
   page.on("pageerror", (e) => errors.push(String(e)));
   page.on("console", (m) => {
     if (m.type() === "error" || m.type() === "warning") consoleLines.push(`${m.type()} ${new URL(m.location().url || HOST_ORIGIN).origin === GAME_ORIGIN ? "game" : "host"}: ${m.text()}`);
   });
-  const w = { label, page, seen, failed, errors, statuses, consoleLines, pending };
+  const w = { label, page, seen, failed, failedRequests, errors, statuses, consoleLines, pending };
   watched.push(w);
   return w;
 }
@@ -679,8 +683,11 @@ test("F5 while 'done' is in flight: the server registered the completion, the br
   await settled(w, { introductionProgress: 1 });
   const shown = (await rounds(request, p))[0];
 
-  // Only the "completed" report is held; every other request passes untouched.
-  let serverStatus = null;
+  // Only the "completed" report is held; every other request passes untouched. The held request and the server's
+  // answer to it are kept, so the sequence below is proven on THAT request, not inferred.
+  let heldRequest = null;
+  let heldBody = null;
+  let serverAnswer = null;
   let release;
   const held = new Promise((ok) => { release = ok; });
   await page.route(`${SUPA}/functions/v1/introduction-progress`, async (route) => {
@@ -688,22 +695,37 @@ test("F5 while 'done' is in flight: the server registered the completion, the br
     let body = null;
     try { body = req.postDataJSON(); } catch { body = null; }
     if (req.method() !== "POST" || body?.action !== "completed") return route.continue();
+    heldRequest = req;
+    heldBody = body;
     const response = await route.fetch();
-    serverStatus = response.status();
+    serverAnswer = { status: response.status(), body: await response.json().catch(() => null) };
     // Never fulfilled or aborted by the test (F11-A): the pupil's reload is what cuts the browser's request off.
     await held;
   });
   await workThroughCards(page, f, { last: false });
   await page.keyboard.press("Enter");
-  await expect.poll(() => serverStatus, { timeout: 30_000, message: "the real server answered the held 'done'" }).toBe(200);
-  const doneRow = (await rounds(request, p))[0];
-  expect(doneRow.completed_at, "the server registered the completion").not.toBeNull();
-  expect(doneRow.completion_request_id).not.toBeNull();
+  // 1. The real server received THIS request and registered it as a first completion ("recorded", not a replay).
+  await expect.poll(() => serverAnswer?.status ?? null, { timeout: 30_000, message: "the real server answered the held 'done'" }).toBe(200);
+  expect(serverAnswer.body?.outcome, "a first registration, not a replay").toBe("recorded");
+  // 2. The database holds exactly that registration: this pupil's one round, completed by the held request's id.
+  const before = await rounds(request, p);
+  expect(before).toHaveLength(1);
+  const doneRow = before[0];
+  expect(doneRow.student_id).toBe(p.id);
+  expect(doneRow.id, "the held request completes this pupil's round").toBe(heldBody.round_id);
+  expect(doneRow.completion_request_id, "the completion was registered by the held request").toBe(heldBody.request_id);
+  expect(Date.parse(doneRow.completed_at)).toBe(Date.parse(serverAnswer.body.at));
+  // 3. The browser has not processed the answer: the request is still outstanding, the view is still open.
+  expect(w.pending.has(heldRequest), "the held request is still in flight in the browser").toBe(true);
+  expect(w.failedRequests).toEqual([]);
   await expect(f.locator("#lv-intro"), "the browser has not processed the answer: the view is still open").toBeVisible();
   await expect(f.locator("#lv-archive-card")).toBeHidden();
 
-  // F5 while the answer is outstanding.
+  // 4. F5 while the answer is outstanding: the browser itself cuts off exactly the held request — observed on that
+  //    Request object (each engine words the failure differently, so the text is not compared), and nothing else.
   await page.reload();
+  await expect.poll(() => w.failedRequests.includes(heldRequest), { timeout: 30_000, message: "the reload aborted the held request" }).toBe(true);
+  expect(w.failedRequests, "the reload cut off the held request and no other").toHaveLength(1);
   await page.unrouteAll({ behavior: "ignoreErrors" });
   release();
 
@@ -719,6 +741,6 @@ test("F5 while 'done' is in flight: the server registered the completion, the br
   expect(w.seen.filter((x) => x === "introduction-progress").length, "one 'shown' and one 'done' — no second report after the reload").toBe(2);
   expect(await instances(request, p), "one open task, never two").toHaveLength(1);
   expect(await rewardState(request, p), "the introduction (shown + done) paid nothing and recorded no attempt").toEqual(start);
-  expect(w.failed.every((x) => x.includes("/functions/v1/introduction-progress")), `only the held 'done' was cut off: ${w.failed.join(", ")}`).toBe(true);
+  expect(w.failedRequests, "after the reload no further request failed").toHaveLength(1);
   expect(w.errors, "no uncaught error in the host or the game").toEqual([]);
 });
