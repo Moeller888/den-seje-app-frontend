@@ -29,7 +29,7 @@ approvers").
 | `playwright.yml` → `test` | kun `workflow_dispatch` (`if:` springer jobbet over ved push og PR) | `environment: e2e-prod` + trinnet `e2e-prod preflight` lige efter dispatch-guarden |
 | `update-avatar-goldens.yml` → `update` | kun `workflow_dispatch` | `environment: e2e-prod` + `e2e-prod preflight` lige efter checkout |
 | `e2e-prod-key-check.yml` → `key-check` (A7, smallere) | kun `workflow_dispatch`, jobbet kun fra `main` | `environment: e2e-prod`; **kun** de tre `E2E_PROD_SUPABASE_*`-secrets, ingen testkonti, intet `npm ci`; scriptet kræver selv `E2E_PROD_ENVIRONMENT = e2e-prod` og laver kun GET/HEAD |
-| `e2e-prod-provision.yml` → `provision` (A4, smallere) | kun `workflow_dispatch`, jobbet kun fra `main` | `environment: e2e-prod`; **kun** URL, service-nøgle og de tre adresser (ingen adgangskoder, ingen anon key), intet `npm ci`; dry-run er standard, `apply` kræver `confirm = provision-accounts-slot-<n>`. Se [e2e-prod-provisioning.md](e2e-prod-provisioning.md) |
+| `e2e-prod-provision.yml` → `provision` (A4, smallere) | kun `workflow_dispatch`, jobbet kun fra `main` | `environment: e2e-prod`; **kun** URL, service-nøgle og de tre adresser (ingen adgangskoder, ingen anon key), intet `npm ci`; dry-run er standard, `apply` kræver `confirm = provision-accounts-slot-<n>`. Forudgående job `describe` uden environment og secrets viser mode, slot og SHA før godkendelsen (M1). Se [e2e-prod-provisioning.md](e2e-prod-provisioning.md) |
 
 - **Almindelig CI er uberørt.** Ingen andre jobs har et environment. `test` springes over ved push og PR via `if:`.
   At GitHub evaluerer `if:` før environmentet, så et oversprunget job aldrig venter på godkendelse og ikke opretter
@@ -140,9 +140,15 @@ Alle oprettes **kun** som environment-secrets i `e2e-prod`, aldrig på repositor
 | `E2E_PROD_TEST_STUDENT_EMAIL` | `TEST_STUDENT_EMAIL` | kendt testkonto | |
 | `E2E_PROD_TEST_STUDENT_PASSWORD`, `E2E_PROD_TEST_TEACHER_PASSWORD`, `E2E_PROD_TEST_STUDENT2_PASSWORD` | `TEST_*_PASSWORD` | ejerens egen opbevaring | GitHub kan aldrig vise en secret igen. Kender ejeren ikke værdien, kræver det nulstilling af testkontoen, som er en særskilt produktionshandling med eget GO |
 
+**Status ved den skrivebeskyttede kontrol 2026-11-19** (kun navne): `e2e-prod` har **3** af de 7 secrets:
+`E2E_PROD_SUPABASE_URL`, `E2E_PROD_SUPABASE_ANON_KEY` og `E2E_PROD_SUPABASE_SERVICE_ROLE_KEY`.
+`E2E_PROD_TEST_STUDENT_EMAIL` og de tre `E2E_PROD_TEST_*_PASSWORD` findes **ikke**. Fase 1B er altså kun gennemført
+for Supabase-delen, og preflight stopper en manuel produktionskørsel. Den fulde matrix med det, A4 og fuld E2E
+kræver, står i [e2e-prod-provisioning.md](e2e-prod-provisioning.md), afsnit 4.
+
 **A4 og C2 (planlagt, ikke oprettet).** Provisioneringen (A4, [e2e-prod-provisioning.md](e2e-prod-provisioning.md)) læser
 desuden to nye adresse-secrets, `E2E_PROD_TEST_TEACHER_EMAIL` og `E2E_PROD_TEST_STUDENT2_EMAIL`, og
-`E2E_PROD_TEST_STUDENT_EMAIL` skal pege på den nye markerede elevkonto. De oprettes eller ændres først i C2, efter at
+`E2E_PROD_TEST_STUDENT_EMAIL` skal oprettes, så det peger på den nye markerede elevkonto. De oprettes eller ændres først i C2, efter at
 ejeren har besluttet adresserne. A6 mapper dem derefter ind i `test` og `update`, og preflight kræver dem.
 
 **Rækkefølge.** Environment-secrets kan lægges i `e2e-prod`, så snart environmentet er oprettet. Det kan ske allerede

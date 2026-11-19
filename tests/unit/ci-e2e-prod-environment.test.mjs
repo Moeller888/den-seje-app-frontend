@@ -164,8 +164,12 @@ test("the provision job is narrow: e2e-prod, main only, manual dispatch only, UR
   const text = WORKFLOWS[file];
   assert.ok(text, `${file} exists`);
   const jobs = jobsOf(text);
-  assert.deepEqual(Object.keys(jobs), [job], `${file} has exactly one job`);
+  // M1 (C2): besides the job itself only `describe`, which has no environment, no secret and no variable.
+  assert.deepEqual(Object.keys(jobs), ["describe", job], `${file} has exactly the jobs describe and ${job}`);
+  const describe = stripComments(jobs.describe);
+  assert.ok(!/secrets\.|vars\.|environment:|concurrency:|permissions:/.test(describe), "describe has no secret, variable, environment, lock or permissions");
   const block = stripComments(jobs[job]);
+  assert.match(block, /^    needs: describe$/m, "the job waits for describe");
   assert.equal((block.match(/^    environment: e2e-prod$/gm) ?? []).length, 1, "runs in e2e-prod");
   assert.equal((block.match(/^\s+environment:/gm) ?? []).length, 1, "no second environment");
   assert.match(block, /^    if: github\.ref == 'refs\/heads\/main'$/m, "the job runs only from main");

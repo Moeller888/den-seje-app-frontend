@@ -9,10 +9,18 @@
 //      (an input is never interpolated into the script);
 //   5. the sparse checkout is exactly the provisioning script's import closure;
 //   6. no other workflow runs the provisioning script, and the isolated check runs only in the isolated
-//      workflow's production lane, after the suite, inside the network lock group.
+//      workflow's production lane, after the suite, inside the network lock group;
+//   7. M1 (C2): the run title shows mode, slot, branch and SHA, and the job `describe` — no environment,
+//      no secret, no variable, no lock — runs the summary script before `provision` (needs: describe);
+//   8. M1: the summary script (.github/ci/e2e-prod-provision-summary.mjs) fails closed and never prints
+//      the confirmation or an unvalidated input.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describeDispatch, main as summaryMain, confirmationFor as summaryConfirmation } from "../../.github/ci/e2e-prod-provision-summary.mjs";
+import { confirmationFor as toolConfirmation } from "../../tools/e2e/provision-accounts.mjs";
 
 const ROOT = new URL("../../", import.meta.url);
 const read = (p) => readFileSync(new URL(p, ROOT), "utf8").replace(/\r\n/g, "\n");
@@ -44,11 +52,21 @@ test("1. manual dispatch only, with mode (default dry-run), slot and confirm inp
   }
 });
 
-test("2. one job: main only, environment e2e-prod, shared lock, read-only token", () => {
+// The text of one job (from "  <name>:" to the next job or the end).
+const jobBlock = (name) => {
+  const jobs = block(code, /\njobs:\n/);
+  const start = jobs.indexOf(`  ${name}:\n`);
+  assert.ok(start >= 0, `job ${name}`);
+  const rest = jobs.slice(start + 1);
+  const next = rest.search(/\n  [A-Za-z0-9_-]+:\n/);
+  return next < 0 ? jobs.slice(start) : jobs.slice(start, start + 1 + next + 1);
+};
+
+test("2. two jobs: describe, then provision — main only, environment e2e-prod, shared lock, read-only token", () => {
   assert.match(code, /\npermissions:\n  contents: read\n/);
   const jobs = block(code, /\njobs:\n/);
-  assert.deepEqual([...jobs.matchAll(/^  ([A-Za-z0-9_-]+):$/gm)].map((m) => m[1]), ["provision"]);
-  assert.ok(jobs.startsWith("  provision:\n    if: github.ref == 'refs/heads/main'\n"), "the job runs only from main");
+  assert.deepEqual([...jobs.matchAll(/^  ([A-Za-z0-9_-]+):$/gm)].map((m) => m[1]), ["describe", "provision"]);
+  assert.ok(jobBlock("provision").startsWith("  provision:\n    needs: describe\n    if: github.ref == 'refs/heads/main'\n"), "the job waits for describe and runs only from main");
   assert.equal((jobs.match(/^    environment: e2e-prod$/gm) ?? []).length, 1);
   assert.equal((jobs.match(/environment:/g) ?? []).length, 1);
   assert.match(jobs, /    concurrency:\n      group: e2e-shared-supabase\n      cancel-in-progress: false\n      queue: max\n/);
@@ -70,13 +88,20 @@ test("3. exactly the five secrets, each mapped once to its own name — no passw
 test("4. no dependencies; the inputs reach the script only as quoted env vars", () => {
   for (const banned of [/npm\s+(?:ci|install|i)\b/, /\bnpx\b/, /playwright/i, /global-setup/, /\bcurl\b/, /\bgh\s/]) assert.doesNotMatch(code, banned);
   const runs = [...code.matchAll(/^\s+run:\s*(.*)$/gm)].map((m) => m[1].trim());
-  assert.deepEqual(runs, ['node tools/e2e/provision-accounts.mjs --mode="$PROVISION_MODE" --confirm="$PROVISION_CONFIRM"']);
-  const exprs = [...code.matchAll(/\$\{\{[^}]*\binputs\.[^}]*\}\}/g)].map((m) => m[0]);
-  assert.deepEqual(exprs.sort(), ["${{ inputs.confirm }}", "${{ inputs.mode }}", "${{ inputs.slot }}"]);
-  for (const [name, input] of [["PROVISION_MODE", "mode"], ["PROVISION_CONFIRM", "confirm"], ["E2E_SLOT", "slot"]]) {
-    assert.match(code, new RegExp(`^          ${name}: \\$\\{\\{ inputs\\.${input} \\}\\}$`, "m"));
+  assert.deepEqual(runs, [
+    "node .github/ci/e2e-prod-provision-summary.mjs",
+    'node tools/e2e/provision-accounts.mjs --mode="$PROVISION_MODE" --confirm="$PROVISION_CONFIRM"',
+  ]);
+  // Inputs appear only in the run title (mode, slot — never confirm) and as env vars of the two steps.
+  const titleLine = (code.match(/^run-name: .*$/m) ?? [""])[0];
+  const exprs = [...code.replace(titleLine, "").matchAll(/\$\{\{[^}]*\binputs\.[^}]*\}\}/g)].map((m) => m[0]);
+  assert.deepEqual(exprs.sort(), ["${{ inputs.confirm }}", "${{ inputs.confirm }}", "${{ inputs.mode }}", "${{ inputs.mode }}", "${{ inputs.slot }}", "${{ inputs.slot }}"]);
+  for (const job of ["describe", "provision"]) {
+    for (const [name, input] of [["PROVISION_MODE", "mode"], ["PROVISION_CONFIRM", "confirm"], ["E2E_SLOT", "slot"]]) {
+      assert.match(jobBlock(job), new RegExp(`^          ${name}: \\$\\{\\{ inputs\\.${input} \\}\\}$`, "m"), `${job} ${name}`);
+    }
   }
-  assert.match(code, /persist-credentials: false/);
+  assert.equal((code.match(/persist-credentials: false/g) ?? []).length, 2);
 });
 
 // The relative imports of a module, followed recursively (plain `from "./x"` / `from "../x"`).
@@ -90,11 +115,87 @@ function importClosure(path, seen = new Set()) {
 }
 
 test("5. the sparse checkout is exactly the provisioning script's import closure", () => {
-  const listed = block(code, /\n          sparse-checkout: \|\n/).split("\n").map((l) => l.trim()).filter((l) => l !== "" && !l.includes(":"));
+  const sparse = (job) => block(jobBlock(job), /\n          sparse-checkout: \|\n/).split("\n").map((l) => l.trim()).filter((l) => l !== "" && !l.includes(":"));
   const closure = [...importClosure("tools/e2e/provision-accounts.mjs")].map(decodeURIComponent).sort();
-  assert.deepEqual(listed.sort(), closure);
+  assert.deepEqual(sparse("provision").sort(), closure);
   assert.ok(closure.includes("tests/e2e-accounts.mjs") && closure.includes(".github/ci/e2e-prod-key-check.mjs"));
-  assert.match(code, /sparse-checkout-cone-mode: false/);
+  // describe checks out exactly the summary script, which imports nothing from the repository.
+  assert.deepEqual(sparse("describe"), [".github/ci/e2e-prod-provision-summary.mjs"]);
+  assert.deepEqual([...importClosure(".github/ci/e2e-prod-provision-summary.mjs")], [".github/ci/e2e-prod-provision-summary.mjs"]);
+  assert.equal((code.match(/sparse-checkout-cone-mode: false/g) ?? []).length, 2);
+});
+
+test("7. M1: the run title and the describe job show what the approval is for, without any secret", () => {
+  assert.match(code, /\nrun-name: "E2E-provisionering: \$\{\{ inputs\.mode \}\} · slot \$\{\{ inputs\.slot \}\} · \$\{\{ github\.ref_name \}\} @ \$\{\{ github\.sha \}\}"\n/);
+  assert.doesNotMatch((code.match(/^run-name: .*$/m) ?? [""])[0], /confirm|secrets\.|vars\./);
+  const d = jobBlock("describe");
+  for (const banned of [/secrets\./, /vars\./, /environment:/, /concurrency:/, /permissions:/, /needs:/, /\bif:/, /continue-on-error/, /npm\s|npx\b|curl\b|\bgh\s/]) {
+    assert.doesNotMatch(d, banned, `describe: ${banned}`);
+  }
+  assert.deepEqual([...d.matchAll(/^      - (?:uses|name): (.*)$/gm)].map((m) => m[1]),
+    ["actions/checkout@v4", "actions/setup-node@v4", "Vis, hvad godkendelsen gælder (ingen secrets, intet netværk)"]);
+  assert.match(d, /^    timeout-minutes: 5$/m);
+});
+
+test("8. M1: the summary fails closed and never prints the confirmation or an unvalidated input", () => {
+  const SHA = "260d759a9df1066e2bfc8620e3990a28f0a6a8c0";
+  const base = { PROVISION_MODE: "dry-run", E2E_SLOT: "0", PROVISION_CONFIRM: "", GITHUB_REF: "refs/heads/main", GITHUB_SHA: SHA };
+  for (const s of ["0", "1", "2", "3"]) assert.equal(summaryConfirmation(s), toolConfirmation(Number(s)), "same confirmation as the tool");
+
+  const dry = describeDispatch(base);
+  assert.equal(dry.ok, true);
+  const text = dry.lines.join("\n");
+  for (const want of ["| Mode | dry-run |", "| Slot | 0 |", "| Branch | main |", `| Commit | ${SHA} |`, "| Bekræftelse | tom |", "kun læsning", "særskilt godkendelse"]) {
+    assert.ok(text.includes(want), want);
+  }
+
+  const ok = describeDispatch({ ...base, PROVISION_MODE: "apply", PROVISION_CONFIRM: "provision-accounts-slot-0" });
+  assert.equal(ok.ok, true);
+  assert.ok(ok.lines.includes("| Bekræftelse | matcher |") && ok.lines.join("\n").includes("højst de fire markerede E2E-konti"));
+
+  const refused = [
+    [{ PROVISION_MODE: "apply" }, "apply kræver"],
+    [{ PROVISION_MODE: "apply", PROVISION_CONFIRM: "provision-accounts-slot-1" }, "matcher ikke"],
+    [{ PROVISION_MODE: "apply", E2E_SLOT: "2", PROVISION_CONFIRM: "provision-accounts-slot-0" }, "matcher ikke"],
+    [{ PROVISION_CONFIRM: "provision-accounts-slot-0" }, "dry-run skal have tom bekræftelse"],
+    [{ GITHUB_REF: "refs/heads/feature" }, "ikke startet fra branchen main"],
+    [{ GITHUB_REF: "refs/pull/1/merge" }, "ikke startet fra branchen main"],
+    [{ GITHUB_SHA: "260d759a" }, "commit-SHA"],
+    [{ GITHUB_SHA: undefined }, "commit-SHA"],
+    [{ PROVISION_MODE: "Apply" }, "mode er hverken"],
+    [{ E2E_SLOT: "4" }, "slot er ikke"],
+    [{ E2E_SLOT: " 0" }, "slot er ikke"],
+  ];
+  for (const [over, why] of refused) {
+    const r = describeDispatch({ ...base, ...over });
+    assert.equal(r.ok, false, why);
+    assert.ok(r.problems.some((p) => p.includes(why)), why);
+    assert.ok(r.lines.join("\n").includes("**Stoppet:**"), why);
+  }
+
+  // Never echoed: the confirmation (even a wrong one), and inputs that fail validation.
+  const secretish = "provision-accounts-slot-0-HEMMELIG";
+  const wrong = describeDispatch({ ...base, PROVISION_MODE: "apply", PROVISION_CONFIRM: secretish });
+  assert.ok(!wrong.lines.join("\n").includes(secretish) && wrong.lines.includes("| Bekræftelse | forkert |"));
+  const injected = describeDispatch({ ...base, PROVISION_MODE: "apply | x\n## falsk", E2E_SLOT: "0 | y" });
+  const out = injected.lines.join("\n");
+  assert.ok(!out.includes("falsk") && !out.includes("| x") && !out.includes("| y"));
+  assert.ok(injected.lines.includes("| Mode | UGYLDIG |") && injected.lines.includes("| Slot | UGYLDIG |"));
+  assert.deepEqual(describeDispatch(undefined).ok, false);
+
+  // The CLI: exit code 1 on any problem, and the summary file gets exactly the printed lines.
+  const dir = mkdtempSync(join(tmpdir(), "m1-summary-"));
+  const log = console.log;
+  try {
+    console.log = () => {};
+    const file = join(dir, "summary.md");
+    assert.equal(summaryMain({ ...base, GITHUB_STEP_SUMMARY: file }), 0);
+    assert.equal(readFileSync(file, "utf8"), `${dry.lines.join("\n")}\n`);
+    assert.equal(summaryMain({ ...base, PROVISION_MODE: "apply" }), 1);
+  } finally {
+    console.log = log;
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("6. only this workflow runs the provisioning script; the isolated check is fenced", () => {

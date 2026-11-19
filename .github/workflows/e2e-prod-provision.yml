@@ -14,6 +14,13 @@ name: E2E prod provision accounts
 # - Kun de fem secrets nedenfor: URL, service-nøgle og de tre adresser. Ingen adgangskoder: kontiene
 #   oprettes uden adgangskode, og global-setup sætter adgangskoderne, når kontiene er verificeret.
 # - Den delte E2E-lås (tests/unit/ci-e2e-queue.test.mjs): alle workflows med service-nøglen tager låsen.
+# - M1 (C2): kørslens titel (run-name) viser mode, slot, branch og den fulde commit-SHA, og jobbet
+#   `describe` (intet environment, ingen secrets, intet netværk) skriver en job-opsummering med formål,
+#   mode, slot, commit og forventet virkning, FØR `provision` beder om godkendelsen i e2e-prod. Er
+#   kombinationen ugyldig (fx apply uden den rigtige bekræftelse), fejler `describe`, og der bedes slet
+#   ikke om godkendelse (.github/ci/e2e-prod-provision-summary.mjs). Bekræftelsen vises aldrig.
+
+run-name: "E2E-provisionering: ${{ inputs.mode }} · slot ${{ inputs.slot }} · ${{ github.ref_name }} @ ${{ github.sha }}"
 
 on:
   workflow_dispatch:
@@ -44,7 +51,28 @@ permissions:
   contents: read
 
 jobs:
+  describe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            .github/ci/e2e-prod-provision-summary.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Vis, hvad godkendelsen gælder (ingen secrets, intet netværk)
+        env:
+          PROVISION_MODE: ${{ inputs.mode }}
+          PROVISION_CONFIRM: ${{ inputs.confirm }}
+          E2E_SLOT: ${{ inputs.slot }}
+        run: node .github/ci/e2e-prod-provision-summary.mjs
+
   provision:
+    needs: describe
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
