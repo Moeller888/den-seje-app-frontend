@@ -336,10 +336,17 @@ word lost or repeated), language runs, the F-07 texts from `tests/fixtures/d362-
 one-ahead fetch, pause/resume, pause in the gap, restart, stop, next question, quick switch, double
 tap, a failing part, cache hit/miss, speed, highlighting, the facade).
 
-An offline browser check (Chromium, Firefox, WebKit; desktop and 375 × 667 touch) ran the real
-quiz of #706 with the approved S1–S7 against a local stand-in for the Worker that serves a
-**synthetic tone**. It proves order, control and error handling in real engines — not how Azure
-pronounces the words.
+`tests/read-aloud-long-text.spec.ts` (in `OFFLINE_SPECS`, so the isolated suite runs it in Chromium,
+Firefox and WebKit): the real quiz with S3's approved 898-character source — the player is shown, one tap
+plays both parts, a pause between the parts holds part 2 until "Fortsæt", the next question stops the
+reading and a late answer for the old part never starts audio, and a short source is one unchanged
+request served from memory the second time. The spec holds part 2's metadata itself (no timers) and
+serves a **synthetic tone** over real HTTP with byte ranges: WebKit does not play audio that is
+fulfilled through Playwright route interception.
+
+A wider offline check outside the repository (desktop and 375 × 667 touch, all seven tasks, delayed
+and failing parts, cache miss) ran the real quiz of #706 with the approved S1–S7 the same way. Both
+prove order, control and error handling in real engines — not how Azure pronounces the words.
 
 ### Known limits
 
