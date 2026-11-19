@@ -4,6 +4,7 @@
 //   tests/e2e-admin.mjs     the only entry points that turn the service-role key into a client
 //   tools/e2e/provision-accounts.mjs          A4: the separate, authorised account provisioning
 //   .github/workflows/e2e-prod-provision.yml  A4: its workflow (read by the contract tests)
+//   .github/ci/e2e-prod-provision-summary.mjs  M1 (C2): what the approver sees before the approval
 //
 // For every mutant ONE textual change is applied and the guard unit tests are run; at least one test
 // must FAIL (the mutant is "killed"). A surviving mutant means a safety rule no test pins.
@@ -45,6 +46,7 @@ const A = "tests/e2e-accounts.mjs";
 const M = "tests/e2e-admin.mjs";
 const P = "tools/e2e/provision-accounts.mjs";
 const W = ".github/workflows/e2e-prod-provision.yml";
+const S = ".github/ci/e2e-prod-provision-summary.mjs";
 
 // [file, name, from, to]: `from` must occur EXACTLY once in `file`.
 export const MUTANTS = Object.freeze([
@@ -151,7 +153,18 @@ export const MUTANTS = Object.freeze([
   [W, "W04 apply by default", "        default: dry-run\n", "        default: apply\n"],
   [W, "W05 input interpolated into the script", "--mode=\"$PROVISION_MODE\"", "--mode=${{ inputs.mode }}"],
   [W, "W06 a password secret", "          E2E_PROD_TEST_STUDENT2_EMAIL: ${{ secrets.E2E_PROD_TEST_STUDENT2_EMAIL }}\n", "          E2E_PROD_TEST_STUDENT2_EMAIL: ${{ secrets.E2E_PROD_TEST_STUDENT2_EMAIL }}\n          E2E_PROD_TEST_TEACHER_PASSWORD: ${{ secrets.E2E_PROD_TEST_TEACHER_PASSWORD }}\n"],
-  [W, "W07 dependencies installed", "      - uses: actions/setup-node@v4\n", "      - run: npm ci\n      - uses: actions/setup-node@v4\n"],
+  [W, "W07 dependencies installed", "          node-version: lts/*\n      - name: Provisionér", "          node-version: lts/*\n      - run: npm ci\n      - name: Provisionér"],
+  // ── M1 (C2): what the approver sees before the e2e-prod approval (workflow + summary script) ──
+  [W, "W08 run-name without mode and slot", "${{ inputs.mode }} · slot ${{ inputs.slot }} · ", ""],
+  [W, "W09 provision does not wait for describe", "    needs: describe\n", ""],
+  [W, "W10 describe gets a secret", "          E2E_SLOT: ${{ inputs.slot }}\n        run: node .github/ci/e2e-prod-provision-summary.mjs", "          E2E_SLOT: ${{ inputs.slot }}\n          SUPABASE_URL: ${{ secrets.E2E_PROD_SUPABASE_URL }}\n        run: node .github/ci/e2e-prod-provision-summary.mjs"],
+  [W, "W11 describe in the environment", "  describe:\n    runs-on:", "  describe:\n    environment: e2e-prod\n    runs-on:"],
+  [S, "S01 wrong confirmation accepted", "else if (confirm !== confirmationFor(slot)) {", "else if (false) {"],
+  [S, "S02 confirmation printed", "| Bekræftelse | ${confirmText} |", "| Bekræftelse | ${confirm} |"],
+  [S, "S03 non-main ref accepted", "if (ref !== MAIN_REF) problems.push(", "if (false) problems.push("],
+  [S, "S04 invalid mode printed raw", "const shownMode = modeOk ? mode : \"UGYLDIG\";", "const shownMode = mode;"],
+  [S, "S05 dry-run with a confirmation accepted", "} else if (modeOk && mode === \"dry-run\" && confirm !== \"\") {", "} else if (false) {"],
+  [S, "S06 problems exit 0", "return ok ? 0 : 1;", "return 0;"],
 ]);
 
 export function countOccurrences(text, needle) {
