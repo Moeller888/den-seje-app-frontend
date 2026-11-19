@@ -64,6 +64,9 @@ function readConfig() {
       if (!c.objectiveMap || !c.stepContexts || typeof c.stepContexts !== "object" || Array.isArray(c.stepContexts)) return null;
       for (const [k, v] of Object.entries(c.stepContexts)) if (typeof k !== "string" || typeof v !== "string" || v.length === 0) return null;
     }
+    // F11-B: the server's introduction — optional, non-production only, and only on top of the server sequence.
+    if (c.introductions !== undefined && typeof c.introductions !== "boolean") return null;
+    if (c.introductions === true && (c.sequence !== true || c.backend !== "local-supabase")) return null;
   } catch {
     return null;
   }
@@ -304,6 +307,7 @@ function start(c) {
       objectiveMap: c.objectiveMap ?? null,
       h5Submissions: c.h5 === true,
       sequence: c.sequence === true ? { contextOfStep: c.stepContexts } : null,
+      introductions: c.introductions === true,
       randomId: () => crypto.randomUUID(),
       store: sessionStorage,
       onEvent: (e) => {

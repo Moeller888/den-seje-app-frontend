@@ -82,11 +82,64 @@ export class ServiceError extends Error {
  */
 export type SubmitRetry = "server-idempotent" | "none";
 
+/**
+ * F11-B: the SERVER chose its introduction step (get-next-question `step: "introduction"`, LP-13/K9 prototype). A
+ * separate kind, never a task: no answer, no key, no mode, no grading. The round id stays in the host.
+ */
+export interface ServiceIntroduction {
+  readonly step: "introduction";
+  /** The server's introduction round (introduction_rounds.id). Host memory only — never sent to the game. */
+  readonly roundId: string;
+  /** The server's version of the content (introduction_rounds.content_sha256). */
+  readonly contentSha256: string;
+  /** The learning objective the server confirmed. */
+  readonly objective: string;
+  /** The decision point the world asked at (the host shows the introduction there). */
+  readonly contextKey: string;
+  /** The cards, in the server's order. */
+  readonly cards: readonly { readonly title: string; readonly text: string }[];
+}
+
+export function isIntroduction(x: ServiceTask | ServiceIntroduction): x is ServiceIntroduction {
+  return (x as { step?: unknown }).step === "introduction";
+}
+
+/** F11-B: a report about an introduction round. `requestId` is stable per round and event (idempotency on the server). */
+export interface IntroductionReport {
+  readonly roundId: string;
+  readonly event: "shown" | "done";
+  readonly requestId: string;
+}
+/**
+ * "recorded": the server registered it now or earlier (recorded / replay / already_recorded / already_completed) — the
+ * server's first time is never moved. "not_recordable": only for "shown", when the server does not take the optional
+ * presented signal (its switch is off); the introduction can still be completed.
+ */
+export type IntroductionReportOutcome = "recorded" | "not_recordable";
+
 export interface TaskService {
   readonly submitRetry: SubmitRetry;
   /** The pupil's open instance, if any (resumption: one open instance per pupil on the server). */
   openTask(): Promise<ServiceTask | null>;
   fetchTask(query: TaskQuery): Promise<ServiceTask>;
+  /**
+   * F11-B: the next step — a task, or the server's introduction. Used by the host only in a bridge/3 session (a game
+   * that shows introductions). Absent = the backend has no introductions (the host uses fetchTask).
+   */
+  fetchStep?(query: TaskQuery): Promise<ServiceTask | ServiceIntroduction>;
   submit(submission: Submission): Promise<ServiceResult>;
   hint(instanceId: string, level: number): Promise<ServiceHint>;
+  /** F11-B: report an introduction round's "shown" or "done". Absent = the backend has no introductions. */
+  reportIntroduction?(report: IntroductionReport): Promise<IntroductionReportOutcome>;
+  /**
+   * F11-B: false = this service has fetchStep/reportIntroduction but its introductions are switched off. The host then
+   * never negotiates bridge/3, so a bridge/3 session always means "the server's introduction is authoritative" and the
+   * game keeps its local (prototype) introduction for bridge/2 only. Absent = decided by fetchStep/reportIntroduction.
+   */
+  readonly introductions?: boolean;
+}
+
+/** F11-B: can this service show the server's introduction (and so may the host negotiate bridge/3)? */
+export function showsIntroductions(service: TaskService): boolean {
+  return service.fetchStep !== undefined && service.reportIntroduction !== undefined && service.introductions !== false;
 }

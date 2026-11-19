@@ -1,5 +1,16 @@
-import type { Action, InteractionKind, StimulusOption } from "./protocol.ts";
-import { ServiceError, type ServiceHint, type ServiceResult, type ServiceTask, type Submission, type TaskQuery, type TaskService } from "./service.ts";
+import { MAX_INTRO_CARDS, MAX_INTRO_TEXT, MAX_INTRO_TITLE, type Action, type InteractionKind, type StimulusOption } from "./protocol.ts";
+import {
+  ServiceError,
+  type IntroductionReport,
+  type IntroductionReportOutcome,
+  type ServiceHint,
+  type ServiceIntroduction,
+  type ServiceResult,
+  type ServiceTask,
+  type Submission,
+  type TaskQuery,
+  type TaskService,
+} from "./service.ts";
 
 /**
  * D-309: `TaskService` over Lærlig's REAL backend — the existing Edge Functions `get-next-question` and
@@ -40,12 +51,19 @@ import { ServiceError, type ServiceHint, type ServiceResult, type ServiceTask, t
  *     process-event then counts the logged levels as the attempt's hints_used. The number of levels is the
  *     server's `hints_available` in a sequence reply (get-next-question, LAERLIGVERSE_HINTS). One request id per
  *     instance, round and level, reused on every retry, so a retry can never count twice. Absent/false: as before.
+ *   - `introductions` (F11-B; LP-13/K9 prototype, migration 20261110043500 — NOT applied in production; needs
+ *     `sequence`): get-next-question may answer `step: "introduction"` (Edge secret LAERLIGVERSE_INTRODUCTION). That
+ *     reply is a SEPARATE kind (ServiceIntroduction), validated strictly — exactly the documented fields, 1–10 cards of
+ *     exactly {title, text}, so no answer key can ride along — and never forced into a task. `reportIntroduction`
+ *     sends the host's "shown"/"done" to introduction-progress (action presented/completed) with the host's stable
+ *     request id; the server sets each time once and answers a repeat with the original. Absent/false: an
+ *     introduction reply is refused as before.
  *
  * The answer key never passes through here before grading: get-next-question's DTO is whitelisted
  * server-side (_shared/question-dto.ts). Options are mapped to opaque ids so the game never sends text.
  */
 
-export type EdgeFunction = "get-next-question" | "process-event" | "request-hint";
+export type EdgeFunction = "get-next-question" | "process-event" | "request-hint" | "introduction-progress";
 
 /**
  * Calls an Edge Function as the pupil (in the browser: supabase.functions.invoke / fetch with the
@@ -74,6 +92,8 @@ export interface LaerligServiceOptions {
   readonly serverHints?: boolean;
   /** A new UUID for a hint request (default crypto.randomUUID). Only used with `serverHints`. */
   readonly newRequestId?: () => string;
+  /** F11-B: show the server's introduction step and report it (introduction-progress). Needs `sequence`. Absent = off. */
+  readonly introductions?: boolean;
 }
 
 /** Feature flags of the Lærligverse backend integration. Everything is OFF unless a caller turns it on. */
@@ -144,6 +164,10 @@ export class LaerligTaskService implements TaskService {
    * return the stored verdict and pay nothing (production body md5 2e05e769…, read 2026-11-02).
    */
   readonly submitRetry = "server-idempotent" as const;
+  /** F11-B: whether this host shows the server's introduction; false keeps every game on bridge/2. */
+  get introductions(): boolean {
+    return this.o.introductions === true;
+  }
   private readonly o: LaerligServiceOptions;
   private readonly served = new Map<string, Served>();
   private open: Served | null = null;
@@ -162,6 +186,15 @@ export class LaerligTaskService implements TaskService {
   }
 
   async fetchTask(q: TaskQuery): Promise<ServiceTask> {
+    return (await this.next(q, false)) as ServiceTask;
+  }
+
+  /** F11-B: as fetchTask, but the server's introduction step comes back as a ServiceIntroduction (needs `introductions`). */
+  async fetchStep(q: TaskQuery): Promise<ServiceTask | ServiceIntroduction> {
+    return this.next(q, true);
+  }
+
+  private async next(q: TaskQuery, allowIntroduction: boolean): Promise<ServiceTask | ServiceIntroduction> {
     let objective: string | null = null;
     if (this.o.objectiveMap !== undefined) {
       const mapped = Object.prototype.hasOwnProperty.call(this.o.objectiveMap, q.objectiveId) ? this.o.objectiveMap[q.objectiveId] : undefined;
@@ -177,6 +210,12 @@ export class LaerligTaskService implements TaskService {
     );
     if (r.status !== 200) throw failure(r.status, r.body);
     const b = r.body;
+    if (isObj(b) && b.step === "introduction") {
+      // Never a silent skip: a game that does not show introductions gets an explicit refusal, and the round stays
+      // as the server left it (served, not completed).
+      if (!allowIntroduction) throw new ServiceError("unavailable", false, "the server chose an introduction, which this game does not show");
+      return this.parseIntroduction(b, q, objective);
+    }
     if (isObj(b) && (b.step === "sequence_complete" || b.step === "sequence_waiting")) {
       this.lastSequence = { state: b.step, step: typeof b.learning_step === "string" ? b.learning_step : null, dueAt: typeof b.due_at === "string" ? b.due_at : null };
       throw new ServiceError("unavailable", false, b.step === "sequence_waiting" ? `sequence_waiting until ${String(b.due_at)}` : "sequence_complete");
@@ -276,7 +315,69 @@ export class LaerligTaskService implements TaskService {
     return { level, text: b.text, hintsRemaining: b.hints_remaining as number };
   }
 
+  /**
+   * F11-B: "shown" → introduction-progress {action: "presented"}, "done" → {action: "completed"}, both with the host's
+   * stable request id. The server registers each once, in its own time, and answers a repeat with the original
+   * (replay / already_recorded / already_completed): this resolves "recorded" for all of them. A foreign or unknown
+   * round is 404 not_found; a server with the optional presented signal switched off answers "shown" with
+   * `not_recordable` (the introduction can still be completed), "done" with an error.
+   */
+  async reportIntroduction(report: IntroductionReport): Promise<IntroductionReportOutcome> {
+    if (this.o.introductions !== true) throw new ServiceError("unavailable", false, "this host does not show introductions");
+    if (typeof report?.roundId !== "string" || !UUID.test(report.roundId)) throw new ServiceError("invalid", false, "the round id is not a UUID");
+    if (typeof report.requestId !== "string" || !UUID.test(report.requestId)) throw new ServiceError("invalid", false, "the request id is not a UUID");
+    if (report.event !== "shown" && report.event !== "done") throw new ServiceError("invalid", false, "unknown introduction event");
+    const r = await this.invoke("introduction-progress", {
+      action: report.event === "shown" ? "presented" : "completed", round_id: report.roundId, request_id: report.requestId,
+    });
+    if (r.status === 404 && isObj(r.body) && r.body.outcome === "disabled") {
+      if (report.event === "shown") return "not_recordable";
+      throw new ServiceError("unavailable", false, "introductions are switched off on the server");
+    }
+    if (r.status !== 200) throw failure(r.status, r.body);
+    const b = r.body;
+    const ok = ["recorded", "replay", "already_recorded", "already_completed"];
+    if (!isObj(b) || typeof b.outcome !== "string" || !ok.includes(b.outcome) || typeof b.at !== "string" || !Number.isFinite(Date.parse(b.at))) {
+      throw new ServiceError("server", false, "introduction-progress returned an unexpected body");
+    }
+    return "recorded";
+  }
+
   // ── Internals ────────────────────────────────────────────────────────────────
+
+  /** F11-B: the introduction reply, exactly as get-next-question documents it — nothing more, nothing less. */
+  private parseIntroduction(b: Record<string, unknown>, q: TaskQuery, objective: string | null): ServiceIntroduction {
+    const bad = (why: string): never => {
+      throw new ServiceError("server", false, `get-next-question introduction: ${why}`);
+    };
+    if (this.o.introductions !== true || this.o.sequence === undefined) {
+      // Today's behaviour: a host that does not show introductions refuses the reply (never a silent skip).
+      throw new ServiceError("unavailable", false, "the server chose an introduction, which this host does not show");
+    }
+    const KEYS = ["step", "learning_objective", "learning_step", "introduction_round_id", "content_sha256", "content"];
+    for (const k of Object.keys(b)) if (!KEYS.includes(k)) bad(`unknown field "${k}"`);
+    if (objective === null || b.learning_objective !== objective) return bad("the server did not confirm the learning objective");
+    if (b.learning_step !== "introduction") bad("learning_step is not introduction");
+    const roundId = b.introduction_round_id;
+    if (typeof roundId !== "string" || !UUID.test(roundId)) return bad("invalid introduction_round_id");
+    const sha = b.content_sha256;
+    if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return bad("invalid content_sha256");
+    const c = b.content;
+    if (!isObj(c) || Object.keys(c).length !== 1 || !Array.isArray(c.cards)) return bad("content is not exactly {cards}");
+    const list = c.cards as unknown[];
+    if (list.length < 1 || list.length > MAX_INTRO_CARDS) return bad("invalid number of cards");
+    const cards = list.map((card, i) => {
+      if (!isObj(card)) return bad(`card ${i}: not an object`);
+      const keys = Object.keys(card);
+      if (keys.length !== 2 || !keys.includes("title") || !keys.includes("text")) return bad(`card ${i}: not exactly {title, text}`);
+      const { title, text } = card;
+      if (typeof title !== "string" || title.trim() === "" || title.length > MAX_INTRO_TITLE) return bad(`card ${i}: invalid title`);
+      if (typeof text !== "string" || text.trim() === "" || text.length > MAX_INTRO_TEXT) return bad(`card ${i}: invalid text`);
+      return { title, text };
+    });
+    this.lastSequence = { state: "step", step: "introduction", dueAt: null };
+    return { step: "introduction", roundId, contentSha256: sha, objective, contextKey: q.contextKey, cards };
+  }
 
   private async invoke(fn: EdgeFunction, body: Readonly<Record<string, unknown>>): Promise<{ status: number; body: unknown }> {
     try {

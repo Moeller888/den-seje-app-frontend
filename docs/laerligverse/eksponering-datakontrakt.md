@@ -1,12 +1,13 @@
 # Lærligverse: datakontrakt for eksponering, gennemførelse og evidens
 
-**Status: prototype bag slukkede flag (2026-11-10).** Intet er anvendt i produktionen, og intet er slået til.
+**Status: prototype bag slukkede flag (2026-11-10; F11-B synlig introduktion 2026-11-16).** Intet er anvendt i produktionen, og intet er slået til.
 
 | Del | Hvad | Status |
 |---|---|---|
 | Migrationer | `20261109043500_laerligverse_presented_at.sql` (K9 for opgaverunder) og `20261110043500_laerligverse_introductions.sql` (introduktionen som servertrin) | Udkast, i `NOT_IN_PRODUCTION` |
 | Edge-flag | `LAERLIGVERSE_INTRODUCTION` og `LAERLIGVERSE_PRESENTED` | Begge slukket |
 | Ejerens GO | Fortsætte som eget kontrolleret spor | Givet 2026-11-10. **Intet** GO til aktivering |
+| Bro, vært og spil (F11-B) | `laerligverse.bridge/3`: `intro.present`, `intro.shown`, `intro.done`, `intro.recorded` (§7) | Draft-PR, værtskonfigurationen `introductions` er slukket som standard |
 | LP-13 | Det endelige introduktionstrin | Ejerbeslutning |
 
 Udgangspunkt: `eksponering-og-hints.md` (#656), `docs/learning-progression-l1-contracts.md` §K9 og [evidens-datakontrakt.md](evidens-datakontrakt.md).
@@ -89,14 +90,35 @@ Svarkoder:
 
 - **Påkrævet `unit`-kontrol:** `tests/unit/laerligverse-introduction-flow-run.test.mjs` bygger replay-profilen `introduction` (K1 → L3/L5 → K9 → introduktioner) i PGlite. Testen viser, at visning, genindlæsning, registrering, gentagelse, afviste kald og gennemførelse ikke ændrer nogen række med elevens id uden for `introduction_rounds`, og at et senere svar følger de gældende regler. En tvilling uden introduktion ender med samme XP, mønter, mastery og niveau, og en plantet belønning bliver opdaget og rullet tilbage. `tests/unit/laerligverse-introduction-concurrency.test.mjs` kører samtidige kald mod PostgreSQL 17 (kun i CI).
 - **Isoleret bane `isolated-e2e (run 1, introduktion-testprofil)`:** samme isolerede stak med profilen `introduction`. `LAERLIGVERSE_INTRODUCTION` og `LAERLIGVERSE_PRESENTED` er kun tændt i denne bane. `tests/isolated/laerligverse-introduction.isolated.spec.mjs` kører hele kæden med databasen som orakel, og `tests/isolated/require-complete-run.mjs` får banen til at fejle, hvis en test bliver sprunget over eller mangler.
-- **Grænse:** testen er en browserbaseret integrations- og API-test, ikke en test af elevens skærm. Eleven logger ind gennem den rigtige login-side. Derefter sender testen de kald, værten vil sende, over HTTP med sessionen fra det login. Introduktionen vises ikke i værten, og broen kender ikke `step: "introduction"`. Kald med `fetch` inde fra login-siden fejlede i banen med "Failed to fetch", før de nåede Edge Runtime. Årsagen er ikke fastslået; det står som en åben observation.
+- **Grænse:** testen er en browserbaseret integrations- og API-test, ikke en test af elevens skærm. Eleven logger ind gennem den rigtige login-side. Derefter sender testen de kald, værten vil sende, over HTTP med sessionen fra det login. (Da #664 blev merget, viste værten ikke introduktionen; det gør F11-B, §7.)
+- **Rettelse 2026-11-16 (F11-A):** her stod tidligere, at årsagen til "Failed to fetch" ved kald inde fra login-siden ikke var fastslået. Den er nu fastslået og skyldtes **testopsætningen, ikke produktet**. Diagnosekørsel 43878328954 på grenen `d110/par-f11a-fetch-diagnosis`, som aldrig merges:
+  - **Første kørsel:** siden var leveret af `route.fulfill()` og havde derfor ingen netværksadresse. Chromium 147's Local Network Access afviste dens kald til loopback-stakken (`LocalNetworkAccessPermissionDenied`).
+  - **Anden kørsel:** `route.abort()` fik Chromium til at indsætte sin fejlside (`chrome-error://chromewebdata/`, `InsecureLocalNetwork`).
+  - **I begge tilfælde** nåede hverken preflight eller kald gatewayen.
+  - **Kontrolmålinger:** kald fra den rigtige `login.html`, fra værtens origin og i Firefox og WebKit lykkedes altid.
+  - **Konsekvens:** F11-B's browsertest bruger derfor den rigtige vært på loopback uden nogen interception.
 - **Mergebetingelse:** indtil banen er et påkrævet check, merges #664 kun, når `isolated-e2e (run 1, introduktion-testprofil)` er grøn på den head, der merges.
 
 ## 6. Ikke bygget
 
-- Værtens og spillets brug: broen kender ikke `step: "introduction"` endnu.
 - Forståelsestjekket som servertrin.
 - `presented_interval_ms` i forsøget.
 - Produktionsseed af introduktionen. Den venter på LP-2 (det endelige `learning_objective`).
 
 Hvert punkt kræver ejerens GO.
+
+## 7. Den synlige introduktion (F11-B, `laerligverse.bridge/3`)
+
+Sikkerhedsgennemgangen med henvisninger til kode og tests står i [bridge-3-sikkerhedsgennemgang.md](bridge-3-sikkerhedsgennemgang.md).
+
+1. **Spillet beder om en opgave** ved et beslutningspunkt. Et spil med introduktionsvisning tilbyder bridge/3, et ældre spil kun bridge/2.
+2. **Serveren vælger introduktionen** (§3), og værten (`LaerligTaskService.fetchStep`, kun med `introductions`) validerer svaret strengt (§5 i gennemgangen).
+3. **Værten sender `intro.present`** med kortene i serverens rækkefølge og et uigennemsigtigt `introToken`. Rundens id, hash og mål bliver hos værten. Et bridge/2-spil får `task_unavailable` og kan aldrig melde noget om introduktionen.
+4. **Spillet viser kortene** som tekst i `IntroView` (`showServer`) og sender `intro.shown`, når det første kort er tegnet.
+5. **Værten melder "presented"** til `introduction-progress` (§4) med et fast request-ID pr. runde.
+6. **Eleven går gennem kortene** med knappen eller tastaturet. Den sidste knap sender `intro.done`, og værten melder "completed" med sit eget faste request-ID. Visningen lukker først, når serveren har registreret det.
+7. **Spillet beder igen ved samme beslutningspunkt**, og serveren udleverer den første `guided_practice`-opgave.
+
+**Registrering og evidens:** "vist" og "gennemført" er registreringer i `introduction_rounds`, ikke læring. De giver hverken XP, mønter, mastery, niveau, streak, achievements eller evidens (§1, D-330). Først et rigtigt svar på opgaven følger de gældende regler.
+
+**Bevis:** `tests/isolated/laerligverse-intro-visible.isolated.spec.mjs` kører i introduktionsbanen i Chromium, Firefox og WebKit og er omfattet af `require-complete-run`.

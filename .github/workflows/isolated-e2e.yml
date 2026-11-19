@@ -477,6 +477,16 @@ jobs:
           sg "$ISOLATED_GROUP" -c "REPLAY_PROFILE=introduction npx playwright test -c tests/isolated/playwright.isolated.config.mjs laerligverse-introduction.isolated.spec.mjs --project=chromium --reporter=list,json"
           node tests/isolated/require-complete-run.mjs "$PLAYWRIGHT_JSON_OUTPUT_NAME" laerligverse-introduction.isolated.spec.mjs
 
+      # F11-B: the VISIBLE introduction through a real pupil browser (real F3 host, game iframe, bridge/3), in all three
+      # browsers, ONLY in the introduction lane — and required to RUN completely, like the chain above.
+      - name: Visible introduction E2E — Chromium, Firefox and WebKit (introduction lane)
+        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'introduction'
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ runner.temp }}/intro-visible-report.json
+        run: |
+          sg "$ISOLATED_GROUP" -c "REPLAY_PROFILE=introduction npx playwright test -c tests/isolated/playwright.isolated.config.mjs laerligverse-intro-visible.isolated.spec.mjs --reporter=list,json"
+          node tests/isolated/require-complete-run.mjs "$PLAYWRIGHT_JSON_OUTPUT_NAME" laerligverse-intro-visible.isolated.spec.mjs
+
       - name: Existing Playwright suite against the isolated stack
         if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'
         id: suite

@@ -1,5 +1,5 @@
 /**
- * Learning bridge `laerligverse.bridge/2` (D-306): protocol, host end, game end and the backend interface.
+ * Learning bridge `laerligverse.bridge/3` (also speaks `/2`; D-306, F11-B): protocol, host end, game end and the backend interface.
  * The test adapter is deliberately NOT exported here; import it from "@adventure-engine/learning-bridge/test-service".
  */
 export * from "./protocol.ts";

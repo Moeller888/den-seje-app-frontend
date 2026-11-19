@@ -8,9 +8,13 @@
 import { loadContent } from "@adventure-engine/content";
 import { Engine } from "@adventure-engine/core";
 import { BridgeClient } from "/pkg/learning-bridge/src/client.ts";
+import { IntroView } from "/pkg/archive-prototype/src/intro-view.ts";
 import { CONTEXT_KEY, DRAWER_KEY, DRAWER_RESULT_ACTION, RESULT_ACTION, TASK_REQUEST_GLOBAL, archiveContent } from "/pkg/archive-prototype/src/content.ts";
 
 const HOST_ORIGIN = "http://127.0.0.1:4330";
+// F11-B: this game shows the server's introduction (bridge/3) only when the harness serves it with ?introductions=1
+// (startHarness({ introductions: true })); otherwise it is the bridge/2 game the other specs have always used.
+const INTRODUCTIONS = new URLSearchParams(location.search).get("introductions") === "1";
 const RESULT_FOR = { [CONTEXT_KEY]: RESULT_ACTION, [DRAWER_KEY]: DRAWER_RESULT_ACTION };
 const body = document.body;
 const $ = (id) => document.getElementById(id);
@@ -41,6 +45,7 @@ const client = new BridgeClient({
   kinds: ["choice", "short_text"],
   contentId: "arkivskabet",
   contentVersion: "harness",
+  introductions: INTRODUCTIONS,
   onStatus: (s) => (body.dataset.bridge = s),
   onReject: (reason) => (body.dataset.lastReject = reason),
 });
@@ -51,6 +56,45 @@ window.addEventListener("message", (e) => {
   try { received.push(JSON.stringify(e.data)); } catch { received.push("<unserialisable>"); }
   client.onMessage({ origin: e.origin, source: e.source, data: e.data });
 });
+
+// F11-B: the archive prototype's own IntroView renders the server's cards (as text) in this game's DOM.
+const introView = new IntroView(document.body);
+body.dataset.intro = "none";
+
+/** The server's introduction: show it, report "shown" once visible and "done" after the final control, then ask again. */
+function serverIntro(msg, req) {
+  body.dataset.intro = "open";
+  body.dataset.introShown = "pending";
+  let shown = null;
+  const reportShown = () => {
+    shown = client.introShown(msg.introToken).then(
+      (r) => { body.dataset.introShown = "recorded"; return r; },
+      (err) => { shown = null; body.dataset.introShown = `error:${err?.code ?? "unknown"}`; throw err; },
+    );
+    return shown;
+  };
+  return introView
+    .showServer({
+      cards: msg.cards,
+      onPresented: () => void reportShown().catch(() => {}),
+      onFinish: async () => {
+        await (shown ?? reportShown());
+        try {
+          await client.introDone(msg.introToken);
+        } catch (err) {
+          body.dataset.introDone = `error:${err?.code ?? "unknown"}`;
+          throw err;
+        }
+        body.dataset.introDone = "recorded";
+      },
+    })
+    .then(() => {
+      body.dataset.intro = "done";
+      // The SERVER decides what follows: ask again at the same decision point.
+      return client.requestStep({ objectiveId: "hist.besaettelsen.h4", purpose: "check", surface: "world", contextKey: req });
+    })
+    .then((next) => (next.type === "intro.present" ? serverIntro(next, req) : show(next)));
+}
 
 let current = null;
 let context = CONTEXT_KEY;
@@ -132,9 +176,9 @@ function frame(now) {
   if (req !== CONTEXT_KEY && req !== DRAWER_KEY) return;
   engine.setGlobal(TASK_REQUEST_GLOBAL, "");
   busy = true;
-  client
-    .requestTask({ objectiveId: "hist.besaettelsen.h4", purpose: "check", surface: "world", contextKey: req })
-    .then(show)
+  (INTRODUCTIONS
+    ? client.requestStep({ objectiveId: "hist.besaettelsen.h4", purpose: "check", surface: "world", contextKey: req }).then((step) => (step.type === "intro.present" ? serverIntro(step, req) : show(step)))
+    : client.requestTask({ objectiveId: "hist.besaettelsen.h4", purpose: "check", surface: "world", contextKey: req }).then(show))
     .catch((err) => {
       body.dataset.task = "error";
       body.dataset.error = err?.code ?? "unknown";

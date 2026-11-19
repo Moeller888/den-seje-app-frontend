@@ -37,7 +37,8 @@ export const ALLOW = Object.freeze({
   game: {
     files: ["game.html", "game.mjs"],
     // Engine core, the scene, and only the game end of the bridge.
-    pkg: ["core/src/", "content/src/", "geometry/src/", "archive-prototype/src/content.ts", "learning-bridge/src/client.ts", "learning-bridge/src/protocol.ts"],
+    // F11-B: plus the archive prototype's IntroView (and its local card content), which renders the server's cards.
+    pkg: ["core/src/", "content/src/", "geometry/src/", "archive-prototype/src/content.ts", "archive-prototype/src/intro-view.ts", "archive-prototype/src/intro-content.ts", "learning-bridge/src/client.ts", "learning-bridge/src/protocol.ts"],
     deny: [],
   },
 });
@@ -90,7 +91,7 @@ export async function startHarness(opts = {}) {
   let hostHandlerFn = handler("host");
   if (opts.host === "f3") {
     const { renderHostPage, hostHandler } = await import("../../../tools/laerligverse/host-page.mjs");
-    hostHandlerFn = hostHandler(renderHostPage({ mode: opts.mode ?? "isolated-test", backend: "local-supabase", gameOrigin: GAME_ORIGIN, gameUrl: `${GAME_ORIGIN}/game.html`, supabaseUrl: opts.supabaseUrl, anonKey: opts.anonKey, objectiveMap: opts.objectiveMap ?? null, h5: opts.h5 === true, sequence: opts.sequence === true, stepContexts: opts.stepContexts ?? null }));
+    hostHandlerFn = hostHandler(renderHostPage({ mode: opts.mode ?? "isolated-test", backend: "local-supabase", gameOrigin: GAME_ORIGIN, gameUrl: `${GAME_ORIGIN}/game.html${opts.introductions === true ? "?introductions=1" : ""}`, supabaseUrl: opts.supabaseUrl, anonKey: opts.anonKey, objectiveMap: opts.objectiveMap ?? null, h5: opts.h5 === true, sequence: opts.sequence === true, stepContexts: opts.stepContexts ?? null, introductions: opts.introductions === true }));
   }
   const listen = (fn, port) =>
     new Promise((ok, fail) => {

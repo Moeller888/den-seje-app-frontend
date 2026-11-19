@@ -112,3 +112,16 @@ export function parseSourceBack(detail: string): Array<{ field: string; value: s
   if (fields.length < 2 || fields.some((m) => m === null)) return null;
   return fields.map((m) => ({ field: (m as RegExpExecArray)[1] as string, value: (m as RegExpExecArray)[2] as string }));
 }
+
+/**
+ * F11-B: does the game show its LOCAL introduction (INTRO_CARDS, D-310) before asking for the task at `contextKey`?
+ * Only at the first decision point, once, and only in a bridge/2 session. A host negotiates bridge/3 only when it shows
+ * the SERVER's introduction, which is then the authoritative one: the server sends it (or, once completed, the task),
+ * and the pupil never meets the local cards as a second, competing introduction. With the server's introduction
+ * switched off (a bridge/2 session) the prototype behaves exactly as before. `serverIntroduction` is true exactly when
+ * the session is bridge/3; the caller (game-main.ts) decides that, so this module stays dependency-free for the
+ * headless root unit tests.
+ */
+export function showsLocalIntroduction(contextKey: string, introSeen: boolean, serverIntroduction: boolean): boolean {
+  return contextKey === CONTEXT_KEY && !introSeen && !serverIntroduction;
+}

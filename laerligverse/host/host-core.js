@@ -108,11 +108,14 @@ export function passwordSessionProvider({ supabaseUrl, anonKey, fetchImpl = glob
  * The EdgeCaller the backend adapter needs: a fresh access token for every call, and NO network request at
  * all when the pupil is signed out (the adapter turns the 401 into session_expired for the game).
  * Network failures propagate as exceptions (the adapter treats them as transient).
- * @param {{ supabaseUrl: string, anonKey: string, session: { getAccessToken(): Promise<string | null> }, fetchImpl?: typeof fetch }} o
+ * Only the listed functions can be called (default: get-next-question and process-event). F11-B: the host adds
+ * introduction-progress ONLY when it shows introductions — the same pupil session, the same anon key, nothing else.
+ * @param {{ supabaseUrl: string, anonKey: string, session: { getAccessToken(): Promise<string | null> }, fetchImpl?: typeof fetch, functions?: readonly string[] }} o
  */
-export function createEdgeCaller({ supabaseUrl, anonKey, session, fetchImpl = globalThis.fetch }) {
+export function createEdgeCaller({ supabaseUrl, anonKey, session, fetchImpl = globalThis.fetch, functions = ["get-next-question", "process-event"] }) {
+  const allowed = Object.freeze([...functions]);
   return async (fn, body) => {
-    if (fn !== "get-next-question" && fn !== "process-event") throw new Error(`edge caller: unknown function ${fn}`);
+    if (!allowed.includes(fn)) throw new Error(`edge caller: unknown function ${fn}`);
     const token = await session.getAccessToken();
     if (!token) return { status: 401, body: { error: "Unauthorized", reason: "signed_out" } };
     const res = await fetchImpl(`${supabaseUrl}/functions/v1/${fn}`, {
@@ -132,7 +135,7 @@ export function createEdgeCaller({ supabaseUrl, anonKey, session, fetchImpl = gl
  *   session: { getAccessToken(): Promise<string | null> }, supabaseUrl: string, anonKey: string,
  *   subject?: "historie" | "engelsk" | "dansk", flags: { laerligverseBackend: boolean },
  *   objectiveMap?: Record<string, string> | null, h5Submissions?: boolean,
- *   sequence?: { contextOfStep: Record<string, string> } | null,
+ *   sequence?: { contextOfStep: Record<string, string> } | null, introductions?: boolean,
  *   randomId: () => string, store?: { getItem(k: string): string | null, setItem(k: string, v: string): void, removeItem(k: string): void },
  *   onEvent?: (e: { type: string, reason?: string, code?: string }) => void, fetchImpl?: typeof fetch,
  * }} o
@@ -140,7 +143,10 @@ export function createEdgeCaller({ supabaseUrl, anonKey, session, fetchImpl = gl
 export function createLaerligverseHost(o) {
   const gameOrigin = assertOrigin(o.gameOrigin);
   assertOrigin(new URL(o.supabaseUrl).origin);
-  const call = createEdgeCaller({ supabaseUrl: o.supabaseUrl, anonKey: o.anonKey, session: o.session, fetchImpl: o.fetchImpl });
+  // F11-B: the server's introduction needs the server-directed sequence; without it the option is refused, never ignored.
+  if (o.introductions === true && !o.sequence) throw new Error("introductions need the server-directed sequence");
+  const functions = o.introductions === true ? ["get-next-question", "process-event", "introduction-progress"] : ["get-next-question", "process-event"];
+  const call = createEdgeCaller({ supabaseUrl: o.supabaseUrl, anonKey: o.anonKey, session: o.session, fetchImpl: o.fetchImpl, functions });
   // D-330: both extensions are OFF unless the (non-production) page configuration turns them on.
   const service = createLaerligTaskService(o.flags, {
     call,
@@ -149,6 +155,8 @@ export function createLaerligverseHost(o) {
     ...(o.h5Submissions === true ? { h5Submissions: true } : {}),
     // D-338: the server decides the step; this only maps it to the world's activity. Off unless configured.
     ...(o.sequence ? { sequence: o.sequence } : {}),
+    // F11-B: the server's introduction step (bridge/3 games only) and its reports. Off unless configured.
+    ...(o.introductions === true ? { introductions: true } : {}),
   });
   let destroyed = false;
   const host = new BridgeHost({

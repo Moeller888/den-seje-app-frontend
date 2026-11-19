@@ -242,7 +242,8 @@ describe("bridge host — retry safety and backend data it cannot carry", () => 
   });
 
   it("the duplicate log is bounded: a remembered request is answered from memory, a forgotten one is handled again", async () => {
-    const p = pair();
+    // Its raw messages are bridge/2: a bridge/2 game (F11-B — a session accepts only its negotiated version).
+    const p = pair({ client: { introductions: false } });
     const c = p.client.connect();
     await flush();
     await c;

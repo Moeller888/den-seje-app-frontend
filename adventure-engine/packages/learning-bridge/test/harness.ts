@@ -120,6 +120,9 @@ export function pair(over: {
     kinds: ["choice", "short_text", "order"],
     contentId: "arkivskabet",
     contentVersion: "1",
+    // F11-B: the default game speaks the newest version (bridge/3), so raw messages built with PROTOCOL match the
+    // session. bridge/2 sessions are tested explicitly (client: { introductions: false }).
+    introductions: true,
     post: (m) => {
       toHost.push(m);
       if (net.dropToHost > 0 || !net.hostUp) {
