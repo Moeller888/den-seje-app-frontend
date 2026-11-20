@@ -58,7 +58,8 @@ test("the host page carries returnUrl only as an http(s) URL on a valid origin; 
 });
 
 test("the update notice: Danish text, two actions, focusable, hidden until needed; shown only on 'outdated', never a reload by itself", () => {
-  assert.match(HTML, /<section id="lv-update"[^>]*role="alertdialog"[^>]*tabindex="-1"[^>]*hidden>/);
+  // role="alert", not "alertdialog": announced without focus (the host cannot take focus from the cross-origin game frame).
+  assert.match(HTML, /<section id="lv-update"[^>]*role="alert"[^>]*tabindex="-1"[^>]*hidden>/);
   assert.match(HTML, /<p id="lv-update-text">Lærligvers er blevet opdateret\. Genindlæs siden for at fortsætte, hvor du slap\.<\/p>/);
   assert.match(HTML, /<button id="lv-update-reload" type="button">Genindlæs<\/button>/);
   assert.match(HTML, /<a id="lv-update-back"[^>]*href="#" hidden>Tilbage til Lærlig<\/a>/);

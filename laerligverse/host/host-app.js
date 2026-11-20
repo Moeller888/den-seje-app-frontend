@@ -265,7 +265,9 @@ function renderEvidence(assessments) {
 /**
  * F12-B: the server requires a step this page or game cannot show ("outdated": step introduction_required, or 426).
  * Nothing was recorded on the server. The pupil chooses: reload (a newer page/game may show it) or go back to Lærlig.
- * Shown once per occurrence; the page NEVER reloads by itself, so there is no reload loop. Focus moves to the notice.
+ * Shown once per occurrence; the page NEVER reloads by itself, so there is no reload loop. The notice is a role="alert"
+ * (announced without focus); focus moves to it when this page holds focus — a browser does not let the host take it from
+ * the cross-origin game frame without a gesture here, so the pupil then reaches the buttons with the keyboard as usual.
  */
 function showUpdateNotice(c) {
   const box = $("lv-update");

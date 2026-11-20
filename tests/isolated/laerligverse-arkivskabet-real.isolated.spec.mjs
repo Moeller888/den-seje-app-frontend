@@ -659,14 +659,17 @@ test("rollback in the WRONG order (host introductions OFF, backend still ON): br
     await fillArchiveCard(f);
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "error", { timeout: 60_000 });
     await expect(f.locator("#lv-status")).toContainText("Ingen opgave lige nu");
-    // F12-B: the host page (not the game) explains it, in Danish, with the two ways on; focus is on the notice.
+    // F12-B: the host page (not the game) explains it, in Danish, with the two ways on. It is a role="alert" region and
+    // the status line says the same: the pupil's focus is in the cross-origin game frame, which no engine lets the host
+    // take without a gesture on the host page (first F12-B run: toBeFocused "inactive" in Chromium, Firefox and WebKit).
     const notice = page.locator("#lv-update");
     await expect(notice).toBeVisible({ timeout: 30_000 });
     await expect(page.locator("#lv-update-text")).toHaveText("Lærligvers er blevet opdateret. Genindlæs siden for at fortsætte, hvor du slap.");
     await expect(page.locator("#lv-update-reload")).toHaveText("Genindlæs");
     await expect(page.locator("#lv-update-back")).toHaveText("Tilbage til Lærlig");
     await expect(page.locator("#lv-update-back")).toHaveAttribute("href", RETURN_URL);
-    await expect(notice).toBeFocused();
+    await expect(notice).toHaveAttribute("role", "alert");
+    await expect(page.locator("#lv-live")).toHaveText("Lærligvers er blevet opdateret. Genindlæs siden for at fortsætte, hvor du slap.");
     await expect(page.locator("body")).toHaveAttribute("data-last-service-error", "outdated");
     // The database: no round for an introduction nobody could show (before F12-B: one, served and never shown).
     expect(await rounds(request, p), "no introduction round is created for a host that cannot show it").toEqual([]);
