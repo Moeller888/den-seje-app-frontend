@@ -458,3 +458,23 @@ PRODUCTION ACTIONS (D-313)
   fakta. Skriv aldrig hemmeligheder eller elevers identitet.
 - Blokerer Lærlig-guarden en handling: STOP og rapportér. Flyt aldrig koden
   til en fil for at komme uden om den.
+
+========================================
+AUTONOMI (AURA T1)
+========================================
+
+50. STÅENDE TILLADELSE KUN FOR BEREGNET NIVEAU 1
+
+- `docs/operations/autonomy-levels.md` er en navngiven, stående tilladelse efter
+  regel 48. Den gælder kun ændringer, hvor
+  `node tools/agents/risk-level.mjs` giver niveau 1 (exitkode 11; enhver
+  anden exitkode er IKKE niveau 1), og kun disse handlinger: egen lås og egen
+  klon/worktree, branch fra `origin/main`, implementering, test, fejlretning,
+  commit af opgavens filer, push uden force af egen branch, oprettelse eller
+  opdatering af PR'en og én læsning af CI-resultatet med rettelse af en
+  kodefejl. Værktøjet køres efter sidste commit og før hvert push.
+- Niveauet beregnes og må aldrig sænkes af agenten. Ved niveau 2 eller 3, en
+  guard-blokering, gentagen fejl eller tvivl: STOP og spørg.
+- Merge, deploy, migrationer, secrets, workflow-dispatch, produktionsdata og
+  ændringer i guard eller indstillinger er IKKE omfattet. De følger reglerne
+  ovenfor uændret.
