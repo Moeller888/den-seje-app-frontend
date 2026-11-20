@@ -398,6 +398,12 @@ const REVIEWED_LATER_READERS = {
   "20261114203119_english_activate_2c_batch2.sql": ENGLISH_ACTIVATION_READER,
   "20261114203120_english_activate_2d_grade6_9.sql": ENGLISH_ACTIVATION_READER,
   "20261114203121_english_activate_2e_batch4.sql": ENGLISH_ACTIVATION_READER,
+  "20261120150000_course_items_out_of_ordinary_quiz.sql":
+    "D-383: the three repeat functions and get_level_questions_for_student keep D-280's / 20261029120000's reads " +
+    "exactly (the pupil's own instances by student_id; the served-check NOT EXISTS) with one added condition on the " +
+    "QUESTION (NOT question_is_course_item(q.metadata)) — it can only narrow what is read or reopened. The new " +
+    "question_is_course_item reads no table. EXECUTE stays service_role only. No policy, RLS or table privilege on " +
+    "question_instances is touched (proven in course-items-out-of-ordinary-quiz-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -601,7 +607,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261114203118_english_activate_2b_pilot.sql",
      "20261114203119_english_activate_2c_batch2.sql",
      "20261114203120_english_activate_2d_grade6_9.sql",
-     "20261114203121_english_activate_2e_batch4.sql"],
+     "20261114203121_english_activate_2e_batch4.sql",
+     "20261120150000_course_items_out_of_ordinary_quiz.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
