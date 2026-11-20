@@ -279,19 +279,38 @@ function installAudio() {
     this.emit = (name) => { for (const fn of this.listeners[name] || []) fn(); };
     this.removeAttribute = (name) => { if (name === "src") this.src = ""; };
     this.pause = () => { this.paused = true; };
+    const waiters = [];
+    const wake = () => { for (const w of waiters.splice(0)) if (this.plays.length >= w.n) w.resolve(); else waiters.push(w); };
     this.play = () => {
       this.plays.push(this.src);
-      if (globalThis.__failPlayFor && this.src.includes(globalThis.__failPlayFor)) return Promise.reject(new Error("NotAllowedError"));
+      if (globalThis.__failPlayFor && this.src.includes(globalThis.__failPlayFor)) {
+        const refused = Promise.reject(new Error("NotAllowedError"));
+        wake();
+        return refused;
+      }
       this.paused = false;
       this.emit("playing");
+      wake();
       return Promise.resolve();
     };
+    /** Resolves once play() has been called n times on this element (after its "playing" was emitted). */
+    this.playsReach = (n) => within(new Promise((resolve) => { waiters.push({ n, resolve }); wake(); }), `play #${n}`);
     created.push(this);
   };
   return created;
 }
 
+// One macrotask turn. Used ONLY after an awaited event below (a clip served, a play started): the provider's remaining
+// work from that point is promise continuations, and every queued microtask runs before the next macrotask — so the
+// state after one turn is deterministic. Never used to wait for a clip load (SHA-256 + fetch take variable time).
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+/** Fails loud (never hangs) if the awaited event does not happen; the bound is a guard, not a synchronisation. */
+function within(promise, what, ms = 5000) {
+  let timer;
+  const guard = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`timed out waiting for ${what}`)), ms); });
+  return Promise.race([promise, guard]).finally(() => clearTimeout(timer));
+}
 
 function deferred() {
   let resolve;
@@ -305,6 +324,13 @@ function deferred() {
  */
 function clipServer({ cached = true, gate = () => null, status = () => 200 } = {}) {
   const calls = [];
+  // A clip's metadata counts as SERVED once the provider holds it: a failure status when it is returned, a hit when
+  // its JSON has been read. `served(key)` waits for exactly that event.
+  const done = new Set();
+  const waiters = [];
+  const check = () => { for (const w of waiters.splice(0)) if (done.has(w.key)) w.resolve(); else waiters.push(w); };
+  const mark = (key) => { done.add(key); check(); };
+  const served = (key) => within(new Promise((resolve) => { waiters.push({ key, resolve }); check(); }), `clip ${key.slice(0, 8)} served`);
   const fetchImpl = async (url, init) => {
     calls.push({ url: String(url), init });
     const match = String(url).match(/([0-9a-f]{64})\.json$/);
@@ -312,9 +338,12 @@ function clipServer({ cached = true, gate = () => null, status = () => 200 } = {
       const key = match[1];
       const wait = gate(key);
       if (wait) await wait;
-      if (status(key) !== 200) return new Response("x", { status: status(key) });
+      if (status(key) !== 200) { mark(key); return new Response("x", { status: status(key) }); }
       if (!cached) return new Response("nf", { status: 404 });
-      return new Response(JSON.stringify({ key, audio: ttsClipPaths(key).audio, words: [] }), { status: 200 });
+      const res = new Response(JSON.stringify({ key, audio: ttsClipPaths(key).audio, words: [] }), { status: 200 });
+      const read = res.json.bind(res);
+      res.json = async () => { const body = await read(); mark(key); return body; };
+      return res;
     }
     if (url === "/api/tts") {
       const body = JSON.parse(init.body);
@@ -325,7 +354,7 @@ function clipServer({ cached = true, gate = () => null, status = () => 200 } = {
     }
     return new Response("?", { status: 500 });
   };
-  return { calls, fetchImpl, metaCalls: () => calls.filter((c) => c.url.endsWith(".json")).map((c) => c.url) };
+  return { calls, fetchImpl, served, metaCalls: () => calls.filter((c) => c.url.endsWith(".json")).map((c) => c.url) };
 }
 
 async function partKeys(text) {
@@ -346,10 +375,10 @@ test("playback: the parts play in order on ONE audio element, without another ta
   assert.equal(await provider.speak({ text: LONG, onState: (s) => states.push(s) }), true);
   assert.equal(audio.length, 1);
   assert.equal(audio[0].src, ttsClipPaths(keys[0]).audio);
-  await flush();
+  await server.served(keys[1]); // the prefetch, started by part 1's "playing" — before any "ended"
   assert.deepEqual(server.metaCalls(), keys.map((k) => ttsClipPaths(k).meta), "part 2 is fetched while part 1 plays");
   audio[0].emit("ended");
-  await flush();
+  await audio[0].playsReach(2);
   assert.equal(audio.length, 1, "no second element");
   assert.equal(audio[0].src, ttsClipPaths(keys[1]).audio);
   assert.deepEqual(audio[0].plays, [ttsClipPaths(keys[0]).audio, ttsClipPaths(keys[1]).audio]);
@@ -365,7 +394,8 @@ test("playback: only one part ahead is fetched — never all parts at once", asy
   const keys = await partKeys(LONGER);
   assert.equal(keys.length, 3);
   await provider.speak({ text: LONGER });
-  await flush();
+  await server.served(keys[1]); // part 2 prefetched …
+  await flush(); // … and everything that follows from it has run: part 3 is asked for only when part 2 plays
   assert.deepEqual(server.metaCalls(), keys.slice(0, 2).map((k) => ttsClipPaths(k).meta));
   provider.stop();
 });
@@ -377,7 +407,7 @@ test("playback: pause and resume inside a part keep the position; 'Forfra' start
   const keys = await partKeys(LONG);
   await provider.speak({ text: LONG, onState: (s) => states.push(s) });
   audio[0].emit("ended");
-  await flush();
+  await audio[0].playsReach(2); // part 2 has started
   audio[0].currentTime = 3.2;
   assert.equal(provider.pause(), true);
   assert.equal(audio[0].paused, true);
@@ -405,7 +435,8 @@ test("playback: a pause in the gap between two parts holds the next part until r
   assert.equal(provider.pause(), true, "pause works while the next part loads");
   assert.equal(states.at(-1), "paused");
   slow.resolve();
-  await flush(); await flush();
+  await server.served(keys[1]); // part 2 is ready …
+  await flush(); // … and the provider has acted on it: it holds the part instead of starting it
   assert.equal(audio[0].plays.length, 1, "the next part does not start while paused");
   assert.equal(provider.resume(), true);
   assert.equal(states.at(-1) === "speaking", true);
@@ -418,14 +449,16 @@ test("playback: stop in the middle of a long reading — a late part never start
   const audio = installAudio();
   const keys = await partKeys(LONG);
   const slow = deferred();
-  const provider = azure({ fetchImpl: clipServer({ gate: (key) => (key === keys[1] ? slow.promise : null) }).fetchImpl });
+  const server = clipServer({ gate: (key) => (key === keys[1] ? slow.promise : null) });
+  const provider = azure({ fetchImpl: server.fetchImpl });
   const states = [];
   await provider.speak({ text: LONG, onState: (s) => states.push(s) });
   audio[0].emit("ended"); // waiting for part 2
   provider.stop(); // the pupil moves on: app.js → stopReadAloud()
   assert.deepEqual(states, ["speaking", "ended"], "the player returns to idle");
   slow.resolve();
-  await flush(); await flush();
+  await server.served(keys[1]); // the late part 2 arrives …
+  await flush(); // … and the provider has acted on it
   assert.equal(audio[0].plays.length, 1, "the delayed part 2 never plays");
   assert.equal(audio[0].paused, true);
   assert.equal(provider.pause(), false);
@@ -461,12 +494,15 @@ test("playback: an audio-output error followed by 'ended' (Firefox without an au
   // (MEDIA_ERR_DECODE, OnMediaSinkAudioError) and THEN "ended". Before the fix the late "ended" started part 2 and
   // its "playing" put the player back on "Læser højt" for good.
   const audio = installAudio();
-  const provider = azure({ fetchImpl: clipServer().fetchImpl });
+  const server = clipServer();
+  const provider = azure({ fetchImpl: server.fetchImpl });
   const states = [];
+  const keys = await partKeys(LONG);
   assert.equal(await provider.speak({ text: LONG, onState: (s) => states.push(s) }), true);
   audio[0].emit("error");
   audio[0].emit("ended");
-  await flush(); await flush();
+  await server.served(keys[1]); // part 2 (prefetched) is ready — it could start now if the late "ended" counted …
+  await flush(); // … and the provider has acted on it
   assert.deepEqual(states, ["speaking", "error"], "the reading ends in the calm error state and stays there");
   assert.equal(audio[0].plays.length, 1, "part 2 is never started");
   assert.equal(audio[0].paused, true);
@@ -482,11 +518,13 @@ test("playback: an audio-output error followed by 'ended' (Firefox without an au
 test("playback: a part that fails shows the calm error state; nothing hangs and nothing else speaks", async () => {
   const audio = installAudio();
   const keys = await partKeys(LONG);
-  const provider = azure({ fetchImpl: clipServer({ status: (key) => (key === keys[1] ? 503 : 200) }).fetchImpl });
+  const server = clipServer({ status: (key) => (key === keys[1] ? 503 : 200) });
+  const provider = azure({ fetchImpl: server.fetchImpl });
   const states = [];
   assert.equal(await provider.speak({ text: LONG, onState: (s) => states.push(s) }), true, "part 1 still plays");
   audio[0].emit("ended");
-  await flush(); await flush();
+  await server.served(keys[1]); // the 503 for part 2 has reached the provider …
+  await flush(); // … and it has acted on it
   assert.deepEqual(states, ["speaking", "error"]);
   assert.equal(audio[0].plays.length, 1);
   assert.equal(provider.pause(), false, "back to idle: the pupil can tap again");
@@ -499,7 +537,8 @@ test("playback: a part that fails shows the calm error state; nothing hangs and 
     const s2 = [];
     await p2.speak({ text: LONG, onState: (s) => s2.push(s) });
     audio2[0].emit("ended");
-    await flush(); await flush();
+    await audio2[0].playsReach(2); // part 2's play() was called (and refused) …
+    await flush(); // … and the refusal has been handled
     assert.deepEqual(s2, ["speaking", "error"]);
   } finally {
     delete globalThis.__failPlayFor;
@@ -513,17 +552,21 @@ test("playback: a part that fails shows the calm error state; nothing hangs and 
 });
 
 test("cache: a hit costs no POST; a repeated reading is served from memory; a miss POSTs each part once, within the limit", async () => {
-  installAudio();
+  const keys = await partKeys(LONG);
+  const first = installAudio();
   const hit = clipServer();
   const provider = azure({ fetchImpl: hit.fetchImpl, getAccessToken: async () => "tok" });
   await provider.speak({ text: LONG });
+  await hit.served(keys[1]); // both parts loaded (part 2 by the prefetch) before the reading is stopped
   await flush();
   provider.stop();
   const before = hit.calls.length;
+  assert.equal(before, 2, "one metadata GET per part");
   assert.equal(hit.calls.filter((c) => c.url === "/api/tts").length, 0);
   await provider.speak({ text: LONG });
-  await flush();
-  assert.equal(hit.calls.length, before, "same text again: no request at all");
+  first[1].emit("ended");
+  await first[1].playsReach(2); // the repeated reading has reached part 2 …
+  assert.equal(hit.calls.length, before, "same text again: no request at all"); // … with both parts from memory
   provider.stop();
 
   installAudio();
@@ -532,7 +575,7 @@ test("cache: a hit costs no POST; a repeated reading is served from memory; a mi
   const audio = installAudio();
   await p2.speak({ text: LONG });
   audio[0].emit("ended");
-  await flush(); await flush();
+  await audio[0].playsReach(2); // part 2 was synthesised and has started
   const posts = miss.calls.filter((c) => c.url === "/api/tts");
   assert.equal(posts.length, 2, "one synthesis per part, no duplicate for the prefetched part");
   for (const post of posts) {
@@ -551,7 +594,7 @@ test("speed: every part plays at the chosen rate (playbackRate and defaultPlayba
   await provider.speak({ text: LONG, rate: 1.25 });
   assert.equal(audio[0].playbackRate, 1.25);
   audio[0].emit("ended");
-  await flush();
+  await audio[0].playsReach(2);
   assert.equal(audio[0].playbackRate, 1.25);
   assert.equal(audio[0].defaultPlaybackRate, 1.25);
   provider.stop();
@@ -570,7 +613,7 @@ test("highlighting: words of part 2 are found AFTER part 1 in the shown text", a
   const provider = azure({ fetchImpl });
   await provider.speak({ text, onBoundary: (b) => boundaries.push(b) });
   audio[0].emit("ended");
-  await flush();
+  await audio[0].playsReach(2); // part 2 has started, with its own word timings
   audio[0].emit("timeupdate");
   assert.equal(boundaries[0].charIndex, 0);
   assert.equal(boundaries.at(-1).charIndex, text.lastIndexOf("Indfødsret"), "the explanation's 'Indfødsret', not the law's");
