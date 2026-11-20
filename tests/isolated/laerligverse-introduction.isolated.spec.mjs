@@ -405,24 +405,24 @@ test("D-383: the ordinary quiz serves the ordinary item, repeats past an unserve
   let inst = await byInstance();
   expect(inst).toHaveLength(1);
   expect(inst[0].question_id).toBe(ordinaryId);
-  expect((await answer(first, SOURCE.content.correct)).status).toBe("correct");
+  expect((await answer(first.body, SOURCE.content.correct)).status).toBe("correct");
 
   // 2. Only the course item is unserved: the ordinary quiz repeats the ordinary item (before D-383: the unserved
   //    course item was "still to serve", so the repeat guard answered no_questions while the TS filter refused it).
   const second = await ordinary();
   expect(second.status, JSON.stringify(second.body)).toBe(200);
-  expect(second.body.question_instance_id, "a repeat of the ordinary round").toBe(first.question_instance_id);
+  expect(second.body.question_instance_id, "a repeat of the ordinary round").toBe(first.body.question_instance_id);
   expect(second.body.content.question).toBe(D383_ORDINARY.question);
   inst = await byInstance();
   expect(inst).toHaveLength(1);
   expect(inst[0]).toMatchObject({ question_id: ordinaryId, answered: false, repeat_count: 1 });
-  await answer(second, SOURCE.content.correct);
+  await answer(second.body, SOURCE.content.correct);
 
   // 3. A targeted course request (objective targeting is on in this lane) still serves the course item. Answered WRONG.
   const course = await post(request, token, "get-next-question", { subject: "historie", learning_objective: D383 });
   expect(course.status, JSON.stringify(course.body)).toBe(200);
   expect(course.body.content.question).toBe(D383_COURSE.question);
-  expect((await answer(course, WRONG)).status).toBe("incorrect");
+  expect((await answer(course.body, WRONG)).status).toBe("incorrect");
   inst = await byInstance();
   expect(inst).toHaveLength(2);
   const courseRound = inst.find((i) => i.question_id === courseId);
@@ -432,7 +432,7 @@ test("D-383: the ordinary quiz serves the ordinary item, repeats past an unserve
   //    answer sorts first). The course round is untouched.
   const third = await ordinary();
   expect(third.status, JSON.stringify(third.body)).toBe(200);
-  expect(third.body.question_instance_id).toBe(first.question_instance_id);
+  expect(third.body.question_instance_id).toBe(first.body.question_instance_id);
   expect(third.body.content.question).toBe(D383_ORDINARY.question);
   inst = await byInstance();
   expect(inst.find((i) => i.question_id === ordinaryId)).toMatchObject({ answered: false, repeat_count: 2 });
