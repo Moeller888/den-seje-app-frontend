@@ -466,9 +466,8 @@ describe("LaerligTaskService — the server's introduction step (mock HTTP)", ()
     const errors: unknown[] = [];
     const replies = [{ status: 200, body: { step: "introduction_required", learning_objective: OBJ } }];
     const service = new LaerligTaskService({ call: async () => replies.shift() ?? { status: 500, body: {} }, subject: "historie", objectiveMap: { "hist.besaettelsen.h4": OBJ }, sequence: { contextOfStep: { guided_practice: "arkivskab" } }, introductions: false });
-    // pair() only hands its service to the BridgeHost (a TaskService); its parameter is typed as the test adapter
-    // because other tests read the adapter's ledger back. The REAL service is the point of this test.
-    const p = pair({ service: service as unknown as FakeTaskService, host: { retryDelaysMs: [0, 0, 0], onServiceError: (e: unknown) => errors.push(e) } });
+    // The REAL service is the point of this test; pair() is generic over the TaskService it hands the BridgeHost.
+    const p = pair({ service, host: { retryDelaysMs: [0, 0, 0], onServiceError: (e: unknown) => errors.push(e) } });
     const c = p.client.connect();
     await flush();
     await c;

@@ -659,9 +659,10 @@ test("rollback in the WRONG order (host introductions OFF, backend still ON): br
     await fillArchiveCard(f);
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "error", { timeout: 60_000 });
     await expect(f.locator("#lv-status")).toContainText("Ingen opgave lige nu");
-    // F12-B: the host page (not the game) explains it, in Danish, with the two ways on. It is a role="alert" region and
-    // the status line says the same: the pupil's focus is in the cross-origin game frame, which no engine lets the host
-    // take without a gesture on the host page (first F12-B run: toBeFocused "inactive" in Chromium, Firefox and WebKit).
+    // F12-B: the host page (not the game) explains it, in Danish, with the two ways on, and takes keyboard focus. First
+    // F12-B run: toBeFocused "inactive" in all three engines — the game focuses its own error button right after
+    // (TaskView.error), taking focus back into the cross-origin frame. Now the game region is hidden while the notice is
+    // shown and focus landing in the frame is moved back (host-app.js showUpdateNotice; `inert` alone did not hold).
     const notice = page.locator("#lv-update");
     await expect(notice).toBeVisible({ timeout: 30_000 });
     await expect(page.locator("#lv-update-text")).toHaveText("Lærligvers er blevet opdateret. Genindlæs siden for at fortsætte, hvor du slap.");
@@ -671,9 +672,40 @@ test("rollback in the WRONG order (host introductions OFF, backend still ON): br
     await expect(notice).toHaveAttribute("role", "alert");
     await expect(page.locator("#lv-live")).toHaveText("Lærligvers er blevet opdateret. Genindlæs siden for at fortsætte, hvor du slap.");
     await expect(page.locator("body")).toHaveAttribute("data-last-service-error", "outdated");
+    // Focus and keyboard: the notice has focus (after the game's own focus call), Tab reaches "Genindlæs" first, and the
+    // keyboard never lands in the game frame. WebKit leaves links out of Tab by default (Safari's "Press Tab to highlight
+    // each item" is off), so "Tilbage til Lærlig" as the next Tab stop is required in Chromium and Firefox only.
+    await expect(notice).toBeFocused();
+    await expect(page.locator("#lv-game-region"), "the game is out of view, the tab order and the accessibility tree").toBeHidden();
+    expect(await page.locator("main").ariaSnapshot(), "no game frame in the accessibility tree while the notice is shown").not.toContain("iframe");
+    await page.keyboard.press("Tab");
+    await expect(page.locator("#lv-update-reload")).toBeFocused();
+    if (browserName !== "webkit") {
+      await page.keyboard.press("Tab");
+      await expect(page.locator("#lv-update-back")).toBeFocused();
+    }
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press("Tab");
+      expect(await page.evaluate(() => document.activeElement?.id ?? ""), `Tab ${i + 1}: never into the game frame`).not.toBe("lv-game");
+    }
     // The database: no round for an introduction nobody could show (before F12-B: one, served and never shown).
     expect(await rounds(request, p), "no introduction round is created for a host that cannot show it").toEqual([]);
     expect(await instances(request, p), "no task is served instead of the required introduction").toEqual([]);
+    expect(await rewardState(request, p)).toEqual(start);
+    // A new sign-in on the same page lifts it: the notice goes, a fresh game document is shown and can take focus again.
+    await page.locator("#lv-logout").click();
+    await expect(page.locator("body")).toHaveAttribute("data-session", "signed-out");
+    await page.locator("#lv-email").fill(p.email);
+    await page.locator("#lv-password").fill(p.password);
+    await page.locator("#lv-login-submit").click();
+    await expect(page.locator("body")).toHaveAttribute("data-session", "active");
+    await expect(notice).toBeHidden();
+    await expect(page.locator("body")).not.toHaveAttribute("data-update", /.*/);
+    await expect(page.locator("#lv-game-region")).toBeVisible();
+    await expect(f.locator("body")).toHaveAttribute("data-bridge", "ready", { timeout: 30_000 });
+    await f.locator("#start").focus();
+    await expect(f.locator("#start"), "the game frame takes focus again after a new sign-in").toBeFocused();
+    expect(await rounds(request, p)).toEqual([]);
     expect(await rewardState(request, p)).toEqual(start);
     // Repeated requests without the capability (still no round, no task) are proven at the API level in
     // laerligverse-introduction.isolated.spec.mjs (F12-B test).

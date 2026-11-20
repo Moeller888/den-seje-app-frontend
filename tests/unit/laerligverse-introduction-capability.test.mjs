@@ -68,6 +68,15 @@ test("the update notice: Danish text, two actions, focusable, hidden until neede
   assert.equal((APP.match(/location\.reload\(\)/g) ?? []).length, 1, "the only reload is the button's");
   assert.match(APP, /\$\("lv-update-reload"\)\.addEventListener\("click", \(\) => location\.reload\(\)\);/);
   assert.match(APP, /box\.focus\(\);/);
+  // Focus is kept out of the game frame while the notice is shown (measured: inert alone did not hold in Chromium or
+  // WebKit, hiding alone not in WebKit): the region is hidden before the notice takes focus, and focus landing on the
+  // frame goes back to the notice. A new sign-in lifts both, before the game region is shown again.
+  const show = APP.slice(APP.indexOf("function showUpdateNotice"), APP.indexOf("function hideUpdateNotice"));
+  assert.ok(show.indexOf('$("lv-game-region").hidden = true;') !== -1 && show.indexOf('$("lv-game-region").hidden = true;') < show.indexOf("box.focus();"));
+  assert.match(APP, /if \(!box\.hidden && document\.activeElement === \$\("lv-game"\)\) box\.focus\(\);/);
+  assert.match(APP, /guardNoticeFocus\(\);/);
+  assert.match(APP, /hideUpdateNotice\(\);\n\s*\$\("lv-game-region"\)\.hidden = false;/);
+  assert.doesNotMatch(APP, /\.inert\b/, "inert is not the mechanism (disproven in two engines)");
   // returnUrl is validated by the page too (a hand-edited config is refused, not obeyed).
   assert.match(APP, /if \(u\.protocol !== "https:" && u\.protocol !== "http:"\) return null;/);
 });
