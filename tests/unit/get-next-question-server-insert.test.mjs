@@ -157,12 +157,14 @@ test("the admin client is used only for the instance insert and the server-only 
   assert.match(INDEX_CODE, /await insertQuestionInstance\(makeAdminClient, \{/);
   const adminUses = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.(from|rpc)\(\s*"([a-z_]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
   assert.deepEqual(adminUses, [
-    // LP-13/K9 prototype (LAERLIGVERSE_INTRODUCTION=on, sequence requests only): the objective's introduction
-    // round for the verified pupil (serve_introduction, service_role only); an introduction carries no key.
-    "rpc:serve_introduction",
     // D-338, sequence requests only (LAERLIGVERSE_SEQUENCE=on + targeting + body.sequence): the pupil's own
     // history in the objective — answered, verdict, time and the question's step tag; no content, no key.
+    // F12-B: read BEFORE the introduction, so an open task round of the objective is resumed first.
     "from:question_instances",
+    // LP-13/K9 prototype (LAERLIGVERSE_INTRODUCTION=on, sequence requests only, F12-B: and introduction_capability 1):
+    // the objective's introduction round for the verified pupil (serve_introduction, service_role only); an
+    // introduction carries no key.
+    "rpc:serve_introduction",
     // Match par only (PR #377): the instance key of a "match" row, read on its own so every other
     // format makes the release-gated reads unchanged (pinned in match-pairs.test.mjs).
     "from:question_instances",
@@ -193,8 +195,14 @@ test("the admin client is used only for the instance insert and the server-only 
   // pinned in level-flow.test.mjs.
   assert.equal((INDEX_CODE.match(/await loadLevelPlan\(admin\(\) as unknown as LevelReadClient, \{\s*studentId: student_id,/g) ?? []).length, 1,
     "the level engine call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 14,
-    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call)");
+  // F12-B: a sequence request WITHOUT the introduction capability decides "introduction_required" from two reads on
+  // the backend client, scoped to the verified pupil and the validated objective — never a write, never a key.
+  assert.equal((INDEX_CODE.match(/admin\(\)\s*\.from\("introduction_rounds"\)\s*\.select\("completed_at, learning_introductions!inner\(learning_objective\)"\)\s*\.eq\("student_id", student_id\)/g) ?? []).length, 1,
+    "F12-B: the pupil's own introduction round (completed_at only)");
+  assert.equal((INDEX_CODE.match(/admin\(\)\s*\.from\("learning_introductions"\)\s*\.select\("id"\)\s*\.eq\("learning_objective", targeting\.objective\)\s*\.eq\("is_active", true\)/g) ?? []).length, 1,
+    "F12-B: whether the objective has an active introduction (id only)");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 16,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call, the 15th and 16th F12-B's two introduction_required reads)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {

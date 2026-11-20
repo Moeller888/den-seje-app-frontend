@@ -19,6 +19,11 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .lv-note { font-size: 14px; color: #5a4f3a; }
 .lv-error { color: var(--err); font-weight: 600; }
 .lv-live { min-height: 1.5em; }
+.lv-update { grid-column: 1 / -1; border: 2px solid var(--accent); }
+.lv-update:focus { outline: 3px solid #1d5fd1; outline-offset: 2px; }
+.lv-update p { margin: 0 0 12px; }
+.lv-update-actions { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.lv-button-link { display: inline-block; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--accent); color: var(--accent); background: #fff; text-decoration: none; }
 .lv-evidence { grid-column: 1 / -1; }
 .lv-evidence table { width: 100%; border-collapse: collapse; font-size: 15px; }
 .lv-evidence th, .lv-evidence td { text-align: left; vertical-align: top; padding: 6px 8px; border-top: 1px solid var(--line); }

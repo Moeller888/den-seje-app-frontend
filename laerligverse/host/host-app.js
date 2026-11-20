@@ -67,6 +67,14 @@ function readConfig() {
     // F11-B: the server's introduction — optional, non-production only, and only on top of the server sequence.
     if (c.introductions !== undefined && typeof c.introductions !== "boolean") return null;
     if (c.introductions === true && (c.sequence !== true || c.backend !== "local-supabase")) return null;
+    // F12-B: where "Tilbage til Lærlig" leads (optional; absent = the link is not shown). An http(s) URL on a valid
+    // origin only — never javascript:, data: or a relative path that would stay on this page.
+    if (c.returnUrl !== undefined && c.returnUrl !== null) {
+      if (typeof c.returnUrl !== "string") return null;
+      const u = new URL(c.returnUrl);
+      assertOrigin(u.origin);
+      if (u.protocol !== "https:" && u.protocol !== "http:") return null;
+    }
   } catch {
     return null;
   }
@@ -254,7 +262,56 @@ function renderEvidence(assessments) {
   }
 }
 
+/**
+ * F12-B: the server requires a step this page or game cannot show ("outdated": step introduction_required, or 426).
+ * Nothing was recorded on the server. The pupil chooses: reload (a newer page/game may show it) or go back to Lærlig.
+ * Shown once per occurrence; the page NEVER reloads by itself, so there is no reload loop. The notice is a role="alert"
+ * (announced also where focus cannot move) and takes keyboard focus.
+ *
+ * Focus: right after this, the game gets task_unavailable and focuses its own error button (TaskView.error), taking
+ * focus back into the cross-origin frame. Measured in Chromium, Firefox and WebKit (F12-B, before this change):
+ * - `inert` on the game region does NOT stop that in Chromium or WebKit;
+ * - hiding the region stops it in Chromium and Firefox, NOT in WebKit;
+ * - so the region is hidden (the game's own "Ingen opgave lige nu" means nothing behind this notice, and a hidden frame
+ *   is out of the tab order and the accessibility tree), AND while the notice is shown, focus that lands in the game
+ *   frame is moved back to the notice (guardNoticeFocus). Only that case: switching tab or window is not touched.
+ * A new sign-in loads a fresh game document and lifts both (hideUpdateNotice).
+ */
+function showUpdateNotice(c) {
+  const box = $("lv-update");
+  if (!box.hidden) return;
+  const back = /** @type {HTMLAnchorElement} */ ($("lv-update-back"));
+  if (typeof c.returnUrl === "string") {
+    back.href = c.returnUrl;
+    back.hidden = false;
+  }
+  $("lv-game-region").hidden = true;
+  box.hidden = false;
+  body.dataset.update = "required";
+  say("Lærligvers er blevet opdateret. Genindlæs siden for at fortsætte, hvor du slap.");
+  box.focus();
+}
+
+/** A new sign-in: the fresh game document is the pupil's again (the server decides anew on its next request). */
+function hideUpdateNotice() {
+  $("lv-update").hidden = true;
+  delete body.dataset.update;
+}
+
+/** While the update notice is shown, focus that moves into the game frame goes back to the notice (see showUpdateNotice). */
+function guardNoticeFocus() {
+  const box = $("lv-update");
+  // The window's blur fires before activeElement settles on the frame; check once the focus change is complete.
+  window.addEventListener("blur", () =>
+    queueMicrotask(() => {
+      if (!box.hidden && document.activeElement === $("lv-game")) box.focus();
+    }),
+  );
+}
+
 function start(c) {
+  $("lv-update-reload").addEventListener("click", () => location.reload());
+  guardNoticeFocus();
   $("lv-mode").hidden = false;
   $("lv-mode").textContent = c.mode === "isolated-test" ? "Isoleret testmiljø — syntetiske elever" : "Lokal udvikling — ikke Lærligs produktion";
   const session = passwordSessionProvider({ supabaseUrl: c.supabaseUrl, anonKey: c.anonKey });
@@ -293,6 +350,7 @@ function start(c) {
     $("lv-session").textContent = "aktiv";
     body.dataset.session = "active";
     $("lv-logout").hidden = false;
+    hideUpdateNotice();
     $("lv-game-region").hidden = false;
     host?.destroy();
     host = createLaerligverseHost({
@@ -313,6 +371,7 @@ function start(c) {
       onEvent: (e) => {
         if (e.type === "reject") body.dataset.lastReject = e.reason ?? "";
         if (e.type === "service-error") body.dataset.lastServiceError = e.code ?? "";
+        if (e.type === "service-error" && e.code === "outdated") showUpdateNotice(c);
       },
     });
     // A new sign-in always loads a FRESH game document (a new bridge session). Re-assigning the same src is not

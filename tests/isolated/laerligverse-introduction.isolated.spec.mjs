@@ -82,7 +82,7 @@ test.beforeAll(async ({ request }) => {
   }
 });
 
-async function makePupil(request, label) {
+async function makePupil(request, label, domains = [OBJECTIVE]) {
   const tag = `${label}-${RUN}`.replace(/[^A-Za-z0-9-]/g, "");
   const email = `intro-${tag}@${SYNTHETIC_EMAIL_DOMAIN}`;
   const password = createHash("sha256").update(`isolated-intro:${tag}`).digest("base64url");
@@ -91,7 +91,7 @@ async function makePupil(request, label) {
   const id = (await created.json()).id;
   const profile = await request.post(`${SUPA}/rest/v1/profiles`, {
     headers: { ...svc, ...json, prefer: "return=minimal" },
-    data: { id, role: "student", full_name: `Syntetisk introduktionselev ${label}`, selected_grade: 8, active_domains: [OBJECTIVE], equipped_slots: {}, active_theme: "default" },
+    data: { id, role: "student", full_name: `Syntetisk introduktionselev ${label}`, selected_grade: 8, active_domains: domains, equipped_slots: {}, active_theme: "default" },
   });
   expect(profile.status(), await profile.text()).toBe(201);
   // A known, non-default progression state, so "unchanged" is a real comparison.
@@ -136,7 +136,10 @@ const post = async (request, token, fn, body, headers = {}) => {
   const r = await request.post(`${SUPA}/functions/v1/${fn}`, { headers: { apikey: ANON, authorization: `Bearer ${token}`, ...json, ...headers }, data: body });
   return { status: r.status(), body: await r.json().catch(() => null) };
 };
-const next = (token, extra = {}) => ({ subject: "historie", learning_objective: OBJECTIVE, sequence: true, ...extra });
+// F12-B: a host that shows introductions sends `introduction_capability: 1` (laerlig-service.ts INTRODUCTION_CAPABILITY);
+// the chain below is that host. `bare` is the same request WITHOUT it (an older host, or one without introductions).
+const next = (token, extra = {}) => ({ subject: "historie", learning_objective: OBJECTIVE, sequence: true, introduction_capability: 1, ...extra });
+const bare = (extra = {}) => ({ subject: "historie", learning_objective: OBJECTIVE, sequence: true, ...extra });
 
 const rows = async (request, path) => {
   const r = await request.get(`${SUPA}/rest/v1/${path}`, { headers: svc });
@@ -356,4 +359,111 @@ test("simultaneous requests and a lost connection: one round, one registration, 
   expect(await instances(request, p)).toHaveLength(1);
   expect(await rounds(request, p)).toHaveLength(1);
   expect(await rewardState(request, p)).toEqual(start);
+});
+
+// ── F12-B: the introduction capability against the REAL get-next-question and PostgreSQL ──────────────────────────
+// A request WITHOUT `introduction_capability` (an older host, or one that does not show introductions) never creates a
+// round for an introduction it cannot show and never gets a task instead of a required one; an invalid value is a 400
+// with no side effect; an OPEN task round is finished first, and answering it is no exemption.
+test("F12-B: without the capability a required introduction is 'introduction_required' — no round, no task, no write; an invalid value is a 400; repeated asking changes nothing", async ({ request }) => {
+  const p = await makePupil(request, "f12b-cap");
+  const token = await signIn(request, p);
+  const start = await rewardState(request, p);
+  const nothing = async (label) => {
+    expect(await rounds(request, p), `${label}: no introduction round`).toEqual([]);
+    expect(await instances(request, p), `${label}: no task instance`).toEqual([]);
+    expect(await rewardState(request, p), `${label}: nothing paid or recorded`).toEqual(start);
+  };
+  // A new pupil, an active introduction: introduction_required — also when the pupil names the task step itself.
+  for (const body of [bare(), bare({ learning_step: "guided_practice" })]) {
+    const r = await post(request, token, "get-next-question", body);
+    expect(r, JSON.stringify(body)).toEqual({ status: 200, body: { step: "introduction_required", learning_objective: OBJECTIVE } });
+  }
+  // Four tabs asking at once without the capability: still nothing.
+  const many = await Promise.all([0, 1, 2, 3].map(() => post(request, token, "get-next-question", bare())));
+  for (const r of many) expect(r.body).toEqual({ step: "introduction_required", learning_objective: OBJECTIVE });
+  await nothing("asked without the capability");
+  // Invalid values: refused before anything is read or written.
+  for (const value of [0, 2, "1", true, null, [1], { v: 1 }]) {
+    const r = await post(request, token, "get-next-question", next(undefined, { introduction_capability: value }));
+    expect(r, JSON.stringify(value)).toEqual({ status: 400, body: { error: "invalid_introduction_capability" } });
+  }
+  await nothing("invalid capability");
+
+  // The capable host: the introduction (one round). A bare request afterwards: still required, the round untouched.
+  const intro = await post(request, token, "get-next-question", next());
+  expect(intro.body.step, JSON.stringify(intro.body)).toBe("introduction");
+  const [round] = await rounds(request, p);
+  expect(round).toMatchObject({ id: intro.body.introduction_round_id, presented_at: null, completed_at: null });
+  expect((await post(request, token, "get-next-question", bare())).body).toEqual({ step: "introduction_required", learning_objective: OBJECTIVE });
+  expect(await rounds(request, p), "an open round is neither changed nor duplicated by a bare request").toEqual([round]);
+
+  // Completed by the capable host: now NOT required — a bare request gets the sequence's first task, as before.
+  const shown = await post(request, token, "introduction-progress", { action: "presented", round_id: round.id, request_id: randomUUID() });
+  expect(shown.body.outcome).toBe("recorded");
+  const done = await post(request, token, "introduction-progress", { action: "completed", round_id: round.id, request_id: randomUUID() });
+  expect(done.body.outcome).toBe("recorded");
+  const task = await post(request, token, "get-next-question", bare());
+  expect(task.status, JSON.stringify(task.body)).toBe(200);
+  expect(task.body).toMatchObject({ learning_objective: OBJECTIVE, learning_step: "guided_practice", mode: "practice" });
+  expect(await instances(request, p)).toHaveLength(1);
+  expect(await rounds(request, p)).toHaveLength(1);
+  expect(await rewardState(request, p), "the introduction paid nothing").toEqual(start);
+});
+
+test("F12-B: an OPEN task round of the objective is resumed before an introduction that appears mid-journey — with or without the capability; once answered, the introduction is required (no exemption)", async ({ request }) => {
+  // Its own objective: a task is served while it has NO introduction, then an introduction is activated (as when
+  // introductions are switched on while pupils are working).
+  const objective = `${OBJECTIVE}_f12b_open`;
+  const item = { ...PRACTICE, content: { ...PRACTICE.content, question: `${SOURCE.content.question} (F12-B åben opgave, testkopi)` } };
+  const q = await (await request.get(`${SUPA}/rest/v1/questions?select=id&learning_objective=eq.${objective}`, { headers: svc })).json();
+  if (q.length === 0) {
+    const ins = await request.post(`${SUPA}/rest/v1/questions`, {
+      headers: { ...svc, ...json, prefer: "return=minimal" },
+      data: [{
+        type: "mc_single", content: item.content, difficulty: 500, is_active: true, question_type: "auto",
+        learning_objective: objective, answer_format: "mc", answer_type: "short",
+        metadata: { domain: objective, concepts: ["kildekritik"], cognitive_skill: "analysis", synthetic: true, fixture: "F12-B", learning_step: "guided_practice" },
+        target_grade: 8, difficulty_band: 3,
+      }],
+    });
+    expect(ins.status(), await ins.text()).toBe(201);
+  }
+  const have = await (await request.get(`${SUPA}/rest/v1/learning_introductions?select=id&learning_objective=eq.${objective}`, { headers: svc })).json();
+  expect(have, "this objective starts WITHOUT an introduction").toEqual([]);
+  const p = await makePupil(request, "f12b-open", [objective]);
+  const token = await signIn(request, p);
+  const start = await rewardState(request, p);
+  const ask = (extra = {}) => ({ subject: "historie", learning_objective: objective, sequence: true, ...extra });
+  const roundsOf = () => rows(request, `introduction_rounds?select=id&student_id=eq.${p.id}`);
+
+  const first = await post(request, token, "get-next-question", ask({ introduction_capability: 1 }));
+  expect(first.status, JSON.stringify(first.body)).toBe(200);
+  expect(first.body).toMatchObject({ learning_objective: objective, learning_step: "guided_practice" });
+  const open = first.body.question_instance_id;
+  // The introduction appears mid-journey.
+  const ins = await request.post(`${SUPA}/rest/v1/learning_introductions`, { headers: { ...svc, ...json, prefer: "return=minimal" }, data: { learning_objective: objective, content: INTRO.content } });
+  expect(ins.status(), await ins.text()).toBe(201);
+
+  for (const body of [ask({ introduction_capability: 1 }), ask()]) {
+    const r = await post(request, token, "get-next-question", body);
+    expect(r.status, JSON.stringify(r.body)).toBe(200);
+    expect(r.body.question_instance_id, `${JSON.stringify(body)}: the SAME open task, not the introduction`).toBe(open);
+  }
+  expect(await roundsOf(), "no introduction round in the middle of a task").toEqual([]);
+  expect(await instances(request, p)).toHaveLength(1);
+
+  // The pupil answers the open task (the existing rules pay for it) …
+  const graded = await post(request, token, "process-event", { question_instance_id: open, answer: item.content.correct, question_shown_at: Date.now(), round_no: first.body.round_no, submission_id: randomUUID() });
+  expect(graded.status, JSON.stringify(graded.body)).toBe(200);
+  const paid = await rewardState(request, p);
+  // … and is NOT exempt: the next step is introduction_required (bare) / the introduction (capable), nothing more paid.
+  expect((await post(request, token, "get-next-question", ask())).body).toEqual({ step: "introduction_required", learning_objective: objective });
+  expect(await roundsOf()).toEqual([]);
+  const intro = await post(request, token, "get-next-question", ask({ introduction_capability: 1 }));
+  expect(intro.body.step, JSON.stringify(intro.body)).toBe("introduction");
+  expect(await roundsOf()).toHaveLength(1);
+  expect(await instances(request, p)).toHaveLength(1);
+  expect(await rewardState(request, p), "the introduction pays nothing").toEqual(paid);
+  expect(paid).not.toEqual(start);
 });

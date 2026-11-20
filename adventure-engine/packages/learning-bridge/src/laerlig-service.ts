@@ -66,6 +66,13 @@ import {
 export type EdgeFunction = "get-next-question" | "process-event" | "request-hint" | "introduction-progress";
 
 /**
+ * F12-B: the version of the introduction capability this host sends (get-next-question body.introduction_capability):
+ * 1 = the cards of step "introduction" + introduction-progress "shown"/"done". Must equal the server's
+ * INTRODUCTION_CAPABILITY_VERSION (supabase/functions/_shared/introduction.ts; pinned by a unit test).
+ */
+export const INTRODUCTION_CAPABILITY = 1;
+
+/**
  * Calls an Edge Function as the pupil (in the browser: supabase.functions.invoke / fetch with the
  * session's access token — the token stays in the host). Resolves with the HTTP status and parsed body;
  * REJECTS only when no response arrived (network failure, aborted request).
@@ -204,12 +211,26 @@ export class LaerligTaskService implements TaskService {
     }
     const seq = this.o.sequence;
     if (seq !== undefined && objective === null) throw new ServiceError("unavailable", false, "a sequence needs a mapped objective");
+    // F12-B: the introduction capability (INTRODUCTION_CAPABILITY) goes out ONLY on a sequence request of a session that
+    // can show the server's introduction — a bridge/3 game (fetchStep) on a host that shows introductions. A bridge/2
+    // session, or a host without introductions, leaves it out, and the server then answers a required introduction with
+    // "introduction_required" instead of creating a round nobody can show. It is a compatibility signal per request,
+    // never an authorisation: the server alone decides what is required.
+    const capable = allowIntroduction && this.o.introductions === true && seq !== undefined;
     const r = await this.invoke(
       "get-next-question",
-      objective === null ? { subject: this.o.subject } : seq !== undefined ? { subject: this.o.subject, learning_objective: objective, sequence: true } : { subject: this.o.subject, learning_objective: objective },
+      objective === null ? { subject: this.o.subject }
+        : seq !== undefined ? { subject: this.o.subject, learning_objective: objective, sequence: true, ...(capable ? { introduction_capability: INTRODUCTION_CAPABILITY } : {}) }
+        : { subject: this.o.subject, learning_objective: objective },
     );
     if (r.status !== 200) throw failure(r.status, r.body);
     const b = r.body;
+    if (isObj(b) && b.step === "introduction_required") {
+      // F12-B: the server requires an introduction this session cannot show (an older host or game, or introductions
+      // switched off here). Nothing was written on the server. "outdated" = reload; the host page offers that and a way
+      // back to Lærlig. Never retried, never turned into a task.
+      throw new ServiceError("outdated", false, "introduction_required");
+    }
     if (isObj(b) && b.step === "introduction") {
       // Never a silent skip: a game that does not show introductions gets an explicit refusal, and the round stays
       // as the server left it (served, not completed).
