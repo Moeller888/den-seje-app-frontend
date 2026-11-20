@@ -13,7 +13,7 @@ const FILES = execFileSync("git", ["ls-files"], { encoding: "utf8", maxBuffer: 6
 const owned = (p) => ownersFor(RULES, p).length > 0;
 
 // Stier, der er ejet på forhånd, selv om de ikke findes endnu: en agent må ikke kunne oprette dem uden review.
-const RESERVED = new Set(["/AGENTS.md"]);
+const RESERVED = new Set(["/**/AGENTS.md", "/**/CLAUDE.local.md", "/**/.mcp.json"]);
 
 test("1: form — kun forankrede mønstre, kun @Moeller888, ingen dubletter, ingen linje uden ejer", () => {
   assert.ok(RULES.length >= 40, `for få regler: ${RULES.length}`);
@@ -47,6 +47,12 @@ test("3: de krævede og de kendte sikkerhedskritiske filer er ejet", () => {
     "tests/isolated/seed/seed-guard.mjs", "tests/unit/claude-settings-guard.test.mjs",
     "tests/unit/credential-hygiene.test.mjs", "tests/unit/e2e-guard-mutants.test.mjs",
     "tests/unit/agent-risk-level.test.mjs", "tests/unit/codeowners.test.mjs",
+    // AURA-03: login og adgangskoder, og alt, som de påkrævede checks selv kører for at afgøre bestået/fejlet
+    "js/login.js", "login.html", "js/reset-password.js", "js/admin.js", "tests/isolated/run-suite.mjs",
+    "tests/isolated/require-complete-run.mjs", "tests/isolated/scope.mjs", "tests/isolated/serve-build.mjs",
+    "tests/isolated/playwright.suite.config.ts", "tests/support/browser-launch-check.mjs",
+    "tests/support/mail-guard.ts", "tests/unit/cloudflare-deploy.test.mjs", "tools/edge/gnq-release.mjs",
+    ".gitattributes",
   ];
   const missing = must.filter((p) => FILES.includes(p) && !owned(p));
   assert.deepEqual(missing, []);
@@ -55,13 +61,14 @@ test("3: de krævede og de kendte sikkerhedskritiske filer er ejet", () => {
   // Alt under supabase/migrations og supabase/functions
   for (const p of FILES.filter((x) => /^supabase\/(?:migrations|functions)\//.test(x))) assert.ok(owned(p), p);
   for (const p of FILES.filter((x) => /^\.github\//.test(x))) assert.ok(owned(p), p);
-  // AGENTS.md er reserveret, selv om den ikke findes
-  assert.ok(owned("AGENTS.md"));
+  // Agentinstruktioner er ejet i alle mapper, også før de findes
+  for (const p of ["AGENTS.md", "js/AGENTS.md", "docs/CLAUDE.md", "js/CLAUDE.md", "docs/.claude/settings.json",
+    "docs/operations/production-actions/CLAUDE.md", "CLAUDE.local.md", ".mcp.json"]) assert.ok(owned(p), p);
 });
 
 test("4: almindelige filer er IKKE ejet (ingen unødige godkendelser)", () => {
   const free = [
-    "index.html", "hub.html", "app.js", "js/avatar-layers.js", "js/login.js", "css/hub.css",
+    "index.html", "hub.html", "app.js", "js/avatar-layers.js", "js/teacher.js", "js/student-detail.js", "css/hub.css",
     "docs/ARCHITECTURE.md", "docs/decisions/D-381.md", "docs/AVATAR_SYSTEM.md",
     "tests/example.spec.ts", "tests/unit/avatar-northstar-hair-nh5c-d381.test.mjs",
     "tests/isolated/schema/replay-plan.mjs", "tests/isolated/kildekritik.isolated.spec.mjs",

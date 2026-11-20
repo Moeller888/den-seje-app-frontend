@@ -20,9 +20,12 @@
 /.github/                                   @Moeller888
 
 # --- Agenternes regler og rettigheder ---
-/.claude/                                   @Moeller888
-/CLAUDE.md                                  @Moeller888
-/AGENTS.md                                  @Moeller888
+# Agentinstruktioner i alle mapper: Claude Code og andre agenter læser dem også i undermapper (AURA-03).
+/**/.claude/                                @Moeller888
+/**/CLAUDE.md                               @Moeller888
+/**/CLAUDE.local.md                         @Moeller888
+/**/AGENTS.md                               @Moeller888
+/**/.mcp.json                               @Moeller888
 /docs/CLAUDE_WORKFLOW.md                    @Moeller888
 /docs/AI_GUIDELINES.md                      @Moeller888
 /docs/migration-workflow-policy.md          @Moeller888
@@ -65,10 +68,25 @@
 /js/supabase.js                             @Moeller888
 /supabaseClient.js                          @Moeller888
 
-# --- Afhængigheder og repo-hygiejne (forsyningskæde, secrets i git) ---
+# --- Login, adgangskoder og super_admin (AURA-03) ---
+# Selve adgangskontrollen er RLS og Edge Functions (ejet ovenfor). Disse filer håndterer adgangskoder,
+# sessioner ved login og nulstilling samt super_admin-visningen. Lærer- og elevsiderne (teacher.js,
+# student-detail.js, app.js) er ikke ejet: deres rollekontrol er brugerflade, ikke en sikkerhedsgrænse, og de
+# er niveau 2 i klassificeringen.
+/js/login.js                                @Moeller888
+/login.html                                 @Moeller888
+/js/reset-password.js                       @Moeller888
+/reset-password.html                        @Moeller888
+/js/admin.js                                @Moeller888
+/admin.html                                 @Moeller888
+
+# --- Afhængigheder og repo-hygiejne (forsyningskæde, secrets i git, linjeskift) ---
 /package.json                               @Moeller888
 /package-lock.json                          @Moeller888
+/deno.lock                                  @Moeller888
+/node_modules/                              @Moeller888
 /.gitignore                                 @Moeller888
+/.gitattributes                             @Moeller888
 /.env.example                               @Moeller888
 
 # --- Testkonti, testmål og den isolerede stak ---
@@ -79,7 +97,9 @@
 /tests/test-credentials.mjs                 @Moeller888
 /tests/global-setup.ts                      @Moeller888
 /tests/helpers.ts                           @Moeller888
-# Den isolerede staks egne vagter (isolation, egress, seed-guard, CI-installation). Specs, harness og
+# Den isolerede staks egne vagter (isolation, egress, seed-guard, CI-installation) og alt, som det påkrævede
+# check "isolated-e2e" selv kører for at afgøre bestået/fejlet (AURA-03: en PR må ikke kunne gøre sit eget
+# check grønt ved at ændre runneren, scope-valget eller kontrollen af en komplet kørsel). Specs, harness og
 # schema/replay-plan er ikke ejet; replay-planen er niveau 2 i klassificeringen.
 /tests/isolated/isolation-guard.mjs         @Moeller888
 /tests/isolated/egress-*                    @Moeller888
@@ -87,6 +107,20 @@
 /tests/isolated/cdn-*.mjs                   @Moeller888
 /tests/isolated/ci/                         @Moeller888
 /tests/isolated/seed/                       @Moeller888
+/tests/isolated/run-suite.mjs               @Moeller888
+/tests/isolated/require-complete-run.mjs    @Moeller888
+/tests/isolated/scope.mjs                   @Moeller888
+/tests/isolated/serve-build.mjs             @Moeller888
+/tests/isolated/tripwire-proxy.mjs          @Moeller888
+/tests/isolated/playwright.*                @Moeller888
+/tests/isolated/schema/replay.mjs           @Moeller888
+/tests/support/browser-launch-check.mjs     @Moeller888
+/tests/support/mail-guard.ts                @Moeller888
+/tests/support/teacher-id-restore.ts        @Moeller888
+/tests/support/d237-guard-exception.mjs     @Moeller888
+/tests/support/unit-timing.mjs              @Moeller888
+/tests/support/timing-reporter.mjs          @Moeller888
+/tools/ci/run-triage.mjs                    @Moeller888
 /tests/run-unit-ci.mjs                      @Moeller888
 /tests/unit-ci-exclusions.mjs               @Moeller888
 /playwright.config.ts                       @Moeller888
@@ -100,6 +134,13 @@
 /tests/unit/migration-workflow-policy.test.mjs @Moeller888
 /tests/unit/agent-*.test.mjs                @Moeller888
 /tests/unit/codeowners.test.mjs             @Moeller888
-/tests/unit/password-help-mail-guard.test.mjs @Moeller888
+/tests/unit/password-help-*.test.mjs        @Moeller888
+/tests/unit/password-reset-form-no-live-call.test.mjs @Moeller888
+/tests/unit/cloudflare-*.test.mjs           @Moeller888
+/tests/unit/production-*.test.mjs           @Moeller888
+/tests/unit/krypter-backup.test.mjs         @Moeller888
+/tests/unit/fix-tests-no-git-mutation.test.mjs @Moeller888
+/tests/unit/repo-walk-build-output-isolation.test.mjs @Moeller888
+/tests/unit/review-answer-authorization.test.mjs @Moeller888
 /tests/unit/profiles-self-update-columns-guard.test.mjs @Moeller888
 /tests/unit/d237-guard-exception.test.mjs   @Moeller888
