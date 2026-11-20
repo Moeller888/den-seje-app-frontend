@@ -529,7 +529,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (LP-13/K9-prototype oven på L5 + L3: introduktionen som særskilt serverrunde bag `LAERLIGVERSE_INTRODUCTION`, ny `_shared/introduction.ts`) — **ikke deployet** | dette repository | 23 | `00e180368681fa5571a74aa7b7d0b4c2e0dd38847322668196c559000ef1ce6f` |
+| Kandidat (D-383: den almindelige quiz serverer og genoptager aldrig en kursusopgave med `metadata.learning_step`; `scope.ts` `isCourseItem`, ingen ny fil, intet flag) — **ikke deployet** | dette repository | 23 | `34ba1624d2a9b77bf3896c6acec97dabe73db14d0825bd0de5c1cd35c62f2a92` |
+| Forrige kandidat (LP-13/K9-prototype oven på L5 + L3: introduktionen som særskilt serverrunde bag `LAERLIGVERSE_INTRODUCTION`, ny `_shared/introduction.ts`) — ikke deployet | main `917ea023` | 23 | `00e180368681fa5571a74aa7b7d0b4c2e0dd38847322668196c559000ef1ce6f` |
 | Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `1df8cd79`: `served_mode` ved indsættelsen og antal hints i et sekvenssvar, begge slukket) — ikke deployet | #653 `807a9e10` | 22 | `5854770231cf0f7440963969ca1c8eeee512b5647bfc77f485fa330298e73c0b` |
 | Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `b6d65cdd`, før D-362) — ikke deployet | #653 `9296ac7f` | 22 | `ac5bef7dba2ee43ed25818b703107ec4f573fa5ce55287cfc26fb34612a81029` |
 | Forrige kandidat (Lærligverse-integration lag 3 oven på main med D-362; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | lag 4 `1df8cd79` | 21 | `ea8072da934530fbf3dc39a29599f6026f3b8ed995a157eeb424023aed61ca8b` |

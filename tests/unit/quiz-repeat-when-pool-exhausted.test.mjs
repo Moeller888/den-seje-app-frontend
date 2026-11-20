@@ -490,13 +490,20 @@ test("the reviewed spelling migration is the only later definition of the repeat
   // can never be served again as a first attempt with the full award. It writes no reward. Its runtime
   // suites (release-open-rounds-inactive-migration-run, -pg) prove both paths, the untouched rows and the
   // rollback to this migration's exact body (md5 7b7693b3…).
+  // D-383 adds ONE condition, NOT question_is_course_item(q.metadata), to both the "nothing unserved remains" guard
+  // and the reopen selection of the three backend repeat functions; everything else is D-280's body byte for byte
+  // (the reopen, repeat_count + 1, the lost-race NULL, the MC re-key). It writes no reward and touches neither
+  // process_question_attempt nor release_open_question_outside. Its runtime suite
+  // (course-items-out-of-ordinary-quiz-migration-run) proves the bodies' diff, that a course round is never reopened
+  // and that an ordinary repeat is reopened as before.
   assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
     ["20261018143726_fix_danish_question_bank_text.sql",
      "20261027120000_repeat_answer_coin_reward.sql",
      "20261031194600_mc_length_cue_answer_paths.sql",
      "20261031194700_mc_length_cue_top10.sql",
      "20261101150000_grading_meaningful_characters.sql",
-     "20261102100000_release_open_rounds_on_inactive_questions.sql"]);
+     "20261102100000_release_open_rounds_on_inactive_questions.sql",
+     "20261120150000_course_items_out_of_ordinary_quiz.sql"]);
 });
 
 test("the migration version is not shared with any other migration", () => {

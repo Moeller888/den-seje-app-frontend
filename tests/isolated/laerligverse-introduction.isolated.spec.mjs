@@ -82,7 +82,7 @@ test.beforeAll(async ({ request }) => {
   }
 });
 
-async function makePupil(request, label) {
+async function makePupil(request, label, domains = [OBJECTIVE]) {
   const tag = `${label}-${RUN}`.replace(/[^A-Za-z0-9-]/g, "");
   const email = `intro-${tag}@${SYNTHETIC_EMAIL_DOMAIN}`;
   const password = createHash("sha256").update(`isolated-intro:${tag}`).digest("base64url");
@@ -91,7 +91,7 @@ async function makePupil(request, label) {
   const id = (await created.json()).id;
   const profile = await request.post(`${SUPA}/rest/v1/profiles`, {
     headers: { ...svc, ...json, prefer: "return=minimal" },
-    data: { id, role: "student", full_name: `Syntetisk introduktionselev ${label}`, selected_grade: 8, active_domains: [OBJECTIVE], equipped_slots: {}, active_theme: "default" },
+    data: { id, role: "student", full_name: `Syntetisk introduktionselev ${label}`, selected_grade: 8, active_domains: domains, equipped_slots: {}, active_theme: "default" },
   });
   expect(profile.status(), await profile.text()).toBe(201);
   // A known, non-default progression state, so "unchanged" is a real comparison.
@@ -356,4 +356,85 @@ test("simultaneous requests and a lost connection: one round, one registration, 
   expect(await instances(request, p)).toHaveLength(1);
   expect(await rounds(request, p)).toHaveLength(1);
   expect(await rewardState(request, p)).toEqual(start);
+});
+
+// ── D-383: course items stay out of the ordinary quiz (real stack; the lane replays 20261120150000) ─────────────────
+// One objective of its own (no introduction, no other spec uses it) holds ONE course item (metadata.learning_step) and
+// ONE ordinary item. The pupil's teacher filter names only this objective, so the ordinary quiz's pool is exactly these
+// two — the situation in which, before D-383, the ordinary quiz served, blocked on and reopened the course item.
+// What each step would do WITHOUT D-383 is stated at the step; the unit suites prove the same per route
+// (gnq-course-items) and per SQL function (course-items-out-of-ordinary-quiz-migration-run).
+const D383 = `${INTRO.learning_objective}_d383`;
+const D383_COURSE = { ...SOURCE.content, question: `${SOURCE.content.question} (D-383 kursusopgave, testkopi)` };
+const D383_ORDINARY = { ...SOURCE.content, question: `${SOURCE.content.question} (D-383 almindelig opgave, testkopi)` };
+const WRONG = SOURCE.content.options.find((o) => o !== SOURCE.content.correct);
+
+test("D-383: the ordinary quiz serves the ordinary item, repeats past an unserved course item, and never reopens a course round; a course request still serves it", async ({ request }) => {
+  const have = await rows(request, `questions?select=id,metadata&learning_objective=eq.${D383}`);
+  if (have.length === 0) {
+    const base = { type: "mc_single", difficulty: 500, is_active: true, question_type: "auto", learning_objective: D383, answer_format: "mc", answer_type: "short", target_grade: 8, difficulty_band: 3 };
+    const ins = await request.post(`${SUPA}/rest/v1/questions`, {
+      headers: { ...svc, ...json, prefer: "return=minimal" },
+      data: [
+        { ...base, content: D383_COURSE, metadata: { domain: D383, synthetic: true, fixture: "D-383", learning_step: "guided_practice" } },
+        { ...base, content: D383_ORDINARY, metadata: { domain: D383, synthetic: true, fixture: "D-383" } },
+      ],
+    });
+    expect(ins.status(), await ins.text()).toBe(201);
+  }
+  const qs = await rows(request, `questions?select=id,metadata&learning_objective=eq.${D383}`);
+  expect(qs).toHaveLength(2);
+  const courseId = qs.find((q) => q.metadata && Object.hasOwn(q.metadata, "learning_step")).id;
+  const ordinaryId = qs.find((q) => !Object.hasOwn(q.metadata ?? {}, "learning_step")).id;
+
+  const p = await makePupil(request, "d383", [D383]);
+  const token = await signIn(request, p);
+  const byInstance = async () => rows(request, `question_instances?select=id,question_id,answered,repeat_count&student_id=eq.${p.id}&order=created_at`);
+  const answer = async (served, text) => {
+    const r = await post(request, token, "process-event", { question_instance_id: served.question_instance_id, answer: text, question_shown_at: Date.now(), round_no: served.round_no, submission_id: randomUUID() });
+    expect(r.status, JSON.stringify(r.body)).toBe(200);
+    expect(r.body.outcome).toBe("recorded");
+    return r.body;
+  };
+  const ordinary = () => post(request, token, "get-next-question", { subject: "historie" });
+
+  // 1. Ordinary request: the ordinary item, never the course item (before D-383: whichever came first).
+  const first = await ordinary();
+  expect(first.status, JSON.stringify(first.body)).toBe(200);
+  expect(first.body.content.question).toBe(D383_ORDINARY.question);
+  let inst = await byInstance();
+  expect(inst).toHaveLength(1);
+  expect(inst[0].question_id).toBe(ordinaryId);
+  expect((await answer(first, SOURCE.content.correct)).status).toBe("correct");
+
+  // 2. Only the course item is unserved: the ordinary quiz repeats the ordinary item (before D-383: the unserved
+  //    course item was "still to serve", so the repeat guard answered no_questions while the TS filter refused it).
+  const second = await ordinary();
+  expect(second.status, JSON.stringify(second.body)).toBe(200);
+  expect(second.body.question_instance_id, "a repeat of the ordinary round").toBe(first.question_instance_id);
+  expect(second.body.content.question).toBe(D383_ORDINARY.question);
+  inst = await byInstance();
+  expect(inst).toHaveLength(1);
+  expect(inst[0]).toMatchObject({ question_id: ordinaryId, answered: false, repeat_count: 1 });
+  await answer(second, SOURCE.content.correct);
+
+  // 3. A targeted course request (objective targeting is on in this lane) still serves the course item. Answered WRONG.
+  const course = await post(request, token, "get-next-question", { subject: "historie", learning_objective: D383 });
+  expect(course.status, JSON.stringify(course.body)).toBe(200);
+  expect(course.body.content.question).toBe(D383_COURSE.question);
+  expect((await answer(course, WRONG)).status).toBe("incorrect");
+  inst = await byInstance();
+  expect(inst).toHaveLength(2);
+  const courseRound = inst.find((i) => i.question_id === courseId);
+  expect(courseRound).toMatchObject({ answered: true, repeat_count: 0 });
+
+  // 4. Nothing unserved: the ordinary repeat reopens the ORDINARY round (before D-383: the course round — a wrong
+  //    answer sorts first). The course round is untouched.
+  const third = await ordinary();
+  expect(third.status, JSON.stringify(third.body)).toBe(200);
+  expect(third.body.question_instance_id).toBe(first.question_instance_id);
+  expect(third.body.content.question).toBe(D383_ORDINARY.question);
+  inst = await byInstance();
+  expect(inst.find((i) => i.question_id === ordinaryId)).toMatchObject({ answered: false, repeat_count: 2 });
+  expect(inst.find((i) => i.question_id === courseId)).toEqual(courseRound);
 });

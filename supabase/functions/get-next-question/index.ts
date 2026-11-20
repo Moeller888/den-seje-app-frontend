@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { publishableKey, serviceKey } from "../_shared/supabase-keys.ts";
 import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
-import { deriveQuestionScope } from "./scope.ts";
+import { deriveQuestionScope, isCourseItem } from "./scope.ts";
 import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
 import { checkRequestedStep, historyFromRows, nextStep, stepDef, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
 import { hintsAvailable } from "../_shared/hints.ts";
@@ -383,6 +383,16 @@ serve(async (req) => {
           status: 409,
         });
       }
+      // D-383: the ordinary quiz never resumes an open COURSE round (the tag is the question row's, like the
+      // objective). Neither served nor released — explicit conflict, as D-329 rule 3; the course is resumed where
+      // it was opened. (An open course round outside the subject's domains was already released above, as
+      // before.)
+      if (targeting.mode === "off" && isCourseItem(instance.questions.metadata)) {
+        return new Response(JSON.stringify({ error: "open_question_course" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        });
+      }
       // D-338: in a sequence, an open round is resumed only in the step the server decided (the step tag is the
       // question row's, like the objective; K1 may deliver an earlier version of the content).
       if (sequence !== null && stepOf(instance.questions.metadata) !== sequence.step) {
@@ -530,6 +540,10 @@ serve(async (req) => {
       if (!q.content) continue;
       // D-338: in a sequence, only the questions tagged with the server's current step are candidates.
       if (sequence !== null && stepOf(q.metadata) !== sequence.step) continue;
+      // D-383: the ordinary quiz never serves a course item (./scope.ts isCourseItem). The candidate RPCs on the
+      // classic route are shared with targeted course requests, so the rule is applied here; the level candidates
+      // and the repeat RPCs (ordinary quiz only) apply it in the database (20261120150000).
+      if (targeting.mode === "off" && isCourseItem(q.metadata)) continue;
 
       let format: string;
       let normalized: any;
