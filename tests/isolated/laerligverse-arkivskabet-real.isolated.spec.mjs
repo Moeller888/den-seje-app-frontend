@@ -44,6 +44,8 @@ const CONTEXT_OF_STEP = Object.fromEntries(ITEMS.map((r) => [r.learning_step, r.
 // The REAL game's one objective for the whole sequence (archive-prototype/src/sequence.ts OBJECTIVE_ID); the host maps it.
 const GAME_OBJECTIVE = "kildekritik.ophav";
 const HARNESS = { host: "f3", supabaseUrl: SUPA, anonKey: ANON, objectiveMap: { [GAME_OBJECTIVE]: OBJECTIVE }, h5: true, sequence: true, stepContexts: CONTEXT_OF_STEP, gameDist: DIST };
+// F12-B: where the update notice's "Tilbage til Lærlig" leads in this lane (the isolated Lærlig build); never followed.
+const RETURN_URL = `${(process.env.ISOLATED_BASE_URL || "http://127.0.0.1:8788").replace(/\/+$/, "")}/hub.html`;
 
 test.describe.configure({ mode: "serial" });
 test.beforeEach(() => {
@@ -629,13 +631,17 @@ test("network breaks: no introduction while offline (an explicit Danish error, n
 });
 
 // ── Rollback risk: the host's introductions OFF while the backend still serves them ─────────────────────────────
-test("rollback in the WRONG order (host introductions OFF, backend still ON): bridge/2, the game's local introduction, then an explicit error instead of a task — never silent, nothing registered or paid", async ({ page, request, browserName }) => {
+test("rollback in the WRONG order (host introductions OFF, backend still ON): bridge/2, the game's local introduction, then the server's introduction_required — NO round is created, the host page offers reload and the way back to Lærlig; nothing registered or paid", async ({ page, request, browserName }) => {
   test.setTimeout(300_000);
-  // This is why the documented rollback order is backend flag OFF first, host OFF second: get-next-question does not
-  // know the host's capability. The backend flag cannot be switched inside one lane (the functions are served once),
-  // so the safe order itself is covered by the archive prototype's trial, not here.
+  // Before F12-B get-next-question did not know the host's capability: it CREATED a round (served_at) for an
+  // introduction this host cannot show, every request, and the pupil was stuck at "Ingen opgave lige nu" (this test
+  // then allowed at most one round with presented_at/completed_at null). F12-B: a host that does not show introductions
+  // leaves `introduction_capability` out, and the server answers a REQUIRED introduction with step
+  // "introduction_required" after two reads — no round, no task, no write. The host page shows the Danish update notice.
+  // The safe rollback ORDER (backend flag OFF first) still cannot be switched inside one lane (the functions are served
+  // once); it is a separate, proposed lane test.
   await harness.close();
-  harness = await startHarness({ ...HARNESS, introductions: false });
+  harness = await startHarness({ ...HARNESS, introductions: false, returnUrl: RETURN_URL });
   try {
     const p = await makePupil(request, "rollback", browserName);
     const start = await rewardState(request, p);
@@ -653,11 +659,21 @@ test("rollback in the WRONG order (host introductions OFF, backend still ON): br
     await fillArchiveCard(f);
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "error", { timeout: 60_000 });
     await expect(f.locator("#lv-status")).toContainText("Ingen opgave lige nu");
-    const rs = await rounds(request, p);
-    expect(rs.length).toBeLessThanOrEqual(1);
-    for (const r of rs) expect([r.presented_at, r.completed_at], "an introduction the host cannot show is never registered as shown or done").toEqual([null, null]);
-    expect(await instances(request, p)).toEqual([]);
+    // F12-B: the host page (not the game) explains it, in Danish, with the two ways on; focus is on the notice.
+    const notice = page.locator("#lv-update");
+    await expect(notice).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("#lv-update-text")).toHaveText("Lærligvers er blevet opdateret. Genindlæs siden for at fortsætte, hvor du slap.");
+    await expect(page.locator("#lv-update-reload")).toHaveText("Genindlæs");
+    await expect(page.locator("#lv-update-back")).toHaveText("Tilbage til Lærlig");
+    await expect(page.locator("#lv-update-back")).toHaveAttribute("href", RETURN_URL);
+    await expect(notice).toBeFocused();
+    await expect(page.locator("body")).toHaveAttribute("data-last-service-error", "outdated");
+    // The database: no round for an introduction nobody could show (before F12-B: one, served and never shown).
+    expect(await rounds(request, p), "no introduction round is created for a host that cannot show it").toEqual([]);
+    expect(await instances(request, p), "no task is served instead of the required introduction").toEqual([]);
     expect(await rewardState(request, p)).toEqual(start);
+    // Repeated requests without the capability (still no round, no task) are proven at the API level in
+    // laerligverse-introduction.isolated.spec.mjs (F12-B test).
   } finally {
     await harness.close();
     harness = await startHarness({ ...HARNESS, introductions: true });

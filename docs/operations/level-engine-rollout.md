@@ -529,7 +529,8 @@ de linjer. Filmængden er præcis den, `get_edge_function` viser efter en deploy
 
 | | Kilde | Filer | Manifest |
 |---|---|---|---|
-| Kandidat (LP-13/K9-prototype oven på L5 + L3: introduktionen som særskilt serverrunde bag `LAERLIGVERSE_INTRODUCTION`, ny `_shared/introduction.ts`) — **ikke deployet** | dette repository | 23 | `00e180368681fa5571a74aa7b7d0b4c2e0dd38847322668196c559000ef1ce6f` |
+| Kandidat (F12-B oven på LP-13/K9-prototypen: `introduction_capability` i sekvensforespørgslen. Uden den svares en påkrævet introduktion med `introduction_required` uden skrivning, en ugyldig værdi giver 400, og en åben opgaverunde i målet genoptages før introduktionen. Alt ligger stadig bag `LAERLIGVERSE_INTRODUCTION`) — **ikke deployet** | dette repository | 23 | `f20ce4145b9945dd32554e0960ebb1c9bb913896ea7047f4d02993e6acab0384` |
+| Forrige kandidat (LP-13/K9-prototype oven på L5 + L3: introduktionen som særskilt serverrunde bag `LAERLIGVERSE_INTRODUCTION`, ny `_shared/introduction.ts`) — ikke deployet | #664 / main `18bb423a` | 23 | `00e180368681fa5571a74aa7b7d0b4c2e0dd38847322668196c559000ef1ce6f` |
 | Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `1df8cd79`: `served_mode` ved indsættelsen og antal hints i et sekvenssvar, begge slukket) — ikke deployet | #653 `807a9e10` | 22 | `5854770231cf0f7440963969ca1c8eeee512b5647bfc77f485fa330298e73c0b` |
 | Forrige kandidat (Lærligverse L5 + L3 oven på lag 4 `b6d65cdd`, før D-362) — ikke deployet | #653 `9296ac7f` | 22 | `ac5bef7dba2ee43ed25818b703107ec4f573fa5ce55287cfc26fb34612a81029` |
 | Forrige kandidat (Lærligverse-integration lag 3 oven på main med D-362; målrettet kald går aldrig gennem niveaumotoren) — ikke deployet | lag 4 `1df8cd79` | 21 | `ea8072da934530fbf3dc39a29599f6026f3b8ed995a157eeb424023aed61ca8b` |

@@ -67,6 +67,14 @@ function readConfig() {
     // F11-B: the server's introduction — optional, non-production only, and only on top of the server sequence.
     if (c.introductions !== undefined && typeof c.introductions !== "boolean") return null;
     if (c.introductions === true && (c.sequence !== true || c.backend !== "local-supabase")) return null;
+    // F12-B: where "Tilbage til Lærlig" leads (optional; absent = the link is not shown). An http(s) URL on a valid
+    // origin only — never javascript:, data: or a relative path that would stay on this page.
+    if (c.returnUrl !== undefined && c.returnUrl !== null) {
+      if (typeof c.returnUrl !== "string") return null;
+      const u = new URL(c.returnUrl);
+      assertOrigin(u.origin);
+      if (u.protocol !== "https:" && u.protocol !== "http:") return null;
+    }
   } catch {
     return null;
   }
@@ -254,7 +262,27 @@ function renderEvidence(assessments) {
   }
 }
 
+/**
+ * F12-B: the server requires a step this page or game cannot show ("outdated": step introduction_required, or 426).
+ * Nothing was recorded on the server. The pupil chooses: reload (a newer page/game may show it) or go back to Lærlig.
+ * Shown once per occurrence; the page NEVER reloads by itself, so there is no reload loop. Focus moves to the notice.
+ */
+function showUpdateNotice(c) {
+  const box = $("lv-update");
+  if (!box.hidden) return;
+  const back = /** @type {HTMLAnchorElement} */ ($("lv-update-back"));
+  if (typeof c.returnUrl === "string") {
+    back.href = c.returnUrl;
+    back.hidden = false;
+  }
+  box.hidden = false;
+  body.dataset.update = "required";
+  say("Lærligvers er blevet opdateret. Genindlæs siden for at fortsætte, hvor du slap.");
+  box.focus();
+}
+
 function start(c) {
+  $("lv-update-reload").addEventListener("click", () => location.reload());
   $("lv-mode").hidden = false;
   $("lv-mode").textContent = c.mode === "isolated-test" ? "Isoleret testmiljø — syntetiske elever" : "Lokal udvikling — ikke Lærligs produktion";
   const session = passwordSessionProvider({ supabaseUrl: c.supabaseUrl, anonKey: c.anonKey });
@@ -313,6 +341,7 @@ function start(c) {
       onEvent: (e) => {
         if (e.type === "reject") body.dataset.lastReject = e.reason ?? "";
         if (e.type === "service-error") body.dataset.lastServiceError = e.code ?? "";
+        if (e.type === "service-error" && e.code === "outdated") showUpdateNotice(c);
       },
     });
     // A new sign-in always loads a FRESH game document (a new bridge session). Re-assigning the same src is not

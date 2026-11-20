@@ -37,7 +37,7 @@ export function hostCsp({ gameOrigin, supabaseOrigin }) {
 }
 
 /** index.html with config and CSP filled in. The JSON is escaped so it can never close its script tag. */
-export function renderHostPage({ mode, backend = "local-supabase", gameOrigin, gameUrl, supabaseUrl = null, anonKey = null, subject = "historie", objectiveMap = null, h5 = false, sequence = false, stepContexts = null, introductions = false }) {
+export function renderHostPage({ mode, backend = "local-supabase", gameOrigin, gameUrl, supabaseUrl = null, anonKey = null, subject = "historie", objectiveMap = null, h5 = false, sequence = false, stepContexts = null, introductions = false, returnUrl = null }) {
   if (mode !== "local-preview" && mode !== "isolated-test") throw new Error(`host page: unknown mode ${mode}`);
   if (!BACKENDS.includes(backend)) throw new Error(`host page: unknown backend ${backend}`);
   // The test adapter is a local demo: never in the isolated test (which must prove the REAL backend).
@@ -45,7 +45,11 @@ export function renderHostPage({ mode, backend = "local-supabase", gameOrigin, g
   if (backend === "local-supabase" && (!supabaseUrl || !anonKey)) throw new Error("host page: local-supabase needs supabaseUrl and anonKey");
   const supabaseOrigin = backend === "local-supabase" ? new URL(supabaseUrl).origin : null;
   if (typeof introductions !== "boolean" || (introductions && !sequence)) throw new Error("host page: introductions need the server sequence");
-  const config = JSON.stringify({ mode, backend, gameOrigin, gameUrl, supabaseUrl, anonKey, subject, objectiveMap, h5, sequence, stepContexts, introductions }).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
+  // F12-B: where the update notice's "Tilbage til Lærlig" leads — an http(s) URL on a valid origin, or null (no link).
+  if (returnUrl !== null && (typeof returnUrl !== "string" || !URL.canParse(returnUrl) || !ORIGIN_RE.test(new URL(returnUrl).origin))) {
+    throw new Error("host page: invalid returnUrl");
+  }
+  const config = JSON.stringify({ mode, backend, gameOrigin, gameUrl, supabaseUrl, anonKey, subject, objectiveMap, h5, sequence, stepContexts, introductions, returnUrl }).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
   const html = readFileSync(join(HOST_DIR, "index.html"), "utf8");
   if (!html.includes("__LV_CSP__") || !html.includes("__LV_CONFIG__")) throw new Error("host page: placeholders missing");
   return html.replace("__LV_CSP__", hostCsp({ gameOrigin, supabaseOrigin })).replace("__LV_CONFIG__", config);
