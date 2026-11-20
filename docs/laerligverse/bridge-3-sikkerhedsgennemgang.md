@@ -137,7 +137,18 @@ Alt andet giver `ServiceError("server")`. Det gælder også svarnøgler på topn
 | Negativ kontrol | En fjernet rækkefølgevagt opdages (fjernes igen i `afterEach`) | samme, "NEGATIVE CONTROL …" |
 | Service | Svarvalidering og kortlægning af alle udfald fra `introduction-progress` | samme |
 | Genereret værtsbro | Allowlist, konfiguration, kæden og bridge/2 gennem `laerligverse/host/bridge/*.js` | `tests/unit/laerligverse-host.test.mjs` |
-| Ægte browser | Login, vært, iframe, synlige kort, tastatur, database som orakel, to faner, anden elev, netværk, belønning | `tests/isolated/laerligverse-intro-visible.isolated.spec.mjs` (introduktionsbanen, alle tre browsere) |
+| Ægte browser | Login, vært, iframe, synlige kort, tastatur, database som orakel, to faner, anden elev, netværk, belønning | `tests/isolated/laerligverse-intro-visible.isolated.spec.mjs` (introduktionsbanen, alle tre browsere; testspillet D-315) |
+| Det rigtige spil (F11-C) | Det rigtige Arkivskabet (`game-main.ts`) mod den isolerede backend: login, serverens introduktion, shown/done i databasen, genindlæsning før og efter, to faner, to elever, netværksbrud, arkivkortet, første opgave besvaret, ingen belønning for introduktionen, forkert tilbagerulningsrækkefølge | `tests/isolated/laerligverse-arkivskabet-real.isolated.spec.mjs` (introduktionsbanen, alle tre browsere) |
+
+**Det rigtige spil i testen (F11-C):**
+- Spillet bygges kun i introduktionsbanen, før netværkslåsen, af `tests/isolated/laerligverse-harness/build-arkivskabet.mjs`, og lægges i runnerens midlertidige mappe.
+- Buildet har én indgang, `game.html`. Prototypens egen værtsside med svarnøgler er ikke med.
+- Spillets værtsoprindelse er bagt ind som `127.0.0.1:4330`, altså harnessens F3-vært.
+- `checkGameDist()` afviser buildet, før noget serveres, hvis det indeholder en værtsside, værtskode, sourcemaps eller en forkert oprindelse.
+- Spiloprindelsen serverer kun `game.html` og buildets egne `assets/`-filer.
+- Intet af dette er en del af `tools/cloudflare-build-static.mjs` eller produktionsbundlet.
+- Når spillet ændres, følger testen med automatisk: den bygger altid commit'ens eget spil. Ændres en selektor eller et forløb i spillet (fx `#lv-intro`, `#lv-task` eller arkivkortet), skal hjælpefunktionerne øverst i specen rettes.
+- **Ikke dækket:** den sikre tilbagerulningsrækkefølge (backend-flag fra først). Backend-flaget kan ikke skiftes inden for én bane, fordi funktionerne serveres én gang. En "shown", der fejler alene, er heller ikke dækket i browseren; broens unit-tests dækker den.
 
 Testopsætninger, der er tilpasset versionen uden at svække en påstand:
 - **`test/harness.ts`:** standardspillet tilbyder bridge/3 (`introductions: true`). Sessionens version afgøres af værtens service: `FakeTaskService` giver bridge/2, `IntroService` giver bridge/3.

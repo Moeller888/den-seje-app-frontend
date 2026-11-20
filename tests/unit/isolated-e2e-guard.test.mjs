@@ -171,6 +171,8 @@ test("no false green, and the order that makes the job fail-closed", () => {
     "node tests/isolated/seed/seed.mjs",
     "supabase functions serve",
     "node tests/isolated/cdn-mirror.mjs --fetch",
+    // F11-C: the real Arkivskabet game is built (pnpm fetches its locked dependencies) BEFORE the lock.
+    "node tests/isolated/laerligverse-harness/build-arkivskabet.mjs",
     "egress-firewall.sh lock",
     "egress-firewall.sh verify",
     "playwright.isolated.config.mjs",
@@ -179,9 +181,10 @@ test("no false green, and the order that makes the job fail-closed", () => {
   for (let i = 1; i < order.length; i++) assert.ok(order[i] > order[i - 1], `step ${i} in order`);
   // Tests run with the locked-down group as primary group, never with the runner's own group.
   const testLines = job.split("\n").filter((l) => /playwright test|run-suite\.mjs/.test(l) && !l.trim().startsWith("#"));
-  // The isolated smoke, the introduction lane's chain (PR #664), its visible introduction (F11-B) and the frontend suite.
-  assert.equal(testLines.length, 4);
-  for (const line of testLines) assert.match(line, /^\s+sg "\$ISOLATED_GROUP" -c "(npx playwright test|REPLAY_PROFILE=introduction npx playwright test|node tests\/isolated\/run-suite\.mjs)/, line);
+  // The isolated smoke, the introduction lane's chain (PR #664), its visible introduction (F11-B), the real
+  // Arkivskabet game (F11-C) and the frontend suite.
+  assert.equal(testLines.length, 5);
+  for (const line of testLines) assert.match(line, /^\s+sg "\$ISOLATED_GROUP" -c "(npx playwright test|REPLAY_PROFILE=introduction npx playwright test|REPLAY_PROFILE=introduction ISOLATED_ARKIVSKABET_DIST=\$RUNNER_TEMP\/arkivskabet-game npx playwright test|node tests\/isolated\/run-suite\.mjs)/, line);
   const fw = read("tests/isolated/egress-firewall.sh");
   assert.match(fw, /-m owner --gid-owner "\$GROUP_NAME" -j ISO_EGRESS_USER\n/);
   assert.match(fw, /-m owner --gid-owner "\$GROUP_NAME" -j ISO_EGRESS_USER6/);
@@ -218,4 +221,26 @@ test("browser install: cache first without the Ubuntu mirrors, the unchanged ins
   assert.ok(install.includes("if ! timeout --kill-after=30s 10m npx playwright install --with-deps; then"), "the fallback is bounded to 10 min");
   assert.ok(install.includes(`'Acquire::Retries "3";' 'Acquire::http::Timeout "30";' 'Acquire::https::Timeout "30";'`), "a silent mirror fails in 30 s per try");
   assert.match(install, /apt: cached \.deb set sha256 /, "the digest of the restored .deb set stays in the log");
+});
+
+test("F11-C: a failing real-game browser test leaves its screenshots and diagnostics where the job uploads them", () => {
+  // First CI run of F11-C (run 44528177519): the isolated config has no outputDir, so Playwright wrote to
+  // tests/isolated/test-results while the upload step looked in test-results-isolated/ — "No files were found".
+  const wf = read(".github/workflows/isolated-e2e.yml");
+  const at = wf.indexOf("- name: Real Arkivskabet E2E — the actual game, bridge/3, Chromium, Firefox and WebKit (introduction lane)\n");
+  assert.notEqual(at, -1);
+  const step = wf.slice(at, wf.indexOf("\n      - ", at + 10));
+  const out = step.match(/--output=\$GITHUB_WORKSPACE\/([^\s"]+)/);
+  assert.ok(out, "the F11-C run sets its own output directory");
+  const upload = wf.slice(wf.indexOf("- name: Upload report\n"));
+  assert.match(upload, /if: always\(\) && needs\.plan\.outputs\.scope != 'docs-md'\n/);
+  const paths = upload.slice(upload.indexOf("path: |"), upload.indexOf("retention-days")).split("\n").map((l) => l.trim()).filter((l) => l.endsWith("/"));
+  assert.ok(paths.some((p) => `${out[1]}/`.startsWith(p)), `${out[1]} is under an uploaded path (${paths.join(", ")})`);
+  // The spec itself: a screenshot and a redacted state report on failure, never a token or a key.
+  const spec = read("tests/isolated/laerligverse-arkivskabet-real.isolated.spec.mjs");
+  assert.match(spec, /test\.use\(\{ screenshot: "only-on-failure" \}\)/);
+  assert.match(spec, /testInfo\.attach\("f11c-diagnostics\.json", \{ body, contentType: "application\/json" \}\)/);
+  assert.match(spec, /const body = redact\(/);
+  assert.ok(spec.includes(String.raw`replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, "<jwt>")`), "JWTs are redacted");
+  assert.ok(spec.includes('[[SERVICE, "<service-key>"], [ANON, "<anon-key>"]]'), "both keys are redacted");
 });

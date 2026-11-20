@@ -152,7 +152,9 @@ test("workflow: the check runs on both paths, only the exact value skips, the gu
     }
     // PR #664: the introduction chain runs ONLY in the introduction lane (and must run completely there).
     // F11-B: likewise the visible introduction (real browser, three engines), ONLY in the introduction lane.
-    if (n === "Introduction E2E — the chain must run completely (introduction lane)" || n === "Visible introduction E2E — Chromium, Firefox and WebKit (introduction lane)") {
+    // F11-C: and the real Arkivskabet game — its build and its E2E — ONLY in the introduction lane.
+    if (n === "Introduction E2E — the chain must run completely (introduction lane)" || n === "Visible introduction E2E — Chromium, Firefox and WebKit (introduction lane)"
+      || n === "Real Arkivskabet game — build it for the isolated F3 host (introduction lane)" || n === "Real Arkivskabet E2E — the actual game, bridge/3, Chromium, Firefox and WebKit (introduction lane)") {
       assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'introduction'\n"), n);
       continue;
     }
