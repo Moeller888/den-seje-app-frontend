@@ -27,7 +27,7 @@ const diff = (path, added, { newFile = false } = {}) => [
 test("1: almindelig frontend, dokumentation og avatar-værktøj er niveau 1", () => {
   assert.equal(lvl([f("js/avatar-layers.js", ["const x = 1;"])]), 1);
   assert.equal(lvl([f("hub.html", ["<p>Hej</p>"]), f("css/hub.css", ["a{color:red}"])]), 1);
-  assert.equal(lvl([f("docs/decisions/D-999.md", ["tekst"]), f("tools/avatar/build-x.mjs", ["export const a = 1;"])]), 1);
+  assert.equal(lvl([f("docs/decisions/D-999.md", ["tekst"], { isNew: true }), f("tools/avatar/build-x.mjs", ["export const a = 1;"])]), 1);
   assert.equal(lvl([f("tests/avatar-x.spec.ts", ["test('x', () => {});"]), f("tests/unit/avatar-x.test.mjs", ["ok"])]), 1);
 });
 
@@ -47,7 +47,7 @@ test("3: backend, belønning, login, elevdata og ukendte stier er niveau 2 (fail
     "noget-helt-nyt/fil.mjs", "tools/avatar-batch/send.mjs"]) {
     assert.equal(lvl([f(p, ["x"])]), 2, p);
   }
-  assert.equal(lvl([]), 2, "ingen filer → 2");
+  assert.equal(lvl([]), 3, "ingen filer → 3 (fail closed)");
 });
 
 test("4: agentens eget skøn kan kun hæve niveauet, aldrig sænke det", () => {
@@ -88,7 +88,7 @@ test("7: et aktiveringsflag (true/false) i kode er niveau 2 — #729-mønstret",
   assert.equal(lvl([f("js/flags-x.js", ["  QUESTION_MIX_ENGINE: false,"])]), 2);
   assert.equal(lvl([f("js/avatar-layers.js", ["const count = 86;"])]), 1);
   // i dokumentation er det kun tekst
-  assert.equal(lvl([f("docs/AVATAR_SYSTEM.md", ["`NORTHSTAR_HAIR_NH5C = true`"])]), 1);
+  assert.equal(lvl([f("docs/avatar-notes.md", ["`NORTHSTAR_HAIR_NH5C = true`"])]), 1);
 });
 
 test("8: SQL — destruktivt og rettigheder er 3, kommentarer tæller ikke", () => {
@@ -102,7 +102,7 @@ test("8: SQL — destruktivt og rettigheder er 3, kommentarer tæller ikke", () 
 });
 
 test("9: test og dokumentation uden ejer: kun rigtige hemmeligheder og guard-omgåelse tæller", () => {
-  assert.equal(lvl([f("tests/unit/x-migration-run.test.mjs", ["CREATE ROLE service_role BYPASSRLS;", "DROP TABLE x;"])]), 1);
+  assert.equal(lvl([f("tests/unit/x-schema.test.mjs", ["CREATE ROLE service_role BYPASSRLS;", "DROP TABLE x;"])]), 1);
   assert.equal(lvl([f("docs/x.md", ["sb_secret_" + "a".repeat(30)])]), 3);
   assert.equal(lvl([f("tests/unit/x.test.mjs", ["// " + "eyJ" + "a".repeat(30) + "." + "b".repeat(30) + "." + "c".repeat(20)])]), 3);
   assert.equal(lvl([f("docs/x.md", ["git commit --no-verify"])]), 3);
@@ -147,7 +147,7 @@ test("12: hvert niveau 3-mønster er også ejet i CODEOWNERS (niveau 3 ⊆ ejers
 
 test("13: CLI — exitkoden er 10 + niveauet; forkert brug er 64", () => {
   const run = (args, input) => spawnSync(process.execPath, [SCRIPT, ...args], { input, encoding: "utf8" });
-  assert.equal(run(["--stdin"], diff("js/hub.js", ["const a = 1;"])).status, 11);
+  assert.equal(run(["--stdin"], diff("js/hub.js", ["const a = 1;"])).status, 12, "stdin giver aldrig niveau 1");
   assert.equal(run(["--stdin"], diff(".github/workflows/x.yml", ["on: push"])).status, 13);
   assert.equal(run(["--stdin", "--declared", "2"], diff("js/hub.js", ["const a = 1;"])).status, 12);
   assert.equal(run(["--stdin", "--json"], diff("app.js", ["x"])).status, 12);
@@ -156,7 +156,7 @@ test("13: CLI — exitkoden er 10 + niveauet; forkert brug er 64", () => {
   assert.equal(run(["--base=-p"], "").status, 64, "en --base, der ligner et flag, afvises");
   assert.equal(run(["--ukendt"], "").status, 64);
   const out = [];
-  assert.equal(main(["--stdin"], { stdin: () => "", out: (s) => out.push(s), err: () => {} }), EXIT[2], "tom diff → 2");
+  assert.equal(main(["--stdin"], { stdin: () => "", out: (s) => out.push(s), err: () => {} }), EXIT[3], "tom diff → 3");
   assert.deepEqual({ ...EXIT }, { 1: 11, 2: 12, 3: 13, usage: 64 });
 });
 
@@ -251,7 +251,8 @@ test("18: binære filer, symlinks, submodules og sletninger", () => {
 
 test("19: H3 — en ændring, der fjerner asserts eller springer test over, er mindst 2", () => {
   assert.equal(lvl([f("tests/unit/review-answer-ownership.test.mjs", ["// ok"], { removed: ["  assert.equal(a, b);", "  assert.ok(c);"] })]), 2);
-  assert.equal(lvl([f("tests/unit/x.test.mjs", ["  assert.equal(a, 2);"], { removed: ["  assert.equal(a, 1);"] })]), 1, "lige mange → 1");
+  assert.equal(lvl([f("tests/unit/x.test.mjs", ["  assert.equal(a, 2);"], { removed: ["  assert.equal(a, 1);"] })]), 2, "en ændret assert → 2");
+  assert.equal(lvl([f("tests/unit/x.test.mjs", ["  assert.equal(a, 1);", "  assert.ok(b);"], { removed: ["  assert.equal(a, 1);"] })]), 1, "assert uændret, ny tilføjet → 1");
   assert.equal(lvl([f("tests/avatar-x.spec.ts", ["test.skip('x', async () => {});"])]), 2);
   assert.equal(lvl([f("tests/unit/x.test.mjs", ["test('x', { skip: true }, () => {});"])]), 2);
 });
@@ -307,4 +308,56 @@ test("24: name-status -z læses strengt", () => {
   assert.deepEqual(parseNameStatusZ("M\0a.js\0R100\0b.js\0c.js\0D\0d.js\0"), ["a.js", "b.js", "c.js", "d.js"]);
   assert.throws(() => parseNameStatusZ("Q\0a.js\0"));
   assert.throws(() => parseNameStatusZ("R100\0b.js\0"));
+});
+
+test("25: AURA-04 red-team — testfiler, signaler, stier og CODEOWNERS-union", () => {
+  // F1: sikkerhedstest uden ejer
+  for (const p of ["tests/unit/question-payload-no-answer-key.test.mjs", "tests/unit/process-text-answer-execute-lockdown.test.mjs",
+    "tests/unit/teacher-spotlights-read-scope.test.mjs", "tests/unit/revoke-truncate-x.test.mjs", "tests/unit/x-migration-run.test.mjs"]) {
+    assert.equal(lvl([f(p, ["// ok"])]), 2, p);
+  }
+  // F2: en testfil omdøbt eller flyttet ud af CI
+  const ren = parseUnifiedDiff(["diff --git a/tests/unit/x.test.mjs b/tests/unit/x.test.mjs.disabled", "similarity index 100%",
+    "rename from tests/unit/x.test.mjs", "rename to tests/unit/x.test.mjs.disabled", ""].join("\n"));
+  assert.equal(classifyChange({ files: ren, codeownersRules: rules }).level, 2);
+  // F3: løsnet matcher, test.fail, skip med tekst, todo, test uden for tests/
+  assert.equal(lvl([f("tests/unit/x.test.mjs", ["  expect(n).toBeGreaterThanOrEqual(1);"], { removed: ["  expect(n).toBe(1);"] })]), 2);
+  assert.equal(lvl([f("tests/unit/x.test.mjs", ["test.fail('x', () => {});"])]), 2);
+  assert.equal(lvl([f("tests/unit/x.test.mjs", ["test('x', { skip: 'senere' }, () => {});"])]), 2);
+  assert.equal(lvl([f("tests/unit/x.test.mjs", ["test('x', { todo: true }, () => {});"])]), 2);
+  assert.equal(lvl([f("adventure-engine/packages/a/src/x.test.ts", ["// ok"], { removed: ["  expect(a).toBe(1);"] })]), 2);
+  // F4, F7: nøglenavn, Storage- og auth-skrivning, citeret flag, betalt SDK-kald
+  assert.equal(lvl([f("js/x.js", ["const k = Deno.env.get('SUPABASE_SECRET_KEYS');"])]), 3);
+  assert.equal(lvl([f("js/x.js", ["await sb.storage.from('docs').upload(p, b);"])]), 2);
+  assert.equal(lvl([f("js/x.js", ["await sb.auth.updateUser({ data });"])]), 2);
+  assert.equal(lvl([f("js/x.js", ['const f = { "NEW_FEATURE": true };'])]), 2);
+  assert.equal(lvl([f("js/x.js", ["const c = new OpenAI({ apiKey });"])]), 2);
+  // F5: unit-test mod en rigtig API
+  assert.equal(lvl([f("tests/unit/x.test.mjs", ["await fetch(u + '/rest/v1/profiles', { method: 'PATCH' });"])]), 2);
+  // F8: pakkehåndtering og testrunnere i underpakker
+  for (const p of ["adventure-engine/pnpm-workspace.yaml", "adventure-engine/.pnpmfile.cjs", "adventure-engine/packages/a/vitest.config.ts"]) {
+    assert.equal(classifyPath(p, rules).level, 2, p);
+  }
+  // F9: D-registret er append-only, kanoniske docs er 2
+  assert.equal(lvl([f("docs/decisions/D-100.md", ["ændret"])]), 1, "en statuslinje i en beslutning må opdateres");
+  assert.equal(lvl([f("docs/decisions/D-100.md", [], { deleted: true })]), 2, "slettet beslutning");
+  assert.equal(lvl([f("docs/ARCHITECTURE.md", ["x"])]), 2);
+  // F13, F14: "."-segmenter og agentinstruktioner uanset store/små bogstaver
+  assert.equal(classifyPath("js/./supabase.js", rules).level, 3);
+  for (const p of ["laerligverse/claude.md", "GEMINI.md", "x/.cursorrules", ".cursor/rules/a.mdc", ".github/copilot-instructions.md"]) {
+    assert.equal(classifyPath(p, rules).level, 3, p);
+  }
+  // G05, G06, G15, T11: kommentarheuristik, IP-adresser og ændrede fixtures
+  assert.equal(lvl([f("hub.html", ["// <img src=\"https://evil.example.net/x.png\">"])]), 2, "// er ikke en kommentar i HTML");
+  assert.equal(lvl([f("js/x.js", ["const a = \"/*\"; fetch(\"https://evil.example.net\"); const b = \"*/\";"])]), 2);
+  assert.equal(lvl([f("js/x.js", ["fetch(\"http://10.0.0.5:8080/x\");"])]), 2);
+  assert.equal(lvl([f("tests/fixtures/process-event-main-parity.json", ["  \"xp\": 20"], { removed: ["  \"xp\": 10"] })]), 2);
+  assert.equal(lvl([f("tests/fixtures/new-parity.json", ["{}"], { isNew: true })]), 1, "en ny fixture er niveau 1");
+  // K02, G13: rå HTML og klammenotation i en prod-spec
+  assert.equal(lvl([f("js/x.js", ["el.innerHTML = answer.text;"])]), 2);
+  assert.equal(lvl([f("tests/avatar-x.spec.ts", ['await sb["from"]("profiles")["update"]({ a: 1 });'])]), 2);
+  // F15: ejerskab fra base og branch er en union; en ejerløs linje i branchen fjerner ikke base-ejerskabet
+  const base = [{ pattern: "/js/x.js", owners: ["@ejer"], re: patternToRegExp("/js/x.js") }];
+  const branch = [{ pattern: "/js/", owners: [], re: patternToRegExp("/js/") }];
+  assert.equal(classifyPath("js/x.js", [base, branch]).level, 2);
 });

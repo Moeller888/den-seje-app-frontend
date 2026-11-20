@@ -32,15 +32,27 @@ hvert push.
 
 **Exitkoder:** 11 = niveau 1, 12 = niveau 2, 13 = niveau 3, 64 = forkert brug. **Kun 11 betyder niveau 1.** Enhver
 anden kode, fx 1 ved et nedbrud i Node, behandles som niveau 3. Alle fejl i værktøjet giver selv 13: git fejler, base
-findes ikke, stdin fejler, eller diffen er for stor.
+findes ikke, stdin fejler, diffen er for stor, eller diffen er tom. `--stdin` giver aldrig niveau 1, fordi diffen
+så hverken kan krydstjekkes eller commit-beskederne læses.
 
 - **Stier** ([`.github/CODEOWNERS`](../../.github/CODEOWNERS) og listerne i værktøjet):
-  - en fil, der er ejet i CODEOWNERS, er mindst niveau 2. Både branchens og base-versionens CODEOWNERS tæller;
+  - en fil, der er ejet i CODEOWNERS, er mindst niveau 2. Ejerskabet er en **union**: en fil er ejet, hvis den er
+    ejet i branchens **eller** i base-versionens CODEOWNERS. En branch kan ikke fjerne base-ejerskab;
   - en sti, der ikke står på listen over niveau 1, er niveau 2 (fail closed);
   - niveau 1-mønstre for filer rammer kun filen selv, ikke en mappe med samme navn (`x.html/evil.js` er 2);
-  - agentinstruktioner (`CLAUDE.md`, `AGENTS.md`, `.claude/`, `.mcp.json`) er niveau 3 i **alle** mapper;
-  - afhængigheder er mindst niveau 2 i alle mapper: `package.json`, lockfiler, `deno.json` og `.npmrc`;
-  - en ugyldig sti, et symlink og et submodule er niveau 3;
+  - agentinstruktioner (`CLAUDE.md`, `AGENTS.md`, `.claude/`, `.mcp.json`, også `GEMINI.md`, `.cursorrules`,
+    `.cursor/` og `copilot-instructions.md`) er niveau 3 i **alle** mapper og uanset store og små bogstaver;
+  - afhængigheder og deres konfiguration er mindst niveau 2 i alle mapper: `package.json`, lockfiler, `deno.json`,
+    `.npmrc`, `pnpm-workspace.yaml`, `.pnpmfile.cjs`, `.yarnrc*` og testrunnernes konfiguration (`vitest`, `vite`,
+    `jest`, `playwright`, `babel`);
+  - sikkerhedstest uden ejer er mindst niveau 2: `*lockdown*`, `*answer-key*`, `*read-scope*`, `*-guard*`,
+    `*authorization*`, `*ownership*`, `revoke-*`, `reward-integrity-*`, `*rls*`, `*grant*` og alle
+    `*-migration-run.test.mjs` i `tests/unit/`;
+  - `docs/ARCHITECTURE.md` og `docs/PROJECT_VISION.md` er niveau 2. En slettet eller omdøbt beslutning
+    (`docs/decisions/`) eller et slettet status-dokument (`ROADMAP.md`, `AVATAR_SYSTEM.md`, `project-state.md`)
+    er mindst niveau 2;
+  - en ændret fil i `tests/fixtures/` er niveau 2. En ny fixture er niveau 1;
+  - en ugyldig sti (også med `.`- eller `..`-segmenter), et symlink og et submodule er niveau 3;
   - en omdøbning eller kopi tæller både for den gamle og den nye sti;
   - en slettet fil uden for `docs/` og `assets/` er mindst niveau 2;
   - en binær fil med en uventet filtype (fx `js/x.js`) er mindst niveau 2.
@@ -53,20 +65,28 @@ findes ikke, stdin fejler, eller diffen er for stor.
 - **Tilføjede linjer:**
   - en rigtig hemmelighed eller en guard-omgåelse giver altid niveau 3. Guard-omgåelse er fx `--no-verify`,
     `[skip ci]` og `--admin`, og commit-beskederne tjekkes også;
-  - i kørbar kode giver service-nøgle, `auth.admin`, `secrets.`, destruktiv SQL og SQL, der ændrer rettigheder,
+  - i kørbar kode giver service-nøgle (også `SUPABASE_SECRET_KEYS`), `auth.admin`, `secrets.`, destruktiv SQL og SQL, der ændrer rettigheder,
     niveau 3;
   - niveau 2 i kørbar kode:
-    - aktiveringsflag, også `X: true` i et objekt, `FLAGS.X = true` og `!0`;
-    - databaseskrivninger, også flerlinjede kæder, `.rpc(x)`, `['delete']` og rå `/rest/v1/`;
+    - aktiveringsflag, også `X: true` og `"X": true` i et objekt, `FLAGS.X = true` og `!0`;
+    - databaseskrivninger, også flerlinjede kæder, `.rpc(x)`, `['delete']` og rå `/rest/v1/`, samt skrivninger i
+      Storage (`upload`, `remove`, `move`) og Auth (`updateUser`, `signUp`);
+    - betalte kald via SDK (`new OpenAI(`, `new Anthropic(`, `.messages.create(`);
+    - rå HTML fra en streng (`innerHTML =`, `insertAdjacentHTML`), den typiske vej til XSS med elevtekst;
     - SQL-ændringer;
     - dynamisk kode (`eval`, `new Function`, `import(x)`, nye `<script src>`);
     - nye eksterne værter, også `wss://`, `//vært`, IP-adresser og URL'er med brugerinfo;
   - **specs mod produktionen** (alt under `tests/` undtagen `tests/unit/` og `tests/isolated/`): admin-klient eller
-    service-nøgle giver 3, og databaseskrivninger giver 2;
-  - **test:** `test.skip`, `.only` og `{ skip: true }` giver 2. Det samme gælder en ændring, der fjerner flere asserts
-    eller test, end den tilføjer;
-  - kommentarer: kun hele kommentarlinjer (`//`, `--` i SQL, `#` i shell og YAML) og blokkommentarer på linjen
-    springes over. Alt, der kan være kode, scannes;
+    service-nøgle giver 3, og databaseskrivninger giver 2, også med klammenotation (`["update"]`);
+  - **test** (under `tests/` og alle `*.test.*`, `*.spec.*` og `e2e/`-filer andre steder):
+    - `test.skip`, `.only`, `.fail`, `.todo`, `{ skip: … }`, `{ todo: … }` og `t.skip()` giver 2;
+    - en ændring, der fjerner flere asserts eller test, end den tilføjer, giver 2;
+    - en **ændret** assert giver 2: en fjernet assert-linje, der ikke står uændret blandt de tilføjede. Undtaget er
+      avatar-test (`tests/unit/avatar-*`, `northstar-*`), hvis forventede antal ændres i næsten hver avatar-PR;
+    - en omdøbt eller flyttet testfil giver 2. Den kan være taget ud af CI;
+    - et kald mod Supabase' API'er (`/rest/v1/`, `*.supabase.co`) i en test giver 2. Unit-test kører på hver PR;
+  - kommentarer: kun hele kommentarlinjer (`//` i JS/TS, `--` i SQL, `#` i shell og YAML) og blokkommentarer på
+    linjer uden citattegn springes over. `//` i HTML er ikke en kommentar;
   - dokumentation og test scannes kun for rigtige hemmeligheder og guard-omgåelse, ud over test-reglerne ovenfor.
     Det gælder filer under `docs/` og `tests/`, Markdown og JSON under en `fixtures/`-mappe.
 - **Append-only:** En ny **Markdown**-fil i `docs/operations/production-actions/` er niveau 1. Alt andet der er
@@ -80,17 +100,18 @@ findes ikke, stdin fejler, eller diffen er for stor.
   `tests/unit/agent-*.test.mjs` og `tests/unit/codeowners.test.mjs`.
 - **En branch kan ikke bedømme sig selv med sin egen kode.** CLI'en giver 3, når `tools/agents/risk-level.mjs`
   afviger fra base-versionen (eller ikke findes der), og base-versionens CODEOWNERS tæller med.
-  - Den lokale kontrol kan dog stadig omgås af en agent, der også fjerner denne kontrol.
-  - Det **bindende** resultat før automatisk merge kommer derfor fra main's version, kørt af det betroede check
-    `risk-gate` ([agent-auto-merge-plan.md](./agent-auto-merge-plan.md), afsnit 1).
+  - **Agentens selvkontrol er ingen sikkerhedsgrænse.** Den kan omgås af en agent, der også fjerner kontrollen,
+    eller som ikke kører den.
+  - Det **bindende** resultat før automatisk merge kommer derfor fra main's version, kørt af merge-controlleren
+    under en separat identitet, uden for den kode, PR'en kan ændre
+    ([agent-auto-merge-plan.md](./agent-auto-merge-plan.md), afsnit 4 og 5).
 - Er agenten i tvivl, bruges det højeste niveau. Et højere niveau koster kun en godkendelse. Et for lavt kan koste en
   produktionsfejl.
 - Klassificeringen er et tekst- og stifilter, **ikke en sikkerhedsgrænse** (afsnit 8). Den tekniske grænse kommer
   med T3–T5:
-  - en separat agentidentitet;
-  - `risk-gate` fra main som påkrævet check;
-  - code owner-review i rulesættet;
-  - auto-merge.
+  - separate identiteter for agenter og merge-controller under en separat Windows-bruger;
+  - én påkrævet godkendelse og code owner-review i rulesættet, uden permanent bypass;
+  - en merge-controller, der kun godkender niveau 1 med main's klassifikator, på en låst SHA.
 
   Indtil da beskytter politikken mod fejl og misforståelser, ikke mod en ondsindet agent.
 
@@ -227,6 +248,55 @@ Alt dette er rettet (afsnit 2), og testene er udvidet fra 13 til 24.
 Næste skridt mod flere automatiske merges skal være bedre beviser, ikke lempeligere regler. Et eksempel er niveau
 2-PR'er, der kun ændrer belønningslogik og har en isoleret E2E-test, som beviser invarianterne.
 
+## 6b. Anden uafhængige blinde test (AURA-04, 2026-11-20)
+
+**Stikprøven:**
+- 60 andre mergede PR'er fra #301–#601, valgt systematisk blandt de 215 i intervallet, som hverken var brugt i den
+  første blinde test, i de 100 seneste PR'er eller til kalibrering.
+- En ny, separat agent mærkede dem uden at se værktøjet, CODEOWNERS, dette dokument eller de tidligere stikprøver.
+  Mærkningen lå fast, før værktøjet blev kørt. Den målte version var 1b705fcc.
+
+| | Antal |
+|---|---|
+| Fordeling (mærket) 1 / 2 / 3 | 36 / 14 / 10 |
+| Fordeling (værktøjet) 1 / 2 / 3 | 27 / 21 / 12 |
+| Korrekt | 49 / 60 |
+| **For lav** | **0** |
+| For høj | 11 (9 gange 1 → 2 og 2 gange 2 → 3) |
+
+- **Falske godkendelser:** 0 af 27 niveau 1-afgørelser. Med 0 fejl i 27 er den øvre 95 %-grænse cirka 11 %, så
+  resultatet er lovende, men ikke et bevis.
+- **Ægte niveau 1 fanget:** 27 af 36 (75 %). De 9 tabte er offline avatarværktøj, hvor signalet `dynamisk-kode`
+  slår ud (`import(x)`), samt én test med færre asserts.
+- **For høje på niveau 2 → 3:** en kommentarmigration, der nævner en nøgle i teksten, og replay-planen sammen med
+  `tests/unit/isolated-*`.
+- **Kan ikke klassificeres pålideligt:** hvad kode gør, tilsløring, fixtures og genererede filer, nye filer i uejede
+  mapper og semantiske tvivlstilfælde som en ny politiklinje i et dokument (afsnit 8).
+
+**Red-team og revision (AURA-04):** en separat agent lavede 61 syntetiske scenarier mod 1b705fcc. 36 af dem var
+semantisk niveau ≥ 2, men gav niveau 1. Rettelserne i afsnit 2 er lavet for kun at **hæve** et niveau i forhold til
+1b705fcc. Det er kontrolleret på 277 diffs (de 220 rigtige og red-teamets): ingen fik et lavere niveau, 38 et højere.
+Derfor gælder resultatet "0 for lave" i den blinde stikprøve stadig, også for den rettede version.
+
+| Efter revisionen | Resultat |
+|---|---|
+| Red-team-scenarier på niveau 1, som burde være ≥ 2 | **6** af 36 tilbage |
+| Anden blinde stikprøve (ikke længere uafhængig for de for høje) | 25 / 23 / 12; korrekt 47, **for lav 0**, for høj 13 |
+| Første blinde stikprøve | 12 / 12 / 36; korrekt 47, **for lav 0**, for høj 13 |
+| De 100 seneste PR'er | 18 / 47 / 35 (før 21 / 44 / 35) |
+| 220 rigtige diffs | 0 anomalier |
+
+**De 6, der stadig giver niveau 1:**
+- semantiske ændringer: et fjernet rolletjek og elevdata sendt med et analytics-event, begge i uejede moduler;
+- bevidst tilsløring: en vært eller et nøglenavn bygget af dele;
+- en omskrevet beslutning i `docs/decisions/`. Statuslinjer opdateres i næsten hver PR, så kun sletning og
+  omdøbning er niveau 2. Det er accepteret;
+- en diff, der er afkortet ved en filgrænse. Det fanges kun af krydstjekket mod name-status i git-tilstand og hos
+  merge-controlleren, ikke i `classifyChange` alene.
+
+Den fremadrettede måling sker i shadow-mode
+([agent-auto-merge-plan.md](./agent-auto-merge-plan.md), afsnit 9, T4a).
+
 ## 7. Vedligeholdelse
 
 - En ny mappe eller filtype på niveau 1 tilføjes i `LEVEL1_PATHS`, og en ny sikkerhedskritisk sti tilføjes i
@@ -256,13 +326,14 @@ Næste skridt mod flere automatiske merges skal være bedre beviser, ikke lempel
 - siger intet om indholdet, og et godkendt review gælder hele PR'en;
 - beskytter ikke mod kode, der **køres** af CI fra en uejet fil. Det gælder fx specs, der kører mod produktionen ved
   næste dispatch, og testhjælpere;
-- gælder ikke ejerens egne PR'er, hvis ejeren har bypass;
+- gælder ikke en PR, der merges via nødproceduren med midlertidig bypass;
 - er bevidst **ikke** sat på niveau 2-logik som `app.js`, `js/teacher.js`, `js/student-detail.js` og
   `js/progression.js`. Ellers ville almindelig udvikling blive blokeret. Den egentlige adgangskontrol er RLS og Edge
   Functions, og de er ejet.
 
 **Derfor** er planen for automatisk merge lagdelt:
-- `risk-gate` fra main kræver ejerens godkendelse for niveau 2 og 3;
+- kun merge-controlleren kan give den krævede godkendelse uden ejeren, og kun for niveau 1. Niveau 2 og 3 kræver
+  ejerens godkendelse, men blokeres aldrig af risikoen selv;
 - CODEOWNERS er en ekstra teknisk spærre for de mest kritiske stier;
 - påkrævede checks og det isolerede E2E fanger funktionelle fejl;
 - et nødstop og revert begrænser skaden.

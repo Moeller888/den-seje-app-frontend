@@ -19,7 +19,7 @@
 // EXITKODER: 11 = niveau 1, 12 = niveau 2, 13 = niveau 3, 64 = forkert brug. Alt andet (fx 1 ved et nedbrud i
 // Node selv) er IKKE et niveau og skal behandles som 3. Kun exitkode 11 betyder niveau 1.
 //
-// Resultatet her er RÅDGIVENDE. Det bindende resultat kommer fra main's version af denne fil (risk-gate, AURA T4),
+// Resultatet her er RÅDGIVENDE. Det bindende resultat kommer fra main's version af denne fil (merge-controlleren, AURA T4),
 // fordi en branch kan ændre sin egen kopi. Derfor giver CLI'en 3, når filen her afviger fra base-versionen.
 
 import { readFileSync } from "node:fs";
@@ -130,10 +130,28 @@ export const LEVEL2_PATHS = Object.freeze([
   // Afhængigheder overalt, også i underpakker (AURA-03, blind test #541): en ny pakke er forsyningskæde.
   "/**/package.json", "/**/package-lock.json", "/**/pnpm-lock.yaml", "/**/yarn.lock", "/**/deno.json",
   "/**/deno.lock", "/**/.npmrc",
+  // Pakkehåndtering og testrunnere i alle mapper: de kan køre kode under installation eller ændre, hvad test
+  // kører (AURA-04, red-team F8).
+  "/**/pnpm-workspace.yaml", "/**/.pnpmfile.cjs", "/**/.yarnrc", "/**/.yarnrc.yml", "/**/bunfig.toml",
+  "/**/vitest.config.*", "/**/vite.config.*", "/**/jest.config.*", "/**/playwright.config.*", "/**/babel.config.*",
+  // Sikkerhedstest uden ejer: de beviser RLS, nøgler og rettigheder (AURA-04, red-team F1).
+  "/tests/unit/*lockdown*", "/tests/unit/*answer-key*", "/tests/unit/*read-scope*", "/tests/unit/*execute-scope*",
+  "/tests/unit/*-guard*", "/tests/unit/*authorization*", "/tests/unit/*ownership*", "/tests/unit/revoke-*",
+  "/tests/unit/reward-integrity-*", "/tests/unit/*rls*", "/tests/unit/*security*", "/tests/unit/*grant*",
+  "/tests/unit/*-migration-run.test.mjs",
+  // Kanoniske dokumenter, der sjældent ændres: arkitektur og vision ændres ikke uden ejeren (AURA-04, red-team F9).
+  // Status-dokumenterne (ROADMAP, AVATAR_SYSTEM, project-state) og D-registret opdateres i næsten hver PR; der
+  // giver kun en SLETNING niveau 2 (classifyChange).
+  "/docs/ARCHITECTURE.md", "/docs/PROJECT_VISION.md",
 ]);
 
 // Append-only: en NY Markdown-fil her er niveau 1; alt andet (ændret, omdøbt, slettet, anden filtype) er 2.
 export const APPEND_ONLY_PATHS = Object.freeze(["/docs/operations/production-actions/"]);
+// Beslutninger og status-dokumenter: en sletning eller omdøbning er mindst niveau 2 (red-team F9).
+const DECISION_RECORD = /^docs\/(?:decisions\/|project-state\.md$|ROADMAP\.md$|AVATAR_SYSTEM\.md$)/;
+// Avatar-test: deres forventede antal (garderobe, varianter) ændres i næsten hver avatar-PR. For dem gælder kun
+// reglen om færre asserts, ikke reglen om en ændret assert.
+const AVATAR_TEST = /^tests\/(?:unit\/)?(?:avatar|northstar)[-_]/i;
 
 // Niveau 1: eksplicit tilladt. Alt andet, der ikke er nævnt, er niveau 2.
 export const LEVEL1_PATHS = Object.freeze([
@@ -162,7 +180,7 @@ const ALLOWED_HOST = String.raw`(?:(?:[\p{L}\p{N}-]+\.)*(?:lærlig\.dk|xn--lrlig
 export const CONTENT_SIGNALS = Object.freeze([
   { level: 3, scope: "alle", id: "secret-literal", re: /sb_secret_[A-Za-z0-9_-]{16,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|\beyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}|\bghp_[A-Za-z0-9]{30,}|\bgithub_pat_[A-Za-z0-9_]{30,}|\bghs_[A-Za-z0-9]{30,}/ },
   { level: 3, scope: "alle", id: "guard-omgåelse", re: /--no-verify\b|dangerouslyDisableSandbox|\[skip ci\]|\[ci skip\]|\[no ci\]|\[skip actions\]|\[actions skip\]|gh pr merge[^\n]*--admin\b/i },
-  { level: 3, scope: "kode", id: "secret-nøgle", re: /service[_-]?role|sb_secret_|SUPABASE_SERVICE/i },
+  { level: 3, scope: "kode", id: "secret-nøgle", re: /service[_-]?role|sb_secret_|SUPABASE_SERVICE|SUPABASE_SECRET/i },
   { level: 3, scope: "kode", id: "github-secret", re: /\$\{\{\s*secrets\./ },
   { level: 3, scope: "kode", id: "auth-admin", re: /auth\.admin\b|\bauth\.users\b/ },
   { level: 3, scope: "kode", id: "destruktiv-sql", re: /\b(?:drop\s+(?:table|schema|function|policy|trigger|column|view|index)|truncate\b|delete\s+from|alter\s+table\b[^;]*\bdrop\b)/i },
@@ -170,12 +188,18 @@ export const CONTENT_SIGNALS = Object.freeze([
   // Playwright-specs uden for den isolerede stak kører mod PRODUKTIONEN (tests/helpers.ts → PROD). En spec, der
   // bruger admin-klienten eller skriver i databasen, ændrer produktionsdata (AURA-03, blind test #316).
   { level: 3, scope: "prod-spec", id: "prod-admin-klient", re: /\b(?:adminClient|serviceClient|createAdminClient|getAdminClient)\b|service[_-]?role|SUPABASE_SERVICE|auth\.admin\b/i },
-  { level: 2, scope: "prod-spec", id: "prod-skrivning", re: /\.(?:insert|update|upsert|delete)\s*\(|\.rpc\s*\(|functions\.invoke\s*\(|\/(?:rest|functions|auth|storage)\/v1\// },
-  { level: 2, scope: "test", id: "test-sprunget-over", re: /\b(?:test|it|describe)\s*\.\s*(?:skip|only|fixme)\b|\bxit\s*\(|\bxdescribe\s*\(|\{\s*skip\s*:\s*true/ },
-  { level: 2, scope: "kode", id: "aktiveringsflag", re: /\b[A-Z][A-Z0-9_]{2,}\s*(?:=|:)\s*(?:true|false|!0|!1)\b/ },
-  { level: 2, scope: "kode", id: "skrivning-db", re: /\.from\([^)]*\)\s*(?:\.\s*|\[\s*["'`])(?:insert|update|upsert|delete)\b|^\s*\.(?:insert|update|upsert|delete)\s*\(|\[\s*["'`](?:insert|update|upsert|delete)["'`]\s*\]|\.rpc\s*\(|functions\.invoke\s*\(|\/(?:rest|functions|auth|storage)\/v1\// },
+  { level: 2, scope: "prod-spec", id: "prod-skrivning", re: /\.(?:insert|update|upsert|delete)\s*\(|\[\s*["'`](?:insert|update|upsert|delete|rpc)["'`]\s*\]|\.rpc\s*\(|functions\.invoke\s*\(|\/(?:rest|functions|auth|storage)\/v1\// },
+  { level: 2, scope: "test", id: "test-sprunget-over", re: /\b(?:test|it|describe)\s*\.\s*(?:skip|only|fixme|fail|todo)\b|\bxit\s*\(|\bxdescribe\s*\(|[{,]\s*(?:skip|todo|only)\s*:|\bt\.(?:skip|todo)\s*\(/ },
+  // Unit-test kører på hver PR, før review: et kald mod Supabase' API'er rammer en rigtig tjeneste (red-team F5).
+  { level: 2, scope: "test", id: "test-mod-api", re: /\/(?:rest|functions|auth|storage)\/v1\/|\.supabase\.co\b/ },
+  { level: 2, scope: "kode", id: "aktiveringsflag", re: /\b[A-Z][A-Z0-9_]{2,}["'`]?\s*(?:=|:)\s*(?:true|false|!0|!1)\b/ },
+  { level: 2, scope: "kode", id: "betalt-kald", re: /\bnew\s+(?:OpenAI|Anthropic)\s*\(|\bopenai\.(?:chat|responses|images|audio|embeddings)\b|\.messages\.create\s*\(|["'`](?:openai|@anthropic-ai\/sdk)["'`]/ },
+  { level: 2, scope: "kode", id: "skrivning-db", re: /\.from\([^)]*\)\s*(?:\.\s*|\[\s*["'`])(?:insert|update|upsert|delete)\b|^\s*\.(?:insert|update|upsert|delete)\s*\(|\[\s*["'`](?:insert|update|upsert|delete)["'`]\s*\]|\.rpc\s*\(|functions\.invoke\s*\(|\/(?:rest|functions|auth|storage)\/v1\/|\.storage\s*\.\s*from\([^)]*\)\s*\.\s*(?:upload|update|remove|move|copy)\b|^\s*\.(?:upload|remove|move)\s*\(|\bauth\.(?:updateUser|signUp|resetPasswordForEmail)\b/ },
   { level: 2, scope: "kode", id: "sql-ændring", re: /\b(?:insert\s+into|update\s+\w+(?:\.\w+)?\s+set|alter\s+table|create\s+(?:or\s+replace\s+)?function)\b/i },
   { level: 2, scope: "kode", id: "dynamisk-kode", re: /\beval\s*\(|\bnew\s+Function\s*\(|\bimport\s*\(\s*(?!["'`])|\bset(?:Timeout|Interval)\s*\(\s*["'`]|document\.write\s*\(|createElement\(\s*["'`]script["'`]|<script\b[^>]*\bsrc\s*=/i },
+  // Rå HTML fra en streng er den typiske vej til stored XSS med elevtekst (red-team K02).
+  { level: 2, scope: "kode", id: "rå-html", re: /\.(?:innerHTML|outerHTML)\s*\+?=|\binsertAdjacentHTML\s*\(|\bdangerouslySetInnerHTML\b/ },
+  { level: 2, scope: "kode", id: "ip-endpoint", re: /\b(?:https?|wss?|ftp):\/\/(?!127\.0\.0\.1\b)\d{1,3}(?:\.\d{1,3}){3}\b/i },
   { level: 2, scope: "kode", id: "url-med-brugerinfo", re: /\b(?:https?|wss?|ftp):\/\/[^\s"'`/]*@/i },
   // Kun VÆRTEN tjekkes mod den lille liste (Lærligs eget domæne, XML-namespaces, eksempeldomæner, lokale adresser),
   // så "https://evil.example.net/?lærlig.dk" og "https://lærlig.dk.evil.net" stadig tæller som eksterne. Også
@@ -193,13 +217,27 @@ const DOC_OR_TEST = /^(?:docs|tests)\/|\.(?:md|txt)$|(?:^|\/)fixtures\/(?:[^/]+\
 // Specs og hjælpere, der kører mod produktionen: alt under tests/ undtagen unit-test og den isolerede stak.
 const PROD_SPEC = /^tests\/(?!unit\/|isolated\/)(?:[^/]+\/)*[^/]+\.(?:spec\.[cm]?[jt]s|[cm]?ts|[cm]?js)$/i;
 // Asserts og test-erklæringer: en ændring, der fjerner flere, end den tilføjer, svækker testen.
-const ASSERT_RE = /\bassert(?:\.\w+)?\s*\(|\bexpect\s*\(|\b(?:test|it)\s*\(/g;
+const ASSERT_RE = /\bassert(?:\.\w+)*\s*\(|\bexpect(?:\.\w+)*\s*\(|\b(?:test|it)\s*\(/g;
+// En testfil, også uden for tests/ (fx adventure-engine/**/x.test.ts og e2e-specs).
+const TEST_FILE = /^tests\/|(?:^|\/)(?:e2e|__tests__)\/|\.(?:test|spec)\.[cm]?[jt]sx?$/i;
+// Agentinstruktioner i alle mapper og med alle store/små bogstaver, også for andre agenter (red-team F14).
+const AGENT_FILE = /(?:^|\/)(?:claude(?:\.local)?\.md|agents\.md|gemini\.md|\.cursorrules|\.windsurfrules|\.clinerules|copilot-instructions\.md|\.mcp\.json)$|(?:^|\/)\.(?:claude|cursor|windsurf|clinerules|gemini|codex)\//i;
+// codeownersRules er én regelliste eller en liste af regellister (base og branch). En sti er ejet, hvis den er ejet
+// i MINDST én af dem: en branch kan ikke fjerne base-versionens ejerskab (red-team F15).
+const isOwned = (rules, p) => {
+  const sets = Array.isArray(rules?.[0]) ? rules : [rules ?? []];
+  return sets.some((r) => ownersFor(r, p).length > 0);
+};
 
 // Den kørbare del af en linje: blokkommentarer på linjen fjernes, og en hel kommentarlinje bliver tom.
 // Det er bevidst groft: en linje, der KAN være kode, scannes (falske fund hæver kun niveauet).
 export function codeOf(line, path) {
-  let l = String(line).replace(/\/\*.*?\*\//g, " ").replace(/<!--.*?-->/g, " ");
-  if (/^\s*\/\//.test(l)) return "";
+  let l = String(line);
+  // "/*" og "*/" inde i strenge må ikke skjule koden imellem (red-team G06): fjernes kun på linjer uden citattegn.
+  if (!/["'`]/.test(l)) l = l.replace(/\/\*.*?\*\//g, " ");
+  l = l.replace(/<!--.*?-->/g, " ");
+  // "//" er kun en kommentar i JS/TS, ikke i HTML eller CSS (red-team G05).
+  if (/\.[cm]?[jt]sx?$/i.test(path) && /^\s*\/\//.test(l)) return "";
   if (/\.sql$/i.test(path) && /^\s*--/.test(l)) return "";
   if (/\.(?:sh|ya?ml|toml|py|ps1|rb|ini|conf)$/i.test(path) && /^\s*#/.test(l)) return "";
   return l;
@@ -207,12 +245,13 @@ export function codeOf(line, path) {
 
 export function classifyPath(path, codeownersRules, { isNew = false } = {}) {
   const p = String(path ?? "");
-  if (!p || p.split("/").includes("..") || p.split("/").includes("") || p.startsWith("/") || /[\0\r\n\\]/.test(p)) {
+  if (!p || p.split("/").includes("..") || p.split("/").includes(".") || p.split("/").includes("") || p.startsWith("/") || /[\0\r\n\\]/.test(p)) {
     return { path: p, level: 3, reason: "ugyldig sti" };
   }
+  if (AGENT_FILE.test(p)) return { path: p, level: 3, reason: "agentinstruktion" };
   const l3 = hit(L3, p);
   if (l3) return { path: p, level: 3, reason: `niveau 3-sti ${l3}` };
-  const owned = ownersFor(codeownersRules ?? [], p).length > 0;
+  const owned = isOwned(codeownersRules, p);
   const ao = hit(AO, p);
   if (ao && !owned) {
     return isNew && /\.md$/i.test(p)
@@ -408,7 +447,7 @@ export function classifyChange({ files, declared = 1, codeownersRules, extraFind
   const findings = [];
   let level = 1;
   const raise = (f) => { findings.push(f); level = Math.max(level, f.level); };
-  if (list.length === 0) raise({ level: 2, reason: "ingen filer fundet (fail closed)" });
+  if (list.length === 0) raise({ level: 3, reason: "ingen filer fundet (fail closed)" });
   for (const f of list) {
     if (typeof f === "object" && f?.anomaly) { raise({ path: f.path, level: 3, reason: `diffen kan ikke læses sikkert: ${f.anomaly}` }); continue; }
     const path = typeof f === "string" ? f : f?.path;
@@ -422,9 +461,20 @@ export function classifyChange({ files, declared = 1, codeownersRules, extraFind
     if (f.deleted && !/^(?:docs|assets)\//.test(p)) raise({ path, level: 2, reason: "sletning af en fil uden for docs/ og assets/" });
     const added = Array.isArray(f.added) ? f.added : [];
     const removed = Array.isArray(f.removed) ? f.removed : [];
-    if (p.startsWith("tests/") && removed.length > 0 && countAsserts(removed) > countAsserts(added)) {
+    if (TEST_FILE.test(p) && removed.length > 0 && countAsserts(removed) > countAsserts(added)) {
       raise({ path, level: 2, reason: "færre asserts eller test end før (en test svækkes)" });
     }
+    // En ændret assert kan være en løsnet assert: en fjernet assert-linje, der ikke står uændret blandt de
+    // tilføjede (red-team F3).
+    // Eksisterende fixtures i tests/fixtures/ er paritets- og facitdata: en ændring kan få en test til at bestå forkert
+    // (red-team T11). En NY fixture er niveau 1.
+    if (p.startsWith("tests/fixtures/") && !isNew) raise({ path, level: 2, reason: "eksisterende fixture ændret" });
+    if (DECISION_RECORD.test(p) && (f.deleted || f.renamed)) raise({ path, level: 2, reason: "beslutning eller status-dokument slettet eller omdøbt" });
+    if (TEST_FILE.test(p) && !AVATAR_TEST.test(p) && removed.some((l) => countAsserts([l]) > 0 && !added.includes(l))) {
+      raise({ path, level: 2, reason: "en assert er ændret eller fjernet (kan svække testen)" });
+    }
+    // En omdøbt eller flyttet testfil kan være taget ud af CI (red-team F2).
+    if (f.renamed && TEST_FILE.test(p)) raise({ path, level: 2, reason: "testfil omdøbt eller flyttet" });
     if (NO_CONTENT_SCAN.test(p)) continue;
     const docOrTest = DOC_OR_TEST.test(p);
     for (const s of CONTENT_SIGNALS) {
@@ -482,7 +532,9 @@ function run(argv, io) {
   let files;
   if (args.stdin) {
     files = parseUnifiedDiff(io.stdin());
-    extra.push({ level: 1, reason: "stdin: kun diffen er vurderet (ikke commit-beskeder og ikke base-versionen af reglerne)" });
+    // Uden git kan diffen hverken krydstjekkes mod name-status eller commit-beskederne læses (red-team P09). Stdin
+    // giver derfor aldrig niveau 1.
+    extra.push({ level: 2, reason: "stdin: diffen kan ikke krydstjekkes, så stdin giver aldrig niveau 1" });
   } else {
     const range = `${args.base}...HEAD`;
     const diff = io.git(["-c", "core.quotePath=false", "diff", "--no-color", "--no-ext-diff", "--no-textconv", "--src-prefix=a/", "--dst-prefix=b/", "-M", range]);
@@ -495,7 +547,7 @@ function run(argv, io) {
     let baseOwners = null;
     try { baseOwners = io.git(["show", `${args.base}:.github/CODEOWNERS`]); } catch { baseOwners = null; }
     if (baseOwners === null) extra.push({ level: 3, reason: "CODEOWNERS findes ikke på base: reglerne kan ikke sammenlignes" });
-    else rules = [...parseCodeowners(baseOwners), ...rules];
+    else rules = [parseCodeowners(baseOwners), rules];
     // Klassifikatoren selv skal være base-versionen. Ellers bedømmer branchen sig selv.
     let baseSelf = null;
     try { baseSelf = io.git(["show", `${args.base}:tools/agents/risk-level.mjs`]); } catch { baseSelf = null; }
