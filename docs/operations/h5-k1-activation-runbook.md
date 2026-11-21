@@ -409,7 +409,7 @@ SELECT count(*) AS jobs,
 | A2 alignment | — | Samme som A1 (fjerner objekterne helt). Der findes ingen rollback, der kun tilbagefører alignment-kroppen | Ja (samme test) | Som A1 |
 | A3 D-327 | — | `docs/operations/question-attempts-history-no-action-rollback.md` (FK tilbage til CASCADE) | Ja: `tests/unit/question-attempts-history-no-action-migration-run.test.mjs` test 6 (kørt 2026-11-04, 5/5 grøn) | Efter rollback af A4 |
 | A4 K1 | `K1_SERVED_SNAPSHOT` slås fra | `docs/operations/l1-k1-attempt-context-rollback.md` | Ja: `tests/unit/l1-k1-attempt-context-migration-run.test.mjs` | **Kun før første forsøg** (rollbacken afbryder, hvis `question_attempts` ikke er tom). Flaget skal være slået fra først (runbookens rækkefølge) |
-| A5 gnq | Redeploy arkiveret v180-kilde (§2.3) | Ikke relevant (ingen DB-ændring) | Nej: redeploy er ikke øvet | Arkivér kilden **før** A5 |
+| A5 gnq | Redeploy arkiveret v180-kilde (§2.3) | Ikke relevant (ingen DB-ændring) | Nej: redeploy er ikke øvet | Arkivér kilden **før** A5. Arkiv, diff og rollback for vej B (2026-11-09): `docs/operations/gnq-release-b-d362.md` (den deployede kilde er version 189 = `a7450b0f`, ikke v180) |
 | A6 process-event | Redeploy arkiveret v34-kilde | Ikke relevant | Nej | Arkivér kilden før A6. Før A8 er H5-vejen ubrugt, så v34 kan genindsættes uden datatab |
 | A7 flag | Fjern secret eller sæt ≠ `on` | Ikke relevant. Allerede oprettede snapshots bliver stående (det er ønsket) | — | — |
 | A8 frontend | `ENABLE_H5_SUBMISSIONS = false` + deploy | **Ingen.** Forsøg, der er skrevet, bevares bevidst (append-only historik). Legacy-vejen virker igen | — | Efter første forsøg er A1–A4 **ikke længere genskabelige**. Kun fremadrettet rettelse (D-273) |
