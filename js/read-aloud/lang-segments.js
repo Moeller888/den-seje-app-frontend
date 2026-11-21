@@ -313,14 +313,24 @@ function splitDashList(text) {
   return m ? [m[1], m[2]] : null;
 }
 
+// A frame that asks about an English word itself: a synonym, an opposite or a grammatical
+// form of it ("…næsten det samme som 'end'?", "Hvad er flertal af 'man'?"). Its quotes and
+// its options are English even when the words are also Danish ("end", "men", "mens"), so
+// the frame decides, not the word lists. Never when it asks for a word "på engelsk".
+const ENGLISH_WORD_FRAME_RE = /samme som|modsatte|\b(datid|flertal|ental|nutid|førnutid|tillægsform|grundform|navneform)\s+af\b/;
+function englishWordFrame(frame) {
+  const f = frame.toLowerCase();
+  return f.indexOf("på engelsk") === -1 && ENGLISH_WORD_FRAME_RE.test(f);
+}
+
 // Prior for quoted text in a question frame: the quote is Danish when the question
 // asks for the English word/sentence ("Hvad hedder 'kat' på engelsk?",
-// "Hvilket ord betyder 'farlig'?"), else English. Synonym / opposite questions
-// ("…næsten det samme som 'big'") quote English.
+// "Hvilket ord betyder 'farlig'?"), else English. Synonym / opposite / word-form
+// questions quote English (and segmentQuestion lets that frame override the word lists).
 function quotePrior(frame) {
   const f = frame.toLowerCase();
   if (f.indexOf("på engelsk") !== -1) return "da";
-  if (/samme som|modsatte/.test(f)) return "en";
+  if (englishWordFrame(f)) return "en";
   if (/hvilke[nt]?\s+[a-zæøå]+\s+betyder/.test(f)) return "da";
   return "en";
 }
@@ -328,6 +338,7 @@ function quotePrior(frame) {
 // Language of the answer options as fixed by the question frame, or null when the
 // frame does not decide it:
 //   "…på engelsk" / quoted Danish ("Hvilket ord betyder 'farlig'?") → English;
+//   synonym / opposite / word form of an English word (englishWordFrame) → English;
 //   "Hvad betyder …", "Læs: …", colour / body part → Danish (a translation/answer).
 function optionFrameLang(question) {
   const q = typeof question === "string" ? question : "";
@@ -335,7 +346,7 @@ function optionFrameLang(question) {
   const frame = chunks.filter((c) => !c.quoted).map((c) => c.text).join(" ").toLowerCase();
   const quoted = chunks.filter((c) => c.quoted).map((c) => c.text).join(" ");
   if (frame.indexOf("på engelsk") !== -1) return "en";
-  if (/samme som|modsatte/.test(frame)) return "en"; // synonym / opposite of an English word
+  if (englishWordFrame(frame)) return "en"; // synonym / opposite / form of an English word
   if (/^\s*hvilke[nt]?\s+(ord|form)\s+passer\b/.test(frame)) return "en"; // English word in an English sentence
   if (quoted && (textLang(quoted) || quotePrior(frame)) === "da") return "en";
   if (/^\s*læs\s*:/.test(frame)) return "da";
@@ -378,7 +389,7 @@ export function segmentQuestion(question) {
     const runs = [];
     for (const c of chunks) {
       if (c.quoted) {
-        const lang = textLang(c.text) || quotePrior(frame);
+        const lang = englishWordFrame(frame) ? "en" : textLang(c.text) || quotePrior(frame);
         for (const r of labelChunk(c.text, lang, lang, "quote")) runs.push(r);
         continue;
       }
