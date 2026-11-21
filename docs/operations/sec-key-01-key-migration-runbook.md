@@ -11,6 +11,38 @@ med ejerens Ja/Nej i Lærlig-guarden — én handling ad gangen.
 > D-146 `CONTAINED_IN_CODE — NOT_ROTATED`), og den giver fuld læse- og skriveadgang forbi RLS til
 > alle elevdata. Risikoen er først lukket efter trin **R-04** (legacy-JWT-secret tilbagekaldt).
 
+### Kontrol 2026-11-06 (read-only; ingen nøgleværdi læst)
+
+- **Hash er stadig gaten, ikke versionsnummeret.** Alle 16 funktioner står ét versionsnummer højere end
+  i tabellen nedenfor (fx `equip-avatar` v15, `get-next-question` v189), men `ezbr_sha256` og
+  `updated_at` er uændrede for alle otte Q-funktioner, og intet i deres mapper eller i
+  `_shared/supabase-keys.ts` er ændret på main siden `87aa94b4`. Springet følger platformens ændring af
+  `SUPABASE_DB_URL` 2026-11-06 09:34Z (databaseadgangskoden blev nulstillet før backuppen). Det er ikke
+  en kodeændring. Tabellens versionstal beskriver gennemgangen 2026-11-05; ved tjek før deploy gælder
+  de nye tal +1, og afviger `ezbr_sha256`: **STOP**.
+- **Åbent spørgsmål 4 er besvaret for anon:** digesten af runtime-`SUPABASE_ANON_KEY` er lig SHA-256 af
+  den nye publishable-nøgle, ikke af legacy-anon. Det forklarer `buy-item`-observationen under O-01.
+- **`SUPABASE_SERVICE_ROLE_KEY` i runtime er ikke afklaret.** Indikation på, at den heller ikke er
+  legacy: variablen blev opdateret samtidig med anon (2026-11-04 15:56Z), og i logudtrækket
+  2026-08-08 → 2026-11-06 er ingen af kaldene med legacy-`service_role` kommet fra en Edge Function.
+  Det er ikke et bevis, fordi de otte funktioner næsten ikke kaldes. Se Q-00 punkt 4.
+- O-01a er 0 rækker for 2026-11-05 19:30Z → 2026-11-06 19:30Z. Alle brugertokens i vinduet er ES256 med
+  `key_id`. Legacy-`anon` står stadig som ikke deaktiveret (`get_publishable_keys`). Status for
+  legacy-`service_role` og JWT-nøglerne kan kun aflæses i dashboardet (Q-00).
+- `request-password-help` har `verify_jwt: true`, og frontenden sender publishable-nøglen. Et `GET`
+  med publishable-nøglen giver 405 fra funktionen selv, så gatewayen afviser ikke kaldet.
+- GitHub-secrets `SUPABASE_SERVICE_ROLE_KEY` og `SUPABASE_ANON_KEY` er sidst sat 2026-07-08. De bruges
+  kun af manuelt startede workflows (`playwright.yml` med `confirm_production`, `update-avatar-goldens.yml`).
+- Kendt kompatibilitetspunkt: `avatar-generation/onboarding-client.ts` l. 45 sender nøglen som
+  `Authorization: Bearer`. Det er uden betydning, så længe `avatar-asset-onboarding` er en 503-stub, men
+  skal rettes, før onboarding genåbnes.
+
+**Forslag, ikke vedtaget (ejerbeslutning):** R-01 er reversibel, og O-01a har været 0 længe. Viser Q-00
+punkt 4, at `SUPABASE_SERVICE_ROLE_KEY` i runtime ikke er legacy-nøglen, afhænger ingen funktion af
+legacy, og R-01 kan flyttes til lige efter K-01, før Q-01…Q-08. Ellers: Q-01…Q-09 i én samlet session
+og R-01 samme dag, uden observationsperioden før R-01. Begge dele fraviger rækkefølgen i afsnit 0, som
+gælder, indtil ejeren beslutter andet. De 48 timer før R-04 fraviges ikke.
+
 **Projekt:** `tjzbehwfagiwpwodsgwg` · **Repo:** `Moeller888/den-seje-app-frontend` (offentligt)
 **Grundlag:** read-only gennemgang 2026-11-05 (`list_edge_functions`, `supabase functions download
 --use-api` til en midlertidig mappe, `query_logs`, read-only `execute_sql`). Ingen nøgleværdi er
@@ -164,6 +196,17 @@ I Supabase-dashboardet for `tjzbehwfagiwpwodsgwg`:
    - **Hvis current = legacy HS256:** at tilbagekalde den logger **alle** ud og stopper login, indtil
      en ny nøgle er current. Så må R-04 ikke udføres, før en asymmetrisk nøgle har været current i
      mindst én fuld token-levetid (standard 1 time) plus refresh-margen.
+
+4. **Er runtime-`SUPABASE_SERVICE_ROLE_KEY` stadig legacy-nøglen?** Ejeren kopierer legacy
+   `service_role` fra dashboardet og kører i sin egen PowerShell, så kun en hash vises:
+
+   ```powershell
+   $h = [Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes((Get-Clipboard).Trim()))
+   -join ($h | ForEach-Object { $_.ToString('x2') }); Set-Clipboard -Value ' '
+   ```
+
+   Sammenlign med SHA256-værdien for `SUPABASE_SERVICE_ROLE_KEY` under Edge Functions → Secrets.
+   Ens: funktionerne bruger legacy, og Q-trinene skal før R-01. Forskellige: de gør ikke.
 
 Ejeren noterer svarene (ja/nej og nøglenavne, ingen værdier) i PR'en for næste trin.
 
