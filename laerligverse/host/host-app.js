@@ -58,6 +58,12 @@ function readConfig() {
       }
     }
     if (c.h5 !== undefined && typeof c.h5 !== "boolean") return null;
+    // D-338: a server-directed sequence needs a step → activity map (string → string), and an objective map.
+    if (c.sequence !== undefined && typeof c.sequence !== "boolean") return null;
+    if (c.sequence === true && c.backend === "local-supabase") {
+      if (!c.objectiveMap || !c.stepContexts || typeof c.stepContexts !== "object" || Array.isArray(c.stepContexts)) return null;
+      for (const [k, v] of Object.entries(c.stepContexts)) if (typeof k !== "string" || typeof v !== "string" || v.length === 0) return null;
+    }
   } catch {
     return null;
   }
@@ -82,8 +88,21 @@ async function startDidacticDemo(c) {
   $("lv-mode").textContent = "Didaktisk demo med testadapter — ikke Lærligs server, intet registreres";
   $("lv-session").textContent = "ingen (testadapter)";
   body.dataset.session = "test-adapter";
-  const { FakeTaskService, ARCHIVE_ITEMS } = await import("./dev/test-adapter.js");
-  const service = new FakeTaskService(ARCHIVE_ITEMS);
+  const { FakeTaskService, ARCHIVE_ITEMS, CONTEXT_OF_STEP, OBJECTIVE, STEP_OF_CONTEXT } = await import("./dev/test-adapter.js");
+  // D-338: with a sequence, the test adapter runs the SERVER's own step policy (bridge/learning-sequence.js is
+  // generated from supabase/functions/_shared/learning-sequence.ts). The world only asks for "next".
+  const policy = c.sequence === true ? await import("./bridge/learning-sequence.js") : null;
+  const service = new FakeTaskService(ARCHIVE_ITEMS, policy ? { sequence: { nextStep: policy.nextStep, stepOfContext: STEP_OF_CONTEXT, contextOfStep: CONTEXT_OF_STEP } } : {});
+  // The revisit needs time to pass: only the TEST ADAPTER's clock moves (a simulation, never retention evidence).
+  let clockOffset = 0;
+  service.clock = () => Date.now() + clockOffset;
+  const refreshDev = () => renderDevPanel({ objective: OBJECTIVE, policy, service });
+  $("lv-dev-clock").addEventListener("click", () => {
+    clockOffset += 20 * 3_600_000;
+    $("lv-dev-clock-state").textContent = `Simuleret tid: +${clockOffset / 3_600_000} timer`;
+    refreshDev();
+  });
+  $("lv-dev-panel").hidden = false;
   const frame = /** @type {HTMLIFrameElement} */ ($("lv-game"));
   const host = new BridgeHost({
     gameOrigin: assertOrigin(c.gameOrigin),
@@ -98,14 +117,56 @@ async function startDidacticDemo(c) {
     void host.onMessage({ origin: e.origin, source: e.source, data: e.data }).then(() => {
       if (host.sessionNonce !== null) linked();
       renderEvidence(assessObjectives(service.observations()));
+      refreshDev();
     });
   });
+  refreshDev();
   $("lv-evidence-panel").hidden = false;
   renderEvidence([]);
   $("lv-game-region").hidden = false;
   frame.src = c.gameUrl;
   body.dataset.state = "running";
   say("Spillet indlæses.");
+}
+
+const STEP_LABEL = {
+  guided_practice: "3 · Støttet øvelse",
+  revision: "5 · Revision",
+  independent_application: "6 · Selvstændig anvendelse",
+  transfer: "7 · Overførsel",
+  revisit: "8 · Genbesøg",
+};
+
+/**
+ * D-338 DEVELOPER VIEW (local demo only, separate from the pupil's view): what the "server" — here the test
+ * adapter running the server's own policy — decided and observed. No token, no key, nothing secret.
+ */
+function renderDevPanel({ objective, policy, service }) {
+  // The server's NEXT decision now (a side-effect-free preview), not the step of the task already served.
+  const d = service.previewSequence(objective.id);
+  const obs = service.observations();
+  const last = obs.at(-1);
+  const rows = [
+    ["Læringsmål (prototype)", `${objective.id}`],
+    ["Politik", policy ? `${policy.POLICY_ID} (foreløbig testpolitik, LP-13)` : "ingen: spillet bestemmer rækkefølgen (F5)"],
+    ["Serverens næste trin", d === null ? "ingen sekvens" : d.state === "step" ? `${STEP_LABEL[d.step] ?? d.step} (mode ${d.mode})` : d.state === "waiting" ? `venter på genbesøg til ${d.dueAt}` : "forløbet er gennemført"],
+    ["Hvorfor", d === null ? "—" : d.state === "step" ? whyStep(d.step, obs) : d.state === "waiting" ? `genbesøget kommer tidligst ${policy?.REVISIT_AFTER_HOURS ?? 20} timer efter overførslen` : "alle trin har et registreret svar"],
+    ["Seneste opgaveinstans · runde", last ? `${last.instanceId} · ${last.roundNo}` : "—"],
+    ["Seneste serverresultat", last ? (last.wasCorrect ? "rigtigt" : "forkert") : "—"],
+    ["Registreret hjælp", last ? `${last.hintsUsed} hints (testadapteren kender hjælpen; Lærligs server gør ikke før L1 K1)` : "—"],
+    ["Evidensstatus", last ? "ikke evidens: kilden er testadapteren, K5 er ikke fastslået, og introduktionen er ikke registreret" : "—"],
+  ];
+  const dl = $("lv-dev-body");
+  dl.replaceChildren();
+  for (const [k, v] of rows) dl.append(Object.assign(document.createElement("dt"), { textContent: k }), Object.assign(document.createElement("dd"), { textContent: v }));
+}
+
+function whyStep(step, obs) {
+  if (step === "guided_practice") return "intet svar i støttet øvelse endnu";
+  if (step === "revision") return "det seneste svar i støttet øvelse var forkert: politikken indsætter én revision";
+  if (step === "independent_application") return obs.length > 0 && obs[0].wasCorrect ? "støttet øvelse besvaret rigtigt: ingen revision" : "revisionen er besvaret (én revision, ingen sløjfe)";
+  if (step === "transfer") return "selvstændig anvendelse er besvaret";
+  return "overførslen er besvaret, og genbesøget er forfaldent";
 }
 
 const STATE_LABEL = {
@@ -209,6 +270,7 @@ function start(c) {
       flags: reportedFlag,
       objectiveMap: c.objectiveMap ?? null,
       h5Submissions: c.h5 === true,
+      sequence: c.sequence === true ? { contextOfStep: c.stepContexts } : null,
       randomId: () => crypto.randomUUID(),
       store: sessionStorage,
       onEvent: (e) => {

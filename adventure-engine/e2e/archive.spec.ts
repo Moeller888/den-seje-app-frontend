@@ -295,8 +295,8 @@ test.describe("Arkivskabet v2 — the full learning sequence (D-322)", () => {
     await expect(f.locator("#lv-task")).toHaveAttribute("data-state", "open");
     await expect(f.locator("#lv-activity")).toHaveText("Revision · ny opgave, samme mål");
     await expect(f.locator("#lv-prompt")).toContainText("Revidér din vurdering med en ny påstand");
-    // D-332: a NEW claim (the army command's wish), not the practice claim again.
-    await expect(f.locator("#lv-prompt")).toContainText("Hærledelsen");
+    // D-332/D-338: a NEW claim (the army command's order), not the practice claim again.
+    await expect(f.locator("#lv-prompt")).toContainText("gav den danske hærledelse tropperne ordre");
     await expect(f.locator('.lv-card[data-option="kilde_a"]')).toHaveCount(0);
     await investigate(f);
     await choose(f, "rev_ordre", "hvem");

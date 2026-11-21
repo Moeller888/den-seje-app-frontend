@@ -132,6 +132,7 @@ export function createEdgeCaller({ supabaseUrl, anonKey, session, fetchImpl = gl
  *   session: { getAccessToken(): Promise<string | null> }, supabaseUrl: string, anonKey: string,
  *   subject?: "historie" | "engelsk" | "dansk", flags: { laerligverseBackend: boolean },
  *   objectiveMap?: Record<string, string> | null, h5Submissions?: boolean,
+ *   sequence?: { contextOfStep: Record<string, string> } | null,
  *   randomId: () => string, store?: { getItem(k: string): string | null, setItem(k: string, v: string): void, removeItem(k: string): void },
  *   onEvent?: (e: { type: string, reason?: string, code?: string }) => void, fetchImpl?: typeof fetch,
  * }} o
@@ -146,6 +147,8 @@ export function createLaerligverseHost(o) {
     subject: o.subject ?? "historie",
     ...(o.objectiveMap ? { objectiveMap: o.objectiveMap } : {}),
     ...(o.h5Submissions === true ? { h5Submissions: true } : {}),
+    // D-338: the server decides the step; this only maps it to the world's activity. Off unless configured.
+    ...(o.sequence ? { sequence: o.sequence } : {}),
   });
   let destroyed = false;
   const host = new BridgeHost({

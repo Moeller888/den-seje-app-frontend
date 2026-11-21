@@ -12,6 +12,15 @@ Intet er godkendt, før du har skrevet det. Værktøjet ændrer aldrig en afgør
 
 **Konstrueret undervisningsmateriale.** Kun proklamationen af 9. april 1940 er et autentisk dokument, og den er parafraseret, ikke citeret. Alle andre kilder er opfundne eksempler på en kildetype og er mærket »(konstrueret eksempel)«.
 
+## Historiefaglig egenkontrol (udført af udvikleren — IKKE en godkendelse)
+
+- **Autentisk dokument:** Kun kongens og regeringens proklamation af 9. april 1940. Den er parafraseret (»bevare ro og orden«) og ikke citeret. Kontrollér parafrasen mod originalteksten.
+- **Konstruerede eksempler:** Alle andre kilder er opfundne eksempler på en kildetype og er mærket »(konstrueret eksempel)« på bagsiden. De må ikke præsenteres som autentiske.
+- **Rettet i D-338:** Revisionens påstand handlede før om, hvad hærledelsen »ville«. Ifølge historiske fremstillinger ønskede hærens chef at kæmpe videre, og beslutningen var regeringens. Påstanden handler nu om ordren (en handling), som ordren kan belyse. Kontrollér den historiske fremstilling.
+- **1864:** Krigen mod Preussen og Østrig, beskydningen af Dybbøl-skanserne og stormen den 18. april 1864 er velkendte rammer. Brevet, mindetalen, avisen og tv-serien er konstruerede kildetyper. Kontrollér baggrundsteksten i opgaven.
+- **9. april 1940:** Der blev kæmpet nogle steder, bl.a. i Sønderjylland og ved Amalienborg, og kampene blev stoppet efter få timer. Kontrollér introkortets formulering om regeringens motiver (»undgå, at flere blev dræbt«, »bevare selvstyre«), som er en fortolkning.
+- **Tvetydighed:** Hver opgave har ét bedste svar for netop den påstand. Hvis du vurderer, at en anden kilde er lige så god, så markér opgaven »kraever_undersoegelse«.
+
 ## Indhold
 
 - [Læringsmålet (forslag)](#maal) · `maal`
@@ -139,6 +148,7 @@ Element-id: `h4-kilde`
 
 - **Fagligt mål:** Eleven kan identificere en historisk kildes afsender, tidspunkt, modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som belæg for.
 - **Progression:** P3: undersøger kilder med støtte og vælger den bedst egnede
+- **Servertrin (D-338):** `guided_practice`. Serveren udleverer opgaven, når eleven er på dette trin (foreløbig testpolitik, LP-13)
 - **Forudsat viden:** Introkortene: 9. april 1940 og de fire spørgsmål. Arkivkortet (afsender/tid/modtager/formål)
 - **Træner:** At matche påstandens indhold (hvis ønske) med kildens afsender og tidspunkt
 - **Forventet elevhandling:** Vender alle fire dokumenter, vælger en kilde og angiver, hvad der afgjorde valget
@@ -173,7 +183,7 @@ Element-id: `h4-kilde`
 
 Element-id: `h4-kilde-revision`
 
-**Opgavetekst:** Revidér din vurdering med en ny påstand. Påstand: »Hærledelsen ville have, at de danske soldater stoppede kampene om morgenen den 9. april 1940.« Hvilken kilde er bedst til at undersøge påstanden?
+**Opgavetekst:** Revidér din vurdering med en ny påstand. Påstand: »Om morgenen den 9. april 1940 gav den danske hærledelse tropperne ordre om at stoppe kampene.« Hvilken kilde er bedst til at undersøge påstanden?
 
 | Kilde (forside) | Bagside |
 |---|---|
@@ -184,12 +194,13 @@ Element-id: `h4-kilde-revision`
 
 - **Fagligt mål:** Eleven kan identificere en historisk kildes afsender, tidspunkt, modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som belæg for.
 - **Progression:** P4: anvender feedbacken på en ny, beslægtet påstand
+- **Servertrin (D-338):** `revision`. Serveren udleverer opgaven, når eleven er på dette trin (foreløbig testpolitik, LP-13)
 - **Forudsat viden:** Feedbacken fra trin 3
 - **Træner:** Samme princip på en ny påstand og nye kilder: kilden fra dem, påstanden handler om, mens det skete
 - **Forventet elevhandling:** Vender dokumenterne, vælger og begrunder igen
 - **Bedømmelse:** Serverbedømt: rigtigt = Ordre
-- **Rigtigt svar og begrundelse:** Ordre. Ja. Samme princip som før: påstanden handler om hærledelsens vilje, og ordren er lavet af hærledelsen selv, samme morgen, til tropperne. Det kan den IKKE vise: om alle soldater faktisk nåede at få ordren, eller hvad de tænkte om den.
-- **Historisk kontekst:** Om morgenen den 9. april 1940 besluttede regeringen at stoppe kampene; tropperne fik ordre om at indstille dem. Konstrueret ordre-eksempel
+- **Rigtigt svar og begrundelse:** Ordre. Ja. Samme princip som før: påstanden handler om, hvad hærledelsen beordrede, og ordren er lavet af hærledelsen selv, samme morgen, til tropperne. Det kan den IKKE vise: hvad hærledelsen selv mente om beslutningen, om alle soldater nåede at få ordren, eller hvad de tænkte om den.
+- **Historisk kontekst:** Om morgenen den 9. april 1940 besluttede regeringen at stoppe kampene, og tropperne fik ordre om at indstille dem. Påstanden handler om ordren (en handling), ikke om hærledelsens holdning. Ifølge historiske fremstillinger ønskede hærens chef at kæmpe videre; det skal læreren kontrollere. Ordre-eksemplet er konstrueret
 - **Kildestatus:** Konstrueret eksempel på en kildetype; ikke et autentisk dokument. Lærer bør kontrollere formuleringen om ordren den 9. april
 - **Vanskelighed (kvalitativ):** middel
 - **Evidensrolle:** Øvelse (efter feedback, med hints). Aldrig evidens
@@ -200,12 +211,12 @@ Element-id: `h4-kilde-revision`
 - »En avis fra dagen efter er lige så god som en kilde fra selve morgenen«
 
 **Feedback pr. forkert valg:**
-- *Erindring:* Se på tiden og afsenderen: soldaten skrev 50 år senere, og han var ikke hærledelsen. Han kan fortælle, hvad han husker, men ikke direkte, hvad hærledelsen ville.
+- *Erindring:* Se på tiden og afsenderen: soldaten skrev 50 år senere, og han var ikke hærledelsen. Han kan fortælle, hvad han husker om ordren, men hans erindring er ikke selve ordren.
 - *Avisartikel:* Se på afsenderen og tiden: journalisten var ikke hærledelsen og skrev dagen efter ud fra andres beretninger. Artiklen er et spor fra 1940, men ikke fra dem, påstanden handler om.
 - *Lærebog:* Se på tiden: lærebogen er skrevet 70 år senere og bygger på andre kilder. Den kan forklare, men den er ikke et spor fra morgenen.
 
 **Hjælp (hints, kun i øvelse):**
-1. Hvis vilje handler påstanden om?
+1. Hvem handler påstanden om?
 2. Hvilken kilde er lavet af dem, påstanden handler om, mens det skete?
 
 **Afgørelse:** se `h4-kilde-revision` i godkendelsesfilen.
@@ -227,6 +238,7 @@ Element-id: `h4-overfoersel`
 
 - **Fagligt mål:** Eleven kan identificere en historisk kildes afsender, tidspunkt, modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som belæg for.
 - **Progression:** P5: anvender principperne på en ny påstand uden hjælp
+- **Servertrin (D-338):** `independent_application`. Serveren udleverer opgaven, når eleven er på dette trin (foreløbig testpolitik, LP-13)
 - **Forudsat viden:** Trin 1–5
 - **Træner:** At se, at den bedste kilde afhænger af påstanden (proklamationen er nu forkert)
 - **Forventet elevhandling:** Vender dokumenterne og vælger uden hints
@@ -285,6 +297,7 @@ Element-id: `t1864`
 
 - **Fagligt mål:** Eleven kan identificere en historisk kildes afsender, tidspunkt, modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som belæg for.
 - **Progression:** P6: overfører metoden til en anden periode
+- **Servertrin (D-338):** `transfer`. Serveren udleverer opgaven, når eleven er på dette trin (foreløbig testpolitik, LP-13)
 - **Forudsat viden:** Trin 1–6 og baggrundsteksten i opgaven (1864 introduceres ikke andre steder)
 - **Træner:** Den samme kildekritiske metode i en ny periode med nye kildetyper (brev, mindetale, modpartens avis, tv-serie)
 - **Forventet elevhandling:** Læser baggrunden, vender dokumenterne og vælger uden hints
@@ -325,6 +338,7 @@ Element-id: `h4-genbesoeg`
 
 - **Fagligt mål:** Eleven kan identificere en historisk kildes afsender, tidspunkt, modtager, formål og kontekst og anvende disse forhold til at begrunde, hvad kilden kan og ikke kan bruges som belæg for.
 - **Progression:** P7: gentager præstationen senere
+- **Servertrin (D-338):** `revisit`. Serveren udleverer opgaven, når eleven er på dette trin (foreløbig testpolitik, LP-13)
 - **Forudsat viden:** Trin 1–7 og et tidsinterval (i prototypen simuleret)
 - **Træner:** Fastholdelse af metoden
 - **Forventet elevhandling:** Vender dokumenterne og vælger uden hints

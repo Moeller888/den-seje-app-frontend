@@ -124,3 +124,34 @@ describe("evidence chain — sources", () => {
     expect(a?.documentedProgression).toBe(false);
   });
 });
+
+describe("evidence chain × L1 K1 contract (D-338; fixtures shaped like PR #536's question_attempts, NOT server data)", () => {
+  const base = { question_instance_id: "qi", submission_id: "sub", attempt_no: 1, grading: "auto" as const, was_correct: true, is_repeat: false, answered_at: T0, learning_objective: "test_kildekritik_ophav" };
+  // Extra K1 columns are present in the row and must simply be ignored by the classifier.
+  const k1Extras = { server_interval_ms: 42_000, objective_ids: ["6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b"], objective_mapping_version: 1, question_content_sha256: "a".repeat(64) };
+
+  it("K1 mode + hints_used are used when present and valid: an unassisted check answer is independent (still not evidence: K5, exposure)", () => {
+    const o = observationFromAttemptRow({ ...base, ...k1Extras, mode: "check", hints_used: 0 });
+    expect(o).toMatchObject({ mode: "check", hintsUsed: 0, source: "server" });
+    const [a] = assessObjectives([o]);
+    expect(a?.states.independent.status).toBe("observed");
+    expect(a?.evidence[0]?.eligible).toBe(false);
+    expect(a?.evidence[0]?.reasons).toEqual(["opgavens evidensgyldighed er ikke fastslået (K5)", "ingen registreret introduktion til målet (LPD §5.3, ikke bygget)"]);
+    expect(a?.documentedProgression).toBe(false);
+  });
+
+  it("K1's legacy constant mode quiz_v1 is not an assessment step: a correct quiz answer is NOT independent performance", () => {
+    const [a] = assessObjectives([observationFromAttemptRow({ ...base, ...k1Extras, mode: "quiz_v1", hints_used: 0 })]);
+    expect(a?.states.independent.status).toBe("not_observed");
+    expect(a?.evidence[0]?.reasons).toContain("læringstrinnet quiz_v1 er øvelse, ikke vurdering (K4)");
+  });
+
+  it("registered help makes it supported; invalid or missing K1 values stay NOT REGISTERED (never defaulted)", () => {
+    const [helped] = assessObjectives([observationFromAttemptRow({ ...base, mode: "practice", hints_used: 2 })]);
+    expect(helped?.states.supported.status).toBe("observed");
+    for (const bad of [{}, { mode: "mastery", hints_used: 0 }, { mode: "check", hints_used: 7 }, { mode: "check", hints_used: -1 }, { mode: 3, hints_used: "0" }]) {
+      const o = observationFromAttemptRow({ ...base, ...bad });
+      expect(o.mode === null || o.hintsUsed === null, JSON.stringify(bad)).toBe(true);
+    }
+  });
+});

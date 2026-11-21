@@ -2,6 +2,7 @@
   {
     "tag": "h4-kilde",
     "step": "arkivskab",
+    "learning_step": "guided_practice",
     "learning_objective": "test_kildekritik_ophav",
     "answer_format": "mc",
     "content": {
@@ -28,10 +29,11 @@
   {
     "tag": "h4-kilde-revision",
     "step": "arkivskab-revision",
+    "learning_step": "revision",
     "learning_objective": "test_kildekritik_ophav",
     "answer_format": "mc",
     "content": {
-      "question": "Revidér din vurdering med en ny påstand. Påstand: »Hærledelsen ville have, at de danske soldater stoppede kampene om morgenen den 9. april 1940.« Hvilken kilde er bedst til at undersøge påstanden?",
+      "question": "Revidér din vurdering med en ny påstand. Påstand: »Om morgenen den 9. april 1940 gav den danske hærledelse tropperne ordre om at stoppe kampene.« Hvilken kilde er bedst til at undersøge påstanden?",
       "options": [
         "Erindring",
         "Ordre",
@@ -48,12 +50,13 @@
       "accepted_answers": [
         "Ordre"
       ],
-      "review_text": "Ja. Samme princip som før: påstanden handler om hærledelsens vilje, og ordren er lavet af hærledelsen selv, samme morgen, til tropperne. Det kan den IKKE vise: om alle soldater faktisk nåede at få ordren, eller hvad de tænkte om den."
+      "review_text": "Ja. Samme princip som før: påstanden handler om, hvad hærledelsen beordrede, og ordren er lavet af hærledelsen selv, samme morgen, til tropperne. Det kan den IKKE vise: hvad hærledelsen selv mente om beslutningen, om alle soldater nåede at få ordren, eller hvad de tænkte om den."
     }
   },
   {
     "tag": "h4-overfoersel",
     "step": "skuffe",
+    "learning_step": "independent_application",
     "learning_objective": "test_kildekritik_ophav",
     "answer_format": "mc",
     "content": {
@@ -80,6 +83,7 @@
   {
     "tag": "t1864",
     "step": "overfoersel",
+    "learning_step": "transfer",
     "learning_objective": "test_kildekritik_ophav",
     "answer_format": "mc",
     "content": {
@@ -106,6 +110,7 @@
   {
     "tag": "h4-genbesoeg",
     "step": "genbesoeg",
+    "learning_step": "revisit",
     "learning_objective": "test_kildekritik_ophav",
     "answer_format": "mc",
     "content": {

@@ -199,7 +199,17 @@ function assess(objective: string, obs: readonly Observation[]): ObjectiveAssess
   };
 }
 
-/** A question_attempts row (H5, D-273) joined with its question's learning_objective → an observation. */
+const K1_MODES: readonly Mode[] = ["quiz_v1", "diagnostic", "practice", "check", "review", "application"];
+
+/**
+ * A question_attempts row (H5, D-273) joined with its question's learning_objective → an observation.
+ *
+ * D-338: L1 K1 (PR #536, owned by another track, NOT applied anywhere yet) adds `mode` (one of K1_MODES, set by
+ * process-event's server constants) and `hints_used` (0–3) to question_attempts. When a row carries them with
+ * valid values they ARE registered facts and are used; otherwise both stay null (not registered) — never
+ * guessed, never defaulted. Note: under K1 a legacy quiz answer is recorded as mode "quiz_v1", which is not an
+ * assessment step, so such a correct answer is never "independent performance" here.
+ */
 export function observationFromAttemptRow(row: {
   question_instance_id: string;
   submission_id: string;
@@ -210,7 +220,13 @@ export function observationFromAttemptRow(row: {
   answered_at: string;
   learning_objective: string;
   round_no?: number;
+  /** L1 K1 (#536). */
+  mode?: unknown;
+  /** L1 K1 (#536). */
+  hints_used?: unknown;
 }): AttemptObservation {
+  const mode = typeof row.mode === "string" && (K1_MODES as readonly string[]).includes(row.mode) ? (row.mode as Mode) : null;
+  const hints = typeof row.hints_used === "number" && Number.isInteger(row.hints_used) && row.hints_used >= 0 && row.hints_used <= 3 ? row.hints_used : null;
   return {
     kind: "attempt",
     source: "server",
@@ -222,9 +238,9 @@ export function observationFromAttemptRow(row: {
     grading: row.grading,
     wasCorrect: row.was_correct,
     isRepeat: row.is_repeat,
-    // Not in question_attempts until L1 K1 (PR #536): NOT REGISTERED, never guessed.
-    mode: null,
-    hintsUsed: null,
+    // L1 K1 (#536) when present and valid; otherwise NOT REGISTERED (null), never guessed.
+    mode,
+    hintsUsed: hints,
     situation: null,
     evidenceValid: null,
   };

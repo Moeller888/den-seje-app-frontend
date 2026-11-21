@@ -150,12 +150,15 @@ test("the key-bearing reads run on the backend client, scoped to the verified st
   const reads = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.from\("question_instances"\)[\s\S]*?;/g)].map((m) => m[0]);
   const selected = reads.map((r) => /\.select\((["`])([\s\S]*?)\1\)/.exec(r)?.[2].replace(/\s+/g, " ").trim());
   assert.deepEqual(selected, [
+    "answered, was_correct, answered_at, questions!inner(learning_objective, metadata)", // D-338 step history (sequence only)
     "correct_answer",                                                          // Match par's key (match only)
     "served_snapshot",                                                         // L1 K1's delivered version
     'id, repeat_count, next_review_at, questions (${targeting.mode === "on" ? "\\n learning_objective," : ""} content, answer_format, answer_type, metadata, is_active )', // due (+ D-329's objective)
     "id",                                                                      // D-329 lost-race check
     "id, repeat_count, questions ( content, answer_format, answer_type, metadata, is_active )",                 // repeat
   ]);
+  // D-338: the step-history read carries no content and no key — only the verdict, time and step tag.
+  assert.equal(/content|correct_answer/.test(selected[0]), false);
   const idOnly = reads.filter((r) => /\.select\("id"\)/.test(r));
   assert.match(idOnly[0], /\.eq\("student_id", student_id\)\s*\.eq\("answered", false\)/);
   assert.ok(INDEX_CODE.indexOf(idOnly[0]) > INDEX_CODE.indexOf('if (!inserted && targeting.mode === "on") {'), "only on the targeted path");

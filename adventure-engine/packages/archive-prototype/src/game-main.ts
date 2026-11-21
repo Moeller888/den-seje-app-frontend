@@ -104,8 +104,10 @@ async function boot(): Promise<void> {
       .then(open)
       .catch((err: unknown) => {
         root.inert = true;
-        view.show({ instanceToken: "none", kind: "choice", stimulus: { prompt: "Arkivaren kunne ikke finde en opgave.", options: null }, mode: "practice", hintsAvailable: 0, contextKey: key });
-        view.error(err instanceof BridgeError ? `Ingen opgave lige nu (${err.code}).` : String(err));
+        // D-338: a revisit the server says is not due yet is not a failure: say so, and offer it again afterwards.
+        const revisitNotYet = key === REVISIT_KEY;
+        view.show({ instanceToken: "none", kind: "choice", stimulus: { prompt: revisitNotYet ? "Genbesøget er ikke klar endnu." : "Arkivaren kunne ikke finde en opgave.", options: null }, mode: "practice", hintsAvailable: 0, contextKey: key });
+        view.error(revisitNotYet ? "Arkivaren kommer tilbage senere. Prøv igen, når der er gået tid." : err instanceof BridgeError ? `Ingen opgave lige nu (${err.code}).` : String(err));
       });
   };
 
@@ -134,6 +136,8 @@ async function boot(): Promise<void> {
     if (outcome === "correct" || outcome === "incorrect" || outcome === "aborted") game.engine.event("cabinet", point.resultAction, { $outcome: outcome });
     if (context === DRAWER_KEY && (outcome === "correct" || outcome === "incorrect")) pendingStep = "afterDrawer";
     if (context === TRANSFER_KEY && (outcome === "correct" || outcome === "incorrect")) pendingStep = "afterTransfer";
+    // No dead end: a revisit that was not available yet is offered again (the server decides when it is due).
+    if (context === REVISIT_KEY && outcome === "error") pendingStep = "afterTransfer";
   };
 
   const send = async (action: Action): Promise<void> => {
