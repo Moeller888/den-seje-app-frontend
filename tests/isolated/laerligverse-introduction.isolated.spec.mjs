@@ -497,20 +497,35 @@ test("D-383 G3: a subject switch keeps an open course round — the ordinary qui
   expect(after.body.content.question).toBe(D383_ORDINARY.question);
 });
 
+// G5 uses an objective with ONLY course items (guided practice and transfer): a targeted request without the sequence
+// then has nothing it may serve. (With an ordinary item in the objective it legitimately gets that one, D-329 — the
+// first CI run on 4c18c63b showed exactly that with the D-383 objective; the refusal there is proven in step 3 of the
+// D-383 test, once the ordinary item is used up.)
+const G5_OBJ = `${INTRO.learning_objective}_d383_course_only`;
 test("D-383 G5: skipping ahead by API is refused — no sequence, a false sequence, a later step or a manipulated objective: no instance, no reward", async ({ request }) => {
-  await d383Items(request);
-  const { p, token, byInstance, course } = await d383Pupil(request, "d383-skip");
+  const have = await rows(request, `questions?select=id&learning_objective=eq.${G5_OBJ}`);
+  if (have.length === 0) {
+    const base = { type: "mc_single", difficulty: 500, is_active: true, question_type: "auto", learning_objective: G5_OBJ, answer_format: "mc", answer_type: "short", target_grade: 8, difficulty_band: 3 };
+    const ins = await request.post(`${SUPA}/rest/v1/questions`, {
+      headers: { ...svc, ...json, prefer: "return=minimal" },
+      data: ["guided_practice", "transfer"].map((step) => ({ ...base, content: { ...SOURCE.content, question: `${SOURCE.content.question} (D-383 G5 ${step}, testkopi)` }, metadata: { domain: G5_OBJ, synthetic: true, fixture: "D-383-G5", learning_step: step } })),
+    });
+    expect(ins.status(), await ins.text()).toBe(201);
+  }
+  const p = await makePupil(request, "d383-skip", [G5_OBJ]);
+  const token = await signIn(request, p);
+  const byInstance = async () => rows(request, `question_instances?select=id&student_id=eq.${p.id}`);
   const start = await rewardState(request, p);
   const ask = (data) => post(request, token, "get-next-question", { subject: "historie", ...data });
   const refusals = [
-    [{ learning_objective: D383 }, 403, { error: "course_requires_sequence" }],
-    [{ learning_objective: D383, sequence: false }, 403, { error: "course_requires_sequence" }],
-    [{ learning_objective: D383, sequence: "true" }, 403, { error: "course_requires_sequence" }],
-    [{ learning_objective: D383, learning_step: "transfer" }, 403, { error: "course_requires_sequence" }],
-    [{ learning_objective: D383, sequence: true, introduction_capability: 1, learning_step: "transfer" }, 409, { error: "learning_step_not_current" }],
-    [{ learning_objective: D383, sequence: true, introduction_capability: 1, learning_step: "revisit" }, 409, { error: "learning_step_not_current" }],
-    [{ learning_objective: D383, sequence: true, introduction_capability: 2 }, 400, { error: "invalid_introduction_capability" }],
-    [{ learning_objective: `${OBJECTIVE}`, sequence: true, introduction_capability: 1 }, 403, { error: "learning_objective_not_allowed" }],
+    [{ learning_objective: G5_OBJ }, 403, { error: "course_requires_sequence" }],
+    [{ learning_objective: G5_OBJ, sequence: false }, 403, { error: "course_requires_sequence" }],
+    [{ learning_objective: G5_OBJ, sequence: "true" }, 403, { error: "course_requires_sequence" }],
+    [{ learning_objective: G5_OBJ, learning_step: "transfer" }, 403, { error: "course_requires_sequence" }],
+    [{ learning_objective: G5_OBJ, sequence: true, introduction_capability: 1, learning_step: "transfer" }, 409, { error: "learning_step_not_current" }],
+    [{ learning_objective: G5_OBJ, sequence: true, introduction_capability: 1, learning_step: "revisit" }, 409, { error: "learning_step_not_current" }],
+    [{ learning_objective: G5_OBJ, sequence: true, introduction_capability: 2 }, 400, { error: "invalid_introduction_capability" }],
+    [{ learning_objective: OBJECTIVE, sequence: true, introduction_capability: 1 }, 403, { error: "learning_objective_not_allowed" }],
   ];
   for (const [data, status, body] of refusals) {
     const r = await ask(data);
@@ -519,10 +534,11 @@ test("D-383 G5: skipping ahead by API is refused — no sequence, a false sequen
   }
   expect(await byInstance(), "no instance").toEqual([]);
   expect(await rewardState(request, p), "no reward").toEqual(start);
-  // The legitimate request still works: the server's first step.
-  const ok = await course();
+  // The legitimate request still works: the server's first step, and its item.
+  const ok = await ask({ learning_objective: G5_OBJ, sequence: true, introduction_capability: 1 });
   expect(ok.status, JSON.stringify(ok.body)).toBe(200);
   expect(ok.body.learning_step).toBe("guided_practice");
+  expect(ok.body.content.question).toContain("G5 guided_practice");
 });
 
 test("D-383 G6: two tabs, ordinary quiz and course at once — at most one open round, never a lost or doubled one, nothing paid", async ({ request }) => {

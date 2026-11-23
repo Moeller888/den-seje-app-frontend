@@ -1,0 +1,41 @@
+{
+ "source": "a7450b0f (the get-next-question deployed in production, docs/operations/level-engine-rollout.md)",
+ "answers": {
+  "old": {
+   "classic": {
+    "status": 200,
+    "body": "{\"question_instance_id\":\"new-inst\",\"round_no\":1,\"content\":{\"question\":\"Q course\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}"
+   },
+   "level": {
+    "status": 200,
+    "body": "{\"question_instance_id\":\"new-inst\",\"round_no\":1,\"content\":{\"question\":\"Q course\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}"
+   },
+   "repeat": {
+    "status": 200,
+    "body": "{\"question_instance_id\":\"rep-course\",\"round_no\":2,\"content\":{\"question\":\"Q course\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\",\"is_repeat\":true}"
+   },
+   "openRound": {
+    "status": 200,
+    "body": "{\"step\":\"no_questions\"}"
+   }
+  },
+  "new": {
+   "classic": {
+    "status": 200,
+    "body": "{\"question_instance_id\":\"new-inst\",\"round_no\":1,\"content\":{\"question\":\"Q course\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}"
+   },
+   "level": {
+    "status": 200,
+    "body": "{\"step\":\"no_questions\"}"
+   },
+   "repeat": {
+    "status": 200,
+    "body": "{\"step\":\"no_questions\"}"
+   },
+   "openRound": {
+    "status": 200,
+    "body": "{\"question_instance_id\":\"open-course\",\"round_no\":1,\"content\":{\"question\":\"Q course\",\"options\":[\"a\",\"b\"]},\"answer_format\":\"mc\",\"answer_type\":\"short\",\"metadata\":null,\"wave_phase\":\"challenge\"}"
+   }
+  }
+ }
+}

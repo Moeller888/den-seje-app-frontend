@@ -14,7 +14,8 @@
 // serves one function version per lane.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -33,8 +34,15 @@ function materialise(commit) {
   }
   return join(dir, "supabase", ENTRY);
 }
+// Production's Edge is read from git where the commit exists (a full clone): then it runs LIVE and must still equal the
+// recorded fixture. CI checks out shallow, without a7450b0f: then the fixture — written by this test from the live run
+// (UPDATE_COURSE_MATRIX_FIXTURE=1), like tests/fixtures/gnq-v179-parity.json — stands in for it. The new Edge always runs.
+const FIXTURE = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "course-items-old-edge-a7450b0f.json");
+const haveCommit = (() => {
+  try { execFileSync("git", ["cat-file", "-e", `${PRODUCTION_EDGE}^{commit}`], { stdio: "ignore" }); return true; } catch { return false; }
+})();
 const EDGE = {
-  old: (await loadHandler(materialise(PRODUCTION_EDGE))).handler,
+  old: haveCommit ? (await loadHandler(materialise(PRODUCTION_EDGE))).handler : null,
   new: (await loadHandler(NEW_INDEX)).handler,
 };
 
@@ -75,22 +83,49 @@ function database(version, situation) {
   };
 }
 
-const servedCourse = (r) => r.status === 200 && JSON.parse(r.body).content?.question === "Q course";
 const ordinaryRequest = (edge, db, situation, level) =>
   runCase(EDGE[edge], { subject: "historie", scenario: situation === "repeat" ? "repeat" : "new", level, patch: database(db, situation) });
+/** What one Edge version answers in the four situations (status and body: what the pupil gets). */
+async function measure(edge, db) {
+  const answers = {};
+  for (const [key, situation, level] of [["classic", "candidates", undefined], ["level", "candidates", "v1"], ["repeat", "repeat", undefined], ["openRound", "open-course-round", undefined]]) {
+    const r = await ordinaryRequest(edge, db, situation, level);
+    answers[key] = { status: r.status, body: r.body };
+  }
+  return answers;
+}
+const fixture = existsSync(FIXTURE) ? JSON.parse(readFileSync(FIXTURE, "utf8")) : null;
+const OLD_ANSWERS = {};
+if (haveCommit) {
+  for (const db of ["old", "new"]) OLD_ANSWERS[db] = await measure("old", db);
+  if (process.env.UPDATE_COURSE_MATRIX_FIXTURE === "1") {
+    writeFileSync(FIXTURE, JSON.stringify({ source: `${PRODUCTION_EDGE} (the get-next-question deployed in production, docs/operations/level-engine-rollout.md)`, answers: OLD_ANSWERS }, null, 1) + "\n");
+  }
+} else {
+  assert.ok(fixture, `${PRODUCTION_EDGE} is not in this checkout and ${FIXTURE} is missing`);
+  Object.assign(OLD_ANSWERS, fixture.answers);
+}
+const servedCourseBody = (a) => a.status === 200 && JSON.parse(a.body).content?.question === "Q course";
+
+test("production's Edge: the live run equals the recorded fixture (where the commit is available)", { skip: !haveCommit && "shallow checkout: the fixture stands in" }, () => {
+  assert.ok(fixture, "the fixture exists (UPDATE_COURSE_MATRIX_FIXTURE=1 writes it)");
+  assert.match(fixture.source, new RegExp(`^${PRODUCTION_EDGE} `));
+  assert.deepEqual(OLD_ANSWERS, fixture.answers);
+});
 
 const RESULTS = {};
 for (const edge of ["old", "new"]) {
   for (const db of ["old", "new"]) {
     test(`${edge} Edge + ${db} database: what the ordinary quiz does with course items`, async () => {
+      const a = edge === "old" ? OLD_ANSWERS[db] : await measure("new", db);
       const r = {
-        classic: servedCourse(await ordinaryRequest(edge, db, "candidates", undefined)),
-        level: servedCourse(await ordinaryRequest(edge, db, "candidates", "v1")),
-        repeatServed: servedCourse(await ordinaryRequest(edge, db, "repeat", undefined)),
+        classic: servedCourseBody(a.classic),
+        level: servedCourseBody(a.level),
+        repeatServed: servedCourseBody(a.repeat),
         // The reopen is the DATABASE's side effect (proven in PGlite): it happens before any Edge code sees the row.
         repeatReopened: db === "old",
         openRoundDeleted: db === "old",
-        openRoundServedToQuiz: servedCourse(await ordinaryRequest(edge, db, "open-course-round", undefined)),
+        openRoundServedToQuiz: servedCourseBody(a.openRound),
       };
       RESULTS[`${edge}/${db}`] = r;
       if (edge === "new") {
