@@ -704,6 +704,20 @@ serve(async (req) => {
       }
       // D-383: the objective still has course items, but only the server sequence may serve them. Say so — never
       // "exhausted" — so a caller that left `sequence` out learns why; nothing was created.
+      // With p_course_scope (20261123100000) the database no longer returns course items here, so the loop cannot see
+      // them; one id-only read of the validated objective tells (only on this path: targeted, outside the sequence,
+      // nothing served). A JSON null tag reads as no tag here: that rare item is then "exhausted", never served.
+      if (sequence === null && !courseItemWithheld) {
+        const { data: courseRows, error: courseError } = await admin()
+          .from("questions")
+          .select("id")
+          .eq("learning_objective", targeting.objective)
+          .eq("is_active", true)
+          .not("metadata->learning_step", "is", null)
+          .limit(1);
+        if (courseError) throw courseError;
+        courseItemWithheld = Array.isArray(courseRows) && courseRows.length > 0;
+      }
       if (sequence === null && courseItemWithheld) {
         return new Response(JSON.stringify({ error: "course_requires_sequence" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

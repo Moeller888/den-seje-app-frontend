@@ -179,6 +179,9 @@ test("the admin client is used only for the instance insert and the server-only 
     // D-329, targeted requests only: the lost-race check reads ONLY the id of the verified pupil's open
     // instance (no key), before "objective_exhausted" may be claimed; it never reaches the repeat RPCs below.
     "from:question_instances",
+    // D-383 follow-up, targeted requests outside the sequence with nothing served only: whether the validated objective
+    // has an active course item — the question's id only, no content, no key — to answer 403 course_requires_sequence.
+    "from:questions",
     // QUESTION_MIX_ENGINE "v2" only: the same repeat with exhaustion judged on servable formats
     // (migration 20261019150000; service_role only, same student-scoped guards).
     "rpc:request_repeat_question_servable_for_student",
@@ -204,8 +207,8 @@ test("the admin client is used only for the instance insert and the server-only 
     "F12-B: the pupil's own introduction round (completed_at only)");
   assert.equal((INDEX_CODE.match(/admin\(\)\s*\.from\("learning_introductions"\)\s*\.select\("id"\)\s*\.eq\("learning_objective", targeting\.objective\)\s*\.eq\("is_active", true\)/g) ?? []).length, 1,
     "F12-B: whether the objective has an active introduction (id only)");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 17,
-    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call, the 15th and 16th F12-B's two introduction_required reads, the 17th the D-383 follow-up's fallback candidate read)");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 18,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call, the 15th and 16th F12-B's two introduction_required reads, the 17th the D-383 follow-up's fallback candidate read, the 18th its id-only course-item check)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {

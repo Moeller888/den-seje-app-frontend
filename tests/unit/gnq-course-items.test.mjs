@@ -199,3 +199,23 @@ test("any OTHER candidate error is not a fallback: it fails loud (500), with no 
   assert.equal(argsOf(r, "get_unserved_questions_for_student").length, 1);
   assert.equal(r.logs.some((l) => l.includes("COURSE_SCOPE_FALLBACK")), false);
 });
+
+test("targeted outside the sequence on the NEW database (course items filtered in SQL): one id-only read decides 403 vs exhausted", async () => {
+  const withCourseRows = (rows) => (kind, name, ops, result) => {
+    if (kind === "rpc" && CANDIDATE_RPCS.includes(name)) return { data: [], error: null };
+    if (kind === "from" && name === "questions") return { data: rows, error: null };
+    return result;
+  };
+  const gated = await targeted({ subject: "historie", scenario: "new", patch: withCourseRows([{ id: "c1" }]) });
+  assert.equal(gated.status, 403, gated.body);
+  assert.deepEqual(JSON.parse(gated.body), { error: "course_requires_sequence" });
+  const read = gated.calls.find((c) => c.kind === "from" && c.name === "questions");
+  assert.deepEqual(read.ops, [["select", "id"], ["eq", "learning_objective", "vikings"], ["eq", "is_active", true], ["not", "metadata->learning_step", "is", null], ["limit", 1]]);
+  assert.equal(read.client, "admin");
+  const empty = await targeted({ subject: "historie", scenario: "new", patch: withCourseRows([]) });
+  assert.equal(empty.status, 200, empty.body);
+  assert.deepEqual(JSON.parse(empty.body), { step: "no_questions", reason: "objective_exhausted" });
+  // The ordinary quiz never makes this read.
+  const ordinary = await runCase(handler, { subject: "historie", scenario: "new", patch: withCourseRows([{ id: "c1" }]) });
+  assert.equal(ordinary.calls.some((c) => c.kind === "from" && c.name === "questions"), false);
+});
