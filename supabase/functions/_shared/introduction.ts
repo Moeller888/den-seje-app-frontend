@@ -15,6 +15,49 @@ export const PRESENTED_ENV = "LAERLIGVERSE_PRESENTED";
 
 export const on = (value: string | undefined | null): boolean => value === "on";
 
+// F12-B: the request's introduction capability (body.introduction_capability). A COMPATIBILITY signal, never an
+// authorisation: it can only tell the server that this host and game session can SHOW a server introduction. It never
+// grants a task, a reward, evidence or an exemption — without it, a required introduction is not skipped but answered
+// with step "introduction_required" and nothing is written.
+//   absent    — the field is missing (every client before F12-B, and every host that does not show introductions);
+//   supported — exactly the integer 1 (version 1: the cards of step "introduction" + introduction-progress shown/done);
+//   invalid   — anything else (another number, a string, true, null …): the request is refused (400), nothing is read
+//               or written. A future version is a new integer the server must learn first; it is refused until then.
+export const INTRODUCTION_CAPABILITY_FIELD = "introduction_capability";
+export const INTRODUCTION_CAPABILITY_VERSION = 1;
+export type IntroductionCapability = "absent" | "supported" | "invalid";
+
+export function introductionCapabilityOf(body: unknown): IntroductionCapability {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) return "absent";
+  if (!Object.prototype.hasOwnProperty.call(body, INTRODUCTION_CAPABILITY_FIELD)) return "absent";
+  const v = (body as Record<string, unknown>)[INTRODUCTION_CAPABILITY_FIELD];
+  return v === INTRODUCTION_CAPABILITY_VERSION ? "supported" : "invalid";
+}
+
+/**
+ * F12-B: is an introduction REQUIRED for this pupil and objective, decided WITHOUT writing (for a request that cannot
+ * show it)? The same rule as serve_introduction (migration 20261110043500): a round of ANY version of the objective's
+ * introduction decides — completed → not required, not completed → required; without a round, an ACTIVE introduction
+ * for the objective → required; none → not required. The rows are read on the backend client (service_role has SELECT
+ * on both tables); `round` is the pupil's earliest round of the objective (or null), `activeIntroduction` whether one
+ * is active. Anything malformed is a contract break (error), never "not required".
+ */
+export type RequiredDecision = { kind: "required" } | { kind: "not_required" } | { kind: "error"; problem: string };
+
+export function introductionRequired(rounds: unknown, active: unknown): RequiredDecision {
+  if (!Array.isArray(rounds) || !Array.isArray(active)) return { kind: "error", problem: "rows are not arrays" };
+  if (rounds.length > 0) {
+    const r = rounds[0];
+    if (typeof r !== "object" || r === null || !Object.prototype.hasOwnProperty.call(r, "completed_at")) {
+      return { kind: "error", problem: "round without completed_at" };
+    }
+    const completedAt = (r as Record<string, unknown>).completed_at;
+    if (completedAt !== null && typeof completedAt !== "string") return { kind: "error", problem: "invalid completed_at" };
+    return completedAt === null ? { kind: "required" } : { kind: "not_required" };
+  }
+  return active.length > 0 ? { kind: "required" } : { kind: "not_required" };
+}
+
 const MAX_CARDS = 10;
 const MAX_TITLE = 200;
 const MAX_TEXT = 2000;

@@ -31,6 +31,18 @@
         </form>
         <p id="lv-login-error" class="lv-error" role="alert" hidden></p>
       </section>
+      <!-- F12-B: the server requires a step this page or game cannot show (an older version, or introductions switched
+           off here). Nothing was recorded. Shown only on the pupil's next request; the page never reloads by itself.
+           role="alert" and focused; while it is shown the game region is hidden and focus is kept out of the game frame
+           (host-app.js showUpdateNotice: measured in all three engines). A new sign-in lifts both. -->
+      <section id="lv-update" class="lv-card lv-update" role="alert" aria-labelledby="lv-update-title" aria-describedby="lv-update-text" tabindex="-1" hidden>
+        <h2 id="lv-update-title">Lærligvers er blevet opdateret</h2>
+        <p id="lv-update-text">Lærligvers er blevet opdateret. Genindlæs siden for at fortsætte, hvor du slap.</p>
+        <div class="lv-update-actions">
+          <button id="lv-update-reload" type="button">Genindlæs</button>
+          <a id="lv-update-back" class="lv-button-link" href="#" hidden>Tilbage til Lærlig</a>
+        </div>
+      </section>
       <section id="lv-game-region" class="lv-game-region" aria-label="Lærligverse-spillet" hidden>
         <iframe id="lv-game" title="Lærligverse: Arkivskabet" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin"></iframe>
       </section>
