@@ -541,21 +541,40 @@ test("D-383 G5: skipping ahead by API is refused — no sequence, a false sequen
   expect(ok.body.content.question).toContain("G5 guided_practice");
 });
 
-test("D-383 G6: two tabs, ordinary quiz and course at once — at most one open round, never a lost or doubled one, nothing paid", async ({ request }) => {
+// G6 (two tabs). Note, a finding outside D-383 that the first CI runs showed: an ORDINARY open round in a domain outside
+// the history domains (here the D-383 objective; in production D-362's pilot_* domains) is released by the next
+// ordinary request (D-316's subject-switch release) and the same question is served again as a NEW instance — no answer
+// is lost, but the instance id changes. G6 therefore asserts what D-383 promises: one open round, nothing paid, and an
+// open COURSE round is never lost or replaced, whatever the tabs ask at the same time.
+test("D-383 G6: two tabs, ordinary quiz and course at once — one open round, nothing paid; an open course round keeps its identity", async ({ request }) => {
   await d383Items(request);
-  const { p, byInstance, ordinary, course } = await d383Pupil(request, "d383-tabs");
-  const start = await rewardState(request, p);
-  const answers = await Promise.all([ordinary(), course(), ordinary(), course()]);
-  for (const r of answers) expect([200, 409], JSON.stringify(r.body)).toContain(r.status);
-  const inst = await byInstance();
-  expect(inst, "idx_one_open_question: exactly one open round").toHaveLength(1);
-  expect(inst[0].answered).toBe(false);
-  // Every successful answer names that one round (or explains the open course round); none another.
-  for (const r of answers.filter((x) => x.status === 200 && x.body.question_instance_id)) expect(r.body.question_instance_id).toBe(inst[0].id);
-  expect(await rewardState(request, p)).toEqual(start);
-  // A second wave changes nothing: the same single round.
-  await Promise.all([ordinary(), course()]);
-  expect(await byInstance()).toEqual(inst);
+  // (a) A fresh pupil, a mixed concurrent wave: at most one open round, nothing paid.
+  const fresh = await d383Pupil(request, "d383-tabs");
+  const freshStart = await rewardState(request, fresh.p);
+  const wave = await Promise.all([fresh.ordinary(), fresh.course(), fresh.ordinary(), fresh.course()]);
+  for (const r of wave) expect([200, 409], JSON.stringify(r.body)).toContain(r.status);
+  const open = (await fresh.byInstance()).filter((i) => i.answered === false);
+  expect(open, "idx_one_open_question: exactly one open round").toHaveLength(1);
+  expect(await rewardState(request, fresh.p)).toEqual(freshStart);
+
+  // (b) A pupil with an open COURSE round; two waves of mixed tabs. The round is the same instance throughout.
+  const { courseId } = await d383Items(request);
+  const tabs = await d383Pupil(request, "d383-tabs-course");
+  const opened = await tabs.course();
+  expect(opened.status, JSON.stringify(opened.body)).toBe(200);
+  const round = (await tabs.byInstance())[0];
+  expect(round).toMatchObject({ question_id: courseId, answered: false });
+  const start = await rewardState(request, tabs.p);
+  for (let w = 0; w < 2; w++) {
+    const answers = await Promise.all([tabs.ordinary(), tabs.course(), tabs.ordinary(), tabs.course()]);
+    answers.forEach((r, i) => {
+      expect(r.status, `wave ${w} tab ${i}: ${JSON.stringify(r.body)}`).toBe(200);
+      if (i % 2 === 0) expect(r.body).toEqual({ step: "no_questions", reason: "course_round_open" });
+      else expect(r.body.question_instance_id, "the course tab resumes the same round").toBe(opened.body.question_instance_id);
+    });
+    expect(await tabs.byInstance(), `wave ${w}: the same single round, untouched`).toEqual([round]);
+  }
+  expect(await rewardState(request, tabs.p)).toEqual(start);
 });
 
 // ── F12-B: the introduction capability against the REAL get-next-question and PostgreSQL ──────────────────────────
