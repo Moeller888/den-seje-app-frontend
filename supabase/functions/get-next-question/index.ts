@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { publishableKey, serviceKey } from "../_shared/supabase-keys.ts";
 import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
-import { deriveQuestionScope, isCourseItem } from "./scope.ts";
+import { courseScopeOf, deriveQuestionScope, isCourseItem, isMissingCourseScope } from "./scope.ts";
 import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
 import { checkRequestedStep, historyFromRows, nextStep, stepDef, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
 import { hintsAvailable } from "../_shared/hints.ts";
@@ -331,6 +331,9 @@ serve(async (req) => {
     // call. It therefore always takes the classic route on the narrowed scope. Untargeted requests: unchanged.
     if (targeting.mode === "on") levelEngine = "off";
     const route = chooseSelectionRoute(mixEngine, levelEngine);
+    // D-383 follow-up: the shared candidate RPCs return only what this request may be served — the server's step inside
+    // the sequence, no course item anywhere else (./scope.ts courseScopeOf).
+    const courseScope = courseScopeOf(sequence !== null ? sequence.step : null);
     // L1 K1 (Edge secret K1_SERVED_SNAPSHOT, ./served-snapshot.ts): unset = everything below runs exactly
     // as before; "on" (only after migration 20261103110000) makes every response and the recorded delivered
     // version the same: new instances propose the row they are built from, open and repeated rounds are
@@ -535,6 +538,7 @@ serve(async (req) => {
         domains: subjectDomains,
         wavePhase,
         lastMisconceptionType,
+        courseScope,
       });
       // pupil = a one-way pseudonym (./log-pseudonym.ts), so the evaluation can exclude test accounts.
       const pupil = await pupilLogHash(student_id);
@@ -546,14 +550,30 @@ serve(async (req) => {
       // get_unserved_questions_for_student excludes questions already instanced for the student
       // via a server-side NOT EXISTS subquery. It returns full content (the key included), so it is
       // EXECUTE for the backend only and called with the verified student_id.
-      const { data: questions, error: questionError } = await admin().rpc(
+      // D-383 follow-up: p_course_scope filters course items BEFORE the LIMIT (20261123100000). On a database without
+      // the parameter (PostgREST PGRST202) the call is made once more with today's arguments, logged; the candidate loop
+      // below withholds course items in both cases.
+      let unserved = await admin().rpc(
         "get_unserved_questions_for_student",
         {
           p_student_id: student_id,
           p_grade:      selectedGrade,
           p_domains:    subjectDomains,
+          p_course_scope: courseScope,
         }
       );
+      if (isMissingCourseScope(unserved.error)) {
+        console.error("COURSE_SCOPE_FALLBACK:", { rpc: "get_unserved_questions_for_student" });
+        unserved = await admin().rpc(
+          "get_unserved_questions_for_student",
+          {
+            p_student_id: student_id,
+            p_grade:      selectedGrade,
+            p_domains:    subjectDomains,
+          }
+        );
+      }
+      const { data: questions, error: questionError } = unserved;
 
       if (questionError) throw questionError;
 
@@ -574,6 +594,7 @@ serve(async (req) => {
             domains: subjectDomains,
             wavePhase,
             lastMisconceptionType,
+            courseScope,
           });
           // pupil = a one-way pseudonym (./log-pseudonym.ts), so the evaluation can exclude test accounts.
           const pupil = await pupilLogHash(student_id);

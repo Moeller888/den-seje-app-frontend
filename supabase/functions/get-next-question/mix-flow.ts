@@ -18,6 +18,7 @@
 // drives it with a recording stub and with a real supabase-js client on a captured fetch.
 
 import { parseServerBand, type ServerBand } from "./server-band.ts";
+import { rpcWithCourseScope } from "./scope.ts";
 import { MIX_POLICY, planNextQuestions, toMixHistory, type MixCandidate, type MixPlan } from "./format-mix.ts";
 
 export const CANDIDATES_RPC = "get_question_candidates_for_student";
@@ -48,6 +49,8 @@ export type MixFlowInput = {
   domains: string[];
   wavePhase: string;
   lastMisconceptionType: string | null;
+  // D-383 follow-up: p_course_scope for the candidate window (./scope.ts courseScopeOf). Absent: the call is as before.
+  courseScope?: string;
 };
 
 export type MixFlowResult = { plan: MixPlan<MixCandidate>; band: ServerBand };
@@ -57,13 +60,16 @@ export async function loadFormatMixPlan(client: MixReadClient, input: MixFlowInp
     throw new Error("format mix: missing student id");
   }
 
+  const candidateArgs = {
+    p_student_id: input.studentId,
+    p_grade: input.grade,
+    p_domains: input.domains,
+    p_per_group: CANDIDATES_PER_GROUP,
+  };
   const [candidates, history, bandResult] = await Promise.all([
-    client.rpc(CANDIDATES_RPC, {
-      p_student_id: input.studentId,
-      p_grade: input.grade,
-      p_domains: input.domains,
-      p_per_group: CANDIDATES_PER_GROUP,
-    }),
+    input.courseScope === undefined
+      ? client.rpc(CANDIDATES_RPC, candidateArgs)
+      : rpcWithCourseScope(client, CANDIDATES_RPC, candidateArgs, input.courseScope),
     client.from("question_instances")
       .select(HISTORY_SELECT)
       .eq("student_id", input.studentId)

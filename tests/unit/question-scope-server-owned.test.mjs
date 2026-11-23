@@ -72,7 +72,7 @@ test("the request cannot shrink the scope to an artificial mini-scope", () => {
 
 // ── get-next-question wiring (source level) ─────────────────────────────────────────────────────
 test("get-next-question takes the scope from the profile and ignores body.selected_grade", () => {
-  assert.match(INDEX_CODE, /import \{ deriveQuestionScope, isCourseItem \} from "\.\/scope\.ts";/);
+  assert.match(INDEX_CODE, /import \{ courseScopeOf, deriveQuestionScope, isCourseItem, isMissingCourseScope \} from "\.\/scope\.ts";/);
   assert.match(INDEX_CODE, /\.from\("profiles"\)\s*\.select\("active_domains, selected_grade"\)\s*\.eq\("id", student_id\)/);
   assert.match(INDEX_CODE, /const scope = deriveQuestionScope\(profileData, body\?\.subject\);/);
   assert.equal(/body\?\.selected_grade|body\.selected_grade/.test(INDEX_CODE), false, "the request body never sets the grade");

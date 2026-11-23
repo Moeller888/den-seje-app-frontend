@@ -173,6 +173,9 @@ test("the admin client is used only for the instance insert and the server-only 
     "from:question_instances",
     "from:question_instances",
     "rpc:get_unserved_questions_for_student",
+    // D-383 follow-up: the same read once more with today's arguments, ONLY when the database predates p_course_scope
+    // (PostgREST PGRST202, logged COURSE_SCOPE_FALLBACK) — the same student, grade and domains, no other field.
+    "rpc:get_unserved_questions_for_student",
     // D-329, targeted requests only: the lost-race check reads ONLY the id of the verified pupil's open
     // instance (no key), before "objective_exhausted" may be claimed; it never reaches the repeat RPCs below.
     "from:question_instances",
@@ -201,8 +204,8 @@ test("the admin client is used only for the instance insert and the server-only 
     "F12-B: the pupil's own introduction round (completed_at only)");
   assert.equal((INDEX_CODE.match(/admin\(\)\s*\.from\("learning_introductions"\)\s*\.select\("id"\)\s*\.eq\("learning_objective", targeting\.objective\)\s*\.eq\("is_active", true\)/g) ?? []).length, 1,
     "F12-B: whether the objective has an active introduction (id only)");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 16,
-    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call, the 15th and 16th F12-B's two introduction_required reads)");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 17,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call, the 15th and 16th F12-B's two introduction_required reads, the 17th the D-383 follow-up's fallback candidate read)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {

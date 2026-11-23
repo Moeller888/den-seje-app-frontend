@@ -139,3 +139,63 @@ test("the request cannot switch it off: body fields named like the tag change no
     assert.equal(r.status, base.status);
   }
 });
+
+// ── D-383 follow-up (20261123100000): the shared candidate RPCs get p_course_scope; an older database falls back ──────
+const argsOf = (r, name) => r.calls.filter((c) => c.kind === "rpc" && c.name === name).map((c) => c.ops.find((o) => o[0] === "args")[1]);
+
+test("p_course_scope: 'none' for the ordinary quiz and for a targeted request outside the sequence; the server's step inside it", async () => {
+  for (const [route, rpc] of [[ROUTES[0], "get_unserved_questions_for_student"], [ROUTES[1], "get_question_candidates_for_student"]]) {
+    const ordinary = await runCase(handler, { ...route, subject: "historie", scenario: "new" });
+    assert.deepEqual(argsOf(ordinary, rpc).map((a) => a.p_course_scope), ["none"], `${route.name}: ordinary`);
+    const outside = await targeted({ ...route, subject: "historie", scenario: "new" });
+    assert.deepEqual(argsOf(outside, rpc).map((a) => a.p_course_scope), ["none"], `${route.name}: targeted, no sequence`);
+    const env = globalThis.Deno.env;
+    env.set("LAERLIGVERSE_SEQUENCE", "on");
+    try {
+      const history = (kind, name, ops, result) =>
+        (kind === "from" && name === "question_instances" && ops.some((o) => o[0] === "select" && String(o[1]).startsWith("answered, was_correct")) ? { data: [], error: null } : result);
+      const inside = await targeted({ ...route, subject: "historie", scenario: "new", extraBody: { sequence: true, learning_step: "guided_practice" }, patch: history });
+      assert.deepEqual(argsOf(inside, rpc).map((a) => a.p_course_scope), ["guided_practice"], `${route.name}: the server's step`);
+    } finally {
+      env.delete("LAERLIGVERSE_SEQUENCE");
+    }
+  }
+  // The level route's candidates are ordinary-only and filtered in SQL (20261120150000); its call is unchanged.
+  const level = await runCase(handler, { ...ROUTES[2], subject: "historie", scenario: "new" });
+  for (const a of argsOf(level, "get_level_questions_for_student")) assert.equal("p_course_scope" in a, false);
+});
+
+test("the client cannot choose the scope: body fields change nothing; only the server's step or 'none' is ever sent", async () => {
+  for (const extraBody of [{ p_course_scope: "transfer" }, { course_scope: "transfer" }, { learning_step: "transfer" }]) {
+    const r = await runCase(handler, { subject: "historie", scenario: "new", extraBody });
+    assert.deepEqual(argsOf(r, "get_unserved_questions_for_student").map((a) => a.p_course_scope), ["none"], JSON.stringify(extraBody));
+  }
+});
+
+test("a database without the parameter (PGRST202): exactly one fallback call with today's arguments, logged; course items still withheld", async () => {
+  for (const [route, rpc] of [[ROUTES[0], "get_unserved_questions_for_student"], [ROUTES[1], "get_question_candidates_for_student"]]) {
+    const patch = (kind, name, ops, result) => {
+      if (kind !== "rpc" || name !== rpc) return result;
+      const args = ops.find((o) => o[0] === "args")[1];
+      if ("p_course_scope" in args) return { data: null, error: { code: "PGRST202", message: "Could not find the function" } };
+      return { data: [COURSE("c1"), Q("o1")], error: null };
+    };
+    const r = await runCase(handler, { ...route, subject: "historie", scenario: "new", patch });
+    assert.equal(r.status, 200, `${route.name}: ${r.body}`);
+    const calls = argsOf(r, rpc);
+    assert.equal(calls.length, 2, `${route.name}: the scoped call and one fallback`);
+    assert.equal(calls[0].p_course_scope, "none");
+    assert.equal("p_course_scope" in calls[1], false);
+    assert.deepEqual(Object.keys(calls[1]).sort(), Object.keys(calls[0]).filter((k) => k !== "p_course_scope").sort(), "otherwise the same arguments");
+    assert.ok(r.logs.some((l) => l === `ERR COURSE_SCOPE_FALLBACK: {"rpc":"${rpc}"}`), `${route.name}: logged`);
+    assert.deepEqual(inserts(r).map((i) => i.question_id), ["o1"], `${route.name}: the TS filter still withholds the course item`);
+  }
+});
+
+test("any OTHER candidate error is not a fallback: it fails loud (500), with no second call", async () => {
+  const patch = (kind, name, ops, result) => (kind === "rpc" && name === "get_unserved_questions_for_student" ? { data: null, error: { code: "42501", message: "permission denied" } } : result);
+  const r = await runCase(handler, { subject: "historie", scenario: "new", patch });
+  assert.equal(r.status, 500, r.body);
+  assert.equal(argsOf(r, "get_unserved_questions_for_student").length, 1);
+  assert.equal(r.logs.some((l) => l.includes("COURSE_SCOPE_FALLBACK")), false);
+});
