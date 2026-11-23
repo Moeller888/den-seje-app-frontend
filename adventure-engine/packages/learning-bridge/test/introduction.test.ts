@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { BridgeHost } from "../src/host.ts";
-import { LaerligTaskService, type EdgeCaller } from "../src/laerlig-service.ts";
+import { INTRODUCTION_CAPABILITY, LaerligTaskService, type EdgeCaller } from "../src/laerlig-service.ts";
 import {
   MAX_INTRO_CARDS,
   MAX_MESSAGE_BYTES,
@@ -431,6 +431,52 @@ describe("LaerligTaskService — the server's introduction step (mock HTTP)", ()
       const a = svc([{ status: 200, body }]);
       await expect(a.s.fetchStep(Q), JSON.stringify(body).slice(0, 80)).rejects.toMatchObject({ code: "server" });
     }
+  });
+
+  it("F12-B: the introduction capability goes out only when THIS session can show the introduction (fetchStep on a host with introductions)", async () => {
+    const TASK = { question_instance_id: "33333333-4444-4555-8666-777777777777", round_no: 1, content: { question: "Q", options: ["a", "b"] }, answer_format: "mc", answer_type: "short", learning_objective: OBJ, learning_step: "guided_practice", mode: "practice" };
+    const step = svc([{ status: 200, body: REPLY }]);
+    await step.s.fetchStep(Q);
+    expect(step.calls[0]).toEqual({ fn: "get-next-question", body: { subject: "historie", learning_objective: OBJ, sequence: true, introduction_capability: INTRODUCTION_CAPABILITY } });
+    // A bridge/2 session (fetchTask), or a host without introductions: the field is LEFT OUT, never sent as false/0.
+    const task = svc([{ status: 200, body: TASK }]);
+    await task.s.fetchTask(Q);
+    expect(task.calls[0]?.body).toEqual({ subject: "historie", learning_objective: OBJ, sequence: true });
+    const off = svc([{ status: 200, body: TASK }], false);
+    await off.s.fetchStep(Q);
+    expect(off.calls[0]?.body).toEqual({ subject: "historie", learning_objective: OBJ, sequence: true });
+    // Without a sequence there is no introduction at all: the request is exactly as before.
+    const calls: Array<Record<string, unknown>> = [];
+    const plain = new LaerligTaskService({ call: async (_fn, body) => { calls.push({ ...body }); return { status: 200, body: TASK }; }, subject: "historie", objectiveMap: { "hist.besaettelsen.h4": OBJ }, introductions: true });
+    await plain.fetchStep(Q).catch(() => undefined);
+    expect(calls[0]).toEqual({ subject: "historie", learning_objective: OBJ });
+    expect(INTRODUCTION_CAPABILITY).toBe(1);
+  });
+
+  it("F12-B: step \"introduction_required\" is an explicit 'outdated' refusal — never a task, never retried, nothing reported", async () => {
+    for (const [fetch, introductions] of [["fetchTask", true], ["fetchStep", false], ["fetchStep", true]] as const) {
+      const a = svc([{ status: 200, body: { step: "introduction_required", learning_objective: OBJ } }], introductions);
+      await expect(a.s[fetch](Q)).rejects.toMatchObject({ code: "outdated", transient: false, message: "introduction_required" });
+      expect(a.calls).toHaveLength(1);
+      expect(await a.s.openTask()).toBeNull();
+    }
+  });
+
+  it("F12-B: through the BridgeHost, introduction_required reaches the game as task_unavailable and the host page as 'outdated'", async () => {
+    const errors: unknown[] = [];
+    const replies = [{ status: 200, body: { step: "introduction_required", learning_objective: OBJ } }];
+    const service = new LaerligTaskService({ call: async () => replies.shift() ?? { status: 500, body: {} }, subject: "historie", objectiveMap: { "hist.besaettelsen.h4": OBJ }, sequence: { contextOfStep: { guided_practice: "arkivskab" } }, introductions: false });
+    // The REAL service is the point of this test; pair() is generic over the TaskService it hands the BridgeHost.
+    const p = pair({ service, host: { retryDelaysMs: [0, 0, 0], onServiceError: (e: unknown) => errors.push(e) } });
+    const c = p.client.connect();
+    await flush();
+    await c;
+    const t = p.client.requestTask({ objectiveId: "hist.besaettelsen.h4", purpose: "check", surface: "world", contextKey: "arkivskab" });
+    await flush();
+    await expect(t).rejects.toMatchObject({ code: "task_unavailable" });
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({ code: "outdated", message: "introduction_required" });
+    expect(replies).toHaveLength(0);
   });
 
   it("reportIntroduction: shown → presented, done → completed, with the host's id; every server outcome mapped", async () => {

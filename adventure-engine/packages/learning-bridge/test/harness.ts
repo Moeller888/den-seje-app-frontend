@@ -1,6 +1,7 @@
 import { BridgeClient, type BridgeClientOptions, type ClientStatus } from "../src/client.ts";
 import { BridgeHost, type BridgeHostOptions, type KeyValueStore } from "../src/host.ts";
 import type { GameMessage, HostMessage, RejectReason } from "../src/protocol.ts";
+import type { TaskService } from "../src/service.ts";
 import { FakeTaskService, type FakeItem } from "../src/test-service.ts";
 
 export const HOST_ORIGIN = "https://xn--lrlig-sra.dk";
@@ -70,16 +71,29 @@ export class MemoryStore implements KeyValueStore {
 /**
  * A host and a game wired like two windows: every message is structured-cloned and delivered as a
  * microtask, with the real origin and source checks. `dropToGame` / `dropToHost` lose messages.
+ *
+ * The host takes any TaskService, so a test can wire the real LaerligTaskService: `p.service` then has the type
+ * of the service passed in. Without one, the host gets the test adapter, whose ledger most tests read back.
  */
-export function pair(over: {
-  service?: FakeTaskService;
+export function pair<S extends TaskService>(over: PairOptions<S> & { service: S }): Pair<S>;
+// The adapter overload is last on purpose: `Parameters<typeof pair>[0]` (used by test helpers) takes the last one.
+export function pair(over?: PairOptions): Pair<FakeTaskService>;
+export function pair(over: PairOptions<TaskService> = {}): Pair<TaskService> {
+  return wire(over.service ?? new FakeTaskService(ITEMS), over);
+}
+
+export type PairOptions<S extends TaskService = FakeTaskService> = {
+  service?: S;
   store?: MemoryStore;
   host?: Partial<BridgeHostOptions>;
   client?: Partial<BridgeClientOptions>;
-} = {}) {
+};
+
+export type Pair<S extends TaskService> = ReturnType<typeof wire<S>>;
+
+function wire<S extends TaskService>(service: S, over: PairOptions<TaskService>) {
   const hostWin = { window: "host" };
   const gameWin = { window: "game" };
-  const service = over.service ?? new FakeTaskService(ITEMS);
   const store = over.store ?? new MemoryStore();
   let n = 0;
   // Deterministic ids keep the tests reproducible; the browser wiring uses crypto.randomUUID().

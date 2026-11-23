@@ -7,7 +7,7 @@ import { deriveQuestionScope } from "./scope.ts";
 import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
 import { checkRequestedStep, historyFromRows, nextStep, stepDef, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
 import { hintsAvailable } from "../_shared/hints.ts";
-import { INTRODUCTION_ENV, decideIntroduction, on as introOn } from "../_shared/introduction.ts";
+import { INTRODUCTION_ENV, decideIntroduction, introductionCapabilityOf, introductionRequired, on as introOn } from "../_shared/introduction.ts";
 import { sortByWave } from "./wave-order.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
@@ -146,6 +146,16 @@ serve(async (req) => {
     const admin = () => (adminClient ??= makeAdminClient());
 
     const body = await req.json().catch(() => ({}));
+    // F12-B (../_shared/introduction.ts): the host's introduction capability, validated before anything is read. Only a
+    // request that SENDS the field can be refused here; every request without it (every client before F12-B, the
+    // ordinary quiz) runs exactly as before.
+    const introductionCapability = introductionCapabilityOf(body);
+    if (introductionCapability === "invalid") {
+      return new Response(JSON.stringify({ error: "invalid_introduction_capability" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
     const sessionContext        = body?.session_context ?? null;
     const wavePhase             = (sessionContext?.wave_phase as string) ?? "challenge";
     const lastMisconceptionType = (sessionContext?.last_misconception_type as string | null) ?? null;
@@ -189,34 +199,73 @@ serve(async (req) => {
     // expects (a stale or manipulated one is refused). Off: no read, no change — the calls are as before.
     let sequence: Extract<SequenceDecision, { state: "step" }> | null = null;
     if (targeting.mode === "on" && Deno.env.get("LAERLIGVERSE_SEQUENCE") === "on" && body?.sequence === true) {
-      // LP-13 / K9 prototype (Edge secret LAERLIGVERSE_INTRODUCTION, ../_shared/introduction.ts, migration
-      // 20261110043500): before the first step, the objective's introduction — a separate server round without an
-      // answer key, so it never blocks the quiz (idx_one_open_question) and no grading path can see it. A refresh
-      // resumes the same round; only the explicit "completed" action (introduction-progress) moves on. Off: no call.
-      if (introOn(Deno.env.get(INTRODUCTION_ENV))) {
-        const { data: introData, error: introError } = await admin().rpc("serve_introduction", {
-          p_student_id: student_id, p_learning_objective: targeting.objective,
-        });
-        if (introError) throw introError;
-        const intro = decideIntroduction(introData);
-        if (intro.kind === "error") throw new Error(`introduction: ${intro.problem}`);
-        if (intro.kind === "show") {
-          console.log("LEARNING_SEQUENCE:", { step: "introduction" });
-          return new Response(JSON.stringify({
-            step: "introduction", learning_objective: targeting.objective, learning_step: "introduction",
-            introduction_round_id: intro.roundId, content_sha256: intro.contentSha256, content: { cards: intro.cards },
-          }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          });
-        }
-      }
+      // The pupil's own history in the objective: the sequence step is derived from it, and (F12-B) it tells whether a
+      // task round of this objective is still open. Read once, on the backend client, scoped to the verified pupil.
       const { data: historyRows, error: historyError } = await admin()
         .from("question_instances")
         .select("answered, was_correct, answered_at, questions!inner(learning_objective, metadata)")
         .eq("student_id", student_id)
         .eq("questions.learning_objective", targeting.objective);
       if (historyError) throw historyError;
+      // LP-13 / K9 prototype (Edge secret LAERLIGVERSE_INTRODUCTION, ../_shared/introduction.ts, migration
+      // 20261110043500): before the first step, the objective's introduction — a separate server round without an
+      // answer key, so it never blocks the quiz (idx_one_open_question) and no grading path can see it. A refresh
+      // resumes the same round; only the explicit "completed" action (introduction-progress) moves on. Off: no call.
+      // F12-B: an OPEN task round of this objective is finished first — the pupil is never pulled back into the
+      // introduction in the middle of a task the server already served (the round is resumed below, unchanged, and
+      // nothing new is created); the next request decides again. An open round is no exemption: once it is answered,
+      // the introduction is required as before.
+      const openTaskInObjective = Array.isArray(historyRows) && historyRows.some((r: { answered?: unknown }) => r?.answered === false);
+      if (introOn(Deno.env.get(INTRODUCTION_ENV)) && !openTaskInObjective) {
+        if (introductionCapability !== "supported") {
+          // F12-B: this host or game cannot show the introduction. Decide WITHOUT writing whether one is required: no
+          // round is created for an introduction that cannot be shown, no task is served instead of it, nothing is
+          // registered or paid. A required introduction is never skipped by leaving the capability out.
+          const [{ data: roundRows, error: roundError }, { data: activeRows, error: activeError }] = await Promise.all([
+            admin()
+              .from("introduction_rounds")
+              .select("completed_at, learning_introductions!inner(learning_objective)")
+              .eq("student_id", student_id)
+              .eq("learning_introductions.learning_objective", targeting.objective)
+              .order("served_at", { ascending: true })
+              .limit(1),
+            admin()
+              .from("learning_introductions")
+              .select("id")
+              .eq("learning_objective", targeting.objective)
+              .eq("is_active", true)
+              .limit(1),
+          ]);
+          if (roundError) throw roundError;
+          if (activeError) throw activeError;
+          const required = introductionRequired(roundRows, activeRows);
+          if (required.kind === "error") throw new Error(`introduction: ${required.problem}`);
+          if (required.kind === "required") {
+            console.log("LEARNING_SEQUENCE:", { step: "introduction_required" });
+            return new Response(JSON.stringify({ step: "introduction_required", learning_objective: targeting.objective }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 200,
+            });
+          }
+        } else {
+          const { data: introData, error: introError } = await admin().rpc("serve_introduction", {
+            p_student_id: student_id, p_learning_objective: targeting.objective,
+          });
+          if (introError) throw introError;
+          const intro = decideIntroduction(introData);
+          if (intro.kind === "error") throw new Error(`introduction: ${intro.problem}`);
+          if (intro.kind === "show") {
+            console.log("LEARNING_SEQUENCE:", { step: "introduction" });
+            return new Response(JSON.stringify({
+              step: "introduction", learning_objective: targeting.objective, learning_step: "introduction",
+              introduction_round_id: intro.roundId, content_sha256: intro.contentSha256, content: { cards: intro.cards },
+            }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 200,
+            });
+          }
+        }
+      }
       const decision = nextStep(historyFromRows(historyRows), Date.now());
       const requested = checkRequestedStep(body?.learning_step, decision);
       if (!requested.ok) {
