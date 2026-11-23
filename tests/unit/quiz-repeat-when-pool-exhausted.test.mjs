@@ -492,8 +492,10 @@ test("the reviewed spelling migration is the only later definition of the repeat
   // rollback to this migration's exact body (md5 7b7693b3…).
   // D-383 adds ONE condition, NOT question_is_course_item(q.metadata), to both the "nothing unserved remains" guard
   // and the reopen selection of the three backend repeat functions; everything else is D-280's body byte for byte
-  // (the reopen, repeat_count + 1, the lost-race NULL, the MC re-key). It writes no reward and touches neither
-  // process_question_attempt nor release_open_question_outside. Its runtime suite
+  // (the reopen, repeat_count + 1, the lost-race NULL, the MC re-key). It writes no reward and does not touch
+  // process_question_attempt. It re-creates release_open_question_outside as D-316's body with ONE narrowing: an ACTIVE
+  // course round is never released (both the round-1 DELETE and the repeat CLOSE keep D-316's paths for every other
+  // round, an inactive course round included), so no released round can come back as a first attempt. Its runtime suite
   // (course-items-out-of-ordinary-quiz-migration-run) proves the bodies' diff, that a course round is never reopened
   // and that an ordinary repeat is reopened as before.
   assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
@@ -521,7 +523,11 @@ test("the repeat step runs after due questions and after new questions", () => {
   const due    = s.indexOf("1. DUE QUESTIONS");
   const fresh  = s.indexOf("2. NEW QUESTIONS");
   const repeat = s.indexOf("3. REPEAT");
-  const none   = s.indexOf('step: "no_questions"');
+  // The pool-exhausted answer is the LAST no_questions in the file. D-383 adds an earlier, different one in the due
+  // step ({ step: "no_questions", reason: "course_round_open" }: an open course round, not an empty pool).
+  const none   = s.lastIndexOf('step: "no_questions"');
+  const courseOpen = s.indexOf('{ step: "no_questions", reason: "course_round_open" }');
+  assert.ok(courseOpen !== -1 && due < courseOpen && courseOpen < fresh, "the D-383 answer belongs to the due step");
   assert.ok(due !== -1 && fresh !== -1 && repeat !== -1 && none !== -1);
   assert.ok(due < fresh && fresh < repeat && repeat < none,
     "a repeat is the last resort, reached only when nothing else can be served");

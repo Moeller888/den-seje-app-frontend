@@ -402,7 +402,9 @@ const REVIEWED_LATER_READERS = {
     "D-383: the three repeat functions and get_level_questions_for_student keep D-280's / 20261029120000's reads " +
     "exactly (the pupil's own instances by student_id; the served-check NOT EXISTS) with one added condition on the " +
     "QUESTION (NOT question_is_course_item(q.metadata)) — it can only narrow what is read or reopened. The new " +
-    "question_is_course_item reads no table. EXECUTE stays service_role only. No policy, RLS or table privilege on " +
+    "question_is_course_item reads no table. release_open_question_outside keeps D-316's reads and writes (the caller's " +
+    "own open rounds, auth.uid()) with the same kind of added condition: an active course round is not released. " +
+    "EXECUTE is unchanged (service_role; release: authenticated). No policy, RLS or table privilege on " +
     "question_instances is touched (proven in course-items-out-of-ordinary-quiz-migration-run.test.mjs).",
 };
 

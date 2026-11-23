@@ -120,8 +120,10 @@ const REVIEWED_H5_SURFACE_AFTER_D280 = Object.freeze([G1, BOOTSTRAP, ALIGN, "202
   // D-383 (20261120150000, not applied) was reviewed: it re-creates the three backend request_repeat_* functions
   // with ONE added condition (NOT question_is_course_item) in their guard and their reopen selection; the reopen itself
   // (answered true → false, repeat_count + 1, the lost-race NULL, the MC re-key) is D-280's byte for byte, so the round
-  // guard's rule is untouched. It touches no _v2, no question_attempts and no process_* function. The bootstrap pinned
-  // the D-280 bodies only as its precondition (applied 2026-11-04) (course-items-out-of-ordinary-quiz-migration-run).
+  // guard's rule is untouched. It also re-creates release_open_question_outside as D-316's body with one narrowing (an
+  // ACTIVE course round is never released; its guarded statement still reads question_attempts only through D-316's
+  // EXISTS). It touches no _v2 and no process_* function. The bootstrap pinned the D-280/D-316 bodies only as its
+  // precondition (applied 2026-11-04) (course-items-out-of-ordinary-quiz-migration-run).
   "20261120150000_course_items_out_of_ordinary_quiz.sql"]);
 
 test("the two files: unique versions, after their prerequisites, adjacent; later H5-surface changes need review", () => {

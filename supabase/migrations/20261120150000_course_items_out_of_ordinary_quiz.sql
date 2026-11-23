@@ -15,15 +15,20 @@
 --   request_repeat_question_for_student        vagten og genåbningen: + NOT question_is_course_item
 --   request_repeat_question_servable_for_student  vagten og genåbningen: + NOT question_is_course_item
 --   request_repeat_level_question_for_student  vagten og genåbningen: + NOT question_is_course_item
+-- Og fagskiftet (kaldt af den almindelige quiz og af et målrettet kald, men frigivelse er aldrig rigtigt for en
+-- kursusrunde, se afsnit 4):
+--   release_open_question_outside              en aktiv kursusrunde frigives aldrig (en inaktiv stadig)
 -- Ingen andre ændringer: signaturer, ejer, SECURITY DEFINER/INVOKER, search_path, plan_cache_mode, grants
 -- og kommentarer er uændrede. Ingen data ændres. Kandidatvinduets eksakthedsargument holder: filteret er,
 -- ligesom question_is_servable, en gyldighedsbetingelse efter vinduet, ikke en del af vinduets indeksscan.
 --
 -- IKKE anvendt i produktion. Må KUN anvendes via apply_migration med særskilt ejer-autorisation
--- (D-110, docs/migration-workflow-policy.md). Kan anvendes før eller efter get-next-question med isCourseItem.
+-- (D-110, docs/migration-workflow-policy.md). RÆKKEFØLGE: denne migration FØR get-next-question med D-383 deployes
+-- (en gammel gentagelseskrop kan ellers genåbne en kursusrunde, før funktionen ser, at den ikke må serveres; se
+-- D-383 "Rækkefølge" og course-items-version-matrix.test.mjs).
 
 -- ── 0. Vagt: funktionerne skal være præcis de versioner, produktionen kører ─────────────────────
--- md5(prosrc) [før, efter]: før er kroppene fra 20261029120000 og 20261031194600 (begge anvendt i
+-- md5(prosrc) [før, efter]: før er kroppene fra 20261029120000, 20261031194600 og 20261102100000 (alle anvendt i
 -- produktion), efter er denne migrations egne kroppe (så en ny kørsel er tilladt). Alt andet afbryder.
 DO $course_items_guard$
 DECLARE
@@ -31,6 +36,7 @@ DECLARE
     "public.get_level_questions_for_student(uuid,integer,text[],integer)": ["9e5862b287f6f41066eb876667c426a7", "8a48fc8ad4268eae0e4e9299d9f8be07"],
     "public.request_repeat_question_for_student(uuid,smallint,text[])": ["2ac19e786310b59051a44aed96b5bf46", "c14b90ccd4d05e12473083b072eaefba"],
     "public.request_repeat_question_servable_for_student(uuid,smallint,text[])": ["092555368551a096c29d6e60f58c17b1", "b23d72a1d167a94246e5b7243c25cdbd"],
+    "public.release_open_question_outside(text[])": ["b80c1c7857ecc90bdbd7b6175b65c78f", "e52e69fa3374a5838293977f0057b34d"],
     "public.request_repeat_level_question_for_student(uuid,text[])": ["db8280ddee20254e876be7fb1fc57e4d", "410d0ab6fb67c329a573cf3f73973921"]
   }';
   f text;
@@ -506,3 +512,89 @@ BEGIN
   RETURN v_instance_id;
 END;
 $$;
+
+-- ── 4. Fagskift: en åben kursusrunde frigives aldrig af den almindelige quiz ──────────────────────
+-- Før: et kald til den almindelige quiz i et andet fag lukkede eller slettede elevens åbne kursusrunde (den lå
+-- uden for fagets domæner), så forløbet mistede den uden at eleven så det. Nu bliver en kursusrunde stående; den
+-- genoptages i forløbet (get-next-question serverer den kun i sekvensen og siger det ellers). Undtagelse som før:
+-- en runde, hvis spørgsmål er INAKTIVT, frigives stadig — den kan aldrig serveres og ville ellers spærre eleven.
+-- Kroppen er D-316's (20261102100000, anvendt i produktion) med præcis de tre betingelser ændret.
+CREATE OR REPLACE FUNCTION public.release_open_question_outside(p_domains text[])
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_user_id UUID := auth.uid();
+  v_closed  INTEGER;
+  v_deleted INTEGER;
+  v_kept    INTEGER;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'not_authenticated';
+  END IF;
+
+  IF p_domains IS NULL OR array_length(p_domains, 1) IS NULL THEN
+    RAISE EXCEPTION 'invalid_domains';
+  END IF;
+
+  -- D-316: a round is also released when its question is inactive (deactivated after it was served).
+  UPDATE public.question_instances qi
+  SET    answered    = true,
+         answered_at = now()
+  FROM   public.questions q
+  WHERE  qi.question_id  = q.id
+    AND  qi.student_id   = v_user_id
+    AND  qi.answered     = false
+    AND  qi.user_answer IS NULL
+    AND  qi.repeat_count > 0
+    AND  (q.is_active IS NOT TRUE
+          OR ((q.learning_objective IS NULL OR NOT (q.learning_objective = ANY (p_domains)))
+              AND NOT public.question_is_course_item(q.metadata)));
+
+  GET DIAGNOSTICS v_closed = ROW_COUNT;
+
+  -- D-316 history guard: a round-1 instance that already carries H5 history (question_attempts) is never
+  -- deleted — the attempts' foreign key would cascade. The H5 invariant makes this state impossible for
+  -- every API path (an attempt is written only by _v2, which closes the round in the same transaction;
+  -- every reopen raises repeat_count, enforced by H5's round guard; no API role may INSERT attempts), so
+  -- this only catches a state forced past the triggers. Such a round is CLOSED instead (as a repeat is):
+  -- the row and every attempt stay, the pupil is still released. Dynamic SQL, because before H5 the table
+  -- does not exist; then there is no history to protect.
+  IF to_regclass('public.question_attempts') IS NOT NULL THEN
+    EXECUTE $guarded$
+      UPDATE public.question_instances qi
+      SET    answered    = true,
+             answered_at = now()
+      FROM   public.questions q
+      WHERE  qi.question_id  = q.id
+        AND  qi.student_id   = $1
+        AND  qi.answered     = false
+        AND  qi.user_answer IS NULL
+        AND  qi.repeat_count = 0
+        AND  (q.is_active IS NOT TRUE
+              OR ((q.learning_objective IS NULL OR NOT (q.learning_objective = ANY ($2)))
+                  AND NOT public.question_is_course_item(q.metadata)))
+        AND  EXISTS (SELECT 1 FROM public.question_attempts a WHERE a.question_instance_id = qi.id)$guarded$
+    USING v_user_id, p_domains;
+    GET DIAGNOSTICS v_kept = ROW_COUNT;
+    v_closed := v_closed + v_kept;
+  END IF;
+
+  DELETE FROM public.question_instances qi
+  USING  public.questions q
+  WHERE  qi.question_id  = q.id
+    AND  qi.student_id   = v_user_id
+    AND  qi.answered     = false
+    AND  qi.user_answer IS NULL
+    AND  qi.repeat_count = 0
+    AND  (q.is_active IS NOT TRUE
+          OR ((q.learning_objective IS NULL OR NOT (q.learning_objective = ANY (p_domains)))
+              AND NOT public.question_is_course_item(q.metadata)));
+
+  GET DIAGNOSTICS v_deleted = ROW_COUNT;
+
+  RETURN v_closed + v_deleted;
+END;
+$function$;

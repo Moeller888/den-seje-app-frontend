@@ -9,9 +9,11 @@
 //   * the server grades with the reviewed key and registers each attempt (H5, question_attempts);
 //   * when the five items are used up the objective is "exhausted" — never a repeat (D-329);
 //   * through the real host page, the game receives the backs and no token or key.
-// What is NOT proven, and why: the server picks ANY unserved item of the objective, not the item of a given
-// learning STEP (practice, revision, transfer …) — step-precise selection needs the step on the server
-// (LP-13 / L1 K1). The test asserts exactly that limit.
+// D-383 (owner mandate 2026-11-23): these are COURSE items (metadata.learning_step), and a course item is served ONLY
+// inside the server-directed sequence (D-338), where the server decides the step. Before, a targeted request without
+// `sequence` got ANY unserved item of the objective (this spec asserted that "stated limit"); now it is refused with
+// 403 course_requires_sequence and nothing is created. The reviewed items, their backs and the server's grading are
+// proven here THROUGH the sequence; the whole step order through the real host page is learning-sequence.isolated.spec.
 import { test, expect } from "@playwright/test";
 import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -72,59 +74,62 @@ async function makePupil(request, label, browserName) {
   return { id, email, password, token: (await signIn.json()).access_token };
 }
 
-const gnq = (request, p) => request.post(`${SUPA}/functions/v1/get-next-question`, { headers: { apikey: ANON, authorization: `Bearer ${p.token}`, ...json }, data: { subject: "historie", learning_objective: OBJECTIVE } });
+const gnq = (request, p, extra = {}) => request.post(`${SUPA}/functions/v1/get-next-question`, { headers: { apikey: ANON, authorization: `Bearer ${p.token}`, ...json }, data: { subject: "historie", learning_objective: OBJECTIVE, ...extra } });
+const instancesOf = async (request, p) => await (await request.get(`${SUPA}/rest/v1/question_instances?select=id,answered&student_id=eq.${p.id}`, { headers: svc })).json();
+const progressOf = async (request, p) => await (await request.get(`${SUPA}/rest/v1/student_progress?select=xp,coins&student_id=eq.${p.id}`, { headers: svc })).json();
 const answer = (request, p, id, text, roundNo) => request.post(`${SUPA}/functions/v1/process-event`, {
   headers: { apikey: ANON, authorization: `Bearer ${p.token}`, ...json },
   data: { question_instance_id: id, answer: text, question_shown_at: Date.now(), round_no: roundNo, submission_id: randomUUID() },
 });
 const attempts = async (request, p) => await (await request.get(`${SUPA}/rest/v1/question_attempts?select=question_instance_id,submission_id,attempt_no,grading,was_correct,is_repeat,answered_at,xp_awarded,coins_awarded&student_id=eq.${p.id}&order=created_at`, { headers: svc })).json();
 
-test("the precise objective serves ONLY the reviewed items, with their backs and without their keys; the server grades with the reviewed key and registers every attempt; then 'exhausted', never a repeat", async ({ request }, testInfo) => {
+test("a targeted request WITHOUT the sequence is refused (403, nothing created); THROUGH the sequence the reviewed items come with their backs and without their keys, step by step, and the server grades with the reviewed key", async ({ request }, testInfo) => {
   test.fail(!K1, K1_GAP);
   if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
   test.skip(testInfo.project.name !== "chromium", "backend path: once per run");
   const p = await makePupil(request, "http", testInfo.project.name);
+  // D-383: the bypass this spec used to rely on. Refused, and nothing is created or paid.
+  const before = await progressOf(request, p);
+  const refused = await gnq(request, p);
+  expect(refused.status(), await refused.text()).toBe(403);
+  expect(await refused.json()).toEqual({ error: "course_requires_sequence" });
+  expect(await instancesOf(request, p)).toEqual([]);
+  expect(await progressOf(request, p)).toEqual(before);
+  // Through the server sequence, every answer right: practice → independent application → transfer, then the
+  // revisit waits (the provisional test policy). Each item is the reviewed item OF THE SERVER'S STEP.
   const seen = [];
-  for (let i = 0; i < FIXTURE.length + 2; i++) {
-    const r = await gnq(request, p);
+  for (let i = 0; i < FIXTURE.length + 1; i++) {
+    const r = await gnq(request, p, { sequence: true });
     expect(r.status(), await r.text()).toBe(200);
     const s = await r.json();
-    if (s.step === "no_questions") {
-      expect(s).toEqual({ step: "no_questions", reason: "objective_exhausted" });
+    if (s.step === "sequence_waiting") {
+      expect(s).toMatchObject({ learning_objective: OBJECTIVE, learning_step: "revisit" });
       break;
     }
     expect(s.learning_objective).toBe(OBJECTIVE);
     const item = byPrompt.get(s.content.question);
     expect(item, "only reviewed items are served for the precise objective").toBeTruthy();
+    expect(s.learning_step, "the item belongs to the server's step").toBe(item.learning_step);
     // The backs come through the DTO in option order; nothing that marks the answer does.
     expect(s.content.options).toEqual(item.content.options);
     expect(s.content.option_details).toEqual(item.content.option_details);
     for (const k of ["correct", "accepted_answers", "review_text", "hints"]) expect(k in s.content, k).toBe(false);
-    seen.push(item.tag);
-    // Alternate right and wrong; the SERVER decides with the reviewed key.
-    const right = i % 2 === 0;
-    const text = right ? item.content.correct : item.content.options.find((o) => o !== item.content.correct);
-    const g = await answer(request, p, s.question_instance_id, text, s.round_no);
+    seen.push(item.learning_step);
+    const g = await answer(request, p, s.question_instance_id, item.content.correct, s.round_no);
     expect(g.status(), await g.text()).toBe(200);
-    const body = await g.json();
-    expect(body).toMatchObject({ outcome: "recorded", status: right ? "correct" : "incorrect", xp_awarded: right ? 10 : 0 });
-    if (!right) expect(body.correct_answer, "the key is revealed only after the answer was recorded").toBe(item.content.correct);
+    expect(await g.json()).toMatchObject({ outcome: "recorded", status: "correct", xp_awarded: 10 });
   }
-  // Every reviewed item once, in whatever order the server chose (NOT step order — the stated limit).
-  expect([...seen].sort()).toEqual(FIXTURE.map((r) => r.tag).sort());
+  expect(seen).toEqual(["guided_practice", "independent_application", "transfer"]);
   const rows = await attempts(request, p);
-  expect(rows).toHaveLength(FIXTURE.length);
+  expect(rows).toHaveLength(seen.length);
   expect(rows.every((r) => r.is_repeat === false && r.grading === "auto")).toBe(true);
   const [a] = assessObjectives(rows.map((r) => observationFromAttemptRow({ ...r, learning_objective: OBJECTIVE })));
   expect(a.states.practised.status).toBe("observed");
-  expect(a.states.independent.status, "server data: mode and hints are not registered (L1 K1)").toBe("unknown");
   expect(a.evidence.every((e) => !e.eligible)).toBe(true);
   expect(a.documentedProgression).toBe(false);
 });
 
-test("through the real host page: the game receives the documents' backs for the precise objective, and no token or key; the server grades", async ({ page, request, browserName }) => {
-  test.fail(!K1, K1_GAP);
-  if (!K1) test.setTimeout(120_000); // the unchanged 30 s assertion must FAIL, not hit the 30 s test timeout
+test("through the real host page WITHOUT the sequence: the game gets no course item — task unavailable, the host records 'forbidden', nothing registered, no token or key reaches the game", async ({ page, request, browserName }) => {
   const p = await makePupil(request, "host", browserName);
   await page.goto(`${HOST_ORIGIN}/`);
   await page.locator("#lv-email").fill(p.email);
@@ -134,19 +139,12 @@ test("through the real host page: the game receives the documents' backs for the
   const f = page.frameLocator("#lv-game");
   await expect(f.locator("body")).toHaveAttribute("data-bridge", "ready", { timeout: 30_000 });
   await f.locator("#use-cabinet").click();
-  await expect(f.locator("body")).toHaveAttribute("data-task", "open", { timeout: 30_000 });
+  await expect(f.locator("body")).toHaveAttribute("data-task", "error", { timeout: 30_000 });
+  await expect(page.locator("body")).toHaveAttribute("data-last-service-error", "forbidden");
   const game = page.frames().find((fr) => fr.url().startsWith(GAME_ORIGIN));
   const received = (await game.evaluate(() => window.__lvReceived())).join("\n");
-  const prompt = await f.locator("#prompt").textContent();
-  const item = byPrompt.get(prompt ?? "");
-  expect(item, "the game shows a reviewed item").toBeTruthy();
-  for (const back of item.content.option_details) expect(received, "each back reached the game").toContain(JSON.stringify(back).slice(1, -1));
-  for (const secret of ["eyJ", "Bearer", "access_token", "refresh_token", ANON, item.content.review_text]) expect(received).not.toContain(secret);
-  // Answer right; the server's verdict reaches the world.
-  const opts = await f.locator("#options button").evaluateAll((bs) => bs.map((b) => ({ id: b.dataset.option, label: b.textContent })));
-  await f.locator(`#options [data-option="${opts.find((o) => o.label === item.content.correct).id}"]`).click();
-  await f.locator("#commit").click();
-  await expect(f.locator("body")).toHaveAttribute("data-task", "correct", { timeout: 30_000 });
-  await expect(f.locator("body")).toHaveAttribute("data-cabinet", "open");
-  expect(await attempts(request, p)).toEqual([expect.objectContaining({ was_correct: true, is_repeat: false, xp_awarded: 10 })]);
+  for (const item of FIXTURE) expect(received, "no reviewed item reached the game").not.toContain(item.content.question);
+  for (const secret of ["eyJ", "Bearer", "access_token", "refresh_token", ANON]) expect(received).not.toContain(secret);
+  expect(await instancesOf(request, p)).toEqual([]);
+  expect(await attempts(request, p)).toEqual([]);
 });

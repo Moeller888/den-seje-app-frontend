@@ -27,6 +27,7 @@ import { NOT_IN_PRODUCTION, TEST_PROFILES } from "../isolated/schema/replay-plan
 
 const FILE = "20261120150000_course_items_out_of_ordinary_quiz.sql";
 const D280 = "20261031194600_mc_length_cue_answer_paths.sql";
+const D316 = "20261102100000_release_open_rounds_on_inactive_questions.sql";
 const MIGRATION = readMigration(FILE);
 const GUARD = JSON.parse(/expected CONSTANT jsonb := '([\s\S]*?)';/.exec(MIGRATION)[1]);
 
@@ -34,6 +35,7 @@ const LEVEL = "public.get_level_questions_for_student(uuid,integer,text[],intege
 const R1 = "public.request_repeat_question_for_student(uuid,smallint,text[])";
 const R2 = "public.request_repeat_question_servable_for_student(uuid,smallint,text[])";
 const R3 = "public.request_repeat_level_question_for_student(uuid,text[])";
+const REL = "public.release_open_question_outside(text[])";
 const ORIGIN = {
   get_level_questions_for_student: "20261029120000_difficulty_scale_b.sql",
   request_repeat_question_for_student: D280,
@@ -50,6 +52,7 @@ async function productionDb() {
   const db = new PGlite();
   for (const sql of answerChainSql()) await db.exec(sql);
   await db.exec(readMigration(D280));
+  await db.exec(readMigration(D316)); // applied in production as 20261102123618
   return db;
 }
 const md5Of = async (db, sig) => (await db.query("SELECT md5(prosrc) AS h FROM pg_proc WHERE oid = to_regprocedure($1)", [sig])).rows[0]?.h ?? null;
@@ -95,17 +98,17 @@ test("bookkeeping: NOT_IN_PRODUCTION, replayed only in the introduction lane", (
 
 test("the guard names production's bodies [before] and this migration's [after]", async () => {
   const db = await productionDb();
-  for (const sig of [LEVEL, R1, R2, R3]) assert.equal(await md5Of(db, sig), GUARD[sig][0], `${sig}: production's body`);
+  for (const sig of [LEVEL, R1, R2, R3, REL]) assert.equal(await md5Of(db, sig), GUARD[sig][0], `${sig}: production's body`);
   await db.exec(MIGRATION);
-  for (const sig of [LEVEL, R1, R2, R3]) assert.equal(await md5Of(db, sig), GUARD[sig][1], `${sig}: this migration's body`);
+  for (const sig of [LEVEL, R1, R2, R3, REL]) assert.equal(await md5Of(db, sig), GUARD[sig][1], `${sig}: this migration's body`);
   await db.exec(MIGRATION); // a re-run is accepted and changes nothing
-  for (const sig of [LEVEL, R1, R2, R3]) assert.equal(await md5Of(db, sig), GUARD[sig][1]);
+  for (const sig of [LEVEL, R1, R2, R3, REL]) assert.equal(await md5Of(db, sig), GUARD[sig][1]);
 });
 
 test("the guard refuses a drifted body, and nothing changes", async () => {
   const db = await productionDb();
   const before = {};
-  for (const sig of [LEVEL, R1, R2, R3]) before[sig] = await md5Of(db, sig);
+  for (const sig of [LEVEL, R1, R2, R3, REL]) before[sig] = await md5Of(db, sig);
   // Drift one of the four (a harmless comment changes prosrc).
   await db.exec(extractFunction(D280, "request_repeat_level_question_for_student").replace("BEGIN\n", "BEGIN\n  -- drift\n"));
   const drifted = await md5Of(db, R3);
@@ -155,6 +158,17 @@ test("EXECUTE on the helper: service_role only", async () => {
   const rows = (await db.query(`SELECT r.rolname, has_function_privilege(r.oid, 'public.question_is_course_item(jsonb)', 'EXECUTE') AS x
     FROM pg_roles r WHERE r.rolname IN ('anon', 'authenticated', 'service_role') ORDER BY 1`)).rows;
   assert.deepEqual(rows, [{ rolname: "anon", x: false }, { rolname: "authenticated", x: false }, { rolname: "service_role", x: true }]);
+  // The replaced functions keep their EXECUTE, SECURITY, config and owner exactly (CREATE OR REPLACE).
+  const before = await productionDb();
+  const facts = async (d) => (await d.query(`SELECT p.oid::regprocedure::text AS f, p.prosecdef, p.proconfig::text AS cfg,
+      has_function_privilege('anon', p.oid, 'EXECUTE') AS anon, has_function_privilege('authenticated', p.oid, 'EXECUTE') AS auth,
+      has_function_privilege('service_role', p.oid, 'EXECUTE') AS svc, pg_get_userbyid(p.proowner) AS owner
+    FROM pg_proc p WHERE p.oid = ANY (ARRAY[to_regprocedure($1), to_regprocedure($2), to_regprocedure($3), to_regprocedure($4), to_regprocedure($5)]::oid[]) ORDER BY 1`,
+    [LEVEL, R1, R2, R3, REL])).rows;
+  const was = await facts(before);
+  assert.equal(was.length, 5);
+  assert.deepEqual(await facts(db), was, "security, config, owner and EXECUTE of all five unchanged");
+  assert.equal(was.find((r) => r.f.startsWith("release_open_question_outside")).auth, true, "the pupil's own release stays callable");
 });
 
 test("level candidates: a levelled course item is never a candidate; the ordinary candidates and their order are unchanged", async () => {
@@ -220,3 +234,75 @@ for (const [name, call] of REPEATS) {
     assert.deepEqual(await row(db, bi), { answered: true, repeat_count: 0, user_answer: "b" });
   });
 }
+
+// ── Section 4: the subject switch (release_open_question_outside) never releases an active course round ──────────
+test("release: the new body is D-316's with exactly the three release conditions extended", () => {
+  const old = extractFunction(D316, "release_open_question_outside");
+  const cond = /AND  \(q\.is_active IS NOT TRUE\n(\s+)OR q\.learning_objective IS NULL OR NOT \(q\.learning_objective = ANY \((p_domains|\$2)\)\)\)/g;
+  let n = 0;
+  const expected = old.replace(cond, (m, ind, arg) => {
+    n++;
+    return `AND  (q.is_active IS NOT TRUE\n${ind}OR ((q.learning_objective IS NULL OR NOT (q.learning_objective = ANY (${arg})))\n${ind}    AND NOT public.question_is_course_item(q.metadata)))`;
+  });
+  assert.equal(n, 3, "the closing UPDATE, the guarded UPDATE and the DELETE");
+  assert.equal(extractFunction(FILE, "release_open_question_outside"), expected);
+});
+
+async function release(db, pupil, domains) {
+  await db.exec(`SELECT set_config('test.uid', '${pupil}', false)`);
+  await db.exec("SET ROLE authenticated");
+  try { return (await db.query("SELECT public.release_open_question_outside($1) AS n", [domains])).rows[0].n; }
+  finally { await db.exec("RESET ROLE"); await db.exec("SELECT set_config('test.uid', '', false)"); }
+}
+async function openRound(db, pupil, question, { repeat = 0 } = {}) {
+  const id = await instance(db, pupil, question, { answered: false });
+  if (repeat > 0) await db.query("UPDATE public.question_instances SET repeat_count = $2 WHERE id = $1", [id, repeat]);
+  return id;
+}
+const exists = async (db, id) => (await db.query("SELECT answered, repeat_count, user_answer FROM public.question_instances WHERE id = $1", [id])).rows[0] ?? null;
+const OTHER_SUBJECT = ["english"]; // the pupil switched subject: the course objective lies outside these domains
+
+test("release: an open course round survives a subject switch (first round and reopened repeat); production's body loses it", async () => {
+  for (const repeat of [0, 1]) {
+    const prod = await productionDb();
+    const pp = await addPupil(prod);
+    const pq = await addQuestion(prod, { metadata: { learning_step: "guided_practice" } });
+    const pid = await openRound(prod, pp, pq, { repeat });
+    assert.equal(await release(prod, pp, OTHER_SUBJECT), 1, `production's body releases the course round (repeat ${repeat}) — the gap`);
+    assert.notDeepEqual(await exists(prod, pid), { answered: false, repeat_count: repeat, user_answer: null });
+
+    const db = await productionDb();
+    await db.exec(MIGRATION);
+    const p = await addPupil(db);
+    const q = await addQuestion(db, { metadata: { learning_step: "guided_practice" } });
+    const id = await openRound(db, p, q, { repeat });
+    assert.equal(await release(db, p, OTHER_SUBJECT), 0);
+    assert.deepEqual(await exists(db, id), { answered: false, repeat_count: repeat, user_answer: null }, `repeat ${repeat}: same row, still open`);
+  }
+});
+
+test("release: an ordinary open round is released exactly as before; an INACTIVE course round is still released", async () => {
+  const db = await productionDb();
+  await db.exec(MIGRATION);
+  const a = await addPupil(db);
+  const ordinary = await addQuestion(db);
+  const oid = await openRound(db, a, ordinary);
+  assert.equal(await release(db, a, OTHER_SUBJECT), 1);
+  assert.equal(await exists(db, oid), null, "a first ordinary round is deleted, as D-316");
+  const b = await addPupil(db);
+  const reopened = await openRound(db, b, ordinary, { repeat: 1 });
+  assert.equal(await release(db, b, OTHER_SUBJECT), 1);
+  assert.deepEqual(await exists(db, reopened), { answered: true, repeat_count: 1, user_answer: null }, "a reopened ordinary repeat is closed, as D-316");
+  // An inactive course question can never be served again; its round must not block the pupil forever.
+  const c = await addPupil(db);
+  const gone = await addQuestion(db, { metadata: { learning_step: "transfer" }, active: false });
+  const gid = await openRound(db, c, gone);
+  assert.equal(await release(db, c, [DOMAIN]), 1, "released even inside the domains, as D-316");
+  assert.equal(await exists(db, gid), null);
+  // Inside the subject's domains an active course round is untouched, as before.
+  const d = await addPupil(db);
+  const course = await addQuestion(db, { metadata: { learning_step: "guided_practice" } });
+  const cid = await openRound(db, d, course);
+  assert.equal(await release(db, d, [DOMAIN]), 0);
+  assert.deepEqual(await exists(db, cid), { answered: false, repeat_count: 0, user_answer: null });
+});

@@ -62,12 +62,12 @@ for (const route of ROUTES) {
   });
 }
 
-test("the ordinary quiz never resumes an open course round: 409 open_question_course, nothing inserted or repeated", async () => {
+test("the ordinary quiz never resumes an open course round: 200 no_questions 'course_round_open' (a state the app explains), nothing inserted or repeated", async () => {
   const due = [{ id: "due-c", repeat_count: 0, next_review_at: "t", questions: { ...COURSE("dc"), is_active: true } }];
   for (const route of ROUTES) {
     const r = await runCase(handler, { ...route, subject: "historie", scenario: "due", patch: withCandidates([Q("o1")], due) });
-    assert.equal(r.status, 409, `${route.name}: ${r.body}`);
-    assert.deepEqual(JSON.parse(r.body), { error: "open_question_course" });
+    assert.equal(r.status, 200, `${route.name}: ${r.body}`);
+    assert.deepEqual(JSON.parse(r.body), { step: "no_questions", reason: "course_round_open" });
     assert.deepEqual(inserts(r), []);
     assert.equal(rpcs(r).some((n) => n.startsWith("request_repeat") || CANDIDATE_RPCS.includes(n)), false, `${route.name}: stops at the open round`);
     assert.equal(r.body.includes("Q dc"), false);
@@ -80,14 +80,55 @@ test("an open ORDINARY round is resumed exactly as before (the harness's due sce
   assert.equal(JSON.parse(r.body).question_instance_id, "due-1");
 });
 
-test("a targeted course request is unchanged: it serves the course item, and resumes its open course round", async () => {
-  const served = await targeted({ subject: "historie", scenario: "new", patch: withCandidates([COURSE("c1"), Q("o1")]) });
-  assert.equal(served.status, 200, served.body);
-  assert.deepEqual(inserts(served).map((i) => i.question_id), ["c1"], "the first candidate, a course item, as before");
+test("a repeat RPC that hands back a course round (only a database without 20261120150000) is not served to the ordinary quiz", async () => {
+  const patch = (kind, name, ops, result) => {
+    if (kind === "from" && name === "question_instances" && ops.some((o) => o[0] === "eq" && o[1] === "id" && o[2] === "rep-1")) {
+      return { data: [{ id: "rep-1", repeat_count: 1, questions: { ...COURSE("rc"), is_active: true } }], error: null };
+    }
+    return result;
+  };
+  const r = await runCase(handler, { subject: "historie", scenario: "repeat", patch });
+  assert.equal(r.status, 200, r.body);
+  assert.deepEqual(JSON.parse(r.body), { step: "no_questions", reason: "course_round_open" });
+  assert.ok(r.logs.some((l) => l.startsWith("ERR D383_REPEAT_RETURNED_COURSE_ROUND:")), "logged loudly: the migration must come first");
+});
+
+// ── Problem 1: a targeted request WITHOUT the server sequence never gets a course item ─────────────────────────────
+test("targeted without the sequence: ordinary items still served; course items withheld → 403 course_requires_sequence, nothing created", async () => {
+  const mixed = await targeted({ subject: "historie", scenario: "new", patch: withCandidates([COURSE("c1"), Q("o1")]) });
+  assert.equal(mixed.status, 200, mixed.body);
+  assert.deepEqual(inserts(mixed).map((i) => i.question_id), ["o1"], "legitimate targeting of ordinary items (D-329) is unchanged");
+  for (const extraBody of [{}, { sequence: false }, { sequence: "true" }, { sequence: 1 }, { learning_step: "transfer" }, { learning_step: "revisit", sequence: false }, { introduction_capability: 1 }]) {
+    const only = await targeted({ subject: "historie", scenario: "new", patch: withCandidates([COURSE("c1"), COURSE("c2", "transfer")]), extraBody });
+    assert.equal(only.status, 403, `${JSON.stringify(extraBody)}: ${only.body}`);
+    assert.deepEqual(JSON.parse(only.body), { error: "course_requires_sequence" });
+    assert.deepEqual(inserts(only), [], "no instance");
+    assert.equal(rpcs(only).some((n) => n.startsWith("request_repeat")), false, "no repeat");
+  }
   const due = [{ id: "due-c", repeat_count: 0, next_review_at: "t", questions: { ...COURSE("dc"), is_active: true } }];
-  const resumed = await targeted({ subject: "historie", scenario: "due", patch: withCandidates([], due) });
-  assert.equal(resumed.status, 200, resumed.body);
-  assert.equal(JSON.parse(resumed.body).question_instance_id, "due-c");
+  const open = await targeted({ subject: "historie", scenario: "due", patch: withCandidates([], due) });
+  assert.equal(open.status, 409, open.body);
+  assert.deepEqual(JSON.parse(open.body), { error: "open_question_course" }, "an open course round is not resumed outside the sequence");
+});
+
+test("inside the server sequence: the course item of the SERVER's step is served, and its open round resumed", async () => {
+  const env = globalThis.Deno.env;
+  env.set("LAERLIGVERSE_SEQUENCE", "on");
+  try {
+    const history = (kind, name, ops, result) =>
+      (kind === "from" && name === "question_instances" && ops.some((o) => o[0] === "select" && String(o[1]).startsWith("answered, was_correct")) ? { data: [], error: null } : result);
+    const both = (a, b) => (kind, name, ops, result) => b(kind, name, ops, a(kind, name, ops, result));
+    const served = await targeted({ subject: "historie", scenario: "new", extraBody: { sequence: true }, patch: both(history, withCandidates([COURSE("t1", "transfer"), Q("o1"), COURSE("g1", "guided_practice")])) });
+    assert.equal(served.status, 200, served.body);
+    assert.equal(JSON.parse(served.body).learning_step, "guided_practice", "the server's first step");
+    assert.deepEqual(inserts(served).map((i) => i.question_id), ["g1"], "only the step's course item; never a later step, never an untagged one");
+    const due = [{ id: "due-c", repeat_count: 0, next_review_at: "t", questions: { ...COURSE("dc", "guided_practice"), is_active: true } }];
+    const resumed = await targeted({ subject: "historie", scenario: "due", extraBody: { sequence: true }, patch: both(history, withCandidates([], due)) });
+    assert.equal(resumed.status, 200, resumed.body);
+    assert.equal(JSON.parse(resumed.body).question_instance_id, "due-c");
+  } finally {
+    env.delete("LAERLIGVERSE_SEQUENCE");
+  }
 });
 
 test("the request cannot switch it off: body fields named like the tag change nothing", async () => {
