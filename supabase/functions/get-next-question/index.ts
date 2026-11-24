@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { publishableKey, serviceKey } from "../_shared/supabase-keys.ts";
 import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
-import { deriveQuestionScope } from "./scope.ts";
+import { deriveQuestionScope, isCourseItem } from "./scope.ts";
 import { openInstanceMatches, resolveObjectiveTargeting } from "./objective-target.ts";
 import { checkRequestedStep, historyFromRows, nextStep, stepDef, stepOf, type SequenceDecision } from "../_shared/learning-sequence.ts";
 import { hintsAvailable } from "../_shared/hints.ts";
@@ -432,6 +432,21 @@ serve(async (req) => {
           status: 409,
         });
       }
+      // D-383: an open COURSE round (the tag is the question row's, like the objective) is resumed ONLY inside the
+      // server-directed sequence, where its step is checked below. Outside it, it is neither served nor released (the
+      // database keeps course rounds since 20261120150000): the ordinary quiz says so in a state the pupil can act
+      // on; a targeted request without the sequence gets an explicit conflict, as D-329 rule 3.
+      if (sequence === null && isCourseItem(instance.questions.metadata)) {
+        return targeting.mode === "off"
+          ? new Response(JSON.stringify({ step: "no_questions", reason: "course_round_open" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          })
+          : new Response(JSON.stringify({ error: "open_question_course" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 409,
+          });
+      }
       // D-338: in a sequence, an open round is resumed only in the step the server decided (the step tag is the
       // question row's, like the objective; K1 may deliver an earlier version of the content).
       if (sequence !== null && stepOf(instance.questions.metadata) !== sequence.step) {
@@ -574,11 +589,22 @@ serve(async (req) => {
     }
 
     let inserted = null;
+    // D-383: a course item was a candidate but withheld because this request is not inside the server sequence.
+    let courseItemWithheld = false;
 
     for (const q of sortedQuestions) {
       if (!q.content) continue;
       // D-338: in a sequence, only the questions tagged with the server's current step are candidates.
       if (sequence !== null && stepOf(q.metadata) !== sequence.step) continue;
+      // D-383: a course item (./scope.ts isCourseItem) is served ONLY inside the server-directed sequence — the only
+      // place where the server has decided the introduction, the step and that this item belongs to it. Never to the
+      // ordinary quiz, and never to a targeted request without the sequence (a client cannot skip the sequence by
+      // leaving `sequence` out). The candidate RPCs on the classic route are shared, so the rule is applied here; the
+      // level candidates and the repeat RPCs (ordinary quiz only) apply it in the database (20261120150000).
+      if (sequence === null && isCourseItem(q.metadata)) {
+        courseItemWithheld = true;
+        continue;
+      }
 
       let format: string;
       let normalized: any;
@@ -655,6 +681,14 @@ serve(async (req) => {
           status: 409,
         });
       }
+      // D-383: the objective still has course items, but only the server sequence may serve them. Say so — never
+      // "exhausted" — so a caller that left `sequence` out learns why; nothing was created.
+      if (sequence === null && courseItemWithheld) {
+        return new Response(JSON.stringify({ error: "course_requires_sequence" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+        });
+      }
       return new Response(JSON.stringify(sequence !== null
         ? { step: "no_questions", reason: "step_exhausted", learning_step: sequence.step }
         : { step: "no_questions", reason: "objective_exhausted" }), {
@@ -720,6 +754,17 @@ serve(async (req) => {
             metadata: unknown;
             is_active: boolean | null;
           } | null | undefined;
+
+          // D-383: the repeat RPCs never reopen a course round (20261120150000). Only a database WITHOUT that migration
+          // can hand one back: then it is not served to the ordinary quiz either — it stays open and is resumed inside
+          // its course. This is why the migration must be applied BEFORE this function is deployed (D-383).
+          if (rq && isCourseItem(rq.metadata)) {
+            console.error("D383_REPEAT_RETURNED_COURSE_ROUND:", { question_instance_id: repeatId });
+            return new Response(JSON.stringify({ step: "no_questions", reason: "course_round_open" }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 200,
+            });
+          }
 
           if (rq && rq.is_active !== false) {
             // The reopened round, read back after the reopen (outside the try, so it fails loud).

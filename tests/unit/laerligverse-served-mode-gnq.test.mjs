@@ -32,7 +32,9 @@ function patch(kind, name, ops, result) {
     return { data: HISTORY, error: null };
   }
   if (kind === "rpc" && name === "get_unserved_questions_for_student") {
-    return { data: [STEP_Q("g1", "guided_practice"), STEP_Q("c1", "independent_application")], error: null };
+    // o1 is an ordinary (untagged) question: a sequence request skips it (no step tag); an untargeted request skips
+    // the two course items (D-383) and gets o1.
+    return { data: [STEP_Q("g1", "guided_practice"), STEP_Q("c1", "independent_application"), { ...STEP_Q("o1", null), metadata: {} }], error: null };
   }
   return result;
 }
@@ -78,6 +80,7 @@ test("off parity: an untargeted request with both secrets \"on\" is identical to
   assert.equal(off.status, 200, off.body);
   assert.deepEqual(on, off);
   assert.equal("served_mode" in insertOf(on), false);
+  assert.equal(insertOf(on).question_id, "o1", "D-383: the ordinary quiz gets the ordinary question, never a course item");
 });
 
 test("LAERLIGVERSE_SERVED_MODE=on: the insert records the STEPS mode of the server's step; nothing else changes", async () => {

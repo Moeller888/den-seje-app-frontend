@@ -85,3 +85,15 @@ export function deriveQuestionScope(profile: unknown, requestedSubject: unknown)
 
   return { subject, grade, activeDomains, subjectDomains, releaseDomains };
 }
+
+// D-383: a Lærligverse COURSE ITEM is a question whose metadata has the key `learning_step` (the D-338 step tag
+// read by stepOf), whatever its value. The ordinary quiz (a request without learning_objective) never serves,
+// repeats or resumes one; only a targeted course request does. The tag on the item decides, not the domain:
+// pilot_* domains (D-362) are deliberately ordinary quiz. The same rule as public.question_is_course_item
+// (migration 20261120150000), which keeps course items out of the level candidates and the repeat RPCs.
+export const COURSE_ITEM_KEY = "learning_step";
+
+export function isCourseItem(metadata: unknown): boolean {
+  return typeof metadata === "object" && metadata !== null && !Array.isArray(metadata)
+    && Object.prototype.hasOwnProperty.call(metadata, COURSE_ITEM_KEY);
+}

@@ -295,13 +295,23 @@ test.describe("server-directed sequence over HTTP (chromium: backend path once p
     expect(await (await next(request, p)).json()).toMatchObject({ step: "sequence_complete", learning_objective: OBJECTIVE });
   });
 
-  test("off path: without `sequence` the same objective is served untagged-aware but WITHOUT a step (today's targeting)", async ({ request }, testInfo) => {
+  // D-383 (owner mandate 2026-11-23): a course item is served ONLY inside the server sequence — the place where the
+  // server decided the step (and, where switched on, the introduction). Before, leaving `sequence` out served ANY
+  // unserved item of the objective, skipping both (this test asserted that). Now: an explicit refusal, nothing created.
+  test("off path: without the server sequence a course objective is refused — 403 course_requires_sequence, no instance, nothing paid", async ({ request }, testInfo) => {
     const p = await makePupil(request, "off", testInfo.project.name);
-    const r = await request.post(`${SUPA}/functions/v1/get-next-question`, { headers: { apikey: ANON, authorization: `Bearer ${p.token}`, ...json }, data: { subject: "historie", learning_objective: OBJECTIVE } });
-    const s = await r.json();
-    expect(s.learning_objective).toBe(OBJECTIVE);
-    expect("learning_step" in s).toBe(false);
-    expect("mode" in s).toBe(false);
+    const progress = async () => (await (await request.get(`${SUPA}/rest/v1/student_progress?select=xp,coins&student_id=eq.${p.id}`, { headers: svc })).json());
+    const before = await progress();
+    for (const extra of [{}, { sequence: false }, { sequence: "true" }, { learning_step: "transfer" }, { learning_step: "revisit", sequence: false }]) {
+      const r = await request.post(`${SUPA}/functions/v1/get-next-question`, { headers: { apikey: ANON, authorization: `Bearer ${p.token}`, ...json }, data: { subject: "historie", learning_objective: OBJECTIVE, ...extra } });
+      expect(r.status(), JSON.stringify(extra)).toBe(403);
+      expect(await r.json()).toEqual({ error: "course_requires_sequence" });
+    }
+    expect(await (await request.get(`${SUPA}/rest/v1/question_instances?select=id&student_id=eq.${p.id}`, { headers: svc })).json()).toEqual([]);
+    expect(await progress()).toEqual(before);
+    // The same pupil inside the sequence gets the server's first step at once (the refusal changed nothing).
+    const s = await (await next(request, p)).json();
+    expect(s).toMatchObject({ learning_objective: OBJECTIVE, learning_step: "guided_practice" });
   });
 });
 

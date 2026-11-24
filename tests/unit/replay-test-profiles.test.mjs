@@ -33,9 +33,10 @@ import { bootstrapMarkerSql } from "../isolated/seed/seed-guard.mjs";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
 const K1 = "20261103110000_l1_k1_attempt_context.sql";
-// PR #664: the introduction lane's chain, in its binding order.
+// PR #664: the introduction lane's chain, in its binding order. D-383 (20261120150000) is the fifth: the lane where
+// course items and ordinary requests meet.
 const INTRO_CHAIN = [K1, "20261108043500_laerligverse_served_mode_hint_log.sql", "20261109043500_laerligverse_presented_at.sql",
-  "20261110043500_laerligverse_introductions.sql"];
+  "20261110043500_laerligverse_introductions.sql", "20261120150000_course_items_out_of_ordinary_quiz.sql"];
 const files = migrationFiles();
 
 test("1. default = production mirror: no profile, 'production' and the old call give the same plan; K1 skipped", () => {
@@ -61,7 +62,7 @@ test("2. the k1 profile changes exactly one decision: K1 skip → apply", () => 
   assert.match(changed[0].reason, /NOT applied in production/);
 });
 
-test("2b. the introduction profile changes exactly its four decisions (K1 → L3/L5 → K9 → introductions) skip → apply", () => {
+test("2b. the introduction profile changes exactly its five decisions (K1 → L3/L5 → K9 → introductions → D-383) skip → apply", () => {
   const base = planReplay(files, readMigration).plan;
   const intro = planReplay(files, readMigration, { profile: "introduction" }).plan;
   assert.deepEqual(intro.map((p) => p.file), base.map((p) => p.file), "same files, same order");

@@ -361,6 +361,222 @@ test("simultaneous requests and a lost connection: one round, one registration, 
   expect(await rewardState(request, p)).toEqual(start);
 });
 
+// ── D-383: course items stay out of the ordinary quiz (real stack; the lane replays 20261120150000) ─────────────────
+// One objective of its own (no introduction, no other spec uses it) holds ONE course item (metadata.learning_step) and
+// ONE ordinary item. The pupil's teacher filter names only this objective, so the ordinary quiz's pool is exactly these
+// two — the situation in which, before D-383, the ordinary quiz served, blocked on and reopened the course item.
+// What each step would do WITHOUT D-383 is stated at the step; the unit suites prove the same per route
+// (gnq-course-items) and per SQL function (course-items-out-of-ordinary-quiz-migration-run).
+const D383 = `${INTRO.learning_objective}_d383`;
+const D383_COURSE = { ...SOURCE.content, question: `${SOURCE.content.question} (D-383 kursusopgave, testkopi)` };
+const D383_ORDINARY = { ...SOURCE.content, question: `${SOURCE.content.question} (D-383 almindelig opgave, testkopi)` };
+const WRONG = SOURCE.content.options.find((o) => o !== SOURCE.content.correct);
+
+/** The D-383 objective's two items, inserted once per stack. */
+async function d383Items(request) {
+  const have = await rows(request, `questions?select=id,metadata&learning_objective=eq.${D383}`);
+  if (have.length === 0) {
+    const base = { type: "mc_single", difficulty: 500, is_active: true, question_type: "auto", learning_objective: D383, answer_format: "mc", answer_type: "short", target_grade: 8, difficulty_band: 3 };
+    const ins = await request.post(`${SUPA}/rest/v1/questions`, {
+      headers: { ...svc, ...json, prefer: "return=minimal" },
+      data: [
+        { ...base, content: D383_COURSE, metadata: { domain: D383, synthetic: true, fixture: "D-383", learning_step: "guided_practice" } },
+        { ...base, content: D383_ORDINARY, metadata: { domain: D383, synthetic: true, fixture: "D-383" } },
+      ],
+    });
+    expect(ins.status(), await ins.text()).toBe(201);
+  }
+  const qs = await rows(request, `questions?select=id,metadata&learning_objective=eq.${D383}`);
+  expect(qs).toHaveLength(2);
+  return {
+    courseId: qs.find((q) => q.metadata && Object.hasOwn(q.metadata, "learning_step")).id,
+    ordinaryId: qs.find((q) => !Object.hasOwn(q.metadata ?? {}, "learning_step")).id,
+  };
+}
+/** A pupil whose teacher filter is the D-383 objective only, with the calls the tests make. */
+async function d383Pupil(request, label) {
+  const p = await makePupil(request, label, [D383]);
+  const token = await signIn(request, p);
+  return {
+    p, token,
+    byInstance: async () => rows(request, `question_instances?select=id,question_id,answered,repeat_count,user_answer&student_id=eq.${p.id}&order=created_at`),
+    answer: async (served, text) => {
+      const r = await post(request, token, "process-event", { question_instance_id: served.question_instance_id, answer: text, question_shown_at: Date.now(), round_no: served.round_no, submission_id: randomUUID() });
+      expect(r.status, JSON.stringify(r.body)).toBe(200);
+      expect(r.body.outcome).toBe("recorded");
+      return r.body;
+    },
+    ordinary: (subject = "historie") => post(request, token, "get-next-question", { subject }),
+    course: (extra = {}) => post(request, token, "get-next-question", { subject: "historie", learning_objective: D383, sequence: true, introduction_capability: 1, ...extra }),
+  };
+}
+
+test("D-383: the ordinary quiz serves the ordinary item, repeats past an unserved course item, and never reopens a course round; only the sequence serves the course item", async ({ request }) => {
+  const { courseId, ordinaryId } = await d383Items(request);
+  const { token, byInstance, answer, ordinary } = await d383Pupil(request, "d383");
+
+  // 1. Ordinary request: the ordinary item, never the course item (before D-383: whichever came first).
+  const first = await ordinary();
+  expect(first.status, JSON.stringify(first.body)).toBe(200);
+  expect(first.body.content.question).toBe(D383_ORDINARY.question);
+  let inst = await byInstance();
+  expect(inst).toHaveLength(1);
+  expect(inst[0].question_id).toBe(ordinaryId);
+  expect((await answer(first.body, SOURCE.content.correct)).status).toBe("correct");
+
+  // 2. Only the course item is unserved: the ordinary quiz repeats the ordinary item (before D-383: the unserved
+  //    course item was "still to serve", so the repeat guard answered no_questions while the TS filter refused it).
+  const second = await ordinary();
+  expect(second.status, JSON.stringify(second.body)).toBe(200);
+  expect(second.body.question_instance_id, "a repeat of the ordinary round").toBe(first.body.question_instance_id);
+  expect(second.body.content.question).toBe(D383_ORDINARY.question);
+  inst = await byInstance();
+  expect(inst).toHaveLength(1);
+  expect(inst[0]).toMatchObject({ question_id: ordinaryId, answered: false, repeat_count: 1 });
+  await answer(second.body, SOURCE.content.correct);
+
+  // 3. A targeted request WITHOUT the server sequence does not get the course item (before: it did) — 403, nothing
+  //    created. Inside the sequence (as the host sends it) the course item of the server's step is served. Answered WRONG.
+  const bypass = await post(request, token, "get-next-question", { subject: "historie", learning_objective: D383 });
+  expect(bypass.status, JSON.stringify(bypass.body)).toBe(403);
+  expect(bypass.body).toEqual({ error: "course_requires_sequence" });
+  expect(await byInstance()).toHaveLength(1);
+  const course = await post(request, token, "get-next-question", { subject: "historie", learning_objective: D383, sequence: true, introduction_capability: 1 });
+  expect(course.status, JSON.stringify(course.body)).toBe(200);
+  expect(course.body).toMatchObject({ learning_objective: D383, learning_step: "guided_practice" });
+  expect(course.body.content.question).toBe(D383_COURSE.question);
+  expect((await answer(course.body, WRONG)).status).toBe("incorrect");
+  inst = await byInstance();
+  expect(inst).toHaveLength(2);
+  const courseRound = inst.find((i) => i.question_id === courseId);
+  expect(courseRound).toMatchObject({ answered: true, repeat_count: 0 });
+
+  // 4. Nothing unserved: the ordinary repeat reopens the ORDINARY round (before D-383: the course round — a wrong
+  //    answer sorts first). The course round is untouched.
+  const third = await ordinary();
+  expect(third.status, JSON.stringify(third.body)).toBe(200);
+  expect(third.body.question_instance_id).toBe(first.body.question_instance_id);
+  expect(third.body.content.question).toBe(D383_ORDINARY.question);
+  inst = await byInstance();
+  expect(inst.find((i) => i.question_id === ordinaryId)).toMatchObject({ answered: false, repeat_count: 2 });
+  expect(inst.find((i) => i.question_id === courseId)).toEqual(courseRound);
+});
+
+test("D-383 G3: a subject switch keeps an open course round — the ordinary quiz says where it is (any subject), and the course resumes the SAME round", async ({ request }) => {
+  const { courseId } = await d383Items(request);
+  const { p, token, byInstance, answer, ordinary, course } = await d383Pupil(request, "d383-switch");
+  const start = await rewardState(request, p);
+  const opened = await course();
+  expect(opened.status, JSON.stringify(opened.body)).toBe(200);
+  expect(opened.body.content.question).toBe(D383_COURSE.question);
+  const round = (await byInstance())[0];
+  expect(round).toMatchObject({ question_id: courseId, answered: false, repeat_count: 0, user_answer: null });
+  // The pupil leaves Lærligverse and opens the ordinary quiz — history (whose domains do NOT include the course
+  // objective, so before D-383 the subject-switch release deleted the round), then English, then Danish.
+  for (const subject of ["historie", "engelsk", "dansk"]) {
+    const r = await ordinary(subject);
+    expect(r.status, `${subject}: ${JSON.stringify(r.body)}`).toBe(200);
+    expect(r.body).toEqual({ step: "no_questions", reason: "course_round_open" });
+    expect(await byInstance(), `${subject}: the same round, untouched`).toEqual([round]);
+  }
+  // A targeted request outside the sequence neither serves nor releases it.
+  const outside = await post(request, token, "get-next-question", { subject: "historie", learning_objective: D383 });
+  expect(outside.status, JSON.stringify(outside.body)).toBe(409);
+  expect(outside.body).toEqual({ error: "open_question_course" });
+  expect(await rewardState(request, p), "nothing registered or paid while away").toEqual(start);
+  // Back in the course: the same instance, the same round number, the same content.
+  const resumed = await course();
+  expect(resumed.status, JSON.stringify(resumed.body)).toBe(200);
+  expect(resumed.body).toMatchObject({ question_instance_id: opened.body.question_instance_id, round_no: opened.body.round_no, learning_step: "guided_practice" });
+  expect(resumed.body.content).toEqual(opened.body.content);
+  expect(await byInstance()).toEqual([round]);
+  // Finished in the course, by the existing rules; then the ordinary quiz serves the ordinary item again.
+  expect((await answer(resumed.body, SOURCE.content.correct)).status).toBe("correct");
+  const after = await ordinary();
+  expect(after.status, JSON.stringify(after.body)).toBe(200);
+  expect(after.body.content.question).toBe(D383_ORDINARY.question);
+});
+
+// G5 uses an objective with ONLY course items (guided practice and transfer): a targeted request without the sequence
+// then has nothing it may serve. (With an ordinary item in the objective it legitimately gets that one, D-329 — the
+// first CI run on 4c18c63b showed exactly that with the D-383 objective; the refusal there is proven in step 3 of the
+// D-383 test, once the ordinary item is used up.)
+const G5_OBJ = `${INTRO.learning_objective}_d383_course_only`;
+test("D-383 G5: skipping ahead by API is refused — no sequence, a false sequence, a later step or a manipulated objective: no instance, no reward", async ({ request }) => {
+  const have = await rows(request, `questions?select=id&learning_objective=eq.${G5_OBJ}`);
+  if (have.length === 0) {
+    const base = { type: "mc_single", difficulty: 500, is_active: true, question_type: "auto", learning_objective: G5_OBJ, answer_format: "mc", answer_type: "short", target_grade: 8, difficulty_band: 3 };
+    const ins = await request.post(`${SUPA}/rest/v1/questions`, {
+      headers: { ...svc, ...json, prefer: "return=minimal" },
+      data: ["guided_practice", "transfer"].map((step) => ({ ...base, content: { ...SOURCE.content, question: `${SOURCE.content.question} (D-383 G5 ${step}, testkopi)` }, metadata: { domain: G5_OBJ, synthetic: true, fixture: "D-383-G5", learning_step: step } })),
+    });
+    expect(ins.status(), await ins.text()).toBe(201);
+  }
+  const p = await makePupil(request, "d383-skip", [G5_OBJ]);
+  const token = await signIn(request, p);
+  const byInstance = async () => rows(request, `question_instances?select=id&student_id=eq.${p.id}`);
+  const start = await rewardState(request, p);
+  const ask = (data) => post(request, token, "get-next-question", { subject: "historie", ...data });
+  const refusals = [
+    [{ learning_objective: G5_OBJ }, 403, { error: "course_requires_sequence" }],
+    [{ learning_objective: G5_OBJ, sequence: false }, 403, { error: "course_requires_sequence" }],
+    [{ learning_objective: G5_OBJ, sequence: "true" }, 403, { error: "course_requires_sequence" }],
+    [{ learning_objective: G5_OBJ, learning_step: "transfer" }, 403, { error: "course_requires_sequence" }],
+    [{ learning_objective: G5_OBJ, sequence: true, introduction_capability: 1, learning_step: "transfer" }, 409, { error: "learning_step_not_current" }],
+    [{ learning_objective: G5_OBJ, sequence: true, introduction_capability: 1, learning_step: "revisit" }, 409, { error: "learning_step_not_current" }],
+    [{ learning_objective: G5_OBJ, sequence: true, introduction_capability: 2 }, 400, { error: "invalid_introduction_capability" }],
+    [{ learning_objective: OBJECTIVE, sequence: true, introduction_capability: 1 }, 403, { error: "learning_objective_not_allowed" }],
+  ];
+  for (const [data, status, body] of refusals) {
+    const r = await ask(data);
+    expect(r.status, `${JSON.stringify(data)}: ${JSON.stringify(r.body)}`).toBe(status);
+    expect(r.body).toEqual(body);
+  }
+  expect(await byInstance(), "no instance").toEqual([]);
+  expect(await rewardState(request, p), "no reward").toEqual(start);
+  // The legitimate request still works: the server's first step, and its item.
+  const ok = await ask({ learning_objective: G5_OBJ, sequence: true, introduction_capability: 1 });
+  expect(ok.status, JSON.stringify(ok.body)).toBe(200);
+  expect(ok.body.learning_step).toBe("guided_practice");
+  expect(ok.body.content.question).toContain("G5 guided_practice");
+});
+
+// G6 (two tabs). Note, a finding outside D-383 that the first CI runs showed: an ORDINARY open round in a domain outside
+// the history domains (here the D-383 objective; in production D-362's pilot_* domains) is released by the next
+// ordinary request (D-316's subject-switch release) and the same question is served again as a NEW instance — no answer
+// is lost, but the instance id changes. G6 therefore asserts what D-383 promises: one open round, nothing paid, and an
+// open COURSE round is never lost or replaced, whatever the tabs ask at the same time.
+test("D-383 G6: two tabs, ordinary quiz and course at once — one open round, nothing paid; an open course round keeps its identity", async ({ request }) => {
+  await d383Items(request);
+  // (a) A fresh pupil, a mixed concurrent wave: at most one open round, nothing paid.
+  const fresh = await d383Pupil(request, "d383-tabs");
+  const freshStart = await rewardState(request, fresh.p);
+  const wave = await Promise.all([fresh.ordinary(), fresh.course(), fresh.ordinary(), fresh.course()]);
+  for (const r of wave) expect([200, 409], JSON.stringify(r.body)).toContain(r.status);
+  const open = (await fresh.byInstance()).filter((i) => i.answered === false);
+  expect(open, "idx_one_open_question: exactly one open round").toHaveLength(1);
+  expect(await rewardState(request, fresh.p)).toEqual(freshStart);
+
+  // (b) A pupil with an open COURSE round; two waves of mixed tabs. The round is the same instance throughout.
+  const { courseId } = await d383Items(request);
+  const tabs = await d383Pupil(request, "d383-tabs-course");
+  const opened = await tabs.course();
+  expect(opened.status, JSON.stringify(opened.body)).toBe(200);
+  const round = (await tabs.byInstance())[0];
+  expect(round).toMatchObject({ question_id: courseId, answered: false });
+  const start = await rewardState(request, tabs.p);
+  for (let w = 0; w < 2; w++) {
+    const answers = await Promise.all([tabs.ordinary(), tabs.course(), tabs.ordinary(), tabs.course()]);
+    answers.forEach((r, i) => {
+      expect(r.status, `wave ${w} tab ${i}: ${JSON.stringify(r.body)}`).toBe(200);
+      if (i % 2 === 0) expect(r.body).toEqual({ step: "no_questions", reason: "course_round_open" });
+      else expect(r.body.question_instance_id, "the course tab resumes the same round").toBe(opened.body.question_instance_id);
+    });
+    expect(await tabs.byInstance(), `wave ${w}: the same single round, untouched`).toEqual([round]);
+  }
+  expect(await rewardState(request, tabs.p)).toEqual(start);
+});
+
 // ── F12-B: the introduction capability against the REAL get-next-question and PostgreSQL ──────────────────────────
 // A request WITHOUT `introduction_capability` (an older host, or one that does not show introductions) never creates a
 // round for an introduction it cannot show and never gets a task instead of a required one; an invalid value is a 400

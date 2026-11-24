@@ -122,6 +122,8 @@ export function extractSchemaPart(file, sql) {
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
 export const NOT_IN_PRODUCTION = Object.freeze({
+  "20261120150000_course_items_out_of_ordinary_quiz.sql":
+    "D-383, not applied in production: it adds question_is_course_item and keeps course items (metadata.learning_step) out of the level candidates and the three repeat RPCs, whose production bodies are still those of 20261029120000 and 20261031194600; applying it needs its own owner GO",
   "20261109120000_laerligverse_course_progress_read.sql":
     "Lærligverse F10-B2 course-progress view, not applied in production: it adds the read RPC get_course_progress for the teacher's \"Kursusforløb\" section, which stays behind ENABLE_COURSE_PROGRESS_VIEW = false; applying it needs its own owner GO",
   "20261107090000_minigame_break_interval_10min.sql":
@@ -332,6 +334,8 @@ export const TEST_PROFILES = Object.freeze({
       "TEST PROFILE introduction: Lærligverse K9 (NOT applied in production) — question_instances.presented_at and mark_presented",
     "20261110043500_laerligverse_introductions.sql":
       "TEST PROFILE introduction: Lærligverse LP-13/K9 introductions (NOT applied in production) — learning_introductions, introduction_rounds and the serve/mark/complete functions",
+    "20261120150000_course_items_out_of_ordinary_quiz.sql":
+      "TEST PROFILE introduction: D-383 (NOT applied in production) — course items out of the ordinary quiz's level candidates and repeats; the lane where course items and ordinary requests meet",
   }),
 });
 
