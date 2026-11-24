@@ -38,7 +38,9 @@ const K1 = "20261103110000_l1_k1_attempt_context.sql";
 const INTRO_CHAIN = [K1, "20261108043500_laerligverse_served_mode_hint_log.sql", "20261109043500_laerligverse_presented_at.sql",
   "20261110043500_laerligverse_introductions.sql", "20261120150000_course_items_out_of_ordinary_quiz.sql",
   // D-383 follow-up: the shared candidate RPCs filter course items before their limit (requires D-383).
-  "20261123100000_course_scope_before_candidate_limit.sql"];
+  "20261123100000_course_scope_before_candidate_limit.sql",
+  // D-384 (F8): an open course round is parked when the pupil leaves the course (requires D-383).
+  "20261124120000_course_round_parking.sql"];
 const files = migrationFiles();
 
 test("1. default = production mirror: no profile, 'production' and the old call give the same plan; K1 skipped", () => {
@@ -64,7 +66,7 @@ test("2. the k1 profile changes exactly one decision: K1 skip → apply", () => 
   assert.match(changed[0].reason, /NOT applied in production/);
 });
 
-test("2b. the introduction profile changes exactly its six decisions (K1 → L3/L5 → K9 → introductions → D-383 → its follow-up) skip → apply", () => {
+test("2b. the introduction profile changes exactly its seven decisions (K1 → L3/L5 → K9 → introductions → D-383 → its follow-up → D-384) skip → apply", () => {
   const base = planReplay(files, readMigration).plan;
   const intro = planReplay(files, readMigration, { profile: "introduction" }).plan;
   assert.deepEqual(intro.map((p) => p.file), base.map((p) => p.file), "same files, same order");

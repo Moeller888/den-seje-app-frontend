@@ -186,6 +186,8 @@ export function h5RequestBody(record, questionShownAt) {
 // registered and NOT paid. Only this exact pair counts as a confirmed refusal.
 export const REFUSAL_STATUS = Object.freeze({
   round_closed: 409, stale_round: 409, submission_conflict: 409, not_found: 404, invalid_request: 400,
+  // D-384: the course round was parked (the pupil left the course in another tab); nothing was recorded.
+  round_parked: 409,
 });
 export const REFUSED_OUTCOMES = Object.freeze(Object.keys(REFUSAL_STATUS));
 
@@ -293,6 +295,7 @@ export const REFUSAL_TEXT = Object.freeze({
   submission_conflict: "Svaret kunne ikke registreres. Vi henter et nyt spørgsmål.",
   not_found: "Spørgsmålet findes ikke længere. Vi henter et nyt.",
   invalid_request: "Svaret kunne ikke behandles. Vi henter et nyt spørgsmål.",
+  round_parked: "Opgaven er sat på pause, fordi du skiftede væk fra forløbet. Du fortsætter med den, når du vender tilbage. Vi henter et nyt spørgsmål.",
 });
 export const UNCERTAIN_TEXT = "⚠️ Forbindelsen svigtede, så vi ved ikke, om dit svar nåede frem. Tryk «Send igen» — det samme svar sendes, og det tæller kun én gang.";
 export const CLIENT_OUTDATED_TEXT = "Lærlig er blevet opdateret. Genindlæs siden for at fortsætte.";

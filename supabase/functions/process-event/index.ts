@@ -12,6 +12,7 @@ import { readInstanceForGrading } from "./instance-read.ts";
 import { answerMode, replyForV2, isRevokedLegacyRpc, errorCodeOf, CLIENT_OUTDATED, UNEXPECTED_RESULT } from "./answer-v2.ts";
 import { ATTEMPT_CONTEXT_ENV, attemptContextEnabled } from "./attempt-context.ts";
 import { isQuizCooldownError, cooldownReply } from "./quiz-cooldown.ts";
+import { isRoundParkedError, roundParkedReply } from "./round-parked.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -261,6 +262,12 @@ serve(async (req) => {
         }
 
         // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+        // D-384 (./round-parked.ts): the round was parked (the pupil left the course); nothing was written.
+        if (v2Error && isRoundParkedError(v2Error)) {
+          console.log("FLOW: ROUND PARKED")
+          const r = roundParkedReply()
+          return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+        }
         if (v2Error && isQuizCooldownError(v2Error)) {
           console.log("FLOW: QUIZ COOLDOWN (text v2)")
           const r = cooldownReply(v2Error, Date.now())
@@ -310,6 +317,12 @@ serve(async (req) => {
       // M2: once EXECUTE is revoked, a request without H5 fields comes from an outdated client.
       // The privilege check ran before the function body, so nothing was registered.
       // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+      // D-384 (./round-parked.ts): the round was parked (the pupil left the course); nothing was written.
+      if (rpcError && isRoundParkedError(rpcError)) {
+        console.log("FLOW: ROUND PARKED")
+        const r = roundParkedReply()
+        return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+      }
       if (rpcError && isQuizCooldownError(rpcError)) {
         console.log("FLOW: QUIZ COOLDOWN (text)")
         const r = cooldownReply(rpcError, Date.now())
@@ -442,6 +455,12 @@ serve(async (req) => {
       }
 
       // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+      // D-384 (./round-parked.ts): the round was parked (the pupil left the course); nothing was written.
+      if (v2Error && isRoundParkedError(v2Error)) {
+        console.log("FLOW: ROUND PARKED")
+        const r = roundParkedReply()
+        return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+      }
       if (v2Error && isQuizCooldownError(v2Error)) {
         console.log("FLOW: QUIZ COOLDOWN (mc v2)")
         const r = cooldownReply(v2Error, Date.now())
@@ -491,6 +510,12 @@ serve(async (req) => {
 
     // M2: see the short-text path above.
     // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+    // D-384 (./round-parked.ts): the round was parked (the pupil left the course); nothing was written.
+    if (rpcError && isRoundParkedError(rpcError)) {
+      console.log("FLOW: ROUND PARKED")
+      const r = roundParkedReply()
+      return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+    }
     if (rpcError && isQuizCooldownError(rpcError)) {
       console.log("FLOW: QUIZ COOLDOWN (mc)")
       const r = cooldownReply(rpcError, Date.now())

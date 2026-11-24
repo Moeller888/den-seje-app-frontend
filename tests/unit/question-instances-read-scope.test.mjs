@@ -506,20 +506,32 @@ test("reviewed SELECT-narrowing migrations only swap table SELECT for a key-less
 // UPDATE never widens who READS rows (an UPDATE's WHERE still needs SELECT, and RLS has no UPDATE policy), so the
 // read scope cannot widen — provided the file changes no policy or RLS, its only privilege statements are the
 // reviewed REVOKE UPDATE / GRANT UPDATE (columns) pair, and every read is one instance by id AND student_id.
+// Each entry names the columns its grant must exclude and the shape every read must have.
+const OWN_INSTANCE_READ = /FROM public\.question_instances qi WHERE qi\.id = \w+ AND qi\.student_id = \w+ FOR UPDATE$/;
+// D-384: every read is scoped to ONE pupil — the backend-given p_student_id (service_role-only functions) or the caller's
+// own auth.uid() (v_user_id, or $1 bound to it in release_open_question_outside's dynamic SQL).
+const OWN_PUPIL_READ = /\b(?:qi\.)?student_id\s*=\s*(?:p_student_id|v_user_id|\$1)\b/;
 const REVIEWED_LATER_UPDATE_NARROWING = {
-  "20261108043500_laerligverse_served_mode_hint_log.sql":
+  "20261108043500_laerligverse_served_mode_hint_log.sql": { excludes: /a\.attname <> 'served_mode'/, read: OWN_INSTANCE_READ, reason:
     "Lærligverse L5 + L3 (not applied): for anon and authenticated it swaps table-level UPDATE for column-level " +
     "UPDATE on every column except the new served_mode (their effective privileges on the existing columns are " +
     "unchanged; RLS still has no UPDATE policy). Its three functions (request_question_hint and the two attempt " +
     "wrappers, SECURITY INVOKER, service_role only) read one instance by id AND student_id FOR UPDATE. No policy, " +
     "RLS or SELECT privilege on question_instances is touched (laerligverse-l3-l5-migration-run and " +
-    "laerligverse-l3-l5-attempt-wrapper-run prove the privileges and the reads as the roles themselves).",
+    "laerligverse-l3-l5-attempt-wrapper-run prove the privileges and the reads as the roles themselves)." },
+  "20261124120000_course_round_parking.sql": { excludes: /a\.attname NOT IN \('parked_at', 'parked_objective', 'served_mode'\)/, read: OWN_PUPIL_READ, reason:
+    "D-384 (not applied): where anon/authenticated still hold table-level UPDATE it swaps it for column-level UPDATE on " +
+    "every column except the two new server-owned parking columns (and L5's served_mode); otherwise it grants nothing. " +
+    "Its reads are D-383's repeat and release bodies (one added condition: a parked round does not block) and the two " +
+    "parking functions, SECURITY DEFINER, service_role only — every read is the given pupil's own rows. No policy, RLS " +
+    "or SELECT privilege on question_instances is touched (course-round-parking-migration-run proves the privileges " +
+    "as the roles themselves)." },
 };
 const UPDATE_NARROWING_STATEMENTS = [
   "format('REVOKE UPDATE ON public.question_instances FROM %I', v_role)",
   "format('GRANT UPDATE (%s) ON public.question_instances TO %I', v_cols, v_role)",
 ];
-function updateNarrowingViolations(body) {
+function updateNarrowingViolations(body, spec = REVIEWED_LATER_UPDATE_NARROWING["20261108043500_laerligverse_served_mode_hint_log.sql"]) {
   const violations = [];
   let sqlText = executableSql(body);
   for (const re of READ_SCOPE_PATTERNS.slice(0, 2)) if (re.test(sqlText)) violations.push(`changes a policy or RLS: ${re}`);
@@ -528,11 +540,11 @@ function updateNarrowingViolations(body) {
     sqlText = sqlText.replace(s, "");
   }
   if (READ_SCOPE_PATTERNS[2].test(sqlText)) violations.push("another GRANT/REVOKE on question_instances");
-  if (!/a\.attname <> 'served_mode'/.test(sqlText)) violations.push("the column grant must exclude served_mode");
+  if (!spec.excludes.test(sqlText)) violations.push(`the column grant must exclude ${spec.excludes}`);
   const reads = sqlText.split(";").map((s) => s.replace(/\s+/g, " ").trim())
     .filter((s) => READ_SCOPE_PATTERNS[3].test(s) || READ_SCOPE_PATTERNS[4].test(s));
   for (const s of reads) {
-    if (!/FROM public\.question_instances qi WHERE qi\.id = \w+ AND qi\.student_id = \w+ FOR UPDATE$/.test(s)) violations.push(`read is not one own instance: ${s.slice(0, 160)}`);
+    if (!spec.read.test(s)) violations.push(`read is not scoped as reviewed: ${s.slice(0, 160)}`);
   }
   if (reads.length === 0) violations.push("no read found — remove the stale exception");
   return violations;
@@ -540,11 +552,12 @@ function updateNarrowingViolations(body) {
 
 test("reviewed UPDATE-narrowing migrations only swap table UPDATE for a column grant and read one own instance", () => {
   const dir = join(REPO, "supabase", "migrations");
-  assert.deepEqual(Object.keys(REVIEWED_LATER_UPDATE_NARROWING), ["20261108043500_laerligverse_served_mode_hint_log.sql"],
+  assert.deepEqual(Object.keys(REVIEWED_LATER_UPDATE_NARROWING), ["20261108043500_laerligverse_served_mode_hint_log.sql",
+    "20261124120000_course_round_parking.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
-  for (const [name, reason] of Object.entries(REVIEWED_LATER_UPDATE_NARROWING)) {
-    assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
-    assert.deepEqual(updateNarrowingViolations(readFileSync(join(dir, name), "utf8")), [], name);
+  for (const [name, spec] of Object.entries(REVIEWED_LATER_UPDATE_NARROWING)) {
+    assert.ok(typeof spec.reason === "string" && spec.reason.length > 0, `${name} must state why it is safe`);
+    assert.deepEqual(updateNarrowingViolations(readFileSync(join(dir, name), "utf8"), spec), [], name);
   }
   // Negative controls: the checker rejects the shapes that would widen or leak.
   const ok = UPDATE_NARROWING_STATEMENTS.join(";\n") + ";\n a.attname <> 'served_mode';\nSELECT 1 FROM public.question_instances qi WHERE qi.id = p_id AND qi.student_id = p_s FOR UPDATE;";
@@ -553,6 +566,14 @@ test("reviewed UPDATE-narrowing migrations only swap table UPDATE for a column g
   assert.ok(updateNarrowingViolations(ok + "\nCREATE POLICY \"x\" ON public.question_instances FOR SELECT TO authenticated USING (true);").length > 0);
   assert.ok(updateNarrowingViolations(ok + "\nSELECT * FROM public.question_instances;").length > 0);
   assert.ok(updateNarrowingViolations(ok.replace("a.attname <> 'served_mode'", "true")).length > 0);
+  // D-384's spec: the parking columns must be excluded, and a read of ANOTHER pupil's (or every pupil's) rows is refused.
+  const parking = REVIEWED_LATER_UPDATE_NARROWING["20261124120000_course_round_parking.sql"];
+  const okP = UPDATE_NARROWING_STATEMENTS.join(";\n") + ";\n a.attname NOT IN ('parked_at', 'parked_objective', 'served_mode');\nSELECT 1 FROM public.question_instances WHERE student_id = p_student_id AND answered = false;";
+  assert.deepEqual(updateNarrowingViolations(okP, parking), []);
+  assert.ok(updateNarrowingViolations(okP.replace("'parked_at', ", ""), parking).length > 0);
+  assert.ok(updateNarrowingViolations(okP + "\nSELECT id FROM public.question_instances WHERE answered = false;", parking).length > 0);
+  assert.ok(updateNarrowingViolations(okP + "\nSELECT id FROM public.question_instances WHERE student_id = p_other;", parking).length > 0);
+  assert.ok(updateNarrowingViolations(okP + "\nGRANT UPDATE (parked_at) ON public.question_instances TO authenticated;", parking).length > 0);
 });
 
 test("the migration sorts after every migration that touches question_instances", () => {
