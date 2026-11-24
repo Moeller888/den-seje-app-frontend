@@ -2,6 +2,18 @@
 
 **Status:** H5 og K1 er merget på `main` (K1 som PR #536, `41aebf4b`), men **intet er anvendt eller aktiveret i produktionen**. Denne runbook er en procedure, **ikke en godkendelse**. Hvert trin kræver ejerens særskilte GO (CLAUDE.md regel 48; `docs/migration-workflow-policy.md`, D-110). `supabase db push` er forbudt.
 
+**Statusopdatering 2026-11-24.** Statuslinjen ovenfor er bevaret. Den beskriver tilstanden, da runbooken blev skrevet.
+- **Anvendt siden 2026-11-04:** produktionen har anvendt de tre første trin i den bindende rækkefølge:
+  - H5-bootstrappen som `20261104095423`;
+  - H5-alignmentet som `20261104140659`;
+  - D-327 som `20261104163310`.
+
+  Kilder: `docs/operations/production-actions/2026-11-04T0954Z-h5-bootstrap-applied.md`, `2026-11-04T1406Z-h5-alignment-applied.md` og `docs/decisions/D-327.md`.
+- **Ikke anvendt:** K1. Intet er aktiveret.
+- **Konsekvens for readiness-kørslen:** det forventede udgangspunkt for næste trin er "efter A3", ikke "før A1".
+- Status 2026-11-04 i tabellerne nedenfor er historik.
+- K1 er parkeret (D-303 og D-341).
+
 **Formål:** Gøre den append-only svarlog (`public.question_attempts`, D-266/D-273) med forsøgskontekst (K1, D-334) til den eneste vej for automatisk rettede svar. Fra cutover (M2) kan første forsøg, gentagelser og indholdsversion dokumenteres pålideligt. Alt, hvad der skal bruges for at udføre aktiveringen, står i denne runbook. Den bygger på en audit af læringsfundamentet (2026-11-04), som ikke er en del af repositoryet. Beslutningerne fra auditten er gengivet i §1.1.
 
 **Værktøjer i denne runbook:**

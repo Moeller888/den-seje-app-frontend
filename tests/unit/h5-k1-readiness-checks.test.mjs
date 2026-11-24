@@ -7,7 +7,7 @@
 //   1. The checks file is one SELECT statement: no writing or DDL keyword outside comments and string
 //      literals, and no function outside a small read-only set (the Lærlig guard rejects e.g. query_to_xml
 //      for execute_sql). Both runbook integrity blocks are read-only too.
-//   2. Before H5 (production's applied order today: D-280 part 1, D-278, G1, G2, D-316): every pre check ok,
+//   2. Before H5 (production's applied order until 2026-11-04 09:54Z: D-280 part 1, D-278, G1, G2, D-316): every pre check ok,
 //      every H5/K1 check false, GATE-A1 the only open gate — no SQL error although question_attempts is absent.
 //   3. After the full chain (bootstrap → alignment → D-327 → K1, ledger as apply_migration writes it): every
 //      pre/boot/align/d327/k1 check ok; cutover false; GATE-M2 the only open gate.
@@ -50,7 +50,11 @@ const D316 = "20261102100000_release_open_rounds_on_inactive_questions.sql";
 const D327 = "20261103100000_question_attempts_history_no_action.sql";
 const K1 = "20261103110000_l1_k1_attempt_context.sql";
 
-// Production's applied order today (2026-11-04), then the binding activation order (D-327 / PR #536).
+// Production's applied order BEFORE H5 (until 2026-11-04 09:54Z), then the binding activation order (D-327 / PR #536).
+// Since then production has applied the first three steps of that order: the bootstrap as 20261104095423, the
+// alignment as 20261104140659 and D-327 as 20261104163310 (docs/operations/production-actions/
+// 2026-11-04T0954Z-h5-bootstrap-applied.md, 2026-11-04T1406Z-h5-alignment-applied.md, docs/decisions/D-327.md).
+// K1 is NOT applied. The name PROD_TODAY is kept; the stages below still model each step of the chain.
 const PROD_TODAY = [D280_PATHS, D278, G1, G2, D316];
 const FULL = [...PROD_TODAY, BOOTSTRAP, ALIGN, D327, K1];
 // The names runbook §3 prescribes for apply_migration.
