@@ -486,11 +486,18 @@ test("negative control: without its weight, a one-minute database file is planne
   const without = { ...weights };
   delete without[f];
   assert.deepEqual(heavyWithoutWeight(suite, without, () => false), [f], "the check names exactly the removed file");
+  // Measured in TIME, not list position: the share of the shard's measured seconds that runs before the file starts.
+  // (A list-position share sits at ~0.5 for any shard count, because the fallback weight is the median; the time
+  // share is what decides whether the file's minute lands at the end of the job.) Checked for the workflow's shard
+  // count and for its neighbours, so a change of N cannot hide the effect.
   const n = unitShardMatrix().shards.length;
-  const position = (w) => {
-    const shard = planShards(suite, n, w).find((s) => s.order.includes(f));
-    return shard.order.indexOf(f) / shard.order.length;
+  const startShare = (w, count) => {
+    const shard = planShards(suite, count, w).find((s) => s.order.includes(f));
+    const before = shard.order.slice(0, shard.order.indexOf(f)).reduce((t, x) => t + (weights[x] ?? 0), 0);
+    return before / shard.order.reduce((t, x) => t + (weights[x] ?? 0), 0);
   };
-  assert.ok(position(weights) < 0.25, "with its weight it starts among the first quarter of its shard");
-  assert.ok(position(without) > 0.5, "without it, it starts in the second half: the tail that hit the timeout");
+  for (const count of [n - 1, n, n + 1].filter((c) => c >= 1)) {
+    assert.ok(startShare(weights, count) < 0.25, `${count} shards: with its weight it starts in the first quarter of its shard's time`);
+    assert.ok(startShare(without, count) > 0.75, `${count} shards: without it, it starts in the last quarter — the tail that hit the timeout`);
+  }
 });
