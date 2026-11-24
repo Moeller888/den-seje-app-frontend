@@ -177,3 +177,6 @@ i produktionen 2026-11-15 som `20261115131725`. Den står nu i `APPLIED_IN_PRODU
 
 `20261118090000_avatar_northstar_hair_nh5c_d381` (D-381) stod i `REPO_AHEAD_OF_PRODUCTION`, indtil den blev anvendt
 i produktionen 2026-11-18 som `20261118135103`. Den står nu i `APPLIED_IN_PRODUCTION`.
+
+`20261124120000_avatar_northstar_hair_h25g1_d386` (D-386) stod i `REPO_AHEAD_OF_PRODUCTION`, indtil den blev
+anvendt i produktionen 2026-11-24 som `20261124160706`. Den står nu i `APPLIED_IN_PRODUCTION`.
