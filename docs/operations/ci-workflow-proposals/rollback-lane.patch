@@ -1,0 +1,50 @@
+diff --git a/.github/workflows/playwright.yml b/.github/workflows/playwright.yml
+--- a/.github/workflows/playwright.yml
++++ b/.github/workflows/playwright.yml
+@@ -132,6 +132,46 @@ jobs:
+           echo "unit shards: $SHARDS"
+           test "$SHARDS" = "success"
+ 
++  # Lærligverset, fase L (rollback lane; proposal docs/operations/ci-workflow-proposals/rollback-lane.md). The rollback
++  # matrix (tests/unit/laerligverse-rollback-matrix-migrations-run.test.mjs) also runs in the unit shards, but there the
++  # checkout is shallow and the cells of the OLD Edge versions are skipped. Here the two commits are fetched and
++  # ROLLBACK_EDGE_REQUIRED=1 makes a missing one a FAILURE: every Edge version × database state × flag is run against a
++  # real PostgreSQL 17.6. Not a required check until it has been green on main for 10 runs (merge-gate proposal).
++  rollback-matrix:
++    name: rollback-matrix (Lærligverset, fase L)
++    runs-on: ubuntu-latest
++    timeout-minutes: 15
++    services:
++      postgres:
++        image: postgres:17.6
++        env:
++          POSTGRES_HOST_AUTH_METHOD: trust
++        ports:
++          - 5432:5432
++        options: >-
++          --health-cmd "pg_isready -U postgres"
++          --health-interval 5s
++          --health-timeout 5s
++          --health-retries 12
++    steps:
++      - uses: actions/checkout@v4
++      - name: Fetch the Edge versions the matrix rolls back to (production a7450b0f, #739 05a4a34f)
++        run: |
++          git fetch --no-tags --depth=1 origin a7450b0fab679ca1358997d55bf332766d77d849 05a4a34fb566e68adcb8a4f8a9d3821eb5d465a1
++          git cat-file -e a7450b0fab679ca1358997d55bf332766d77d849^{commit}
++          git cat-file -e 05a4a34fb566e68adcb8a4f8a9d3821eb5d465a1^{commit}
++      - uses: actions/setup-node@v4
++        with:
++          node-version: lts/*
++      - name: Install dependencies
++        run: npm ci
++      - name: Rollback matrix — every Edge version on every database state, nothing skipped
++        env:
++          LEVEL_ENGINE_PG_URL: postgres://postgres@localhost:5432/postgres
++          LEVEL_ENGINE_PG_REQUIRED: "1"
++          ROLLBACK_EDGE_REQUIRED: "1"
++        run: node --test --test-reporter=spec tests/unit/laerligverse-rollback-matrix-migrations-run.test.mjs
++
+   classify:
+     runs-on: ubuntu-latest
+     outputs:
