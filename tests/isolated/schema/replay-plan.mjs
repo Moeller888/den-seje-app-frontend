@@ -210,6 +210,8 @@ export const REPO_AHEAD_OF_PRODUCTION = Object.freeze({
     "repository ahead of production: the repository's request-password-help calls public.reserve_password_help, which production does not have (catalog, 2026-10-25) — open production task D-243",
   "20261030211428_question_attempts_v2.sql":
     "repository ahead of production: the repository's process-event calls process_question_attempt_v2 / process_text_answer_v2 behind the H5 switch, which production does not have (catalog, 2026-11-01) — open production task D-266/D-273 (H5)",
+  "20261124120000_avatar_northstar_hair_h25g1_d386.sql":
+    "repository ahead of production: the repository's Northstar wardrobe can save HAIR-25 group 1 (avatar_identity.northstar.hair = h25n2/h25n3/h25n6/h25n7/h25v2/h25n5 -grey / -brown) through set_avatar_northstar, its cards hidden behind NORTHSTAR_HAIR_H25G1, which production's validate_avatar_identity refuses — open production task D-386 (apply before the cards are opened)",
 });
 
 // Every timestamped migration from ACCOUNTED_FROM on must be accounted for in exactly one place:
