@@ -63,6 +63,28 @@ function withoutRoundNo(r, label) {
   return { ...r, body, calls };
 }
 
+// D-383 follow-up (migration 20261123100000): every call of the two SHARED candidate RPCs carries
+// p_course_scope = "none" in these cases (none is inside a server sequence), so course items are filtered before the
+// RPC's limit. This asserts exactly that value on exactly those calls and on no other call, then removes exactly that
+// field and nothing else. courseScopeCalls counts the calls checked, so the off-parity test is not vacuous.
+const COURSE_SCOPE_RPCS = Object.freeze(["get_unserved_questions_for_student", "get_question_candidates_for_student"]);
+let courseScopeCalls = 0;
+function withoutCourseScope(r, label) {
+  const calls = r.calls.map((c) => {
+    const args = c.kind === "rpc" ? c.ops.find((o) => o[0] === "args")?.[1] : undefined;
+    if (!args || !Object.hasOwn(args, "p_course_scope")) {
+      assert.equal(COURSE_SCOPE_RPCS.includes(c.name) && c.kind === "rpc", false, `${label}: ${c.name} without p_course_scope`);
+      return c;
+    }
+    assert.ok(COURSE_SCOPE_RPCS.includes(c.name), `${label}: p_course_scope on ${c.name}`);
+    assert.equal(args.p_course_scope, "none", `${label}: ${c.name} p_course_scope`);
+    courseScopeCalls++;
+    const { p_course_scope: _scope, ...rest } = args;
+    return { ...c, ops: c.ops.map((o) => (o[0] === "args" ? ["args", rest] : o)) };
+  });
+  return { ...r, calls };
+}
+
 // PR #379: both FORMAT_MIX: lines (shadow and v2) carry pupil = the first 16 hex of
 // SHA-256("laerlig-format-mix-log-v1:" + student_id), computed here independently of
 // ./log-pseudonym.ts for the harness pupil "stu-1". This asserts it on every FORMAT_MIX: line, that no
@@ -104,14 +126,14 @@ test("the first request of a fresh isolate (key-source log included) matches v17
   assert.ok(warmup.logs.some((l) => l.includes("[supabase-keys]")), "the once-per-isolate log is part of the comparison");
 });
 
-test("LEVEL_ENGINE off (missing, empty, false, true, 0, off, V1, \" v1\", canary without allowlist): identical to v179 in status, body, calls and logs, apart from round_no and the FORMAT_MIX pupil", async () => {
+test("LEVEL_ENGINE off (missing, empty, false, true, 0, off, V1, \" v1\", canary without allowlist): identical to v179 in status, body, calls and logs, apart from round_no, the FORMAT_MIX pupil and D-383's p_course_scope", async () => {
   const { handler } = await loaded;
   let runs = 0;
   for (const level of OFF_VALUES) for (const mix of MIX_VALUES) for (const subject of SUBJECTS) for (const s of SCENARIOS) {
     const c = { mix, level, subject, scenario: s };
     const got = await runCase(handler, c);
     const label = `LEVEL_ENGINE=${level === undefined ? "<missing>" : JSON.stringify(level)} ${caseKey(c)}`;
-    assert.deepEqual(withoutPupil(withoutRoundNo(got, label), label), GOLDEN.cases[caseKey(c)], label);
+    assert.deepEqual(withoutCourseScope(withoutPupil(withoutRoundNo(got, label), label), label), GOLDEN.cases[caseKey(c)], label);
     assert.ok(!got.calls.some((x) => B_FUNCTIONS.includes(x.name)), `${label}: a B function was called`);
     assert.ok(!got.calls.some((x) => LEVEL_TABLES.includes(x.name)), `${label}: a level table was read or written`);
     assert.ok(!got.logs.some((l) => l.includes("LEVEL_ENGINE:")), `${label}: level log line`);
@@ -119,6 +141,7 @@ test("LEVEL_ENGINE off (missing, empty, false, true, 0, off, V1, \" v1\", canary
   }
   assert.equal(runs, OFF_VALUES.length * MIX_VALUES.length * SUBJECTS.length * SCENARIOS.length);
   assert.ok(pupilLines > 0, "the FORMAT_MIX pupil check ran on at least one line");
+  assert.ok(courseScopeCalls > 0, "the p_course_scope check ran on at least one candidate call");
 });
 
 test("negative control: LEVEL_ENGINE=\"v1\" is caught by the same comparison (B functions called, behaviour differs)", async () => {

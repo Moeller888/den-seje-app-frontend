@@ -152,7 +152,9 @@ function parseSelect(s) {
 }
 const SCALAR_RPC = new Set(["release_open_question_outside", "request_repeat_question_for_student"]);
 const SETOF_RPC = new Set(["get_unserved_questions_for_student"]);
-const RPC_CAST = { p_student_id: "uuid", p_grade: "smallint", p_domains: "text[]" };
+// p_course_scope: the D-383 follow-up's argument (20261123100000, NOT in this database). Cast like the others, so the REAL
+// database decides whether a function takes it.
+const RPC_CAST = { p_student_id: "uuid", p_grade: "smallint", p_domains: "text[]", p_course_scope: "text" };
 const TABLES = new Set(["profiles", "question_instances"]);
 
 let backendConn = null; // the connection the handler's calls run on
@@ -211,6 +213,9 @@ async function backend(client, kind, name, ops) {
     if (scalar) return { data: rows.length ? rows[0].v : null, error: null };
     return { data: single ? rows[0] ?? null : rows, error: null };
   } catch (e) {
+    // PostgREST resolves an RPC by its named arguments; when no function takes them (PostgreSQL would say 42883,
+    // undefined_function) it answers PGRST202 without calling anything. Modelled for rpc only, nothing else.
+    if (kind === "rpc" && e.code === "42883") return { data: null, error: { message: e.message, code: "PGRST202" } };
     return { data: null, error: { message: e.message, code: e.code ?? null } };
   }
 }
@@ -364,6 +369,14 @@ test("L1 K1 delivered version, end to end through the real get-next-question han
     const rOff = await gnq(handler, off, { k1: false });
     assertPublic(rOn);
     assertPublic(rOff);
+    // D-383 follow-up: this database predates p_course_scope, so the handler made the scoped call, got PGRST202 from
+    // the real function lookup, and fell back exactly once to today's arguments.
+    for (const r of [rOn, rOff]) {
+      const unserved = r.calls.filter((c) => c.kind === "rpc" && c.name === "get_unserved_questions_for_student").map((c) => c.sql);
+      assert.equal(unserved.length, 2, "the scoped call and one fallback");
+      assert.match(unserved[0], /p_course_scope/);
+      assert.doesNotMatch(unserved[1], /p_course_scope/);
+    }
     // K1 off: the insert carries no proposal and the row has no delivered version — as before K1.
     const insOff = rOff.calls.find((c) => /^INSERT/.test(c.sql));
     assert.ok(insOff && !/served_snapshot/.test(insOff.sql), "K1 off sends no proposal");

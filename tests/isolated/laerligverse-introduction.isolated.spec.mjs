@@ -577,6 +577,51 @@ test("D-383 G6: two tabs, ordinary quiz and course at once — one open round, n
   expect(await rewardState(request, tabs.p)).toEqual(start);
 });
 
+// ── D-383 follow-up (problem 3): course items are filtered BEFORE the candidate limit (real PostgREST + PostgreSQL) ─────
+// One objective of its own holds 60 course items of the step TRANSFER (more than the classic route's LIMIT 50), then
+// 3 ordinary items and ONE guided-practice item. Before 20261123100000 the limit was filled with transfer items: the
+// ordinary quiz saw only course items (withheld) and answered "no questions", and a new pupil's sequence (the server's
+// first step is guided practice) saw no guided-practice item and answered "step exhausted". This lane replays the
+// migration; PostgREST must resolve the named p_course_scope against the new default parameter.
+const LIMIT_OBJ = `${INTRO.learning_objective}_d383_limit`;
+test("D-383 follow-up: 60 course items ahead hide neither the 3 ordinary items nor the one item of the server's step", async ({ request }) => {
+  const have = await rows(request, `questions?select=id&learning_objective=eq.${LIMIT_OBJ}`);
+  if (have.length === 0) {
+    const base = { type: "mc_single", difficulty: 500, is_active: true, question_type: "auto", learning_objective: LIMIT_OBJ, answer_format: "mc", answer_type: "short", target_grade: 8, difficulty_band: 3 };
+    const item = (label, metadata) => ({ ...base, content: { ...SOURCE.content, question: `${SOURCE.content.question} (D-383 grænse: ${label}, testkopi)` }, metadata: { domain: LIMIT_OBJ, synthetic: true, fixture: "D-383-limit", ...metadata } });
+    const data = [
+      ...Array.from({ length: 60 }, (_, i) => item(`overførsel ${i + 1}`, { learning_step: "transfer" })),
+      ...Array.from({ length: 3 }, (_, i) => item(`almindelig ${i + 1}`, {})),
+      item("øvelse", { learning_step: "guided_practice" }),
+    ];
+    const ins = await request.post(`${SUPA}/rest/v1/questions`, { headers: { ...svc, ...json, prefer: "return=minimal" }, data });
+    expect(ins.status(), await ins.text()).toBe(201);
+  }
+  expect(await rows(request, `questions?select=id&learning_objective=eq.${LIMIT_OBJ}`)).toHaveLength(64);
+
+  // The ordinary quiz, three times: each time an ordinary item — never "no questions", never a course item.
+  const a = await makePupil(request, "d383-limit", [LIMIT_OBJ]);
+  const ta = await signIn(request, a);
+  const seen = new Set();
+  for (let i = 0; i < 3; i++) {
+    const r = await post(request, ta, "get-next-question", { subject: "historie" });
+    expect(r.status, JSON.stringify(r.body)).toBe(200);
+    expect(r.body.content?.question ?? "", JSON.stringify(r.body)).toContain("almindelig");
+    seen.add(r.body.content.question);
+    const g = await post(request, ta, "process-event", { question_instance_id: r.body.question_instance_id, answer: SOURCE.content.correct, question_shown_at: Date.now(), round_no: r.body.round_no, submission_id: randomUUID() });
+    expect(g.status, JSON.stringify(g.body)).toBe(200);
+  }
+  expect(seen.size, "three different ordinary items").toBe(3);
+
+  // A new pupil in the sequence: the server's first step is guided practice — the one such item, behind 60 others.
+  const b = await makePupil(request, "d383-limit-step", [LIMIT_OBJ]);
+  const tb = await signIn(request, b);
+  const step = await post(request, tb, "get-next-question", { subject: "historie", learning_objective: LIMIT_OBJ, sequence: true, introduction_capability: 1 });
+  expect(step.status, JSON.stringify(step.body)).toBe(200);
+  expect(step.body).toMatchObject({ learning_objective: LIMIT_OBJ, learning_step: "guided_practice" });
+  expect(step.body.content.question).toContain("øvelse");
+});
+
 // ── F12-B: the introduction capability against the REAL get-next-question and PostgreSQL ──────────────────────────
 // A request WITHOUT `introduction_capability` (an older host, or one that does not show introductions) never creates a
 // round for an introduction it cannot show and never gets a task instead of a required one; an invalid value is a 400

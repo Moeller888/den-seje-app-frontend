@@ -46,6 +46,8 @@ const CHAIN = [
   "20261110043500_laerligverse_introductions.sql",
   // D-383: course items out of the ordinary quiz, replayed last in this lane (it needs none of the four above).
   "20261120150000_course_items_out_of_ordinary_quiz.sql",
+  // D-383 follow-up: p_course_scope on the shared candidate RPCs (requires D-383).
+  "20261123100000_course_scope_before_candidate_limit.sql",
 ];
 
 let db;
