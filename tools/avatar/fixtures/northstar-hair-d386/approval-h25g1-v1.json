@@ -1,0 +1,369 @@
+{
+ "decision": "D-386",
+ "what": "HAIR-25 gruppe 1: seks frisurer i gråt og brunt som hoveder på Northstars fælles hovedbase",
+ "approvedOn": "2026-11-24",
+ "ownerText": "Jeg godkender alle seks frisurer i gruppe 1 i både brun og grå: N2, N3, N6, N7, V2 og N5, præcis som vist på vurderingssiden.",
+ "approvedPage": {
+  "path": "run-3/faerdig-gruppe1/vurdering.html",
+  "sha256": "f2f9e07c02397142870cd065c84c22b886af682c3290141d948d7e430e54208d"
+ },
+ "result": {
+  "path": "run-3/faerdig-gruppe1/resultat.json",
+  "sha256": "b27a60e490869a132420e0342a7b69b91e3ea9c73948a351453ca418ab2691ea"
+ },
+ "method": {
+  "version": "hair25v3-metode-r7a-2026-11-24",
+  "manifestSha256": "60a8c6139dbe0b7b624989ef177f7622415984b210760f07156f9474ba925edf",
+  "codeFingerprint": "2ba166f8f1a98b1e1bb0855a27435c83415332a8c61769b52a4146c91ee313a4",
+  "post": "r7 + greyTone (r7a)"
+ },
+ "private": "De godkendte PNG-hoveder, vurderingssiden og alle mellemfiler ligger uden for repositoryet (DenSejeApp-artefacts/hair-25-trial); kun de tolv WebP-hoveder publiceres.",
+ "webpArgs": "tools/avatar/build-northstar-runtime-assets.mjs CWEBP_ARGS (tabsfri, -exact); afkodet og sammenlignet byte for byte",
+ "renderCheck": "appens egen northstarCompose (js/avatar-layers.js) genskaber vurderingssidens figur-app, hoved-1til1, tank-app og sweater-app byte for byte fra WebP-hovederne",
+ "order": [
+  "h25n2",
+  "h25n3",
+  "h25n6",
+  "h25n7",
+  "h25v2",
+  "h25n5"
+ ],
+ "hairs": {
+  "h25n2-grey": {
+   "trialId": "N2",
+   "colour": "grey",
+   "name": "Glat page med lige pandehår",
+   "label": "Page med pandehår · gråt",
+   "file": "head-h25n2-grey-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/N2/grey-head.png",
+    "sha256": "443471c5ebb5d9c445ff3f39699ebb56adaf29cc9e65794d5c24700d5096da2b",
+    "pixelSha256": "4fb7e0b90feac085a981250e4bfad331b744071164ac3d737e6eb682c0e95505"
+   },
+   "webp": {
+    "sha256": "dc3ad56313ffff64d351336620d0fc965bdc786658a969b0d5efed5c7fe9da72",
+    "bytes": 95272,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/N2/views-graa/figur-app.png": "40720376ec29f6995e981a6437f75864e34b14a8b014e32f8131a077229d3f40",
+    "run-3/faerdig-gruppe1/N2/views-graa/hoved-1til1.png": "e36b0a4c8ba24820f5ecb5ef821690a396da180f7325ada1abc0c31b4fceb06d",
+    "run-3/faerdig-gruppe1/N2/views-graa/tank-app.png": "43db0930361201d025766ed9da14c026980a2e10d83ac0fc68735380cc1d0441",
+    "run-3/faerdig-gruppe1/N2/views-graa/sweater-app.png": "4a7e1c28926c3a9806c4db9b98cba86a861729ef313c1fed980afc3d2c072f6b"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "6b107ca7fdfaea27948f9b7a1a3cd975c8bd3e0cbda3b435fe572a362223135e",
+    "top-tank-navy": "f2a7529bda31c94b5922e1b1070277caef6a9a953003cde481ddcb60bbbb4736",
+    "top-sweater-ls2-heather": "c6f0c4ca79f124ad2440b76062fe0ee72f618276ed00b704f6d13ffc91a905b7"
+   }
+  },
+  "h25n2-brown": {
+   "trialId": "N2",
+   "colour": "brown",
+   "name": "Glat page med lige pandehår",
+   "label": "Page med pandehår · brunt",
+   "file": "head-h25n2-brown-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/N2/brown-head.png",
+    "sha256": "6251efc554de77a7a8eed083b2b1332fea8d122565e8740c9c01043e257fa01b",
+    "pixelSha256": "ae5a0a679d0f5aa845e935d08213196e52f16517ddad5c73b9e55608c21b7814"
+   },
+   "webp": {
+    "sha256": "9b91fc5ba41dd4179ea3dbc237c987d08e6a7cc7cbd0ded5fbf5b4cb478113b1",
+    "bytes": 104586,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/N2/views/figur-app.png": "733cb513e01a556020af6a87c68d5d188b662c655463f0e0f36354876b5b8fd8",
+    "run-3/faerdig-gruppe1/N2/views/hoved-1til1.png": "bac3814e86e6cc11a1544d42849f00f56f860d2d05643550eb68cc79629acdc8",
+    "run-3/faerdig-gruppe1/N2/views/tank-app.png": "ccd3f9091c80ea1fda13e0c367d169b0a89614a6c05c6cdaa094bd59b87e05a7",
+    "run-3/faerdig-gruppe1/N2/views/sweater-app.png": "65c6771676388eba9da0d58c9b1857629765519b150c29beb1b661a8d3b7b2ff"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "45e34b978031e02734e9b9b4adaf09f7c80b300373d189be3fac33e8374eaa65",
+    "top-tank-navy": "b232e14e08100713fdf4b7038189b585c16a1d086b645c4feda21b30eba28425",
+    "top-sweater-ls2-heather": "dda3b2beabd9324737f0c39982a77c3c88db549083423b011b6256977795e260"
+   }
+  },
+  "h25n3-grey": {
+   "trialId": "N3",
+   "colour": "grey",
+   "name": "Bølget hår til skuldrene",
+   "label": "Bølget skulderhår · gråt",
+   "file": "head-h25n3-grey-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/N3/grey-head.png",
+    "sha256": "7489c6abed788e22bf5d75f85622332666709d1ff040438fcd373d0c5799d411",
+    "pixelSha256": "e5cc52cf3d7d9df3191f8add17d61df4958562ddd1f20f103b61c69589960535"
+   },
+   "webp": {
+    "sha256": "743f17bfaff0d1fc20175feb8747368f633133b9d3a8b4d3d359f1d91f2580e5",
+    "bytes": 112066,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/N3/views-graa/figur-app.png": "154e99a96ef168d23f26bbe3b6b157f3b5c9af5e504a5c2724f72876ef038df5",
+    "run-3/faerdig-gruppe1/N3/views-graa/hoved-1til1.png": "95591de94aded037f3687df737c4279e60894e4cc5389fcb8600b60788268172",
+    "run-3/faerdig-gruppe1/N3/views-graa/tank-app.png": "f99b2d47302db6b4a61671507a55109518dee2faa626d9a8b911695e2c3c9086",
+    "run-3/faerdig-gruppe1/N3/views-graa/sweater-app.png": "4920b49311b955b808de23e2139cdbd76a8385ea7860310e966c17ba4d2f03d4"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "79fc3b8a47782c23af6cd87cdc111bf345a188eb369bc7a2edc64320d4a74789",
+    "top-tank-navy": "54e20e2b63d52c595c31b08fda6e53e5c4e558727a98b3ad09806ad6afdcb1ee",
+    "top-sweater-ls2-heather": "799050dba5b908a1ba0b783f6fe955997c241a244e75f0f4ea53275e83e3f7f8"
+   }
+  },
+  "h25n3-brown": {
+   "trialId": "N3",
+   "colour": "brown",
+   "name": "Bølget hår til skuldrene",
+   "label": "Bølget skulderhår · brunt",
+   "file": "head-h25n3-brown-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/N3/brown-head.png",
+    "sha256": "2da11a8d4c2cf9ff499388dbd8f1ca43bf7d1a178f18559ee486dcdbd01d58ef",
+    "pixelSha256": "74485b758da8a72df2f2a84a4fae10fcf65f3770c10cb0f2d06f091ceb59ff5b"
+   },
+   "webp": {
+    "sha256": "22a59e89e54b7837d295c7114f3d3c5d44fb0a04772a8a144864af3bfecfbdf3",
+    "bytes": 124516,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/N3/views/figur-app.png": "b0babd32a9a64a74c32ab1a619b47bdd2456112895d52f3fba62e3722b8422df",
+    "run-3/faerdig-gruppe1/N3/views/hoved-1til1.png": "4b9ea106c8ceac422ee03103b3b294f8d2ff7955243a23c0b18ca1447ae59837",
+    "run-3/faerdig-gruppe1/N3/views/tank-app.png": "2f19dad670107b27840785723e15fcb060008ff7458ceda425bda00459e5de2f",
+    "run-3/faerdig-gruppe1/N3/views/sweater-app.png": "24d869616173bb47070794c4e8f9e98253af30381bade1a5b5f53fef7906c73b"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "24f67f0ac2b0c312f1772e302dc7f54665bd2f0d3d3ec672edfa909c103c0cd1",
+    "top-tank-navy": "43cdb3527e60f0ac39839b63ab7915efcbd135ee4228afae85986b0ace051c92",
+    "top-sweater-ls2-heather": "7c575340515b7ed89a09390ebc90ef62fe2e679168aa5e07e3be1781b76d0baf"
+   }
+  },
+  "h25n6-grey": {
+   "trialId": "N6",
+   "colour": "grey",
+   "name": "Lav hestehale over skulderen",
+   "label": "Lav hestehale · gråt",
+   "file": "head-h25n6-grey-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/N6/grey-head.png",
+    "sha256": "ac7e9890616053377434f49bd38539e97813477da234257ac2de731af9fbe1e6",
+    "pixelSha256": "2e8ea400989d06ba695cf3e1d7940aab07f35f2b6a503279991bbba0984d87c1"
+   },
+   "webp": {
+    "sha256": "d2ef5eb626b34149f929278580e6cee5196960254abf6f17c85a2a29aa827786",
+    "bytes": 92682,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/N6/views-graa/figur-app.png": "558ff2717d71cc21ebc8bf295caeded9888fcc65aeafdf4d877fcf92e0a98c1e",
+    "run-3/faerdig-gruppe1/N6/views-graa/hoved-1til1.png": "de3879dbc7a7c1672230bff1599e9d6e9463f3a24e305cdebbcb0cbfbf9bc0d7",
+    "run-3/faerdig-gruppe1/N6/views-graa/tank-app.png": "fa5e10c3968c1b3d9d4bf9d2baffce155247a89e42b2445213f5d482e020786e",
+    "run-3/faerdig-gruppe1/N6/views-graa/sweater-app.png": "f13a49f4fc870bdce836cab277c530084520bca564e909862aef214eb71e9d38"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "22bd9ee95e36c48a3b48125a7315ccb7b90b8976b1d5340c25a1020e0b66bda8",
+    "top-tank-navy": "33afccedb2bd5013aaa21ee780d7262833ac0c2357788987f4cc973d8be78ac6",
+    "top-sweater-ls2-heather": "a1e9b220799a87f16069dbb7c05ca59972d31a939d09236bb6c341e7af667044"
+   }
+  },
+  "h25n6-brown": {
+   "trialId": "N6",
+   "colour": "brown",
+   "name": "Lav hestehale over skulderen",
+   "label": "Lav hestehale · brunt",
+   "file": "head-h25n6-brown-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/N6/brown-head.png",
+    "sha256": "8b7bb5874d913e10d9ffdfc092c1cecd53dc66081d008f151f4229c4b4222a84",
+    "pixelSha256": "69b82405c0d5912bde8c43893b4dcbe6c68b9fa917256b0a5fdd4826756bae84"
+   },
+   "webp": {
+    "sha256": "8f46c01ca510efa511cbc259035674f6cfc3e1542f41c2e709c04f0b2fbafab6",
+    "bytes": 101656,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/N6/views/figur-app.png": "19a8d86f25c8c593e33fc468b84a00903e0a7a94495ccf552ab7c2898c763e43",
+    "run-3/faerdig-gruppe1/N6/views/hoved-1til1.png": "3f20aede428d5ce8c3c75ab7746676cd6838c58fe8ea46f7280120fba6456b04",
+    "run-3/faerdig-gruppe1/N6/views/tank-app.png": "40286133dc7b984c891942d404c80d6a0b8528ba931f52adb765a8e8b816a55b",
+    "run-3/faerdig-gruppe1/N6/views/sweater-app.png": "c99ed28951ec8224d99f1ab7e21c3ae57bff91c1a8f3651a036c60dcef766b1e"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "12fd24711e2a6221d08ffb36d5b01543b20f773d457ef323bc0b1e2e3a8e6f8d",
+    "top-tank-navy": "5ccd80dd9ea61e4928af099f91076057aa4ded756396f8c91eaef3ec2711d8f6",
+    "top-sweater-ls2-heather": "94d9ad869e2523ccebc5beeacd0c3c0ea2afcb8e6f3235b37a4db19bb0a7c7f2"
+   }
+  },
+  "h25n7-grey": {
+   "trialId": "N7",
+   "colour": "grey",
+   "name": "Stor afro",
+   "label": "Stor afro · gråt",
+   "file": "head-h25n7-grey-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/N7/grey-head.png",
+    "sha256": "cf7b730c436f0282e7cf2bed15f122f226578bccaee66d8ea8a19a359d79e097",
+    "pixelSha256": "a1ce67f57de3201244349c608a2192788b6cb571b8a584b59504d19563432f02"
+   },
+   "webp": {
+    "sha256": "fd4cfb172e2eaf4c5acfbe1780b2fec85cb0ba1f7a6df5376f5c356f4d8036e3",
+    "bytes": 112750,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/N7/views-graa/figur-app.png": "48d0e8bcade1b929f8f2cac399d84f2b70e0cb52d1b799ae770e161608240f30",
+    "run-3/faerdig-gruppe1/N7/views-graa/hoved-1til1.png": "dc0ddb3e6a0d794867d284bd98aa5b733acf8086ed5b3bfc08f5f786ee1212d7",
+    "run-3/faerdig-gruppe1/N7/views-graa/tank-app.png": "d136601946a06efd8307bc99104c3a6d7c282ac06bc4544df37de49c3e5f65ff",
+    "run-3/faerdig-gruppe1/N7/views-graa/sweater-app.png": "7590916ee3e92a6f4a8424ec318ba4ebaafed43d488984a142b23d63a2037435"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "df3d4c4b9bad0c11133a97c698d6c024cc2a2888aa24a6d8e3e8fe712ab5bf3a",
+    "top-tank-navy": "052270cd34dabe36a74c525514d7cd7ba76b62ab85113b72411709310040b1ba",
+    "top-sweater-ls2-heather": "268665c96133df4d6908123a9e8e91d4653b6aa7643e49cdb3cb6727604650d8"
+   }
+  },
+  "h25n7-brown": {
+   "trialId": "N7",
+   "colour": "brown",
+   "name": "Stor afro",
+   "label": "Stor afro · brunt",
+   "file": "head-h25n7-brown-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/N7/brown-head.png",
+    "sha256": "64097dda79d3200a328c50ffd35b2a534887796e7e7790f286fb39a6543ee5f7",
+    "pixelSha256": "58936acacf233c7da4e5369bfbd320deda148a22ed10053fec26deade03ee808"
+   },
+   "webp": {
+    "sha256": "62ad5d60c31f2cd1de34c57fa9c9091cd519a94295099a3b97975d6cf4af1af4",
+    "bytes": 119818,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/N7/views/figur-app.png": "be6702a29c14abd6e5a9331f8a1ec59accf261da51dc85d47c9e3cfa8afab30e",
+    "run-3/faerdig-gruppe1/N7/views/hoved-1til1.png": "5134668740e808f5e942ecf057eaef6e5d5c8a79384f20df97e338f8f9e28706",
+    "run-3/faerdig-gruppe1/N7/views/tank-app.png": "0d9265b5b42426182c6e5677790fcb2ff69ee21dfa2f4269616b87f85c633388",
+    "run-3/faerdig-gruppe1/N7/views/sweater-app.png": "1e10b65280e40c9ad86924dc3586c795df5e15a56df65388ef6d2d53616ec37b"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "82758ce3153e26ce7e9671158b8b909f3ab96cc6fe9b95f1555ab1ee8d31a53d",
+    "top-tank-navy": "654b082f510e6dbe16a30c11f16bb12ed077b83226afcf937e8a19014c0e444e",
+    "top-sweater-ls2-heather": "ef03cce874dad3f3b47022e602f756c52aafaac2f27b9d13fe60b361abfd1db7"
+   }
+  },
+  "h25v2-grey": {
+   "trialId": "V2",
+   "colour": "grey",
+   "name": "Tætte krøller til skuldrene",
+   "label": "Tætte krøller · gråt",
+   "file": "head-h25v2-grey-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/V2/grey-head.png",
+    "sha256": "847d2cb19b9461b762a89b6bcaaf8f3431af24e9ab116b1534824c097d43458c",
+    "pixelSha256": "b36fe6dd0a57254113aa4d544e23d181f22806e2663e4ebe19742fe7bec9eab2"
+   },
+   "webp": {
+    "sha256": "7a1bba529af0d66c160493ec0ad15ded44e2917f251e92a710a7ab818bc82fe2",
+    "bytes": 129228,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/V2/views-graa/figur-app.png": "2cf69749b927864fa9f7543f333549207062d68f5a8057e7b9e72031e877e344",
+    "run-3/faerdig-gruppe1/V2/views-graa/hoved-1til1.png": "b1c05085feaab69a7b6fb1b1b8270aa1fc5f78f4a565a20c6581ff7a133e217d",
+    "run-3/faerdig-gruppe1/V2/views-graa/tank-app.png": "bc64ca2de0b3efa32ccadb94130ed874ca9eb6dc1f37372a26fb4e7a350b2b74",
+    "run-3/faerdig-gruppe1/V2/views-graa/sweater-app.png": "84749187ef1c1e9ad799b7adfc5815f421aca0444a24b9b4b801c7f1595c8b9e"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "bb986510fcc044c11df8f7b968503d3d529f4920251e8e01400bc8631d2d39b3",
+    "top-tank-navy": "312213598b0f0d13d074ee67928ef545dc6869570575208ac300da914f15e499",
+    "top-sweater-ls2-heather": "0f7757ab7d7928ec777ffd1f0ef950d9dece17b6abe7842832c6e6cf5ecfe8d4"
+   }
+  },
+  "h25v2-brown": {
+   "trialId": "V2",
+   "colour": "brown",
+   "name": "Tætte krøller til skuldrene",
+   "label": "Tætte krøller · brunt",
+   "file": "head-h25v2-brown-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/V2/brown-head.png",
+    "sha256": "3e697307da245eb2caaf837c119bdb9681f62e62568a671508231d7cd7275eda",
+    "pixelSha256": "8ed0908408af71a5b732d3abd74ec5957f9e9f7aec1d2064d8ca2a0727f4dfd8"
+   },
+   "webp": {
+    "sha256": "64eaae3f0b9a292f1e39a3cc319fdff7568081dd7b782bffa1e40d347bc4fd3e",
+    "bytes": 148070,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/V2/views/figur-app.png": "7e17c8566c187cb596100c4a0b387a543d161cb54c3e060e3db520a5edb27d26",
+    "run-3/faerdig-gruppe1/V2/views/hoved-1til1.png": "e791b8d0245292f8754378391b96aad21103b319323598c3817730d9aea0bfd8",
+    "run-3/faerdig-gruppe1/V2/views/tank-app.png": "c36ae946d215fc406fc09490affe584461137d94bbce0feec53b2658470b6a65",
+    "run-3/faerdig-gruppe1/V2/views/sweater-app.png": "fe6eee3d9491d70539bef3eb8cfe5c9ad99c9b711538fdcc94fc4bd71e5d1d99"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "7331e58be079c2e5adc01660b7eb34a8f2794b255eeede82831c5c77a56ed8eb",
+    "top-tank-navy": "55d9f546eb4f94ae757a56560fd11ff2324173d6c25d646258d27cbf2db030a9",
+    "top-sweater-ls2-heather": "b60dc4401c7bbf331f504ab032dc0c5f85faa90f08d25d9c723d424ab6c6106a"
+   }
+  },
+  "h25n5-grey": {
+   "trialId": "N5",
+   "colour": "grey",
+   "name": "To korte fletninger",
+   "label": "To fletninger · gråt",
+   "file": "head-h25n5-grey-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/N5/grey-head.png",
+    "sha256": "4ba6ea5760de19b6af7e8adc9b250125684587b16da61274e745e1659bdd9962",
+    "pixelSha256": "080b94b232618f4b11a2febc9b634a6f6496056dd85803093c8877fa30fa9201"
+   },
+   "webp": {
+    "sha256": "8b109e79fa391b88d0778b4e3742bf8a9d8f32512bb89b07211758694f6f516c",
+    "bytes": 89022,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/N5/views-graa/figur-app.png": "d4d7c765f5fc34e4fef40c386985a1afdc9e2c97f90b230de1d94e0fbf75a537",
+    "run-3/faerdig-gruppe1/N5/views-graa/hoved-1til1.png": "d09da3eca836fac21044c49732a101666c9edea2a84c2bedece2a406dde2498a",
+    "run-3/faerdig-gruppe1/N5/views-graa/tank-app.png": "f6cf53b7f027210206343bd68ddf2436d46be810c5c4763e97f3ea1fadc76ca4",
+    "run-3/faerdig-gruppe1/N5/views-graa/sweater-app.png": "c50281f46a8f93f56bcb7fae594d9620ffb9df07be2857ca82c3a5a3d1efdb79"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "8cc8f76203be6abd6623eae3433684a41554452f1a7291754ccc42d83f38ef63",
+    "top-tank-navy": "0fb7593518e53f2349dca96c014dd9eacdda987be2665662aeb2adf59a36ceec",
+    "top-sweater-ls2-heather": "dd5fd1d6ef13c1c061205ff74418c06818cf0ba62851f87c17e50003628da8df"
+   }
+  },
+  "h25n5-brown": {
+   "trialId": "N5",
+   "colour": "brown",
+   "name": "To korte fletninger",
+   "label": "To fletninger · brunt",
+   "file": "head-h25n5-brown-v1.webp",
+   "approvedPng": {
+    "path": "run-3/faerdig-gruppe1/N5/brown-head.png",
+    "sha256": "6355ee94367d576cb56f11086b3395059a18e9e918bff8d40d74b2561a9462ed",
+    "pixelSha256": "d0aed30ecb544cd0febac61e03e82d3f9269552cf207f13a9d92d6ea28dfaff7"
+   },
+   "webp": {
+    "sha256": "58426596fe6c2d40013c7ee68b4f21719ff296a4a94f6340309704914ec8d16a",
+    "bytes": 97690,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/faerdig-gruppe1/N5/views/figur-app.png": "d590174ba3ba167873b23208115795ad83bd938718c353571f5bc353cb9f001e",
+    "run-3/faerdig-gruppe1/N5/views/hoved-1til1.png": "92497fe969beac0c6e69605c92bbd313fd0947cf33aae0abd42512c78495fdce",
+    "run-3/faerdig-gruppe1/N5/views/tank-app.png": "ad9622fd1faa1bf396ebe188174062c8cca1143fc62d0609af52247bbfb59ad4",
+    "run-3/faerdig-gruppe1/N5/views/sweater-app.png": "8817b863a0ec65098e14ce50e32acec3cc7ca06449f5a7ead97a7a99274981eb"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "c9b2b296656c4f58419ac1d0c79efc0d0f130aa4d8cc3731ba407b953c0065fa",
+    "top-tank-navy": "bf142d4db26e5ff0abd344f6003dc2dcf40f6bf68df1d45af0a821f65ef1037e",
+    "top-sweater-ls2-heather": "9239434c9c847ee7f56f3362eaeefa57ff90e6ea24494477a2ad4f4dc51a7f4c"
+   }
+  }
+ }
+}
