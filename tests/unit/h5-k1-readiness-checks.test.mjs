@@ -40,7 +40,7 @@ import {
   D278, D280_PATHS, G1, BOOTSTRAP, ALIGN, TOP10_BEFORE, TOP10_ID, uid, baseSql, migrationSql, FINGERPRINT_SQL,
 } from "./helpers/h5-integration-chain.mjs";
 import { G2, G2_SEED_SQL } from "./helpers/g2-h5-orders.mjs";
-import { extractFunction } from "./helpers/answer-chain-schema.mjs";
+import { extractFunction, readMigration } from "./helpers/answer-chain-schema.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CHECKS_SQL = readFileSync(join(ROOT, "docs", "operations", "h5-k1-readiness-checks.sql"), "utf8");
@@ -243,7 +243,7 @@ test("4d. PRE-02 after D-383: all four after-bodies with the helper pass; a mixt
   const c = await checks(after);
   assert.equal(c["PRE-02"].ok, true, c["PRE-02"].actual);
   assert.match(c["PRE-02"].actual, /release=e52e69fa .*rqs=c14b90cc rqss=b23d72a1 rql=410d0ab6 course=00cc41a0/);
-  assert.match(before["PRE-02"].actual, /course=mangler$/);
+  assert.match(before["PRE-02"].actual, /course=mangler park=mangler resume=mangler$/);
   for (const id of Object.keys(before)) {
     if (id !== "PRE-02") assert.deepEqual([id, c[id].ok], [id, before[id].ok], `${id} is unchanged by D-383`);
   }
@@ -262,6 +262,54 @@ test("4d. PRE-02 after D-383: all four after-bodies with the helper pass; a mixt
   const helperOnly = await db(PROD_TODAY);
   await helperOnly.exec(extractFunction(D383_FILE, "question_is_course_item"));
   assert.equal((await checks(helperOnly))["PRE-02"].ok, false, "the helper with the before-bodies: refused");
+});
+
+// F8/D-384 (20261124160000) replaces the same four in one transaction (the helper unchanged) and adds the two parking
+// functions. Applied UNMODIFIED on top of D-383's bodies, as production will get it. PRE-02 accepts the after-F8 set
+// only with F8's functions present, and the after-D-383 set only with them absent.
+const F8_FILE = "20261124160000_course_round_parking.sql";
+test("4e. PRE-02 after F8: the four F8 bodies with the helper and F8's functions pass; F8's functions with D-383's bodies, or one body back, do not", async () => {
+  const d383 = await db(PROD_TODAY);
+  for (const name of D383_BODIES) await d383.exec(extractFunction(D383_FILE, name));
+  const before = await checks(d383);
+  const after = await db(PROD_TODAY);
+  for (const name of D383_BODIES) await after.exec(extractFunction(D383_FILE, name));
+  await after.exec(readMigration(F8_FILE));
+  const c = await checks(after);
+  assert.equal(c["PRE-02"].ok, true, c["PRE-02"].actual);
+  assert.match(c["PRE-02"].actual, /release=72f2a0f3 .*rqs=f21252b7 rqss=e69545d9 rql=881b68b8 course=00cc41a0/);
+  for (const id of Object.keys(before)) {
+    if (id !== "PRE-02") assert.deepEqual([id, c[id].ok], [id, before[id].ok], `${id} is unchanged by F8`);
+  }
+
+  // D-383's bodies with F8's functions present (a partial or reverted F8): refused.
+  const reverted = await db(PROD_TODAY);
+  for (const name of D383_BODIES) await reverted.exec(extractFunction(D383_FILE, name));
+  await reverted.exec(readMigration(F8_FILE));
+  for (const name of D383_BODIES.filter((n) => n !== "question_is_course_item")) await reverted.exec(extractFunction(D383_FILE, name));
+  assert.equal((await checks(reverted))["PRE-02"].ok, false, "D-383's bodies with F8's functions: refused");
+
+  // One body back to D-383's (a mixture): refused.
+  const mixed = await db(PROD_TODAY);
+  for (const name of D383_BODIES) await mixed.exec(extractFunction(D383_FILE, name));
+  await mixed.exec(readMigration(F8_FILE));
+  await mixed.exec(extractFunction(D383_FILE, "release_open_question_outside"));
+  assert.equal((await checks(mixed))["PRE-02"].ok, false, "release back to D-383, the repeat functions after F8: refused");
+
+  // F8's parking function with another body: refused by PRE-02 (PRE-05 knows it only as F8's reviewed function).
+  const changedPark = await db(PROD_TODAY);
+  for (const name of D383_BODIES) await changedPark.exec(extractFunction(D383_FILE, name));
+  await changedPark.exec(readMigration(F8_FILE));
+  await changedPark.exec(`CREATE OR REPLACE FUNCTION public.park_open_course_round(p_student_id uuid) RETURNS uuid LANGUAGE plpgsql
+    SECURITY DEFINER SET search_path = '' AS $f$ BEGIN UPDATE public.question_instances SET answered = true WHERE student_id = p_student_id; RETURN NULL; END $f$`);
+  assert.equal((await checks(changedPark))["PRE-02"].ok, false, "an unreviewed park body: refused");
+
+  // F8's bodies without F8's functions: refused.
+  const noParking = await db(PROD_TODAY);
+  for (const name of D383_BODIES) await noParking.exec(extractFunction(D383_FILE, name));
+  await noParking.exec(readMigration(F8_FILE));
+  await noParking.exec("DROP FUNCTION public.park_open_course_round(uuid)");
+  assert.equal((await checks(noParking))["PRE-02"].ok, false, "the after-F8 bodies without park_open_course_round: refused");
 });
 
 test("5. a missing constraint, a missing trigger and a disabled trigger are detected", async () => {
