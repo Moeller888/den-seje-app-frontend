@@ -123,6 +123,12 @@ test("the fast-path re-check refuses anything but a valid docs-md list (red, nev
   assert.equal(recheck(Buffer.from("{").toString("base64")).ok, false);
 });
 
+// D-362 / #736: the only two steps of the virtual audio output (exact names).
+const AUDIO_STEPS = [
+  "Audio — the PulseAudio package cache (production lane)",
+  "Audio — a virtual output for the browsers (PulseAudio null sink, production lane)",
+];
+
 test("workflow: the check runs on both paths, only the exact value skips, the guard still runs first", () => {
   const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8");
   const job = wf.slice(wf.indexOf("\n  isolated-e2e:\n"));
@@ -165,8 +171,27 @@ test("workflow: the check runs on both paths, only the exact value skips, the gu
       assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'\n"), n);
       continue;
     }
+    // D-362 / #736: the virtual audio output (a PulseAudio null sink) for the browsers of the production lane, whose
+    // suite reads texts aloud in Firefox (no sound server on the runner → NS_ERROR_DOM_MEDIA_MEDIASINK_ERR). Exactly
+    // these two steps, with exactly the production-lane condition of the suite they serve: no event condition (D-261),
+    // no other lane. Skipping them elsewhere never skips a test — the K1 and introduction lanes do not run that suite.
+    // Pinned in full by isolated-virtual-audio.test.mjs.
+    if (AUDIO_STEPS.includes(n)) {
+      assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && matrix.profile == 'production'\n"), n);
+      continue;
+    }
     // Every other step: skipped ONLY for the exact value "docs-md"; any other value runs it.
     assert.match(s, /\n        if: (?:(?:always|failure)\(\) && )?needs\.plan\.outputs\.scope != 'docs-md'\n/, n);
+  }
+  // D-362 / #736: the audio exception is those two steps, once each, and no other step of the job touches the sound
+  // server or its package cache — a third step under another name cannot start it in another lane. (Comment lines are
+  // ignored: the explanation above the audio steps belongs to the step before them.)
+  for (const audioName of AUDIO_STEPS) assert.equal(steps.filter((s) => name(s) === audioName).length, 1, audioName);
+  for (const s of steps) {
+    const code = s.split("\n").filter((line) => !/^\s*#/.test(line)).join("\n");
+    if (/virtual-audio|pulseaudio|pw-audio-apt|pactl/i.test(code)) {
+      assert.ok(AUDIO_STEPS.includes(name(s)), `only the two audio steps touch the sound server: ${name(s)}`);
+    }
   }
   assert.ok(steps.findIndex((s) => name(s).startsWith("Guard —")) < steps.findIndex((s) => name(s).startsWith("Docs-only fast path")));
   // The plan reads the change set from the merge commit (depth 2) — no token, no secret, no extra

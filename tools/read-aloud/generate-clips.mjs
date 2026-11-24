@@ -20,7 +20,8 @@
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { canonicalTtsRequest, ttsKey, ttsClipPaths } from "../../js/read-aloud/tts-key.js";
+import { ttsKey, ttsClipPaths } from "../../js/read-aloud/tts-key.js";
+import { planTtsRequests } from "../../js/read-aloud/tts-chunks.js";
 import { segmentQuestion, segmentOption } from "../../js/read-aloud/lang-segments.js";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -105,15 +106,20 @@ async function fetchActiveQuestions(env) {
   return all;
 }
 
-/** Unique clips (by key) for a list of requests. */
+/**
+ * Unique clips (by key) for a list of requests. A long text yields the same parts the browser asks
+ * for (js/read-aloud/tts-chunks.js), so pre-generating it fills exactly the clips the player plays.
+ */
 export async function uniqueClips(requests) {
   const clips = new Map();
   let rejected = 0;
   for (const request of requests) {
-    const checked = canonicalTtsRequest(request.text, request.segments);
-    if (!checked.ok) { rejected += 1; continue; }
-    const key = await ttsKey(checked.value);
-    if (!clips.has(key)) clips.set(key, checked.value);
+    const planned = planTtsRequests(request.text, request.segments);
+    if (!planned.ok) { rejected += 1; continue; }
+    for (const part of planned.parts) {
+      const key = await ttsKey(part);
+      if (!clips.has(key)) clips.set(key, part);
+    }
   }
   return { clips, rejected };
 }

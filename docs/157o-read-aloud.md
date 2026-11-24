@@ -264,3 +264,110 @@ concurrent requests → 1 Azure call, Azure error/timeout → nothing stored, We
 admin token, HTTP surface (404 no-store, Range 206, 401/400/403/405/413/429/503/504), provider
 (hit, miss, error, timeout, stop-while-loading, timing at 0,75× and 1,5×).
 `tests/unit/read-aloud-player.test.mjs`: production never uses Web Speech.
+
+## 8. Long texts — one reading in several requests (D-362 / F-07, 2026-11-19)
+
+**Problem.** One synthesis request may carry at most 800 characters (`TTS_LIMITS.maxChars`,
+`js/read-aloud/tts-key.js`; the Worker enforces the same contract). The provider's `canSpeak()`
+answered `false` for anything longer, so `attachReadAloudControl` rendered no player at all. In the
+history pilot (D-362 / F-07) the sources of S2 (849 characters) and S3, S4, S6 (§ 35 with word
+explanations, 898 characters) therefore had no "Læs op" — and with them the historical words
+*Folkethinget, Huusstand, 30te Aar, Indfødsret, Fattigvæsenet, Raadigheden over sit Bo*.
+
+**Decision.** Fix it in the read-aloud architecture, not in the content: the approved pupil texts
+stay byte for byte as approved (63bb8b97). The 800-character limit, the Worker, the cache key, the
+rate limits and the UI are unchanged.
+
+### Split contract — `js/read-aloud/tts-chunks.js`
+
+- `planTtsRequests(text, segments)`: a text that fits is **one** part — exactly the canonical
+  request it always was (same key, so every cached clip is still served). A longer text becomes a
+  short sequence of **ordinary** canonical requests ("parts"), each normalised, keyed, cached and
+  synthesised like any short text. Any other validation error keeps its own reason.
+- Length is measured as the contract measures it: `normalizeTtsText(piece).length` (UTF-16 code
+  units after NFC, `__` blanks and whitespace collapsing). Every part passes `canonicalTtsRequest`.
+- Lossless: `pieces.join("") === text.normalize("NFC")` — nothing dropped, repeated or reordered;
+  whitespace at a cut stays with the earlier piece.
+- Preferred cuts: blank line → line break → sentence end (not after `f.eks.`, `bl.a.`, … or a Danish
+  ordinal such as "den 5. juni") → clause mark → space; inside the best class the cut nearest an even
+  split. Only a text without a space inside the limit is cut in a word — never in a surrogate pair,
+  before a combining mark or inside a `__` blank.
+- Language runs (English subject) are kept: a part of an English run is still read by the English
+  voice; adjacent runs are grouped as long as the group fits.
+- At most `TTS_MAX_PARTS` = 16 parts (12,800 characters); beyond that there is no player, as before.
+
+F-07 result: S2 = 283 + 564 characters (cut at its paragraph), S3/S4/S6 = the law text (452) +
+the word explanations (444), each historical word whole inside one part. S1 (image description, 298),
+S5 and S7 (§ 2, 337) and every question and answer option stay one unchanged request. Unique clips
+for the seven sources: 6.
+
+### Playback — `js/read-aloud/provider-azure.js`
+
+- The parts play one after another on the **same** audio element (an element started from the
+  pupil's tap may keep playing; this matters for Safari). The UI sees one reading: `speaking` …
+  `ended`, no state between parts, no "segment 2 of 3".
+- Fetching: part 1 before playback; part *i + 1* when part *i* starts playing (one ahead, never all at
+  once). Loads are shared per key (`inflight`), so a prefetch and a restart never ask twice.
+- Pause/resume act on the current part. A pause in the gap while the next part loads holds it: the
+  part waits for "Fortsæt".
+- "Forfra" and a speed change start the whole text again from part 1 (the player already restarted
+  on a speed change); every part gets the chosen `playbackRate` and `defaultPlaybackRate`.
+- Stop, the next question (`stopReadAloud()`) or another player bump the provider's generation: a
+  late network answer or an `ended` of an old element can never start audio again.
+- Word highlighting: each part's words are searched from that part's own place in the shown text.
+- A part that fails (metadata error, synthesis error, timeout, a refused `play()`) ends the reading
+  in the usual calm error state ("Oplæsningen kunne ikke hentes lige nu. Prøv igen om lidt."); a
+  failing first part is a failed start exactly as for a short text. No other voice takes over.
+
+### Cache, cost and load
+
+A part is an ordinary clip: GET `/tts/v1/<key>.json` first, POST `/api/tts` only on a miss (per-user
+20/min still applies). A ~900-character source costs 2 requests; repeating it costs none (memo).
+`tools/read-aloud/generate-clips.mjs` plans long texts the same way, so pre-generation fills exactly
+the clips the player asks for.
+
+### Tests
+
+`tests/unit/read-aloud-long-text.test.mjs` (28): the split (empty, 1, 799, 800, 801, 898, 1,600,
+5,000 characters, no stops, no spaces, many line breaks, Danish letters/NFC/surrogates/combining
+marks, old spellings, normalisation, blanks, 200 seeded random texts: lossless, within the limit, no
+word lost or repeated), language runs, the F-07 texts from `tests/fixtures/d362-approved-pilot-rows.json`
+(byte-checked against the approved fingerprint), the generator, and playback (order on one element,
+one-ahead fetch, pause/resume, pause in the gap, restart, stop, next question, quick switch, double
+tap, a failing part, cache hit/miss, speed, highlighting, the facade).
+
+`tests/read-aloud-long-text.spec.ts` (in `OFFLINE_SPECS`, so the isolated suite runs it in Chromium,
+Firefox and WebKit): the real quiz with S3's approved 898-character source — the player is shown, one tap
+plays both parts, a pause between the parts holds part 2 until "Fortsæt", the next question stops the
+reading and a late answer for the old part never starts audio, and a short source is one unchanged
+request served from memory the second time. The spec holds part 2's metadata itself (no timers) and
+serves a **synthetic tone** over real HTTP with byte ranges: WebKit does not play audio that is
+fulfilled through Playwright route interception.
+
+A wider offline check outside the repository (desktop and 375 × 667 touch, all seven tasks, delayed
+and failing parts, cache miss) ran the real quiz of #706 with the approved S1–S7 the same way. Both
+prove order, control and error handling in real engines — not how Azure pronounces the words.
+
+### Known limits
+
+- The manual listening check of the historical words with the real Azure voice is **still
+  outstanding** (needs real synthesis, i.e. a separate GO).
+- Between two parts there is a short pause (the next part is normally already loaded); a part whose
+  metadata takes longer than `TTS_TIMEOUTS.metaMs` (8 s) ends the reading in the error state, also
+  when the pupil had paused in the gap.
+- The review text (feedback) and the course summary still have no player (unchanged, not in scope).
+
+### Audio output errors and the CI sound server (PR #736, 2026-11-19)
+
+- **Fix.** Firefox reports a failing audio output as `error` (MEDIA_ERR_DECODE, `OnMediaSinkAudioError`)
+  followed by `ended`. The late `ended` used to start the next part, whose `playing` put the player back on
+  "Læser højt" for good. A reading that has ended (`ended` or `error`) is now over: no later event of its
+  audio element acts. Reproduced in Firefox with Mozilla's test pref `media.cubeb.force_null_context`
+  (no audio backend) and pinned in `tests/unit/read-aloud-long-text.test.mjs`.
+- **CI.** Firefox on Linux plays sound only through a sound server; the GitHub runner has none, so in the
+  isolated suite (run 44581847725) every `<audio>` failed with `NS_ERROR_DOM_MEDIA_MEDIASINK_ERR`.
+  `tests/isolated/ci/virtual-audio.sh` installs and starts a PulseAudio daemon with its automatic null sink —
+  production lane of `isolated-e2e.yml` only, before the network lock, its own small package cache
+  (`~/.cache/pw-audio-apt`, never the browser/apt entry `playwright.yml` shares), verified (`pactl info`, a
+  sink must exist) and failing loud as `INFRA-AUDIO`. Pinned in `tests/unit/isolated-virtual-audio.test.mjs`.
+  Chromium and WebKit play without a sound server.
