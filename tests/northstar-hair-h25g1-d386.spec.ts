@@ -1,12 +1,13 @@
 // D-386 — HAIR-25 group 1: six hairstyles (N2, N3, N6, N7, V2, N5), each in grey and brown, approved by the owner 2026-11-24 exactly as
-// shown on the private assessment page. Their twelve cards are HIDDEN by default (NORTHSTAR_HAIR_H25G1 = false) until D-386's migration is
-// applied in production.
+// shown on the private assessment page. Their twelve cards are SHOWN by default since the production trial passed (NORTHSTAR_HAIR_H25G1 =
+// true), free like every other hairstyle.
 // SELF-SERVED + FIXTURE-INTERCEPTED (as northstar-hair-nh5c-d381.spec.ts): a local static server serves this branch's code; every
 // *.supabase.co call is answered from a fictitious, stateful pupil (the stored choice changes as set_avatar_northstar is called). No real
 // backend, account or token. It proves:
-//   - hidden by default: today's 86 cards and no group-1 card; a browser's opt-in (?northstarh25=1) shows the twelve last under Hoved
-//     (98) and ?northstarh25=0 hides them again; the flag turned on shows the same nineteen hairstyles; a STORED group-1 head is drawn on
-//     Avatar, Hub and in the quiz without the opt-in; older saved avatars are drawn as before;
+//   - open by default, WITHOUT any opt-in: 98 cards, the twelve last under Hoved, with no price; older saved avatars are drawn as before;
+//   - the flag still switches the cards off: this branch's avatar-layers.js served with NORTHSTAR_HAIR_H25G1 = false has 86 cards and no
+//     group-1 card; a browser's opt-in (?northstarh25=1) shows them (98) and ?northstarh25=0 hides them again; a STORED group-1 head is
+//     still drawn on Avatar, Hub and in the quiz;
 //   - each of the twelve goes on in place (no reload), the outfit stays and the hairstyle is saved with it; a part (tank top, sweater,
 //     trousers, shoes) keeps the hairstyle; after a reload both stay; Hub and the quiz draw the same head and outfit;
 //   - AS APPROVED: with a T-shirt, a tank top and a sweater the browser loads exactly the twelve WebP heads the approval fixture binds
@@ -83,14 +84,14 @@ function routeFor(pupil: Pupil) {
 }
 
 const LAYERS = fs.readFileSync(path.join(ROOT, "js", "avatar-layers.js"), "utf8");
-const G1_OFF = "export const NORTHSTAR_HAIR_H25G1 = false;";
-async function openPage(browser: Browser, pupil: Pupil, { g1FlagOn = false }: { g1FlagOn?: boolean } = {}) {
+const G1_ON = "export const NORTHSTAR_HAIR_H25G1 = true;";
+async function openPage(browser: Browser, pupil: Pupil, { g1FlagOff = false }: { g1FlagOff?: boolean } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1100, height: 900 }, reducedMotion: "reduce" });
   await ctx.route("**://*.supabase.co/**", routeFor(pupil));
-  // g1FlagOn: this branch's module with only D-386's flag turned on — the group-1 cards shown, as a later opening would
-  if (g1FlagOn) {
-    expect(LAYERS.split(G1_OFF).length, "the group-1 flag line occurs once").toBe(2);
-    const body = LAYERS.replace(G1_OFF, "export const NORTHSTAR_HAIR_H25G1 = true;");
+  // g1FlagOff: this branch's module with only D-386's flag turned off — the group-1 cards hidden, as before the opening
+  if (g1FlagOff) {
+    expect(LAYERS.split(G1_ON).length, "the group-1 flag line occurs once").toBe(2);
+    const body = LAYERS.replace(G1_ON, "export const NORTHSTAR_HAIR_H25G1 = false;");
     await ctx.route(`${baseUrl}/js/avatar-layers.js*`, (r) => r.fulfill({ status: 200, headers: { "content-type": "text/javascript" }, body }));
   }
   await ctx.addInitScript(([k, s]: [string, any]) => { localStorage.setItem(k, JSON.stringify(s)); }, [`sb-${REF}-auth-token`, SESSION]);
@@ -127,13 +128,26 @@ const NINETEEN = [...SEVEN, ...G1.map((k) => [k, FX.hairs[k].label])];
 const HEAD = (hair: string) => "/assets/avatar-northstar-hair/head-" + hair + "-v1.webp";
 const TOPS = ["top-tee-hip-cream", "top-tank-navy", "top-sweater-ls2-heather"];   // T-shirt, tank top, sweater
 
-test("D-386 hidden by default: 86 cards and no group-1 card; ?northstarh25=1 shows the twelve last under Hoved (98) and =0 hides them; the flag turned on shows them too; stored group-1 heads are drawn on Avatar, Hub and in the quiz; older saved avatars as before", async ({ browser, browserName }) => {
+test("D-386 open by default: the twelve last under Hoved without any opt-in (98 cards), free; with the flag off 86 cards and no group-1 card, ?northstarh25=1 shows them and =0 hides them, and stored group-1 heads are still drawn on Avatar, Hub and in the quiz; older saved avatars as before", async ({ browser, browserName }) => {
   test.skip(browserName !== "chromium", "UI dedup");
   test.setTimeout(480000);
   expect(NINETEEN.slice(7).map(([, l]) => l)).toEqual(["Page med pandehår · gråt", "Page med pandehår · brunt", "Bølget skulderhår · gråt", "Bølget skulderhår · brunt", "Lav hestehale · gråt", "Lav hestehale · brunt", "Stor afro · gråt", "Stor afro · brunt", "Tætte krøller · gråt", "Tætte krøller · brunt", "To fletninger · gråt", "To fletninger · brunt"]);
   {
     const pupil: Pupil = { northstar: { ...FREE }, sent: [] };
     const { ctx, page, errs } = await openPage(browser, pupil);
+    await openAvatar(page, 98);
+    expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_h25g1")), "no opt-in in this browser").toBe(null);
+    expect(await hairIds(page)).toEqual(NINETEEN);
+    // free like the other hairstyles: no hair card carries a price, and every group-1 card has its equip button
+    await expect(page.locator("#northstarWardrobeCards [data-wardrobe-category='hair'] .price-tag")).toHaveCount(0);
+    for (const k of G1) await expect(hairCard(page, k).locator(".equip-btn")).toHaveCount(1);
+    expect(pupil.sent, "nothing is saved by looking").toEqual([]);
+    expect(errs).toEqual([]);
+    await ctx.close();
+  }
+  {
+    const pupil: Pupil = { northstar: { ...FREE }, sent: [] };
+    const { ctx, page, errs } = await openPage(browser, pupil, { g1FlagOff: true });
     await openAvatar(page, 86);
     expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_h25g1")), "no opt-in in this browser").toBe(null);
     expect(await hairIds(page)).toEqual(SEVEN);
@@ -149,18 +163,9 @@ test("D-386 hidden by default: 86 cards and no group-1 card; ?northstarh25=1 sho
     expect(errs).toEqual([]);
     await ctx.close();
   }
-  {
-    const pupil: Pupil = { northstar: { ...FREE }, sent: [] };
-    const { ctx, page, errs } = await openPage(browser, pupil, { g1FlagOn: true });
-    await openAvatar(page, 98);
-    expect(await hairIds(page), "the flag turned on (a later opening) shows the same nineteen").toEqual(NINETEEN);
-    expect(pupil.sent).toEqual([]);
-    expect(errs).toEqual([]);
-    await ctx.close();
-  }
   for (const hair of G1) {
     const pupil: Pupil = { northstar: { ...FREE, top: "top-tank-navy", hair }, sent: [] };
-    const { ctx, page, errs } = await openPage(browser, pupil);   // no opt-in: drawn whatever the flag
+    const { ctx, page, errs } = await openPage(browser, pupil, { g1FlagOff: true });   // no opt-in, the flag off: drawn whatever the flag
     await openAvatar(page, 86);
     await drawn(page);
     expect(await headOn(page, "avatar"), "stored " + hair + " on Avatar").toEqual({ hair, head: [HEAD(hair)] });
@@ -178,7 +183,7 @@ test("D-386 hidden by default: 86 cards and no group-1 card; ?northstarh25=1 sho
   for (const [choice, want] of older) {
     const pupil: Pupil = { northstar: choice ? { ...choice } : null, sent: [] };
     const { ctx, page, errs } = await openPage(browser, pupil);
-    await openAvatar(page, 86);
+    await openAvatar(page, 98);
     if (want) {
       await expect.poll(async () => (await figure(page)).path, { timeout: 30000 }).toBe("northstar");
       expect(await headOn(page, "avatar"), JSON.stringify(choice)).toEqual({ hair: want, head: [HEAD(want)] });
@@ -192,12 +197,13 @@ test("D-386 hidden by default: 86 cards and no group-1 card; ?northstarh25=1 sho
   }
 });
 
-test("D-386 with the opt-in: all twelve go on in place, keep the outfit and are saved with it; a part keeps the hairstyle; both survive a reload; Hub and the quiz draw the same", async ({ browser, browserName }) => {
+test("D-386 on by default: all twelve go on in place, keep the outfit and are saved with it; a part keeps the hairstyle; both survive a reload; Hub and the quiz draw the same", async ({ browser, browserName }) => {
   test.skip(browserName !== "chromium", "UI dedup");
   test.setTimeout(240000);
   const pupil: Pupil = { northstar: { ...FREE }, sent: [] };
   const { ctx, page, errs } = await openPage(browser, pupil);
-  await openAvatar(page, 98, "?northstarh25=1");
+  await openAvatar(page, 98);
+  expect(await page.evaluate(() => localStorage.getItem("avatar_northstar_hair_h25g1")), "no opt-in").toBe(null);
   await page.waitForLoadState("load");
   await drawn(page);
   await page.getByRole("tab", { name: "Hoved", exact: true }).click();
@@ -275,7 +281,7 @@ test("D-386 as approved: with a T-shirt, a tank top and a sweater, the browser d
   for (const top of TOPS) {
     const pupil: Pupil = { northstar: { ...START, top }, sent: [] };
     const { ctx, page, errs } = await openPage(browser, pupil);
-    await openAvatar(page, 98, "?northstarh25=1");
+    await openAvatar(page, 98);
     await drawn(page);
     expect(await page.evaluate(async () => { const L: any = await import("/js/avatar-layers.js"); const o = L.NORTHSTAR_OUTFITS[L.NORTHSTAR_START_OUTFIT]; return [o.bottom, o.shoes]; }), "the approved pictures wear the start outfit").toEqual([START.pants, START.shoes]);
     expect(await headOn(page, "avatar")).toEqual({ hair: "standard", head: [HEAD("standard")] });

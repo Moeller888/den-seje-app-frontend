@@ -1378,11 +1378,12 @@ export const NORTHSTAR_HAIRS_NH5C = Object.freeze({
 });
 // D-386: HAIR-25 group 1 — six hairstyles approved by the owner 2026-11-24 in neutral grey and Northstar's brown, exactly as shown on the
 // private assessment page; twelve more heads on the same shared base (lossless WebP of the approved head PNGs, bound by sha256 in
-// tools/avatar/fixtures/northstar-hair-d386/approval-h25g1-v1.json). Their twelve cards are HIDDEN by default (NORTHSTAR_HAIR_H25G1 =
-// false), because production's validate_avatar_identity refuses the values until D-386's migration (20261124120000) is applied; only a
-// browser that opts in shows them, last under Hoved after the nape locks: localStorage avatar_northstar_hair_h25g1 = "1" (or
-// avatar.html?northstarh25=1; =0 removes it). A stored group-1 head is drawn on every surface whatever the flag (Avatar, Hub, quiz).
-export const NORTHSTAR_HAIR_H25G1 = false;
+// tools/avatar/fixtures/northstar-hair-d386/approval-h25g1-v1.json). Their twelve cards are SHOWN by default since the production trial
+// passed (D-386, NORTHSTAR_HAIR_H25G1 = true), last under Hoved after the nape locks, free like every other hairstyle. OFF (false): the
+// cards are hidden, and only a browser that opts in shows them: localStorage avatar_northstar_hair_h25g1 = "1" (or
+// avatar.html?northstarh25=1; =0 removes it). A stored group-1 head is drawn on every surface whatever the flag (Avatar, Hub, quiz). The
+// database accepts the twelve values through D-386's migration (applied in production 2026-11-24, 20261124160706).
+export const NORTHSTAR_HAIR_H25G1 = true;
 export const NORTHSTAR_HAIR_H25G1_OPT_IN_KEY = "avatar_northstar_hair_h25g1";
 export const NORTHSTAR_HAIRS_H25G1 = Object.freeze({
   "h25n2-grey": Object.freeze({ file: "head-h25n2-grey-v1.webp", label: "Page med pandehår · gråt" }),
