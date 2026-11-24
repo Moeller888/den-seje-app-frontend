@@ -88,7 +88,8 @@ export function deriveQuestionScope(profile: unknown, requestedSubject: unknown)
 
 // D-383: a Lærligverse COURSE ITEM is a question whose metadata has the key `learning_step` (the D-338 step tag
 // read by stepOf), whatever its value. The ordinary quiz (a request without learning_objective) never serves,
-// repeats or resumes one; only a targeted course request does. The tag on the item decides, not the domain:
+// repeats or resumes one, and neither does a targeted request outside the server sequence; only a request inside the
+// server-directed sequence does (D-383 addendum 2026-11-23). The tag on the item decides, not the domain:
 // pilot_* domains (D-362) are deliberately ordinary quiz. The same rule as public.question_is_course_item
 // (migration 20261120150000), which keeps course items out of the level candidates and the repeat RPCs.
 export const COURSE_ITEM_KEY = "learning_step";
@@ -96,4 +97,32 @@ export const COURSE_ITEM_KEY = "learning_step";
 export function isCourseItem(metadata: unknown): boolean {
   return typeof metadata === "object" && metadata !== null && !Array.isArray(metadata)
     && Object.prototype.hasOwnProperty.call(metadata, COURSE_ITEM_KEY);
+}
+
+// D-383 follow-up (migration 20261123100000): the two SHARED candidate RPCs filter course items BEFORE their limit, so
+// they cannot crowd out the valid candidates. p_course_scope = the server's step inside the sequence (only that step's
+// course items), "none" everywhere else (no course items). The candidate loop keeps its own check as well.
+export const COURSE_SCOPE_NONE = "none";
+
+export function courseScopeOf(sequenceStep: string | null): string {
+  return typeof sequenceStep === "string" && sequenceStep.length > 0 ? sequenceStep : COURSE_SCOPE_NONE;
+}
+
+/** PostgREST's "no function matches these named arguments": a database without 20261123100000. */
+export function isMissingCourseScope(error: unknown): boolean {
+  return typeof error === "object" && error !== null && (error as { code?: unknown }).code === "PGRST202";
+}
+
+type ScopedRpcClient = { rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }> };
+
+/**
+ * One candidate RPC with p_course_scope. On a database that predates the parameter, exactly one explicit fallback to
+ * the call without it (today's behaviour; the candidate loop still withholds course items), logged loudly. Any other
+ * error is returned unchanged for the caller to throw.
+ */
+export async function rpcWithCourseScope(client: ScopedRpcClient, fn: string, args: Record<string, unknown>, scope: string): Promise<{ data: unknown; error: unknown }> {
+  const scoped = await client.rpc(fn, { ...args, p_course_scope: scope });
+  if (!isMissingCourseScope(scoped.error)) return scoped;
+  console.error("COURSE_SCOPE_FALLBACK:", { rpc: fn });
+  return await client.rpc(fn, args);
 }
