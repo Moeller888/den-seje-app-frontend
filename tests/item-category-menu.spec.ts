@@ -5,7 +5,7 @@
 //   - both pages show the same 7 categories in the same order, Overdele chosen first, the menu directly over the cards, no
 //     horizontal scrolling, the chosen tab marked (aria-selected) and reachable with the arrow keys, Home and End;
 //   - only the chosen category's cards are shown: on Avatar the 63 wardrobe tops (tees, sweaters and tank tops) and the pupil's
-//     Ridderdragt under Overdele, 6 bottoms, 10 shoes, the 7 hairstyles (D-374, D-378, D-381) and the hat under Hoved; in Butik Ridderdragt under Overdele, the hats under Hoved;
+//     Ridderdragt under Overdele, 6 bottoms, 10 shoes, the 19 hairstyles (D-374, D-378, D-381, D-386) and the hat under Hoved; in Butik Ridderdragt under Overdele, the hats under Hoved;
 //   - an empty category says so (Avatar: Ryg; Butik: Underdele);
 //   - switching category changes nothing the pupil wears and saves nothing;
 //   - a wardrobe choice and an equip keep the pupil in the category (in place since D-366); the outfit stays approved;
@@ -225,7 +225,7 @@ for (const width of [1100, 390]) {
     const wardrobe = () => page.locator("#northstarWardrobeCards .item-card:visible").evaluateAll((cs) => cs.map((c) => (c as HTMLElement).dataset.piece || ((c as HTMLElement).dataset.hair ? "hair:" + (c as HTMLElement).dataset.hair : "")));
     const items = () => page.locator("#inventoryGrid .item-card:visible .item-name").allTextContents();
     const now = () => page.evaluate(async () => { const L: any = await import("/js/avatar-layers.js"); const o = L.northstarOutfitNow(); return o ? { id: o.top + "+" + o.bottom + "+" + o.shoes, approved: L.northstarApprovedOutfits().has(o.top + "+" + o.bottom + "+" + o.shoes) } : null; });
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(86, { timeout: 30000 });   // D-381: the 79 parts and the 7 hairstyles (D-374's 3, D-378's 2 top knots and D-381's 2 nape locks)
+    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(98, { timeout: 30000 });   // D-386: the 79 parts and the 19 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks and D-386's 12 of group 1)
     await expect(page.locator("#inventoryGrid .item-card")).toHaveCount(3);
 
     // Overdele: the 63 wardrobe tops — tees, sweaters and tank tops — and the pupil's Ridderdragt
@@ -248,7 +248,7 @@ for (const width of [1100, 390]) {
     const shoes = await wardrobe();
     expect(shoes.length === 10 && shoes.every((p) => p.startsWith("shoes-"))).toBe(true);
     await page.getByRole("tab", { name: "Hoved", exact: true }).click();
-    expect(await wardrobe()).toEqual(["hair:standard", "hair:nh4-grey", "hair:nh4-brown", "hair:nh5b-grey", "hair:nh5b-brown", "hair:nh5c-grey", "hair:nh5c-brown"]);   // D-374, D-378, D-381
+    expect(await wardrobe()).toEqual(["hair:standard", "hair:nh4-grey", "hair:nh4-brown", "hair:nh5b-grey", "hair:nh5b-brown", "hair:nh5c-grey", "hair:nh5c-brown", "hair:h25n2-grey", "hair:h25n2-brown", "hair:h25n3-grey", "hair:h25n3-brown", "hair:h25n6-grey", "hair:h25n6-brown", "hair:h25n7-grey", "hair:h25n7-brown", "hair:h25v2-grey", "hair:h25v2-brown", "hair:h25n5-grey", "hair:h25n5-brown"]);   // D-374, D-378, D-381, D-386
     expect(await items()).toEqual(["Pirathat"]);
     await page.getByRole("tab", { name: "Ansigt", exact: true }).click();
     expect(await items()).toEqual(["Ninja-maske"]);
