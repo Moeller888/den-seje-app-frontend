@@ -622,6 +622,53 @@ test("D-383 follow-up: 60 course items ahead hide neither the 3 ordinary items n
   expect(step.body.content.question).toContain("øvelse");
 });
 
+// ── D-383 follow-up through REAL PostgREST: both new signatures resolve by named arguments, at the limits ───────────
+// The unit test course-scope-candidate-limit-gnq-pg.test.mjs drives the real handler on every route (classic, v2,
+// level, level+mix) with a stand-in for supabase-js; this lane cannot switch QUESTION_MIX_ENGINE or LEVEL_ENGINE (they are
+// set in the workflow), so here the two changed RPCs are called DIRECTLY through PostgREST as the backend calls them
+// (service key): the 5-argument v2 window as well as the classic one, with and without p_course_scope. 100 course items
+// of one step sit ahead of 3 ordinary items and one item of another step (more than the classic LIMIT 50 and the v2
+// window of 20 per group).
+const PGRST_OBJ = `${INTRO.learning_objective}_d383_postgrest`;
+test("D-383 follow-up via PostgREST: p_course_scope resolves on both candidate RPCs and filters before LIMIT 50 / 20 per group", async ({ request }) => {
+  const have = await rows(request, `questions?select=id&learning_objective=eq.${PGRST_OBJ}`);
+  if (have.length === 0) {
+    const base = { type: "mc_single", difficulty: 500, is_active: true, question_type: "auto", learning_objective: PGRST_OBJ, answer_format: "mc", answer_type: "short", target_grade: 8, difficulty_band: 3 };
+    const item = (label, metadata) => ({ ...base, content: { ...SOURCE.content, question: `${SOURCE.content.question} (D-383 PostgREST: ${label}, testkopi)` }, metadata: { domain: PGRST_OBJ, synthetic: true, fixture: "D-383-postgrest", ...metadata } });
+    const data = [
+      ...Array.from({ length: 100 }, (_, i) => item(`overførsel ${i + 1}`, { learning_step: "transfer" })),
+      ...Array.from({ length: 3 }, (_, i) => item(`almindelig ${i + 1}`, {})),
+      item("øvelse", { learning_step: "guided_practice" }),
+    ];
+    const ins = await request.post(`${SUPA}/rest/v1/questions`, { headers: { ...svc, ...json, prefer: "return=minimal" }, data });
+    expect(ins.status(), await ins.text()).toBe(201);
+  }
+  const all = await rows(request, `questions?select=id,metadata&learning_objective=eq.${PGRST_OBJ}`);
+  expect(all).toHaveLength(104);
+  const ordinary = all.filter((r) => !Object.prototype.hasOwnProperty.call(r.metadata ?? {}, "learning_step")).map((r) => r.id).sort();
+  const guided = all.filter((r) => r.metadata?.learning_step === "guided_practice").map((r) => r.id);
+  expect(ordinary).toHaveLength(3);
+  expect(guided).toHaveLength(1);
+  const pupil = randomUUID(); // no rounds: the NOT EXISTS excludes nothing
+  const rpc = async (fn, args) => {
+    const r = await request.post(`${SUPA}/rest/v1/rpc/${fn}`, { headers: { ...svc, ...json }, data: args });
+    expect(r.status(), `${fn} ${JSON.stringify(args)}: ${await r.text()}`).toBe(200);
+    return (await r.json()).map((x) => x.id);
+  };
+  const classic = { p_student_id: pupil, p_grade: 8, p_domains: [PGRST_OBJ] };
+  const window = { ...classic, p_per_group: 20 };
+  for (const [fn, args, cap] of [["get_unserved_questions_for_student", classic, 50], ["get_question_candidates_for_student", window, 20]]) {
+    // Without the argument: PostgREST resolves the new function with its DEFAULT NULL — today's rows, the limit full.
+    expect(await rpc(fn, args), `${fn} without p_course_scope`).toHaveLength(cap);
+    // 'none': the ordinary quiz — every ordinary item although 100 course items come first; no course item.
+    expect((await rpc(fn, { ...args, p_course_scope: "none" })).sort(), `${fn} 'none'`).toEqual(ordinary);
+    // A step id: only that step's items — the one guided-practice item behind the 100 transfer items.
+    expect(await rpc(fn, { ...args, p_course_scope: "guided_practice" }), `${fn} 'guided_practice'`).toEqual(guided);
+    // The transfer step itself still meets the limit (the limit is unchanged, only applied after the filter).
+    expect(await rpc(fn, { ...args, p_course_scope: "transfer" }), `${fn} 'transfer'`).toHaveLength(cap);
+  }
+});
+
 // ── F12-B: the introduction capability against the REAL get-next-question and PostgreSQL ──────────────────────────
 // A request WITHOUT `introduction_capability` (an older host, or one that does not show introductions) never creates a
 // round for an introduction it cannot show and never gets a task instead of a required one; an invalid value is a 400
