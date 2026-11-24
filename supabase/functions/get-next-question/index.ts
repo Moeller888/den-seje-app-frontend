@@ -706,7 +706,8 @@ serve(async (req) => {
       // "exhausted" — so a caller that left `sequence` out learns why; nothing was created.
       // With p_course_scope (20261123100000) the database no longer returns course items here, so the loop cannot see
       // them; one id-only read of the validated objective tells (only on this path: targeted, outside the sequence,
-      // nothing served). A JSON null tag reads as no tag here: that rare item is then "exhausted", never served.
+      // nothing served). A JSON null tag ({"learning_step": null}) counts as a tag here, as in isCourseItem and
+      // question_is_course_item: `->` yields the jsonb value null, which IS NOT NULL in SQL, so the answer is 403.
       if (sequence === null && !courseItemWithheld) {
         const { data: courseRows, error: courseError } = await admin()
           .from("questions")
