@@ -44,6 +44,8 @@ const CHAIN = [
   "20261108043500_laerligverse_served_mode_hint_log.sql",
   "20261109043500_laerligverse_presented_at.sql",
   "20261110043500_laerligverse_introductions.sql",
+  // D-383: course items out of the ordinary quiz, replayed last in this lane (it needs none of the four above).
+  "20261120150000_course_items_out_of_ordinary_quiz.sql",
 ];
 
 let db;

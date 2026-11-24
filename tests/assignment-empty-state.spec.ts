@@ -40,13 +40,13 @@ test.afterAll(async () => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-async function loginAndInterceptNoQuestions(page: any) {
+async function loginAndInterceptNoQuestions(page: any, answer: Record<string, unknown> = { step: "no_questions" }) {
   // Intercept get-next-question before navigation so it fires on first load
   await page.route("**/functions/v1/get-next-question", async (route: any) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ step: "no_questions" }),
+      body: JSON.stringify(answer),
     });
   });
 
@@ -161,4 +161,22 @@ test("6. Hub button navigates to hub.html", async ({ page, browserName }) => {
 
   await page.locator("#go-hub-btn").click();
   await page.waitForURL(`${PROD}/hub.html`, { timeout: 10000 });
+});
+
+test("7. D-383: an open Lærligverse course task is explained (kept, finish it there) — not 'no more questions', not the teacher text", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "UI dedup");
+
+  // With a teacher filter set, so the generic and the assignment texts would both be possible — neither may show.
+  await adminClient.from("profiles").update({ active_domains: ["cold_war"] }).eq("id", studentId);
+
+  await loginAndInterceptNoQuestions(page, { step: "no_questions", reason: "course_round_open" });
+
+  await expect(page.locator("#question")).toHaveText("Du har en opgave i gang i Lærligvers");
+  const sub = page.locator("#no-questions-sub");
+  await expect(sub).toHaveText("Gør den færdig i Lærligvers. Den er gemt, så du fortsætter, hvor du slap. Bagefter kan du fortsætte her.");
+  await expect(page.locator("#question")).not.toContainText(/ingen flere spørgsmål/i);
+  await expect(sub).not.toContainText(/spørg din lærer/i);
+  // The same way on as every empty state: back to the hub, or try again.
+  await expect(page.locator("#go-hub-btn")).toBeVisible();
+  await expect(page.locator("#retry-question-btn")).toBeVisible();
 });

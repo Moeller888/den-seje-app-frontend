@@ -1561,7 +1561,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!parsed) return null;
 
     if (parsed.step === "no_questions") {
-      return { step: "no_questions" };
+      // D-383: "course_round_open" = the pupil has an unfinished task in a Lærligverse course; it is kept, not lost.
+      return { step: "no_questions", reason: parsed.reason === "course_round_open" ? "course_round_open" : null };
     }
 
     if (!parsed.content || !parsed.content.question) {
@@ -1884,7 +1885,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       feedback.className = "";
       optionsContainer.innerHTML = "";
 
-      if (currentSubject === "engelsk") {
+      if (question.reason === "course_round_open") {
+        // D-383: one open task per pupil (idx_one_open_question). The course task is kept; say where it is.
+        questionElement.textContent = "Du har en opgave i gang i Lærligvers";
+        const sub = document.createElement("p");
+        sub.id = "no-questions-sub";
+        sub.textContent = "Gør den færdig i Lærligvers. Den er gemt, så du fortsætter, hvor du slap. Bagefter kan du fortsætte her.";
+        optionsContainer.appendChild(sub);
+      } else if (currentSubject === "engelsk") {
         questionElement.textContent = "🎉 Du har klaret alle engelskopgaverne lige nu";
         const sub = document.createElement("p");
         sub.id = "no-questions-sub";
