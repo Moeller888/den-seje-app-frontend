@@ -1,0 +1,17 @@
+{
+  "_comment": "Gennemgået liste over de CI-checks, en PR mod main skal have på sin head før en manuel merge (tools/merge/merge-pr.ps1). Navn = forventet conclusion. Ændres workflows (fx 5 unit-shards), opdateres listen i samme PR. Gennemgået 2026-11-24 mod #740 (67ab90fa) og #741 (a732b739).",
+  "checks": {
+    "classify": "success",
+    "plan": "success",
+    "test": "skipped",
+    "unit (shard 1/4)": "success",
+    "unit (shard 2/4)": "success",
+    "unit (shard 3/4)": "success",
+    "unit (shard 4/4)": "success",
+    "unit": "success",
+    "isolated-e2e (run 1)": "success",
+    "isolated-e2e (run 1, K1-testprofil)": "success",
+    "isolated-e2e (run 1, introduktion-testprofil)": "success",
+    "Workers Builds: den-seje-app-frontend": "success"
+  }
+}
