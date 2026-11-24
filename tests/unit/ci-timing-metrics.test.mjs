@@ -461,7 +461,49 @@ test("the runner schedules through pgLaneScheduler over the planned files", () =
 // weight) was still running when the 10-minute job timeout hit; 108 of 109 files had passed, 0 failed. The drift
 // report only says so after the run; this test says it before merge. It changes no file that runs and no timeout.
 const HEAVY_NAME = /-(migration-run|migrations-run|concurrency|pg)\.test\.mjs$/;
-const usesPglite = (f) => read("tests/unit/" + f).includes('from "@electric-sql/pglite"');
+// PGlite is detected in the file itself OR in any local module it imports (transitively): a test that gets its
+// database through tests/unit/helpers/*.mjs is just as heavy. Any quoted reference to the package counts —
+// `from "…"`, `from '…'`, `import("…")`, `require.resolve("…")`, subpaths — so the import style cannot hide it.
+const PGLITE_REF = /["']@electric-sql\/pglite(?:["']|\/)/;
+const LOCAL_IMPORT = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)["'](\.{1,2}\/[^"']+)["']/g;
+function referencesPglite(path, readSource, seen = new Set()) {
+  if (seen.has(path)) return false;
+  seen.add(path);
+  let src;
+  try { src = readSource(path); } catch { return false; } // a missing module is the test's own failure, not weight
+  if (PGLITE_REF.test(src)) return true;
+  const dir = path.slice(0, path.lastIndexOf("/") + 1);
+  for (const m of src.matchAll(LOCAL_IMPORT)) {
+    const target = new URL(m[1], "file:///r/" + dir).pathname.slice("/r/".length);
+    if (referencesPglite(target, readSource, seen)) return true;
+  }
+  return false;
+}
+const usesPglite = (f) => referencesPglite("tests/unit/" + f, read);
+
+test("PGlite detection follows local imports and every quoting style (negative controls)", () => {
+  const files = {
+    "tests/unit/a.test.mjs": 'import { db } from "./helpers/db.mjs";',
+    "tests/unit/helpers/db.mjs": "import { x } from '../support/inner.mjs';",
+    "tests/unit/support/inner.mjs": "const { PGlite } = await import('@electric-sql/pglite');",
+    "tests/unit/b.test.mjs": "import {PGlite} from '@electric-sql/pglite';",
+    "tests/unit/c.test.mjs": 'const p = require.resolve("@electric-sql/pglite/contrib/uuid_ossp");',
+    "tests/unit/d.test.mjs": 'import "./helpers/plain.mjs"; import { y } from "./cycle.mjs";',
+    "tests/unit/helpers/plain.mjs": 'export const plain = "electric-sql pglite is only mentioned here";',
+    "tests/unit/cycle.mjs": 'import { d } from "./d.test.mjs";',
+    "tests/unit/e.test.mjs": 'import { gone } from "./helpers/missing.mjs";',
+  };
+  const readSource = (p) => { if (!(p in files)) throw new Error("ENOENT " + p); return files[p]; };
+  const uses = (f) => referencesPglite("tests/unit/" + f, readSource);
+  assert.equal(uses("a.test.mjs"), true, "two helper levels deep, single quotes, dynamic import");
+  assert.equal(uses("b.test.mjs"), true, "single-quoted static import");
+  assert.equal(uses("c.test.mjs"), true, "require.resolve of a subpath");
+  assert.equal(uses("d.test.mjs"), false, "a cycle terminates and plain prose is no reference");
+  assert.equal(uses("e.test.mjs"), false, "a missing local module is not counted as PGlite");
+  // The old check (`from "@electric-sql/pglite"` in the file itself) missed a, b and c:
+  const oldCheck = (f) => files["tests/unit/" + f].includes('from "@electric-sql/pglite"');
+  assert.deepEqual(["a.test.mjs", "b.test.mjs", "c.test.mjs"].filter(oldCheck), []);
+});
 function heavyWithoutWeight(suite, weights, isPg) {
   return suite.filter((f) => isPg(f) || HEAVY_NAME.test(f) || usesPglite(f))
     .filter((f) => !(Number.isFinite(weights[f]) && weights[f] > 0));
