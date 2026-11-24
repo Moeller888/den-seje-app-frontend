@@ -27,7 +27,7 @@ import { installFlagDiagnostics } from "./js/flags.js";
 // H5 PR 4 (D-266, D-273): OFF by default and not switchable from the browser — see the module header.
 import {
   isH5SubmissionsEnabled, isH5Eligible, createSubmission, savePending, persistAndVerify, loadPending, clearPending,
-  blockRecord, h5RequestBody, classifyResponse, isClientOutdatedError,
+  blockRecord, h5RequestBody, classifyResponse, isClientOutdatedError, activationNoOf, legacyRefusalOf,
   REFUSAL_TEXT, UNCERTAIN_TEXT, CLIENT_OUTDATED_TEXT, MISSING_ROUND_TEXT, STORAGE_TEXT, INCOMPATIBLE_TEXT,
 } from "./js/answer-submission.js";
 // Anti-gætte-pause: the server enforces it; this only shows it (js/quiz-cooldown.js).
@@ -152,6 +152,8 @@ let currentInstanceId = null;
 // H5: the round the server issued with the question on screen, and its answer type (long answers keep
 // the teacher path). Only read when H5 is on.
 let currentRoundNo = null;
+// D-384: the round's activation as the server handed it out (null = none sent; then nothing extra is sent).
+let currentActivationNo = null;
 let currentAnswerType = null;
 let questionShownAt = null;
 let lastKnownXp = 0;
@@ -1103,7 +1105,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!record) {
       // round_no comes only from the server's question. Without a valid one there is no submission
       // and no legacy fallback.
-      const created = createSubmission({ studentId, instanceId: currentInstanceId, roundNo: currentRoundNo, answer: userAnswer });
+      const created = createSubmission({ studentId, instanceId: currentInstanceId, roundNo: currentRoundNo, activationNo: currentActivationNo, answer: userAnswer });
       if (!created.ok) {
         logError("H5_SUBMISSION_NOT_CREATED", { reason: created.reason });
         feedback.textContent = created.reason === "answer_too_long" ? "⚠️ Svaret er for langt."
@@ -1303,7 +1305,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             student_id: studentId,
             question_instance_id: currentInstanceId,
             answer: userAnswer,
-            question_shown_at: questionShownAt
+            question_shown_at: questionShownAt,
+            // D-384: only when the server handed one out; without it the body is exactly as before.
+            ...(currentActivationNo !== null ? { activation_no: currentActivationNo } : {})
           }
         }
       ));
@@ -1324,6 +1328,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       const cooldown = await cooldownFromInvokeError(error);
       if (cooldown) {
         await enterCooldown(cooldown);
+        return;
+      }
+
+      // D-384: the course round was parked, or resumed after this tab got it. Nothing was recorded; sending the same
+      // answer again would be refused again (a dead end), so the question is loaded anew — as on the H5 path.
+      const refusal = await legacyRefusalOf(error);
+      if (refusal) {
+        logEvent("ANSWER_REFUSED", { outcome: refusal });
+        feedback.textContent = REFUSAL_TEXT[refusal];
+        feedback.className = "feedback-pending";
+        setUIState(UI_STATES.TRANSITIONING);
+        setTimeout(() => { loadAndRenderQuestion(); }, 2500);
         return;
       }
 
@@ -1572,6 +1588,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     currentInstanceId = parsed.question_instance_id ?? null;
     currentRoundNo = parsed.round_no ?? null;
+    // D-384: the round's activation, only when the server sends one (LAERLIGVERSE_COURSE_PARKING=on); sent back with
+    // the answer so an older tab's answer to a resumed course round is refused.
+    currentActivationNo = activationNoOf(parsed);
     currentAnswerType = parsed.answer_type ?? null;
 
     console.log("INSTANCE ID:", currentInstanceId);

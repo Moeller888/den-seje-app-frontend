@@ -13,6 +13,7 @@ import { answerMode, replyForV2, isRevokedLegacyRpc, errorCodeOf, CLIENT_OUTDATE
 import { ATTEMPT_CONTEXT_ENV, attemptContextEnabled } from "./attempt-context.ts";
 import { isQuizCooldownError, cooldownReply } from "./quiz-cooldown.ts";
 import { isRoundParkedError, roundParkedReply } from "./round-parked.ts";
+import { COURSE_PARKING_ENV as ACTIVATION_ENV, activationCheckEnabled, activationVerdict, staleActivationReply } from "./round-activation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -115,6 +116,11 @@ serve(async (req) => {
     // and call below is exactly as before, and _v2 gets the L1 constants.
     const attemptContextOn = h5 !== null && attemptContextEnabled(Deno.env.get(ATTEMPT_CONTEXT_ENV))
 
+    // D-384 (./round-activation.ts): with LAERLIGVERSE_COURSE_PARKING exactly "on" the instance read also returns the
+    // round's activation, and an answer from an earlier activation (an old tab) is refused below — on every answer path,
+    // before any answer function. Off: the read and every path are exactly as before.
+    const activationCheckOn = activationCheckEnabled(Deno.env.get(ACTIVATION_ENV))
+
     // ── Fetch instance + question meta ───────────────────────────────────────
     // A backend read (./instance-read.ts): the answer key and the question content are server-only.
     // Nothing from the row is used or returned before the ownership check below.
@@ -123,7 +129,8 @@ serve(async (req) => {
     try {
       ({ data: instanceData, error: instanceError } = await readInstanceForGrading(
         makeAdminClient,
-        question_instance_id
+        question_instance_id,
+        activationCheckOn
       ))
     } catch (keyError: any) {
       // serviceKey()'s messages name the variables, never their values.
@@ -152,6 +159,27 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403, headers: corsHeaders
       })
+    }
+
+    // D-384: the stale-tab check (./round-activation.ts). After the ownership check, before every answer path.
+    if (activationCheckOn) {
+      const verdict = activationVerdict(body.activation_no, instanceData.activation_no)
+      if (verdict.kind === "server_fault") {
+        console.error("ROUND ACTIVATION: the instance has no valid activation_no (migration 20261124120000 missing?)")
+        return new Response(JSON.stringify({ error: "Server configuration error" }), {
+          status: 500, headers: corsHeaders
+        })
+      }
+      if (verdict.kind === "invalid") {
+        return new Response(JSON.stringify({ outcome: "invalid_request", reason: "activation_no", error: "Invalid request" }), {
+          status: 400, headers: corsHeaders
+        })
+      }
+      if (verdict.kind === "stale") {
+        console.log("FLOW: STALE ACTIVATION", JSON.stringify({ expected: verdict.expected, given: verdict.given }))
+        const r = staleActivationReply()
+        return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+      }
     }
 
     const questionMeta    = instanceData.questions || {}

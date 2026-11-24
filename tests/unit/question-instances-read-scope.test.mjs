@@ -519,9 +519,9 @@ const REVIEWED_LATER_UPDATE_NARROWING = {
     "wrappers, SECURITY INVOKER, service_role only) read one instance by id AND student_id FOR UPDATE. No policy, " +
     "RLS or SELECT privilege on question_instances is touched (laerligverse-l3-l5-migration-run and " +
     "laerligverse-l3-l5-attempt-wrapper-run prove the privileges and the reads as the roles themselves)." },
-  "20261124120000_course_round_parking.sql": { excludes: /a\.attname NOT IN \('parked_at', 'parked_objective', 'served_mode'\)/, read: OWN_PUPIL_READ, reason:
+  "20261124120000_course_round_parking.sql": { excludes: /a\.attname NOT IN \('parked_at', 'parked_objective', 'activation_no', 'served_mode'\)/, read: OWN_PUPIL_READ, reason:
     "D-384 (not applied): where anon/authenticated still hold table-level UPDATE it swaps it for column-level UPDATE on " +
-    "every column except the two new server-owned parking columns (and L5's served_mode); otherwise it grants nothing. " +
+    "every column except the three new server-owned columns (parking + activation; and L5's served_mode); otherwise it grants nothing. " +
     "Its reads are D-383's repeat and release bodies (one added condition: a parked round does not block) and the two " +
     "parking functions, SECURITY DEFINER, service_role only — every read is the given pupil's own rows. No policy, RLS " +
     "or SELECT privilege on question_instances is touched (course-round-parking-migration-run proves the privileges " +
@@ -568,9 +568,10 @@ test("reviewed UPDATE-narrowing migrations only swap table UPDATE for a column g
   assert.ok(updateNarrowingViolations(ok.replace("a.attname <> 'served_mode'", "true")).length > 0);
   // D-384's spec: the parking columns must be excluded, and a read of ANOTHER pupil's (or every pupil's) rows is refused.
   const parking = REVIEWED_LATER_UPDATE_NARROWING["20261124120000_course_round_parking.sql"];
-  const okP = UPDATE_NARROWING_STATEMENTS.join(";\n") + ";\n a.attname NOT IN ('parked_at', 'parked_objective', 'served_mode');\nSELECT 1 FROM public.question_instances WHERE student_id = p_student_id AND answered = false;";
+  const okP = UPDATE_NARROWING_STATEMENTS.join(";\n") + ";\n a.attname NOT IN ('parked_at', 'parked_objective', 'activation_no', 'served_mode');\nSELECT 1 FROM public.question_instances WHERE student_id = p_student_id AND answered = false;";
   assert.deepEqual(updateNarrowingViolations(okP, parking), []);
   assert.ok(updateNarrowingViolations(okP.replace("'parked_at', ", ""), parking).length > 0);
+  assert.ok(updateNarrowingViolations(okP.replace("'activation_no', ", ""), parking).length > 0, "the activation column must be excluded too");
   assert.ok(updateNarrowingViolations(okP + "\nSELECT id FROM public.question_instances WHERE answered = false;", parking).length > 0);
   assert.ok(updateNarrowingViolations(okP + "\nSELECT id FROM public.question_instances WHERE student_id = p_other;", parking).length > 0);
   assert.ok(updateNarrowingViolations(okP + "\nGRANT UPDATE (parked_at) ON public.question_instances TO authenticated;", parking).length > 0);

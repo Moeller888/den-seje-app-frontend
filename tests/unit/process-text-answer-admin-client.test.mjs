@@ -131,7 +131,10 @@ test("auth stays on the user client; the grading read is a backend read that inc
   assert.match(INDEX_CODE, /await supabase\.auth\.getUser\(\)/);
   assert.match(INDEX_CODE, /import \{ readInstanceForGrading \} from "\.\/instance-read\.ts";/);
   assert.match(INDEX_CODE,
-    /\(\{ data: instanceData, error: instanceError \} = await readInstanceForGrading\(\s*makeAdminClient,\s*question_instance_id\s*\)\)/);
+    /\(\{ data: instanceData, error: instanceError \} = await readInstanceForGrading\(\s*makeAdminClient,\s*question_instance_id,\s*activationCheckOn\s*\)\)/);
+  // D-384: the third argument only adds activation_no to the SAME backend read (LAERLIGVERSE_COURSE_PARKING=on).
+  const readSrc = readFileSync(new URL("../../supabase/functions/process-event/instance-read.ts", import.meta.url), "utf8");
+  assert.match(readSrc, /\.select\(withActivation === true \? `\$\{ACTIVATION_COLUMN\},\$\{GRADING_COLUMNS\}` : GRADING_COLUMNS\)/);
   const readModule = readFileSync(new URL("../../supabase/functions/process-event/instance-read.ts", import.meta.url), "utf8");
   assert.match(readModule, /\.from\("question_instances"\)/);
   assert.match(readModule, /student_id,/);

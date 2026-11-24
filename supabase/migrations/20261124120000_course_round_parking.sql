@@ -21,7 +21,7 @@
 -- get-next-question læser forfaldne runder med next_review_at <= now(), så ENHVER Edge Function — også dem fra før
 -- denne migration (#739-kandidaten, produktionens a7450b0f) — ser aldrig en parkeret runde i forfaldsløkken, og det
 -- delvise idx_one_open_question lader dem indsætte en ny almindelig opgave. Genoptagelse sætter next_review_at =
--- now(). Se docs/decisions/D-384.md "Tilbageførsel".
+-- rundens created_at (forfalden efter ethvert ur; se resume-funktionen). Se docs/decisions/D-384.md "Tilbageførsel".
 --
 -- ÆNDRINGER:
 --   1. kolonnerne parked_at og parked_objective + to CHECK-begrænsninger;
@@ -34,7 +34,13 @@
 --      parkeret kursusrunde spærre gentagelser i alle fag);
 --   6. release_open_question_outside: en INAKTIV parkeret runde frigives som før (D-316) og mister parkeringen i
 --      samme sætning; en aktiv parkeret kursusrunde røres aldrig (D-383's regel, uændret);
---   7. adgang: anon/authenticated får aldrig UPDATE på de to nye kolonner (L5-mønstret fra 20261108043500, se 7).
+--   7. adgang: anon/authenticated får aldrig UPDATE på de tre nye kolonner (L5-mønstret fra 20261108043500, se 7);
+--   8. activation_no (serverens generationsnummer for rundens AKTIVERING): resume_parked_course_round tæller det op.
+--      Samme runde (samme id, samme round_no) kan nemlig vises i en fane FØR parkeringen og i en anden EFTER
+--      genoptagelsen; round_no (H5) og submission_id skelner ikke de to. get-next-question udleverer nummeret med
+--      LAERLIGVERSE_COURSE_PARKING=on, browseren sender det med svaret, og process-event afviser et svar fra en
+--      tidligere aktivering (409 stale_activation) FØR nogen svarfunktion kaldes. En runde, der aldrig er genoptaget,
+--      har 0, og så accepteres et svar uden nummer (alle eksisterende klienter og svarveje er uændrede).
 -- Kroppene i 5 og 6 er D-383's, ordret, med kun de markerede linjer tilføjet. Signaturer, SECURITY, search_path,
 -- grants og kommentarer er uændrede. Ingen eksisterende data ændres (ingen række er parkeret før denne fil).
 --
@@ -52,9 +58,12 @@
 --   DROP INDEX public.idx_one_parked_course_round;
 --   DROP INDEX public.idx_one_open_question;
 --   CREATE UNIQUE INDEX idx_one_open_question ON public.question_instances (student_id) WHERE answered = false;
---   ALTER TABLE public.question_instances DROP COLUMN parked_objective, DROP COLUMN parked_at;  -- tager CHECK'ene med
+--   ALTER TABLE public.question_instances DROP COLUMN parked_objective, DROP COLUMN parked_at,
+--     DROP COLUMN activation_no;  -- tager CHECK'ene med
 --   og de fire funktioner fra 20261120150000 (deres kroppe, ordret).
---   Kolonne-UPDATE (7) behøver ingen tilbageførsel: de to kolonner forsvinder med DROP COLUMN.
+--   Kolonne-UPDATE (7) behøver ingen tilbageførsel: de tre kolonner forsvinder med DROP COLUMN.
+--   (activation_no > 0 betyder kun, at runden har været genoptaget; at droppe den mister ingen elevdata, men en Edge
+--   Function med LAERLIGVERSE_COURSE_PARKING=on kræver kolonnen: slå flaget fra FØR tilbageførslen.)
 
 SET lock_timeout = '5s';
 
@@ -99,6 +108,13 @@ COMMENT ON COLUMN public.question_instances.parked_at IS
   'D-384: set while an open COURSE round is parked (the pupil left the course); NULL otherwise. Server-owned: only park_open_course_round / resume_parked_course_round / release_open_question_outside write it.';
 COMMENT ON COLUMN public.question_instances.parked_objective IS
   'D-384: the learning objective (course) a parked round belongs to, copied from the question at parking time; NULL when not parked. Server-owned.';
+-- ADD COLUMN … NOT NULL DEFAULT 0 er en ren katalogændring (PostgreSQL ≥ 11): ingen omskrivning af tabellen.
+ALTER TABLE public.question_instances ADD COLUMN IF NOT EXISTS activation_no integer NOT NULL DEFAULT 0;
+ALTER TABLE public.question_instances DROP CONSTRAINT IF EXISTS question_instances_activation_no_nonnegative;
+ALTER TABLE public.question_instances ADD CONSTRAINT question_instances_activation_no_nonnegative
+  CHECK (activation_no >= 0);
+COMMENT ON COLUMN public.question_instances.activation_no IS
+  'D-384: how many times this round was resumed after parking (0 = never). get-next-question hands it out with the round; process-event refuses an answer carrying an older number (409 stale_activation). Server-owned: only resume_parked_course_round writes it.';
 
 -- ── 2. Én AKTIV åben opgave pr. elev; højst én parkeret pr. elev og kursusmål ─────────────────────
 DROP INDEX public.idx_one_open_question;
@@ -170,7 +186,7 @@ $function$;
 
 -- Skift til kurset p_objective i serverens trin p_step (D-338): først parkeres en AKTIV kursusrunde fra et ANDET
 -- kursus (eleven skiftede kursus), derefter genoptages den parkerede runde i dette kursus.
---   'resumed'       den parkerede runde er aktiv igen (samme id; next_review_at = now(), så den serveres som forfalden)
+--   'resumed'       den parkerede runde er aktiv igen (samme id; next_review_at = rundens created_at, så den serveres som forfalden uanset urforskydning)
 --   'none'          intet parkeret i dette kursus
 --   'other_active'  en anden runde er aktiv (fx en almindelig opgave): den parkerede bliver parkeret, intet tabes
 --   'wrong_step'    den parkerede runde hører til et andet trin end serverens (indholdet er flyttet): den bliver
@@ -224,7 +240,13 @@ BEGIN
   END IF;
   BEGIN
     UPDATE public.question_instances
-    SET    parked_at = NULL, parked_objective = NULL, next_review_at = now()
+    -- next_review_at: rundens OPRETTELSE, ikke now(). get-next-question læser forfaldne runder med
+    -- next_review_at <= Edge-urets tid (millisekunder); databasens now() (mikrosekunder, et andet ur) kan ligge EFTER
+    -- den, og så var den genoptagne runde ikke forfalden: funktionen forsøgte en ny runde og svarede 409
+    -- open_question_exists (fundet på ægte PostgreSQL 17, D-384 stale-tab-testen). created_at ligger altid før både
+    -- parkeringen og genoptagelsen, uanset urforskydning; LEAST(…, now()) er værnet, hvis den skulle mangle.
+    SET    parked_at = NULL, parked_objective = NULL, next_review_at = LEAST(created_at, now()),
+           activation_no = activation_no + 1  -- en ny AKTIVERING af samme runde: en ældre fanes svar er forældet
     WHERE  id = v_parked.id;
   EXCEPTION WHEN unique_violation THEN
     -- A new active round was inserted concurrently (get-next-question does not take the pupil lock): it wins.
@@ -635,7 +657,7 @@ $function$;
 -- nok alene: hvor anon/authenticated stadig har UPDATE på HELE tabellen (produktionen i dag; L3/L5 i
 -- 20261108043500 er ikke anvendt), dækker tabelrettigheden også nye kolonner, og en kolonne-REVOKE har ingen
 -- virkning (prototypens fund). Derfor L5-mønstret: tabelrettigheden erstattes af kolonnerettigheder for alle
--- kolonner UNDTAGEN parked_at og parked_objective. Har rollerne allerede kun kolonnerettigheder (L5 anvendt), får de
+-- kolonner UNDTAGEN parked_at, parked_objective og activation_no. Har rollerne allerede kun kolonnerettigheder (L5 anvendt), får de
 -- nye kolonner ingen rettighed, og der er intet at gøre. service_role (BYPASSRLS, tabelrettighed) er uændret.
 DO $parking_acl$
 DECLARE
@@ -645,7 +667,7 @@ BEGIN
   SELECT string_agg(quote_ident(a.attname), ', ' ORDER BY a.attnum) INTO v_cols
   FROM pg_catalog.pg_attribute a
   WHERE a.attrelid = 'public.question_instances'::regclass AND a.attnum > 0 AND NOT a.attisdropped
-    AND a.attname NOT IN ('parked_at', 'parked_objective', 'served_mode');
+    AND a.attname NOT IN ('parked_at', 'parked_objective', 'activation_no', 'served_mode');
   FOR v_role IN
     SELECT r.rolname FROM pg_catalog.pg_roles r
     WHERE r.rolname IN ('anon', 'authenticated')
@@ -671,7 +693,7 @@ BEGIN
     IF has_table_privilege(r, 'public.question_instances', 'UPDATE') THEN
       RAISE EXCEPTION 'COURSE_PARKING: % har stadig UPDATE på hele question_instances', r;
     END IF;
-    FOREACH c IN ARRAY ARRAY['parked_at', 'parked_objective'] LOOP
+    FOREACH c IN ARRAY ARRAY['parked_at', 'parked_objective', 'activation_no'] LOOP
       FOREACH p IN ARRAY ARRAY['SELECT', 'INSERT', 'UPDATE'] LOOP
         IF has_column_privilege(r, 'public.question_instances', c, p) THEN
           RAISE EXCEPTION 'COURSE_PARKING: % har % på question_instances.%', r, p, c;

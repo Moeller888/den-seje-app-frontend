@@ -12,10 +12,13 @@
 // "course_round_open"). The switch is NOT a Lærligverse feature toggle: it must stay on while Lærligverset is off, so the
 // ordinary quiz can park a course round that is still open.
 //
-// ROLLBACK SAFETY lives in the database, not here: parking sets next_review_at = 'infinity', so EVERY version of this
-// function (also those before D-384) skips a parked round in its due loop (next_review_at <= now()). Switching this flag
-// off, or deploying an older function, therefore never blocks a pupil on a parked round; the round simply waits until a
-// D-384 function resumes it in its course. See docs/decisions/D-384.md "Tilbageførsel".
+// ROLLBACK SAFETY (proven in laerligverse-rollback-matrix-migrations-run, scenarios 2/3/6b): parking sets next_review_at =
+// 'infinity', so EVERY version of this function (also those before D-384) skips a parked round in its due loop — the
+// ORDINARY quiz is safe with any version. The COURSE is not: an older version (or this one with the switch off) cannot
+// resume a parked round and answers 409 in the course (open_question_exists), and a7450b0f serves an ordinary task there.
+// The safe rollback target with parked rounds is THIS function with the switch on and the Lærligverse flags off. With the
+// switch on before migration 20261124120000, every request fails (500): the switch follows the migration. See
+// docs/decisions/D-384.md "Udrulning, tilbageførsel og nødstop".
 //
 // Pure TypeScript with no Deno or network imports, so the Node unit suite imports exactly what the function runs.
 
@@ -60,4 +63,18 @@ export function resumeOutcomeOf({ data, error }: RpcResult): ResumeOutcome {
     throw new Error(`resume_parked_course_round: unexpected result ${JSON.stringify(data)}`);
   }
   return data as ResumeOutcome;
+}
+
+// THE ACTIVATION (question_instances.activation_no, bumped by every resume). The SAME round — same id, same round_no — can
+// be on screen in a tab opened BEFORE it was parked and in a tab that resumed it; neither round_no (H5) nor submission_id
+// tells the two apart, and the production answer path (H5 off) carries neither. So the response carries the activation,
+// the browser sends it back with the answer, and process-event (./../process-event/round-activation.ts) refuses an answer
+// from an earlier activation before any answer function runs. A row without a valid number is a server fault (the
+// migration is missing while the switch is on): it throws (500) instead of serving a round whose answer would be refused.
+export function activationOf(row: { id?: unknown; activation_no?: unknown } | null | undefined): { activation_no: number } {
+  const n = row?.activation_no;
+  if (typeof n !== "number" || !Number.isInteger(n) || n < 0) {
+    throw new Error(`Invalid activation_no on question instance ${String(row?.id ?? "?")}`);
+  }
+  return { activation_no: n };
 }

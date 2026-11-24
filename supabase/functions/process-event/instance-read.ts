@@ -38,14 +38,19 @@ export const GRADING_COLUMNS = `
 // Reads one instance by id through a freshly built admin client. makeAdminClient is invoked only
 // here; if it throws (missing or broken key configuration), so does this — never a fallback to the
 // user client.
+// D-384 (./round-activation.ts): with LAERLIGVERSE_COURSE_PARKING=on the same read also returns the round's activation.
+// Off: exactly GRADING_COLUMNS, as before.
+export const ACTIVATION_COLUMN = "activation_no";
+
 export async function readInstanceForGrading(
   makeAdminClient: () => ReadClient,
   instanceId: string,
+  withActivation = false,
 ): Promise<ReadResponse> {
   const admin = makeAdminClient();
   const result: ReadResponse = await admin
     .from("question_instances")
-    .select(GRADING_COLUMNS)
+    .select(withActivation === true ? `${ACTIVATION_COLUMN},${GRADING_COLUMNS}` : GRADING_COLUMNS)
     .eq("id", instanceId)
     .maybeSingle();
   return result;

@@ -47,16 +47,22 @@ test("a real PostgreSQL server is present where it is required (CI)", { skip: !P
 });
 
 // ── Edge versions ───────────────────────────────────────────────────────────────────────────────────
+// With F8 in the tree: also #740's candidate (f51f39e4), and F8 twice — LAERLIGVERSE_COURSE_PARKING off (= D-383's
+// behaviour) and on. "F8, parkering til" with every Lærligverse flag off is the SAFETY VERSION: same code, course off.
 const EDGES = [
   { key: "prod", label: "a7450b0f (produktion i dag)", commit: "a7450b0f" },
   { key: "d383", label: "05a4a34f (#739, main)", commit: "05a4a34f" },
-  { key: "tree", label: F8 ? "dette træ (F8)" : "dette træ (#740)", commit: null },
+  ...(F8 ? [{ key: "c740", label: "f51f39e4 (#740-kandidaten)", commit: "f51f39e4" }] : []),
+  { key: "tree", label: F8 ? "dette træ (F8), parkering fra" : "dette træ (#740)", commit: null },
+  ...(F8 ? [{ key: "f8on", label: "dette træ (F8), parkering til", commit: null, same: "tree", flags: { LAERLIGVERSE_COURSE_PARKING: "on" } }] : []),
 ];
 const handlers = {};
 for (const e of EDGES) {
+  if (e.same) { handlers[e.key] = handlers[e.same]; continue; }
   if (e.commit && !haveCommit(e.commit, ROOT)) { handlers[e.key] = null; continue; }
   handlers[e.key] = await loadHandler(e.commit ? materialise(e.commit, ROOT) : TREE_INDEX);
 }
+const edgeFlags = (e) => e.flags ?? {};
 // Does a version know the parked state? Read from its source, not assumed.
 const knowsParking = (e) => readFileSync(e.commit ? materialise(e.commit, ROOT) : TREE_INDEX, "utf8").includes("parked_at");
 test("old Edge versions are available where the rollback job requires them", { skip: !EDGE_REQUIRED }, () => {
@@ -116,12 +122,15 @@ async function question(db, domain, metadata = {}) {
 }
 const COURSE_STEPS = ["guided_practice", "independent_application", "transfer"];
 async function content(db, withCourse) {
-  const c = { ordinary: [], english: [], course: {} };
+  const c = { ordinary: [], english: [], course: {}, course2: null };
   for (let i = 0; i < 3; i++) c.ordinary.push(await question(db, "vikings"));
   for (let i = 0; i < 2; i++) c.english.push(await question(db, "english"));
   if (withCourse) for (const s of COURSE_STEPS) c.course[s] = await question(db, "vikings", { learning_step: s });
+  // A second course (another learning objective) for "parked rounds in two courses".
+  if (withCourse) c.course2 = await question(db, "english", { learning_step: "guided_practice" });
   return c;
 }
+const park = (db, p) => as(db, "service_role", null, "SELECT public.park_open_course_round($1) AS id", [p]);
 async function newPupil(db) {
   const id = uid(50000 + ++seq);
   await db.q("INSERT INTO auth.users VALUES ($1)", [id]);
@@ -162,11 +171,21 @@ const PUPILS = {
     seed: async (db, p, c) => { await round(db, p, c.course.guided_practice, { answered: true, daysAgo: 3 }); await round(db, p, c.course.independent_application, { answered: true }); } },
   F: { label: "åben almindelig runde plus kursushistorik", course: true, subject: "historie", canBeServed: true,
     seed: async (db, p, c) => { await round(db, p, c.course.guided_practice, { answered: true }); await round(db, p, c.ordinary[0], { daysAgo: 0 }); } },
+  // F8 (D-384): parked rounds exist only on a database with F8's migration; parked with F8's own RPC.
+  P: { label: "parkeret kursusrunde, beder om almindelig historie", course: true, f8: true, subject: "historie", canBeServed: true,
+    seed: async (db, p, c) => { await round(db, p, c.course.guided_practice, { daysAgo: 0 }); await park(db, p); } },
+  P2: { label: "to parkerede kursusrunder i to kurser, skifter til engelsk", course: true, f8: true, subject: "engelsk", canBeServed: true,
+    seed: async (db, p, c) => {
+      await round(db, p, c.course.guided_practice, { daysAgo: 0 }); await park(db, p);
+      await round(db, p, c.course2, { daysAgo: 0 }); await park(db, p);
+    } },
+  PO: { label: "parkeret kursusrunde plus åben almindelig runde", course: true, f8: true, subject: "historie", canBeServed: true,
+    seed: async (db, p, c) => { await round(db, p, c.course.guided_practice, { daysAgo: 0 }); await park(db, p); await round(db, p, c.ordinary[0], { daysAgo: 0 }); } },
 };
 
 // ── Observation ─────────────────────────────────────────────────────────────────────────────────────
 const ROWS = `SELECT qi.id, qi.answered, qi.user_answer, qi.was_correct, qi.repeat_count, qi.answered_at::text AS answered_at,
-    q.metadata, (q.metadata ? 'learning_step') AS course
+    q.metadata, (q.metadata ? 'learning_step') AS course, (to_jsonb(qi) ->> 'parked_at') IS NOT NULL AS parked
   FROM public.question_instances qi JOIN public.questions q ON q.id = qi.question_id WHERE qi.student_id = $1 ORDER BY qi.id`;
 const snapshot = async (db, p) => {
   const rows = await db.q(ROWS, [p]);
@@ -206,6 +225,7 @@ async function observe(db, handler, pupilType, c, flags) {
     const now = byId.get(r.id);
     if (!now) { problems.push(r.course ? (r.answered ? "kursussvar slettet" : "åben kursusrunde slettet") : "runde slettet"); continue; }
     if (r.course && r.answered && (!now.answered || now.user_answer !== r.user_answer || now.repeat_count !== r.repeat_count)) problems.push("kursussvar genåbnet");
+    if (r.parked && (now.answered || !now.parked)) problems.push(now.answered ? "parkeret runde lukket" : "parkeret runde genoptaget uden for kurset");
     if (!r.course && r.answered && now.repeat_count === r.repeat_count && (now.user_answer !== r.user_answer || !now.answered)) problems.push("svar tabt");
   }
   if (t.course && after.step !== before.step) problems.push("kursusforløbet flyttet");
@@ -213,7 +233,7 @@ async function observe(db, handler, pupilType, c, flags) {
 }
 
 // ── The matrix: scenario 1 (no course content) and 2 (course content), every Edge × DB state × LEVEL_ENGINE ──────
-const STAGES = ["DB0", "DB1", "DB2", "DB2↓"];
+const STAGES = ["DB0", "DB1", "DB2", "DB2↓", ...(F8 ? ["DB3"] : [])];
 const LEVELS = [undefined, "v1"];
 const cellKey = (scenario, edge, stage, level) => `${scenario}|${edge}|${stage}|${level ?? "-"}`;
 // EXPECTED problems per cell and pupil type (only cells with a problem are listed; every other cell must be clean).
@@ -230,10 +250,15 @@ const expect = (scenario, edges, stages, levels, pupil, problems) => {
 };
 // Reviewed against the observed behaviour; the reason for each is in docs/operations/laerligverse-rollback-matrix.md.
 const S2 = "2-med-kursusindhold";
-const ALL = ["DB0", "DB1", "DB2", "DB2↓"];
-const AFTER_D383 = ["DB1", "DB2", "DB2↓"];
+const PRE_F8 = ["DB0", "DB1", "DB2", "DB2↓"];
+const ALL = [...PRE_F8, ...(F8 ? ["DB3"] : [])];
+const AFTER_D383 = ["DB1", "DB2", "DB2↓", ...(F8 ? ["DB3"] : [])];
 const BOTH = [undefined, "v1"];
-const NEW_EDGES = ["d383", "tree"];
+// #739, #740's candidate and this tree with parking OFF behave identically in every cell (F8 off = D-383's behaviour).
+const NEW_EDGES = ["d383", "c740", "tree"];
+const S1 = "1-uden-kursusindhold";
+const NO_COLUMN = "fastlåst (column t.activation_no does not exist)";
+const E500 = "serverfejl 500";
 const MOVED = "kursusforløbet flyttet";
 const REOPENED = "kursussvar genåbnet";
 const EXPECTED_RULES = [
@@ -255,6 +280,21 @@ const EXPECTED_RULES = [
   // F8 (open, D-384): an open course round blocks the ordinary quiz in every subject until it is finished in the course.
   [S2, NEW_EDGES, ALL, BOTH, "B", [STUCK]],
   [S2, NEW_EDGES, AFTER_D383, BOTH, "B2", [STUCK]],
+  // F8 with LAERLIGVERSE_COURSE_PARKING=on on a database WITHOUT its migration: every request fails loud (the due read
+  // names activation_no) — nothing served, nothing changed (B2 on DB0: DB0's own subject-switch release, as above).
+  // This is why the flag must follow the migration (deployment gate, D-384). On DB3 every pupil type is clean —
+  // including B and B2, which D-383 leaves stuck, and the parked types P, P2, PO.
+  ...(F8 ? [
+    [S1, ["f8on"], PRE_F8, BOTH, "A", [NO_COLUMN, E500]],
+    [S1, ["f8on"], PRE_F8, BOTH, "R", [NO_COLUMN, E500]],
+    ...["A", "R", "B", "B2", "D", "F"].map((t) => [S2, ["f8on"], PRE_F8, BOTH, t, [NO_COLUMN, E500]]),
+    [S2, ["f8on"], ["DB0"], BOTH, "B2", ["åben kursusrunde slettet"]],
+    [S2, ["f8on"], PRE_F8, BOTH, "C", [E500]],
+    [S2, ["f8on"], PRE_F8, BOTH, "C2", [E500]],
+  ] : []),
+  // The parked types P, P2, PO (DB3 only): CLEAN under every version in the ordinary quiz — next_review_at = 'infinity'
+  // hides the round from every due loop, the partial index lets a new ordinary round in, release and repeats are F8's
+  // database bodies. (What older versions do in the COURSE is scenario 3.)
 ];
 for (const r of EXPECTED_RULES) expect(...r);
 
@@ -274,7 +314,8 @@ for (const scenario of ["1-uden-kursusindhold", "2-med-kursusindhold"]) {
             OBSERVED[k] = {};
             for (const pupilType of Object.keys(PUPILS)) {
               if (PUPILS[pupilType].course && !withCourse) continue;
-              const o = await observe(db, handlers[e.key], pupilType, c, { LEVEL_ENGINE: level });
+              if (PUPILS[pupilType].f8 && stage !== "DB3") continue;
+              const o = await observe(db, handlers[e.key], pupilType, c, { LEVEL_ENGINE: level, ...edgeFlags(e) });
               if (o.problems.length) OBSERVED[k][pupilType] = o.problems;
             }
           }
@@ -322,26 +363,63 @@ test("DB2↓ with this tree: the old signature is met by exactly one fallback pe
   } finally { await db.end(); }
 });
 
-// ── Scenario 3: after F8 (parked rounds exist) — active only when this tree carries F8's migration ──────────
-test("scenario 3 (after F8): a version that does not know parked_at is UNSAFE on a parked round; only F8-aware versions are safe",
+// ── Scenario 3 (F8): back in the course after a rollback — parked rounds made by F8's own RPC, every Edge version ──────
+// Each version gets the course request (the Lærligverse flags on) of a pupil whose course round is PARKED, and then the
+// F8 function (parking on) gets the next request (roll-forward). Observed per version: what is served, what happens to
+// the parked round, and whether the course can still be finished with it. EXPECTED_RETURN holds the reviewed outcome.
+const LV_FLAGS = { LAERLIGVERSE_OBJECTIVE_TARGETING: "on", LAERLIGVERSE_SEQUENCE: "on", LAERLIGVERSE_SERVED_MODE: "on", LAERLIGVERSE_HINTS: "on" };
+const COURSE_BODY = { subject: "historie", learning_objective: "vikings", sequence: true };
+// Reviewed 2026-11-24 (docs/operations/laerligverse-rollback-matrix.md, "Tilbage i kurset"):
+//   * production's a7450b0f knows no sequence: it serves an ORDINARY task in the course request; the parked round is
+//     untouched; F8 then answers 409 open_question_other_step until that ordinary round is answered (it is due in the
+//     ordinary quiz) — a temporary block, nothing lost.
+//   * #739, #740 and F8 with parking off: the course request finds no candidate (the parked question has an instance)
+//     and their lost-race read counts the PARKED row as "open" → 409 open_question_exists: the course is unavailable,
+//     nothing changes; F8 (parking on) then resumes the same round.
+//   * F8 with parking on: the same round is resumed.
+const EXPECTED_RETURN = {
+  prod: ["almindelig opgave i kurset", "F8 derefter: open_question_other_step"],
+  d383: ["intet serveret (open_question_exists)", "F8 genoptager derefter den parkerede"],
+  c740: ["intet serveret (open_question_exists)", "F8 genoptager derefter den parkerede"],
+  tree: ["intet serveret (open_question_exists)", "F8 genoptager derefter den parkerede"],
+  f8on: ["samme runde genoptaget", "F8 genoptager derefter den parkerede"],
+};
+test("scenario 3 (after F8): a pupil with a PARKED course round returns to the course — per Edge version, then F8 takes over",
   { skip: !F8 && "F8 (D-384) is not in this tree: activated automatically when a migration adding parked_at lands" }, async () => {
+    seq = 0;
     const db = await database("DB3");
+    const observed = {};
     try {
       const c = await content(db, true);
       for (const e of EDGES) {
         if (!handlers[e.key]) continue;
         const p = await newPupil(db);
-        const id = await round(db, p, c.course.guided_practice, { daysAgo: 0 });
-        await db.q("UPDATE public.question_instances SET parked_at = now() WHERE id = $1", [id]);
+        const parkedId = await round(db, p, c.course.guided_practice, { daysAgo: 0 });
+        await park(db, p);
         const before = await snapshot(db, p);
-        const r = await request(handlers[e.key], db, p, {});
-        const after = await snapshot(db, p);
-        const parkedKept = after.rows.some((x) => x.id === id && !x.answered);
-        const servedOrdinary = r.status === 200 && !(await db.q(ROWS, [p])).find((x) => x.id === r.body?.question_instance_id)?.course;
-        const safe = parkedKept && servedOrdinary && after.step === before.step;
-        assert.equal(safe, knowsParking(e), `${e.label}: ${knowsParking(e) ? "F8-aware → must be safe" : "pre-F8 → detected as UNSAFE"} (status ${r.status} ${r.text.slice(0, 120)})`);
+        const r = await request(handlers[e.key], db, p, { flags: { ...LV_FLAGS, ...edgeFlags(e) }, body: COURSE_BODY });
+        const mid = await snapshot(db, p);
+        const parkedNow = mid.rows.find((x) => x.id === parkedId);
+        const servedId = r.body?.question_instance_id ?? null;
+        const outcome = [];
+        if (r.status >= 500) outcome.push(`serverfejl ${r.status}`);
+        if (!parkedNow) outcome.push("parkeret runde slettet");
+        else if (parkedNow.answered) outcome.push("parkeret runde lukket");
+        if (servedId === parkedId) outcome.push("samme runde genoptaget");
+        else if (servedId) outcome.push(mid.rows.find((x) => x.id === servedId)?.course ? "ny kursusrunde ved siden af den parkerede" : "almindelig opgave i kurset");
+        else outcome.push(`intet serveret (${r.body?.error ?? r.body?.reason ?? r.body?.step ?? r.status})`);
+        if (mid.step !== before.step) outcome.push("kursusforløbet flyttet");
+        // Roll-forward: F8 with parking on gets the next course request. Can the pupil finish the course step?
+        const fwd = await request(handlers.tree, db, p, { flags: { ...LV_FLAGS, LAERLIGVERSE_COURSE_PARKING: "on" }, body: COURSE_BODY });
+        const fwdId = fwd.body?.question_instance_id ?? null;
+        if (fwdId === parkedId) outcome.push("F8 genoptager derefter den parkerede");
+        else if (fwdId) outcome.push("F8 serverer derefter en anden kursusrunde");
+        else outcome.push(`F8 derefter: ${fwd.body?.error ?? fwd.body?.reason ?? fwd.status}`);
+        observed[e.key] = outcome;
       }
     } finally { await db.end(); }
+    if (process.env.ROLLBACK_MATRIX_PRINT === "1") console.error("OBSERVED_RETURN", JSON.stringify(observed));
+    for (const [k, v] of Object.entries(observed)) assert.deepEqual(v, EXPECTED_RETURN[k], `${k}: the return-to-course outcome differs from the reviewed one`);
   });
 
 // ── Scenario 4: roll-forward on ONE database, the real transition chain ───────────────────────────────────
@@ -383,16 +461,22 @@ test("scenario 4 (roll-forward): production Edge on DB0 → M1 → M2 → this t
 const LV_ON = { LAERLIGVERSE_OBJECTIVE_TARGETING: "on", LAERLIGVERSE_SEQUENCE: "on", LAERLIGVERSE_SERVED_MODE: "on", LAERLIGVERSE_HINTS: "on" };
 test("scenario 5 (flags off): with an open course round the ordinary quiz answers course_round_open — STUCK until F8; with the flags ON the pupil can finish the round in the course", async () => {
   seq = 0;
-  const db = await database("DB2");
+  // With F8 in the tree: on F8's database (its flag needs its migration — see the f8on cells of the matrix).
+  const db = await database(F8 ? "DB3" : "DB2");
   try {
     const c = await content(db, true);
     const p = await newPupil(db);
     const open = await round(db, p, c.course.guided_practice, { daysAgo: 0 });
     const before = await snapshot(db, p);
     // Off (every LAERLIGVERSE_* unset): no path serves the course round, and the ordinary quiz refuses → stuck.
-    const off = await request(handlers.tree, db, p, { body: { subject: "historie" } });
-    const offEng = await request(handlers.tree, db, p, { body: { subject: "engelsk" } });
     const parkingKnown = readFileSync(TREE_INDEX, "utf8").includes("parked_at");
+    // F8: the safety version = parking ON with every Lærligverse flag off. (Parking off is D-383's behaviour: stuck.)
+    const safety = parkingKnown ? { LAERLIGVERSE_COURSE_PARKING: "on" } : {};
+    const off = await request(handlers.tree, db, p, { flags: safety, body: { subject: "historie" } });
+    // The pupil works: answers what was served (with F8 an ordinary task), then switches subject and answers again.
+    if (parkingKnown && off.body?.question_instance_id) await answer(db, p, off.body.question_instance_id);
+    const offEng = await request(handlers.tree, db, p, { flags: safety, body: { subject: "engelsk" } });
+    if (parkingKnown && offEng.body?.question_instance_id) await answer(db, p, offEng.body.question_instance_id);
     if (!parkingKnown) {
       assert.equal(off.body?.reason, "course_round_open", "DETECTED (F8): flags off + open course round = no ordinary task");
       assert.equal(offEng.body?.reason, "course_round_open", "DETECTED (F8): no other subject either");
@@ -401,10 +485,11 @@ test("scenario 5 (flags off): with an open course round the ordinary quiz answer
     }
     // Nothing was lost while blocked: the round is still open and the course step unchanged.
     const mid = await snapshot(db, p);
-    assert.ok(mid.rows.some((r) => r.id === open && !r.answered) || parkingKnown, "the open course round is kept");
+    assert.ok(mid.rows.some((r) => r.id === open && !r.answered), "the open course round is kept (parked with F8)");
+    if (parkingKnown) assert.equal(mid.rows.find((r) => r.id === open).parked, true, "F8: it waits parked, not deleted or closed");
     assert.equal(mid.step, before.step);
     // On: the course request resumes the SAME round in its step.
-    const on = await request(handlers.tree, db, p, { flags: LV_ON, body: { subject: "historie", learning_objective: "vikings", sequence: true } });
+    const on = await request(handlers.tree, db, p, { flags: { ...LV_ON, ...safety }, body: { subject: "historie", learning_objective: "vikings", sequence: true } });
     assert.equal(on.status, 200, on.text.slice(0, 200));
     assert.equal(on.body?.question_instance_id, open, "the course resumes the same instance");
   } finally { await db.end(); }
@@ -440,6 +525,41 @@ test("scenario 6 (emergency stop): deactivating course questions frees an open c
     }
   } finally { await db.end(); }
 });
+
+// ── Scenario 6b (F8): the emergency stop on a database with PARKED rounds — what exactly happens ─────────────────────
+// Deactivating the course questions makes D-316's release (F8's body) treat a parked course round as inactive: a
+// first-round row (repeat_count 0, the only kind a course round has since D-383) is DELETED — the unanswered round is
+// gone with everything stored on it (presentation, served mode, snapshot; hints where L3 is applied). Answered course
+// rounds and the course step are kept. So the emergency stop is NOT lossless for unanswered course work.
+test("scenario 6b (after F8): emergency stop with parked rounds — every version: the unanswered parked round is DELETED; answers and step kept",
+  { skip: !F8 && "F8 (D-384) is not in this tree" }, async () => {
+    seq = 0;
+    const db = await database("DB3");
+    try {
+      const c = await content(db, true);
+      const pupils = [];
+      for (const e of EDGES) {
+        if (!handlers[e.key]) continue;
+        const p = await newPupil(db);
+        await round(db, p, c.course.guided_practice, { answered: true, daysAgo: 2 });
+        const parked = await round(db, p, c.course.independent_application, { daysAgo: 0 });
+        await park(db, p);
+        pupils.push({ e, p, parked, before: await snapshot(db, p) });
+      }
+      await db.q("UPDATE public.questions SET is_active = false WHERE metadata ? 'learning_step'");
+      for (const { e, p, parked, before } of pupils) {
+        const r = await request(handlers[e.key], db, p, { flags: edgeFlags(e), body: { subject: "historie" } });
+        const after = await snapshot(db, p);
+        assert.ok(r.body?.question_instance_id, `${e.label}: an ordinary task is served (${r.text.slice(0, 120)})`);
+        assert.equal(after.rows.find((x) => x.id === r.body.question_instance_id)?.course, false, `${e.label}: no course item`);
+        assert.equal(after.rows.some((x) => x.id === parked), false, `${e.label}: the unanswered parked round is DELETED (not lossless)`);
+        for (const row of before.rows.filter((x) => x.answered)) {
+          assert.ok(after.rows.some((x) => x.id === row.id && x.answered && x.user_answer === row.user_answer), `${e.label}: course answers kept`);
+        }
+        assert.equal(after.step, before.step, `${e.label}: the course step is unchanged (the deleted round never counted)`);
+      }
+    } finally { await db.end(); }
+  });
 
 // ── The document carries the same matrix ───────────────────────────────────────────────────────────────────
 test("docs/operations/laerligverse-rollback-matrix.md carries exactly this matrix", () => {

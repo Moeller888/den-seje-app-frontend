@@ -285,15 +285,17 @@ test("access (production's privileges): no EXECUTE for pupils; parked_at is not 
   for (const role of ["anon", "authenticated"]) {
     assert.equal(await code(() => asA(db, role, "SELECT public.park_open_course_round($1)", [p], p)), "42501", role);
     assert.equal(await code(() => asA(db, role, "SELECT public.resume_parked_course_round($1, 'x', 'y')", [p], p)), "42501", role);
-    for (const col of ["parked_at", "parked_objective"]) {
+    for (const col of ["parked_at", "parked_objective", "activation_no"]) {
       assert.equal((await db.query(`SELECT has_column_privilege($1, 'public.question_instances', $2, 'UPDATE') u`, [role, col])).rows[0].u, false, `${role}.${col}`);
     }
     assert.equal(await code(() => asA(db, role, `UPDATE public.question_instances SET parked_at = now(), parked_objective = 'x' WHERE id = '${c}'`, [], p)), "42501",
       `${role}: a direct PostgREST UPDATE of the parking is refused by privilege, not only by RLS`);
+    assert.equal(await code(() => asA(db, role, `UPDATE public.question_instances SET activation_no = 7 WHERE id = '${c}'`, [], p)), "42501",
+      `${role}: the pupil cannot set the activation the stale-tab check compares against`);
   }
   // Every other column keeps exactly the UPDATE it had (the pupil's effective rights are unchanged; RLS still has no policy).
   const cols = (await db.query(`SELECT attname FROM pg_attribute WHERE attrelid = 'public.question_instances'::regclass AND attnum > 0 AND NOT attisdropped
-    AND attname NOT IN ('parked_at', 'parked_objective') ORDER BY attnum`)).rows.map((r) => r.attname);
+    AND attname NOT IN ('parked_at', 'parked_objective', 'activation_no') ORDER BY attnum`)).rows.map((r) => r.attname);
   for (const col of cols) assert.equal((await db.query(`SELECT has_column_privilege('authenticated', 'public.question_instances', $1, 'UPDATE') u`, [col])).rows[0].u, true, col);
   assert.equal((await db.query(`SELECT has_table_privilege('service_role', 'public.question_instances', 'UPDATE') u`)).rows[0].u, true);
 });

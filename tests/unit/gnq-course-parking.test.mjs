@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { loadHandler, runCase } from "./helpers/gnq-parity-harness.mjs";
 import {
-  COURSE_PARKING_ENV, courseParkingEnabled, parkResultOf, resumeOutcomeOf, RESUME_OUTCOMES,
+  COURSE_PARKING_ENV, activationOf, courseParkingEnabled, parkResultOf, resumeOutcomeOf, RESUME_OUTCOMES,
 } from "../../supabase/functions/get-next-question/course-parking.ts";
 
 const INDEX = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "supabase", "functions", "get-next-question", "index.ts");
@@ -103,19 +103,56 @@ test("parking ON: any other database error, or an unexpected answer, is a loud 5
   }
 });
 
-test("parking ON: an open ORDINARY round is resumed exactly as before; no parking call", async () => {
-  const r = await withEnv({ [COURSE_PARKING_ENV]: "on" }, () => runCase(handler, { subject: "historie", scenario: "due" }));
+// A database WITH migration 20261124120000 answers a select naming activation_no with the column (default 0). The
+// harness's rows predate the column, so this adds it exactly where a real database would: only when it is selected.
+const selectsActivation = (ops) => ops.some((o) => o[0] === "select" && /\bactivation_no\b/.test(String(o[1])));
+const withActivationColumn = (inner, n = 0) => (kind, name, ops, result) => {
+  const res = inner ? inner(kind, name, ops, result) : result;
+  if (kind !== "from" || name !== "question_instances" || !selectsActivation(ops) || !Array.isArray(res?.data)) return res;
+  return { ...res, data: res.data.map((row) => ("activation_no" in row ? row : { ...row, activation_no: n })) };
+};
+
+test("parking ON: an open ORDINARY round is resumed exactly as before; no parking call; its activation is handed out", async () => {
+  const r = await withEnv({ [COURSE_PARKING_ENV]: "on" }, () => runCase(handler, { subject: "historie", scenario: "due", patch: withActivationColumn(null) }));
   assert.equal(r.status, 200, r.body);
   assert.equal(JSON.parse(r.body).question_instance_id, "due-1");
+  assert.equal(JSON.parse(r.body).activation_no, 0, "D-384: the round's activation, so process-event can tell an older tab");
   assert.deepEqual(rpcCalls(r, "park_open_course_round"), []);
 });
 
+test("parking OFF: the due read names no activation_no and the response carries none (byte-identical to D-383)", async () => {
+  for (const scenario of ["due", "repeat", "new"]) {
+    const r = await withEnv({ [COURSE_PARKING_ENV]: undefined }, () => runCase(handler, { subject: "historie", scenario }));
+    assert.equal(r.status, 200, r.body);
+    assert.equal(r.calls.some((c) => c.kind === "from" && selectsActivation(c.ops)), false, `${scenario}: no new column read`);
+    assert.equal("activation_no" in JSON.parse(r.body), false, `${scenario}: no new response key`);
+  }
+});
+
+test("parking ON: a reopened (repeat) round hands out its activation too; a new round hands out none (it is 0 by default)", async () => {
+  const rep = await withEnv({ [COURSE_PARKING_ENV]: "on" }, () => runCase(handler, { subject: "historie", scenario: "repeat", patch: withActivationColumn(null, 2) }));
+  assert.equal(rep.status, 200, rep.body);
+  assert.equal(JSON.parse(rep.body).activation_no, 2, "a once-resumed round keeps its number when it is repeated");
+  const fresh = await withEnv({ [COURSE_PARKING_ENV]: "on" }, () => runCase(handler, { subject: "historie", scenario: "new", patch: withActivationColumn(null) }));
+  assert.equal(fresh.status, 200, fresh.body);
+  assert.equal("activation_no" in JSON.parse(fresh.body), false, "a new row is 0: process-event accepts an answer without a number for it");
+});
+
+test("parking ON on a database WITHOUT the column (migration missing): a loud 500, never a round whose answer would be refused", async () => {
+  const r = await withEnv({ [COURSE_PARKING_ENV]: "on" }, () => runCase(handler, { subject: "historie", scenario: "due" }));
+  assert.equal(r.status, 500, r.body);
+  assert.match(r.body, /Invalid activation_no/);
+  for (const bad of [undefined, null, -1, 1.5, "1"]) assert.throws(() => activationOf({ id: "x", activation_no: bad }), String(bad));
+  assert.deepEqual(activationOf({ id: "x", activation_no: 3 }), { activation_no: 3 });
+});
+
 test("in the server sequence: resume is called for the validated objective and the SERVER's step, then the round is served", async () => {
-  const due = [{ id: "due-c", repeat_count: 0, next_review_at: "t", questions: { ...COURSE("dc", "guided_practice"), is_active: true } }];
+  const due = [{ id: "due-c", repeat_count: 0, activation_no: 1, next_review_at: "t", questions: { ...COURSE("dc", "guided_practice"), is_active: true } }];
   const r = await withEnv({ ...SEQ_ENV, [COURSE_PARKING_ENV]: "on" }, () => sequence(backend({ due, history: true, resume: { data: "resumed", error: null } })));
   assert.equal(r.status, 200, r.body);
   assert.deepEqual(rpcCalls(r, "resume_parked_course_round"), [{ p_student_id: "stu-1", p_objective: "vikings", p_step: "guided_practice" }]);
   assert.equal(JSON.parse(r.body).question_instance_id, "due-c", "the SAME instance");
+  assert.equal(JSON.parse(r.body).activation_no, 1, "the resumed activation is handed out with it");
   assert.deepEqual(rpcCalls(r, "park_open_course_round"), [], "inside the sequence nothing is parked by the due loop");
   // A step named by the client never reaches the RPC: the server's step is used (a stale one is refused before).
   const off = await withEnv({ ...SEQ_ENV, [COURSE_PARKING_ENV]: undefined }, () => sequence(backend({ due, history: true })));

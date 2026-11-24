@@ -27,7 +27,7 @@ import {
   type LevelReadClient,
 } from "./level-flow.ts";
 import { SERVED_SNAPSHOT_ENV, deliveredQuestion, deliveryProposal, servedSnapshotEnabled } from "./served-snapshot.ts";
-import { COURSE_PARKING_ENV, courseParkingEnabled, parkResultOf, resumeOutcomeOf } from "./course-parking.ts";
+import { COURSE_PARKING_ENV, activationOf, courseParkingEnabled, parkResultOf, resumeOutcomeOf } from "./course-parking.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -414,7 +414,7 @@ serve(async (req) => {
       .from("question_instances")
       .select(`
         id,
-        repeat_count,
+        repeat_count,${courseParking ? "\n        activation_no," : ""}
         next_review_at,
         questions (${targeting.mode === "on" ? "\n          learning_objective," : ""}
           content,
@@ -490,6 +490,8 @@ serve(async (req) => {
       // Outside the try: an invalid round, or a malformed delivered version, fails loud instead of being
       // skipped like bad content.
       const roundNo = roundNoOf(instance);
+      // D-384: the round's activation (bumped by every resume), so process-event can refuse an older tab's answer.
+      const activation = courseParking ? activationOf(instance) : {};
       // K1: an open round with a delivered version is served FROM it (a reload never shows a later edit);
       // without one it is served from the question row as before (version unknown).
       const delivered = servedSnapshot ? await deliveredFor(instance.id) : null;
@@ -507,6 +509,7 @@ serve(async (req) => {
           JSON.stringify({
             question_instance_id: instance.id,
             round_no: roundNo,
+            ...activation,
             content: pub.content,
             answer_format: format,
             answer_type: q.answer_type || "short",
@@ -795,11 +798,11 @@ serve(async (req) => {
       if (repeatError) throw repeatError;
 
       if (repeatId) {
-        const { data: repeatRows, error: repeatFetchError } = await admin()
-          .from("question_instances")
-          .select(`
+        // A plain string (D-384's optional column makes it one of two): supabase-js's type-level select parser cannot
+        // read a union of literals, and the due read above is a string for the same reason. Runtime is unchanged.
+        const repeatColumns: string = `
             id,
-            repeat_count,
+            repeat_count,${courseParking ? "\n            activation_no," : ""}
             questions (
               content,
               answer_format,
@@ -807,16 +810,20 @@ serve(async (req) => {
               metadata,
               is_active
             )
-          `)
+          `;
+        const { data: repeatRows, error: repeatFetchError } = await admin()
+          .from("question_instances")
+          .select(repeatColumns)
           .eq("id", repeatId)
           .eq("student_id", student_id)
           .limit(1);
 
         if (repeatFetchError) throw repeatFetchError;
 
-        const repeatRow = Array.isArray(repeatRows) && repeatRows.length > 0
+        // The selected columns, typed by hand (the select string is a plain string, see repeatColumns).
+        const repeatRow = (Array.isArray(repeatRows) && repeatRows.length > 0
           ? repeatRows[0]
-          : null;
+          : null) as unknown as { id: string; repeat_count?: unknown; activation_no?: unknown; questions?: unknown } | null;
 
         if (repeatRow) {
           // PostgREST returns a to-one embed as an object, but supabase-js types it as an array.
@@ -844,6 +851,8 @@ serve(async (req) => {
           if (rq && rq.is_active !== false) {
             // The reopened round, read back after the reopen (outside the try, so it fails loud).
             const roundNo = roundNoOf(repeatRow);
+            // D-384: a reopened round keeps its activation (a once-resumed round is > 0); served so its answer passes.
+            const activation = courseParking ? activationOf(repeatRow) : {};
             // K1: the reopen took the round's snapshot in the same statement; serve FROM it.
             const delivered = servedSnapshot ? await deliveredFor(repeatRow.id) : null;
             const src = delivered ?? rq;
@@ -859,6 +868,7 @@ serve(async (req) => {
                 JSON.stringify({
                   question_instance_id: repeatRow.id,
                   round_no: roundNo,
+                  ...activation,
                   content: pub.content,
                   answer_format: format,
                   answer_type: src.answer_type || "short",
