@@ -429,7 +429,9 @@ test("negative control: the old pool ran ≥ 2 PG files at once on PR #674's sha
   const suite = [...new Set([...ciSuite().filter((f) => !LATER.has(f)), "isolated-stimulus-chain-seed.test.mjs"])].sort();
   const pg = new Set(realPg());
   const isPg = (f) => pg.has(f);
-  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  // #674's plan was made with the weights of run 42241221235. Those weights are frozen in a fixture, so refreshing
+  // tests/unit-ci-weights.json (2026-11-24) cannot move this historical plan; the control proves the same thing.
+  const { weights } = JSON.parse(read("tests/fixtures/unit-ci-weights-run-42241221235.json"));
   const shard1 = planShards(suite, 4, weights)[0];
   for (const f of ["minigame-breaks-concurrency.test.mjs", "mc-length-cue-top10-concurrency.test.mjs", "claim-daily-reward-concurrency.test.mjs"]) {
     assert.ok(shard1.order.includes(f), `${f} is in #674's shard 1`);
@@ -450,4 +452,45 @@ test("the runner schedules through pgLaneScheduler over the planned files", () =
   assert.ok(src.includes("for (const f of sched.take()) {"));
   assert.ok(src.includes("try { sched.finish(f); } catch (err) { rejectAll(err); return; }"));
   assert.ok(!src.includes("queue.shift()"), "the old worker loop is gone");
+});
+
+// ── weights for the heavy files ─────────────────────────────────────────────────────────────
+// A file without a weight is planned at the median (about 1 s). planShards runs a shard heaviest first, so an
+// unweighted DATABASE test lands at the END of its shard and its real minute becomes the shard's tail. That is what
+// cancelled unit shard 4/4 of run 45200127762 (2026-11-23): order-categorize-activation-migration-run (60–69 s, no
+// weight) was still running when the 10-minute job timeout hit; 108 of 109 files had passed, 0 failed. The drift
+// report only says so after the run; this test says it before merge. It changes no file that runs and no timeout.
+const HEAVY_NAME = /-(migration-run|migrations-run|concurrency|pg)\.test\.mjs$/;
+const usesPglite = (f) => read("tests/unit/" + f).includes('from "@electric-sql/pglite"');
+function heavyWithoutWeight(suite, weights, isPg) {
+  return suite.filter((f) => isPg(f) || HEAVY_NAME.test(f) || usesPglite(f))
+    .filter((f) => !(Number.isFinite(weights[f]) && weights[f] > 0));
+}
+
+test("every heavy CI file (PGlite, real PostgreSQL, *-migration-run, *-concurrency) has a measured weight", () => {
+  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  const pg = new Set(realPg());
+  const suite = ciSuite();
+  const heavy = suite.filter((f) => pg.has(f) || HEAVY_NAME.test(f) || usesPglite(f));
+  assert.ok(heavy.length >= 100, `expected the ≥ 100 database files of 2026-11-24, found ${heavy.length}`);
+  assert.deepEqual(heavyWithoutWeight(suite, weights, (f) => pg.has(f)), [],
+    "a heavy test file has no weight in tests/unit-ci-weights.json: add its seconds from its own PR's unit run " +
+    "(the drift report lists it as 'no weight'), or run tools/ci/unit-weights-refresh.mjs --write once it is on main");
+});
+
+test("negative control: without its weight, a one-minute database file is planned at the end of its shard", () => {
+  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  const suite = ciSuite();
+  const f = "order-categorize-activation-migration-run.test.mjs";
+  assert.ok(suite.includes(f) && weights[f] >= 30, `${f} is in the suite and weighs ≥ 30 s`);
+  const without = { ...weights };
+  delete without[f];
+  assert.deepEqual(heavyWithoutWeight(suite, without, () => false), [f], "the check names exactly the removed file");
+  const n = unitShardMatrix().shards.length;
+  const position = (w) => {
+    const shard = planShards(suite, n, w).find((s) => s.order.includes(f));
+    return shard.order.indexOf(f) / shard.order.length;
+  };
+  assert.ok(position(weights) < 0.25, "with its weight it starts among the first quarter of its shard");
+  assert.ok(position(without) > 0.5, "without it, it starts in the second half: the tail that hit the timeout");
 });
