@@ -84,12 +84,14 @@ export async function makeTemplate(db) {
   return { name: db.name, dispose: () => db.drop() };
 }
 
-// One statement in its own transaction, as `role` (and, for the pupil, auth.uid() = pupil via test.uid).
-export async function as(conn, role, pupil, sql, params = []) {
+// One statement in its own transaction, as `role` (and, for the pupil, auth.uid() = pupil via test.uid). `headers`: the
+// client's request headers, set as request.headers for that transaction exactly as PostgREST does (JSON, lower-case keys).
+export async function as(conn, role, pupil, sql, params = [], headers = null) {
   await conn.q("BEGIN");
   try {
     await conn.q(`SET LOCAL ROLE ${role}`);
     if (pupil) await conn.q("SELECT set_config('test.uid', $1, true)", [pupil]);
+    if (headers) await conn.q("SELECT set_config('request.headers', $1, true)", [JSON.stringify(headers)]);
     const rows = await conn.q(sql, params);
     await conn.q("COMMIT");
     return rows;
@@ -129,8 +131,10 @@ const TABLES = new Set(["profiles", "question_instances", "questions"]);
 const als = new AsyncLocalStorage();
 const shared = { conn: null, pupil: null, calls: [] };
 const current = () => als.getStore() ?? shared;
-async function backend(client, kind, name, ops) {
+async function backend(client, kind, name, ops, headers = null) {
   const state = current();
+  // A test's hook between process-event's read check and its answer call (the TOCTOU window), once per rpc.
+  if (kind === "rpc" && typeof state.beforeRpc === "function") await state.beforeRpc(name);
   const role = client === "admin" ? "service_role" : "authenticated";
   const pupil = client === "admin" ? null : state.pupil;
   const params = [];
@@ -208,9 +212,9 @@ async function backend(client, kind, name, ops) {
   } else {
     throw new Error(`stand-in: ${kind} is not modelled`);
   }
-  state.calls.push({ client, kind, name, sql });
+  state.calls.push({ client, kind, name, sql, headers });
   try {
-    const rows = await as(state.conn, role, pupil, sql, params);
+    const rows = await as(state.conn, role, pupil, sql, params, headers);
     if (mode === "scalar") return { data: rows.length ? rows[0].v : null, error: null };
     if (mode === "single") return { data: rows[0] ?? null, error: null };
     if (mode === "none") return { data: null, error: null };
@@ -224,23 +228,27 @@ async function backend(client, kind, name, ops) {
 
 const STUB_SERVE = `export function serve(h) { globalThis.__gnqDbHandlers.push(h); }`;
 const STUB_SUPABASE = `
-function chain(kind, name, client, ops) {
+function chain(kind, name, client, ops, headers) {
   return new Proxy(function () {}, {
     get(_t, prop) {
       if (prop === "then") {
-        const res = globalThis.__gnqDbBackend(client, kind, name, ops);
+        const res = globalThis.__gnqDbBackend(client, kind, name, ops, headers);
         return (ok, ko) => Promise.resolve(res).then(ok, ko);
       }
-      return (...args) => chain(kind, name, client, [...ops, [String(prop), ...args]]);
+      return (...args) => chain(kind, name, client, [...ops, [String(prop), ...args]], headers);
     },
   });
 }
-export function createClient(_url, key) {
+export function createClient(_url, key, options) {
   const client = key === "SERVICE" ? "admin" : "user";
+  // PostgREST's request.headers: the client's global headers, keys in lower case (Authorization is not modelled).
+  const given = options && options.global && options.global.headers ? options.global.headers : {};
+  const lower = Object.fromEntries(Object.entries(given).filter(([k]) => k.toLowerCase() !== "authorization").map(([k, v]) => [k.toLowerCase(), String(v)]));
+  const headers = Object.keys(lower).length ? lower : null;
   return {
     auth: { getUser: async () => ({ data: { user: { id: globalThis.__gnqDbUser() } }, error: null }) },
-    from: (table) => chain("from", table, client, []),
-    rpc: (fn, args) => chain("rpc", fn, client, [["args", args]]),
+    from: (table) => chain("from", table, client, [], headers),
+    rpc: (fn, args) => chain("rpc", fn, client, [["args", args]], headers),
   };
 }`;
 const dataUrl = (src) => "data:text/javascript," + encodeURIComponent(src);
@@ -294,9 +302,9 @@ export const FLAG_NAMES = Object.freeze(["LEVEL_ENGINE", "QUESTION_MIX_ENGINE", 
   "LAERLIGVERSE_COURSE_PARKING", "LAERLIGVERSE_ATTEMPT_CONTEXT"]);
 
 const setFlags = (flags) => { for (const k of FLAG_NAMES) { if (flags[k] === undefined) ENV.delete(k); else ENV.set(k, flags[k]); } };
-async function run(handler, conn, pupil, flags, json, { capture = true } = {}) {
+async function run(handler, conn, pupil, flags, json, { capture = true, beforeRpc = null } = {}) {
   setFlags(flags);
-  const store = { conn, pupil, calls: [] };
+  const store = { conn, pupil, calls: [], beforeRpc };
   const logs = [];
   const { log, error, warn } = console;
   const sink = (...a) => logs.push(a.map((x) => (x instanceof Error ? x.message : typeof x === "string" ? x : JSON.stringify(x))).join(" "));
@@ -323,6 +331,6 @@ export function request(handler, conn, pupil, { flags = {}, body = {} } = {}) {
  * One request with EXACTLY `body` (process-event's answer). `capture: false` for requests that run at the same time on
  * their own connections (each request's calls stay its own; console output is then not captured).
  */
-export function post(handler, conn, pupil, { flags = {}, body = {}, capture = true } = {}) {
-  return run(handler, conn, pupil, flags, body, { capture });
+export function post(handler, conn, pupil, { flags = {}, body = {}, capture = true, beforeRpc = null } = {}) {
+  return run(handler, conn, pupil, flags, body, { capture, beforeRpc });
 }

@@ -14,9 +14,13 @@
 // Nothing is read, written or paid for a refused answer. The pupil's browser shows a Danish text and loads the round
 // again (the current activation), so nothing is lost.
 //
-// WHAT IT DOES NOT COVER (documented in docs/decisions/D-384.md): the check is a read before the answer function's own
-// transaction. A park AND a resume that both complete inside that gap (milliseconds, two further requests) would let the
-// older answer through as the round's one answer — the pupil's own answer to the same question, paid once, never two.
+// ATOMIC IN THE DATABASE. The check above is a read before the answer function's own transaction, so a park AND a
+// resume that both complete inside that gap would otherwise let the older answer through. The answer call therefore
+// carries the activation it was checked against in the header ACTIVATION_HEADER (activationClientHeaders); PostgREST
+// puts the call's headers in request.headers for that call's transaction, and the trigger question_instances_parked_guard
+// (migration 20261124160000) compares it with the LOCKED row's activation_no inside the answer function's own UPDATE.
+// A mismatch is SQLSTATE LQ410 'stale_activation': the whole answer is rolled back (nothing recorded or paid), and
+// isStaleActivationError turns it into the same 409 as the read check. The read check stays the fast path.
 //
 // THE SWITCH is the same Edge secret as get-next-question's: LAERLIGVERSE_COURSE_PARKING, exactly "on" (only after
 // migration 20261124160000). Off: no column is read and nothing is checked — exactly the behaviour before D-384.
@@ -46,6 +50,24 @@ export function activationVerdict(given: unknown, rowValue: unknown): Activation
   if (g !== null && !isActivation(g)) return { kind: "invalid" };
   if (g === null ? rowValue === 0 : g === rowValue) return { kind: "accept" };
   return { kind: "stale", expected: rowValue, given: g as number | null };
+}
+
+// The header the answer call carries (lower case: PostgREST's request.headers keys are lower case).
+export const ACTIVATION_HEADER = "x-laerlig-activation-no";
+export const STALE_ACTIVATION_SQLSTATE = "LQ410";
+export const STALE_ACTIVATION_MESSAGE = "stale_activation";
+
+/** The headers for the answer call's backend client: the activation the read check accepted (the row's value). */
+export function activationClientHeaders(rowValue: unknown): Record<string, string> {
+  if (!isActivation(rowValue)) throw new Error("activationClientHeaders: not a valid activation_no");
+  return { [ACTIVATION_HEADER]: String(rowValue) };
+}
+
+/** The trigger's refusal (the round was resumed between the read check and the answer function's UPDATE). */
+export function isStaleActivationError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const { code, message } = error as { code?: unknown; message?: unknown };
+  return code === STALE_ACTIVATION_SQLSTATE || message === STALE_ACTIVATION_MESSAGE;
 }
 
 /** The reply for a refused stale answer (stable, machine-readable; js/answer-submission.js lists it as a refusal). */

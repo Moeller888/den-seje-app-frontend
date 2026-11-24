@@ -11,6 +11,7 @@ import { dirname, join } from "node:path";
 import { loadHandler, runCase, INSTANCES } from "./helpers/process-event-harness.mjs";
 import {
   COURSE_PARKING_ENV, activationCheckEnabled, activationVerdict, staleActivationReply,
+  ACTIVATION_HEADER, activationClientHeaders, isStaleActivationError,
 } from "../../supabase/functions/process-event/round-activation.ts";
 import { COURSE_PARKING_ENV as GNQ_ENV } from "../../supabase/functions/get-next-question/course-parking.ts";
 import { ACTIVATION_COLUMN, GRADING_COLUMNS } from "../../supabase/functions/process-event/instance-read.ts";
@@ -115,6 +116,56 @@ test("ON: ownership is still checked FIRST — a foreign round is 403 whatever a
   const r = await send({ body: { question_instance_id: "foreign-1", answer: "a", activation_no: 9 }, backend: db(0), env: ON });
   assert.equal(r.status, 403);
   assert.deepEqual(rpcs(r), []);
+});
+
+// THE ATOMIC HALF (TOCTOU): the answer call carries the activation the read check accepted, and the trigger's LQ410 (the
+// round was resumed between the read and the answer function's UPDATE) becomes the same 409 on every path. The database
+// half — the trigger compares the header with the LOCKED row — is proven in course-round-stale-tab-migrations-run.
+const answerClients = (r) => r.calls.filter((c) => c.createClient === "admin" && c.activation !== undefined).map((c) => c.activation);
+const STALE_DB = { code: "LQ410", message: "stale_activation", details: "The answer belongs to an earlier activation of the round." };
+const LONG = { question_instance_id: "long-1", answer: Array.from({ length: 25 }, (_, i) => "ord" + i).join(" ") };
+
+test("ON: every answer call (four answer RPCs and the long save) runs on a client carrying the checked activation; OFF: none does", async () => {
+  for (const [name, c] of Object.entries(CASES)) {
+    const on = await send({ body: { ...c.body, activation_no: 2 }, backend: db(2), env: ON });
+    assert.equal(on.status, 200, `${name}: ${on.body}`);
+    assert.deepEqual(answerClients(on), ["2"], `${name}: exactly one client with the header — the answer call's`);
+    const idx = on.calls.findIndex((x) => x.activation === "2");
+    assert.equal(on.calls.slice(idx + 1).find((x) => x.kind === "rpc")?.name, c.rpc, `${name}: that client makes the answer call`);
+    const off = await send({ body: c.body, backend: db(2), env: { [COURSE_PARKING_ENV]: undefined } });
+    assert.deepEqual(answerClients(off), [], `${name}: off — no header anywhere`);
+  }
+  const long = await send({ body: { ...LONG, activation_no: 0 }, backend: db(0), env: ON });
+  assert.equal(long.status, 200, long.body);
+  assert.deepEqual(answerClients(long), ["0"], "the long save carries it too");
+});
+
+test("ON: the trigger's LQ410 (resumed between read check and answer) is 409 stale_activation on all four paths and the long save — never a 500", async () => {
+  for (const [name, c] of Object.entries(CASES)) {
+    const backend = (kind, n, ops, client, base) => (kind === "rpc" && n === c.rpc ? { data: null, error: STALE_DB } : db(0)(kind, n, ops, client, base));
+    const r = await send({ body: { ...c.body, activation_no: 0 }, backend, env: ON });
+    assert.equal(r.status, 409, `${name}: ${r.body}`);
+    assert.deepEqual(r.json, { outcome: "stale_activation", error: "Stale activation" }, name);
+    assert.ok(r.logs.some((l) => l.includes("FLOW: STALE ACTIVATION (atomic)")), name);
+    assert.deepEqual(r.calls.filter((x) => x.kind === "from" && x.ops.some((o) => o[0] === "update")), [], `${name}: nothing written after the refusal`);
+  }
+  const isSave = (kind, n, ops) => kind === "from" && n === "question_instances" && ops.some((o) => o[0] === "update");
+  const longBackend = (kind, n, ops, client, base) => (isSave(kind, n, ops) ? { data: null, error: STALE_DB } : db(0)(kind, n, ops, client, base));
+  const long = await send({ body: { ...LONG, activation_no: 0 }, backend: longBackend, env: ON });
+  assert.equal(long.status, 409, long.body);
+  assert.deepEqual(long.json, { outcome: "stale_activation", error: "Stale activation" });
+});
+
+test("round-activation.ts: the atomic half's helpers", () => {
+  assert.equal(ACTIVATION_HEADER, "x-laerlig-activation-no");
+  assert.deepEqual(activationClientHeaders(0), { "x-laerlig-activation-no": "0" });
+  assert.deepEqual(activationClientHeaders(7), { "x-laerlig-activation-no": "7" });
+  for (const bad of [undefined, null, -1, "1", 1.5]) assert.throws(() => activationClientHeaders(bad), String(bad));
+  assert.equal(isStaleActivationError(STALE_DB), true);
+  assert.equal(isStaleActivationError({ code: "LQ410" }), true);
+  for (const other of [null, undefined, "LQ410", { code: "LQ409", message: "course_round_parked" }, { code: "23505" }]) {
+    assert.equal(isStaleActivationError(other), false, JSON.stringify(other));
+  }
 });
 
 test("round-activation.ts: the verdict, strictly", () => {

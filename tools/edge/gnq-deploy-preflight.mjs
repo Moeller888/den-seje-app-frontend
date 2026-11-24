@@ -67,7 +67,7 @@ export const F8_FUNCTIONS = Object.freeze([
   { sig: "public.park_open_course_round(uuid)", md5: "52581c2c4fad3c6de60286014f7f671c", definer: true, volatility: "v", config: ["search_path=public, pg_temp"], ...BACKEND_ONLY },
   { sig: "public.resume_parked_course_round(uuid,text,text)", md5: "6695d1104f3383e3b43adff7679415f2", definer: true, volatility: "v", config: ["search_path=public, pg_temp"], ...BACKEND_ONLY },
   // The trigger function: no API role may call it at all.
-  { sig: "public.question_instances_parked_guard()", md5: "438d432e4da0976aa8765036fd0b2c54", definer: false, volatility: "v", config: ['search_path=""'], required: [], forbidden: ["PUBLIC", "anon", "authenticated", "service_role"] },
+  { sig: "public.question_instances_parked_guard()", md5: "5ec4281de033dc90c86d6ba09891d957", definer: false, volatility: "v", config: ['search_path=""'], required: [], forbidden: ["PUBLIC", "anon", "authenticated", "service_role"] },
 ]);
 export const F8_NEW_SIGS = Object.freeze(["public.park_open_course_round(uuid)", "public.resume_parked_course_round(uuid,text,text)", "public.question_instances_parked_guard()"]);
 // The table facts (catalog only — pg_attribute, pg_constraint, pg_indexes, pg_trigger, privileges; never a row).
@@ -88,7 +88,7 @@ export const F8_TABLE = Object.freeze({
     idx_one_parked_course_round: "CREATE UNIQUE INDEX idx_one_parked_course_round ON public.question_instances USING btree (student_id, parked_objective) WHERE (parked_at IS NOT NULL)",
   },
   triggers: {
-    question_instances_parked_guard: { enabled: "O", def: "CREATE TRIGGER question_instances_parked_guard BEFORE UPDATE OF answered ON public.question_instances FOR EACH ROW EXECUTE FUNCTION question_instances_parked_guard()" },
+    question_instances_parked_guard: { enabled: "O", def: "CREATE TRIGGER question_instances_parked_guard BEFORE UPDATE OF answered, user_answer ON public.question_instances FOR EACH ROW EXECUTE FUNCTION question_instances_parked_guard()" },
   },
 });
 // Before F8 (DB0–DB2): none of the above, and production's one-open-round index.

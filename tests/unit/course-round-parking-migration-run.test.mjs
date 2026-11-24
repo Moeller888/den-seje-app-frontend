@@ -198,6 +198,55 @@ test("resume: none / wrong_step / other_active change nothing; resumed = the sam
   assert.equal(await xp(db, p), after, "a second answer to the same round pays nothing");
 });
 
+// The ATOMIC activation check (TOCTOU): process-event's answer call carries the activation it checked in the header
+// x-laerlig-activation-no, which PostgREST puts in request.headers for that call's transaction. Simulated here exactly so.
+// One statement as service_role in its own transaction with request.headers set (SET LOCAL: nothing survives a rollback).
+const withHeaders = async (db, headers, sql, params) => {
+  await db.exec("BEGIN");
+  try {
+    await db.exec("SET LOCAL ROLE service_role");
+    await db.query("SELECT set_config('request.headers', $1, true)", [JSON.stringify(headers)]);
+    const r = (await db.query(sql, params)).rows;
+    await db.exec("COMMIT");
+    return r;
+  } catch (e) { await db.exec("ROLLBACK"); throw e; }
+};
+const ANSWER_SQL = "SELECT public.process_question_attempt($1, $2, $3, 0) AS r";
+test("atomic activation: the trigger refuses (LQ410) an answer or a long save whose header names another activation than the LOCKED row's — nothing recorded or paid; no header = no check", async () => {
+  const db = await productionDb();
+  const p = await pupilA(db);
+  const c = await serve(db, p, await questionA(db, { objective: HISTORY, step: "guided_practice" }));
+  await park(db, p);
+  const o = await serve(db, p, await questionA(db, { objective: "vikings" }));
+  await answerA(db, p, o);
+  assert.equal(await resume(db, p, HISTORY, "guided_practice"), "resumed");
+  assert.equal((await db.query("SELECT activation_no FROM public.question_instances WHERE id = $1", [c])).rows[0].activation_no, 1);
+  const before = { xp: await xp(db, p), row: await inst(db, c) };
+  // Tab A checked activation 0 before the resume; its answer call reaches the database now.
+  assert.equal(await code(() => withHeaders(db, { "x-laerlig-activation-no": "0" }, ANSWER_SQL, [p, c, "a"])), "LQ410");
+  assert.equal(await message(() => withHeaders(db, { "x-laerlig-activation-no": "0" }, ANSWER_SQL, [p, c, "a"])), "stale_activation");
+  // The long-answer save (user_answer only) is covered by the same trigger.
+  assert.equal(await code(() => withHeaders(db, { "x-laerlig-activation-no": "0" }, "UPDATE public.question_instances SET user_answer = 'gammel' WHERE id = $1", [c])), "LQ410");
+  // Malformed or future numbers are refused too; other headers are ignored.
+  for (const v of ["2", "", "01", "x"]) assert.equal(await code(() => withHeaders(db, { "x-laerlig-activation-no": v }, ANSWER_SQL, [p, c, "a"])), "LQ410", v);
+  assert.deepEqual(await inst(db, c), before.row, "nothing recorded");
+  assert.equal(await xp(db, p), before.xp, "nothing paid");
+  // The current activation is accepted, once.
+  assert.ok((await withHeaders(db, { "x-laerlig-activation-no": "1", "x-other": "y" }, ANSWER_SQL, [p, c, "a"]))[0].r);
+  assert.equal((await inst(db, c)).answered, true);
+  assert.ok(await xp(db, p) > before.xp, "paid once");
+  // No header (switch off, get-next-question, an older Edge Function): the trigger checks nothing.
+  const p2 = await pupilA(db);
+  const c2 = await serve(db, p2, await questionA(db, { objective: HISTORY, step: "guided_practice" }));
+  await park(db, p2);
+  await answerA(db, p2, await serve(db, p2, await questionA(db, { objective: "vikings" })));
+  await resume(db, p2, HISTORY, "guided_practice");
+  assert.ok((await withHeaders(db, { "x-other": "y" }, ANSWER_SQL, [p2, c2, "a"]))[0].r, "a header set without the activation key: no check");
+  const p3 = await pupilA(db);
+  const c3 = await serve(db, p3, await questionA(db, { objective: "vikings" }));
+  assert.ok((await answerA(db, p3, c3))[0].r, "no request.headers at all: no check");
+});
+
 test("D2 several courses: history → maths → ordinary → back to history → back to maths; nothing lost, nothing completed", async () => {
   const db = await productionDb();
   const p = await pupilA(db);

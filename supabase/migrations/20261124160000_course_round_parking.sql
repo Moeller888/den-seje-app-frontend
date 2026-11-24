@@ -41,6 +41,9 @@
 --      LAERLIGVERSE_COURSE_PARKING=on, browseren sender det med svaret, og process-event afviser et svar fra en
 --      tidligere aktivering (409 stale_activation) FØR nogen svarfunktion kaldes. En runde, der aldrig er genoptaget,
 --      har 0, og så accepteres et svar uden nummer (alle eksisterende klienter og svarveje er uændrede).
+--      Process-events tjek er en læsning FØR svarfunktionens transaktion; det ATOMISKE tjek er triggeren i 3: den
+--      sammenligner den aktivering, process-event kontrollerede (headeren x-laerlig-activation-no), med den låste
+--      rækkes activation_no i svarfunktionens egen UPDATE (LQ409's trigger, nu også LQ410 'stale_activation').
 -- Kroppene i 5 og 6 er D-383's, ordret, med kun de markerede linjer tilføjet. Signaturer, SECURITY, search_path,
 -- grants og kommentarer er uændrede. Ingen eksisterende data ændres (ingen række er parkeret før denne fil).
 --
@@ -123,18 +126,36 @@ CREATE UNIQUE INDEX idx_one_open_question ON public.question_instances (student_
 CREATE UNIQUE INDEX IF NOT EXISTS idx_one_parked_course_round ON public.question_instances (student_id, parked_objective)
   WHERE parked_at IS NOT NULL;
 
--- ── 3. Et svar på en parkeret runde afvises, uanset svarvej ──────────────────────────────────────
+-- ── 3. Et svar på en parkeret runde — eller fra en tidligere aktivering — afvises, uanset svarvej ──
+-- AKTIVERINGSTJEKKET ER ATOMISK HER. process-event sender den aktivering, det har kontrolleret, i headeren
+-- x-laerlig-activation-no på sit svarkald; PostgREST lægger kaldets request-headere i request.headers for netop det
+-- kalds transaktion. Triggeren kører i svarfunktionens egen UPDATE, efter rækkelåsen, så OLD.activation_no er den
+-- låste, aktuelle værdi. Er runden parkeret og genoptaget, efter at process-event læste rækken, afviger tallet, og
+-- svaret afvises med LQ410 'stale_activation' i samme transaktion: intet registreres eller udbetales. Uden headeren
+-- (alle kald, når LAERLIGVERSE_COURSE_PARKING ikke er "on", get-next-question og ældre Edge Functions) tjekkes intet,
+-- og adfærden er nøjagtigt som før. user_answer er med, så lang-svar-vejens gemning også er dækket.
 CREATE OR REPLACE FUNCTION public.question_instances_parked_guard()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY INVOKER
 SET search_path = ''
 AS $function$
+DECLARE
+  v_headers text := nullif(current_setting('request.headers', true), '');
+  v_given text;
 BEGIN
   IF NEW.answered IS TRUE AND NEW.parked_at IS NOT NULL THEN
     RAISE EXCEPTION 'course_round_parked'
       USING ERRCODE = 'LQ409',
             DETAIL = 'The course round is parked; it is resumed inside its course. Nothing was recorded.';
+  END IF;
+  IF v_headers IS NOT NULL THEN
+    v_given := v_headers::json ->> 'x-laerlig-activation-no';
+    IF v_given IS NOT NULL AND v_given IS DISTINCT FROM OLD.activation_no::text THEN
+      RAISE EXCEPTION 'stale_activation'
+        USING ERRCODE = 'LQ410',
+              DETAIL = 'The answer belongs to an earlier activation of the round. Nothing was recorded.';
+    END IF;
   END IF;
   RETURN NEW;
 END;
@@ -142,7 +163,7 @@ $function$;
 REVOKE ALL ON FUNCTION public.question_instances_parked_guard() FROM PUBLIC, anon, authenticated, service_role;
 DROP TRIGGER IF EXISTS question_instances_parked_guard ON public.question_instances;
 CREATE TRIGGER question_instances_parked_guard
-  BEFORE UPDATE OF answered ON public.question_instances
+  BEFORE UPDATE OF answered, user_answer ON public.question_instances
   FOR EACH ROW EXECUTE FUNCTION public.question_instances_parked_guard();
 
 -- ── 4. Parkering og genoptagelse (kun get-next-question, service_role) ──────────────────────────

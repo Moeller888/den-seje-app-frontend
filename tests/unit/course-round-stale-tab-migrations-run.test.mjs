@@ -60,11 +60,13 @@ async function question(db, objective, metadata = {}) {
   [id, JSON.stringify({ question: `Q ${id}`, options: ["a", "b"], correct: "a" }), JSON.stringify(metadata), objective]);
   return id;
 }
-async function setup(db) {
+async function setup(db, { courseFormat = "mc" } = {}) {
   const c = { ordinary: [], english: [], course: null };
   for (let i = 0; i < 4; i++) c.ordinary.push(await question(db, "vikings"));
   for (let i = 0; i < 2; i++) c.english.push(await question(db, "english"));
   c.course = await question(db, "vikings", { learning_step: "guided_practice" });
+  // A short-text course item: the legacy text path (process_text_answer) instead of process_question_attempt.
+  if (courseFormat === "text") await db.q("UPDATE public.questions SET answer_format = 'text', content = content - 'options' WHERE id = $1", [c.course]);
   const p = uid(60000 + ++seq);
   await db.q("INSERT INTO auth.users VALUES ($1)", [p]);
   await db.q("INSERT INTO public.profiles (id, role, selected_grade, active_domains) VALUES ($1, 'student', 6, $2)", [p, ["vikings"]]);
@@ -92,8 +94,8 @@ const answer = (db, p, instance, ans, activation, { flags = PARKING, capture = t
 });
 
 /** Steps 1–4: tab A holds the course round (activation 0), the pupil leaves the course, works, and resumes in tab B. */
-async function toResumed(db, { cycles = 1 } = {}) {
-  const s = await setup(db);
+async function toResumed(db, { cycles = 1, courseFormat = "mc" } = {}) {
+  const s = await setup(db, { courseFormat });
   const tabA = await request(GNQ, db, s.p, { flags: { ...LV, ...PARKING }, body: COURSE });
   assert.equal(tabA.status, 200, tabA.text);
   assert.equal(tabA.body.question_instance_id, s.round, "tab A: the course round");
@@ -232,6 +234,130 @@ test("flags: with LAERLIGVERSE_COURSE_PARKING off nothing is parked or checked (
     assert.equal((await row(db, s.round)).user_answer, "a");
   } finally { await db.end(); }
 });
+
+// ── TOCTOU: the park AND the resume happen BETWEEN process-event's read check and its answer call ──────────────────
+// Forced deterministically: the harness's beforeRpc hook runs inside tab A's request, after the read check accepted
+// activation 0 and right before the answer function is called. In that gap the pupil leaves the course (park), answers
+// an ordinary task and comes back (resume → activation 1). The read check can no longer see it; only the database can.
+const ANSWER_RPCS = new Set(["process_question_attempt", "process_text_answer"]);
+async function staleInTheGap(db, courseFormat) {
+  // Tab A holds the round at activation 0; nothing has happened yet, so the read check will accept it.
+  const s = await setup(db, { courseFormat });
+  const tabA = await request(GNQ, db, s.p, { flags: { ...LV, ...PARKING }, body: COURSE });
+  assert.equal(tabA.body.question_instance_id, s.round);
+  assert.equal(tabA.body.activation_no, 0);
+  let tabB = null;
+  let fired = 0;
+  const beforeRpc = async (name) => {
+    if (!ANSWER_RPCS.has(name) || fired++) return;
+    const other = await request(GNQ, db, s.p, { flags: PARKING, body: { subject: "historie" } });
+    assert.equal((await row(db, s.round)).parked, true, "parked inside the gap");
+    assert.equal((await answer(db, s.p, other.body.question_instance_id, "a", other.body.activation_no)).status, 200);
+    tabB = await request(GNQ, db, s.p, { flags: { ...LV, ...PARKING }, body: COURSE });
+    assert.equal(tabB.body.question_instance_id, s.round, "resumed inside the gap");
+    assert.equal(tabB.body.activation_no, 1);
+  };
+  const before = { prog: await progress(db, s.p) };
+  const a = await post(PE, db, s.p, { flags: PARKING, beforeRpc,
+    body: { student_id: s.p, question_instance_id: s.round, answer: "a", question_shown_at: Date.now(), activation_no: 0 } });
+  assert.equal(fired, 1, "the gap was entered exactly once, at the answer call");
+  return { s, a, tabB, before };
+}
+
+for (const courseFormat of ["mc", "text"]) {
+  test(`TOCTOU (${courseFormat}, legacy path): park + resume between the read check and the answer call — the database refuses tab A atomically (409 stale_activation); tab B's answer is the one that counts`, async () => {
+    const db = await database();
+    try {
+      const { s, a, before } = await staleInTheGap(db, courseFormat);
+      assert.equal(a.status, 409, a.text);
+      assert.deepEqual(a.body, { outcome: "stale_activation", error: "Stale activation" });
+      assert.ok(a.logs.some((l) => l.includes("STALE ACTIVATION (atomic)")), "refused by the trigger, not the read check");
+      const mid = await row(db, s.round);
+      assert.equal(mid.answered, false, "tab A recorded nothing");
+      assert.equal(mid.user_answer, null);
+      assert.equal(mid.activation_no, 1);
+      const midProg = await progress(db, s.p);
+      assert.ok(midProg.xp - before.prog.xp <= 10, "only the ordinary task inside the gap was paid");
+      const b = await answer(db, s.p, s.round, "b", 1);
+      assert.equal(b.status, 200, b.text);
+      const end = await row(db, s.round);
+      assert.equal(end.answered, true);
+      assert.equal(end.user_answer, "b", "tab B's answer is recorded");
+      assert.equal(end.was_correct, false);
+      assert.deepEqual(await progress(db, s.p), midProg, "tab B's wrong answer pays nothing; tab A paid nothing");
+    } finally { await db.end(); }
+  });
+}
+
+test("TOCTOU control: with the trigger's pre-fix body (read check only) the SAME interleaving lets tab A's stale answer through — the test reproduces the hole", async () => {
+  const db = await database();
+  try {
+    await db.q(`CREATE OR REPLACE FUNCTION public.question_instances_parked_guard() RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
+      SET search_path = '' AS $f$ BEGIN
+        IF NEW.answered IS TRUE AND NEW.parked_at IS NOT NULL THEN
+          RAISE EXCEPTION 'course_round_parked' USING ERRCODE = 'LQ409';
+        END IF;
+        RETURN NEW; END; $f$`);
+    const { s, a } = await staleInTheGap(db, "mc");
+    assert.equal(a.status, 200, a.text);
+    const r = await row(db, s.round);
+    assert.equal(r.answered, true, "the stale answer became the round's one answer");
+    assert.equal(r.activation_no, 1, "…although the round is in activation 1");
+  } finally { await db.end(); }
+});
+
+test("the atomic check needs the header: switch off, no header is sent and the trigger checks nothing (behaviour before D-384)", async () => {
+  const db = await database();
+  try {
+    const s = await toResumed(db);
+    const a = await answer(db, s.p, s.round, "a", s.tabA.body.activation_no, { flags: {} });
+    assert.equal(a.status, 200, a.text);
+    assert.ok(a.calls.filter((c) => c.kind === "rpc").every((c) => c.headers === null), "no activation header with the switch off");
+    const on = await toResumed(db);
+    const b = await answer(db, on.p, on.round, "a", 1);
+    assert.equal(b.status, 200, b.text);
+    const rpc = b.calls.find((c) => c.name === "process_question_attempt");
+    assert.deepEqual(rpc.headers, { "x-laerlig-activation-no": "1" }, "switch on: the answer call carries the checked activation");
+    assert.ok(b.calls.filter((c) => c.name !== "process_question_attempt").every((c) => c.headers === null), "only the answer call carries it");
+  } finally { await db.end(); }
+});
+
+test("TOCTOU under the row lock (real PostgreSQL, two connections): the resume holds the row, tab A's answer call waits on it — after the resume commits, the trigger sees the NEW activation and refuses",
+  { skip: !PG_URL && "needs a real PostgreSQL server (LEVEL_ENGINE_PG_URL): PGlite has one connection" }, async () => {
+    const db = await database();
+    try {
+      for (let i = 0; i < 4; i++) {
+        const s = await setup(db);
+        const tabA = await request(GNQ, db, s.p, { flags: { ...LV, ...PARKING }, body: COURSE });
+        assert.equal(tabA.body.activation_no, 0);
+        const other = await request(GNQ, db, s.p, { flags: PARKING, body: { subject: "historie" } });
+        assert.equal((await answer(db, s.p, other.body.question_instance_id, "a", other.body.activation_no)).status, 200);
+        const c2 = await db.connect();
+        try {
+          // get-next-question's resume, held open: the row is locked with activation_no = 1, not yet committed.
+          await c2.x("BEGIN");
+          await c2.x("SET LOCAL ROLE service_role");
+          assert.equal((await c2.q("SELECT public.resume_parked_course_round($1, 'vikings', 'guided_practice') AS r", [s.p]))[0].r, "resumed");
+          // Tab A (read check: activation 0, the committed value) — its answer function blocks on the row.
+          const pending = answer(db, s.p, s.round, "a", 0, { capture: false });
+          await new Promise((r) => setTimeout(r, 300));
+          // Observed from a third connection (the test's own superuser): a role cannot see another session's wait.
+          const c3 = await db.connect();
+          const waiting = (await c3.q(`SELECT count(*)::int n FROM pg_stat_activity WHERE wait_event_type = 'Lock' AND datname = current_database()`))[0].n;
+          await c3.close();
+          await c2.x("COMMIT");
+          const a = await pending;
+          assert.equal(waiting, 1, "tab A's answer function was waiting on the resumed row's lock");
+          assert.equal(a.status, 409, `waited on the lock, then: ${a.text}`);
+          assert.equal(a.body.outcome, "stale_activation");
+          const r = await row(db, s.round);
+          assert.equal(r.answered, false, "tab A recorded nothing");
+          assert.equal(r.activation_no, 1);
+          assert.equal((await answer(db, s.p, s.round, "b", 1)).status, 200, "tab B's answer counts");
+        } finally { await c2.close(); }
+      }
+    } finally { await db.end(); }
+  });
 
 test("simultaneous (real PostgreSQL, two connections): tab A's stale and tab B's current answer at the same moment — B counts, A is refused; two B requests — one answer, paid once",
   { skip: !PG_URL && "needs a real PostgreSQL server (LEVEL_ENGINE_PG_URL): PGlite has one connection" }, async () => {

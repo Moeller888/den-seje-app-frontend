@@ -152,8 +152,8 @@ const RPC = readFileSync(join(REPO, "supabase/functions/process-event/text-answe
 
 test("process-event calls process_question_attempt only through the admin helper", () => {
   assert.match(RPC, /const admin = makeAdminClient\(\);\s*return await admin\.rpc\("process_question_attempt",/);
-  assert.match(INDEX_CODE, /await callProcessQuestionAttempt\(\s*makeAdminClient,/);
-  assert.match(INDEX_CODE, /createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\), ADMIN_CLIENT_OPTIONS\)/);
+  assert.match(INDEX_CODE, /await callProcessQuestionAttempt\(\s*makeAnswerClient,/);
+  assert.match(INDEX_CODE, /createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\), headers \? \{ \.\.\.ADMIN_CLIENT_OPTIONS, global: \{ headers \} \} : ADMIN_CLIENT_OPTIONS\)/);
   assert.equal(/\.rpc\(\s*["'`]process_question_attempt["'`]/.test(INDEX_CODE), false,
     "after the lockdown a user-client call would be denied");
 });

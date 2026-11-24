@@ -140,11 +140,13 @@ async function newPupil(db) {
 }
 // A round as a server path would have left it: served (open), or answered `daysAgo` days ago (wrong answers due).
 async function round(db, pupil, q, { answered = false, correct = true, daysAgo = 2 } = {}) {
+  // An open round is due a minute ago, never at the database's now(): real PostgreSQL's clock can run milliseconds ahead
+  // of the Edge clock that get-next-question's due read uses, and the round would then not be due (timing-dependent).
   const r = await db.q(`INSERT INTO public.question_instances (student_id, question_id, correct_answer, created_at, answered, answered_at,
       user_answer, was_correct, is_correct, next_review_at)
     VALUES ($1, $2, 'a', now() - make_interval(days => $3::int), $4::boolean, CASE WHEN $4 THEN now() - make_interval(days => $3::int) END,
       CASE WHEN $4 THEN $5::text END, CASE WHEN $4 THEN $6::boolean END, CASE WHEN $4 THEN $6::boolean END,
-      CASE WHEN $4 THEN now() - make_interval(days => $3::int - 1) ELSE now() END) RETURNING id`,
+      CASE WHEN $4 THEN now() - make_interval(days => $3::int - 1) ELSE now() - interval '1 minute' END) RETURNING id`,
   [pupil, q, daysAgo, answered, correct ? "a" : "b", correct]);
   return r[0].id;
 }
