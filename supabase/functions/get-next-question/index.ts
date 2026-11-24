@@ -340,7 +340,7 @@ serve(async (req) => {
     // version the same: new instances propose the row they are built from, open and repeated rounds are
     // served from their snapshot.
     const servedSnapshot = servedSnapshotEnabled(Deno.env.get(SERVED_SNAPSHOT_ENV));
-    // D-384 (./course-parking.ts, Edge secret LAERLIGVERSE_COURSE_PARKING, only after migration 20261124120000): an open
+    // D-384 (./course-parking.ts, Edge secret LAERLIGVERSE_COURSE_PARKING, only after migration 20261124160000): an open
     // course round is parked when the pupil leaves the course and resumed inside it. Off: no new call, no new column.
     const courseParking = courseParkingEnabled(Deno.env.get(COURSE_PARKING_ENV));
     // Lærligverse L5 (Edge secret LAERLIGVERSE_SERVED_MODE, only after migration 20261108043500): when the

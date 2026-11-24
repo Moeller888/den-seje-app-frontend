@@ -103,7 +103,7 @@ test("parking ON: any other database error, or an unexpected answer, is a loud 5
   }
 });
 
-// A database WITH migration 20261124120000 answers a select naming activation_no with the column (default 0). The
+// A database WITH migration 20261124160000 answers a select naming activation_no with the column (default 0). The
 // harness's rows predate the column, so this adds it exactly where a real database would: only when it is selected.
 const selectsActivation = (ops) => ops.some((o) => o[0] === "select" && /\bactivation_no\b/.test(String(o[1])));
 const withActivationColumn = (inner, n = 0) => (kind, name, ops, result) => {

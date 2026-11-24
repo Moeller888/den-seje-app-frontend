@@ -1,4 +1,4 @@
-// REAL PostgreSQL 17 proof for D-384 (F8), migration 20261124120000_course_round_parking.sql — what PGlite (one
+// REAL PostgreSQL 17 proof for D-384 (F8), migration 20261124160000_course_round_parking.sql — what PGlite (one
 // connection) cannot show: truly simultaneous requests for one pupil, as two tabs, a double click, a retry after a lost
 // connection or a delayed answer from an old tab produce them.
 //
@@ -46,7 +46,7 @@ test("a real PostgreSQL server is present where it is required (CI)", { skip: !R
 });
 
 const CHAIN = ["20261031194600_mc_length_cue_answer_paths.sql", "20261102100000_release_open_rounds_on_inactive_questions.sql",
-  "20261120150000_course_items_out_of_ordinary_quiz.sql", "20261124120000_course_round_parking.sql"];
+  "20261120150000_course_items_out_of_ordinary_quiz.sql", "20261124160000_course_round_parking.sql"];
 const HISTORY = "kildekritik_ophav";
 const MATH = "brøker_kursus";
 const PARK = "SELECT public.park_open_course_round($1) AS r";

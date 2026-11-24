@@ -1,4 +1,4 @@
-// RUNTIME proof for D-384 (F8), migration 20261124120000_course_round_parking.sql, executed UNMODIFIED on PGlite — on two
+// RUNTIME proof for D-384 (F8), migration 20261124160000_course_round_parking.sql, executed UNMODIFIED on PGlite — on two
 // databases:
 //   A. PRODUCTION's answer chain (helpers/answer-chain-schema.mjs pins every md5) + D-280 part 1 + D-316 + D-383: the
 //      privileges production has today (anon/authenticated with table-level UPDATE on question_instances);
@@ -22,7 +22,7 @@ import { bootstrapMarkerSql } from "../isolated/seed/seed-guard.mjs";
 import { historyFromRows, nextStep } from "../../supabase/functions/_shared/learning-sequence.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const FILE = "20261124120000_course_round_parking.sql";
+const FILE = "20261124160000_course_round_parking.sql";
 const D383 = "20261120150000_course_items_out_of_ordinary_quiz.sql";
 const D383_FOLLOW_UP = "20261123100000_course_scope_before_candidate_limit.sql";
 const MIGRATION = readMigration(FILE);

@@ -6,7 +6,7 @@
 // submission_id separates them — and the production answer path (H5 off) carries neither. First-answer-wins would let
 // whichever arrives first count, which may be the answer to the presentation the pupil had already left.
 //
-// THE RULE. question_instances.activation_no counts the round's resumes (migration 20261124120000; only
+// THE RULE. question_instances.activation_no counts the round's resumes (migration 20261124160000; only
 // resume_parked_course_round writes it). get-next-question hands it out with the round (switch on); the browser sends it
 // back as `activation_no`. Before ANY answer function is called:
 //   * row 0 (never resumed): accepted with no number (every existing client) or with 0;
@@ -19,7 +19,7 @@
 // older answer through as the round's one answer — the pupil's own answer to the same question, paid once, never two.
 //
 // THE SWITCH is the same Edge secret as get-next-question's: LAERLIGVERSE_COURSE_PARKING, exactly "on" (only after
-// migration 20261124120000). Off: no column is read and nothing is checked — exactly the behaviour before D-384.
+// migration 20261124160000). Off: no column is read and nothing is checked — exactly the behaviour before D-384.
 //
 // Pure TypeScript with no Deno or network imports, so the Node tests import exactly what the function runs.
 

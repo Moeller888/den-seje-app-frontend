@@ -4,10 +4,10 @@
 // released by a subject switch and only served inside the server sequence). Without parking, a pupil who leaves a course
 // in the middle of a task gets "course_round_open" in every other subject — for good when Lærligverset is switched off.
 // Closing the round as answered would move the sequence on without an answer; deleting it would lose its hints,
-// presentation and snapshot. So the SAME row is parked (migration 20261124120000): it stays unanswered, keeps its id and
+// presentation and snapshot. So the SAME row is parked (migration 20261124160000): it stays unanswered, keeps its id and
 // everything served with it, and no longer counts as the pupil's ACTIVE open round.
 //
-// THE SWITCH. Edge secret LAERLIGVERSE_COURSE_PARKING, exactly "on" (only after migration 20261124120000). Anything else:
+// THE SWITCH. Edge secret LAERLIGVERSE_COURSE_PARKING, exactly "on" (only after migration 20261124160000). Anything else:
 // no new RPC is called and no new column is read — the function behaves exactly as without D-384 (D-383's
 // "course_round_open"). The switch is NOT a Lærligverse feature toggle: it must stay on while Lærligverset is off, so the
 // ordinary quiz can park a course round that is still open.
@@ -17,7 +17,7 @@
 // ORDINARY quiz is safe with any version. The COURSE is not: an older version (or this one with the switch off) cannot
 // resume a parked round and answers 409 in the course (open_question_exists), and a7450b0f serves an ordinary task there.
 // The safe rollback target with parked rounds is THIS function with the switch on and the Lærligverse flags off. With the
-// switch on before migration 20261124120000, every request fails (500): the switch follows the migration. See
+// switch on before migration 20261124160000, every request fails (500): the switch follows the migration. See
 // docs/decisions/D-384.md "Udrulning, tilbageførsel og nødstop".
 //
 // Pure TypeScript with no Deno or network imports, so the Node unit suite imports exactly what the function runs.

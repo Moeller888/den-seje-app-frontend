@@ -1,5 +1,5 @@
 // Deployment gate for the get-next-question Edge Function (D-383, its follow-up 20261123100000, and D-384 / F8
-// 20261124120000). Which database state a candidate needs is read from the CANDIDATE'S OWN SOURCE (candidateClass):
+// 20261124160000). Which database state a candidate needs is read from the CANDIDATE'S OWN SOURCE (candidateClass):
 // F8 needs DB3; #740 / D-383 need DB2 and are refused on DB3 (parked rounds: the course becomes unavailable, rollback
 // matrix scenario 3); a candidate from before D-383 is accepted only on DB0.
 //
@@ -57,7 +57,7 @@ export const REQUIRED_FUNCTIONS = Object.freeze([
   { sig: "public.get_unserved_questions_for_student(uuid,smallint,text[],text)", md5: "395001c3deec3fb24408c3a769e0b5f5", definer: true, volatility: "s", config: ["search_path=public, pg_temp"], ...BACKEND_ONLY },
   { sig: "public.get_question_candidates_for_student(uuid,smallint,text[],integer,text)", md5: "1430439742fc272b1e372adc7761d2f5", definer: true, volatility: "s", config: ["search_path=public, pg_temp"], ...BACKEND_ONLY },
 ]);
-// D-384 (20261124120000): the four D-383 bodies F8 replaces (one marked condition each) and F8's own three functions,
+// D-384 (20261124160000): the four D-383 bodies F8 replaces (one marked condition each) and F8's own three functions,
 // measured on PGlite from the unmodified files (gnq-deploy-preflight.test.mjs proves they equal what the file leaves).
 export const F8_FUNCTIONS = Object.freeze([
   { sig: "public.release_open_question_outside(text[])", md5: "72f2a0f3579b2ce758031ce7f47724e3", definer: true, volatility: "v", config: ["search_path=public"], required: ["authenticated"], forbidden: ["PUBLIC", "anon"] },
@@ -289,7 +289,7 @@ export function checkCatalog(catalog, { now = new Date(), maxAgeMin = DEFAULT_MA
     if (f.present !== true) { problems.push(`${r.sig}: missing in the database`); continue; }
     if (f.md5 !== r.md5) {
       const note = BEFORE[r.sig] === f.md5 ? " (still the body before D-383)"
-        : requiredState === "DB3" && REQUIRED_FUNCTIONS.find((x) => x.sig === r.sig)?.md5 === f.md5 ? " (D-383's body: 20261124120000 not applied)"
+        : requiredState === "DB3" && REQUIRED_FUNCTIONS.find((x) => x.sig === r.sig)?.md5 === f.md5 ? " (D-383's body: 20261124160000 not applied)"
         : requiredState === "DB2" && F8_FUNCTIONS.find((x) => x.sig === r.sig)?.md5 === f.md5 ? " (F8's body: the database is past DB2)" : "";
       problems.push(`${r.sig}: body md5 ${f.md5}, expected ${r.md5}${note}`);
     }
@@ -307,7 +307,7 @@ export function checkCatalog(catalog, { now = new Date(), maxAgeMin = DEFAULT_MA
     const f = by.get(sig);
     if (!f) problems.push(`${sig}: not in the catalog result`);
     else if (f.present !== false) {
-      problems.push(ABSENT_FUNCTIONS.includes(sig) ? `${sig}: still exists (20261123100000 not applied)` : `${sig}: exists (20261124120000 is applied: the database is past DB2)`);
+      problems.push(ABSENT_FUNCTIONS.includes(sig) ? `${sig}: still exists (20261123100000 not applied)` : `${sig}: exists (20261124160000 is applied: the database is past DB2)`);
     }
   }
   for (const name of SINGLE_NAMES) {
@@ -331,7 +331,7 @@ export function checkCatalog(catalog, { now = new Date(), maxAgeMin = DEFAULT_MA
   const tabUpd = catalog.table?.pupil_table_update;
   if (requiredState === "DB3") {
     if (!Array.isArray(tabUpd)) problems.push("pupil table UPDATE unknown");
-    else for (const r of tabUpd) problems.push(`${r} still has UPDATE on the whole of question_instances (20261124120000's column grant missing)`);
+    else for (const r of tabUpd) problems.push(`${r} still has UPDATE on the whole of question_instances (20261124160000's column grant missing)`);
   }
   return problems;
 }
@@ -352,7 +352,7 @@ export function stateRefusal(cls, state) {
   if (state === "DB3" && cls.requires !== "DB3") {
     return `candidate ${cls.kind} needs ${cls.requires}, but the database has F8 (DB3): parked course rounds may exist, and a version before F8 makes the course unavailable (rollback matrix, scenario 3). The safe rollback target on DB3 is F8 with LAERLIGVERSE_COURSE_PARKING=on and the Lærligverse flags off (docs/operations/laerligverse-rollback-matrix.md).`;
   }
-  if (cls.requires === "DB3") return `candidate ${cls.kind} needs DB3 (20261124120000 applied and verified) — on ${state} it would answer every request with 500 when LAERLIGVERSE_COURSE_PARKING is on`;
+  if (cls.requires === "DB3") return `candidate ${cls.kind} needs DB3 (20261124160000 applied and verified) — on ${state} it would answer every request with 500 when LAERLIGVERSE_COURSE_PARKING is on`;
   if (cls.requires === "DB0") return `candidate ${cls.kind} knows no course items: on ${state} it would serve course items in the ordinary quiz (rollback matrix, scenario 2); accepted only on DB0`;
   return `candidate ${cls.kind} needs ${cls.requires}; the database is ${state} (order: M1 → M2 → Edge, docs/operations/laerligverse-rollout-plan.md)`;
 }

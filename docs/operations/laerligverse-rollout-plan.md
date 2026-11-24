@@ -68,7 +68,7 @@ Hvert trin: hvad der er tilgængeligt, hvad der kan gå galt, tilladt tilbagefø
 - **Verifikation:** gaten: DB2.
 - **GO:** apply_migration M2.
 
-### Trin 4 — F8 `20261124120000` (D-384) → DB3
+### Trin 4 — F8 `20261124160000` (D-384) → DB3
 - **Tilgængeligt:** som i dag. Med en gammel Edge og ingen parkerede rækker er DB3 = DB2 (bevist i matrixen,
   scenarie 1 og 2, DB3-celler for `a7450b0f`). Elevernes tabel-UPDATE erstattes af kolonnerettigheder for alle kolonner
   undtagen de tre nye (effektivt uændret; bevist som rollerne).

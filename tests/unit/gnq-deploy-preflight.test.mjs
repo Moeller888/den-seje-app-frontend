@@ -30,7 +30,7 @@ const REF = "abcdefghijklmnopqrst";
 const OTHER_REF = "zyxwvutsrqponmlkjihg";
 const D383 = "20261120150000_course_items_out_of_ordinary_quiz.sql";
 const SCOPE = "20261123100000_course_scope_before_candidate_limit.sql";
-const F8 = "20261124120000_course_round_parking.sql";
+const F8 = "20261124160000_course_round_parking.sql";
 
 async function database(state) {
   const db = new PGlite();
@@ -125,7 +125,7 @@ test("DB3 (F8) as the three migrations leave it: ready for an F8 candidate; the 
   // …and DB3 is NOT ready for a DB2 candidate, nor DB2 for an F8 candidate: the states are told apart by their facts.
   assert.ok(checkCatalog(c, { requiredState: "DB2" }).some((p) => /past DB2/.test(p)));
   const p2 = checkCatalog(await catalogOf(DBS[2]), { requiredState: "DB3" });
-  assert.ok(p2.some((p) => /20261124120000 not applied/.test(p)), JSON.stringify(p2));
+  assert.ok(p2.some((p) => /20261124160000 not applied/.test(p)), JSON.stringify(p2));
   assert.ok(p2.some((p) => /park_open_course_round\(uuid\): missing/.test(p)));
   assert.ok(p2.some((p) => /column activation_no: "absent"/.test(p)));
 });

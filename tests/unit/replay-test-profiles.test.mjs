@@ -40,7 +40,7 @@ const INTRO_CHAIN = [K1, "20261108043500_laerligverse_served_mode_hint_log.sql",
   // D-383 follow-up: the shared candidate RPCs filter course items before their limit (requires D-383).
   "20261123100000_course_scope_before_candidate_limit.sql",
   // D-384 (F8): an open course round is parked when the pupil leaves the course (requires D-383).
-  "20261124120000_course_round_parking.sql"];
+  "20261124160000_course_round_parking.sql"];
 const files = migrationFiles();
 
 test("1. default = production mirror: no profile, 'production' and the old call give the same plan; K1 skipped", () => {

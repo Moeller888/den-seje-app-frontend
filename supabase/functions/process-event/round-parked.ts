@@ -1,4 +1,4 @@
-// D-384 (F8): an answer to a PARKED course round (migration 20261124120000) — how the database's refusal becomes a
+// D-384 (F8): an answer to a PARKED course round (migration 20261124160000) — how the database's refusal becomes a
 // controlled HTTP reply in process-event.
 //
 // THE ENFORCEMENT IS IN THE DATABASE, NOT HERE

@@ -165,7 +165,7 @@ serve(async (req) => {
     if (activationCheckOn) {
       const verdict = activationVerdict(body.activation_no, instanceData.activation_no)
       if (verdict.kind === "server_fault") {
-        console.error("ROUND ACTIVATION: the instance has no valid activation_no (migration 20261124120000 missing?)")
+        console.error("ROUND ACTIVATION: the instance has no valid activation_no (migration 20261124160000 missing?)")
         return new Response(JSON.stringify({ error: "Server configuration error" }), {
           status: 500, headers: corsHeaders
         })

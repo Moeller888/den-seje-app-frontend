@@ -3,7 +3,7 @@
 // tab B answers with its own answer. Proven end to end with the REAL get-next-question and the REAL process-event of this
 // tree (tests/unit/helpers/gnq-db-backend.mjs turns each supabase-js call into SQL) against a REAL database: production's
 // answer chain (helpers/answer-chain-schema.mjs) + D-280 + D-316 and, unmodified on top, 20261120150000 (D-383),
-// 20261123100000 (#740) and 20261124120000 (D-384). PGlite locally; the unit job's PostgreSQL 17.6 in CI
+// 20261123100000 (#740) and 20261124160000 (D-384). PGlite locally; the unit job's PostgreSQL 17.6 in CI
 // (LEVEL_ENGINE_PG_URL) — and the simultaneous cases only there (two connections).
 //
 // The answer path is the one production uses today: the LEGACY one (H5 off, K1 not applied) — process_question_attempt
@@ -41,7 +41,7 @@ async function build() {
     GRANT EXECUTE ON FUNCTION public.get_question_candidates_for_student(uuid, smallint, text[], integer) TO service_role;`);
   await db.x(readMigration("20261120150000_course_items_out_of_ordinary_quiz.sql"));
   await db.x(readMigration("20261123100000_course_scope_before_candidate_limit.sql"));
-  await db.x(readMigration("20261124120000_course_round_parking.sql"));
+  await db.x(readMigration("20261124160000_course_round_parking.sql"));
   return makeTemplate(db);
 }
 async function database() {

@@ -1,5 +1,5 @@
 // D-384 i process-event (supabase/functions/process-event/round-parked.ts): databasens afvisning af et svar på en
-// PARKERET kursusrunde (SQLSTATE LQ409 fra triggeren question_instances_parked_guard, migration 20261124120000) bliver
+// PARKERET kursusrunde (SQLSTATE LQ409 fra triggeren question_instances_parked_guard, migration 20261124160000) bliver
 // et kontrolleret 409 round_parked på alle fire svarveje — aldrig en generisk 500, aldrig et forsøg på en anden vej og
 // ingen skrivning bagefter. Og browseren (js/answer-submission.js) viser det som en afvisning med dansk tekst.
 // Kører den RIGTIGE index.ts gennem tests/unit/helpers/process-event-harness.mjs.
