@@ -1,0 +1,35 @@
+diff --git a/.github/workflows/playwright.yml b/.github/workflows/playwright.yml
+index 5508bf26..cc7d5b50 100644
+--- a/.github/workflows/playwright.yml
++++ b/.github/workflows/playwright.yml
+@@ -63,7 +63,7 @@ jobs:
+   # (tests/unit-ci-exclusions.mjs). Those still run, and still fail loudly, locally.
+   #
+   # SHARDED (A2, 2026-10-23). The suite grew from 4.0 to 7.2 min in one week and the job has a
+-  # 10-minute timeout. `unit-shard` runs it as N jobs (3 until D-361, now 4); tests/run-unit-ci.mjs plans one deterministic
++  # 10-minute timeout. `unit-shard` runs it as N jobs (3 until D-361, 4 until D-385, now 5); tests/run-unit-ci.mjs plans one deterministic
+   # partition (every file exactly once, balanced by tests/unit-ci-weights.json) and each shard runs
+   # its own part. `unit` is the one check that reports: it passes only if EVERY shard succeeded, so
+   # a failing, cancelled or skipped shard fails `unit`. (A2: 3 shards kept 9 parallel PRs within the
+@@ -73,6 +73,12 @@ jobs:
+   # 10 shards in a week were cancelled at ~617 s with 0 failed tests. 203 job logs show the variance is
+   # the RUNNER, not the plan: shards stay balanced (wall = 1.03 × file time / concurrency), but a whole
+   # runner runs 0.63–1.49× the median speed. 3 shards fit only up to ~1.2×; 4 fit the slowest seen.
++  # FIVE SHARDS (D-385, owner-approved 2026-11-24). Run 45200127762 (#739) was cancelled at the 10-minute limit with 0
++  # failed tests: the runner ran ~1.5x slower on every file, and 15 heavy files had no measured weight, so the plan put
++  # minute-long files at the tail of a shard. With refreshed weights (PR #741) the simulated worst job at 1.5x is 507 s
++  # on 4 shards, 412 s on 5 and 348 s on 6 (runner minutes 23.2 / 23.7 / 24.2). 5 keeps ~3 minutes of headroom at the
++  # slowest runner seen for half a runner-minute more per run. Timeout and retries are unchanged (no retries).
++  #
+   # The shard count is the matrix length and nothing else: UNIT_SHARD and the job name read
+   # strategy.job-total, and tests/unit/ci-timing-metrics.test.mjs requires the matrix to be exactly 1..N.
+   # UNIT_SHARD_BUDGET_S (450 s of tests ≈ 480 s job with ~30 s setup) is the design target: passing it is reported (a warning and the files
+@@ -91,7 +97,7 @@ jobs:
+     strategy:
+       fail-fast: false
+       matrix:
+-        shard: [1, 2, 3, 4]
++        shard: [1, 2, 3, 4, 5]
+     services:
+       postgres:
+         image: postgres:17.6

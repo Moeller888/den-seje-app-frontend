@@ -429,7 +429,9 @@ test("negative control: the old pool ran ≥ 2 PG files at once on PR #674's sha
   const suite = [...new Set([...ciSuite().filter((f) => !LATER.has(f)), "isolated-stimulus-chain-seed.test.mjs"])].sort();
   const pg = new Set(realPg());
   const isPg = (f) => pg.has(f);
-  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  // #674's plan was made with the weights of run 42241221235. Those weights are frozen in a fixture, so refreshing
+  // tests/unit-ci-weights.json (2026-11-24) cannot move this historical plan; the control proves the same thing.
+  const { weights } = JSON.parse(read("tests/fixtures/unit-ci-weights-run-42241221235.json"));
   const shard1 = planShards(suite, 4, weights)[0];
   for (const f of ["minigame-breaks-concurrency.test.mjs", "mc-length-cue-top10-concurrency.test.mjs", "claim-daily-reward-concurrency.test.mjs"]) {
     assert.ok(shard1.order.includes(f), `${f} is in #674's shard 1`);
@@ -450,4 +452,94 @@ test("the runner schedules through pgLaneScheduler over the planned files", () =
   assert.ok(src.includes("for (const f of sched.take()) {"));
   assert.ok(src.includes("try { sched.finish(f); } catch (err) { rejectAll(err); return; }"));
   assert.ok(!src.includes("queue.shift()"), "the old worker loop is gone");
+});
+
+// ── weights for the heavy files ─────────────────────────────────────────────────────────────
+// A file without a weight is planned at the median (about 1 s). planShards runs a shard heaviest first, so an
+// unweighted DATABASE test lands at the END of its shard and its real minute becomes the shard's tail. That is what
+// cancelled unit shard 4/4 of run 45200127762 (2026-11-23): order-categorize-activation-migration-run (60–69 s, no
+// weight) was still running when the 10-minute job timeout hit; 108 of 109 files had passed, 0 failed. The drift
+// report only says so after the run; this test says it before merge. It changes no file that runs and no timeout.
+const HEAVY_NAME = /-(migration-run|migrations-run|concurrency|pg)\.test\.mjs$/;
+// PGlite is detected in the file itself OR in any local module it imports (transitively): a test that gets its
+// database through tests/unit/helpers/*.mjs is just as heavy. Any quoted reference to the package counts —
+// `from "…"`, `from '…'`, `import("…")`, `require.resolve("…")`, subpaths — so the import style cannot hide it.
+const PGLITE_REF = /["']@electric-sql\/pglite(?:["']|\/)/;
+const LOCAL_IMPORT = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)["'](\.{1,2}\/[^"']+)["']/g;
+function referencesPglite(path, readSource, seen = new Set()) {
+  if (seen.has(path)) return false;
+  seen.add(path);
+  let src;
+  try { src = readSource(path); } catch { return false; } // a missing module is the test's own failure, not weight
+  if (PGLITE_REF.test(src)) return true;
+  const dir = path.slice(0, path.lastIndexOf("/") + 1);
+  for (const m of src.matchAll(LOCAL_IMPORT)) {
+    const target = new URL(m[1], "file:///r/" + dir).pathname.slice("/r/".length);
+    if (referencesPglite(target, readSource, seen)) return true;
+  }
+  return false;
+}
+const usesPglite = (f) => referencesPglite("tests/unit/" + f, read);
+
+test("PGlite detection follows local imports and every quoting style (negative controls)", () => {
+  const files = {
+    "tests/unit/a.test.mjs": 'import { db } from "./helpers/db.mjs";',
+    "tests/unit/helpers/db.mjs": "import { x } from '../support/inner.mjs';",
+    "tests/unit/support/inner.mjs": "const { PGlite } = await import('@electric-sql/pglite');",
+    "tests/unit/b.test.mjs": "import {PGlite} from '@electric-sql/pglite';",
+    "tests/unit/c.test.mjs": 'const p = require.resolve("@electric-sql/pglite/contrib/uuid_ossp");',
+    "tests/unit/d.test.mjs": 'import "./helpers/plain.mjs"; import { y } from "./cycle.mjs";',
+    "tests/unit/helpers/plain.mjs": 'export const plain = "electric-sql pglite is only mentioned here";',
+    "tests/unit/cycle.mjs": 'import { d } from "./d.test.mjs";',
+    "tests/unit/e.test.mjs": 'import { gone } from "./helpers/missing.mjs";',
+  };
+  const readSource = (p) => { if (!(p in files)) throw new Error("ENOENT " + p); return files[p]; };
+  const uses = (f) => referencesPglite("tests/unit/" + f, readSource);
+  assert.equal(uses("a.test.mjs"), true, "two helper levels deep, single quotes, dynamic import");
+  assert.equal(uses("b.test.mjs"), true, "single-quoted static import");
+  assert.equal(uses("c.test.mjs"), true, "require.resolve of a subpath");
+  assert.equal(uses("d.test.mjs"), false, "a cycle terminates and plain prose is no reference");
+  assert.equal(uses("e.test.mjs"), false, "a missing local module is not counted as PGlite");
+  // The old check (`from "@electric-sql/pglite"` in the file itself) missed a, b and c:
+  const oldCheck = (f) => files["tests/unit/" + f].includes('from "@electric-sql/pglite"');
+  assert.deepEqual(["a.test.mjs", "b.test.mjs", "c.test.mjs"].filter(oldCheck), []);
+});
+function heavyWithoutWeight(suite, weights, isPg) {
+  return suite.filter((f) => isPg(f) || HEAVY_NAME.test(f) || usesPglite(f))
+    .filter((f) => !(Number.isFinite(weights[f]) && weights[f] > 0));
+}
+
+test("every heavy CI file (PGlite, real PostgreSQL, *-migration-run, *-concurrency) has a measured weight", () => {
+  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  const pg = new Set(realPg());
+  const suite = ciSuite();
+  const heavy = suite.filter((f) => pg.has(f) || HEAVY_NAME.test(f) || usesPglite(f));
+  assert.ok(heavy.length >= 100, `expected the ≥ 100 database files of 2026-11-24, found ${heavy.length}`);
+  assert.deepEqual(heavyWithoutWeight(suite, weights, (f) => pg.has(f)), [],
+    "a heavy test file has no weight in tests/unit-ci-weights.json: add its seconds from its own PR's unit run " +
+    "(the drift report lists it as 'no weight'), or run tools/ci/unit-weights-refresh.mjs --write once it is on main");
+});
+
+test("negative control: without its weight, a one-minute database file is planned at the end of its shard", () => {
+  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  const suite = ciSuite();
+  const f = "order-categorize-activation-migration-run.test.mjs";
+  assert.ok(suite.includes(f) && weights[f] >= 30, `${f} is in the suite and weighs ≥ 30 s`);
+  const without = { ...weights };
+  delete without[f];
+  assert.deepEqual(heavyWithoutWeight(suite, without, () => false), [f], "the check names exactly the removed file");
+  // Measured in TIME, not list position: the share of the shard's measured seconds that runs before the file starts.
+  // (A list-position share sits at ~0.5 for any shard count, because the fallback weight is the median; the time
+  // share is what decides whether the file's minute lands at the end of the job.) Checked for the workflow's shard
+  // count and for its neighbours, so a change of N cannot hide the effect.
+  const n = unitShardMatrix().shards.length;
+  const startShare = (w, count) => {
+    const shard = planShards(suite, count, w).find((s) => s.order.includes(f));
+    const before = shard.order.slice(0, shard.order.indexOf(f)).reduce((t, x) => t + (weights[x] ?? 0), 0);
+    return before / shard.order.reduce((t, x) => t + (weights[x] ?? 0), 0);
+  };
+  for (const count of [n - 1, n, n + 1].filter((c) => c >= 1)) {
+    assert.ok(startShare(weights, count) < 0.25, `${count} shards: with its weight it starts in the first quarter of its shard's time`);
+    assert.ok(startShare(without, count) > 0.75, `${count} shards: without it, it starts in the last quarter — the tail that hit the timeout`);
+  }
 });
