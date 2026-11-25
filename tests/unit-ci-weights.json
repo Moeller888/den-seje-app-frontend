@@ -1,5 +1,5 @@
 {
-  "_comment": "Seconds per unit file on a GitHub ubuntu-latest runner: the median of CI runs 45162227503, 44737131771, 44711480839, 44519011095, 44511101897, 44470431950 (tools/ci/unit-weights-refresh.mjs, concurrency 3). Used ONLY to balance CI shards: a stale or missing entry changes balance, never which files run. Refresh with the same tool when the drift report or the shard budget warns. Four files of PR #739/#740, not yet on main, are the median of their own PR CI runs 45200127762 and 45200365791 (D-383): course-items-out-of-ordinary-quiz-migration-run, course-items-version-matrix, course-scope-candidate-limit-migration-run, gnq-course-items.",
+  "_comment": "Seconds per unit file on a GitHub ubuntu-latest runner: the median of CI runs 45162227503, 44737131771, 44711480839, 44519011095, 44511101897, 44470431950 (tools/ci/unit-weights-refresh.mjs, concurrency 3). Used ONLY to balance CI shards: a stale or missing entry changes balance, never which files run. Refresh with the same tool when the drift report or the shard budget warns. Four files of PR #739/#740, not yet on main, are the median of their own PR CI runs 45200127762 and 45200365791 (D-383): course-items-out-of-ordinary-quiz-migration-run, course-items-version-matrix, course-scope-candidate-limit-migration-run, gnq-course-items. PR #742: course-scope-candidate-limit-gnq-pg 10 s is an ESTIMATE (no CI run of the file yet; 7.1 s locally on PGlite, real PostgreSQL in CI) — replace it with the measurement from #742's own CI.",
   "weights": {
     "achievement-reward-concurrency.test.mjs": 1.1,
     "achievement-reward-exactly-once-migration-run.test.mjs": 39.7,
@@ -222,6 +222,7 @@
     "course-items-version-matrix.test.mjs": 0.3,
     "course-progress-rpc-migration-run.test.mjs": 19.6,
     "course-progress-view.test.mjs": 0.3,
+    "course-scope-candidate-limit-gnq-pg.test.mjs": 10,
     "course-scope-candidate-limit-migration-run.test.mjs": 54.3,
     "create-student-handler.test.mjs": 0.3,
     "credential-hygiene.test.mjs": 0.9,
