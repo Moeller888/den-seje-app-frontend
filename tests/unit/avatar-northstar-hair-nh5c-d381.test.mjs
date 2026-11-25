@@ -28,6 +28,7 @@ const FREE = { outfit: "FRI", top: "top-tee-hip-blue", pants: "bottom-trousers-s
 const LOCKS = ["nh5c-grey", "nh5c-brown"];
 const BEFORE = ["standard", "nh4-grey", "nh4-brown", "nh5b-grey", "nh5b-brown"];
 const G1 = ["h25n2", "h25n3", "h25n6", "h25n7", "h25v2", "h25n5"].flatMap((s) => [s + "-grey", s + "-brown"]);   // D-386's group 1, open by default, last under Hoved
+const G2 = ["h25d1", "h25v1", "h25n9"].flatMap((s) => [s + "-grey", s + "-brown"]);   // D-387's group 2, open by default, last under Hoved
 const HEAD = (hair) => "/assets/avatar-northstar-hair/head-" + hair + "-v1.webp";
 
 // a fresh module per case, with or without this browser's opt-in to the nape locks; flagOff: the same module with only the flag line set
@@ -47,7 +48,7 @@ test("D-381 open: the two nape-lock cards are shown by default, last under Hoved
   const L = await layers(false);
   assert.equal(L.NORTHSTAR_HAIR_NH5C, true, "the cards are shown by default");
   assert.equal(L.isNorthstarHairNh5cOn(), true);
-  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...LOCKS, ...G1], "nineteen cards, the nape locks before D-386's group 1");
+  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...LOCKS, ...G1, ...G2], "twenty-five cards, the nape locks before D-386's group 1");
   L.northstarUseAccount({ northstar: { ...FREE } });
   for (const k of [...BEFORE, ...LOCKS]) assert.deepEqual(L.northstarFitHair(k).choice, { ...FREE, hair: k }, k + " goes on and keeps the outfit");
 });
@@ -61,7 +62,7 @@ test("D-381 catalogue: two nape-lock hairstyles with their Danish labels; with t
   assert.deepEqual(Object.keys(L.NORTHSTAR_HAIRS_NH5B), ["nh5b-grey", "nh5b-brown"], "D-377's catalogue is unchanged");
   assert.equal(L.NORTHSTAR_HAIR_NH5B, true, "the top knot stays open (D-378)");
   assert.equal(L.isNorthstarHairNh5cOn(), false);
-  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...G1], "no nape-lock card without the opt-in: the five before them and D-386's group 1");
+  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...G1, ...G2], "no nape-lock card without the opt-in: the five before them and D-386's group 1");
   L.northstarUseAccount({ northstar: { ...FREE } });
   for (const k of LOCKS) assert.equal(L.northstarFitHair(k), null, k + " cannot be put on while its cards are hidden");
   for (const k of BEFORE) assert.deepEqual(L.northstarFitHair(k).choice, { ...FREE, hair: k }, k + " still goes on");
@@ -71,7 +72,7 @@ test("D-381 on by default (and, with the flag off, a browser's opt-in): both col
   for (const [optIn, flagOff] of [[false, false], [true, true]]) {
     const L = await layers(optIn, { flagOff });
     assert.equal(L.isNorthstarHairNh5cOn(), true, JSON.stringify({ optIn, flagOff }));
-    assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...LOCKS, ...G1], "nineteen cards, the nape locks before D-386's group 1");
+    assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...LOCKS, ...G1, ...G2], "twenty-five cards, the nape locks before D-386's group 1");
     const plans = {};
     for (const hair of ["standard", ...LOCKS]) {
       L.northstarUseAccount({ northstar: { ...FREE } });
