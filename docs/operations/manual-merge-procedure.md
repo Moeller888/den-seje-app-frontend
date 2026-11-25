@@ -22,6 +22,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\merge\merge-pr.ps1 -Pr
 Valgfrit: `-ExpectedHeadBranch <navn>` (låser også branchnavnet) og `-ExpectedChecksFile <sti>` (en anden
 gennemgået liste). `-ExecutionPolicy Bypass` gælder kun den ene proces og ændrer ingen indstilling.
 
+## Driftserfaring
+
+- **2026-11-24/25, #741:** første faktiske brug. Ejeren kørte først dry-run og derefter `-Merge` fra worktree'en for
+  denne PR (før #749 var merget). Alle kontroller og efterkontroller bestod: merge-commit `764ea38c`, forældre
+  `06f25cf2` (main) + `a732b739` (head), branchen bevaret. Værktøjet er dermed afprøvet i ejerens PowerShell-miljø,
+  men ligger først på main, når #749 er merget.
+- Værktøjet sender formen med mellemrum, `--match-head-commit <sha>`, som gh behandler som lighedstegnsformen.
+  Lærlig-guarden afviser den form for agenters kommandoer (`agent-coordination.md`). Værktøjet køres af ejeren uden
+  for agentsessionen, og #741 blev merget med netop den form.
+
 ## Hvad der kontrolleres
 
 Alle kontroller køres og rapporteres med **forventet** og **observeret** værdi (`AFVIG …: forventet '…',
@@ -67,7 +77,18 @@ repository-indstillinger, et fejlende merge-kald og afvigende merge-forældre el
 - `tests/unit/migration-versions-unique.test.mjs` sikrer, at ingen to filer i `supabase/migrations` deler version
   i ét træ (main og hver PR's merge med main i CI).
 - `tools/ci/migration-versions.mjs` sammenligner før push de migrationer, en branch tilføjer, med alle hentede
-  `origin/*`-branches (se `agent-coordination.md`, push-trinnet).
+  `origin/*`-branches (se `agent-coordination.md`, push-trinnet). Kør `git fetch --prune origin` først. Uden
+  `--prune` bliver en remote-ref til en branch, der er slettet på GitHub, stående. Den kan melde en kollision, der ikke
+  længere findes, hvilket er den sikre retning.
+- Verificeret adfærd (CLI-tests mod rigtige midlertidige git-repositorier i
+  `tests/unit/migration-versions-unique.test.mjs`):
+  - dublet i samme træ giver 1;
+  - samme version på en anden branch giver 1 og navngiver branchen;
+  - samme fil på en stablet branch giver 0;
+  - omnummerering af branchens egen, ikke mergede migration fjerner kollisionen (branchens egen gamle origin-ref ignoreres);
+  - en ikke-prunet ref tæller, til den er prunet;
+  - en ulæselig ref, en manglende base eller manglende git giver 2, aldrig et stille ok;
+  - en ekstra worktree giver samme svar.
 - **Resterende samtidighedsrisiko:** kontrollen er et øjebliksbillede af hentede branches, ikke en atomisk
   reservation. To sessioner, der vælger samme version inden for det samme vindue, før nogen af dem har pushet, ser
   ikke hinanden. Et lokalt, ikke-pushet nummer er usynligt. Træ-testen fanger kollisionen senest i den anden PR's
@@ -75,3 +96,8 @@ repository-indstillinger, et fejlende merge-kald og afvigende merge-forældre el
   strict). Afbødning uden reservationssystem: vælg ikke runde timer, kør kontrollen igen ved hvert push og
   umiddelbart før mergeanbefalingen, og kør træ-testen lokalt mod `ExpectedMain` som en del af
   integrationsverifikationen.
+- **Senere integration i claim-protokollen (anbefaling, ikke gennemført):** `tools/agents/claim.mjs push-check` kan
+  importere `collisions()` og afvise et push med en ny exitkode, når branchen tilføjer en migration, der kolliderer
+  med en hentet branch. Kontrollen kører så automatisk i det trin, alle agenter allerede kører. Den forbliver et
+  øjebliksbillede og ikke en reservation. Det er en ændring i det fælles koordinationsværktøj, så den bør lande
+  som sin egen lille ændring, når #749 er merget.

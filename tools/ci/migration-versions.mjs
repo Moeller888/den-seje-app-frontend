@@ -11,7 +11,13 @@
 //   * tests/unit/migration-versions-unique.test.mjs — this tree (main, and every PR's merge with main in CI);
 //   * this CLI, before a push (docs/operations/agent-coordination.md, the claim protocol's push step): the migrations
 //     this branch ADDS against every origin/* branch already fetched. Read-only: git ls-tree / merge-base / for-each-ref.
-//     It fetches nothing itself — run `git fetch origin` first, as the claim protocol already does.
+//     It fetches nothing itself — run `git fetch --prune origin` first. Without --prune a remote-tracking ref of a
+//     branch deleted on GitHub stays and can report a collision that no longer exists (the safe direction); a branch
+//     not fetched yet is invisible (the unsafe direction). A ref whose tree cannot be read is reported and fails the
+//     run (exit 2) instead of being skipped — a ref merely without supabase/migrations is not an error.
+//
+// NOT A RESERVATION. This is a snapshot of fetched refs. Two sessions that pick one version before either has pushed
+// do not see each other; the tree test then catches it in CI at the latest. Avoid round hours.
 //
 //   node tools/ci/migration-versions.mjs [--base origin/main] [--head HEAD]   exit 0 = unique · 1 = collision · 2 = usage/git error
 //
@@ -60,6 +66,11 @@ export function collisions(added, refs) {
 
 const git = (args) => execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 const lsMigrations = (ref) => git(["ls-tree", "--name-only", `${ref}:${MIGRATIONS_DIR}`]).split("\n").map((s) => s.trim()).filter(Boolean);
+// The migrations of a ref: [] when its tree has no supabase/migrations; throws when the ref itself cannot be read.
+function refMigrations(ref) {
+  const dir = git(["ls-tree", "-d", "--name-only", ref, MIGRATIONS_DIR]).trim();
+  return dir === MIGRATIONS_DIR ? lsMigrations(ref) : [];
+}
 
 function main(argv) {
   const opt = (name, dflt) => { const i = argv.indexOf(name); return i < 0 ? dflt : argv[i + 1]; };
@@ -76,15 +87,21 @@ function main(argv) {
   const refs = git(["for-each-ref", "--format=%(refname:short)", "refs/remotes/origin"]).split("\n").map((s) => s.trim())
     .filter((r) => r && r !== "origin/HEAD" && r !== "origin" && r !== `origin/${self}`);
   const trees = [];
+  const unreadable = [];
   for (const ref of refs) {
-    try { trees.push({ ref, names: lsMigrations(ref) }); } catch { /* a ref without the directory */ }
+    try { trees.push({ ref, names: refMigrations(ref) }); } catch (e) {
+      if (typeof e?.status !== "number") throw e; // a git exit code, not a bug in this script
+      unreadable.push(ref);
+    }
   }
+  for (const r of unreadable) console.error(`ERROR: cannot read the tree of ${r}`);
   const hits = collisions(added, trees);
   for (const h of hits) console.error(`COLLISION: this branch adds ${h.mine}; ${h.ref} has ${h.theirs} (version ${h.version})`);
   if (dup.length || hits.length) {
     console.error("Pick a version that no branch uses (later than every migration this one requires), rename the file and every reference.");
     return 1;
   }
+  if (unreadable.length) { console.error(`migration versions: ${unreadable.length} ref(s) unreadable — fix git (git fetch --prune origin) and run again`); return 2; }
   console.log(`migration versions: ok — ${added.length} added on this branch, unique against ${trees.length} origin branches (fetched state)`);
   return 0;
 }
