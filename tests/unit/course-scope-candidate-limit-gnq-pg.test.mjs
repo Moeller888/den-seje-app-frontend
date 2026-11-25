@@ -21,14 +21,16 @@
 //   The controls run the UNCHANGED earlier function bodies (taken verbatim from their migration files) with the CURRENT
 //   handler, and show the defect #740 fixes: enough course items ahead of the ordinary ones, and the ordinary quiz gets
 //   nothing although ordinary questions exist. No function body is altered for a control.
-//   * classic: the old body has LIMIT 50 WITHOUT ORDER BY, so which 50 rows it returns is the plan's business. The data
-//     makes every plausible plan agree: the course items are inserted first (sequential and bitmap scans return heap
-//     order) AND have the lower difficulty_level (idx_questions_objective_level returns level order, then heap order).
-//     Heap order equals insertion order ONLY in an empty table: on real PostgreSQL the free space map puts the smaller
-//     ordinary rows (metadata {}) into gaps on earlier pages left by earlier scenarios (#742's first CI run, shard 2;
-//     reproduced locally on PostgreSQL 17.12: an ordinary row at ctid (7,21) ahead of course rows on pages 7–10). So
-//     every classic control case gets its OWN fresh D383 database, whose questions table is empty before its INSERT.
-//     The test asserts the outcome on the run itself, so a plan that disagreed would fail loudly, never pass silently.
+//   * classic: the old body has LIMIT 50 WITHOUT ORDER BY, so which 50 rows it returns is the plan's business. SQL
+//     promises NO order here, and this control does NOT prove one. It demonstrates the defect under DOCUMENTED test
+//     conditions: a fresh database per case (an empty questions table, one INSERT with the course items first and at
+//     the lower difficulty_level), on the plans PostgreSQL 17 chooses there (observed: a sequential scan with a nested
+//     loop anti join, i.e. heap order = insertion order). Under those conditions the old body returns only course items
+//     from 50 on, and the ordinary quiz starves although ordinary questions exist — the defect #740 removes by
+//     filtering before the limit. Why a fresh database: in a table with earlier rows, the free space map puts the
+//     smaller ordinary rows (metadata {}) into gaps on earlier pages, so heap order is NOT insertion order (#742's first
+//     CI run, shard 2; reproduced on PostgreSQL 17.12: an ordinary row at ctid (7,21) ahead of course rows on pages
+//     7–10). The outcome is asserted on the run itself, so a plan that disagreed would fail loudly, never pass silently.
 //   * v2: the old body orders by md5(student_id || question_id); the ids are CHOSEN so that every course item ranks
 //     before every ordinary one for this pupil — fully deterministic.
 //   * level: production's 20261029120000 body orders by distance to the pupil's level; the course items are nearer.
