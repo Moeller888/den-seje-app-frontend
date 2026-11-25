@@ -92,6 +92,37 @@ Tests are the **gatekeeper** and **ground truth** (CLAUDE.md rules 1, 34, 41–4
   `test.use` (agent memory `project_repo_sync_model`).
 - **No deploy without green tests.**
 
+## 3a. Vinduesfri automatisering (Windows 11, permanent krav 2026-11-25)
+
+Automatisering må aldrig forstyrre ejerens arbejde (CLAUDE.md regel 51): **0 uønskede PowerShell- og
+CMD-vinduer, 0 fokusskift, 0 unødvendige dialogbokse**. Sikkerhedsadvarsler, UAC og ejerens
+godkendelser vises fortsat og omgås aldrig.
+
+**Målt på Windows 11 (vinduesvagt: alle vinduer, der bliver synlige, og alle fokusskift):**
+
+| Startmåde | Synlige vinduer | Fokusskift |
+|---|---|---|
+| Underproces af en terminal eller et script (`& powershell`, Node `spawnSync`) | 0 | 0 |
+| `ProcessStartInfo` med `UseShellExecute = $false` + `CreateNoWindow = $true` | 0 | 0 |
+| Planlagt opgave med adgangskode-logon (session 0, fx backup og Ops) | 0 | 0 |
+| **Planlagt opgave med interaktivt token (LogonType 3) → `powershell -WindowStyle Hidden`** | **Windows Terminal-vindue** | **ja** |
+| Samme opgave via `conhost.exe --headless` | 0 | 0, men **exitkoden går tabt** (7 → 0) |
+| Samme opgave via en starter i GUI-delsystemet (`lb-skjult.exe`) | 0 | 0, exitkode og output bevaret |
+
+**Regler:**
+- En opgave, der skal køre i ejerens session (interaktivt token), starter sit program gennem en
+  vinduesfri starter i GUI-delsystemet, aldrig `powershell.exe` eller `cmd.exe` direkte.
+- Start under andre brugeroplysninger (`CreateProcessWithLogonW`, `ProcessStartInfo.UserName`) går
+  også gennem starteren, fordi Windows ignorerer `CreateNoWindow` der. Kontoisolationen bevares.
+- Node: `windowsHide: true` på alle underprocesser. Ingen `shell: true`, `exec` eller `Start-Process`.
+- stdout, stderr, exitkoder, revisionslog og diagnose skal bevares (starteren videresender byte for
+  byte eller skriver en logfil).
+- **Test:** ændringer, der starter processer eller registrerer opgaver, måles med en vinduesvagt
+  (`SetWinEventHook`: `EVENT_OBJECT_SHOW` + `EVENT_SYSTEM_FOREGROUND`), og der skal være en
+  regressionstest. En testopgave med interaktivt token må aldrig køres med `powershell`/`cmd` direkte.
+- Referenceimplementering: backupsporets `lb-skjult.exe`, `vinduesvagt.ps1`, `lint-vinduer.mjs` og
+  `vinduesfri-regression.ps1` (uden for Git, i backupkittet).
+
 ## 4. Rollback policy
 
 - **Feature flags first.** New behaviour (especially AI — [AI_GUIDELINES.md](./AI_GUIDELINES.md))

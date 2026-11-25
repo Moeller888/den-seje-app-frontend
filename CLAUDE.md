@@ -478,3 +478,28 @@ AUTONOMI (AURA T1)
 - Merge, deploy, migrationer, secrets, workflow-dispatch, produktionsdata og
   ændringer i guard eller indstillinger er IKKE omfattet. De følger reglerne
   ovenfor uændret.
+
+========================================
+VINDUESFRI AUTOMATISERING (PERMANENT)
+========================================
+
+51. AUTOMATISERING MÅ ALDRIG ÅBNE VINDUER ELLER TAGE FOKUS
+
+- Krav: 0 uønskede PowerShell- og CMD-vinduer, 0 afbrydelser af tastaturfokus
+  og 0 unødvendige dialogbokse. Det gælder hele projektet: scripts, tests,
+  værktøjer, planlagte opgaver og agenter. Sikkerhedsadvarsler, UAC og ejerens
+  godkendelser vises fortsat; de må aldrig omgås.
+- Målt årsag (Windows 11, 2026-11-25): en planlagt opgave med interaktivt token
+  (LogonType 3), der starter `powershell.exe` eller `cmd.exe` direkte, åbner et
+  Windows Terminal-vindue og tager fokus. `-WindowStyle Hidden` virker IKKE.
+  `conhost.exe --headless` skjuler vinduet, men sluger exitkoden og må ikke bruges.
+- Brug i stedet: en vinduesfri starter i Windows-GUI-delsystemet (som
+  backupsporets `lb-skjult.exe`), der bevarer exitkode, stdout og stderr. Brug den også
+  ved start under andre brugeroplysninger, hvor `CreateNoWindow` ignoreres.
+  Opgaver med adgangskode-logon (session 0) er vinduesfri i forvejen.
+- Node: `windowsHide: true` på alle underprocesser. .NET: `UseShellExecute = $false`
+  og `CreateNoWindow = $true`. Ingen `Start-Process`, `cmd /c`, `shell: true`
+  eller nye synlige vinduer. Genbrug den eksisterende terminal frem for at åbne nye.
+- Test: en ændring, der starter processer eller registrerer opgaver, skal måles
+  med en vinduesvagt (synlige vinduer + fokusskift) og have en regressionstest.
+  Detaljer: `docs/CLAUDE_WORKFLOW.md` §3a.
