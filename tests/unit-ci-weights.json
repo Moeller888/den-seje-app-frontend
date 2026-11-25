@@ -1,5 +1,5 @@
 {
-  "_comment": "Seconds per unit file on a GitHub ubuntu-latest runner: the median of CI runs 45162227503, 44737131771, 44711480839, 44519011095, 44511101897, 44470431950 (tools/ci/unit-weights-refresh.mjs, concurrency 3). Used ONLY to balance CI shards: a stale or missing entry changes balance, never which files run. Refresh with the same tool when the drift report or the shard budget warns. Four files of PR #739/#740, not yet on main, are the median of their own PR CI runs 45200127762 and 45200365791 (D-383): course-items-out-of-ordinary-quiz-migration-run, course-items-version-matrix, course-scope-candidate-limit-migration-run, gnq-course-items.",
+  "_comment": "Seconds per unit file on a GitHub ubuntu-latest runner: the median of CI runs 45162227503, 44737131771, 44711480839, 44519011095, 44511101897, 44470431950 (tools/ci/unit-weights-refresh.mjs, concurrency 3). Used ONLY to balance CI shards: a stale or missing entry changes balance, never which files run. Refresh with the same tool when the drift report or the shard budget warns. Four files of PR #739/#740, not yet on main, are the median of their own PR CI runs 45200127762 and 45200365791 (D-383): course-items-out-of-ordinary-quiz-migration-run, course-items-version-matrix, course-scope-candidate-limit-migration-run, gnq-course-items. avatar-northstar-hair-h25g2-d387 (PR #752, D-387, not yet on main) is its own PR's CI unit run 45601396882.",
   "weights": {
     "achievement-reward-concurrency.test.mjs": 1.1,
     "achievement-reward-exactly-once-migration-run.test.mjs": 39.7,
@@ -45,6 +45,7 @@
     "avatar-northstar-free-combination-d370.test.mjs": 4.6,
     "avatar-northstar-hair-d373.test.mjs": 3.6,
     "avatar-northstar-hair-h25g1-d386.test.mjs": 2.7,
+    "avatar-northstar-hair-h25g2-d387.test.mjs": 3.9,
     "avatar-northstar-hair-nh5b-d377.test.mjs": 2.5,
     "avatar-northstar-hair-nh5c-d381.test.mjs": 2.6,
     "avatar-northstar-independent-d235.test.mjs": 4.5,
