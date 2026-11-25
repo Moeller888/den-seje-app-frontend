@@ -225,7 +225,7 @@ for (const width of [1100, 390]) {
     const wardrobe = () => page.locator("#northstarWardrobeCards .item-card:visible").evaluateAll((cs) => cs.map((c) => (c as HTMLElement).dataset.piece || ((c as HTMLElement).dataset.hair ? "hair:" + (c as HTMLElement).dataset.hair : "")));
     const items = () => page.locator("#inventoryGrid .item-card:visible .item-name").allTextContents();
     const now = () => page.evaluate(async () => { const L: any = await import("/js/avatar-layers.js"); const o = L.northstarOutfitNow(); return o ? { id: o.top + "+" + o.bottom + "+" + o.shoes, approved: L.northstarApprovedOutfits().has(o.top + "+" + o.bottom + "+" + o.shoes) } : null; });
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(98, { timeout: 30000 });   // D-386: the 79 parts and the 19 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks and D-386's 12 of group 1)
+    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(104, { timeout: 30000 });   // D-387: the 79 parts and the 25 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks, D-386's 12 of group 1 and D-387's 6 of group 2)
     await expect(page.locator("#inventoryGrid .item-card")).toHaveCount(3);
 
     // Overdele: the 63 wardrobe tops — tees, sweaters and tank tops — and the pupil's Ridderdragt
@@ -248,7 +248,7 @@ for (const width of [1100, 390]) {
     const shoes = await wardrobe();
     expect(shoes.length === 10 && shoes.every((p) => p.startsWith("shoes-"))).toBe(true);
     await page.getByRole("tab", { name: "Hoved", exact: true }).click();
-    expect(await wardrobe()).toEqual(["hair:standard", "hair:nh4-grey", "hair:nh4-brown", "hair:nh5b-grey", "hair:nh5b-brown", "hair:nh5c-grey", "hair:nh5c-brown", "hair:h25n2-grey", "hair:h25n2-brown", "hair:h25n3-grey", "hair:h25n3-brown", "hair:h25n6-grey", "hair:h25n6-brown", "hair:h25n7-grey", "hair:h25n7-brown", "hair:h25v2-grey", "hair:h25v2-brown", "hair:h25n5-grey", "hair:h25n5-brown"]);   // D-374, D-378, D-381, D-386
+    expect(await wardrobe()).toEqual(["hair:standard", "hair:nh4-grey", "hair:nh4-brown", "hair:nh5b-grey", "hair:nh5b-brown", "hair:nh5c-grey", "hair:nh5c-brown", "hair:h25n2-grey", "hair:h25n2-brown", "hair:h25n3-grey", "hair:h25n3-brown", "hair:h25n6-grey", "hair:h25n6-brown", "hair:h25n7-grey", "hair:h25n7-brown", "hair:h25v2-grey", "hair:h25v2-brown", "hair:h25n5-grey", "hair:h25n5-brown", "hair:h25d1-grey", "hair:h25d1-brown", "hair:h25v1-grey", "hair:h25v1-brown", "hair:h25n9-grey", "hair:h25n9-brown"]);   // D-374, D-378, D-381, D-386
     expect(await items()).toEqual(["Pirathat"]);
     await page.getByRole("tab", { name: "Ansigt", exact: true }).click();
     expect(await items()).toEqual(["Ninja-maske"]);

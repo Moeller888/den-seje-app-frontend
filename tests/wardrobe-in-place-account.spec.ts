@@ -26,7 +26,7 @@ async function loginAsStudent(page: Page) {
 }
 async function openWardrobe(page: Page) {
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(98, { timeout: 30000 });   // D-386: the 79 parts and the 19 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks and D-386's 12 of group 1)
+  await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(104, { timeout: 30000 });   // D-387: the 79 parts and the 25 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks, D-386's 12 of group 1 and D-387's 6 of group 2)
 }
 const card = (page: Page, piece: string) => page.locator(`#northstarWardrobeCards .item-card[data-piece='${piece}']`);
 const outfitNow = (page: Page) => page.evaluate(async () => { const L: any = await import("/js/avatar-layers.js"); const o = L.northstarOutfitNow(); return o ? [o.top, o.bottom, o.shoes].join("+") : null; });
@@ -37,7 +37,7 @@ async function clearChoice(page: Page) {
     await back.click();
     await expect.poll(() => outfitNow(page)).toBe(null);
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(98, { timeout: 30000 });   // D-386: the 79 parts and the 19 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks and D-386's 12 of group 1)
+    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(104, { timeout: 30000 });   // D-387: the 79 parts and the 25 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks, D-386's 12 of group 1 and D-387's 6 of group 2)
     expect(await outfitNow(page), "the cleared choice is saved").toBe(null);
   }
 }
@@ -84,7 +84,7 @@ test("D-370: a free outfit is saved on the account in the three-part format, rea
 
     // a manual reload, then a new login in a fresh browser session
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(98, { timeout: 30000 });   // D-386: the 79 parts and the 19 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks and D-386's 12 of group 1)
+    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(104, { timeout: 30000 });   // D-387: the 79 parts and the 25 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks, D-386's 12 of group 1 and D-387's 6 of group 2)
     expect(await outfitNow(page)).toBe(chosen);
     await expect(card(page, "bottom-trousers-square-olive")).toHaveClass(/equipped/);
     await ctx.close();
@@ -99,17 +99,17 @@ test("D-370: a free outfit is saved on the account in the three-part format, rea
 
     // an older choice with a K number gives the same outfit everywhere
     await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(98, { timeout: 30000 });   // D-386: the 79 parts and the 19 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks and D-386's 12 of group 1)
+    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(104, { timeout: 30000 });   // D-387: the 79 parts and the 25 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks, D-386's 12 of group 1 and D-387's 6 of group 2)
     await directSave(page, { outfit: "K07", pants: "TS-NAV", shoes: "SV1-V5-CHALK", top: "TK-NAVY" });
     const older = "top-tank-navy+bottom-trousers-square-navy+shoes-sneakers-low-sv1-chalk";
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(98, { timeout: 30000 });   // D-386: the 79 parts and the 19 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks and D-386's 12 of group 1)
+    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(104, { timeout: 30000 });   // D-387: the 79 parts and the 25 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks, D-386's 12 of group 1 and D-387's 6 of group 2)
     expect(await outfitNow(page), "older choice on Avatar").toBe(older);
     expect(await shownOn(page, "avatar.html", "avatar-preview"), "older choice drawn on Avatar").toBe(older);
     expect(await shownOn(page, "hub.html", "profileAvatar"), "older choice on Hub").toBe(older);
     expect(await shownOn(page, "index.html", "avatar-display"), "older choice in the quiz").toBe(older);
     await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(98, { timeout: 30000 });   // D-386: the 79 parts and the 19 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks and D-386's 12 of group 1)
+    await expect(page.locator("#northstarWardrobeCards .item-card")).toHaveCount(104, { timeout: 30000 });   // D-387: the 79 parts and the 25 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks, D-386's 12 of group 1 and D-387's 6 of group 2)
   } finally {
     try { await clearChoice(page); } finally { await ctx.close(); }
   }
