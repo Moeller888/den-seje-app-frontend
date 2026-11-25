@@ -24,6 +24,10 @@
 //   * classic: the old body has LIMIT 50 WITHOUT ORDER BY, so which 50 rows it returns is the plan's business. The data
 //     makes every plausible plan agree: the course items are inserted first (sequential and bitmap scans return heap
 //     order) AND have the lower difficulty_level (idx_questions_objective_level returns level order, then heap order).
+//     Heap order equals insertion order ONLY in an empty table: on real PostgreSQL the free space map puts the smaller
+//     ordinary rows (metadata {}) into gaps on earlier pages left by earlier scenarios (#742's first CI run, shard 2;
+//     reproduced locally on PostgreSQL 17.12: an ordinary row at ctid (7,21) ahead of course rows on pages 7–10). So
+//     every classic control case gets its OWN fresh D383 database, whose questions table is empty before its INSERT.
 //     The test asserts the outcome on the run itself, so a plan that disagreed would fail loudly, never pass silently.
 //   * v2: the old body orders by md5(student_id || question_id); the ids are CHOSEN so that every course item ranks
 //     before every ordinary one for this pupil — fully deterministic.
@@ -467,8 +471,11 @@ test("candidate filtering before the limit — real get-next-question, real data
 
   // ── NEGATIVE CONTROLS: the unchanged earlier bodies starve the ordinary quiz exactly at the limit ──
   await t.test(`CONTROL D383 classic (unchanged 20261016160000 body): ${CLASSIC_LIMIT - 1} course items → served; ${CLASSIC_LIMIT}, ${CLASSIC_LIMIT + 1}, 100 → starved`, async () => {
-    assertServedOrdinary(await scenario(handler, db.D383, "classic", CLASSIC_LIMIT - 1), "control classic 49");
-    for (const n of [CLASSIC_LIMIT, CLASSIC_LIMIT + 1, 100]) assertStarved(await scenario(handler, db.D383, "classic", n), `control classic ${n}`);
+    // A fresh database per case: an empty questions table, so heap order is insertion order (see NEGATIVE CONTROLS).
+    assertServedOrdinary(await scenario(handler, await createDatabase("D383"), "classic", CLASSIC_LIMIT - 1), "control classic 49");
+    for (const n of [CLASSIC_LIMIT, CLASSIC_LIMIT + 1, 100]) {
+      assertStarved(await scenario(handler, await createDatabase("D383"), "classic", n), `control classic ${n}`);
+    }
   });
   await t.test(`CONTROL D383 v2 (unchanged 20261019150000 body): ${CANDIDATES_PER_GROUP - 1} course items → served; ${CANDIDATES_PER_GROUP}, ${CANDIDATES_PER_GROUP + 1} → starved`, async () => {
     assertServedOrdinary(await scenario(handler, db.D383, "v2", CANDIDATES_PER_GROUP - 1), "control v2 19");
