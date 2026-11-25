@@ -149,7 +149,9 @@ test("D-386 approval and assets: the owner's approval binds every approved head 
   const bound = new Set(G1.map((id) => FX.hairs[id].approvedPng.sha256));
   for (const f of tracked.filter((p) => /\.(png|webp)$/i.test(p) && /hair|h25/i.test(p))) assert.ok(!bound.has(sha(read(f))), f + " is a private approved PNG");
   const dir = readdirSync(join(ROOT, "assets", "avatar-northstar-hair"));
-  assert.deepEqual(dir.filter((f) => /h25/.test(f)).sort(), G1.map((id) => "head-" + id + "-v1.webp").sort(), "exactly the twelve heads, no intermediate file");
+  // since D-387 the folder also holds group 2's six heads, each bound by D-387's own approval fixture (tested in its own test)
+  const G2FILES = Object.values(JSON.parse(read("tools/avatar/fixtures/northstar-hair-d387/approval-h25g2-v1.json").toString("utf8")).hairs).map((h) => h.file);
+  assert.deepEqual(dir.filter((f) => /h25/.test(f)).sort(), [...G1.map((id) => "head-" + id + "-v1.webp"), ...G2FILES].sort(), "exactly the twelve heads (plus D-387's six bound heads), no intermediate file");
   assert.ok(!existsSync(join(ROOT, "assets", "avatar-northstar-hair", "vurdering.html")));
 });
 
