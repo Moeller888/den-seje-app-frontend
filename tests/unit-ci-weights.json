@@ -1,5 +1,5 @@
 {
-  "_comment": "Seconds per unit file on a GitHub ubuntu-latest runner: the median of CI runs 45162227503, 44737131771, 44711480839, 44519011095, 44511101897, 44470431950 (tools/ci/unit-weights-refresh.mjs, concurrency 3). Used ONLY to balance CI shards: a stale or missing entry changes balance, never which files run. Refresh with the same tool when the drift report or the shard budget warns. Four files of PR #739/#740, not yet on main, are the median of their own PR CI runs 45200127762 and 45200365791 (D-383): course-items-out-of-ordinary-quiz-migration-run, course-items-version-matrix, course-scope-candidate-limit-migration-run, gnq-course-items.",
+  "_comment": "Seconds per unit file on a GitHub ubuntu-latest runner: the median of CI runs 45162227503, 44737131771, 44711480839, 44519011095, 44511101897, 44470431950 (tools/ci/unit-weights-refresh.mjs, concurrency 3). Used ONLY to balance CI shards: a stale or missing entry changes balance, never which files run. Refresh with the same tool when the drift report or the shard budget warns. Four files of PR #739/#740, not yet on main, are the median of their own PR CI runs 45200127762 and 45200365791 (D-383): course-items-out-of-ordinary-quiz-migration-run, course-items-version-matrix, course-scope-candidate-limit-migration-run, gnq-course-items. PR #746: laerligverse-rollback-matrix-migrations-run 4.9 s is MEASURED in its own CI run on 0e9068c5 and covers only the unit-shard profile (real PostgreSQL, shallow checkout: the old Edge versions, scenario 3 (F8) and scenario 4 (roll-forward) are skipped); with F8 in the tree (#745) scenario 3 runs and the file is heavier, and the proposed rollback lane with full history runs every Edge version — those are separate measurements, not this weight.",
   "weights": {
     "achievement-reward-concurrency.test.mjs": 1.1,
     "achievement-reward-exactly-once-migration-run.test.mjs": 39.7,
@@ -307,6 +307,7 @@
     "laerligverse-l3-l5-migration-run.test.mjs": 13.6,
     "laerligverse-request-hint.test.mjs": 0.2,
     "laerligverse-review-pack.test.mjs": 0.3,
+    "laerligverse-rollback-matrix-migrations-run.test.mjs": 4.9,
     "laerligverse-rubric-calibration.test.mjs": 0.3,
     "laerligverse-served-mode-gnq.test.mjs": 0.3,
     "laerligverse-shortcuts.test.mjs": 0.3,
