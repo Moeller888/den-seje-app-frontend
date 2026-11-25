@@ -24,16 +24,20 @@
 //            5 remote har flyttet sig siden den verificerede SHA · 6 ødelagt låsefil ·
 //            7 ingen verificeret remote-SHA (kør `verify`) · 8 ALARM efter push: serverens gamle værdi var
 //            ikke den verificerede (en anden har ændret branchen i mellemtiden) ·
-//            9 KONFLIKT: modstridende låse (ny og gammel placering har forskellige ejere)
+//            9 KONFLIKT: modstridende låse (ny og gammel placering har forskellige ejere) ·
+//            10 MIGRATIONSKOLLISION: en migration, branchen tilføjer, deler version med en anden fil (dette træ
+//               eller en hentet origin-branch) · 11 migrationskontrollen kunne ikke gennemføres (git-fejl,
+//               ulæselig ref, manglende base) — fejler lukket, aldrig et stille ok
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync, readFileSync, readdirSync, unlinkSync, existsSync, renameSync, linkSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
+import { checkBranch, describeCheck } from "../ci/migration-versions.mjs";
 
 export const EXIT = Object.freeze({
   OK: 0, USAGE: 1, OWNED_BY_OTHER: 2, UNCLAIMED: 3, DUPLICATE: 4, REMOTE_MOVED: 5, BROKEN: 6, NOT_VERIFIED: 7, PUSH_ALERT: 8,
-  CONFLICT: 9,
+  CONFLICT: 9, MIGRATION_COLLISION: 10, MIGRATION_ERROR: 11,
 });
 export const DEFAULT_STALE_HOURS = 24;
 export const ABSENT = "absent"; // verificeret: branchen findes ikke på remote
@@ -419,10 +423,24 @@ export function verify(dir, { cwd, branch, session, remote = "origin", run = git
   return { ...update(dir, claimFile(dir, branch), r.claim, {}, now, { verifiedRemote: seen }), remoteSha: seen };
 }
 
-// Lige før push. Tre krav, alle skal holde:
+// Migrationsversioner (fjerde krav i push-check). Samme regel og samme kode som tools/ci/migration-versions.mjs:
+// de migrationer, HEAD tilføjer i forhold til <remote>/main, må ikke dele version med en anden fil i træet eller
+// på en hentet origin-branch. En branch uden supabase/migrations, eller uden tilføjede migrationer, læser ingen
+// refs. En git-fejl eller en ulæselig ref er MIGRATION_ERROR (fejler lukket). Et øjebliksbillede af hentede refs,
+// IKKE en reservation: to sessioner, der vælger samme version, før nogen har pushet, ser ikke hinanden.
+export function migrationGate({ cwd, branch, remote = "origin", run = git }) {
+  const r = checkBranch({ base: `${remote}/main`, head: "HEAD", self: branch, run: (args) => run(args, cwd), skipWithoutMigrations: true });
+  if (r.code === 0) return null;
+  const detail = describeCheck(r).join(" · ");
+  if (r.code === 1) return { code: EXIT.MIGRATION_COLLISION, migrations: r, reason: `migrationskollision — vælg en ubrugt version og omdøb: ${detail}` };
+  return { code: EXIT.MIGRATION_ERROR, migrations: r, reason: `migrationskontrollen kunne ikke gennemføres (${r.summary}) — hent (git fetch --prune ${remote}) og prøv igen; intet push: ${detail}` };
+}
+
+// Lige før push. Fire krav, alle skal holde:
 //   1) ejerskab;  2) en verificeret remote-SHA findes, og remote er PRÆCIS den nu (ikke blot en forfader:
 //   en tilbagerulning eller en fremmed commit, som agenten har trukket ind lokalt, ændrer remote-HEAD og
-//   stoppes her);  3) den verificerede SHA er indeholdt i HEAD, så en almindelig push er en fast-forward.
+//   stoppes her);  3) den verificerede SHA er indeholdt i HEAD, så en almindelig push er en fast-forward;
+//   4) migrationsversionerne er unikke (migrationGate) — også for en ny branch.
 export function pushCheck(dir, { cwd, branch, session, remote = "origin", run = git }) {
   const own = check(dir, { branch, session });
   if (own.code !== EXIT.OK) return { ...own, reason: own.claim ? "ejet af en anden session" : "ingen lås" };
@@ -434,12 +452,14 @@ export function pushCheck(dir, { cwd, branch, session, remote = "origin", run = 
     return { code: EXIT.REMOTE_MOVED, remoteSha: now, head,
       reason: `remote er ${now}, verificeret var ${verified} — en anden har pushet eller rullet tilbage; stop, gennemgå forskellen, ingen force` };
   }
-  if (now === ABSENT) return { code: EXIT.OK, remoteSha: now, head, reason: "ny branch på remote (verificeret fraværende)" };
-  if (now !== head) {
+  if (now !== ABSENT && now !== head) {
     try { run(["merge-base", "--is-ancestor", now, head], cwd); } catch {
       return { code: EXIT.REMOTE_MOVED, remoteSha: now, head, reason: `verificeret remote ${now} er ikke indeholdt i HEAD ${head} — en almindelig push ville blive afvist; ingen force` };
     }
   }
+  const mig = migrationGate({ cwd, branch, remote, run });
+  if (mig) return { ...mig, remoteSha: now, head };
+  if (now === ABSENT) return { code: EXIT.OK, remoteSha: now, head, reason: "ny branch på remote (verificeret fraværende)" };
   return { code: EXIT.OK, remoteSha: now, head, reason: "remote uændret siden verificering, fast-forward" };
 }
 
@@ -551,7 +571,7 @@ const USAGE = `Brug: node tools/agents/claim.mjs <kommando> [--flag værdi]
   check       --branch B            (0 = din, 2 = en andens, 3 = ingen lås, 6 = ødelagt, 9 = konflikt)
   heartbeat   --branch B [--status …] [--next …] [--tests …]
   verify      --branch B [--remote origin]   (registrér den remote-HEAD, du har gennemgået)
-  push-check  --branch B [--remote origin]   (0 = push uden force; 5/7/9 = stop)
+  push-check  --branch B [--remote origin]   (0 = push uden force; 5/7/9/10/11 = stop)
   after-push  --branch B --porcelain-file F  (output fra din egen git push --porcelain; 8 = ALARM)
   release     --branch B
   whois       --branch B                     (hvem ejer branchen, kører sessionen, hvilken terminal)
