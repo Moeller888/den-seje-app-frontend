@@ -1,0 +1,36 @@
+diff --git a/.github/workflows/isolated-e2e.yml b/.github/workflows/isolated-e2e.yml
+index 60f8147a..058ede40 100644
+--- a/.github/workflows/isolated-e2e.yml
++++ b/.github/workflows/isolated-e2e.yml
+@@ -614,3 +614,31 @@ jobs:
+       - name: Stop local Supabase
+         if: always() && needs.plan.outputs.scope != 'docs-md'
+         run: supabase stop --no-backup || true
++
++  # ONE stable check for every isolated lane (owner-approved direction 2026-11-24): the ruleset can require
++  # "isolated-e2e (alle baner)" instead of naming each matrix entry. needs.isolated-e2e.result alone would stay green
++  # if a lane disappeared from the matrix, so the decision reads this run's own job list and requires every named
++  # lane exactly once with conclusion success (tests/isolated/require-all-lanes.mjs; proven by
++  # tests/unit/isolated-require-all-lanes.test.mjs). Missing, skipped, cancelled or failed lanes fail this check.
++  # A docs-only change runs every lane with its steps skipped; the lanes conclude success, so this passes.
++  isolated-e2e-all:
++    name: isolated-e2e (alle baner)
++    needs: [plan, isolated-e2e]
++    if: always()
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    permissions:
++      contents: read
++      actions: read
++    steps:
++      - uses: actions/checkout@v4
++      - name: Every required isolated lane must exist and have passed
++        env:
++          GH_TOKEN: ${{ github.token }}
++          PLAN: ${{ needs.plan.result }}
++          LANES: ${{ needs.isolated-e2e.result }}
++        run: |
++          echo "plan: $PLAN, isolated lanes (matrix aggregate): $LANES"
++          gh api --paginate "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?filter=latest&per_page=100" \
++            -q '.jobs[] | {name, status, conclusion}' > jobs.ndjson
++          node tests/isolated/require-all-lanes.mjs jobs.ndjson "$PLAN" "$LANES"
