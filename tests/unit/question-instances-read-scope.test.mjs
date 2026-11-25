@@ -406,6 +406,12 @@ const REVIEWED_LATER_READERS = {
     "own open rounds, auth.uid()) with the same kind of added condition: an active course round is not released. " +
     "EXECUTE is unchanged (service_role; release: authenticated). No policy, RLS or table privilege on " +
     "question_instances is touched (proven in course-items-out-of-ordinary-quiz-migration-run.test.mjs).",
+  "20261123100000_course_scope_before_candidate_limit.sql":
+    "D-383 follow-up: re-creates get_unserved_questions_for_student and get_question_candidates_for_student with " +
+    "production's bodies plus one predicate on the QUESTION (p_course_scope); their only read of question_instances is " +
+    "the unchanged served-check (NOT EXISTS, the given student_id). It can only narrow what is returned. EXECUTE stays " +
+    "service_role only. No policy, RLS or table privilege on question_instances is touched " +
+    "(proven in course-scope-candidate-limit-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -610,7 +616,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261114203119_english_activate_2c_batch2.sql",
      "20261114203120_english_activate_2d_grade6_9.sql",
      "20261114203121_english_activate_2e_batch4.sql",
-     "20261120150000_course_items_out_of_ordinary_quiz.sql"],
+     "20261120150000_course_items_out_of_ordinary_quiz.sql",
+     "20261123100000_course_scope_before_candidate_limit.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

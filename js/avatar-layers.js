@@ -1376,6 +1376,29 @@ export const NORTHSTAR_HAIRS_NH5C = Object.freeze({
   "nh5c-grey": Object.freeze({ file: "head-nh5c-grey-v1.webp", label: "Nakkelokker · gråt" }),
   "nh5c-brown": Object.freeze({ file: "head-nh5c-brown-v1.webp", label: "Nakkelokker · brunt" }),
 });
+// D-386: HAIR-25 group 1 — six hairstyles approved by the owner 2026-11-24 in neutral grey and Northstar's brown, exactly as shown on the
+// private assessment page; twelve more heads on the same shared base (lossless WebP of the approved head PNGs, bound by sha256 in
+// tools/avatar/fixtures/northstar-hair-d386/approval-h25g1-v1.json). Their twelve cards are SHOWN by default since the production trial
+// passed (D-386, NORTHSTAR_HAIR_H25G1 = true), last under Hoved after the nape locks, free like every other hairstyle. OFF (false): the
+// cards are hidden, and only a browser that opts in shows them: localStorage avatar_northstar_hair_h25g1 = "1" (or
+// avatar.html?northstarh25=1; =0 removes it). A stored group-1 head is drawn on every surface whatever the flag (Avatar, Hub, quiz). The
+// database accepts the twelve values through D-386's migration (applied in production 2026-11-24, 20261124160706).
+export const NORTHSTAR_HAIR_H25G1 = true;
+export const NORTHSTAR_HAIR_H25G1_OPT_IN_KEY = "avatar_northstar_hair_h25g1";
+export const NORTHSTAR_HAIRS_H25G1 = Object.freeze({
+  "h25n2-grey": Object.freeze({ file: "head-h25n2-grey-v1.webp", label: "Page med pandehår · gråt" }),
+  "h25n2-brown": Object.freeze({ file: "head-h25n2-brown-v1.webp", label: "Page med pandehår · brunt" }),
+  "h25n3-grey": Object.freeze({ file: "head-h25n3-grey-v1.webp", label: "Bølget skulderhår · gråt" }),
+  "h25n3-brown": Object.freeze({ file: "head-h25n3-brown-v1.webp", label: "Bølget skulderhår · brunt" }),
+  "h25n6-grey": Object.freeze({ file: "head-h25n6-grey-v1.webp", label: "Lav hestehale · gråt" }),
+  "h25n6-brown": Object.freeze({ file: "head-h25n6-brown-v1.webp", label: "Lav hestehale · brunt" }),
+  "h25n7-grey": Object.freeze({ file: "head-h25n7-grey-v1.webp", label: "Stor afro · gråt" }),
+  "h25n7-brown": Object.freeze({ file: "head-h25n7-brown-v1.webp", label: "Stor afro · brunt" }),
+  "h25v2-grey": Object.freeze({ file: "head-h25v2-grey-v1.webp", label: "Tætte krøller · gråt" }),
+  "h25v2-brown": Object.freeze({ file: "head-h25v2-brown-v1.webp", label: "Tætte krøller · brunt" }),
+  "h25n5-grey": Object.freeze({ file: "head-h25n5-grey-v1.webp", label: "To fletninger · gråt" }),
+  "h25n5-brown": Object.freeze({ file: "head-h25n5-brown-v1.webp", label: "To fletninger · brunt" }),
+});
 // The item category (ITEM_CATEGORIES) the hairstyles are shown under.
 export const NORTHSTAR_HAIR_ITEM_CATEGORY = "hoved";
 // The flag, or this browser's explicit opt-in. Never throws.
@@ -1395,15 +1418,22 @@ export function isNorthstarHairNh5cOn() {
   if (NORTHSTAR_HAIR_NH5C) return true;
   try { return typeof localStorage !== "undefined" && localStorage.getItem(NORTHSTAR_HAIR_NH5C_OPT_IN_KEY) === "1"; } catch (_e) { return false; }
 }
+// D-386: group 1's cards — with the hair choice on, their flag or this browser's explicit opt-in. Never throws.
+export function isNorthstarHairH25g1On() {
+  if (!isNorthstarHairOn()) return false;
+  if (NORTHSTAR_HAIR_H25G1) return true;
+  try { return typeof localStorage !== "undefined" && localStorage.getItem(NORTHSTAR_HAIR_H25G1_OPT_IN_KEY) === "1"; } catch (_e) { return false; }
+}
 const _nsOwn = (o, h) => typeof h === "string" && Object.prototype.hasOwnProperty.call(o, h);
-// A known hairstyle's entry (D-373's three, D-377's top knot, then D-381's nape locks), or null.
-const _nsHairEntry = (h) => (_nsOwn(NORTHSTAR_HAIRS, h) ? NORTHSTAR_HAIRS[h] : _nsOwn(NORTHSTAR_HAIRS_NH5B, h) ? NORTHSTAR_HAIRS_NH5B[h] : _nsOwn(NORTHSTAR_HAIRS_NH5C, h) ? NORTHSTAR_HAIRS_NH5C[h] : null);
+// A known hairstyle's entry (D-373's three, D-377's top knot, D-381's nape locks, then D-386's group 1), or null.
+const _nsHairEntry = (h) => (_nsOwn(NORTHSTAR_HAIRS, h) ? NORTHSTAR_HAIRS[h] : _nsOwn(NORTHSTAR_HAIRS_NH5B, h) ? NORTHSTAR_HAIRS_NH5B[h] : _nsOwn(NORTHSTAR_HAIRS_NH5C, h) ? NORTHSTAR_HAIRS_NH5C[h] : _nsOwn(NORTHSTAR_HAIRS_H25G1, h) ? NORTHSTAR_HAIRS_H25G1[h] : null);
 const _nsIsHair = (h) => _nsHairEntry(h) !== null;
-// The hairstyles the wardrobe offers now: D-373's three, the top knot while its cards are on, and the nape locks (last) while theirs are.
+// The hairstyles the wardrobe offers now: D-373's three, the top knot while its cards are on, the nape locks while theirs are, and
+// D-386's group 1 (last) while theirs are.
 export function northstarSelectableHairs() {
-  const nh5b = isNorthstarHairNh5bOn(), nh5c = isNorthstarHairNh5cOn();
-  if (!nh5b && !nh5c) return NORTHSTAR_HAIRS;
-  return Object.freeze({ ...NORTHSTAR_HAIRS, ...(nh5b ? NORTHSTAR_HAIRS_NH5B : {}), ...(nh5c ? NORTHSTAR_HAIRS_NH5C : {}) });
+  const nh5b = isNorthstarHairNh5bOn(), nh5c = isNorthstarHairNh5cOn(), g1 = isNorthstarHairH25g1On();
+  if (!nh5b && !nh5c && !g1) return NORTHSTAR_HAIRS;
+  return Object.freeze({ ...NORTHSTAR_HAIRS, ...(nh5b ? NORTHSTAR_HAIRS_NH5B : {}), ...(nh5c ? NORTHSTAR_HAIRS_NH5C : {}), ...(g1 ? NORTHSTAR_HAIRS_H25G1 : {}) });
 }
 // The hairstyle the named account has explicitly chosen, or null (also while the hair choice is off).
 function _nsChosenHair() {
@@ -1419,7 +1449,8 @@ export function northstarHeadSrc(hair) {
   return _nsIsHair(hair) ? NORTHSTAR_HAIR_BASE_PATH + "/" + _nsHairEntry(hair).file : _nsSrc(NORTHSTAR_FIGURE.head);
 }
 // Puts a hairstyle on: the outfit worn now (on today's avatar, the start outfit) stays, saved as the three parts with the hairstyle.
-// Null while the hair choice is off, for an unknown hairstyle, or for the top knot or the nape locks while their cards are off (D-377, D-381).
+// Null while the hair choice is off, for an unknown hairstyle, or for the top knot, the nape locks or group 1 while their cards are off
+// (D-377, D-381, D-386).
 export function northstarFitHair(hair) {
   if (!isNorthstarHairOn() || !_nsOwn(northstarSelectableHairs(), hair)) return null;
   const o = northstarOutfitNow() || NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT];
