@@ -19,7 +19,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
-const CARDS = 98;          // the 79 parts, D-374/D-378/D-381's seven hairstyles and group 1's twelve (D-386)
+const CARDS = 104;         // the 79 parts, D-374/D-378/D-381's seven hairstyles, group 1's twelve (D-386) and group 2's six (D-387)
 const G1 = ["h25n2", "h25n3", "h25n6", "h25n7", "h25v2", "h25n5"].flatMap((s) => [s + "-grey", s + "-brown"]);
 
 async function signedIn(browser: Browser): Promise<{ ctx: BrowserContext; page: Page }> {

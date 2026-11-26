@@ -1399,6 +1399,23 @@ export const NORTHSTAR_HAIRS_H25G1 = Object.freeze({
   "h25n5-grey": Object.freeze({ file: "head-h25n5-grey-v1.webp", label: "To fletninger · gråt" }),
   "h25n5-brown": Object.freeze({ file: "head-h25n5-brown-v1.webp", label: "To fletninger · brunt" }),
 });
+// D-387: HAIR-25 group 2 — three hairstyles approved by the owner 2026-11-25 in neutral grey and Northstar's brown, exactly as shown on
+// the private assessment page (vurdering-v2.html); six more heads on the same shared base (lossless WebP of the approved head PNGs,
+// bound by sha256 in tools/avatar/fixtures/northstar-hair-d387/approval-h25g2-v1.json). Their six cards are SHOWN by default since the
+// production trial passed (D-387, NORTHSTAR_HAIR_H25G2 = true), last under Hoved after group 1, free like every other hairstyle. OFF
+// (false): the cards are hidden, and only a browser that opts in shows them: localStorage avatar_northstar_hair_h25g2 = "1" (or
+// avatar.html?northstarh25g2=1; =0 removes it). A stored group-2 head is drawn on every surface whatever the flag (Avatar, Hub, quiz).
+// The database accepts the six values through D-387's migration (applied in production 2026-11-25, 20261125194022).
+export const NORTHSTAR_HAIR_H25G2 = true;
+export const NORTHSTAR_HAIR_H25G2_OPT_IN_KEY = "avatar_northstar_hair_h25g2";
+export const NORTHSTAR_HAIRS_H25G2 = Object.freeze({
+  "h25d1-grey": Object.freeze({ file: "head-h25d1-grey-v1.webp", label: "Korte krøller · gråt" }),
+  "h25d1-brown": Object.freeze({ file: "head-h25d1-brown-v1.webp", label: "Korte krøller · brunt" }),
+  "h25v1-grey": Object.freeze({ file: "head-h25v1-grey-v1.webp", label: "Glat sideskilning · gråt" }),
+  "h25v1-brown": Object.freeze({ file: "head-h25v1-brown-v1.webp", label: "Glat sideskilning · brunt" }),
+  "h25n9-grey": Object.freeze({ file: "head-h25n9-grey-v1.webp", label: "Langt glat hår · gråt" }),
+  "h25n9-brown": Object.freeze({ file: "head-h25n9-brown-v1.webp", label: "Langt glat hår · brunt" }),
+});
 // The item category (ITEM_CATEGORIES) the hairstyles are shown under.
 export const NORTHSTAR_HAIR_ITEM_CATEGORY = "hoved";
 // The flag, or this browser's explicit opt-in. Never throws.
@@ -1424,16 +1441,22 @@ export function isNorthstarHairH25g1On() {
   if (NORTHSTAR_HAIR_H25G1) return true;
   try { return typeof localStorage !== "undefined" && localStorage.getItem(NORTHSTAR_HAIR_H25G1_OPT_IN_KEY) === "1"; } catch (_e) { return false; }
 }
+// D-387: group 2's cards — with the hair choice on, their flag or this browser's explicit opt-in. Never throws.
+export function isNorthstarHairH25g2On() {
+  if (!isNorthstarHairOn()) return false;
+  if (NORTHSTAR_HAIR_H25G2) return true;
+  try { return typeof localStorage !== "undefined" && localStorage.getItem(NORTHSTAR_HAIR_H25G2_OPT_IN_KEY) === "1"; } catch (_e) { return false; }
+}
 const _nsOwn = (o, h) => typeof h === "string" && Object.prototype.hasOwnProperty.call(o, h);
-// A known hairstyle's entry (D-373's three, D-377's top knot, D-381's nape locks, then D-386's group 1), or null.
-const _nsHairEntry = (h) => (_nsOwn(NORTHSTAR_HAIRS, h) ? NORTHSTAR_HAIRS[h] : _nsOwn(NORTHSTAR_HAIRS_NH5B, h) ? NORTHSTAR_HAIRS_NH5B[h] : _nsOwn(NORTHSTAR_HAIRS_NH5C, h) ? NORTHSTAR_HAIRS_NH5C[h] : _nsOwn(NORTHSTAR_HAIRS_H25G1, h) ? NORTHSTAR_HAIRS_H25G1[h] : null);
+// A known hairstyle's entry (D-373's three, D-377's top knot, D-381's nape locks, D-386's group 1, then D-387's group 2), or null.
+const _nsHairEntry = (h) => (_nsOwn(NORTHSTAR_HAIRS, h) ? NORTHSTAR_HAIRS[h] : _nsOwn(NORTHSTAR_HAIRS_NH5B, h) ? NORTHSTAR_HAIRS_NH5B[h] : _nsOwn(NORTHSTAR_HAIRS_NH5C, h) ? NORTHSTAR_HAIRS_NH5C[h] : _nsOwn(NORTHSTAR_HAIRS_H25G1, h) ? NORTHSTAR_HAIRS_H25G1[h] : _nsOwn(NORTHSTAR_HAIRS_H25G2, h) ? NORTHSTAR_HAIRS_H25G2[h] : null);
 const _nsIsHair = (h) => _nsHairEntry(h) !== null;
-// The hairstyles the wardrobe offers now: D-373's three, the top knot while its cards are on, the nape locks while theirs are, and
-// D-386's group 1 (last) while theirs are.
+// The hairstyles the wardrobe offers now: D-373's three, the top knot while its cards are on, the nape locks while theirs are,
+// D-386's group 1 while theirs are, and D-387's group 2 (last) while theirs are.
 export function northstarSelectableHairs() {
-  const nh5b = isNorthstarHairNh5bOn(), nh5c = isNorthstarHairNh5cOn(), g1 = isNorthstarHairH25g1On();
-  if (!nh5b && !nh5c && !g1) return NORTHSTAR_HAIRS;
-  return Object.freeze({ ...NORTHSTAR_HAIRS, ...(nh5b ? NORTHSTAR_HAIRS_NH5B : {}), ...(nh5c ? NORTHSTAR_HAIRS_NH5C : {}), ...(g1 ? NORTHSTAR_HAIRS_H25G1 : {}) });
+  const nh5b = isNorthstarHairNh5bOn(), nh5c = isNorthstarHairNh5cOn(), g1 = isNorthstarHairH25g1On(), g2 = isNorthstarHairH25g2On();
+  if (!nh5b && !nh5c && !g1 && !g2) return NORTHSTAR_HAIRS;
+  return Object.freeze({ ...NORTHSTAR_HAIRS, ...(nh5b ? NORTHSTAR_HAIRS_NH5B : {}), ...(nh5c ? NORTHSTAR_HAIRS_NH5C : {}), ...(g1 ? NORTHSTAR_HAIRS_H25G1 : {}), ...(g2 ? NORTHSTAR_HAIRS_H25G2 : {}) });
 }
 // The hairstyle the named account has explicitly chosen, or null (also while the hair choice is off).
 function _nsChosenHair() {
@@ -1449,8 +1472,8 @@ export function northstarHeadSrc(hair) {
   return _nsIsHair(hair) ? NORTHSTAR_HAIR_BASE_PATH + "/" + _nsHairEntry(hair).file : _nsSrc(NORTHSTAR_FIGURE.head);
 }
 // Puts a hairstyle on: the outfit worn now (on today's avatar, the start outfit) stays, saved as the three parts with the hairstyle.
-// Null while the hair choice is off, for an unknown hairstyle, or for the top knot, the nape locks or group 1 while their cards are off
-// (D-377, D-381, D-386).
+// Null while the hair choice is off, for an unknown hairstyle, or for the top knot, the nape locks, group 1 or group 2 while their cards
+// are off (D-377, D-381, D-386, D-387).
 export function northstarFitHair(hair) {
   if (!isNorthstarHairOn() || !_nsOwn(northstarSelectableHairs(), hair)) return null;
   const o = northstarOutfitNow() || NORTHSTAR_OUTFITS[NORTHSTAR_START_OUTFIT];

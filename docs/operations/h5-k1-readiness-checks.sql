@@ -65,7 +65,8 @@ fn AS (
     ('tx8',      'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text)'),
     ('mc9',      'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text,text,integer)'),
     ('tx10',     'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)'),
-    ('snap',     'public.question_instances_served_snapshot()')
+    ('snap',     'public.question_instances_served_snapshot()'),
+    ('course',   'public.question_is_course_item(jsonb)')
   ) AS v(k, sig)
 ),
 f AS (
@@ -77,7 +78,7 @@ f AS (
     max(md5) FILTER (WHERE k = 'reject')  AS reject,  max(md5) FILTER (WHERE k = 'guard')   AS guard,
     max(md5) FILTER (WHERE k = 'mc7')     AS mc7,     max(md5) FILTER (WHERE k = 'tx8')     AS tx8,
     max(md5) FILTER (WHERE k = 'mc9')     AS mc9,     max(md5) FILTER (WHERE k = 'tx10')    AS tx10,
-    max(md5) FILTER (WHERE k = 'snap')    AS snap,
+    max(md5) FILTER (WHERE k = 'snap')    AS snap,    max(md5) FILTER (WHERE k = 'course')  AS course,
     max(oid::oid) FILTER (WHERE k = 'mc7')  AS mc7_oid,  max(oid::oid) FILTER (WHERE k = 'tx8')  AS tx8_oid,
     max(oid::oid) FILTER (WHERE k = 'mc9')  AS mc9_oid,  max(oid::oid) FILTER (WHERE k = 'tx10') AS tx10_oid,
     max(oid::oid) FILTER (WHERE k = 'pqa')  AS pqa_oid,  max(oid::oid) FILTER (WHERE k = 'pta')  AS pta_oid,
@@ -163,16 +164,26 @@ SELECT 'PRE-01' AS check_id, 'pre' AS phase,
        coalesce(s.pqa, 'mangler') AS actual,
        s.pqa = '2e05e769a102f61ffef0ea4dd550c55b' AS ok, 1 AS ord FROM s
 UNION ALL
-SELECT 'PRE-02', 'pre', 'de øvrige seks fastlåste svar-/genåbningsfunktioner har de gennemgåede kroppe (release: før eller efter D-316)',
+-- D-383 (20261120150000) skifter release + de tre request_repeat_*_for_student i ÉN transaktion og tilføjer
+-- question_is_course_item. Derfor kun to lovlige sæt: alle fire før D-383 (helperen fraværende) eller alle fire efter
+-- (helperen med sin gennemgåede krop). En blanding — eller en hvilken som helst anden krop — er false.
+SELECT 'PRE-02', 'pre', 'de øvrige seks fastlåste svar-/genåbningsfunktioner har de gennemgåede kroppe (release: før eller efter D-316; release og de tre repeat-funktioner: alle før eller alle efter D-383)',
        concat_ws(' ', 'pta=' || coalesce(left(s.pta, 8), 'mangler'), 'release=' || coalesce(left(s.release, 8), 'mangler'),
                  'rq=' || coalesce(left(s.rq, 8), 'mangler'), 'rqs=' || coalesce(left(s.rqs, 8), 'mangler'),
-                 'rqss=' || coalesce(left(s.rqss, 8), 'mangler'), 'rql=' || coalesce(left(s.rql, 8), 'mangler')),
+                 'rqss=' || coalesce(left(s.rqss, 8), 'mangler'), 'rql=' || coalesce(left(s.rql, 8), 'mangler'),
+                 'course=' || coalesce(left(s.course, 8), 'mangler')),
        coalesce(s.pta = 'e80727ea87ffdc64988e5a09dcb20356'
-         AND s.release IN ('7b7693b3bff869a113e8e97e16bb456a', 'b80c1c7857ecc90bdbd7b6175b65c78f')
          AND s.rq   = '54ab9354d309c014e94e902fd6f885f4'
-         AND s.rqs  = '2ac19e786310b59051a44aed96b5bf46'
-         AND s.rqss = '092555368551a096c29d6e60f58c17b1'
-         AND s.rql  = 'db8280ddee20254e876be7fb1fc57e4d', false), 2 FROM s
+         AND ((s.release IN ('7b7693b3bff869a113e8e97e16bb456a', 'b80c1c7857ecc90bdbd7b6175b65c78f')
+               AND s.rqs  = '2ac19e786310b59051a44aed96b5bf46'
+               AND s.rqss = '092555368551a096c29d6e60f58c17b1'
+               AND s.rql  = 'db8280ddee20254e876be7fb1fc57e4d'
+               AND to_regprocedure('public.question_is_course_item(jsonb)') IS NULL)
+           OR (s.release = 'e52e69fa3374a5838293977f0057b34d'
+               AND s.rqs  = 'c14b90ccd4d05e12473083b072eaefba'
+               AND s.rqss = 'b23d72a1d167a94246e5b7243c25cdbd'
+               AND s.rql  = '410d0ab6fb67c329a573cf3f73973921'
+               AND s.course = '00cc41a03b3f5070789fe5442fddf5cc')), false), 2 FROM s
 UNION ALL
 SELECT 'PRE-03', 'pre', 'seks som SECURITY DEFINER, request_repeat_level_question_for_student som INVOKER',
        'definer(6)=' || coalesce(s.six_definer::text, 'mangler') || ' level_definer=' || coalesce(s.rql_definer::text, 'mangler'),

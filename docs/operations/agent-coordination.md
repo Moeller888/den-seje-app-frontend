@@ -283,6 +283,9 @@ Et brugt GO frigives aldrig automatisk.
 anden ændrer branchen i de sekunder, der går, før handlingen rammer GitHub. Den atomiske sammenligning skal ske på
 GitHubs side:
 - `gh pr merge <N> --match-head-commit <head>` afvises af GitHub, hvis PR'ens HEAD ikke længere er den forventede;
+  - brug formen med lighedstegn som én direkte kommando uden `cd` i samme kald:
+    `gh pr merge <N> --repo Moeller888/den-seje-app-frontend --merge --match-head-commit=<fuld sha>`;
+  - Lærlig-guarden afviser formen med mellemrum (`--match-head-commit <sha>`). Den tæller SHA'en som et ekstra positionelt argument ("gh pr merge med ekstra argumenter er ikke tilladt"). Det skete for #747 og #748 2026-11-24, og #748 blev derefter merget med formen med lighedstegn;
 - en almindelig `git push` uden force afvises af serveren, hvis den ikke er en fast-forward;
 - se også `push-check`/`after-push`.
 
