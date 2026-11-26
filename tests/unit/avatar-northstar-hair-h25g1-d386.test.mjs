@@ -29,6 +29,7 @@ const D357 = read("supabase/migrations/20261106120000_avatar_northstar_choice.sq
 const FREE = { outfit: "FRI", top: "top-tee-hip-blue", pants: "bottom-trousers-square-navy", shoes: "shoes-sneakers-white" };
 const STYLES = ["h25n2", "h25n3", "h25n6", "h25n7", "h25v2", "h25n5"];
 const G1 = STYLES.flatMap((s) => [s + "-grey", s + "-brown"]);
+const G2 = ["h25d1", "h25v1", "h25n9"].flatMap((s) => [s + "-grey", s + "-brown"]);   // D-387's group 2, open by default, last under Hoved
 const LABELS = { h25n2: "Page med pandehår", h25n3: "Bølget skulderhår", h25n6: "Lav hestehale", h25n7: "Stor afro", h25v2: "Tætte krøller", h25n5: "To fletninger" };
 const TRIAL = { h25n2: "N2", h25n3: "N3", h25n6: "N6", h25n7: "N7", h25v2: "V2", h25n5: "N5" };
 const BEFORE = ["standard", "nh4-grey", "nh4-brown", "nh5b-grey", "nh5b-brown", "nh5c-grey", "nh5c-brown"];
@@ -51,7 +52,7 @@ test("D-386 open: the twelve group-1 cards are shown by default, last under Hove
   const L = await layers(false);
   assert.equal(L.NORTHSTAR_HAIR_H25G1, true, "the cards are shown by default");
   assert.equal(L.isNorthstarHairH25g1On(), true);
-  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...G1], "nineteen cards, group 1 last");
+  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...G1, ...G2], "twenty-five cards, group 1 before D-387's group 2");
   // free like the other hairstyles: a hairstyle entry is only its file and label — no price, no shop item, nothing to unlock
   for (const [k, h] of Object.entries(L.northstarSelectableHairs())) assert.deepEqual(Object.keys(h).sort(), ["file", "label"], k + " carries no price");
   L.northstarUseAccount({ northstar: { ...FREE } });
@@ -70,7 +71,7 @@ test("D-386 catalogue: twelve group-1 hairstyles in the owner's order with their
   assert.deepEqual(Object.keys(L.NORTHSTAR_HAIRS_NH5C), ["nh5c-grey", "nh5c-brown"], "D-381's catalogue is unchanged");
   assert.equal(L.NORTHSTAR_HAIR_NH5B, true); assert.equal(L.NORTHSTAR_HAIR_NH5C, true);
   assert.equal(L.isNorthstarHairH25g1On(), false);
-  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), BEFORE, "no group-1 card without the opt-in: today's seven cards");
+  assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...G2], "no group-1 card without the opt-in: the seven before it and D-387's group 2");
   L.northstarUseAccount({ northstar: { ...FREE } });
   for (const k of G1) assert.equal(L.northstarFitHair(k), null, k + " cannot be put on while its cards are hidden");
   for (const k of BEFORE) assert.deepEqual(L.northstarFitHair(k).choice, { ...FREE, hair: k }, k + " still goes on");
@@ -80,7 +81,7 @@ test("D-386 on by default (and, with the flag off, a browser's opt-in): every gr
   for (const [optIn, flagOff] of [[false, false], [true, true]]) {
     const L = await layers(optIn, { flagOff });
     assert.equal(L.isNorthstarHairH25g1On(), true, JSON.stringify({ optIn, flagOff }));
-    assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...G1], "nineteen cards, group 1 last");
+    assert.deepEqual(Object.keys(L.northstarSelectableHairs()), [...BEFORE, ...G1, ...G2], "twenty-five cards, group 1 before D-387's group 2");
     const plans = {};
     for (const hair of ["standard", ...G1]) {
       L.northstarUseAccount({ northstar: { ...FREE } });
@@ -149,7 +150,9 @@ test("D-386 approval and assets: the owner's approval binds every approved head 
   const bound = new Set(G1.map((id) => FX.hairs[id].approvedPng.sha256));
   for (const f of tracked.filter((p) => /\.(png|webp)$/i.test(p) && /hair|h25/i.test(p))) assert.ok(!bound.has(sha(read(f))), f + " is a private approved PNG");
   const dir = readdirSync(join(ROOT, "assets", "avatar-northstar-hair"));
-  assert.deepEqual(dir.filter((f) => /h25/.test(f)).sort(), G1.map((id) => "head-" + id + "-v1.webp").sort(), "exactly the twelve heads, no intermediate file");
+  // since D-387 the folder also holds group 2's six heads, each bound by D-387's own approval fixture (tested in its own test)
+  const G2FILES = Object.values(JSON.parse(read("tools/avatar/fixtures/northstar-hair-d387/approval-h25g2-v1.json").toString("utf8")).hairs).map((h) => h.file);
+  assert.deepEqual(dir.filter((f) => /h25/.test(f)).sort(), [...G1.map((id) => "head-" + id + "-v1.webp"), ...G2FILES].sort(), "exactly the twelve heads (plus D-387's six bound heads), no intermediate file");
   assert.ok(!existsSync(join(ROOT, "assets", "avatar-northstar-hair", "vurdering.html")));
 });
 

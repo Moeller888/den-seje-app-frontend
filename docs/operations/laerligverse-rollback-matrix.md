@@ -186,4 +186,9 @@ går tabt, men ingen svar og ingen progression. En produktionsændring af `is_ac
 - Klienten (`spil.html`) køres ikke. Hvad eleven **ser** ved `course_round_open`, dækkes af introduktionsbanen.
 - **Gamle Edge-versioner kræver deres commits.** CI tjekker shallow ud: cellerne springes over med begrundelse. Det foreslåede
   rollback-job henter de to commits og sætter `ROLLBACK_EDGE_REQUIRED=1`, så de dér ikke kan springes over.
+- **Tre testprofiler med forskellig tyngde.** Unit-sharden (rigtig PostgreSQL, shallow checkout) springer de gamle
+  Edge-versioner, scenarie 3 og scenarie 4 over og målte 4,9 s i #746's CI (`0e9068c5`). Den værdi er planlægningsvægten
+  i `tests/unit-ci-weights.json`. Med F8 i træet kører scenarie 3, og filen bliver tungere. Den skal måles i F8's egen
+  CI. Rollback-banen med fuld historik kører alle Edge-versioner og planlægges som sit eget job, ikke ud fra
+  unit-vægten.
 - **Samtidighed** (to faner under et versionsskift) er ikke dækket her. Det hører til F8's PG-samtidighedstests.

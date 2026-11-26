@@ -17,7 +17,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
-const CARDS = 98;   // the 79 parts and the 19 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks and D-386's 12 of group 1)
+const CARDS = 104;  // the 79 parts and the 25 hairstyles (D-374's 3, D-378's 2 top knots, D-381's 2 nape locks, D-386's 12 of group 1 and D-387's 6 of group 2)
 
 async function signedIn(browser: Browser): Promise<{ ctx: BrowserContext; page: Page }> {
   const ctx = await browser.newContext({ reducedMotion: "reduce" });

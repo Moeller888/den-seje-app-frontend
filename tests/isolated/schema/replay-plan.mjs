@@ -269,6 +269,7 @@ export const APPLIED_IN_PRODUCTION = Object.freeze({
   "20261115090000_avatar_northstar_hair_nh5b_d377.sql": "20261115131725",
   "20261118090000_avatar_northstar_hair_nh5c_d381.sql": "20261118135103",
   "20261124120000_avatar_northstar_hair_h25g1_d386.sql": "20261124160706",
+  "20261125113412_avatar_northstar_hair_h25g2_d387.sql": "20261125194022",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),

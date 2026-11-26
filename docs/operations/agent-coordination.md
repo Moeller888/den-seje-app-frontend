@@ -102,6 +102,17 @@ Sessions-id tages automatisk fra harnessen, så `--session` er ikke nødvendig.
      kræver den, at den verificerede SHA er indeholdt i HEAD.
    - `after-push` sammenligner serverens gamle værdi fra `--porcelain`-outputtet med den verificerede SHA. Er de
      forskellige, eller var opdateringen forced, giver den ALARM. Ellers registreres den nye HEAD som verificeret.
+   - **Tilføjer branchen en migration**, køres før `push-check` (efter `git fetch origin`):
+     ```
+     node tools/ci/migration-versions.mjs          # 0 = unik · 1 = kollision · 2 = brugs-/git-fejl
+     ```
+     Den sammenligner versionerne på de migrationer, branchen tilføjer, med alle hentede `origin/*`-branches (kun
+     læsning). Samme version med et andet filnavn er en kollision: vælg en version, ingen branch bruger, og som
+     ligger efter alt det, migrationen kræver; omdøb filen og alle henvisninger. Baggrund: 2026-11-24 brugte #747
+     (D-386, merget) og #745 (F8, åben) begge `20261124120000`. `schema_migrations` nøgles på versionen og
+     replay-planen på navnet, så ingen eksisterende test så det. `tests/unit/migration-versions-unique.test.mjs`
+     håndhæver samme regel i træet (main og hver PR's merge med main i CI); kontrollen her fanger to ÅBNE branches,
+     som hver for sig er grønne (rulesættet er ikke strict).
 6. **Ved overdragelse:**
    ```
    node tools/agents/claim.mjs handover --branch <b>
@@ -272,6 +283,9 @@ Et brugt GO frigives aldrig automatisk.
 anden ændrer branchen i de sekunder, der går, før handlingen rammer GitHub. Den atomiske sammenligning skal ske på
 GitHubs side:
 - `gh pr merge <N> --match-head-commit <head>` afvises af GitHub, hvis PR'ens HEAD ikke længere er den forventede;
+  - brug formen med lighedstegn som én direkte kommando uden `cd` i samme kald:
+    `gh pr merge <N> --repo Moeller888/den-seje-app-frontend --merge --match-head-commit=<fuld sha>`;
+  - Lærlig-guarden afviser formen med mellemrum (`--match-head-commit <sha>`). Den tæller SHA'en som et ekstra positionelt argument ("gh pr merge med ekstra argumenter er ikke tilladt"). Det skete for #747 og #748 2026-11-24, og #748 blev derefter merget med formen med lighedstegn;
 - en almindelig `git push` uden force afvises af serveren, hvis den ikke er en fast-forward;
 - se også `push-check`/`after-push`.
 
