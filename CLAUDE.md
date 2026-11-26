@@ -478,3 +478,32 @@ AUTONOMI (AURA T1)
 - Merge, deploy, migrationer, secrets, workflow-dispatch, produktionsdata og
   ændringer i guard eller indstillinger er IKKE omfattet. De følger reglerne
   ovenfor uændret.
+
+========================================
+RESSOURCEBEVIDST AUTOMATISERING (PERMANENT)
+========================================
+
+52. AUTOMATISERING SKAL RESPEKTERE EJERENS ØVRIGE ARBEJDE OG MASKINENS RESSOURCER
+
+- Ejerens programmer, andre aktive AI-sessioner og nødvendige produktionsprocesser
+  må aldrig lukkes, ændres eller nedprioriteres for at gennemføre automatisering.
+  Bed heller ikke ejeren om at lukke egne programmer. Mangler der ressourcer, venter
+  arbejdet.
+- Kontrollér fri RAM og CPU-belastning, før en tung test eller et tungt job startes
+  (fx rigtig PostgreSQL, integrationstests, fulde E2E-kørsler). Er der ikke plads,
+  startes intet. Kørslen melder pause og genoptages senere, uden aggressiv polling
+  eller ventesløjfer.
+- Ingen unødvendig parallelisering. Tunge dele køres én ad gangen. Langvarige
+  baggrundsjob og målinger holdes korte og målrettede, fx omkring en planlagt kørsel
+  i stedet for en hel time.
+- Ryd op efter egne testkørsler: efterladte processer, testklynger og testopgaver.
+  Afslut kun processer, der sikkert er identificeret som egne (kommandolinje i egen
+  arbejdsmappe, forælder afsluttet). Andres processer røres aldrig.
+- Gem fremdrift løbende. Testresultater gemmes som kontrolpunkter sammen med SHA-256
+  af de relevante filer, så beståede dele ikke køres igen efter en afbrydelse,
+  medmindre filerne er ændret.
+- Allerede godkendt arbejde må ikke kræve gentagne manuelle godkendelser. Genoptag
+  fra seneste gyldige kontrolpunkt inden for den eksisterende godkendelse. Nye
+  handlinger kræver stadig deres egen godkendelse (regel 48).
+- Genbrug eksisterende mekanismer frem for at bygge nye orkestreringssystemer.
+  Detaljer: `docs/CLAUDE_WORKFLOW.md` §3b.

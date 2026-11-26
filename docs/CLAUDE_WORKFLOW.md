@@ -92,6 +92,36 @@ Tests are the **gatekeeper** and **ground truth** (CLAUDE.md rules 1, 34, 41–4
   `test.use` (agent memory `project_repo_sync_model`).
 - **No deploy without green tests.**
 
+## 3b. Ressourcebevidst automatisering (permanent krav 2026-11-26)
+
+Automatisering skal fungere ved siden af ejerens øvrige arbejde (CLAUDE.md regel 52). Ejeren skal
+aldrig lukke egne programmer for at få automatiseringen igennem.
+
+**Før en tung del** (rigtig PostgreSQL, integrationstest, fuld E2E): læs fri RAM og CPU-belastning. Er
+der for lidt plads, startes intet; kørslen melder "pause" med de målte værdier og genoptages senere.
+Ingen ventesløjfer eller hyppig polling.
+
+**Afvikling:**
+- én tung del ad gangen og ingen unødvendige parallelle agenter eller baggrundsjob;
+- målinger holdes korte og målrettede (fx vinduesvagt fra lige før til lige efter en planlagt kørsel);
+- kontrolpunkter: hver bestået del gemmes med SHA-256 over sine inputfiler. Ved genoptagelse
+  springes dele med uændret fingeraftryk over;
+- oprydning efter hver del: egne forældreløse processer afsluttes (kommandolinje i egen
+  arbejdsmappe, forælder afsluttet); efterladte testopgaver rapporteres og slettes kun med
+  godkendelse;
+- andres processer (ejerens programmer, andre AI-sessioner, produktionsopgaver) røres aldrig.
+
+**Måling af vinduer ved siden af ejerens arbejde:** en ny proces tælles som testens, medmindre hele
+dens forælderkæde kan følges til et program, der kørte før testen (ejerens Edge, Windows' Game Bar).
+Opgavestyringen, `taskhostw` og ukendte forældre tælles altid. Konsolvinduer i nye processer og
+Windows Terminal-klasser tælles altid.
+
+**Godkendelser:** en genoptagelse inden for allerede godkendt arbejde kræver ingen ny godkendelse.
+Nye handlinger gør (regel 48).
+
+**Referenceimplementering:** backupsporets `regression-dele.ps1`, `vinduesvagt.ps1` og
+`test-tilskrivning.ps1` (uden for Git, i backupkittet).
+
 ## 4. Rollback policy
 
 - **Feature flags first.** New behaviour (especially AI — [AI_GUIDELINES.md](./AI_GUIDELINES.md))
