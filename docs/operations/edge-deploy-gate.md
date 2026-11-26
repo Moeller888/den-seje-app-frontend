@@ -11,10 +11,43 @@ afhængighed, nemlig mellem de to funktioner. F8's `get-next-question` parkerer 
 parkeret runde (409 `round_parked`). Udrulningsplanen (`docs/operations/laerligverse-rollout-plan.md`, trin 5) deployer
 derfor `process-event` først. Den rækkefølge var hidtil manuel, og gaten gør den teknisk kontrollerbar.
 
+## Identitet: kun gennemgåede versioner (D1, 2026-11-26)
+
+En klasse, der kun er læst ud fra tekst i kildekoden (en markørstreng eller et kald), er et indicium, ikke en identitet.
+Derfor gælder en klasse kun for en **gennemgået version**. `tools/edge/edge-candidates.json` knytter manifestet
+(sha256 over den deployede filmængde, `gnq-release.mjs`' regel) til den klasse, versionen blev gennemgået som.
+Markørerne krydskontrollerer kun:
+
+| Manifest | Koden læses som | Udfald |
+|---|---|---|
+| registreret | samme klasse | KENDT: gaten går videre til tilstands- og parreglen |
+| ikke registreret | hvad som helst | UKENDT (`UNKNOWN`): afvist på alle databaser, også som partner |
+| registreret | en anden klasse | MODSTRIDENDE (`CONFLICTING`): afvist, fordi registret eller kilden er forkert |
+
+Begge gates bruger registret: `gnq-deploy-preflight.mjs` (kandidaten) og `edge-deploy-gate.mjs` (kandidaten og begge
+kørende funktioner). Kommentarer tæller ikke som kode. Fjernelsen af kommentarer kan kun sænke en markørklasse, aldrig
+hæve den, og en sænket klasse ender som MODSTRIDENDE. `node tools/edge/edge-deploy-gate.mjs identity` viser træets to
+manifester og deres udfald.
+
+Registret indeholder fire versioner, og testen verificerer hver af dem i alle checkouts, også i shallow CI:
+- `get-next-question` F8 `107ce90a…` og `process-event` F8 `1f568f67…` (dette træ).
+- `get-next-question` #740 `b0e59067…` og `process-event` før F8 `3915cdd1…` (fixturen for `634b7282`).
+
+get-next-question's manifester er de samme som runbookens (`docs/operations/level-engine-rollout.md`). En ændring i
+en funktions graf, også i `supabase/functions/_shared`, giver et nyt manifest. Testen fejler så, indtil versionen er
+gennemgået, og træets indgang er udskiftet.
+
+**Produktionens kørende versioner er ikke nødvendigvis main.** Rollback-matricen kalder get-next-question i produktion
+`a7450b0f`, men den kørende kilde kan afvige fra commit'en. Ingen produktionsversion er registreret ud fra antagelser.
+Ved en deploy downloader gaten den kørende kilde: et ukendt manifest er UKENDT, og gaten stopper (NOT READY ved en
+partner). En ejerbeslutning efter en read-only gennemgang afgør, om manifestet registreres. Den planlagte rækkefølge
+kræver det ikke. get-next-question #740 deployes først gennem gnq-gaten, som ikke læser partneren, og derefter står
+#740 (registreret) live ved siden af `process-event`.
+
 ## Kontraktregistret
 
-Hver funktions klasse læses fra dens egen kildekode og erklæres aldrig. Det gælder både kandidaten og den kørende
-version, som downloades.
+Hver funktions klasse læses fra dens egen kildekode og erklæres aldrig, og den gælder kun for en registreret identitet
+(ovenfor). Det gælder både kandidaten og den kørende version, som downloades.
 
 | Funktion | Klasse | Accepteres på |
 |---|---|---|
@@ -22,6 +55,7 @@ version, som downloades.
 | `process-event` | før F8 | DB0, DB1, DB2 |
 | `process-event` | F8: alle aktiveringsmarkører kaldt i `index.ts` og begge moduler i grafen | DB3 |
 | `process-event` | UFULDSTÆNDIG: kun nogle af markørerne | ingen database |
+| begge | UKENDT eller MODSTRIDENDE (identitet, ovenfor) | ingen database |
 
 Markørerne er `round-activation.ts` og `round-parked.ts` i modulgrafen samt kaldene `activationVerdict()`,
 `activationClientHeaders()`, `isStaleActivationError()`, `staleActivationReply()`, `isRoundParkedError()` og
@@ -75,12 +109,46 @@ Exitkoderne er som gnq-gatens: 0 ok, 1 brug, 2 IKKE KLAR, 3 AFVIST, 4 DEPLOYET M
   eller fra fremtiden) afvises.
 - Låsen deles med gnq-gaten og frigives efter hvert udfald.
 - Efterkontrollen fanger: den anden funktion ændret under deploy, forkert kilde, verify_jwt true og ændret database.
-- Mutationskontrol: når parreglen, markørgenkendelsen eller den gamle gates F8-afvisning slås fra, fejler testene.
+- Mutationskontrol: når parreglen, markørgenkendelsen, den gamle gates F8-afvisning, registeropslaget,
+  kommentarfjernelsen eller fixturens isolation slås fra, fejler testene.
+- Identitet: en byte ændret i `process-event` før F8 (markørerne alene ville godtage den på DB0–DB2), omdøbte
+  sikkerhedskald, kald kun i kommentarer, en halvt tilsluttet aktiveringskontrol, F8's parkeringskald omdøbt i
+  get-next-question (markørerne alene ville kalde den #740) og et register, som koden modsiger. Alt afvises, også en
+  ukendt kørende partner (NOT READY, intet deployet). Et forkert register fejler højlydt.
 - Referenceversionerne er fastlåst. "Før F8" er commit `634b7282`: main efter #740, hvor `supabase/functions` er uændret
-  til `9177e15d`. Testen læser aldrig `origin/main`, som flytter sig. CI's shallow checkout mangler commit'en, så
-  `tests/fixtures/edge-gate-before-f8-634b7282.json` indeholder præcis de filer, hvor commit'en afviger fra træet. Hvor
-  commit'en findes, beviser første test, at fixturen er lig commit'en (samme graf og samme manifest). Ingen test springes
-  over i CI. Før rettelsen 2026-11-26 sprang 10 af de 17 tests over uden `origin/main`.
+  til `050a5f3f`. Testen læser aldrig `origin/main`, som flytter sig. `tests/fixtures/edge-gate-before-f8-634b7282.json`
+  er **selvstændig**: alle 32 filer i begge funktioners grafer ved commit'en, også de fire `_shared`-moduler, som begge
+  bruger, plus deres manifester. Intet læses fra træet. Testen har manifesterne fastlåst og verificerer dem i hver
+  kørsel, også i shallow CI. Hvor commit'en findes, beviser første test desuden, at fixturen er lig commit'en.
+- Negativ kontrol: når et fælles modul ændres i træet, er referencen uændret. Den tidligere konstruktion (kun de
+  afvigende filer lagt oven på træet) ville have ændret betydning, og det viser testen. En ændret byte i fixturen, en
+  manglende fil, en overflødig fil eller et ændret registreret manifest får testen til at fejle.
+- Før rettelserne 2026-11-26 sprang 10 af de 17 tests over uden `origin/main`. Nu springes ingen over.
+
+## Overgangsmatricen: hvad gaten verificerer, og hvad der kræver operationel kontrol (D3)
+
+Det empiriske bevis for get-next-question-versioner × DB0–DB3 × `LEVEL_ENGINE` × kursusindhold × parkerede runder ×
+rollback og roll-forward er `docs/operations/laerligverse-rollback-matrix.md`. Den genereres af
+`tests/unit/laerligverse-rollback-matrix-migrations-run.test.mjs`, og F8-scenarierne kører nu, hvor F8 er i træet.
+Rækkefølgen mellem de to funktioner, rettigheder og efterkontrol er bevist her.
+
+| Forhold | Gaten verificerer teknisk | Kræver særskilt operationel kontrol |
+|---|---|---|
+| Databasetilstand DB0–DB3 | ja: katalog og ledger læst af værktøjet, højst 15 min gamle, fuld katalogkontrol på DB2/DB3 | — |
+| Kandidatens identitet og klasse | ja: committet, ren, runbookens manifest, registreret identitet | gennemgang, før en ny version registreres |
+| Kørende `get-next-question`/`process-event` | ja: version, ACTIVE, verify_jwt, downloadet kilde, registreret identitet | hvorfor en ukendt produktionsversion kører (read-only gennemgang, ejerbeslutning) |
+| Parreglen ved deploy og tilbageførsel | ja: begge retninger | — |
+| Udvidede rettigheder (GRANT/REVOKE) | ja: hele katalogkontrollen | — |
+| Fejl under eller efter deploy | ja: efterkontrol (exit 4) og fejlet kommando (exit 5) | ejerens beslutning om roll-forward eller tilbageførsel |
+| `LAERLIGVERSE_COURSE_PARKING` (Edge-secret) | nej: værdien kan ikke læses | ejerens kontrol før og efter trin 5 |
+| Lærligvers-flag og kursusindhold | nej: gaten læser ingen rækker | read-only tælling efter runbooken, rollback-matricens scenarie 1 og 2 |
+| Parkerede runder | nej | read-only tælling, rollback-matricens scenarie 3 (på DB3 kun F8 med parkering slået til) |
+| Gamle browserfaner og klienter | nej: frontend er Cloudflare, ikke Edge | serverens 409 `stale_activation`/`round_parked` er bevist i `course-round-stale-tab-migrations-run` |
+| Deploys uden om gaten (dashboard, andre maskiner) | kun bagefter, ved næste kørsel og efterkontrol | adgangsstyring i Supabase |
+
+Almindelig undervisning: gaten godtager `process-event` før F8 på DB2 ved siden af #740 (produktionens planlagte par),
+så overgangen blokerer ikke elever uden kursus. Hvilke elevtyper der er sikre i hver kombination af version, database og
+flag, står i rollback-matricens afsnit "Samlet: hvad er en sikker tilbageførsel i dag?". Gaten påstår ikke mere end det.
 
 ## Hvad gaten IKKE ser
 

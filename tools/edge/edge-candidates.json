@@ -1,0 +1,27 @@
+{
+  "_comment": "Reviewed Edge candidate identities (D-384, 2026-11-26): per function, the manifest sha256 of a reviewed source graph and the class it was reviewed as. A source whose manifest is not here is UNKNOWN and refused by both deploy gates; one whose source reads as another class is CONFLICTING and refused. Every entry is verified by tests/unit/edge-deploy-gate.test.mjs from `verified_by`: 'tree' = this checkout's source, 'fixture:634b7282' = tests/fixtures/edge-gate-before-f8-634b7282.json. A change to a function's graph (including supabase/functions/_shared) changes its manifest: review it, then replace the 'tree' entry (node tools/edge/edge-deploy-gate.mjs identity prints it).",
+  "get-next-question": {
+    "107ce90aae3b51fae01820eade1fa1d0b6d0856510f64be39bd77b10b64e7848": {
+      "class": "F8 (D-384)",
+      "verified_by": "tree",
+      "reviewed": "D-384 candidate, docs/operations/level-engine-rollout.md (Kandidat, 24 filer)"
+    },
+    "b0e59067502f32e73cc00223a58c74cc939b38b3ab75fd8c80e6dbca80b3c41c": {
+      "class": "#740 (course scope)",
+      "verified_by": "fixture:634b7282",
+      "reviewed": "#740 on main 634b7282, docs/operations/level-engine-rollout.md (Forrige kandidat)"
+    }
+  },
+  "process-event": {
+    "1f568f6778e9f603f46ef3b4b0ef0fe724360387a7d23fbbf14b063a3da5f3a3": {
+      "class": "F8 (D-384)",
+      "verified_by": "tree",
+      "reviewed": "D-384 process-event (activation check + parked-round refusal), PR #745"
+    },
+    "3915cdd14310feddcad4974167eaffb5af4a0fb06724e75ddd06ad0afccfd0aa": {
+      "class": "before F8",
+      "verified_by": "fixture:634b7282",
+      "reviewed": "process-event on main 634b7282 (unchanged to 050a5f3f)"
+    }
+  }
+}

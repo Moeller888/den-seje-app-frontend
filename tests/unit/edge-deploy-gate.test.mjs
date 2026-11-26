@@ -32,44 +32,58 @@ const PE_INDEX = "functions/process-event/index.ts";
 // ---- the sources: this tree (F8 for both) and a PINNED commit before F8 ----
 // BEFORE_F8 is main right after #740 (get-next-question #740, process-event before F8); supabase/functions is unchanged
 // from there to 9177e15d, so it is the pair production is planned to run during the transition. Pinned, never
-// origin/main: main moves (F8 itself lands there), and CI checks out shallow, without old commits. The recorded fixture
-// holds exactly the files in which BEFORE_F8 differs from this tree; every run reads the sources through it, and where
-// the commit IS in the checkout, the first test proves the fixture equals the commit (as course-items-version-matrix).
-// UPDATE_EDGE_GATE_FIXTURE=1 rewrites it from the commit.
+// origin/main: main moves (F8 itself lands there), and CI checks out shallow, without old commits.
+// The fixture is SELF-CONTAINED: every file of both functions' graphs at BEFORE_F8 (the four _shared modules both use
+// included) and their manifests. Nothing is read from this tree, so a later change to a shared file here can never
+// change what "before F8" means (until 2026-11-26 the fixture held only the files that differed and was laid over this
+// tree). Every run — shallow CI included — proves the fixture's manifests equal the PINNED ones below and the register's
+// entries; where the commit IS in the checkout, the first test also proves the fixture equals the commit.
+// UPDATE_EDGE_GATE_FIXTURE=1 rewrites it from the commit; the pinned manifests make any change to it fail loudly.
 const tree = workingTreeReader();
 const BEFORE_F8 = "634b728262ecc1b81c0347a743e9b793d707374d";
+const PINNED = Object.freeze({
+  [GNQ]: "b0e59067502f32e73cc00223a58c74cc939b38b3ab75fd8c80e6dbca80b3c41c", // #740, docs/operations/level-engine-rollout.md
+  [PE]: "3915cdd14310feddcad4974167eaffb5af4a0fb06724e75ddd06ad0afccfd0aa", // process-event before F8
+});
 const FIXTURE = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "edge-gate-before-f8-634b7282.json");
 let haveCommit = true;
 try { execFileSync("git", ["cat-file", "-e", `${BEFORE_F8}^{commit}`], { stdio: "ignore" }); } catch { haveCommit = false; }
-/** The files of both functions' graphs at BEFORE_F8 whose content differs from this tree (or is absent here). */
-function pinnedDelta() {
+/** Every file of both functions' graphs at BEFORE_F8, sorted. */
+function pinnedFull() {
   const pinned = gitReader(BEFORE_F8);
   const files = {};
-  for (const slug of [GNQ, PE]) {
-    for (const f of graphFilesFor(slug, pinned)) {
-      let here = null;
-      try { here = tree(f); } catch { /* absent in this tree */ }
-      const then = pinned(f);
-      if (here !== then) files[f] = then;
-    }
-  }
+  for (const slug of [GNQ, PE]) for (const f of graphFilesFor(slug, pinned)) files[f] = pinned(f);
   return Object.fromEntries(Object.keys(files).sort().map((f) => [f, files[f]]));
+}
+/** A reader over a file map only: a path outside it is an error, never a fallback to this tree. */
+const mapOnly = (files) => (p) => { if (!Object.hasOwn(files, p)) throw new Error(`ENOENT ${p} (not in the fixture)`); return files[p]; };
+/** The fixture's manifests, recomputed from its files; throws unless they are exactly the pinned ones. */
+function verifyFixture(fx) {
+  const read = mapOnly(fx.files);
+  const got = Object.fromEntries([GNQ, PE].map((slug) => [slug, manifestFor(read, graphFilesFor(slug, read)).hash]));
+  assert.deepEqual(got, { ...PINNED }, "the fixture's manifests are not the pinned ones: it changed");
+  assert.deepEqual(fx.manifests, { ...PINNED }, "the fixture's recorded manifests are not the pinned ones");
+  const used = new Set([GNQ, PE].flatMap((slug) => graphFilesFor(slug, read)));
+  assert.deepEqual(Object.keys(fx.files).filter((f) => !used.has(f)), [], "the fixture holds a file neither graph uses");
+  return read;
 }
 if (process.env.UPDATE_EDGE_GATE_FIXTURE === "1") {
   assert.ok(haveCommit, `${BEFORE_F8} is not in this checkout: the fixture cannot be rewritten`);
-  writeFileSync(FIXTURE, JSON.stringify({ source: `${BEFORE_F8} (main after #740: get-next-question #740, process-event before F8)`, files: pinnedDelta() }, null, 2) + "\n");
+  const files = pinnedFull(), read = mapOnly(files);
+  const manifests = Object.fromEntries([GNQ, PE].map((slug) => [slug, manifestFor(read, graphFilesFor(slug, read)).hash]));
+  writeFileSync(FIXTURE, JSON.stringify({ source: `${BEFORE_F8} (main after #740: get-next-question #740, process-event before F8)`, manifests, files }, null, 2) + "\n");
 }
 assert.ok(existsSync(FIXTURE), `${FIXTURE} is missing (UPDATE_EDGE_GATE_FIXTURE=1 writes it where ${BEFORE_F8} is available)`);
 const fixture = JSON.parse(readFileSync(FIXTURE, "utf8"));
 
 /** A reader with some files replaced. */
 const overlay = (base, changes) => (p) => (p in changes ? changes[p] : base(p));
-/** Both functions as at BEFORE_F8. */
-const beforeF8 = overlay(tree, fixture.files);
-/** process-event as at BEFORE_F8, everything else from this tree. */
-const withOldPe = () => (p) => (p.startsWith("functions/process-event/") ? beforeF8(p) : tree(p));
-/** get-next-question as at BEFORE_F8, everything else from this tree. */
-const withOldGnq = () => (p) => (p.startsWith("functions/get-next-question/") ? beforeF8(p) : tree(p));
+/** Both functions exactly as at BEFORE_F8 — from the fixture alone. */
+const beforeF8 = verifyFixture(fixture);
+/** process-event as at BEFORE_F8 (each function is read from its own source: the gate never mixes them). */
+const withOldPe = () => beforeF8;
+/** get-next-question as at BEFORE_F8. */
+const withOldGnq = () => beforeF8;
 
 // ---- the databases ----
 const D383 = "20261120150000_course_items_out_of_ordinary_quiz.sql";
@@ -95,19 +109,39 @@ const ROWS = { 0: await rowsOf(await database(0)), 2: await rowsOf(await databas
 // ---------------------------------------------------------------------------------------------------------------
 // The pinned reference.
 
-test("the pinned reference: the fixture is exactly where 634b7282 differs from this tree (where the commit is available)", { skip: !haveCommit && "shallow checkout: the recorded fixture stands in" }, () => {
+test("the pinned reference: the fixture is every graph file of both functions at 634b7282 (where the commit is available)", { skip: !haveCommit && "shallow checkout: the pinned manifests below stand in" }, () => {
   assert.match(fixture.source, new RegExp(`^${BEFORE_F8} `));
-  assert.deepEqual(fixture.files, pinnedDelta(), "stale fixture: run with UPDATE_EDGE_GATE_FIXTURE=1 and review the diff");
+  assert.deepEqual(fixture.files, pinnedFull(), "stale fixture: run with UPDATE_EDGE_GATE_FIXTURE=1 and review the diff");
   const pinned = gitReader(BEFORE_F8);
   for (const slug of [GNQ, PE]) {
     assert.deepEqual(graphFilesFor(slug, beforeF8), graphFilesFor(slug, pinned), `${slug}: the same graph as the commit`);
-    assert.equal(manifestFor(beforeF8, graphFilesFor(slug, beforeF8)).hash, manifestFor(pinned, graphFilesFor(slug, pinned)).hash, `${slug}: the same manifest as the commit`);
+    assert.equal(manifestFor(pinned, graphFilesFor(slug, pinned)).hash, PINNED[slug], `${slug}: the commit's manifest is the pinned one`);
   }
 });
 
-test("the pinned reference is a fixed commit, never a moving ref", () => {
+test("the pinned reference is a fixed commit with fixed manifests, verified in every checkout (shallow CI too)", () => {
   assert.match(BEFORE_F8, /^[0-9a-f]{40}$/);
-  assert.ok(Object.keys(fixture.files).length > 0 && Object.keys(fixture.files).every((f) => f.startsWith("functions/")));
+  for (const slug of [GNQ, PE]) assert.equal(manifestFor(beforeF8, graphFilesFor(slug, beforeF8)).hash, PINNED[slug], slug);
+  assert.ok(Object.keys(fixture.files).includes("functions/_shared/supabase-keys.ts"), "the shared modules are in the fixture");
+  assert.ok(Object.keys(fixture.files).every((f) => f.startsWith("functions/")));
+});
+
+test("negative control: a changed shared file in this tree leaves the reference identical; a changed fixture fails loudly", () => {
+  const shared = "functions/_shared/supabase-keys.ts";
+  assert.ok(graphFilesFor(GNQ, beforeF8).includes(shared) && graphFilesFor(PE, beforeF8).includes(shared), "both graphs use it");
+  // The tree changes a shared module: the self-contained reference does not move…
+  const changedTree = overlay(tree, { [shared]: tree(shared) + "\n// changed later\n" });
+  for (const slug of [GNQ, PE]) assert.equal(manifestFor(beforeF8, graphFilesFor(slug, beforeF8)).hash, PINNED[slug], slug);
+  // …where the OLD construction (only the differing files, laid over this tree) silently would have.
+  const delta = Object.fromEntries(Object.entries(fixture.files).filter(([f, text]) => { try { return tree(f) !== text; } catch { return true; } }));
+  const oldWay = overlay(changedTree, delta);
+  assert.notEqual(manifestFor(oldWay, graphFilesFor(PE, oldWay)).hash, PINNED[PE], "the old overlay would have changed meaning");
+  // One changed byte in the fixture itself, a file removed, or a stray file: verifyFixture throws.
+  assert.throws(() => verifyFixture({ ...fixture, files: { ...fixture.files, [shared]: fixture.files[shared] + " " } }), /not the pinned ones/);
+  const { [shared]: _gone, ...without } = fixture.files;
+  assert.throws(() => verifyFixture({ ...fixture, files: without }), /ENOENT/);
+  assert.throws(() => verifyFixture({ ...fixture, files: { ...fixture.files, "functions/x.ts": "x" } }), /neither graph uses/);
+  assert.throws(() => verifyFixture({ ...fixture, manifests: { ...fixture.manifests, [PE]: "0".repeat(64) } }), /recorded manifests/);
 });
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -402,4 +436,93 @@ test("the real transport is the Supabase CLI with explicit argument vectors, the
   assert.deepEqual(seen[1].args.slice(0, 7), deployArgsFor(PE, REF));
   assert.deepEqual(deployArgsFor(PE, REF), ["functions", "deploy", "process-event", "--project-ref", REF, "--no-verify-jwt", "--use-api"]);
   assert.ok(seen[2].args.includes("--linked"));
+});
+
+// ---------------------------------------------------------------------------------------------------------------
+// Identity (D-384, 2026-11-26): a class counts only for a REVIEWED manifest whose code reads as that class.
+
+import { REGISTRY_FILE, loadRegistry as loadCandidateRegistry } from "../../tools/edge/edge-candidates.mjs";
+import { isUnusable, processEventMarkers } from "../../tools/edge/edge-deploy-gate.mjs";
+
+const REGISTRY = loadCandidateRegistry();
+
+test("the register: every entry is verified here (this tree or the pinned fixture), and this tree's two candidates are in it", () => {
+  const sources = { tree, "fixture:634b7282": beforeF8 };
+  for (const slug of [GNQ, PE]) {
+    for (const [hash, e] of Object.entries(REGISTRY[slug])) {
+      const read = sources[e.verified_by];
+      assert.ok(read, `${slug} ${hash.slice(0, 8)}: verified_by ${e.verified_by} is no source this test has`);
+      const c = classify(slug, read, REGISTRY);
+      assert.equal(c.hash, hash, `${slug} ${hash.slice(0, 8)}: stale entry — ${e.verified_by} is now ${c.hash} (review it, then replace the entry)`);
+      assert.equal(c.cls.kind, e.class, `${slug} ${hash.slice(0, 8)}: its code reads as ${c.cls.markers ?? c.cls.kind}, registered ${e.class}`);
+    }
+    const here = classify(slug, tree, REGISTRY);
+    assert.ok(!isUnusable(here.cls), `this tree's ${slug} (${here.hash}) is not registered: review it and add it to ${REGISTRY_FILE} (node tools/edge/edge-deploy-gate.mjs identity)`);
+  }
+  // get-next-question's reviewed manifests are the runbook's.
+  const runbook = readFileSync(new URL("../../docs/operations/level-engine-rollout.md", import.meta.url), "utf8");
+  for (const hash of Object.keys(REGISTRY[GNQ])) assert.ok(runbook.includes(hash.slice(0, 8)), `${hash.slice(0, 8)} is not in the runbook`);
+});
+
+test("identity: process-event before F8 with one changed byte is UNKNOWN — refused where the reviewed one is accepted", () => {
+  const changed = overlay(beforeF8, { [PE_INDEX]: beforeF8(PE_INDEX) + "\n" });
+  assert.equal(processEventMarkers(changed, graphFilesFor(PE, changed)).kind, "before F8", "its markers alone would accept it");
+  const c = classify(PE, changed, REGISTRY);
+  assert.equal(c.cls.kind, "UNKNOWN");
+  const reviewed = classify(PE, beforeF8, REGISTRY).cls;
+  for (const st of ["DB0", "DB1", "DB2", "DB3"]) {
+    assert.match(stateRefusal(PE, c.cls, st), /UNKNOWN.*not a reviewed process-event version.*refused on every database/, st);
+    if (st !== "DB3") assert.equal(stateRefusal(PE, reviewed, st), null, `${st}: the reviewed version is accepted`);
+  }
+});
+
+test("identity: renamed safety calls, calls only in comments, a partly wired check, the modules renamed away — never a known class", () => {
+  const index = tree(PE_INDEX);
+  const names = PE_F8_MARKERS.filter((m) => m.call).map((m) => m.call.replace("(", ""));
+  // Every activation call renamed in every file (a refactor that loses the contract): the modules stay → INCOMPLETE.
+  const renamedAll = (p) => names.reduce((t, n) => t.replaceAll(n, `${n}Renamed`), tree(p));
+  assert.equal(classify(PE, renamedAll, REGISTRY).cls.kind, "INCOMPLETE");
+  // Half of them only in comments.
+  const half = names.slice(0, 3).reduce((t, n) => t.replace(new RegExp(`(^|[^\\w.])${n}\\s*\\(`, "gm"), "$1noCheck("), index) +
+    names.slice(0, 3).map((n) => `\n// ${n}(x)`).join("");
+  const partly = classify(PE, overlay(tree, { [PE_INDEX]: half }), REGISTRY).cls;
+  assert.equal(partly.kind, "INCOMPLETE");
+  assert.deepEqual(partly.missing, names.slice(0, 3).map((n) => `${n}()`));
+  // The F8 modules renamed away and the calls gone: the markers read "before F8" — the manifest is no reviewed one.
+  const noF8 = overlay(beforeF8, { [PE_INDEX]: beforeF8(PE_INDEX).replace("serve(", "serve(/* refactored */") });
+  const c = classify(PE, noF8, REGISTRY).cls;
+  assert.ok(c.kind === "UNKNOWN" || c.kind === "CONFLICTING", c.kind);
+  for (const st of ["DB0", "DB2", "DB3"]) assert.ok(stateRefusal(PE, c, st), st);
+  // get-next-question: F8's parking call renamed → markers read #740, the manifest is unknown.
+  const gnqRenamed = (p) => tree(p).replaceAll("park_open_course_round", "park_round_v2");
+  const g = classify(GNQ, gnqRenamed, REGISTRY).cls;
+  assert.equal(g.kind, "UNKNOWN");
+  assert.equal(g.markers, "#740 (course scope)", "the markers alone would have called it #740 and accepted it on DB2");
+  assert.match(stateRefusal(GNQ, g, "DB2"), /refused on every database/);
+});
+
+test("identity: conflicting contracts — a register entry that its code contradicts is CONFLICTING and refused", () => {
+  const lying = { ...REGISTRY, [PE]: { ...REGISTRY[PE], [PINNED[PE]]: { class: "F8 (D-384)", verified_by: "fixture:634b7282", reviewed: "deliberately wrong" } } };
+  const c = classify(PE, beforeF8, lying).cls;
+  assert.equal(c.kind, "CONFLICTING");
+  assert.match(c.reason, /registered as F8 \(D-384\), but its source reads as before F8/);
+  assert.match(pairRefusal(GNQ, { f8: true, kind: "F8 (D-384)" }, { cls: c }), /CONFLICTING.*pair cannot be checked/);
+});
+
+test("identity end to end: an unknown candidate is REFUSED before the lock; an unknown live partner is NOT READY; nothing deployed", async () => {
+  // Candidate: process-event before F8 with one byte changed, on DB2 next to #740 (where the reviewed one passes).
+  const changed = overlay(beforeF8, { [PE_INDEX]: beforeF8(PE_INDEX) + "\n" });
+  const s = await setup(PE, { candidate: changed, state: 2, live: { gnq: withOldGnq(), pe: withOldPe() } });
+  assert.equal(s.run(), 3, s.text());
+  assert.match(s.text(), /REFUSED: process-event candidate is UNKNOWN/);
+  assert.equal(s.calls.catalog + s.calls.deploy, 0, "no read, no deploy");
+  assert.ok(!existsSync(lockPath(s.root)), "no lock left");
+  // Partner: F8's process-event onto DB3, but the live get-next-question is an unreviewed version.
+  const t = await setup(PE, { live: { gnq: (p) => beforeF8(p) + (p === "functions/get-next-question/index.ts" ? "\n" : ""), pe: withOldPe() } });
+  assert.equal(t.run(), 2, t.text());
+  assert.match(t.text(), /live get-next-question is UNKNOWN.*pair cannot be checked/);
+  assert.equal(t.calls.deploy, 0);
+  // The reviewed pair in the same setup passes (the refusals above are the identity, nothing else).
+  const u = await setup(PE, { live: { gnq: withOldGnq(), pe: withOldPe() } });
+  assert.equal(u.run(), 0, u.text());
 });

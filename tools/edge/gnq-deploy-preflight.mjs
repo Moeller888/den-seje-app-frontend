@@ -36,6 +36,7 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { graphFiles, manifest, workingTreeReader } from "./gnq-release.mjs";
+import { identify, loadRegistry } from "./edge-candidates.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const TOOL_VERSION = 2;
@@ -336,17 +337,36 @@ export function checkCatalog(catalog, { now = new Date(), maxAgeMin = DEFAULT_MA
   return problems;
 }
 
-// ---- which database a candidate needs: read from the candidate's own source, never declared ----
-/** The candidate's class, from its get-next-question graph (`read`, `files` as gnq-release.mjs gives them). */
-export function candidateClass(read, files) {
-  const src = files.map((f) => read(f)).join("\n");
+// ---- which database a candidate needs: the REVIEWED class of its manifest, cross-checked by its own source ----
+/** Source text without comments: a marker that only appears in a comment is not code. Imperfect in one direction only:
+ * removing too much can only LOWER the marker class, which the register then reports as CONFLICTING (refused). */
+export function codeOnly(text) {
+  return String(text).replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((l) => l.replace(/(^|[^:])\/\/.*$/, "$1")).join("\n");
+}
+
+/** What the get-next-question graph's CODE reads as: markers only — evidence, never identity. */
+export function markerClass(read, files) {
+  const src = files.map((f) => codeOnly(read(f))).join("\n");
   if (src.includes("park_open_course_round")) return { kind: "F8 (D-384)", requires: "DB3" };
   if (src.includes("p_course_scope")) return { kind: "#740 (course scope)", requires: "DB2" };
   if (src.includes("isCourseItem(")) return { kind: "D-383 (#739)", requires: "DB2" };
   return { kind: "before D-383", requires: "DB0" };
 }
+
+/**
+ * The candidate's class (`read`, `files` as gnq-release.mjs gives them): the REVIEWED class of its manifest
+ * (tools/edge/edge-candidates.json), cross-checked by its markers. Not reviewed → UNKNOWN; reviewed as another class →
+ * CONFLICTING. Both have requires: null and are refused on every database.
+ */
+export function candidateClass(read, files, registry = loadRegistry()) {
+  const m = markerClass(read, files);
+  const id = identify(registry, "get-next-question", manifest(read, files).hash, m.kind);
+  if (id.verdict === "KNOWN") return m;
+  return { kind: id.verdict, requires: null, reason: id.reason, markers: m.kind };
+}
 /** Why a candidate may not go onto a database state (null = the state is the candidate's). */
 export function stateRefusal(cls, state) {
+  if (cls.requires === null) return `candidate is ${cls.kind}: ${cls.reason} — refused on every database`;
   if (state === cls.requires) return null;
   if (state === "UNKNOWN") return "the database is not in a reviewed state";
   if (state === "DB3" && cls.requires !== "DB3") {
@@ -385,13 +405,13 @@ export const deployArgs = (ref) => ["functions", "deploy", FUNCTION_SLUG, "--pro
 const git = (root, args) => execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 
 /** The candidate's identity: HEAD commit, the graph files, and every graph path that differs from HEAD (must be none). */
-export function candidateIdentity(root) {
+export function candidateIdentity(root, registry = loadRegistry()) {
   const read = workingTreeReader(root);
   const files = graphFiles(read);
   const hash = manifest(read, files).hash;
   const head = git(root, ["rev-parse", "HEAD"]);
   const dirty = git(root, ["status", "--porcelain", "--untracked-files=all", "--", ...files.map((f) => `supabase/${f}`)]);
-  return { head, files, hash, cls: candidateClass(read, files), dirty: dirty === "" ? [] : dirty.split("\n") };
+  return { head, files, hash, cls: candidateClass(read, files, registry), dirty: dirty === "" ? [] : dirty.split("\n") };
 }
 
 // ---- a local lock: one deploy at a time from this clone and its worktrees ----
@@ -508,7 +528,7 @@ function args(argv) {
 
 const USAGE = "usage: gnq-deploy-preflight.mjs sql | deploy --project-ref <ref> --expect-candidate <sha256> [--execute --record <new file>] | check-offline --catalog <file>";
 
-export function main(argv, { root = ROOT, now = () => new Date(), log = console.log, err = console.error, transport } = {}) {
+export function main(argv, { root = ROOT, now = () => new Date(), log = console.log, err = console.error, transport, registry } = {}) {
   let a;
   try { a = args(argv); } catch (e) { err(e.message); return 1; }
   const cmd = a._[0];
@@ -522,7 +542,8 @@ export function main(argv, { root = ROOT, now = () => new Date(), log = console.
     let catalog;
     try { catalog = parseCatalog(readFileSync(a.catalog, "utf8")); } catch (e) { err(`NOT READY: ${e.message}`); return 2; }
     const read = workingTreeReader(root);
-    const cls = candidateClass(read, graphFiles(read));
+    let cls;
+    try { cls = candidateClass(read, graphFiles(read), registry ?? loadRegistry()); } catch (e) { err(`NOT READY: ${e.message}`); return 2; }
     const state = stateKey(rolloutState(catalog));
     const refusal = stateRefusal(cls, state);
     const problems = refusal ? [refusal] : cls.requires === "DB0" ? [] : checkCatalog(catalog, { now: now(), maxAgeMin: 60 * 24 * 365, requiredState: cls.requires });
@@ -546,9 +567,11 @@ export function main(argv, { root = ROOT, now = () => new Date(), log = console.
   if (t.linkedRef() !== ref) { err(`REFUSED: the Supabase CLI is linked to ${t.linkedRef() ?? "no project"}, not ${ref}`); return 3; }
   // 2. Candidate: committed and clean, and the runbook's.
   let cand;
-  try { cand = candidateIdentity(root); } catch (e) { err(`REFUSED: candidate unreadable (${e.message})`); return 3; }
+  try { cand = candidateIdentity(root, registry ?? loadRegistry()); } catch (e) { err(`REFUSED: candidate unreadable (${e.message})`); return 3; }
   if (cand.dirty.length > 0) { err("REFUSED: the candidate's files differ from the commit:\n  " + cand.dirty.join("\n  ")); return 3; }
   if (cand.hash !== a["expect-candidate"]) { err(`REFUSED: the working tree is candidate ${cand.hash}, not ${a["expect-candidate"]}`); return 3; }
+  // 2a. Identity: only a REVIEWED version (tools/edge/edge-candidates.json) whose code reads as its reviewed class.
+  if (cand.cls.requires === null) { err(`REFUSED: ${stateRefusal(cand.cls, "DB0")}`); return 3; }
   // 2b. F8's get-next-question parks rounds and hands out activation_no: it is safe only next to F8's process-event.
   // This gate reads get-next-question alone, so it never deploys that class — the shared gate checks the pair.
   if (cand.cls.requires === "DB3") {

@@ -38,9 +38,10 @@ import {
   catalogSql, ledgerSql, TOOL_VERSION as CATALOG_VERSION,
 } from "./gnq-deploy-preflight.mjs";
 import { specifiers } from "./gnq-release.mjs";
+import { identify, loadRegistry } from "./edge-candidates.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-export const GATE_VERSION = 1;
+export const GATE_VERSION = 2;
 const SHA256_RE = /^[0-9a-f]{64}$/;
 const sha256 = (s) => createHash("sha256").update(s).digest("hex");
 
@@ -86,8 +87,8 @@ export const PE_F8_MARKERS = Object.freeze([
 ]);
 const PRE_F8_STATES = Object.freeze(["DB0", "DB1", "DB2"]);
 
-/** process-event's class from its own source: complete F8, before F8, or INCOMPLETE (some markers only). */
-export function processEventClass(read, files) {
+/** process-event's MARKER class from its own source: complete F8, before F8, or INCOMPLETE (some markers only). */
+export function processEventMarkers(read, files) {
   const index = files.includes("functions/process-event/index.ts") ? read("functions/process-event/index.ts") : "";
   // Comments do not count: a marker that only appears in a comment is not wired.
   const code = index.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((l) => l.replace(/(^|[^:])\/\/.*$/, "$1")).join("\n");
@@ -98,9 +99,26 @@ export function processEventClass(read, files) {
   return { kind: "INCOMPLETE", f8: null, accepts: [], missing };
 }
 
-/** get-next-question's class (gnq-deploy-preflight's rule), in the registry's shape. */
-export function getNextQuestionClass(read, files) {
-  const c = gnqClass(read, files);
+/** A class with no database: refused everywhere, also as the live partner. */
+const UNUSABLE = Object.freeze(["INCOMPLETE", "UNKNOWN", "CONFLICTING"]);
+export const isUnusable = (cls) => UNUSABLE.includes(cls?.kind);
+
+/**
+ * process-event's class: its markers (INCOMPLETE stays INCOMPLETE), then the REVIEWED identity of its manifest
+ * (tools/edge/edge-candidates.json): not reviewed → UNKNOWN, reviewed as another class → CONFLICTING.
+ */
+export function processEventClass(read, files, registry = loadRegistry()) {
+  const m = processEventMarkers(read, files);
+  if (m.kind === "INCOMPLETE") return m;
+  const id = identify(registry, "process-event", manifestFor(read, files).hash, m.kind);
+  if (id.verdict === "KNOWN") return m;
+  return { kind: id.verdict, f8: null, accepts: [], reason: id.reason, markers: m.kind };
+}
+
+/** get-next-question's class (gnq-deploy-preflight's rule: reviewed identity + markers), in the registry's shape. */
+export function getNextQuestionClass(read, files, registry = loadRegistry()) {
+  const c = gnqClass(read, files, registry);
+  if (c.requires === null) return { kind: c.kind, f8: null, accepts: [], requires: null, reason: c.reason, markers: c.markers };
   return { kind: c.kind, f8: c.requires === "DB3", accepts: [c.requires], requires: c.requires };
 }
 
@@ -109,9 +127,9 @@ export const FUNCTIONS = Object.freeze({
   "process-event": { other: "get-next-question", classify: processEventClass },
 });
 
-export function classify(slug, read) {
+export function classify(slug, read, registry = loadRegistry()) {
   const files = graphFilesFor(slug, read);
-  return { files, cls: FUNCTIONS[slug].classify(read, files), hash: manifestFor(read, files).hash };
+  return { files, cls: FUNCTIONS[slug].classify(read, files, registry), hash: manifestFor(read, files).hash };
 }
 
 /** Why `cls` of `slug` may not go onto database `state` (null = accepted). */
@@ -119,6 +137,7 @@ export function stateRefusal(slug, cls, state) {
   if (cls.kind === "INCOMPLETE") {
     return `${slug} candidate is INCOMPLETE: F8's activation check is only partly wired (missing: ${cls.missing.join(", ")}) — refused on every database`;
   }
+  if (cls.kind === "UNKNOWN" || cls.kind === "CONFLICTING") return `${slug} candidate is ${cls.kind}: ${cls.reason} — refused on every database`;
   if (slug === "get-next-question") return gnqStateRefusal({ kind: cls.kind, requires: cls.requires }, state);
   if (cls.accepts.includes(state)) return null;
   if (state === "UNKNOWN") return "the database is not in a reviewed state";
@@ -131,6 +150,7 @@ export function pairRefusal(slug, cls, other) {
   const otherSlug = FUNCTIONS[slug].other;
   if (!other || other.error) return `the live ${otherSlug} is unknown (${other?.error ?? "not read"}) — the pair cannot be checked`;
   if (other.cls.kind === "INCOMPLETE") return `the live ${otherSlug} is INCOMPLETE (missing: ${other.cls.missing.join(", ")}) — fix that first`;
+  if (isUnusable(other.cls)) return `the live ${otherSlug} is ${other.cls.kind}: ${other.cls.reason} — the pair cannot be checked (a read-only owner review decides whether to register it)`;
   if (slug === "get-next-question" && cls.f8 && other.cls.f8 !== true) {
     return `get-next-question ${cls.kind} parks course rounds and hands out activation_no, but the live process-event is ${other.cls.kind}: it would accept stale answers. Deploy F8's process-event FIRST (rollout plan, trin 5.2)`;
   }
@@ -176,7 +196,7 @@ export function cliTransport(root = ROOT, { bin = "supabase", run = spawnSync } 
 }
 
 /** One live function: version, status, verify_jwt, manifest and CLASS of its deployed source (or why not). */
-export function liveFunction(transport, ref, slug) {
+export function liveFunction(transport, ref, slug, registry = loadRegistry()) {
   let list;
   try { list = transport.listFunctions(ref); } catch (e) { return { error: `function list unreadable (${e.message})` }; }
   const rows = Array.isArray(list) ? list.filter((f) => f && (f.slug === slug || f.name === slug)) : [];
@@ -188,7 +208,7 @@ export function liveFunction(transport, ref, slug) {
   let dl;
   try {
     dl = transport.downloadFunction(ref, slug);
-    const c = classify(slug, dl.read);
+    const c = classify(slug, dl.read, registry);
     out.manifest = c.hash;
     out.cls = c.cls;
   } catch (e) {
@@ -201,9 +221,9 @@ export function liveFunction(transport, ref, slug) {
 
 const git = (root, args) => execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 
-export function candidateIdentity(root, slug) {
+export function candidateIdentity(root, slug, registry = loadRegistry()) {
   const read = treeReader(root);
-  const c = classify(slug, read);
+  const c = classify(slug, read, registry);
   const head = git(root, ["rev-parse", "HEAD"]);
   const dirty = git(root, ["status", "--porcelain", "--untracked-files=all", "--", ...c.files.map((f) => `supabase/${f}`)]);
   return { ...c, head, dirty: dirty === "" ? [] : dirty.split("\n") };
@@ -245,7 +265,7 @@ function databaseRead(transport, ref, now, maxAgeMin, slug, cls) {
 
 // ---- the command line ----
 
-const ALLOWED = { contracts: [], deploy: ["function", "project-ref", "expect-candidate", "record", "max-age-min"] };
+const ALLOWED = { contracts: [], identity: [], deploy: ["function", "project-ref", "expect-candidate", "record", "max-age-min"] };
 const FLAGS = new Set(["execute"]);
 
 function args(argv) {
@@ -265,11 +285,11 @@ function args(argv) {
   return out;
 }
 
-const USAGE = "usage: edge-deploy-gate.mjs contracts | deploy --function <get-next-question|process-event> --project-ref <ref> --expect-candidate <sha256> [--execute --record <new file>]";
+const USAGE = "usage: edge-deploy-gate.mjs contracts | identity | deploy --function <get-next-question|process-event> --project-ref <ref> --expect-candidate <sha256> [--execute --record <new file>]";
 
 export function contractsText() {
   return [
-    `edge-deploy-gate v${GATE_VERSION}: contract registry (classes are read from each function's own source)`,
+    `edge-deploy-gate v${GATE_VERSION}: contract registry. A class counts only for a REVIEWED manifest (tools/edge/edge-candidates.json) whose code reads as that class; otherwise UNKNOWN or CONFLICTING → nowhere`,
     "get-next-question:",
     "  before D-383 → DB0 · D-383 (#739) → DB2 · #740 (course scope) → DB2 · F8 (D-384) → DB3",
     "  F8 needs the live process-event to be F8 (its activation check exists before the first round is parked)",
@@ -281,7 +301,7 @@ export function contractsText() {
   ].join("\n");
 }
 
-export function main(argv, { root = ROOT, now = () => new Date(), log = console.log, err = console.error, transport } = {}) {
+export function main(argv, { root = ROOT, now = () => new Date(), log = console.log, err = console.error, transport, registry: injected } = {}) {
   let a;
   try { a = args(argv); } catch (e) { err(e.message); return 1; }
   const cmd = a._[0];
@@ -289,6 +309,18 @@ export function main(argv, { root = ROOT, now = () => new Date(), log = console.
   const unknown = Object.keys(a).filter((k) => k !== "_" && k !== "execute" && !ALLOWED[cmd].includes(k));
   if (unknown.length > 0 || (a.execute && cmd !== "deploy")) { err(`${cmd}: not accepted: ${[...unknown, ...(a.execute && cmd !== "deploy" ? ["execute"] : [])].map((k) => `--${k}`).join(", ")}`); return 1; }
   if (cmd === "contracts") { log(contractsText()); return 0; }
+  if (cmd === "identity") {
+    // This checkout's two candidates: manifest, marker class and register verdict — what a reviewer registers.
+    let registry;
+    try { registry = injected ?? loadRegistry(); } catch (e) { err(`REFUSED: ${e.message}`); return 3; }
+    const read = treeReader(root);
+    for (const s of Object.keys(FUNCTIONS)) {
+      const c = classify(s, read, registry);
+      const markers = c.cls.markers ?? c.cls.kind;
+      log(`${s}: manifest ${c.hash} (${c.files.length} files), code reads as ${markers}, register: ${isUnusable(c.cls) ? c.cls.kind : "KNOWN"}`);
+    }
+    return 0;
+  }
 
   const slug = a.function;
   if (!(slug in FUNCTIONS)) { err(`deploy needs --function ${Object.keys(FUNCTIONS).join(" | ")}`); return 1; }
@@ -301,16 +333,18 @@ export function main(argv, { root = ROOT, now = () => new Date(), log = console.
   if (!Number.isInteger(maxAgeMin) || maxAgeMin < 1 || maxAgeMin > 60) { err("--max-age-min must be 1..60"); return 1; }
   if (a.record && existsSync(a.record)) { err(`REFUSED: ${a.record} exists — a record is written once, for one deploy`); return 3; }
   const t = transport ?? cliTransport(root);
+  let registry;
+  try { registry = injected ?? loadRegistry(); } catch (e) { err(`REFUSED: ${e.message}`); return 3; }
 
   // 1. Environment.
   if (t.linkedRef() !== ref) { err(`REFUSED: the Supabase CLI is linked to ${t.linkedRef() ?? "no project"}, not ${ref}`); return 3; }
   // 2. Candidate: committed, clean, the runbook's, and a complete class.
   let cand;
-  try { cand = candidateIdentity(root, slug); } catch (e) { err(`REFUSED: candidate unreadable (${e.message})`); return 3; }
+  try { cand = candidateIdentity(root, slug, registry); } catch (e) { err(`REFUSED: candidate unreadable (${e.message})`); return 3; }
   if (cand.dirty.length > 0) { err("REFUSED: the candidate's files differ from the commit:\n  " + cand.dirty.join("\n  ")); return 3; }
   if (cand.hash !== a["expect-candidate"]) { err(`REFUSED: the working tree's ${slug} is candidate ${cand.hash}, not ${a["expect-candidate"]}`); return 3; }
   log(`candidate ${slug} ${cand.hash} is ${cand.cls.kind}: accepted on ${cand.cls.accepts.join(", ") || "no database"}`);
-  if (cand.cls.kind === "INCOMPLETE") { err(`REFUSED: ${stateRefusal(slug, cand.cls, "DB3")}`); return 3; }
+  if (isUnusable(cand.cls)) { err(`REFUSED: ${stateRefusal(slug, cand.cls, "DB3")}`); return 3; }
   // 3. The shared lock.
   let lock;
   try { lock = lockPath(root); } catch (e) { err(`REFUSED: no git directory for the lock (${e.message})`); return 3; }
@@ -323,16 +357,16 @@ export function main(argv, { root = ROOT, now = () => new Date(), log = console.
     const dbProblems = before.notReady ?? before.problems;
     if (dbProblems.length > 0) { err("NOT READY:\n  " + dbProblems.join("\n  ")); return 2; }
     // 5. Both live functions.
-    const live = liveFunction(t, ref, slug);
+    const live = liveFunction(t, ref, slug, registry);
     if (live.error) { err(`NOT READY: ${live.error}`); return 2; }
-    const other = liveFunction(t, ref, otherSlug);
+    const other = liveFunction(t, ref, otherSlug, registry);
     log(`live ${slug}: version ${live.version} (${live.cls.kind}); live ${otherSlug}: ${other.error ? other.error : `version ${other.version} (${other.cls.kind})`}`);
     const pair = pairRefusal(slug, cand.cls, other);
     if (pair) { err(`NOT READY: ${pair}`); return 2; }
     if (other.status !== "ACTIVE") { err(`NOT READY: the live ${otherSlug} is ${other.status}, not ACTIVE`); return 2; }
     if (live.manifest === cand.hash) { log(`ALREADY DEPLOYED: ${slug} version ${live.version} is candidate ${cand.hash}; nothing to do`); return 0; }
     // 6. The candidate once more, right before the deploy.
-    const again = candidateIdentity(root, slug);
+    const again = candidateIdentity(root, slug, registry);
     if (again.hash !== cand.hash || again.dirty.length > 0 || again.head !== cand.head) { err("REFUSED: the candidate changed during the check"); return 3; }
     const command = `supabase ${deployArgsFor(slug, ref).join(" ")}`;
     if (!a.execute) {
@@ -345,8 +379,8 @@ export function main(argv, { root = ROOT, now = () => new Date(), log = console.
     try { t.deploy(ref, slug); } catch (e) { err(`DEPLOY FAILED: ${e.message}`); return 5; }
     // 8. After.
     const after = databaseRead(t, ref, now(), maxAgeMin, slug, cand.cls);
-    const liveAfter = liveFunction(t, ref, slug);
-    const otherAfter = liveFunction(t, ref, otherSlug);
+    const liveAfter = liveFunction(t, ref, slug, registry);
+    const otherAfter = liveFunction(t, ref, otherSlug, registry);
     const post = [];
     if (after.refused) post.push(after.refused);
     if (after.notReady) post.push(...after.notReady);

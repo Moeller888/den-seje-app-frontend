@@ -22,9 +22,10 @@ import { PGlite } from "@electric-sql/pglite";
 import { answerChainSql, extractFunction, readMigration } from "./helpers/answer-chain-schema.mjs";
 import {
   ABSENT_FUNCTIONS, F8_FUNCTIONS, F8_TABLE, REQUIRED_FUNCTIONS, candidateClass, candidateHash, catalogSql, checkCatalog,
-  cliTransport, deployArgs, ledgerSql, lockPath, main, parseCatalog, parseLedger, rolloutState, stateRefusal,
+  cliTransport, deployArgs, ledgerSql, lockPath, main, markerClass, parseCatalog, parseLedger, rolloutState, stateRefusal,
 } from "../../tools/edge/gnq-deploy-preflight.mjs";
 import { gitReader, graphFiles, workingTreeReader } from "../../tools/edge/gnq-release.mjs";
+import { identify, loadRegistry, parseRegistry } from "../../tools/edge/edge-candidates.mjs";
 
 const REF = "abcdefghijklmnopqrst";
 const OTHER_REF = "zyxwvutsrqponmlkjihg";
@@ -156,18 +157,25 @@ test("DB3 with ONE change is refused: a pupil grant on a server-owned column, a 
 
 test("the candidate's class is read from its OWN source: F8 needs DB3, #740/D-383 need DB2, a version before D-383 only DB0", () => {
   const tree = workingTreeReader();
-  assert.deepEqual(candidateClass(tree, graphFiles(tree)), { kind: "F8 (D-384)", requires: "DB3" }, "this tree");
-  const at = (commit) => { const r = gitReader(commit, new URL("../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")); return candidateClass(r, graphFiles(r)); };
+  assert.deepEqual(candidateClass(tree, graphFiles(tree)), { kind: "F8 (D-384)", requires: "DB3" }, "this tree (reviewed: tools/edge/edge-candidates.json)");
+  // The markers are evidence only (the register decides identity): what each historical version's CODE reads as.
+  const at = (commit) => { const r = gitReader(commit, new URL("../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")); return markerClass(r, graphFiles(r)); };
   for (const [commit, want] of [["f51f39e4", "#740 (course scope)"], ["05a4a34f", "D-383 (#739)"], ["a7450b0f", "before D-383"]]) {
     let cls;
     try { cls = at(commit); } catch { continue; } // a shallow checkout lacks the commit: the synthetic cases below still run
     assert.equal(cls.kind, want, commit);
   }
-  const synth = (text) => candidateClass(() => text, ["functions/get-next-question/index.ts"]);
+  const synth = (text) => markerClass(() => text, ["functions/get-next-question/index.ts"]);
   assert.equal(synth("rpc('park_open_course_round')").requires, "DB3");
   assert.equal(synth("p_course_scope: 'exclude'").requires, "DB2");
   assert.equal(synth("if (isCourseItem(x))").requires, "DB2");
   assert.equal(synth("serve()").requires, "DB0");
+  // A marker in a comment is not code: a version before F8 that only MENTIONS the parking call does not read as F8.
+  assert.equal(synth("// park_open_course_round comes with F8\n/* p_course_scope */ serve()").requires, "DB0");
+  assert.equal(synth("const u = 'https://x.dk'; rpc('park_open_course_round')").requires, "DB3", "the :// of a URL is no comment");
+  // Lossy in ONE direction only: a // inside a string can hide a marker, which LOWERS the class — the register then
+  // reports a reviewed manifest as CONFLICTING (refused); it can never raise a class.
+  assert.equal(synth("const u = 'a//b'; rpc('park_open_course_round')").requires, "DB0");
   // The refusals say why, in both directions.
   assert.equal(stateRefusal({ kind: "F8 (D-384)", requires: "DB3" }, "DB3"), null);
   assert.match(stateRefusal({ kind: "F8 (D-384)", requires: "DB3" }, "DB2"), /needs DB3.*500/);
@@ -277,7 +285,13 @@ const PRE_F8 = (() => {
   for (const [p, v] of files) files.set(p, v.replaceAll("park_open_course_round", "parking_removed_in_this_synthetic_candidate"));
   return mapReader(files);
 })();
-async function setup(hooks = {}, { state = 2, otherState = 2, changeDuringDeploy = null, read = PRE_F8 } = {}) {
+// The synthetic candidate is no reviewed version, so the real register calls it UNKNOWN (tested below). The deploy tests
+// register it explicitly, as #740, in a TEST register: the real one plus this one entry.
+const REAL_REGISTRY = loadRegistry();
+const PRE_F8_HASH = candidateHash(PRE_F8);
+const TEST_REGISTRY = { ...REAL_REGISTRY, "get-next-question": { ...REAL_REGISTRY["get-next-question"],
+  [PRE_F8_HASH]: { class: "#740 (course scope)", verified_by: "tree", reviewed: "synthetic test candidate (this file)" } } };
+async function setup(hooks = {}, { state = 2, otherState = 2, changeDuringDeploy = null, read = PRE_F8, registry = TEST_REGISTRY } = {}) {
   const root = checkout(read);
   link(root, REF);
   let after = ROWS[state];
@@ -293,7 +307,7 @@ async function setup(hooks = {}, { state = 2, otherState = 2, changeDuringDeploy
   const s = fakeSupabase(root, projects, hooks);
   const out = [];
   const candidate = candidateHash(workingTreeReader(root));
-  const io = { root, transport: s.transport, log: (x) => out.push(String(x)), err: (x) => out.push(String(x)) };
+  const io = { root, transport: s.transport, log: (x) => out.push(String(x)), err: (x) => out.push(String(x)), registry };
   const deploy = (...extra) => main(["deploy", "--project-ref", REF, "--expect-candidate", candidate, ...extra], io);
   return { root, projects, ...s, out, candidate, io, deploy, record: join(root, "record.json") };
 }
@@ -365,7 +379,7 @@ test("concurrent use: a held lock refuses; the lock is released after every outc
 });
 
 test("the deploy candidates: #740 here; F8's candidate is REFUSED before any read (it needs the pair rule), on DB3 as on DB2", async () => {
-  assert.equal(candidateClass(PRE_F8, graphFiles(PRE_F8)).kind, "#740 (course scope)", "the synthetic candidate is #740");
+  assert.equal(candidateClass(PRE_F8, graphFiles(PRE_F8), TEST_REGISTRY).kind, "#740 (course scope)", "the synthetic candidate is #740 (test register)");
   for (const state of [3, 2]) {
     const s = await setup({}, { state, read: workingTreeReader() });
     assert.equal(s.deploy("--execute", "--record", s.record), 3, s.out.join("\n"));
@@ -483,4 +497,61 @@ test("the real transport is the Supabase CLI with explicit argument vectors: --l
   }
   const failing = cliTransport("/r", { run: () => ({ status: 1, stderr: "not linked" }) });
   assert.throws(() => failing.queryCatalog(), /db query failed \(exit 1\): not linked/);
+});
+
+// ---- identity (D-384, 2026-11-26): only a REVIEWED manifest whose code reads as its reviewed class ----
+
+test("identity: an unreviewed candidate is UNKNOWN and REFUSED before the lock and any read, even with the runbook's hash", async () => {
+  const s = await setup({}, { registry: REAL_REGISTRY });
+  assert.equal(candidateClass(PRE_F8, graphFiles(PRE_F8)).kind, "UNKNOWN", "the synthetic #740 is no reviewed version");
+  for (const extra of [[], ["--execute", "--record", s.record]]) {
+    assert.equal(s.deploy(...extra), 3, s.out.join("\n"));
+    assert.equal(s.calls.catalog, 0, "no catalog read");
+    assert.equal(s.calls.deploy, 0, "nothing deployed");
+    assert.ok(!existsSync(lockPath(s.root)), "no lock taken");
+  }
+  assert.match(s.out.join("\n"), /UNKNOWN: manifest [0-9a-f]{64} is not a reviewed get-next-question version \(its source reads as #740/);
+});
+
+test("identity: a registered manifest whose code reads as another class is CONFLICTING and REFUSED", async () => {
+  // The register claims the synthetic candidate is F8 — its code reads as #740.
+  const wrong = { ...REAL_REGISTRY, "get-next-question": { ...REAL_REGISTRY["get-next-question"],
+    [PRE_F8_HASH]: { class: "F8 (D-384)", verified_by: "tree", reviewed: "deliberately wrong" } } };
+  const cls = candidateClass(PRE_F8, graphFiles(PRE_F8), wrong);
+  assert.equal(cls.kind, "CONFLICTING");
+  assert.match(stateRefusal(cls, "DB2"), /registered as F8 \(D-384\), but its source reads as #740.*refused on every database/);
+  for (const st of ["DB0", "DB2", "DB3", "UNKNOWN"]) assert.ok(stateRefusal(cls, st), st);
+  const s = await setup({}, { registry: wrong });
+  assert.equal(s.deploy(), 3);
+  assert.equal(s.calls.catalog, 0);
+});
+
+test("identity: a renamed safety call, a marker only in a comment, one changed byte — each is UNKNOWN, never a known class", () => {
+  const tree = workingTreeReader();
+  const files = graphFiles(tree);
+  const variants = {
+    "F8's parking call renamed": (p) => tree(p).replaceAll("park_open_course_round", "park_round_v2"),
+    "the parking call only in a comment": (p) => tree(p).replaceAll("park_open_course_round(", "noop(") + "\n// park_open_course_round()\n",
+    "one byte added to a shared module": (p) => (p.startsWith("functions/_shared/") ? tree(p) + " " : tree(p)),
+  };
+  for (const [label, read] of Object.entries(variants)) {
+    const cls = candidateClass(read, files);
+    assert.ok(cls.kind === "UNKNOWN" || cls.kind === "CONFLICTING", `${label}: ${cls.kind}`);
+    assert.equal(cls.requires, null, label);
+  }
+});
+
+test("identity: the register itself fails loudly when malformed", () => {
+  const ok = JSON.stringify({ "get-next-question": {}, "process-event": {} });
+  assert.deepEqual(parseRegistry(ok), { "get-next-question": {}, "process-event": {} });
+  for (const [text, re] of [
+    ["{", /not JSON/],
+    [JSON.stringify({ "get-next-question": {} }), /process-event must be an object/],
+    [JSON.stringify({ "get-next-question": {}, "process-event": {}, "buy-item": {} }), /unknown key buy-item/],
+    [JSON.stringify({ "get-next-question": { abc: { class: "x", verified_by: "tree", reviewed: "r" } }, "process-event": {} }), /not a sha256/],
+    [JSON.stringify({ "get-next-question": { ["a".repeat(64)]: { verified_by: "tree", reviewed: "r" } }, "process-event": {} }), /class is required/],
+    [JSON.stringify({ "get-next-question": { ["a".repeat(64)]: { class: "x", verified_by: "me", reviewed: "r" } }, "process-event": {} }), /verified_by/],
+    [JSON.stringify({ "get-next-question": { ["a".repeat(64)]: { class: "x", verified_by: "tree", reviewed: " " } }, "process-event": {} }), /reviewed/],
+  ]) assert.throws(() => parseRegistry(text), re, text);
+  assert.equal(identify(parseRegistry(ok), "get-next-question", "a".repeat(64), "F8 (D-384)").verdict, "UNKNOWN");
 });

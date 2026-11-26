@@ -94,6 +94,11 @@ som tør kørsel) og henviser til `tools/edge/edge-deploy-gate.mjs deploy --func
 samme kontroller plus parreglen. Så findes der ingen anden vej uden om parkontrollen. Kandidater før F8 (#740, D-383)
 kan stadig køre her.
 
+**Kun gennemgåede versioner (2026-11-26).** Klassen læses ikke længere ud fra tekst alene. Den gælder kun, når
+kandidatens manifest står i `tools/edge/edge-candidates.json` som netop den klasse (`docs/operations/edge-deploy-gate.md`,
+"Identitet"). Et ukendt manifest (UKENDT) og et manifest, som koden modsiger (MODSTRIDENDE), afvises med exit 3, før lås
+og databaselæsning, også med runbookens hash. Markører i kommentarer tæller ikke.
+
 **Hvad gaten IKKE ser:** Edge-secrets (værdien af `LAERLIGVERSE_COURSE_PARKING`), `process-event` (den fælles gate
 `tools/edge/edge-deploy-gate.mjs` dækker begge funktioner og deres indbyrdes rækkefølge, se
 `docs/operations/edge-deploy-gate.md`), rækker (om der er kursusindhold eller parkerede runder). Det står i
