@@ -549,6 +549,13 @@ export function main(argv, { root = ROOT, now = () => new Date(), log = console.
   try { cand = candidateIdentity(root); } catch (e) { err(`REFUSED: candidate unreadable (${e.message})`); return 3; }
   if (cand.dirty.length > 0) { err("REFUSED: the candidate's files differ from the commit:\n  " + cand.dirty.join("\n  ")); return 3; }
   if (cand.hash !== a["expect-candidate"]) { err(`REFUSED: the working tree is candidate ${cand.hash}, not ${a["expect-candidate"]}`); return 3; }
+  // 2b. F8's get-next-question parks rounds and hands out activation_no: it is safe only next to F8's process-event.
+  // This gate reads get-next-question alone, so it never deploys that class — the shared gate checks the pair.
+  if (cand.cls.requires === "DB3") {
+    err(`REFUSED: candidate ${cand.cls.kind} needs F8's process-event live next to it, and this gate does not read process-event. ` +
+      "Use tools/edge/edge-deploy-gate.mjs deploy --function get-next-question (the same checks plus the pair rule, docs/operations/edge-deploy-gate.md)");
+    return 3;
+  }
   // 3. Lock.
   let lock;
   try { lock = lockPath(root); } catch (e) { err(`REFUSED: no git directory for the lock (${e.message})`); return 3; }

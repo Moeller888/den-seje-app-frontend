@@ -2,7 +2,7 @@
 // The catalog query runs, unmodified, against PGlite databases in the rollout states DB0, DB2 and DB3 (built from the
 // real migration files). The `deploy` command runs end to end in a temporary git checkout against a SYNTHETIC
 // Supabase that holds BOTH functions per project (version, status, verify_jwt, deployed source). The candidates and
-// the live versions are real sources: this tree (F8) and origin/main (get-next-question #740, process-event before
+// the live versions are real sources: this tree (F8) and the pinned commit 634b7282 (get-next-question #740, process-event before
 // F8). Nothing connects to Supabase, and nothing is deployed anywhere.
 //
 // HONEST LIMITS: as gnq-deploy-preflight.test.mjs — PGlite is PostgreSQL as superuser, and the CLI's JSON shapes are
@@ -14,6 +14,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 import { answerChainSql, extractFunction, readMigration } from "./helpers/answer-chain-schema.mjs";
 import { catalogSql, ledgerSql, candidateHash, lockPath } from "../../tools/edge/gnq-deploy-preflight.mjs";
@@ -28,21 +29,47 @@ const GNQ = "get-next-question";
 const PE = "process-event";
 const PE_INDEX = "functions/process-event/index.ts";
 
-// ---- the sources: this tree (F8 for both) and origin/main (#740 / before F8) ----
+// ---- the sources: this tree (F8 for both) and a PINNED commit before F8 ----
+// BEFORE_F8 is main right after #740 (get-next-question #740, process-event before F8); supabase/functions is unchanged
+// from there to 9177e15d, so it is the pair production is planned to run during the transition. Pinned, never
+// origin/main: main moves (F8 itself lands there), and CI checks out shallow, without old commits. The recorded fixture
+// holds exactly the files in which BEFORE_F8 differs from this tree; every run reads the sources through it, and where
+// the commit IS in the checkout, the first test proves the fixture equals the commit (as course-items-version-matrix).
+// UPDATE_EDGE_GATE_FIXTURE=1 rewrites it from the commit.
 const tree = workingTreeReader();
-let mainRead;
-try {
-  execFileSync("git", ["rev-parse", "--verify", "origin/main^{commit}"], { stdio: "ignore" });
-  mainRead = gitReader("origin/main");
-} catch { mainRead = null; }
-const needMain = { skip: mainRead ? false : "origin/main is not available in this clone" };
+const BEFORE_F8 = "634b728262ecc1b81c0347a743e9b793d707374d";
+const FIXTURE = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "edge-gate-before-f8-634b7282.json");
+let haveCommit = true;
+try { execFileSync("git", ["cat-file", "-e", `${BEFORE_F8}^{commit}`], { stdio: "ignore" }); } catch { haveCommit = false; }
+/** The files of both functions' graphs at BEFORE_F8 whose content differs from this tree (or is absent here). */
+function pinnedDelta() {
+  const pinned = gitReader(BEFORE_F8);
+  const files = {};
+  for (const slug of [GNQ, PE]) {
+    for (const f of graphFilesFor(slug, pinned)) {
+      let here = null;
+      try { here = tree(f); } catch { /* absent in this tree */ }
+      const then = pinned(f);
+      if (here !== then) files[f] = then;
+    }
+  }
+  return Object.fromEntries(Object.keys(files).sort().map((f) => [f, files[f]]));
+}
+if (process.env.UPDATE_EDGE_GATE_FIXTURE === "1") {
+  assert.ok(haveCommit, `${BEFORE_F8} is not in this checkout: the fixture cannot be rewritten`);
+  writeFileSync(FIXTURE, JSON.stringify({ source: `${BEFORE_F8} (main after #740: get-next-question #740, process-event before F8)`, files: pinnedDelta() }, null, 2) + "\n");
+}
+assert.ok(existsSync(FIXTURE), `${FIXTURE} is missing (UPDATE_EDGE_GATE_FIXTURE=1 writes it where ${BEFORE_F8} is available)`);
+const fixture = JSON.parse(readFileSync(FIXTURE, "utf8"));
 
 /** A reader with some files replaced. */
 const overlay = (base, changes) => (p) => (p in changes ? changes[p] : base(p));
-/** process-event from origin/main, everything else from this tree. */
-const withOldPe = () => (p) => (p.startsWith("functions/process-event/") ? mainRead(p) : tree(p));
-/** get-next-question from origin/main, everything else from this tree. */
-const withOldGnq = () => (p) => (p.startsWith("functions/get-next-question/") ? mainRead(p) : tree(p));
+/** Both functions as at BEFORE_F8. */
+const beforeF8 = overlay(tree, fixture.files);
+/** process-event as at BEFORE_F8, everything else from this tree. */
+const withOldPe = () => (p) => (p.startsWith("functions/process-event/") ? beforeF8(p) : tree(p));
+/** get-next-question as at BEFORE_F8, everything else from this tree. */
+const withOldGnq = () => (p) => (p.startsWith("functions/get-next-question/") ? beforeF8(p) : tree(p));
 
 // ---- the databases ----
 const D383 = "20261120150000_course_items_out_of_ordinary_quiz.sql";
@@ -66,6 +93,24 @@ const rowsOf = async (db) => ({ catalog: (await db.query(catalogSql())).rows, le
 const ROWS = { 0: await rowsOf(await database(0)), 2: await rowsOf(await database(2)), 3: await rowsOf(await database(3)) };
 
 // ---------------------------------------------------------------------------------------------------------------
+// The pinned reference.
+
+test("the pinned reference: the fixture is exactly where 634b7282 differs from this tree (where the commit is available)", { skip: !haveCommit && "shallow checkout: the recorded fixture stands in" }, () => {
+  assert.match(fixture.source, new RegExp(`^${BEFORE_F8} `));
+  assert.deepEqual(fixture.files, pinnedDelta(), "stale fixture: run with UPDATE_EDGE_GATE_FIXTURE=1 and review the diff");
+  const pinned = gitReader(BEFORE_F8);
+  for (const slug of [GNQ, PE]) {
+    assert.deepEqual(graphFilesFor(slug, beforeF8), graphFilesFor(slug, pinned), `${slug}: the same graph as the commit`);
+    assert.equal(manifestFor(beforeF8, graphFilesFor(slug, beforeF8)).hash, manifestFor(pinned, graphFilesFor(slug, pinned)).hash, `${slug}: the same manifest as the commit`);
+  }
+});
+
+test("the pinned reference is a fixed commit, never a moving ref", () => {
+  assert.match(BEFORE_F8, /^[0-9a-f]{40}$/);
+  assert.ok(Object.keys(fixture.files).length > 0 && Object.keys(fixture.files).every((f) => f.startsWith("functions/")));
+});
+
+// ---------------------------------------------------------------------------------------------------------------
 // The registry.
 
 test("the deployed file set and manifest are gnq-release.mjs's for get-next-question, and the same rule for process-event", () => {
@@ -79,7 +124,7 @@ test("the deployed file set and manifest are gnq-release.mjs's for get-next-ques
   assert.deepEqual(Object.keys(FUNCTIONS).sort(), [GNQ, PE]);
 });
 
-test("process-event's class is read from its own source: this tree is F8, origin/main is before F8", needMain, () => {
+test("process-event's class is read from its own source: this tree is F8, the pinned commit is before F8", () => {
   assert.deepEqual(classify(PE, tree).cls, { kind: "F8 (D-384)", f8: true, accepts: ["DB3"] });
   assert.deepEqual(classify(PE, withOldPe()).cls, { kind: "before F8", f8: false, accepts: ["DB0", "DB1", "DB2"] });
   assert.equal(classify(GNQ, tree).cls.kind, "F8 (D-384)");
@@ -212,7 +257,7 @@ test("usage: only the documented flags and the two functions", async () => {
   assert.equal(s.calls.catalog + s.calls.deploy, 0);
 });
 
-test("trin 5 in the planned order: F8's process-event first (next to #740), then F8's get-next-question — both verified", needMain, async () => {
+test("trin 5 in the planned order: F8's process-event first (next to #740), then F8's get-next-question — both verified", async () => {
   // 5.2 — process-event: DB3, live gnq #740, live process-event before F8.
   const s = await setup(PE, { live: { gnq: withOldGnq(), pe: withOldPe() } });
   assert.equal(s.run(), 0, s.text());
@@ -231,7 +276,7 @@ test("trin 5 in the planned order: F8's process-event first (next to #740), then
   assert.equal(JSON.parse(readFileSync(t.record, "utf8")).verified, true);
 });
 
-test("the WRONG order is refused: F8's get-next-question while process-event is before F8 → NOT READY, nothing deployed", needMain, async () => {
+test("the WRONG order is refused: F8's get-next-question while process-event is before F8 → NOT READY, nothing deployed", async () => {
   const s = await setup(GNQ, { live: { gnq: withOldGnq(), pe: withOldPe() } });
   assert.equal(s.run("--execute", "--record", s.record), 2);
   assert.match(s.text(), /Deploy F8's process-event FIRST/);
@@ -239,14 +284,14 @@ test("the WRONG order is refused: F8's get-next-question while process-event is 
   assert.equal(existsSync(s.record), false);
 });
 
-test("mixed versions on rollback: process-event before F8 next to F8's get-next-question → NOT READY", needMain, async () => {
+test("mixed versions on rollback: process-event before F8 next to F8's get-next-question → NOT READY", async () => {
   const s = await setup(PE, { candidate: withOldPe(), state: 3, live: { gnq: tree, pe: tree } });
   assert.equal(s.run(), 2);
   assert.match(s.text(), /no activation check|removes the activation check/);
   assert.equal(s.calls.deploy, 0);
 });
 
-test("incompatible database states: F8's process-event on DB2 or DB0, process-event before F8 on DB3 → NOT READY", needMain, async () => {
+test("incompatible database states: F8's process-event on DB2 or DB0, process-event before F8 on DB3 → NOT READY", async () => {
   for (const state of [0, 2]) {
     const s = await setup(PE, { state, live: { gnq: withOldGnq(), pe: withOldPe() } });
     assert.equal(s.run(), 2, `DB${state}`);
@@ -261,7 +306,7 @@ test("incompatible database states: F8's process-event on DB2 or DB0, process-ev
   assert.match(u.text(), /ALREADY DEPLOYED/, "the same source is recognised as deployed");
 });
 
-test("DB3 with one fact changed is refused for F8's process-event: an altered table is no reviewed state; a widened grant fails the full review", needMain, async () => {
+test("DB3 with one fact changed is refused for F8's process-event: an altered table is no reviewed state; a widened grant fails the full review", async () => {
   // A table fact changed: rolloutState no longer recognises DB3 at all.
   const db = await database(3);
   await db.exec("ALTER TABLE public.question_instances ALTER COLUMN activation_no DROP NOT NULL;");
@@ -290,7 +335,7 @@ test("a missing activation check in the CANDIDATE is refused before any database
   assert.equal(s.calls.catalog, 0);
 });
 
-test("wrong manifests and hashes: another expected hash, an uncommitted byte, an unreadable or INCOMPLETE live partner", needMain, async () => {
+test("wrong manifests and hashes: another expected hash, an uncommitted byte, an unreadable or INCOMPLETE live partner", async () => {
   const s = await setup(PE, { live: { gnq: withOldGnq(), pe: withOldPe() } });
   assert.equal(main(["deploy", "--function", PE, "--project-ref", REF, "--expect-candidate", "0".repeat(64)], s.io), 3);
   assert.match(s.text(), /is candidate [0-9a-f]{64}, not 0{64}/);
@@ -308,7 +353,7 @@ test("wrong manifests and hashes: another expected hash, an uncommitted byte, an
   assert.match(v.text(), /live process-event is INCOMPLETE/);
 });
 
-test("stale reads are refused: a catalog older than the limit, or from the future", needMain, async () => {
+test("stale reads are refused: a catalog older than the limit, or from the future", async () => {
   const later = () => new Date(Date.now() + 20 * 60_000);
   const s = await setup(PE, { live: { gnq: withOldGnq(), pe: withOldPe() }, now: later });
   assert.equal(s.run(), 2);
@@ -319,7 +364,7 @@ test("stale reads are refused: a catalog older than the limit, or from the futur
   assert.match(t.text(), /lies in the future/);
 });
 
-test("one Edge deploy at a time: the lock is gnq-deploy-preflight's file, and it is released after every outcome", needMain, async () => {
+test("one Edge deploy at a time: the lock is gnq-deploy-preflight's file, and it is released after every outcome", async () => {
   const s = await setup(PE, { live: { gnq: withOldGnq(), pe: withOldPe() } });
   const lock = lockPath(s.root);
   writeFileSync(lock, "{}\n");
@@ -330,7 +375,7 @@ test("one Edge deploy at a time: the lock is gnq-deploy-preflight's file, and it
   assert.equal(existsSync(lock), false);
 });
 
-test("the after-check: the OTHER function changing during the deploy, or this one not becoming the candidate → exit 4", needMain, async () => {
+test("the after-check: the OTHER function changing during the deploy, or this one not becoming the candidate → exit 4", async () => {
   const s = await setup(PE, { live: { gnq: withOldGnq(), pe: withOldPe() }, hooks: { afterDeploy: (fns) => { fns[GNQ].version += 1; fns[GNQ].files = filesOf(tree); } } });
   assert.equal(s.run("--execute", "--record", s.record), 4);
   assert.match(s.text(), /get-next-question changed during the deploy/);

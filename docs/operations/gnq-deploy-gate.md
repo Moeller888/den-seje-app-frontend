@@ -88,6 +88,12 @@ efterlader, og at hver enkelt ændring afvises.
 `LAERLIGVERSE_COURSE_PARKING=on` og Lærligvers-flagene fra (bevist i rollback-matrixen). At gå tilbage til en ældre
 version på DB3 er en bevidst ejerbeslutning uden om gaten, efter et read-only tjek af, at ingen runde er parkeret.
 
+**F8's kandidat deployes aldrig gennem denne gate.** F8's `get-next-question` er kun sikker ved siden af F8's
+`process-event`, og den læser denne gate ikke. Den afviser derfor klassen F8 (exit 3, før lås og databaselæsning, også
+som tør kørsel) og henviser til `tools/edge/edge-deploy-gate.mjs deploy --function get-next-question`. Den gate kører de
+samme kontroller plus parreglen. Så findes der ingen anden vej uden om parkontrollen. Kandidater før F8 (#740, D-383)
+kan stadig køre her.
+
 **Hvad gaten IKKE ser:** Edge-secrets (værdien af `LAERLIGVERSE_COURSE_PARKING`), `process-event` (den fælles gate
 `tools/edge/edge-deploy-gate.mjs` dækker begge funktioner og deres indbyrdes rækkefølge, se
 `docs/operations/edge-deploy-gate.md`), rækker (om der er kursusindhold eller parkerede runder). Det står i

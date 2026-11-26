@@ -34,6 +34,9 @@ Markørerne er `round-activation.ts` og `round-parked.ts` i modulgrafen samt kal
   mens runder kan parkeres.
 - En ukendt, ulæselig eller ufuldstændig partner afvises altid. Det samme gælder en partner, der ikke er ACTIVE.
 
+**Én vej.** `tools/edge/gnq-deploy-preflight.mjs deploy` afviser F8's `get-next-question` (exit 3, også som tør
+kørsel) og henviser hertil. Den gamle gate kan derfor ikke bruges uden om parreglen.
+
 ## Kørsel
 
 ```
@@ -72,7 +75,12 @@ Exitkoderne er som gnq-gatens: 0 ok, 1 brug, 2 IKKE KLAR, 3 AFVIST, 4 DEPLOYET M
   eller fra fremtiden) afvises.
 - Låsen deles med gnq-gaten og frigives efter hvert udfald.
 - Efterkontrollen fanger: den anden funktion ændret under deploy, forkert kilde, verify_jwt true og ændret database.
-- Mutationskontrol: når parreglen eller markørgenkendelsen slås fra, fejler testene.
+- Mutationskontrol: når parreglen, markørgenkendelsen eller den gamle gates F8-afvisning slås fra, fejler testene.
+- Referenceversionerne er fastlåst. "Før F8" er commit `634b7282`: main efter #740, hvor `supabase/functions` er uændret
+  til `9177e15d`. Testen læser aldrig `origin/main`, som flytter sig. CI's shallow checkout mangler commit'en, så
+  `tests/fixtures/edge-gate-before-f8-634b7282.json` indeholder præcis de filer, hvor commit'en afviger fra træet. Hvor
+  commit'en findes, beviser første test, at fixturen er lig commit'en (samme graf og samme manifest). Ingen test springes
+  over i CI. Før rettelsen 2026-11-26 sprang 10 af de 17 tests over uden `origin/main`.
 
 ## Hvad gaten IKKE ser
 
