@@ -86,7 +86,9 @@ Hvert trin: hvad der er tilgængeligt, hvad der kan gå galt, tilladt tilbagefø
      runde parkeres;
   3. **`get-next-question`** fra F8 gennem gaten (gaten afviser kandidaten på alt andet end DB3).
   Så starter F8 med parkering til, og der er ingen mellemtilstand "F8 med parkering fra" (som efterlader B/B2
-  fastlåst). **Grænse:** gaten dækker kun `get-next-question`; `process-event`'s deploy følger runbooken manuelt.
+  fastlåst). **Gate:** begge deploys går gennem den fælles gate `tools/edge/edge-deploy-gate.mjs`
+  (`docs/operations/edge-deploy-gate.md`), som håndhæver rækkefølgen: F8's `get-next-question` afvises, så længe den
+  kørende `process-event` ikke er F8. Gaten ser stadig ikke secret-værdien eller rækkerne.
 - **Tilgængeligt:** almindelig undervisning; kursus utilgængeligt (Lærligvers-flagene er ikke sat i produktion).
   Dette ER sikkerhedsversionen.
 - **Kan gå galt:** efterkontrollen fejler (exit 4) — gaten stopper, runbookens beslutning gælder.

@@ -268,8 +268,16 @@ const oldFn = () => {
 };
 const ROWS = { 0: await rowsOf(DBS[0]), 1: await rowsOf(DBS[1]), 2: await rowsOf(DBS[2]), 3: await rowsOf(DBS[3]) };
 
-// This tree's candidate is F8: its reviewed state is DB3 (an older candidate is checked out from its commit below).
-async function setup(hooks = {}, { state = 3, otherState = 3, changeDuringDeploy = null, read = undefined } = {}) {
+// This gate deploys only candidates WITHOUT a partner contract. F8's get-next-question (this tree) is safe only next to
+// F8's process-event, which this gate does not read: it is REFUSED here and goes through tools/edge/edge-deploy-gate.mjs
+// (tests/unit/edge-deploy-gate.test.mjs). The deploy tests therefore run a candidate of class #740 — this tree with F8's
+// parking call renamed, deterministic and without an old commit — on its reviewed state DB2.
+const PRE_F8 = (() => {
+  const files = fileMap(workingTreeReader());
+  for (const [p, v] of files) files.set(p, v.replaceAll("park_open_course_round", "parking_removed_in_this_synthetic_candidate"));
+  return mapReader(files);
+})();
+async function setup(hooks = {}, { state = 2, otherState = 2, changeDuringDeploy = null, read = PRE_F8 } = {}) {
   const root = checkout(read);
   link(root, REF);
   let after = ROWS[state];
@@ -304,7 +312,7 @@ test("usage: only the documented flags; a catalog FILE can never reach a deploy;
 });
 
 test("environment: no link or another project → REFUSED before any read; the catalog comes from the LINKED project", async () => {
-  const s = await setup({}, { state: 0, otherState: 3 });
+  const s = await setup({}, { state: 0, otherState: 2 });
   writeFileSync(join(s.root, "supabase", ".temp", "project-ref"), "garbage\n");
   assert.equal(s.deploy(), 3, "no valid link");
   link(s.root, OTHER_REF);
@@ -356,12 +364,21 @@ test("concurrent use: a held lock refuses; the lock is released after every outc
   assert.equal(existsSync(lockPath(t.root)), false, "released after NOT READY");
 });
 
-test("F8's candidate onto DB2 (its migration missing) → NOT READY, nothing deployed; an older candidate onto DB3 → NOT READY with the safe rollback target", async () => {
-  const s = await setup({}, { state: 2 });
-  assert.equal(s.deploy("--execute", "--record", s.record), 2, s.out.join("\n"));
-  assert.ok(s.out.some((x) => /F8 \(D-384\): it needs DB3/.test(x)), "the class is reported");
-  assert.ok(s.out.some((x) => /needs DB3/.test(x)));
-  assert.equal(s.calls.deploy, 0);
+test("the deploy candidates: #740 here; F8's candidate is REFUSED before any read (it needs the pair rule), on DB3 as on DB2", async () => {
+  assert.equal(candidateClass(PRE_F8, graphFiles(PRE_F8)).kind, "#740 (course scope)", "the synthetic candidate is #740");
+  for (const state of [3, 2]) {
+    const s = await setup({}, { state, read: workingTreeReader() });
+    assert.equal(s.deploy("--execute", "--record", s.record), 3, s.out.join("\n"));
+    assert.ok(s.out.some((x) => /F8 \(D-384\) needs F8's process-event live next to it/.test(x)), s.out.join(" | "));
+    assert.ok(s.out.some((x) => /edge-deploy-gate\.mjs deploy --function get-next-question/.test(x)));
+    assert.equal(s.deploy(), 3, "the dry run too: it would print a command without the pair check");
+    assert.equal(s.calls.catalog + s.calls.deploy, 0, "refused before any read");
+    assert.equal(existsSync(s.record), false);
+    assert.equal(existsSync(lockPath(s.root)), false);
+  }
+});
+
+test("an older candidate onto DB3 → NOT READY with the safe rollback target", async () => {
   let old;
   try { old = gitReader("f51f39e4", new URL("../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")); old(graphFiles(workingTreeReader())[0]); } catch { old = null; }
   const files = old ? null : fileMap(workingTreeReader());

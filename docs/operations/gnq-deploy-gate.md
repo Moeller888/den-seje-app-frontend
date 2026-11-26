@@ -88,8 +88,15 @@ efterlader, og at hver enkelt ændring afvises.
 `LAERLIGVERSE_COURSE_PARKING=on` og Lærligvers-flagene fra (bevist i rollback-matrixen). At gå tilbage til en ældre
 version på DB3 er en bevidst ejerbeslutning uden om gaten, efter et read-only tjek af, at ingen runde er parkeret.
 
-**Hvad gaten IKKE ser:** Edge-secrets (værdien af `LAERLIGVERSE_COURSE_PARKING`), `process-event` (deployes efter
-runbooken, før gnq), rækker (om der er kursusindhold eller parkerede runder). Det står i
+**F8's kandidat deployes aldrig gennem denne gate.** F8's `get-next-question` er kun sikker ved siden af F8's
+`process-event`, og den læser denne gate ikke. Den afviser derfor klassen F8 (exit 3, før lås og databaselæsning, også
+som tør kørsel) og henviser til `tools/edge/edge-deploy-gate.mjs deploy --function get-next-question`. Den gate kører de
+samme kontroller plus parreglen. Så findes der ingen anden vej uden om parkontrollen. Kandidater før F8 (#740, D-383)
+kan stadig køre her.
+
+**Hvad gaten IKKE ser:** Edge-secrets (værdien af `LAERLIGVERSE_COURSE_PARKING`), `process-event` (den fælles gate
+`tools/edge/edge-deploy-gate.mjs` dækker begge funktioner og deres indbyrdes rækkefølge, se
+`docs/operations/edge-deploy-gate.md`), rækker (om der er kursusindhold eller parkerede runder). Det står i
 `docs/operations/laerligverse-rollout-plan.md`, hvor hvert af dem kontrolleres.
 
 ## E1: hvordan læsningen bindes til projektet
@@ -190,8 +197,9 @@ Ejeren beslutter og installerer. Guarden er ikke ændret.
    - Edge-secret `LAERLIGVERSE_COURSE_PARKING`: guarden behandler den allerede som en secret-ændring ("ask", én direkte
      kommando pr. kald; bekræftet 2026-11-24, da selv tekst om den i et script blev afvist). Ingen ændring nødvendig;
      den hører til trin 5 i udrulningsplanen;
-   - deploy af `process-event`: "ask" som i dag, men kun i udrulningsplanens trin 5 (FØR gnq) — et tilsvarende
-     gate-værktøj for `process-event` findes ikke endnu;
+   - deploy af `process-event`: "ask" som i dag, men kun i udrulningsplanens trin 5 (FØR gnq) og kun gennem den fælles
+     gate `tools/edge/edge-deploy-gate.mjs --function process-event` (bygget 2026-11-26, ikke installeret som
+     guard-regel; en guard-ændring kræver ejerens godkendelse);
    - **forslag:** tillad `db query --db-url` mod udelukkende lokale adresser (127.0.0.1/localhost), så CLI'ens
      JSON-format kan observeres mod en engangsdatabase. I dag afvises det sammen med alle `db query`.
 
