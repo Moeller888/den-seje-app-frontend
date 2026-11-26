@@ -1,6 +1,7 @@
 // Refreshes tests/unit-ci-weights.json from recent CI logs and projects the unit-shard job times
 // (D-361). Read-only towards GitHub: it only GETs workflow runs, jobs and job logs through `gh api`.
-// It writes nothing unless --write is given, and then only tests/unit-ci-weights.json.
+// It writes nothing unless --write is given, and then only tests/unit-ci-weights.json, deleting the fragments in
+// tests/unit-ci-weights.d/ that the new measurement covers (a fragment left behind would override it).
 //
 //   node tools/ci/unit-weights-refresh.mjs [--runs 123,456] [--count 6] [--repo owner/name] [--write]
 //
@@ -14,7 +15,7 @@
 // at a normal (1.00), a slow (p90, 1.14) and the slowest seen (1.49) runner — constants measured on
 // 203 shard jobs, 2026-11-05/06 (D-361). Output contains file names and numbers only.
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { planShards } from "../../tests/support/unit-timing.mjs";
@@ -57,6 +58,14 @@ export function projection(suite, weights, from, to) {
       ok: job.p90 <= DESIGN_TARGET_S && job.slowest < JOB_TIMEOUT_S - SETUP_S });
   }
   return rows;
+}
+
+/** Deletes every fragment in `dir` whose test file `weights` (a fresh measurement) covers; returns those fragments.
+ * Fragments for files the measurement did not see stay: they are still the only weight for that file. */
+export function foldFragments(dir, weights) {
+  const covered = readWeightFragments(dir).filter((f) => f.file in weights);
+  for (const f of covered) unlinkSync(join(dir, `${f.file}.json`));
+  return covered;
 }
 
 const HERE = dirname(fileURLToPath(import.meta.url)), REPO_ROOT = resolve(HERE, "..", "..");
@@ -116,9 +125,11 @@ async function main() {
     };
     writeFileSync(file, JSON.stringify(doc, null, 2) + "\n");
     console.log(`\nwrote ${file}`);
-    // The fragments this refresh measured are folded into the shared file now: delete them in the same commit.
-    const covered = readWeightFragments(join(REPO_ROOT, FRAGMENT_DIR)).filter((f) => f.file in weights);
-    for (const f of covered) console.log(`  folded, delete in this commit: ${FRAGMENT_DIR}/${f.file}.json (${f.seconds} s → ${weights[f.file]} s)`);
+    // The fragments this refresh measured are folded into the shared file now. They are deleted here, not merely listed:
+    // a fragment left behind would override the newer measurement (a fragment wins over the shared file).
+    for (const f of foldFragments(join(REPO_ROOT, FRAGMENT_DIR), weights)) {
+      console.log(`  folded and deleted: ${FRAGMENT_DIR}/${f.file}.json (${f.seconds} s → ${weights[f.file]} s) — commit the deletion with the shared file`);
+    }
   } else {
     console.log("\n(dry run — pass --write to update tests/unit-ci-weights.json)");
   }

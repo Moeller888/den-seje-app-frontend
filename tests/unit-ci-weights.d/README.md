@@ -13,4 +13,5 @@ de samme linjer. Kun to vægte for den SAMME testfil kan konflikte, og så er de
 
 Et fragment tilsidesætter den delte fils værdi for samme testfil (`tests/support/unit-weights.mjs`). Et forkert navn,
 manglende `source` eller `seconds` ≤ 0 får kørslen til at fejle højlydt. `tools/ci/unit-weights-refresh.mjs --write`
-folder målingerne ind i den delte fil og lister de fragmenter, der skal slettes i samme commit.
+folder målingerne ind i den delte fil og sletter selv de fragmenter, målingen dækker. Ellers ville et efterladt fragment
+tilsidesætte den nyere måling. Commit sletningerne sammen med den delte fil.

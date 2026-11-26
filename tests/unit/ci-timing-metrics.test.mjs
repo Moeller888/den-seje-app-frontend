@@ -639,3 +639,59 @@ test("the reason for fragments: two branches adding weights as fragments merge w
   assert.deepEqual(loadUnitWeights(root).weights, { "a.test.mjs": 6, "b.test.mjs": 4.9, "c.test.mjs": 2.5 });
   rmSync(root, { recursive: true, force: true });
 });
+
+test("the same test file on two branches: identical fragments merge cleanly, different seconds are a real conflict", () => {
+  const g = (cwd, ...a) => execFrag("git", a, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+  const root = fragRepo({ "a.test.mjs": 6 }, {});
+  g(root, "init", "-q", "-b", "main");
+  g(root, "config", "user.email", "t@example.invalid"); g(root, "config", "user.name", "t"); g(root, "config", "core.autocrlf", "false");
+  g(root, "add", "-A"); g(root, "commit", "-q", "-m", "base");
+  const fragment = (name, body) => {
+    g(root, "switch", "-q", "-c", name, "main");
+    mkdirSync(joinFrag(root, "tests", "unit-ci-weights.d"), { recursive: true });
+    writeFileSyncFrag(joinFrag(root, "tests", "unit-ci-weights.d", "b.test.mjs.json"), body);
+    g(root, "add", "-A"); g(root, "commit", "-q", "-m", name);
+  };
+  const same = JSON.stringify({ seconds: 4.9, source: "run 1" }) + "\n";
+  fragment("same-1", same);
+  fragment("same-2", same);
+  g(root, "switch", "-q", "same-1");
+  g(root, "merge", "-q", "--no-edit", "same-2");
+  assert.equal(loadUnitWeights(root).weights["b.test.mjs"], 4.9);
+  fragment("diff-1", JSON.stringify({ seconds: 4.9, source: "run 1" }) + "\n");
+  fragment("diff-2", JSON.stringify({ seconds: 9.1, source: "run 2" }) + "\n");
+  g(root, "switch", "-q", "diff-1");
+  assert.throws(() => g(root, "merge", "-q", "--no-edit", "diff-2"), "two different weights for one file are never merged silently");
+  g(root, "merge", "--abort");
+  rmSync(root, { recursive: true, force: true });
+});
+
+import { foldFragments } from "../../tools/ci/unit-weights-refresh.mjs";
+
+test("refresh --write folds: the fragments the new measurement covers are DELETED, so none can override it; others stay", () => {
+  const root = fragRepo({ "a.test.mjs": 6 }, {
+    "a.test.mjs.json": JSON.stringify({ seconds: 1.8, source: "PR run" }),
+    "b.test.mjs.json": JSON.stringify({ seconds: 4.9, source: "PR run" }),
+    "README.md": "# fragments\n",
+  });
+  const dir = joinFrag(root, FRAGMENT_DIR);
+  const measured = { "a.test.mjs": 2.2, "c.test.mjs": 3 }; // b was not in the measured runs
+  assert.deepEqual(foldFragments(dir, measured).map((f) => f.file), ["a.test.mjs"]);
+  assert.deepEqual(readdirSync(dir).sort(), ["README.md", "b.test.mjs.json"], "a's fragment is gone, b's (still the only weight) stays");
+  writeFileSyncFrag(joinFrag(root, "tests", "unit-ci-weights.json"), JSON.stringify({ _comment: "x", weights: measured }, null, 2) + "\n");
+  assert.deepEqual(loadUnitWeights(root).weights, { "a.test.mjs": 2.2, "b.test.mjs": 4.9, "c.test.mjs": 3 }, "the new measurement wins for a");
+  rmSync(root, { recursive: true, force: true });
+});
+
+test("the real suite with fragments: 4 shards (the workflow) and 5 shards (the proposal) each run every CI file exactly once", () => {
+  const suite = readdirSync(new URL("./", import.meta.url)).filter((f) => f.endsWith(".test.mjs") && !BINARY_DEPENDENT.includes(f)).sort();
+  const { weights, fragments } = loadUnitWeights(REPO_DIR);
+  for (const f of fragments) assert.ok(suite.includes(f.file) || BINARY_DEPENDENT.includes(f.file), `${f.file}: a fragment for a file CI does not run`);
+  for (const n of [4, 5]) {
+    const plan = planShards(suite, n, weights);
+    assert.equal(plan.length, n);
+    assert.deepEqual(plan.flatMap((s) => s.files).sort(), suite, `${n} shards: every file in exactly one shard`);
+    assert.equal(new Set(plan.flatMap((s) => s.files)).size, suite.length, `${n} shards: no file twice`);
+    assert.ok(plan.every((s) => s.files.length > 0), `${n} shards: none empty`);
+  }
+});

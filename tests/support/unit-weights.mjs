@@ -9,7 +9,8 @@
 //
 // A fragment: tests/unit-ci-weights.d/<test file>.json = { "seconds": <number > 0>, "source": "<where it was measured>" }
 // A fragment overrides the shared file's entry for that test file. tools/ci/unit-weights-refresh.mjs --write folds the
-// measured values into the shared file and lists the fragments that the refresh covers; delete those in the same commit.
+// measured values into the shared file and DELETES the fragments the refresh covers (one left behind would override the
+// newer measurement); commit those deletions with the shared file.
 // Anything malformed throws: a broken fragment must fail the run loudly, never be ignored.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
