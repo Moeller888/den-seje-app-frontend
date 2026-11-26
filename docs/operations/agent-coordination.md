@@ -133,6 +133,49 @@ Sessions-id tages automatisk fra harnessen, så `--session` er ikke nødvendig.
 Overblik over alle låse: `node tools/agents/claim.mjs list`. Ødelagte låse vises som `ØDELAGT`, de øvrige vises
 stadig, og exitkoden er 6.
 
+## Integrationskø og mergevindue (midlertidig procedure, ejer-GO 2026-11-26)
+
+**Problemet:** parallelle spor merger til main i tidsrummet mellem én sessions integrationsverifikation og ejerens
+manuelle merge. Det skete for #744 tre gange 2026-11-25 (#752, #754, #755). Mergeværktøjets SHA-lås
+(`docs/operations/manual-merge-procedure.md`) stopper korrekt hver gang, men hver main-flytning koster en ny
+prøve-merge, en ny kommando, ofte en ny CI-runde og nye konflikter.
+
+**Løsningen genbruger claim-protokollen. Der er ingen ny kode og ingen guard-, token- eller ruleset-ændring.** Den er
+frivillig koordinering som resten af claim-mekanismen og ikke adgangskontrol.
+
+1. **Udvikling fortsætter uændret.** Branches pushes og testes som hidtil. Køen gælder kun selve mergen til main.
+2. **Mergeparathed registreres på PR'ens egen branch-lås**, når PR'en er grøn og lokalt verificeret mod en bestemt
+   main:
+   ```
+   node tools/agents/claim.mjs heartbeat --branch <b> --status "MERGEKLAR #<N> head=<sha> main=<sha> <UTC-tid>" --next "venter på mergevinduet"
+   ```
+   Køen ses af alle med `node tools/agents/claim.mjs list`. Rækkefølgen er tidspunktet for MERGEKLAR, medmindre
+   ejeren bestemmer andet.
+3. **Ét mergevindue ad gangen.** Den forreste PR's session tager pseudo-låsen `merge-window/main`:
+   ```
+   node tools/agents/claim.mjs claim --branch merge-window/main --task MERGE-<N> --pr <N> --purpose "mergevindue #<N>"
+   ```
+   Claim-værktøjet tillader kun én ejer. `node tools/agents/claim.mjs whois --branch merge-window/main` viser, hvem
+   der har vinduet.
+4. **Mens vinduet er optaget**, forbereder andre sessioner ingen mergekommandoer og beder ikke ejeren om at merge.
+   Ejeren merger kun den PR, der har vinduet, også i andre spor. Udvikling, push og CI fortsætter frit.
+5. **Kort og levende.** Vinduet bruges kun mellem den friske verifikation (prøve-merge, tests, main-CI og dry-run) og
+   ejerens merge. Målet er under 2 timer, og der sendes heartbeat ved hver statusændring. Et vindue uden heartbeat i
+   over 2 timer betragtes som forældet. Det overtages aldrig automatisk: ejeren eller ejersessionen frigiver det efter
+   afklaring, som for alle andre låse.
+6. **Efter merge eller stop:** sessionen verificerer mergen (forældre, CI, branch), og PR'ens branch-status
+   opdateres. Derefter frigives vinduet:
+   ```
+   node tools/agents/claim.mjs release --branch merge-window/main
+   ```
+   Først derefter tager den næste i køen vinduet.
+7. **Ejeren godkender stadig hver merge** med mergeværktøjet. Vinduet bestemmer kun rækkefølgen og reducerer,
+   hvor tit main flytter sig under en verifikation. Det giver ingen merge-rettigheder, og SHA-låsen gælder uændret.
+
+**Grænser:** låsene er lokale på denne maskine og frivillige. En session, der ikke læser denne procedure, eller en
+merge i GitHubs webflade, ses ikke af køen. Derfor er punkt 4 også en regel for ejeren. Proceduren er midlertidig,
+indtil ejeren beslutter en varig løsning.
+
 ## Hvad push-kontrollen faktisk garanterer
 
 | Scenarie | Opdages | Hvordan |
