@@ -285,3 +285,99 @@ test("handover henter fakta fra git og efterlader kun de felter, et menneske ell
   assert.match(md, /Arbejdstræ:\*\* rent/);
   for (const f of ["Tests", "Åbne fejl", "Risici", "Næste sikre handling", "Godkendelsesstatus"]) assert.match(md, new RegExp(f));
 });
+
+// ── push-check, fjerde krav: migrationsversioner (tools/ci/migration-versions.mjs checkBranch) ──────────────────────
+// Et rigtigt bart remote med main (én migration), agentens klon `a` på `work`, og en fremmed klon `b`.
+const G = ["-c", "user.email=t@t", "-c", "user.name=t", "-c", "commit.gpgsign=false"];
+function migRepos() {
+  const r = repos();
+  const add = (cwd, name) => {
+    mkdirSync(join(cwd, "supabase", "migrations"), { recursive: true });
+    writeFileSync(join(cwd, "supabase", "migrations", name), "select 1;\n");
+    sh(["add", "-A"], cwd);
+    sh([...G, "commit", "-q", "-m", `add ${name}`], cwd);
+  };
+  sh(["branch", "-M", "main"], r.a);
+  add(r.a, "20261201100000_a.sql");
+  sh(["push", "-q", "origin", "main"], r.a);
+  sh(["checkout", "-q", "-b", "work"], r.a);
+  sh(["clone", "-q", r.bare, r.b], r.root);
+  return { ...r, add };
+}
+// En ny branch: verificeret fraværende, så push-check når til migrationskravet.
+function readyToPush(r) {
+  sh(["fetch", "-q", "origin"], r.a);
+  own(r.dir);
+  verify(r.dir, { cwd: r.a, branch: "work", session: "A" });
+}
+
+test("push-check, migrationer: en unik ny migration → OK; samme version på en anden hentet branch → MIGRATION_COLLISION (10)", () => {
+  const r = migRepos();
+  try {
+    r.add(r.a, "20261201110000_mine.sql");
+    readyToPush(r);
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.OK);
+    sh(["checkout", "-q", "-b", "other"], r.b);
+    r.add(r.b, "20261201110000_theirs.sql");
+    sh(["push", "-q", "origin", "other"], r.b);
+    sh(["fetch", "-q", "origin"], r.a);
+    const res = pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" });
+    assert.equal(res.code, EXIT.MIGRATION_COLLISION, res.reason);
+    assert.match(res.reason, /origin\/other has 20261201110000_theirs\.sql/);
+  } finally { r.done(); }
+});
+
+test("push-check, migrationer: dublet i eget træ → 10; omnummerering fjerner kollisionen", () => {
+  const r = migRepos();
+  try {
+    r.add(r.a, "20261201110000_x.sql");
+    r.add(r.a, "20261201110000_y.sql");
+    readyToPush(r);
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.MIGRATION_COLLISION);
+    sh(["mv", "supabase/migrations/20261201110000_y.sql", "supabase/migrations/20261201113700_y.sql"], r.a);
+    sh([...G, "commit", "-q", "-m", "omnummerér"], r.a);
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.OK);
+  } finally { r.done(); }
+});
+
+test("push-check, migrationer: ulæselig ref eller manglende base fejler LUKKET (MIGRATION_ERROR, 11) — aldrig et stille ok", () => {
+  const r = migRepos();
+  try {
+    r.add(r.a, "20261201110000_mine.sql");
+    readyToPush(r);
+    const blob = execFileSync("git", ["hash-object", "-w", "--stdin"], { cwd: r.a, input: "x", encoding: "utf8" }).trim();
+    sh(["update-ref", "refs/remotes/origin/not-a-commit", blob], r.a);
+    let res = pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" });
+    assert.equal(res.code, EXIT.MIGRATION_ERROR, res.reason);
+    assert.match(res.reason, /cannot read the tree of origin\/not-a-commit/);
+    sh(["update-ref", "-d", "refs/remotes/origin/not-a-commit"], r.a);
+    sh(["update-ref", "-d", "refs/remotes/origin/main"], r.a); // basen er ikke hentet
+    res = pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" });
+    assert.equal(res.code, EXIT.MIGRATION_ERROR, res.reason);
+  } finally { r.done(); }
+});
+
+test("push-check, migrationer: en branch uden tilføjede migrationer læser ingen refs (ingen ekstra belastning)", () => {
+  const r = migRepos();
+  try {
+    commit(r.a, "kun kode");
+    readyToPush(r);
+    const calls = [];
+    const spy = (args, cwd) => { calls.push(args.join(" ")); return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim(); };
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A", run: spy }).code, EXIT.OK);
+    assert.equal(calls.filter((c) => c.startsWith("for-each-ref")).length, 0, calls.join("\n"));
+  } finally { r.done(); }
+});
+
+test("push-check, migrationer: de eksisterende krav kommer FØR migrationskravet (ejerskab, verificering, remote)", () => {
+  const r = migRepos();
+  try {
+    r.add(r.a, "20261201100000_dup_of_main.sql"); // ville være en kollision
+    sh(["fetch", "-q", "origin"], r.a);
+    own(r.dir);
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.NOT_VERIFIED);
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "B" }).code, EXIT.OWNED_BY_OTHER);
+    verify(r.dir, { cwd: r.a, branch: "work", session: "A" });
+    assert.equal(pushCheck(r.dir, { cwd: r.a, branch: "work", session: "A" }).code, EXIT.MIGRATION_COLLISION);
+  } finally { r.done(); }
+});

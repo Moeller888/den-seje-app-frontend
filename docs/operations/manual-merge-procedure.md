@@ -96,8 +96,11 @@ repository-indstillinger, et fejlende merge-kald og afvigende merge-forældre el
   strict). Afbødning uden reservationssystem: vælg ikke runde timer, kør kontrollen igen ved hvert push og
   umiddelbart før mergeanbefalingen, og kør træ-testen lokalt mod `ExpectedMain` som en del af
   integrationsverifikationen.
-- **Senere integration i claim-protokollen (anbefaling, ikke gennemført):** `tools/agents/claim.mjs push-check` kan
-  importere `collisions()` og afvise et push med en ny exitkode, når branchen tilføjer en migration, der kolliderer
-  med en hentet branch. Kontrollen kører så automatisk i det trin, alle agenter allerede kører. Den forbliver et
-  øjebliksbillede og ikke en reservation. Det er en ændring i det fælles koordinationsværktøj, så den bør lande
-  som sin egen lille ændring, når #749 er merget.
+- **Integreret i claim-protokollen (2026-11-25):** `tools/agents/claim.mjs push-check` kører `checkBranch` som sit
+  fjerde krav. Kollision giver exit 10 og en git-fejl eller en ulæselig ref exit 11, og begge stopper pushet. En branch
+  uden tilføjede migrationer læser ingen refs. Kontrollen forbliver et øjebliksbillede og ikke en reservation.
+- **Mulig atomisk reservation (anbefaling, ikke gennemført):** den eksisterende D-nummer-reservation
+  (`tools/decisions/reserve.mjs`) er atomisk, fordi GitHub afviser at oprette et tag, der allerede findes, når det
+  pushes uden force. Samme mønster, et tag `migration-version/<14 cifre>` oprettet, før migrationsfilen committes, ville
+  lukke vinduet mellem to sessioner uden et nyt koordinationssystem. Det kræver en ændring af tag-praksis (og evt.
+  guard-reglerne for tag-push) og ejerens særskilte beslutning.

@@ -64,12 +64,78 @@ export function collisions(added, refs) {
   return out;
 }
 
-const git = (args) => execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-const lsMigrations = (ref) => git(["ls-tree", "--name-only", `${ref}:${MIGRATIONS_DIR}`]).split("\n").map((s) => s.trim()).filter(Boolean);
-// The migrations of a ref: [] when its tree has no supabase/migrations; throws when the ref itself cannot be read.
-function refMigrations(ref) {
-  const dir = git(["ls-tree", "-d", "--name-only", ref, MIGRATIONS_DIR]).trim();
-  return dir === MIGRATIONS_DIR ? lsMigrations(ref) : [];
+const defaultGit = (args) => execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+const isGitError = (e) => typeof e?.status === "number"; // a git exit code — not a bug in this script
+
+/**
+ * The whole check, shared by this CLI and tools/agents/claim.mjs push-check (one rule, one implementation).
+ *   base, head  refs (default origin/main, HEAD);  self  this branch's name, whose own origin ref is not "another
+ *   branch";  run(args) → git stdout (throws on a git error; claim.mjs passes its own runner with the cwd).
+ *   skipWithoutMigrations  a tree WITHOUT supabase/migrations is "nothing to check" (claim.mjs: every branch passes
+ *   push-check, most never touch migrations) instead of a usage error (the CLI is run on purpose).
+ * Returns { code: 0 ok · 1 collision · 2 git error / unreadable ref / missing base, added, errors[], collisions[],
+ * checkedRefs, summary }. Nothing added → no ref is read at all (no extra cost for ordinary branches).
+ */
+export function checkBranch({ base = "origin/main", head = "HEAD", self = null, run = defaultGit, skipWithoutMigrations = false } = {}) {
+  const errors = [];
+  const out = (code, extra) => ({ code, added: [], errors, collisions: [], checkedRefs: 0, ...extra });
+  const ls = (ref) => run(["ls-tree", "--name-only", `${ref}:${MIGRATIONS_DIR}`]).split("\n").map((s) => s.trim()).filter(Boolean);
+  const hasDir = (ref) => run(["ls-tree", "-d", "--name-only", ref, MIGRATIONS_DIR]).trim() === MIGRATIONS_DIR;
+  let here, added;
+  try {
+    if (!hasDir(head)) {
+      if (skipWithoutMigrations) return out(0, { summary: `no ${MIGRATIONS_DIR} in ${head} — nothing to check` });
+      errors.push(`${head} has no ${MIGRATIONS_DIR}`);
+      return out(2, { summary: "nothing to compare" });
+    }
+    here = ls(head);
+    const fork = run(["merge-base", head, base]).trim();
+    const before = new Set(hasDir(fork) ? ls(fork) : []);
+    added = here.filter((n) => !before.has(n));
+  } catch (e) {
+    if (!isGitError(e)) throw e;
+    errors.push(`git: ${String(e.stderr || e.message).split("\n")[0].trim()} (is ${base} fetched?)`);
+    return out(2, { summary: "git error" });
+  }
+  const dup = duplicateVersions(here).map((d) => ({ version: d.version, mine: d.names[0], theirs: d.names[1], ref: "this tree" }));
+  if (added.length === 0) {
+    return { code: dup.length ? 1 : 0, added, errors, collisions: dup, checkedRefs: 0,
+      summary: dup.length ? "duplicate version in this tree" : "0 added on this branch — no ref read" };
+  }
+  let refs;
+  try {
+    refs = run(["for-each-ref", "--format=%(refname:short)", "refs/remotes/origin"]).split("\n").map((s) => s.trim())
+      .filter((r) => r && r !== "origin/HEAD" && r !== "origin" && r !== `origin/${self}`);
+  } catch (e) {
+    if (!isGitError(e)) throw e;
+    errors.push(`git: cannot list origin refs`);
+    return out(2, { added, summary: "git error" });
+  }
+  const trees = [];
+  for (const ref of refs) {
+    try { trees.push({ ref, names: hasDir(ref) ? ls(ref) : [] }); } catch (e) {
+      if (!isGitError(e)) throw e;
+      errors.push(`cannot read the tree of ${ref}`);
+    }
+  }
+  const hits = [...dup, ...collisions(added, trees)];
+  if (hits.length) return { code: 1, added, errors, collisions: hits, checkedRefs: trees.length, summary: `${hits.length} collision(s)` };
+  if (errors.length) return { code: 2, added, errors, collisions: [], checkedRefs: trees.length, summary: `${errors.length} ref(s) unreadable — git fetch --prune origin and run again` };
+  return { code: 0, added, errors, collisions: [], checkedRefs: trees.length,
+    summary: `${added.length} added on this branch, unique against ${trees.length} origin branches (fetched state)` };
+}
+
+/** One line per finding, for both the CLI and claim.mjs. */
+export function describeCheck(r) {
+  const lines = [];
+  for (const e of r.errors) lines.push(`ERROR: ${e}`);
+  for (const h of r.collisions) {
+    lines.push(h.ref === "this tree"
+      ? `COLLISION in this tree: version ${h.version} is used by ${h.mine} and ${h.theirs}`
+      : `COLLISION: this branch adds ${h.mine}; ${h.ref} has ${h.theirs} (version ${h.version})`);
+  }
+  if (r.code === 1) lines.push("Pick a version that no branch uses (later than every migration this one requires), rename the file and every reference.");
+  return lines;
 }
 
 function main(argv) {
@@ -77,33 +143,18 @@ function main(argv) {
   const base = opt("--base", "origin/main");
   const head = opt("--head", "HEAD");
   if (!base || !head) { console.error("usage: node tools/ci/migration-versions.mjs [--base origin/main] [--head HEAD]"); return 2; }
-  const here = lsMigrations(head);
-  const dup = duplicateVersions(here);
-  for (const d of dup) console.error(`COLLISION in this tree: version ${d.version} is used by ${d.names.join(" and ")}`);
-  const fork = git(["merge-base", head, base]).trim();
-  const before = new Set(lsMigrations(fork));
-  const added = here.filter((n) => !before.has(n));
-  const self = head === "HEAD" ? git(["rev-parse", "--abbrev-ref", "HEAD"]).trim() : null;
-  const refs = git(["for-each-ref", "--format=%(refname:short)", "refs/remotes/origin"]).split("\n").map((s) => s.trim())
-    .filter((r) => r && r !== "origin/HEAD" && r !== "origin" && r !== `origin/${self}`);
-  const trees = [];
-  const unreadable = [];
-  for (const ref of refs) {
-    try { trees.push({ ref, names: refMigrations(ref) }); } catch (e) {
-      if (typeof e?.status !== "number") throw e; // a git exit code, not a bug in this script
-      unreadable.push(ref);
+  let self = null;
+  if (head === "HEAD") {
+    try { self = defaultGit(["rev-parse", "--abbrev-ref", "HEAD"]).trim(); } catch (e) {
+      if (!isGitError(e)) throw e;
+      console.error("migration versions: not a git repository"); return 2;
     }
   }
-  for (const r of unreadable) console.error(`ERROR: cannot read the tree of ${r}`);
-  const hits = collisions(added, trees);
-  for (const h of hits) console.error(`COLLISION: this branch adds ${h.mine}; ${h.ref} has ${h.theirs} (version ${h.version})`);
-  if (dup.length || hits.length) {
-    console.error("Pick a version that no branch uses (later than every migration this one requires), rename the file and every reference.");
-    return 1;
-  }
-  if (unreadable.length) { console.error(`migration versions: ${unreadable.length} ref(s) unreadable — fix git (git fetch --prune origin) and run again`); return 2; }
-  console.log(`migration versions: ok — ${added.length} added on this branch, unique against ${trees.length} origin branches (fetched state)`);
-  return 0;
+  const r = checkBranch({ base, head, self });
+  for (const l of describeCheck(r)) console.error(l);
+  if (r.code === 0) console.log(`migration versions: ok — ${r.summary}`);
+  else console.error(`migration versions: ${r.summary}`);
+  return r.code;
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
