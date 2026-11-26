@@ -183,3 +183,9 @@ anvendt i produktionen 2026-11-24 som `20261124160706`. Den står nu i `APPLIED_
 
 `20261125113412_avatar_northstar_hair_h25g2_d387` (D-387) stod i `REPO_AHEAD_OF_PRODUCTION`, indtil den blev
 anvendt i produktionen 2026-11-25 som `20261125194022`. Den står nu i `APPLIED_IN_PRODUCTION`.
+
+`20261126154317_avatar_northstar_hair_h25g4_d388` (D-388) er ikke anvendt i produktionen. Repositoryets
+Northstar-garderobe kan gemme HAIR-25 forsøg G4 (`avatar_identity.northstar.hair` = `h25v5`, `h25d5` og `h25d4`,
+hver med `-grey` / `-brown`) gennem `set_avatar_northstar`, med de seks kort skjult bag `NORTHSTAR_HAIR_H25G4`, og
+produktionens `validate_avatar_identity` afviser værdierne. Den står derfor i `REPO_AHEAD_OF_PRODUCTION` som åben
+produktionsopgave under D-388. Den skal anvendes, før kortene åbnes.
