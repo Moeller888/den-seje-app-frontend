@@ -66,7 +66,9 @@ fn AS (
     ('mc9',      'public.process_question_attempt_v2(uuid,uuid,text,integer,uuid,text,text,text,integer)'),
     ('tx10',     'public.process_text_answer_v2(uuid,uuid,text,boolean,integer,uuid,text,text,text,integer)'),
     ('snap',     'public.question_instances_served_snapshot()'),
-    ('course',   'public.question_is_course_item(jsonb)')
+    ('course',   'public.question_is_course_item(jsonb)'),
+    ('park',     'public.park_open_course_round(uuid)'),
+    ('resume',   'public.resume_parked_course_round(uuid,text,text)')
   ) AS v(k, sig)
 ),
 f AS (
@@ -79,6 +81,7 @@ f AS (
     max(md5) FILTER (WHERE k = 'mc7')     AS mc7,     max(md5) FILTER (WHERE k = 'tx8')     AS tx8,
     max(md5) FILTER (WHERE k = 'mc9')     AS mc9,     max(md5) FILTER (WHERE k = 'tx10')    AS tx10,
     max(md5) FILTER (WHERE k = 'snap')    AS snap,    max(md5) FILTER (WHERE k = 'course')  AS course,
+    max(md5) FILTER (WHERE k = 'park')    AS park,    max(md5) FILTER (WHERE k = 'resume')  AS resume,
     max(oid::oid) FILTER (WHERE k = 'mc7')  AS mc7_oid,  max(oid::oid) FILTER (WHERE k = 'tx8')  AS tx8_oid,
     max(oid::oid) FILTER (WHERE k = 'mc9')  AS mc9_oid,  max(oid::oid) FILTER (WHERE k = 'tx10') AS tx10_oid,
     max(oid::oid) FILTER (WHERE k = 'pqa')  AS pqa_oid,  max(oid::oid) FILTER (WHERE k = 'pta')  AS pta_oid,
@@ -165,25 +168,37 @@ SELECT 'PRE-01' AS check_id, 'pre' AS phase,
        s.pqa = '2e05e769a102f61ffef0ea4dd550c55b' AS ok, 1 AS ord FROM s
 UNION ALL
 -- D-383 (20261120150000) skifter release + de tre request_repeat_*_for_student i ÉN transaktion og tilføjer
--- question_is_course_item. Derfor kun to lovlige sæt: alle fire før D-383 (helperen fraværende) eller alle fire efter
--- (helperen med sin gennemgåede krop). En blanding — eller en hvilken som helst anden krop — er false.
-SELECT 'PRE-02', 'pre', 'de øvrige seks fastlåste svar-/genåbningsfunktioner har de gennemgåede kroppe (release: før eller efter D-316; release og de tre repeat-funktioner: alle før eller alle efter D-383)',
+-- question_is_course_item. F8/D-384 (20261124160000) skifter de samme fire igen i ÉN transaktion (helperen uændret) og
+-- tilføjer park_open_course_round / resume_parked_course_round. Derfor kun tre lovlige sæt: alle fire før D-383
+-- (helperen og F8 fraværende), alle fire efter D-383 (helperen med sin krop, F8 fraværende) eller alle fire efter F8
+-- (helperen med sin krop, F8's to funktioner til stede). En blanding — eller en hvilken som helst anden krop — er false.
+SELECT 'PRE-02', 'pre', 'de øvrige seks fastlåste svar-/genåbningsfunktioner har de gennemgåede kroppe (release: før eller efter D-316; release og de tre repeat-funktioner: alle før D-383, alle efter D-383 eller alle efter F8)',
        concat_ws(' ', 'pta=' || coalesce(left(s.pta, 8), 'mangler'), 'release=' || coalesce(left(s.release, 8), 'mangler'),
                  'rq=' || coalesce(left(s.rq, 8), 'mangler'), 'rqs=' || coalesce(left(s.rqs, 8), 'mangler'),
                  'rqss=' || coalesce(left(s.rqss, 8), 'mangler'), 'rql=' || coalesce(left(s.rql, 8), 'mangler'),
-                 'course=' || coalesce(left(s.course, 8), 'mangler')),
+                 'course=' || coalesce(left(s.course, 8), 'mangler'),
+                 'park=' || coalesce(left(s.park, 8), 'mangler'), 'resume=' || coalesce(left(s.resume, 8), 'mangler')),
        coalesce(s.pta = 'e80727ea87ffdc64988e5a09dcb20356'
          AND s.rq   = '54ab9354d309c014e94e902fd6f885f4'
          AND ((s.release IN ('7b7693b3bff869a113e8e97e16bb456a', 'b80c1c7857ecc90bdbd7b6175b65c78f')
                AND s.rqs  = '2ac19e786310b59051a44aed96b5bf46'
                AND s.rqss = '092555368551a096c29d6e60f58c17b1'
                AND s.rql  = 'db8280ddee20254e876be7fb1fc57e4d'
-               AND to_regprocedure('public.question_is_course_item(jsonb)') IS NULL)
+               AND to_regprocedure('public.question_is_course_item(jsonb)') IS NULL
+               AND to_regprocedure('public.park_open_course_round(uuid)') IS NULL)
            OR (s.release = 'e52e69fa3374a5838293977f0057b34d'
                AND s.rqs  = 'c14b90ccd4d05e12473083b072eaefba'
                AND s.rqss = 'b23d72a1d167a94246e5b7243c25cdbd'
                AND s.rql  = '410d0ab6fb67c329a573cf3f73973921'
-               AND s.course = '00cc41a03b3f5070789fe5442fddf5cc')), false), 2 FROM s
+               AND s.course = '00cc41a03b3f5070789fe5442fddf5cc'
+               AND to_regprocedure('public.park_open_course_round(uuid)') IS NULL)
+           OR (s.release = '72f2a0f3579b2ce758031ce7f47724e3'
+               AND s.rqs  = 'f21252b7f5ba341697613beb3ad2302f'
+               AND s.rqss = 'e69545d93975d3da5b5de0c29e9b522a'
+               AND s.rql  = '881b68b8cc997205d83dc5532e152bf9'
+               AND s.course = '00cc41a03b3f5070789fe5442fddf5cc'
+               AND s.park   = '52581c2c4fad3c6de60286014f7f671c'
+               AND s.resume = '6695d1104f3383e3b43adff7679415f2')), false), 2 FROM s
 UNION ALL
 SELECT 'PRE-03', 'pre', 'seks som SECURITY DEFINER, request_repeat_level_question_for_student som INVOKER',
        'definer(6)=' || coalesce(s.six_definer::text, 'mangler') || ' level_definer=' || coalesce(s.rql_definer::text, 'mangler'),
@@ -193,6 +208,7 @@ SELECT 'PRE-04', 'pre', 'D-290 G2-værnet er fraværende eller præcis det genne
        coalesce(s.g2, 'fraværende'),
        s.g2 IS NULL OR s.g2 = 'e5627de108be67869a4615490a6857a2', 4 FROM s
 UNION ALL
+-- F8's park_open_course_round / resume_parked_course_round er kendte (deres kroppe tjekkes i PRE-02's F8-sæt).
 SELECT 'PRE-05', 'pre', 'ingen ukendt funktion opdaterer question_instances.answered/repeat_count',
        coalesce((SELECT string_agg(p.oid::regprocedure::text, ', ' ORDER BY 1)
                    FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
@@ -200,13 +216,13 @@ SELECT 'PRE-05', 'pre', 'ingen ukendt funktion opdaterer question_instances.answ
                     AND p.prosrc ~* 'update\s+(public\.)?question_instances\M'
                     AND p.prosrc ~* '\m(answered|repeat_count)\M'
                     AND p.oid NOT IN (SELECT fn.oid FROM fn WHERE fn.oid IS NOT NULL
-                                        AND fn.k IN ('pqa','pta','release','rq','rqs','rqss','rql','mc7','tx8','mc9','tx10'))), 'ingen'),
+                                        AND fn.k IN ('pqa','pta','release','rq','rqs','rqss','rql','mc7','tx8','mc9','tx10','park','resume'))), 'ingen'),
        NOT EXISTS (SELECT 1 FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
                     WHERE n.nspname = 'public'
                       AND p.prosrc ~* 'update\s+(public\.)?question_instances\M'
                       AND p.prosrc ~* '\m(answered|repeat_count)\M'
                       AND p.oid NOT IN (SELECT fn.oid FROM fn WHERE fn.oid IS NOT NULL
-                                          AND fn.k IN ('pqa','pta','release','rq','rqs','rqss','rql','mc7','tx8','mc9','tx10'))), 5
+                                          AND fn.k IN ('pqa','pta','release','rq','rqs','rqss','rql','mc7','tx8','mc9','tx10','park','resume'))), 5
 UNION ALL
 SELECT 'PRE-06', 'pre', 'question_attempts findes ikke, eller er tom ifølge statistikken (K1 kontrollerer selv atomart, at den er tom)',
        CASE WHEN s.qa IS NULL THEN 'findes ikke' ELSE s.qa_rows::text || ' rækker (estimat)' END,

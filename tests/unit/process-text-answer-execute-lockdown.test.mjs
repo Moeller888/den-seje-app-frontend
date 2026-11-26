@@ -90,7 +90,7 @@ test("the Edge half this migration depends on is in the repo", () => {
   const rpc = readFileSync(join(REPO, "supabase/functions/process-event/text-answer-rpc.ts"), "utf8");
   const index = readFileSync(join(REPO, "supabase/functions/process-event/index.ts"), "utf8");
   assert.match(rpc, /admin\.rpc\("process_text_answer",/);
-  assert.match(index, /createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\), ADMIN_CLIENT_OPTIONS\)/);
+  assert.match(index, /createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\), headers \? \{ \.\.\.ADMIN_CLIENT_OPTIONS, global: \{ headers \} \} : ADMIN_CLIENT_OPTIONS\)/);
   assert.equal(/supabase\s*\.rpc\(\s*["']process_text_answer["']/.test(index), false,
     "after the lockdown a user-client call would be denied");
 });

@@ -21,15 +21,17 @@ import { dirname, join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { answerChainSql, extractFunction, readMigration } from "./helpers/answer-chain-schema.mjs";
 import {
-  ABSENT_FUNCTIONS, REQUIRED_FUNCTIONS, candidateHash, catalogSql, checkCatalog, cliTransport, deployArgs, ledgerSql,
-  lockPath, main, parseCatalog, parseLedger, rolloutState,
+  ABSENT_FUNCTIONS, F8_FUNCTIONS, F8_TABLE, REQUIRED_FUNCTIONS, candidateClass, candidateHash, catalogSql, checkCatalog,
+  cliTransport, deployArgs, ledgerSql, lockPath, main, markerClass, parseCatalog, parseLedger, rolloutState, stateRefusal,
 } from "../../tools/edge/gnq-deploy-preflight.mjs";
-import { graphFiles, workingTreeReader } from "../../tools/edge/gnq-release.mjs";
+import { gitReader, graphFiles, workingTreeReader } from "../../tools/edge/gnq-release.mjs";
+import { identify, loadRegistry, parseRegistry } from "../../tools/edge/edge-candidates.mjs";
 
 const REF = "abcdefghijklmnopqrst";
 const OTHER_REF = "zyxwvutsrqponmlkjihg";
 const D383 = "20261120150000_course_items_out_of_ordinary_quiz.sql";
 const SCOPE = "20261123100000_course_scope_before_candidate_limit.sql";
+const F8 = "20261124160000_course_round_parking.sql";
 
 async function database(state) {
   const db = new PGlite();
@@ -40,9 +42,10 @@ async function database(state) {
   for (const f of ["20261031194600_mc_length_cue_answer_paths.sql", "20261102100000_release_open_rounds_on_inactive_questions.sql"]) await db.exec(readMigration(f));
   if (state >= 1) await db.exec(readMigration(D383));
   if (state >= 2) await db.exec(readMigration(SCOPE));
+  if (state >= 3) await db.exec(readMigration(F8));
   // The ledger as Supabase keeps it (versions are apply_migration's own timestamps, not the file names).
   await db.exec(`CREATE SCHEMA supabase_migrations; CREATE TABLE supabase_migrations.schema_migrations (version text PRIMARY KEY, name text);
-    INSERT INTO supabase_migrations.schema_migrations VALUES ('20261104095423', 'h5_bootstrap')${state >= 1 ? ", ('20261201000001', 'd383')" : ""}${state >= 2 ? ", ('20261201000002', 'course_scope')" : ""};`);
+    INSERT INTO supabase_migrations.schema_migrations VALUES ('20261104095423', 'h5_bootstrap')${state >= 1 ? ", ('20261201000001', 'd383')" : ""}${state >= 2 ? ", ('20261201000002', 'course_scope')" : ""}${state >= 3 ? ", ('20261201000010', 'course_round_parking')" : ""};`);
   return db;
 }
 async function catalogOf(db) {
@@ -50,14 +53,22 @@ async function catalogOf(db) {
   assert.equal(r.rows.length, 1);
   return parseCatalog(r.rows); // the shape the Management API returns: [{ preflight: … }]
 }
-const DBS = { 0: await database(0), 1: await database(1), 2: await database(2) };
+const DBS = { 0: await database(0), 1: await database(1), 2: await database(2), 3: await database(3) };
 
 test("the two queries are read-only SELECTs: catalog over pg_proc, ledger over versions; no table rows, no writes", () => {
   for (const sql of [catalogSql(), ledgerSql()]) {
     const body = sql.replace(/^--.*$/m, "");
     assert.match(body.trim(), /^SELECT json_build_object\(/);
-    assert.doesNotMatch(body, /\b(INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|GRANT|REVOKE|TRUNCATE|COPY|SET|DO)\b/);
-    assert.doesNotMatch(body, /\b(question_instances|questions|profiles|auth\.users|student_)\w*\b(?!_)/i, "reads no table with pupil data");
+    // Statements only: SQL comments and string literals (privilege names such as 'UPDATE') are data, not statements;
+    // what remains must hold no writing keyword, and it is one statement.
+    const code = body.replace(/--[^\n]*/g, "").replace(/'(?:[^']|'')*'/g, "''");
+    assert.doesNotMatch(code, /\b(INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|GRANT|REVOKE|TRUNCATE|COPY|SET|DO)\b/);
+    assert.doesNotMatch(code, /;\s*\S/, "one statement");
+    assert.doesNotMatch(body, /\b(FROM|JOIN)\s+(public\.)?(question_instances|questions|profiles|auth\.users|student_\w+)\b/i, "reads no table with pupil data");
+    // D-384's table facts name question_instances ONLY as a catalog object: to_regclass('public.question_instances').
+    assert.equal(body.replace(/to_regclass\('public\.question_instances'\)/g, "").match(/question_instances(?!_parked_guard|_activation|_parked_)/g), null,
+      "question_instances appears only inside to_regclass() (catalog), never as a table that is read");
+    assert.doesNotMatch(body, /\b(questions|profiles|auth\.users)\b/i);
   }
   for (const f of REQUIRED_FUNCTIONS) assert.ok(catalogSql().includes(`'${f.sig}'`));
   for (const s of ABSENT_FUNCTIONS) assert.ok(catalogSql().includes(`'${s}'`));
@@ -67,7 +78,7 @@ test("the two queries are read-only SELECTs: catalog over pg_proc, ledger over v
 test("DB2 as the migrations leave it: ready; the expected facts are exactly what the two files create", async () => {
   const c = await catalogOf(DBS[2]);
   assert.equal(rolloutState(c), "DB2 (both migrations)");
-  assert.deepEqual(checkCatalog(c), []);
+  assert.deepEqual(checkCatalog(c, { requiredState: "DB2" }), []);
   const l = parseLedger((await DBS[2].query(ledgerSql())).rows);
   assert.equal(l.count, 3);
 });
@@ -104,6 +115,75 @@ test("DB2 with ONE change is refused: a different body, a widened grant, an extr
   }
 });
 
+test("DB3 (F8) as the three migrations leave it: ready for an F8 candidate; the F8 facts are exactly what the file creates", async () => {
+  const c = await catalogOf(DBS[3]);
+  assert.equal(rolloutState(c), "DB3 (all three migrations, F8)");
+  assert.deepEqual(checkCatalog(c, { requiredState: "DB3" }), []);
+  assert.deepEqual(c.table.pupil_column_privileges, [], "anon/authenticated: nothing on the three server-owned columns");
+  assert.deepEqual(c.table.pupil_table_update, [], "no table-level UPDATE left for the pupil roles");
+  for (const f of F8_FUNCTIONS) assert.equal(c.functions.find((x) => x.sig === f.sig)?.md5, f.md5, f.sig);
+  assert.deepEqual(Object.keys(c.table.columns).sort(), Object.keys(F8_TABLE.columns).sort());
+  // …and DB3 is NOT ready for a DB2 candidate, nor DB2 for an F8 candidate: the states are told apart by their facts.
+  assert.ok(checkCatalog(c, { requiredState: "DB2" }).some((p) => /past DB2/.test(p)));
+  const p2 = checkCatalog(await catalogOf(DBS[2]), { requiredState: "DB3" });
+  assert.ok(p2.some((p) => /20261124160000 not applied/.test(p)), JSON.stringify(p2));
+  assert.ok(p2.some((p) => /park_open_course_round\(uuid\): missing/.test(p)));
+  assert.ok(p2.some((p) => /column activation_no: "absent"/.test(p)));
+});
+
+test("DB3 with ONE change is refused: a pupil grant on a server-owned column, a dropped CHECK, another index, a disabled trigger, a callable trigger function, a widened RPC", async (t) => {
+  const cases = [
+    ["authenticated may UPDATE parked_at", "GRANT UPDATE (parked_at) ON public.question_instances TO authenticated;", /server-owned column: authenticated:parked_at:UPDATE/],
+    ["anon may SELECT activation_no", "GRANT SELECT (activation_no) ON public.question_instances TO anon;", /anon:activation_no:SELECT/],
+    ["the pupil got table UPDATE back", "GRANT UPDATE ON public.question_instances TO authenticated;", /whole of question_instances/],
+    ["a CHECK dropped", "ALTER TABLE public.question_instances DROP CONSTRAINT question_instances_parked_is_open;", /check question_instances_parked_is_open/],
+    ["the one-ACTIVE index widened back", "DROP INDEX public.idx_one_open_question; CREATE UNIQUE INDEX idx_one_open_question ON public.question_instances (student_id) WHERE answered = false;", /index idx_one_open_question/],
+    ["the trigger disabled", "ALTER TABLE public.question_instances DISABLE TRIGGER question_instances_parked_guard;", /trigger question_instances_parked_guard/],
+    ["the activation default changed", "ALTER TABLE public.question_instances ALTER COLUMN activation_no SET DEFAULT 1;", /column activation_no/],
+    ["the pupil may park", "GRANT EXECUTE ON FUNCTION public.park_open_course_round(uuid) TO authenticated;", /park_open_course_round\(uuid\): authenticated has EXECUTE/],
+    ["the trigger function is callable", "GRANT EXECUTE ON FUNCTION public.question_instances_parked_guard() TO service_role;", /parked_guard\(\): service_role has EXECUTE/],
+    ["resume's body changed", "CREATE OR REPLACE FUNCTION public.resume_parked_course_round(p_student_id uuid, p_objective text, p_step text) RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp AS $f$ BEGIN RETURN 'none'; END $f$;", /resume_parked_course_round\(uuid,text,text\): body md5/],
+  ];
+  for (const [label, sql, expected] of cases) {
+    await t.test(label, async () => {
+      const db = await database(3);
+      await db.exec(sql);
+      const c = await catalogOf(db);
+      const problems = checkCatalog(c, { requiredState: "DB3" });
+      assert.ok(problems.some((p) => expected.test(p)), `${label}: ${JSON.stringify(problems)}`);
+    });
+  }
+});
+
+test("the candidate's class is read from its OWN source: F8 needs DB3, #740/D-383 need DB2, a version before D-383 only DB0", () => {
+  const tree = workingTreeReader();
+  assert.deepEqual(candidateClass(tree, graphFiles(tree)), { kind: "F8 (D-384)", requires: "DB3" }, "this tree (reviewed: tools/edge/edge-candidates.json)");
+  // The markers are evidence only (the register decides identity): what each historical version's CODE reads as.
+  const at = (commit) => { const r = gitReader(commit, new URL("../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")); return markerClass(r, graphFiles(r)); };
+  for (const [commit, want] of [["f51f39e4", "#740 (course scope)"], ["05a4a34f", "D-383 (#739)"], ["a7450b0f", "before D-383"]]) {
+    let cls;
+    try { cls = at(commit); } catch { continue; } // a shallow checkout lacks the commit: the synthetic cases below still run
+    assert.equal(cls.kind, want, commit);
+  }
+  const synth = (text) => markerClass(() => text, ["functions/get-next-question/index.ts"]);
+  assert.equal(synth("rpc('park_open_course_round')").requires, "DB3");
+  assert.equal(synth("p_course_scope: 'exclude'").requires, "DB2");
+  assert.equal(synth("if (isCourseItem(x))").requires, "DB2");
+  assert.equal(synth("serve()").requires, "DB0");
+  // A marker in a comment is not code: a version before F8 that only MENTIONS the parking call does not read as F8.
+  assert.equal(synth("// park_open_course_round comes with F8\n/* p_course_scope */ serve()").requires, "DB0");
+  assert.equal(synth("const u = 'https://x.dk'; rpc('park_open_course_round')").requires, "DB3", "the :// of a URL is no comment");
+  // Lossy in ONE direction only: a // inside a string can hide a marker, which LOWERS the class — the register then
+  // reports a reviewed manifest as CONFLICTING (refused); it can never raise a class.
+  assert.equal(synth("const u = 'a//b'; rpc('park_open_course_round')").requires, "DB0");
+  // The refusals say why, in both directions.
+  assert.equal(stateRefusal({ kind: "F8 (D-384)", requires: "DB3" }, "DB3"), null);
+  assert.match(stateRefusal({ kind: "F8 (D-384)", requires: "DB3" }, "DB2"), /needs DB3.*500/);
+  assert.match(stateRefusal({ kind: "#740 (course scope)", requires: "DB2" }, "DB3"), /course unavailable.*safe rollback target on DB3 is F8/);
+  assert.match(stateRefusal({ kind: "before D-383", requires: "DB0" }, "DB2"), /course items in the ordinary quiz/);
+  assert.match(stateRefusal({ kind: "#740 (course scope)", requires: "DB2" }, "UNKNOWN"), /not in a reviewed state/);
+});
+
 test("the catalog itself: too old, from the future, duplicated, incomplete, malformed — all refused", async () => {
   const c = await catalogOf(DBS[2]);
   const readAt = Date.parse(c.read_at);
@@ -131,9 +211,8 @@ test("the candidate is the manifest the runbook documents, and one changed byte 
 
 const g = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 
-function checkout() {
+function checkout(read = workingTreeReader()) {
   const root = mkdtempSync(join(tmpdir(), "gnq-gate-"));
-  const read = workingTreeReader();
   for (const f of graphFiles(read)) {
     const out = join(root, "supabase", f);
     mkdirSync(dirname(out), { recursive: true });
@@ -195,10 +274,25 @@ const oldFn = () => {
   files.set("functions/get-next-question/scope.ts", files.get("functions/get-next-question/scope.ts") + "\n// the version production runs\n");
   return { version: 41, status: "ACTIVE", verify_jwt: false, files };
 };
-const ROWS = { 0: await rowsOf(DBS[0]), 1: await rowsOf(DBS[1]), 2: await rowsOf(DBS[2]) };
+const ROWS = { 0: await rowsOf(DBS[0]), 1: await rowsOf(DBS[1]), 2: await rowsOf(DBS[2]), 3: await rowsOf(DBS[3]) };
 
-async function setup(hooks = {}, { state = 2, otherState = 2, changeDuringDeploy = null } = {}) {
-  const root = checkout();
+// This gate deploys only candidates WITHOUT a partner contract. F8's get-next-question (this tree) is safe only next to
+// F8's process-event, which this gate does not read: it is REFUSED here and goes through tools/edge/edge-deploy-gate.mjs
+// (tests/unit/edge-deploy-gate.test.mjs). The deploy tests therefore run a candidate of class #740 — this tree with F8's
+// parking call renamed, deterministic and without an old commit — on its reviewed state DB2.
+const PRE_F8 = (() => {
+  const files = fileMap(workingTreeReader());
+  for (const [p, v] of files) files.set(p, v.replaceAll("park_open_course_round", "parking_removed_in_this_synthetic_candidate"));
+  return mapReader(files);
+})();
+// The synthetic candidate is no reviewed version, so the real register calls it UNKNOWN (tested below). The deploy tests
+// register it explicitly, as #740, in a TEST register: the real one plus this one entry.
+const REAL_REGISTRY = loadRegistry();
+const PRE_F8_HASH = candidateHash(PRE_F8);
+const TEST_REGISTRY = { ...REAL_REGISTRY, "get-next-question": { ...REAL_REGISTRY["get-next-question"],
+  [PRE_F8_HASH]: { class: "#740 (course scope)", verified_by: "tree", reviewed: "synthetic test candidate (this file)" } } };
+async function setup(hooks = {}, { state = 2, otherState = 2, changeDuringDeploy = null, read = PRE_F8, registry = TEST_REGISTRY } = {}) {
+  const root = checkout(read);
   link(root, REF);
   let after = ROWS[state];
   if (changeDuringDeploy) {
@@ -213,7 +307,7 @@ async function setup(hooks = {}, { state = 2, otherState = 2, changeDuringDeploy
   const s = fakeSupabase(root, projects, hooks);
   const out = [];
   const candidate = candidateHash(workingTreeReader(root));
-  const io = { root, transport: s.transport, log: (x) => out.push(String(x)), err: (x) => out.push(String(x)) };
+  const io = { root, transport: s.transport, log: (x) => out.push(String(x)), err: (x) => out.push(String(x)), registry };
   const deploy = (...extra) => main(["deploy", "--project-ref", REF, "--expect-candidate", candidate, ...extra], io);
   return { root, projects, ...s, out, candidate, io, deploy, record: join(root, "record.json") };
 }
@@ -284,6 +378,31 @@ test("concurrent use: a held lock refuses; the lock is released after every outc
   assert.equal(existsSync(lockPath(t.root)), false, "released after NOT READY");
 });
 
+test("the deploy candidates: #740 here; F8's candidate is REFUSED before any read (it needs the pair rule), on DB3 as on DB2", async () => {
+  assert.equal(candidateClass(PRE_F8, graphFiles(PRE_F8), TEST_REGISTRY).kind, "#740 (course scope)", "the synthetic candidate is #740 (test register)");
+  for (const state of [3, 2]) {
+    const s = await setup({}, { state, read: workingTreeReader() });
+    assert.equal(s.deploy("--execute", "--record", s.record), 3, s.out.join("\n"));
+    assert.ok(s.out.some((x) => /F8 \(D-384\) needs F8's process-event live next to it/.test(x)), s.out.join(" | "));
+    assert.ok(s.out.some((x) => /edge-deploy-gate\.mjs deploy --function get-next-question/.test(x)));
+    assert.equal(s.deploy(), 3, "the dry run too: it would print a command without the pair check");
+    assert.equal(s.calls.catalog + s.calls.deploy, 0, "refused before any read");
+    assert.equal(existsSync(s.record), false);
+    assert.equal(existsSync(lockPath(s.root)), false);
+  }
+});
+
+test("an older candidate onto DB3 → NOT READY with the safe rollback target", async () => {
+  let old;
+  try { old = gitReader("f51f39e4", new URL("../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")); old(graphFiles(workingTreeReader())[0]); } catch { old = null; }
+  const files = old ? null : fileMap(workingTreeReader());
+  if (files) for (const [p, v] of files) files.set(p, v.replaceAll("park_open_course_round", "parking_removed_in_this_synthetic_candidate"));
+  const t = await setup({}, { state: 3, read: old ?? mapReader(files) });
+  assert.equal(t.deploy("--execute", "--record", t.record), 2, t.out.join("\n"));
+  assert.ok(t.out.some((x) => /safe rollback target on DB3 is F8/.test(x)), t.out.join(" | "));
+  assert.equal(t.calls.deploy, 0);
+});
+
 test("dry run: everything checked, nothing deployed, the one command printed", async () => {
   const s = await setup();
   assert.equal(s.deploy(), 0, s.out.join("\n"));
@@ -344,11 +463,13 @@ test("check-offline is weaker by design: it reports, never writes, and says it i
   const out = [];
   const io = { root, log: (x) => out.push(String(x)), err: (x) => out.push(String(x)) };
   const f = join(root, "c.json");
+  writeFileSync(f, JSON.stringify((await DBS[3].query(catalogSql())).rows));
+  assert.equal(main(["check-offline", "--catalog", f], { ...io, root: undefined }), 0, out.join("\n"));
   writeFileSync(f, JSON.stringify((await DBS[2].query(catalogSql())).rows));
-  assert.equal(main(["check-offline", "--catalog", f], io), 0);
+  assert.equal(main(["check-offline", "--catalog", f], { ...io, root: undefined }), 2, "this tree's candidate (F8) needs DB3");
   assert.ok(out.some((x) => /Which database produced it is unknown; this is no deploy evidence/.test(x)));
   writeFileSync(f, JSON.stringify((await DBS[0].query(catalogSql())).rows));
-  assert.equal(main(["check-offline", "--catalog", f], io), 2);
+  assert.equal(main(["check-offline", "--catalog", f], { ...io, root: undefined }), 2);
   assert.deepEqual(readdirSync(root), ["c.json"], "check-offline writes nothing: no receipt, no marker");
 });
 
@@ -376,4 +497,61 @@ test("the real transport is the Supabase CLI with explicit argument vectors: --l
   }
   const failing = cliTransport("/r", { run: () => ({ status: 1, stderr: "not linked" }) });
   assert.throws(() => failing.queryCatalog(), /db query failed \(exit 1\): not linked/);
+});
+
+// ---- identity (D-384, 2026-11-26): only a REVIEWED manifest whose code reads as its reviewed class ----
+
+test("identity: an unreviewed candidate is UNKNOWN and REFUSED before the lock and any read, even with the runbook's hash", async () => {
+  const s = await setup({}, { registry: REAL_REGISTRY });
+  assert.equal(candidateClass(PRE_F8, graphFiles(PRE_F8)).kind, "UNKNOWN", "the synthetic #740 is no reviewed version");
+  for (const extra of [[], ["--execute", "--record", s.record]]) {
+    assert.equal(s.deploy(...extra), 3, s.out.join("\n"));
+    assert.equal(s.calls.catalog, 0, "no catalog read");
+    assert.equal(s.calls.deploy, 0, "nothing deployed");
+    assert.ok(!existsSync(lockPath(s.root)), "no lock taken");
+  }
+  assert.match(s.out.join("\n"), /UNKNOWN: manifest [0-9a-f]{64} is not a reviewed get-next-question version \(its source reads as #740/);
+});
+
+test("identity: a registered manifest whose code reads as another class is CONFLICTING and REFUSED", async () => {
+  // The register claims the synthetic candidate is F8 — its code reads as #740.
+  const wrong = { ...REAL_REGISTRY, "get-next-question": { ...REAL_REGISTRY["get-next-question"],
+    [PRE_F8_HASH]: { class: "F8 (D-384)", verified_by: "tree", reviewed: "deliberately wrong" } } };
+  const cls = candidateClass(PRE_F8, graphFiles(PRE_F8), wrong);
+  assert.equal(cls.kind, "CONFLICTING");
+  assert.match(stateRefusal(cls, "DB2"), /registered as F8 \(D-384\), but its source reads as #740.*refused on every database/);
+  for (const st of ["DB0", "DB2", "DB3", "UNKNOWN"]) assert.ok(stateRefusal(cls, st), st);
+  const s = await setup({}, { registry: wrong });
+  assert.equal(s.deploy(), 3);
+  assert.equal(s.calls.catalog, 0);
+});
+
+test("identity: a renamed safety call, a marker only in a comment, one changed byte — each is UNKNOWN, never a known class", () => {
+  const tree = workingTreeReader();
+  const files = graphFiles(tree);
+  const variants = {
+    "F8's parking call renamed": (p) => tree(p).replaceAll("park_open_course_round", "park_round_v2"),
+    "the parking call only in a comment": (p) => tree(p).replaceAll("park_open_course_round(", "noop(") + "\n// park_open_course_round()\n",
+    "one byte added to a shared module": (p) => (p.startsWith("functions/_shared/") ? tree(p) + " " : tree(p)),
+  };
+  for (const [label, read] of Object.entries(variants)) {
+    const cls = candidateClass(read, files);
+    assert.ok(cls.kind === "UNKNOWN" || cls.kind === "CONFLICTING", `${label}: ${cls.kind}`);
+    assert.equal(cls.requires, null, label);
+  }
+});
+
+test("identity: the register itself fails loudly when malformed", () => {
+  const ok = JSON.stringify({ "get-next-question": {}, "process-event": {} });
+  assert.deepEqual(parseRegistry(ok), { "get-next-question": {}, "process-event": {} });
+  for (const [text, re] of [
+    ["{", /not JSON/],
+    [JSON.stringify({ "get-next-question": {} }), /process-event must be an object/],
+    [JSON.stringify({ "get-next-question": {}, "process-event": {}, "buy-item": {} }), /unknown key buy-item/],
+    [JSON.stringify({ "get-next-question": { abc: { class: "x", verified_by: "tree", reviewed: "r" } }, "process-event": {} }), /not a sha256/],
+    [JSON.stringify({ "get-next-question": { ["a".repeat(64)]: { verified_by: "tree", reviewed: "r" } }, "process-event": {} }), /class is required/],
+    [JSON.stringify({ "get-next-question": { ["a".repeat(64)]: { class: "x", verified_by: "me", reviewed: "r" } }, "process-event": {} }), /verified_by/],
+    [JSON.stringify({ "get-next-question": { ["a".repeat(64)]: { class: "x", verified_by: "tree", reviewed: " " } }, "process-event": {} }), /reviewed/],
+  ]) assert.throws(() => parseRegistry(text), re, text);
+  assert.equal(identify(parseRegistry(ok), "get-next-question", "a".repeat(64), "F8 (D-384)").verdict, "UNKNOWN");
 });

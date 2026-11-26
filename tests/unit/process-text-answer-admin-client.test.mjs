@@ -131,7 +131,10 @@ test("auth stays on the user client; the grading read is a backend read that inc
   assert.match(INDEX_CODE, /await supabase\.auth\.getUser\(\)/);
   assert.match(INDEX_CODE, /import \{ readInstanceForGrading \} from "\.\/instance-read\.ts";/);
   assert.match(INDEX_CODE,
-    /\(\{ data: instanceData, error: instanceError \} = await readInstanceForGrading\(\s*makeAdminClient,\s*question_instance_id\s*\)\)/);
+    /\(\{ data: instanceData, error: instanceError \} = await readInstanceForGrading\(\s*makeAdminClient,\s*question_instance_id,\s*activationCheckOn\s*\)\)/);
+  // D-384: the third argument only adds activation_no to the SAME backend read (LAERLIGVERSE_COURSE_PARKING=on).
+  const readSrc = readFileSync(new URL("../../supabase/functions/process-event/instance-read.ts", import.meta.url), "utf8");
+  assert.match(readSrc, /\.select\(withActivation === true \? `\$\{ACTIVATION_COLUMN\},\$\{GRADING_COLUMNS\}` : GRADING_COLUMNS\)/);
   const readModule = readFileSync(new URL("../../supabase/functions/process-event/instance-read.ts", import.meta.url), "utf8");
   assert.match(readModule, /\.from\("question_instances"\)/);
   assert.match(readModule, /student_id,/);
@@ -151,29 +154,37 @@ test("the ownership check returns 403 and runs before every answer path", () => 
   assert.match(block, /status: 403/);
 });
 
-test("the admin client is built in one place, from serviceKey(), with no headers", () => {
-  const adminBuilds = INDEX_CODE.match(/createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\), ADMIN_CLIENT_OPTIONS\)/g) ?? [];
+test("the admin client is built in one place, from serviceKey(), with no headers but D-384's activation header", () => {
+  const adminBuilds = INDEX_CODE.match(/createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\),/g) ?? [];
   assert.equal(adminBuilds.length, 1);
-  assert.match(INDEX_CODE, /function makeAdminClient\(\) \{\s*return createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\), ADMIN_CLIENT_OPTIONS\)\s*\}/);
+  // The only header it can carry is the one the caller passes, and the only caller passing one is the answer client,
+  // with activationClientHeaders' output (x-laerlig-activation-no) — never the pupil's Authorization.
+  assert.match(INDEX_CODE, /function makeAdminClient\(headers\?: Record<string, string>\) \{\s*return createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\), headers \? \{ \.\.\.ADMIN_CLIENT_OPTIONS, global: \{ headers \} \} : ADMIN_CLIENT_OPTIONS\)\s*\}/);
   assert.equal((INDEX_CODE.match(/serviceKey\(\)/g) ?? []).length, 1, "serviceKey() is resolved in exactly one place");
+  assert.equal((INDEX_CODE.match(/makeAdminClient\([^)]/g) ?? []).length, 2, "the definition and one call with headers");
+  assert.match(INDEX_CODE, /const activationHeaders = activationClientHeaders\(instanceData\.activation_no\)\s*makeAnswerClient = \(\) => makeAdminClient\(activationHeaders\)/);
 });
 
 test("the admin client is used only by the grading read, the two privileged answer RPCs and the server-owned instance writes", () => {
-  // makeAdminClient is defined once and handed to exactly eight call sites — the grading read
-  // (./instance-read.ts), the short-text award, the MC/number attempt, the long-answer save, the
-  // two misconception-signal writes (./instance-writes.ts) and the two H5 _v2 calls (D-273,
-  // ./text-answer-rpc.ts). It is never invoked directly, so nothing else can run on it.
+  // makeAdminClient is defined once and handed to the grading read (./instance-read.ts) and the two misconception-signal
+  // writes (./instance-writes.ts). The five answer calls — the short-text award, the MC/number attempt, the long-answer
+  // save and the two H5 _v2 calls (D-273, ./text-answer-rpc.ts) — get makeAnswerClient: makeAdminClient itself, or
+  // (LAERLIGVERSE_COURSE_PARKING on, D-384) makeAdminClient with the checked activation header. It is never invoked
+  // directly without headers, so nothing else can run on it.
   const uses = INDEX_CODE.match(/makeAdminClient/g) ?? [];
-  assert.equal(uses.length, 9, "one definition + eight call sites");
-  assert.match(PATH_TEXT, /await callProcessTextAnswerV2\(\s*makeAdminClient,/);
-  assert.match(PATH_MC, /await callProcessQuestionAttemptV2\(\s*makeAdminClient,/);
+  assert.equal(uses.length, 6, "definition + grading read + two signal writes + the answer client's two forms");
+  assert.match(INDEX_CODE, /let makeAnswerClient = makeAdminClient\r?\n/);
+  assert.equal((INDEX_CODE.match(/makeAnswerClient = /g) ?? []).length, 2, "declared once, replaced once (activation check on)");
+  assert.equal((INDEX_CODE.match(/makeAnswerClient,/g) ?? []).length, 5, "exactly the five answer calls");
+  assert.match(PATH_TEXT, /await callProcessTextAnswerV2\(\s*makeAnswerClient,/);
+  assert.match(PATH_MC, /await callProcessQuestionAttemptV2\(\s*makeAnswerClient,/);
   assert.match(INDEX_CODE, /await readInstanceForGrading\(\s*makeAdminClient,/);
-  assert.match(PATH_TEXT, /await callProcessTextAnswer\(\s*makeAdminClient,/);
-  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,/);
-  assert.match(PATH_LONG, /await updateOwnInstance\(\s*makeAdminClient,/);
+  assert.match(PATH_TEXT, /await callProcessTextAnswer\(\s*makeAnswerClient,/);
+  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAnswerClient,/);
+  assert.match(PATH_LONG, /await updateOwnInstance\(\s*makeAnswerClient,/);
   assert.match(PATH_TEXT, /await recordMisconceptionSignal\(makeAdminClient,/);
   assert.match(PATH_MC, /await recordMisconceptionSignal\(makeAdminClient,/);
-  assert.equal(/makeAdminClient\(\)/.test(INDEX_CODE.replace(/function makeAdminClient\(\)/, "")), false,
+  assert.equal(/makeAdminClient\(\)/.test(INDEX_CODE.replace(/function makeAdminClient\(/, "")), false,
     "the admin client is only ever built inside the privileged helpers");
 });
 
@@ -207,7 +218,7 @@ test("the deploy diagnostic logs only serviceKeySource(), never a key", () => {
 });
 
 test("MC / number call process_question_attempt via the admin client with server-side values", () => {
-  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,\s*\{\s*studentId:\s+user\.id,\s*instanceId:\s+question_instance_id,\s*answer:\s+gradedAnswer,\s*questionShownAt:\s+question_shown_at \?\? Date\.now\(\),\s*\}\s*\)/);
+  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAnswerClient,\s*\{\s*studentId:\s+user\.id,\s*instanceId:\s+question_instance_id,\s*answer:\s+gradedAnswer,\s*questionShownAt:\s+question_shown_at \?\? Date\.now\(\),\s*\}\s*\)/);
   assert.equal(/supabase\s*\.rpc\(\s*["']process_question_attempt["']/.test(INDEX_CODE), false,
     "process_question_attempt is never called on the user client");
   assert.equal(/callProcessTextAnswer/.test(PATH_MC), false);
@@ -242,7 +253,7 @@ test("the MC / number response and review scheduling are unchanged; the misconce
 
 test("the long-answer path keeps its contract; only the save moved to the scoped admin write", () => {
   assert.match(PATH_LONG, /if \(words < 20\)/);
-  assert.match(PATH_LONG, /await updateOwnInstance\(\s*makeAdminClient,\s*\{ instanceId: question_instance_id, studentId: user\.id \},\s*\{ user_answer: answer \}\s*\)/);
+  assert.match(PATH_LONG, /await updateOwnInstance\(\s*makeAnswerClient,\s*\{ instanceId: question_instance_id, studentId: user\.id \},\s*\{ user_answer: answer \}\s*\)/);
   assert.equal(/supabase\s*\.from\("question_instances"\)\s*\.update/.test(PATH_LONG), false, "no user-client update left");
   assert.match(PATH_LONG, /JSON\.stringify\(\{ status: "pending", correct_answer: null, review_text: null \}\)/);
   assert.equal(/callProcessTextAnswer|callProcessQuestionAttempt|serviceKey|ADMIN_CLIENT_OPTIONS|answered/.test(PATH_LONG), false,

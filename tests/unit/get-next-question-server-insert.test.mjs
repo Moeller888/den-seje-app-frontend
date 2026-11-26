@@ -171,13 +171,21 @@ test("the admin client is used only for the instance insert and the server-only 
     // L1 K1 (K1_SERVED_SNAPSHOT=on only): the instance's delivered version (served_snapshot), read on its
     // own and scoped to the verified student, so with the switch off every read is unchanged.
     "from:question_instances",
+    // D-384 (LAERLIGVERSE_COURSE_PARKING=on, sequence requests only): parks an active course round of ANOTHER course and
+    // resumes this course's parked round for the verified pupil (service_role only; returns a state word, no key).
+    "rpc:resume_parked_course_round",
     "from:question_instances",
+    // D-384 (LAERLIGVERSE_COURSE_PARKING=on, outside the sequence, only when the due round is an active course round):
+    // parks the verified pupil's active course round (service_role only; returns the instance id, no key).
+    "rpc:park_open_course_round",
     "rpc:get_unserved_questions_for_student",
     // D-383 follow-up: the same read once more with today's arguments, ONLY when the database predates p_course_scope
     // (PostgREST PGRST202, logged COURSE_SCOPE_FALLBACK) — the same student, grade and domains, no other field.
     "rpc:get_unserved_questions_for_student",
     // D-329, targeted requests only: the lost-race check reads ONLY the id of the verified pupil's open
     // instance (no key), before "objective_exhausted" may be claimed; it never reaches the repeat RPCs below.
+    // D-384: twice in the source — with parking on it also requires parked_at IS NULL (the ACTIVE open round).
+    "from:question_instances",
     "from:question_instances",
     // D-383 follow-up, targeted requests outside the sequence with nothing served only: whether the validated objective
     // has an active course item — the question's id only, no content, no key — to answer 403 course_requires_sequence.
@@ -207,8 +215,8 @@ test("the admin client is used only for the instance insert and the server-only 
     "F12-B: the pupil's own introduction round (completed_at only)");
   assert.equal((INDEX_CODE.match(/admin\(\)\s*\.from\("learning_introductions"\)\s*\.select\("id"\)\s*\.eq\("learning_objective", targeting\.objective\)\s*\.eq\("is_active", true\)/g) ?? []).length, 1,
     "F12-B: whether the objective has an active introduction (id only)");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 18,
-    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call, the 15th and 16th F12-B's two introduction_required reads, the 17th the D-383 follow-up's fallback candidate read, the 18th its id-only course-item check)");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 21,
+    "no other admin() use (the 10th is Match par's key read, the 11th L1 K1's served_snapshot read, the 12th D-329's id-only lost-race check, the 13th D-338's step-history read, the 14th the LP-13/K9 serve_introduction call, the 15th and 16th F12-B's two introduction_required reads, the 17th the D-383 follow-up's fallback candidate read, the 18th its id-only course-item check, the 19th and 20th D-384's resume and park calls, the 21st the second branch of D-329's lost-race check with D-384's parked_at IS NULL)");
 });
 
 test("index.ts never writes question_instances on the user client", () => {

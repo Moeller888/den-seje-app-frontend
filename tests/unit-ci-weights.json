@@ -245,6 +245,7 @@
     "e2e-guard.test.mjs": 0.2,
     "e2e-provision-accounts.test.mjs": 0.3,
     "e2e-slot-accounts.test.mjs": 0.1,
+    "edge-deploy-gate.test.mjs": 63.1,
     "e2e-writes-slot-scoped.test.mjs": 0.2,
     "english-5000-migrations-run.test.mjs": 4.3,
     "english-activation-migrations-run.test.mjs": 9.1,

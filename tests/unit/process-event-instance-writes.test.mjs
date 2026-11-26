@@ -118,7 +118,7 @@ test("the module has no Deno, env, network or Authorization access of its own", 
 
 test("the admin client options carry no pupil Authorization header", () => {
   assert.equal("global" in ADMIN_CLIENT_OPTIONS, false);
-  assert.match(INDEX_CODE, /function makeAdminClient\(\) \{\s*return createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\), ADMIN_CLIENT_OPTIONS\)\s*\}/);
+  assert.match(INDEX_CODE, /function makeAdminClient\(headers\?: Record<string, string>\) \{\s*return createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\), headers \? \{ \.\.\.ADMIN_CLIENT_OPTIONS, global: \{ headers \} \} : ADMIN_CLIENT_OPTIONS\)\s*\}/);
 });
 
 // ── recordMisconceptionSignal: non-fatal, never silent ──────────────────────────────────────────
@@ -197,7 +197,7 @@ test("a misconception failure never changes the answer response (no early return
 });
 
 test("long answer: scoped admin save; a failed or 0-row save is a controlled 500, never 'pending'", () => {
-  assert.match(PATH_LONG, /saveResult = await updateOwnInstance\(\s*makeAdminClient,\s*\{ instanceId: question_instance_id, studentId: user\.id \},\s*\{ user_answer: answer \}\s*\)/);
+  assert.match(PATH_LONG, /saveResult = await updateOwnInstance\(\s*makeAnswerClient,\s*\{ instanceId: question_instance_id, studentId: user\.id \},\s*\{ user_answer: answer \}\s*\)/);
   const failure = between(PATH_LONG, "if (!saveResult.ok) {", 'console.log("FLOW: LONG');
   assert.match(failure, /console\.error\("LONG SAVE ERROR:", JSON\.stringify\(\{\s*instance_id: question_instance_id,\s*reason: saveResult\.reason,/);
   assert.match(failure, /JSON\.stringify\(\{ error: "Could not save answer" \}\)/);
@@ -214,8 +214,8 @@ test("long answer: a key/config failure is a controlled 500 with no user-client 
 });
 
 test("the MC/number and short-text award RPC paths are unchanged", () => {
-  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,\s*\{\s*studentId:\s+user\.id,\s*instanceId:\s+question_instance_id,\s*answer:\s+gradedAnswer,\s*questionShownAt:\s+question_shown_at \?\? Date\.now\(\),\s*\}\s*\)/);
-  assert.match(PATH_TEXT, /await callProcessTextAnswer\(\s*makeAdminClient,\s*\{\s*instanceId: question_instance_id,\s*userId:\s+user\.id,\s*answer,\s*isCorrect,\s*\}\s*\)/);
+  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAnswerClient,\s*\{\s*studentId:\s+user\.id,\s*instanceId:\s+question_instance_id,\s*answer:\s+gradedAnswer,\s*questionShownAt:\s+question_shown_at \?\? Date\.now\(\),\s*\}\s*\)/);
+  assert.match(PATH_TEXT, /await callProcessTextAnswer\(\s*makeAnswerClient,\s*\{\s*instanceId: question_instance_id,\s*userId:\s+user\.id,\s*answer,\s*isCorrect,\s*\}\s*\)/);
   // The misconception write comes after the award RPC, never before it.
   assert.ok(PATH_MC.indexOf("await callProcessQuestionAttempt(") < PATH_MC.indexOf("await recordMisconceptionSignal("));
   assert.ok(PATH_TEXT.indexOf("await callProcessTextAnswer(") < PATH_TEXT.indexOf("await recordMisconceptionSignal("));

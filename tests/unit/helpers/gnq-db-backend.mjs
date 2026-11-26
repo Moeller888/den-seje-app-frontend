@@ -10,6 +10,7 @@
 // so the stand-in never guesses it; an argument or chain operation it does not model THROWS — a test fails rather than
 // being answered by something the database did not say.
 import { registerHooks } from "node:module";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { createRequire } from "node:module";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -58,6 +59,12 @@ export async function openDatabase(root, label, { template = null } = {}) {
     onPg: true,
     name,
     drop,
+    // Another connection to the SAME database (for requests that must run at the same time); close it yourself.
+    connect: async () => {
+      const c2 = new pg.Client({ connectionString: u.toString() });
+      await c2.connect();
+      return { onPg: true, q: async (s, p) => (await c2.query(s, p)).rows, x: async (s) => { await c2.query(s); }, close: async () => { await c2.end().catch(() => {}); } };
+    },
     close: async () => { await c.end().catch(() => {}); },
     q: async (s, p) => (await c.query(s, p)).rows,
     x: async (s) => { await c.query(s); },
@@ -77,12 +84,14 @@ export async function makeTemplate(db) {
   return { name: db.name, dispose: () => db.drop() };
 }
 
-// One statement in its own transaction, as `role` (and, for the pupil, auth.uid() = pupil via test.uid).
-export async function as(conn, role, pupil, sql, params = []) {
+// One statement in its own transaction, as `role` (and, for the pupil, auth.uid() = pupil via test.uid). `headers`: the
+// client's request headers, set as request.headers for that transaction exactly as PostgREST does (JSON, lower-case keys).
+export async function as(conn, role, pupil, sql, params = [], headers = null) {
   await conn.q("BEGIN");
   try {
     await conn.q(`SET LOCAL ROLE ${role}`);
     if (pupil) await conn.q("SELECT set_config('test.uid', $1, true)", [pupil]);
+    if (headers) await conn.q("SELECT set_config('request.headers', $1, true)", [JSON.stringify(headers)]);
     const rows = await conn.q(sql, params);
     await conn.q("COMMIT");
     return rows;
@@ -108,11 +117,24 @@ function parseSelect(s) {
 const RPC_CAST = Object.freeze({
   p_student_id: "uuid", p_grade: "smallint", p_domains: "text[]", p_course_scope: "text", p_per_group: "integer",
   p_subject: "text", p_level: "integer", p_limit: "integer",
+  // D-384's two parking RPCs (get-next-question with LAERLIGVERSE_COURSE_PARKING=on).
+  p_objective: "text", p_step: "text",
+  // process-event's answer RPCs (legacy, H5 _v2 and the L5/L3 wrappers): the same names the deployed functions take.
+  p_question_instance_id: "uuid", p_answer: "text", p_question_shown_at: "bigint", p_instance_id: "uuid", p_user_id: "uuid",
+  p_user_answer: "text", p_is_correct: "boolean", p_round_no: "integer", p_submission_id: "uuid", p_review_text: "text",
+  p_misconception_type: "text", p_mode: "text", p_hints_used: "integer",
 });
 const TABLES = new Set(["profiles", "question_instances", "questions"]);
 
-const state = { conn: null, pupil: null, calls: [] };
-async function backend(client, kind, name, ops) {
+// Per request: the connection and the pupil. AsyncLocalStorage keeps two requests that run AT THE SAME TIME (each on its
+// own connection to a real PostgreSQL server) apart; a single request behaves exactly as with one shared state.
+const als = new AsyncLocalStorage();
+const shared = { conn: null, pupil: null, calls: [] };
+const current = () => als.getStore() ?? shared;
+async function backend(client, kind, name, ops, headers = null) {
+  const state = current();
+  // A test's hook between process-event's read check and its answer call (the TOCTOU window), once per rpc.
+  if (kind === "rpc" && typeof state.beforeRpc === "function") await state.beforeRpc(name);
   const role = client === "admin" ? "service_role" : "authenticated";
   const pupil = client === "admin" ? null : state.pupil;
   const params = [];
@@ -132,12 +154,13 @@ async function backend(client, kind, name, ops) {
     else { sql = `SELECT to_jsonb(public.${name}(${named.join(", ")})) AS v`; mode = "scalar"; }
   } else if (kind === "from") {
     if (!TABLES.has(name)) throw new Error(`stand-in: table ${name} is not modelled`);
-    let select = null, row = null, order = null, limit = null;
+    let select = null, row = null, set = null, order = null, limit = null;
     const where = [];
     const embedFilters = [];
     for (const [op, ...a] of ops) {
       if (op === "select") select = parseSelect(a[0]);
       else if (op === "insert") row = a[0];
+      else if (op === "update") set = a[0];
       else if (op === "eq" && String(a[0]).startsWith("questions.")) {
         // A filter on an !inner embed keeps only the rows whose embedded question matches (PostgREST's inner join).
         embedFilters.push(`qf.${ident(String(a[0]).slice("questions.".length))} = ${p(a[1])}`);
@@ -147,41 +170,54 @@ async function backend(client, kind, name, ops) {
       else if (op === "gte") where.push(`t.${ident(a[0])} >= ${p(a[1])}`);
       else if (op === "lt") where.push(`t.${ident(a[0])} < ${p(a[1])}`);
       else if (op === "in") where.push(`t.${ident(a[0])} = ANY(${p(a[1])})`);
+      else if (op === "is" && a[1] === null) where.push(`t.${ident(a[0])} IS NULL`);
       else if (op === "not" && a[1] === "is" && a[2] === null) {
-        const m = /^(\w+)->(\w+)$/.exec(a[0]);
+        const m = /^(w+)->(w+)$/.exec(a[0]);
         where.push(m ? `t.${ident(m[1])} -> ${p(m[2])} IS NOT NULL` : `t.${ident(a[0])} IS NOT NULL`);
       } else if (op === "order") order = `t.${ident(a[0])} ${a[1]?.ascending === false ? "DESC" : "ASC"}`;
       else if (op === "limit") limit = Number(a[0]);
       else if (op === "maybeSingle") mode = "single";
       else throw new Error(`stand-in: .${op}() is not modelled`);
     }
-    if (!select) throw new Error("stand-in: a chain without select()");
-    if (embedFilters.length) {
-      if (name !== "question_instances" || !select.embeds.some((e) => e.table === "questions" && e.inner)) throw new Error("stand-in: an embed filter needs questions!inner");
-      where.push(`EXISTS (SELECT 1 FROM public.questions qf WHERE qf.id = t.question_id AND ${embedFilters.join(" AND ")})`);
-    }
-    const embedSql = select.embeds.map((e) => {
-      if (name !== "question_instances" || e.table !== "questions") throw new Error(`stand-in: embed ${e.table}`);
-      return `(SELECT to_jsonb(e) FROM (SELECT ${e.cols.map((c) => `q.${c}`).join(", ")} FROM public.questions q
-        WHERE q.id = t.question_id) e) AS questions`;
-    });
-    if (row) {
-      if (where.length || order || select.embeds.length) throw new Error("stand-in: insert with filters");
-      const cols = Object.keys(row).map(ident);
-      sql = `INSERT INTO public.${name} AS t (${cols.join(", ")}) VALUES (${cols.map((c) => p(row[c])).join(", ")}) RETURNING ${select.cols.map((c) => `t.${c}`).join(", ")}`;
+    if (set) {
+      // PostgREST PATCH: the filters name the row(s); RETURNING only with .select() (without it data is null).
+      if (row || order || limit !== null || embedFilters.length || where.length === 0 || select?.embeds.length) {
+        throw new Error("stand-in: an update shape that is not modelled");
+      }
+      const cols = Object.keys(set).map(ident);
+      sql = `UPDATE public.${name} AS t SET ${cols.map((c) => `${c} = ${p(set[c])}`).join(", ")} WHERE ${where.join(" AND ")}`
+        + (select ? ` RETURNING ${select.cols.map((c) => `t.${c}`).join(", ")}` : "");
+      if (!select) mode = "none";
     } else {
-      sql = `SELECT ${[...select.cols.map((c) => `t.${c}`), ...embedSql].join(", ")} FROM public.${name} t`
-        + (where.length ? ` WHERE ${where.join(" AND ")}` : "") + (order ? ` ORDER BY ${order}` : "")
-        + (limit !== null ? ` LIMIT ${limit}` : "");
+      if (!select) throw new Error("stand-in: a chain without select()");
+      if (embedFilters.length) {
+        if (name !== "question_instances" || !select.embeds.some((e) => e.table === "questions" && e.inner)) throw new Error("stand-in: an embed filter needs questions!inner");
+        where.push(`EXISTS (SELECT 1 FROM public.questions qf WHERE qf.id = t.question_id AND ${embedFilters.join(" AND ")})`);
+      }
+      const embedSql = select.embeds.map((e) => {
+        if (name !== "question_instances" || e.table !== "questions") throw new Error(`stand-in: embed ${e.table}`);
+        return `(SELECT to_jsonb(e) FROM (SELECT ${e.cols.map((c) => `q.${c}`).join(", ")} FROM public.questions q
+        WHERE q.id = t.question_id) e) AS questions`;
+      });
+      if (row) {
+        if (where.length || order || select.embeds.length) throw new Error("stand-in: insert with filters");
+        const cols = Object.keys(row).map(ident);
+        sql = `INSERT INTO public.${name} AS t (${cols.join(", ")}) VALUES (${cols.map((c) => p(row[c])).join(", ")}) RETURNING ${select.cols.map((c) => `t.${c}`).join(", ")}`;
+      } else {
+        sql = `SELECT ${[...select.cols.map((c) => `t.${c}`), ...embedSql].join(", ")} FROM public.${name} t`
+          + (where.length ? ` WHERE ${where.join(" AND ")}` : "") + (order ? ` ORDER BY ${order}` : "")
+          + (limit !== null ? ` LIMIT ${limit}` : "");
+      }
     }
   } else {
     throw new Error(`stand-in: ${kind} is not modelled`);
   }
-  state.calls.push({ client, kind, name, sql });
+  state.calls.push({ client, kind, name, sql, headers });
   try {
-    const rows = await as(state.conn, role, pupil, sql, params);
+    const rows = await as(state.conn, role, pupil, sql, params, headers);
     if (mode === "scalar") return { data: rows.length ? rows[0].v : null, error: null };
     if (mode === "single") return { data: rows[0] ?? null, error: null };
+    if (mode === "none") return { data: null, error: null };
     return { data: rows, error: null };
   } catch (e) {
     // PostgREST resolves an RPC by its named arguments; none matching (PostgreSQL 42883) is PGRST202, nothing called.
@@ -192,23 +228,27 @@ async function backend(client, kind, name, ops) {
 
 const STUB_SERVE = `export function serve(h) { globalThis.__gnqDbHandlers.push(h); }`;
 const STUB_SUPABASE = `
-function chain(kind, name, client, ops) {
+function chain(kind, name, client, ops, headers) {
   return new Proxy(function () {}, {
     get(_t, prop) {
       if (prop === "then") {
-        const res = globalThis.__gnqDbBackend(client, kind, name, ops);
+        const res = globalThis.__gnqDbBackend(client, kind, name, ops, headers);
         return (ok, ko) => Promise.resolve(res).then(ok, ko);
       }
-      return (...args) => chain(kind, name, client, [...ops, [String(prop), ...args]]);
+      return (...args) => chain(kind, name, client, [...ops, [String(prop), ...args]], headers);
     },
   });
 }
-export function createClient(_url, key) {
+export function createClient(_url, key, options) {
   const client = key === "SERVICE" ? "admin" : "user";
+  // PostgREST's request.headers: the client's global headers, keys in lower case (Authorization is not modelled).
+  const given = options && options.global && options.global.headers ? options.global.headers : {};
+  const lower = Object.fromEntries(Object.entries(given).filter(([k]) => k.toLowerCase() !== "authorization").map(([k, v]) => [k.toLowerCase(), String(v)]));
+  const headers = Object.keys(lower).length ? lower : null;
   return {
-    auth: { getUser: async () => ({ data: { user: { id: globalThis.__gnqDbPupil } }, error: null }) },
-    from: (table) => chain("from", table, client, []),
-    rpc: (fn, args) => chain("rpc", fn, client, [["args", args]]),
+    auth: { getUser: async () => ({ data: { user: { id: globalThis.__gnqDbUser() } }, error: null }) },
+    from: (table) => chain("from", table, client, [], headers),
+    rpc: (fn, args) => chain("rpc", fn, client, [["args", args]], headers),
   };
 }`;
 const dataUrl = (src) => "data:text/javascript," + encodeURIComponent(src);
@@ -228,6 +268,7 @@ function install() {
   });
   globalThis.Deno = { env: { get: (k) => ENV.get(k), set: (k, v) => ENV.set(k, v), delete: (k) => ENV.delete(k) } };
   globalThis.__gnqDbBackend = backend;
+  globalThis.__gnqDbUser = () => current().pupil;
 }
 
 /** Is the commit in this checkout (CI checks out shallow)? */
@@ -256,29 +297,40 @@ export async function loadHandler(indexPath) {
 
 /** Flags this matrix varies; every other secret stays unset (production's state for them). */
 export const FLAG_NAMES = Object.freeze(["LEVEL_ENGINE", "QUESTION_MIX_ENGINE", "LAERLIGVERSE_OBJECTIVE_TARGETING",
-  "LAERLIGVERSE_SEQUENCE", "LAERLIGVERSE_SERVED_MODE", "LAERLIGVERSE_HINTS", "K1_SERVED_SNAPSHOT"]);
+  "LAERLIGVERSE_SEQUENCE", "LAERLIGVERSE_SERVED_MODE", "LAERLIGVERSE_HINTS", "K1_SERVED_SNAPSHOT",
+  // D-384 (get-next-question AND process-event read it) and L5/L3's process-event switch.
+  "LAERLIGVERSE_COURSE_PARKING", "LAERLIGVERSE_ATTEMPT_CONTEXT"]);
 
-/** One get-next-question request by `pupil` on `conn`, with exactly `flags` set. */
-export async function request(handler, conn, pupil, { flags = {}, body = {} } = {}) {
-  for (const k of FLAG_NAMES) { if (flags[k] === undefined) ENV.delete(k); else ENV.set(k, flags[k]); }
-  state.conn = conn;
-  state.pupil = pupil;
-  globalThis.__gnqDbPupil = pupil;
-  state.calls = [];
+const setFlags = (flags) => { for (const k of FLAG_NAMES) { if (flags[k] === undefined) ENV.delete(k); else ENV.set(k, flags[k]); } };
+async function run(handler, conn, pupil, flags, json, { capture = true, beforeRpc = null } = {}) {
+  setFlags(flags);
+  const store = { conn, pupil, calls: [], beforeRpc };
   const logs = [];
   const { log, error, warn } = console;
   const sink = (...a) => logs.push(a.map((x) => (x instanceof Error ? x.message : typeof x === "string" ? x : JSON.stringify(x))).join(" "));
-  console.log = sink; console.error = sink; console.warn = sink;
+  if (capture) { console.log = sink; console.error = sink; console.warn = sink; }
   try {
-    const res = await handler(new Request("http://stub/", {
-      method: "POST", headers: { Authorization: "Bearer pupil" },
-      body: JSON.stringify({ subject: "historie", session_context: { wave_phase: "challenge" }, ...body }),
-    }));
-    const text = await res.text();
-    let parsed = null;
-    try { parsed = JSON.parse(text); } catch { /* non-JSON stays null */ }
-    return { status: res.status, body: parsed, text, logs, calls: [...state.calls] };
+    return await als.run(store, async () => {
+      const res = await handler(new Request("http://stub/", { method: "POST", headers: { Authorization: "Bearer pupil" }, body: JSON.stringify(json) }));
+      const text = await res.text();
+      let parsed = null;
+      try { parsed = JSON.parse(text); } catch { /* non-JSON stays null */ }
+      return { status: res.status, body: parsed, text, logs, calls: [...store.calls] };
+    });
   } finally {
-    console.log = log; console.error = error; console.warn = warn;
+    if (capture) { console.log = log; console.error = error; console.warn = warn; }
   }
+}
+
+/** One get-next-question request by `pupil` on `conn`, with exactly `flags` set. */
+export function request(handler, conn, pupil, { flags = {}, body = {} } = {}) {
+  return run(handler, conn, pupil, flags, { subject: "historie", session_context: { wave_phase: "challenge" }, ...body });
+}
+
+/**
+ * One request with EXACTLY `body` (process-event's answer). `capture: false` for requests that run at the same time on
+ * their own connections (each request's calls stay its own; console output is then not captured).
+ */
+export function post(handler, conn, pupil, { flags = {}, body = {}, capture = true, beforeRpc = null } = {}) {
+  return run(handler, conn, pupil, flags, body, { capture, beforeRpc });
 }

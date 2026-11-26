@@ -46,6 +46,10 @@ const MAX_ROUND_NO = 2147483647;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const isValidRoundNo = (v) => typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= MAX_ROUND_NO;
+// D-384: the round's activation as get-next-question hands it out (a whole number ≥ 0; LAERLIGVERSE_COURSE_PARKING=on),
+// or null when none was sent. Bumped by every resume of a parked course round; process-event refuses an older one.
+export const isValidActivationNo = (v) => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= MAX_ROUND_NO;
+export const activationNoOf = (parsed) => (parsed && isValidActivationNo(parsed.activation_no) ? parsed.activation_no : null);
 export const isUuid = (v) => typeof v === "string" && UUID.test(v);
 const isNonEmptyString = (v) => typeof v === "string" && v.length > 0;
 
@@ -68,10 +72,11 @@ function defaultNewId() {
  * server's question, or without crypto.randomUUID, there is no H5 submission (and no legacy fallback).
  * @returns {{ ok: true, record: object } | { ok: false, reason: string }}
  */
-export function createSubmission({ studentId, instanceId, roundNo, answer, now = Date.now(), newId = defaultNewId } = {}) {
+export function createSubmission({ studentId, instanceId, roundNo, activationNo = null, answer, now = Date.now(), newId = defaultNewId } = {}) {
   if (!isNonEmptyString(studentId)) return { ok: false, reason: "no_student" };
   if (!isNonEmptyString(instanceId)) return { ok: false, reason: "no_instance" };
   if (!isValidRoundNo(roundNo)) return { ok: false, reason: "invalid_round_no" };
+  if (activationNo !== null && !isValidActivationNo(activationNo)) return { ok: false, reason: "invalid_activation_no" };
   if (!isNonEmptyString(answer)) return { ok: false, reason: "empty_answer" };
   if (answer.length > MAX_ANSWER_LENGTH) return { ok: false, reason: "answer_too_long" };
   let id = null;
@@ -84,6 +89,8 @@ export function createSubmission({ studentId, instanceId, roundNo, answer, now =
       student_id: studentId,
       question_instance_id: instanceId,
       round_no: roundNo,
+      // D-384: only when the server handed one out: the record is then locked to that activation.
+      ...(activationNo !== null ? { activation_no: activationNo } : {}),
       submission_id: id.toLowerCase(),
       answer,
       created_at: now,
@@ -103,6 +110,9 @@ export function blockRecord(record, reason = BLOCKED_INCOMPATIBLE) {
 
 const RECORD_KEYS = "answer,created_at,question_instance_id,round_no,student_id,submission_id,v";
 const BLOCKED_RECORD_KEYS = "answer,blocked,created_at,question_instance_id,round_no,student_id,submission_id,v";
+// D-384: the same two shapes with the round's activation (exactly one extra key, activation_no).
+const ACTIVATION_RECORD_KEYS = "activation_no,answer,created_at,question_instance_id,round_no,student_id,submission_id,v";
+const ACTIVATION_BLOCKED_RECORD_KEYS = "activation_no,answer,blocked,created_at,question_instance_id,round_no,student_id,submission_id,v";
 
 /** A stored value back to a record, or null when it is anything but a complete, current record. */
 export function parseRecord(raw, now = Date.now()) {
@@ -110,8 +120,10 @@ export function parseRecord(raw, now = Date.now()) {
   try { r = typeof raw === "string" ? JSON.parse(raw) : null; } catch (_e) { return null; }
   if (!r || typeof r !== "object" || Array.isArray(r)) return null;
   const keys = Object.keys(r).sort().join(",");
-  if (keys !== RECORD_KEYS && keys !== BLOCKED_RECORD_KEYS) return null;
-  if (keys === BLOCKED_RECORD_KEYS && r.blocked !== BLOCKED_INCOMPATIBLE) return null;
+  const withActivation = keys === ACTIVATION_RECORD_KEYS || keys === ACTIVATION_BLOCKED_RECORD_KEYS;
+  if (keys !== RECORD_KEYS && keys !== BLOCKED_RECORD_KEYS && !withActivation) return null;
+  if ((keys === BLOCKED_RECORD_KEYS || keys === ACTIVATION_BLOCKED_RECORD_KEYS) && r.blocked !== BLOCKED_INCOMPATIBLE) return null;
+  if (withActivation && !isValidActivationNo(r.activation_no)) return null;
   if (r.v !== 1 || !isNonEmptyString(r.student_id) || !isNonEmptyString(r.question_instance_id)) return null;
   if (!isValidRoundNo(r.round_no) || !isUuid(r.submission_id)) return null;
   if (!isNonEmptyString(r.answer) || r.answer.length > MAX_ANSWER_LENGTH) return null;
@@ -179,6 +191,8 @@ export function h5RequestBody(record, questionShownAt) {
     question_shown_at: questionShownAt ?? null,
     round_no: record.round_no,
     submission_id: record.submission_id,
+    // D-384: the activation the record was locked to, when the server handed one out.
+    ...(isValidActivationNo(record.activation_no) ? { activation_no: record.activation_no } : {}),
   };
 }
 
@@ -186,7 +200,14 @@ export function h5RequestBody(record, questionShownAt) {
 // registered and NOT paid. Only this exact pair counts as a confirmed refusal.
 export const REFUSAL_STATUS = Object.freeze({
   round_closed: 409, stale_round: 409, submission_conflict: 409, not_found: 404, invalid_request: 400,
+  // D-384: the course round was parked (the pupil left the course in another tab); nothing was recorded.
+  round_parked: 409,
+  // D-384: the round was resumed after this tab got it (a newer activation); nothing was recorded.
+  stale_activation: 409,
 });
+// D-384: the two refusals the LEGACY answer path (H5 off — production today) can also meet. Both mean: nothing was
+// recorded; show the text and load the question again (the course round waits, or comes back in its current activation).
+export const LEGACY_REFUSED_OUTCOMES = Object.freeze(["round_parked", "stale_activation"]);
 export const REFUSED_OUTCOMES = Object.freeze(Object.keys(REFUSAL_STATUS));
 
 async function readErrorBody(error) {
@@ -286,6 +307,17 @@ export async function isClientOutdatedError(error) {
   return status === 426 && !!body && body.outcome === "client_outdated";
 }
 
+/**
+ * Legacy path (H5 off): the D-384 refusal a failed answer carries — "round_parked" or "stale_activation", with exactly
+ * 409 — or null for every other error (which keeps today's handling). Nothing was recorded for either refusal.
+ */
+export async function legacyRefusalOf(error) {
+  if (!error || error.name !== "FunctionsHttpError") return null;
+  const { status, body } = await readErrorBody(error);
+  if (!body || !LEGACY_REFUSED_OUTCOMES.includes(body.outcome)) return null;
+  return status === REFUSAL_STATUS[body.outcome] ? body.outcome : null;
+}
+
 // The pupil-facing text for each refusal. None of them says right or wrong: nothing was graded.
 export const REFUSAL_TEXT = Object.freeze({
   round_closed: "Dette spørgsmål er allerede besvaret. Vi henter et nyt.",
@@ -293,6 +325,8 @@ export const REFUSAL_TEXT = Object.freeze({
   submission_conflict: "Svaret kunne ikke registreres. Vi henter et nyt spørgsmål.",
   not_found: "Spørgsmålet findes ikke længere. Vi henter et nyt.",
   invalid_request: "Svaret kunne ikke behandles. Vi henter et nyt spørgsmål.",
+  round_parked: "Opgaven er sat på pause, fordi du skiftede væk fra forløbet. Du fortsætter med den, når du vender tilbage. Vi henter et nyt spørgsmål.",
+  stale_activation: "Opgaven er åbnet igen et andet sted, så dette svar hører til en ældre visning. Vi henter opgaven igen.",
 });
 export const UNCERTAIN_TEXT = "⚠️ Forbindelsen svigtede, så vi ved ikke, om dit svar nåede frem. Tryk «Send igen» — det samme svar sendes, og det tæller kun én gang.";
 export const CLIENT_OUTDATED_TEXT = "Lærlig er blevet opdateret. Genindlæs siden for at fortsætte.";

@@ -12,6 +12,9 @@ import { readInstanceForGrading } from "./instance-read.ts";
 import { answerMode, replyForV2, isRevokedLegacyRpc, errorCodeOf, CLIENT_OUTDATED, UNEXPECTED_RESULT } from "./answer-v2.ts";
 import { ATTEMPT_CONTEXT_ENV, attemptContextEnabled } from "./attempt-context.ts";
 import { isQuizCooldownError, cooldownReply } from "./quiz-cooldown.ts";
+import { isRoundParkedError, roundParkedReply } from "./round-parked.ts";
+import { COURSE_PARKING_ENV as ACTIVATION_ENV, activationCheckEnabled, activationVerdict, staleActivationReply } from "./round-activation.ts";
+import { activationClientHeaders, isStaleActivationError } from "./round-activation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,8 +33,9 @@ console.log(`[process-event] service-key source=${serviceKeySource()}`)
 // misconception signal — see ./instance-writes.ts), and nothing else.
 // Built per call, only when one of those is about to run: no pupil Authorization header, no session.
 // If the key cannot be resolved this throws — never a fallback to the user client.
-function makeAdminClient() {
-  return createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), ADMIN_CLIENT_OPTIONS)
+// `headers`: only D-384's activation header (./round-activation.ts activationClientHeaders), and only for the answer call.
+function makeAdminClient(headers?: Record<string, string>) {
+  return createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), headers ? { ...ADMIN_CLIENT_OPTIONS, global: { headers } } : ADMIN_CLIENT_OPTIONS)
 }
 
 function countWords(text: string) {
@@ -114,6 +118,11 @@ serve(async (req) => {
     // and call below is exactly as before, and _v2 gets the L1 constants.
     const attemptContextOn = h5 !== null && attemptContextEnabled(Deno.env.get(ATTEMPT_CONTEXT_ENV))
 
+    // D-384 (./round-activation.ts): with LAERLIGVERSE_COURSE_PARKING exactly "on" the instance read also returns the
+    // round's activation, and an answer from an earlier activation (an old tab) is refused below — on every answer path,
+    // before any answer function. Off: the read and every path are exactly as before.
+    const activationCheckOn = activationCheckEnabled(Deno.env.get(ACTIVATION_ENV))
+
     // ── Fetch instance + question meta ───────────────────────────────────────
     // A backend read (./instance-read.ts): the answer key and the question content are server-only.
     // Nothing from the row is used or returned before the ownership check below.
@@ -122,7 +131,8 @@ serve(async (req) => {
     try {
       ({ data: instanceData, error: instanceError } = await readInstanceForGrading(
         makeAdminClient,
-        question_instance_id
+        question_instance_id,
+        activationCheckOn
       ))
     } catch (keyError: any) {
       // serviceKey()'s messages name the variables, never their values.
@@ -151,6 +161,34 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403, headers: corsHeaders
       })
+    }
+
+    // D-384: the stale-tab check (./round-activation.ts). After the ownership check, before every answer path.
+    // makeAnswerClient: the backend client for the answer call itself. Switch on: it carries the activation accepted
+    // here (header x-laerlig-activation-no), and the trigger question_instances_parked_guard re-checks it against the
+    // LOCKED row inside the answer function's own transaction (LQ410 → the same 409) — the atomic check. Off: exactly
+    // makeAdminClient, as before.
+    let makeAnswerClient = makeAdminClient
+    if (activationCheckOn) {
+      const verdict = activationVerdict(body.activation_no, instanceData.activation_no)
+      if (verdict.kind === "server_fault") {
+        console.error("ROUND ACTIVATION: the instance has no valid activation_no (migration 20261124160000 missing?)")
+        return new Response(JSON.stringify({ error: "Server configuration error" }), {
+          status: 500, headers: corsHeaders
+        })
+      }
+      if (verdict.kind === "invalid") {
+        return new Response(JSON.stringify({ outcome: "invalid_request", reason: "activation_no", error: "Invalid request" }), {
+          status: 400, headers: corsHeaders
+        })
+      }
+      if (verdict.kind === "stale") {
+        console.log("FLOW: STALE ACTIVATION", JSON.stringify({ expected: verdict.expected, given: verdict.given }))
+        const r = staleActivationReply()
+        return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+      }
+      const activationHeaders = activationClientHeaders(instanceData.activation_no)
+      makeAnswerClient = () => makeAdminClient(activationHeaders)
     }
 
     const questionMeta    = instanceData.questions || {}
@@ -190,7 +228,7 @@ serve(async (req) => {
       let saveResult: InstanceWriteResult
       try {
         saveResult = await updateOwnInstance(
-          makeAdminClient,
+          makeAnswerClient,
           { instanceId: question_instance_id, studentId: user.id },
           { user_answer: answer }
         )
@@ -200,6 +238,13 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: "Server configuration error" }), {
           status: 500, headers: corsHeaders
         })
+      }
+
+      // D-384: the trigger refused a save from an earlier activation of the round (./round-activation.ts).
+      if (!saveResult.ok && saveResult.reason === "db_error" && isStaleActivationError({ code: saveResult.code })) {
+        console.log("FLOW: STALE ACTIVATION (long, atomic)")
+        const r = staleActivationReply()
+        return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
       }
 
       if (!saveResult.ok) {
@@ -239,7 +284,7 @@ serve(async (req) => {
           // L5 + L3 (./attempt-context.ts): attemptContextOn → the wrapper derives mode and hints in the
           // answer's own transaction; false → the L1 constants, exactly as before.
           ({ data: v2Data, error: v2Error } = await callProcessTextAnswerV2(
-            makeAdminClient,
+            makeAnswerClient,
             {
               instanceId:        question_instance_id,
               userId:            user.id,
@@ -261,6 +306,19 @@ serve(async (req) => {
         }
 
         // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+        // D-384 (./round-parked.ts): the round was parked (the pupil left the course); nothing was written.
+        // D-384 (./round-activation.ts): the round was resumed after the read check; the trigger refused the answer
+        // in the answer function's own transaction, so nothing was written.
+        if (v2Error && isStaleActivationError(v2Error)) {
+          console.log("FLOW: STALE ACTIVATION (atomic)")
+          const r = staleActivationReply()
+          return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+        }
+        if (v2Error && isRoundParkedError(v2Error)) {
+          console.log("FLOW: ROUND PARKED")
+          const r = roundParkedReply()
+          return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+        }
         if (v2Error && isQuizCooldownError(v2Error)) {
           console.log("FLOW: QUIZ COOLDOWN (text v2)")
           const r = cooldownReply(v2Error, Date.now())
@@ -291,7 +349,7 @@ serve(async (req) => {
       let rpcError: any
       try {
         ({ data: rpcResult, error: rpcError } = await callProcessTextAnswer(
-          makeAdminClient,
+          makeAnswerClient,
           {
             instanceId: question_instance_id,
             userId:     user.id,
@@ -310,6 +368,19 @@ serve(async (req) => {
       // M2: once EXECUTE is revoked, a request without H5 fields comes from an outdated client.
       // The privilege check ran before the function body, so nothing was registered.
       // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+      // D-384 (./round-parked.ts): the round was parked (the pupil left the course); nothing was written.
+      // D-384 (./round-activation.ts): the round was resumed after the read check; the trigger refused the answer
+      // in the answer function's own transaction, so nothing was written.
+      if (rpcError && isStaleActivationError(rpcError)) {
+        console.log("FLOW: STALE ACTIVATION (atomic)")
+        const r = staleActivationReply()
+        return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+      }
+      if (rpcError && isRoundParkedError(rpcError)) {
+        console.log("FLOW: ROUND PARKED")
+        const r = roundParkedReply()
+        return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+      }
       if (rpcError && isQuizCooldownError(rpcError)) {
         console.log("FLOW: QUIZ COOLDOWN (text)")
         const r = cooldownReply(rpcError, Date.now())
@@ -421,7 +492,7 @@ serve(async (req) => {
         // L5 + L3 (./attempt-context.ts): attemptContextOn → the wrapper derives mode and hints in the
         // answer's own transaction; false → the L1 constants, exactly as before.
         ({ data: v2Data, error: v2Error } = await callProcessQuestionAttemptV2(
-          makeAdminClient,
+          makeAnswerClient,
           {
             studentId:         user.id,
             instanceId:        question_instance_id,
@@ -442,6 +513,19 @@ serve(async (req) => {
       }
 
       // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+      // D-384 (./round-parked.ts): the round was parked (the pupil left the course); nothing was written.
+      // D-384 (./round-activation.ts): the round was resumed after the read check; the trigger refused the answer
+      // in the answer function's own transaction, so nothing was written.
+      if (v2Error && isStaleActivationError(v2Error)) {
+        console.log("FLOW: STALE ACTIVATION (atomic)")
+        const r = staleActivationReply()
+        return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+      }
+      if (v2Error && isRoundParkedError(v2Error)) {
+        console.log("FLOW: ROUND PARKED")
+        const r = roundParkedReply()
+        return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+      }
       if (v2Error && isQuizCooldownError(v2Error)) {
         console.log("FLOW: QUIZ COOLDOWN (mc v2)")
         const r = cooldownReply(v2Error, Date.now())
@@ -473,7 +557,7 @@ serve(async (req) => {
     let rpcError: any
     try {
       ({ data: rpcData, error: rpcError } = await callProcessQuestionAttempt(
-        makeAdminClient,
+        makeAnswerClient,
         {
           studentId:       user.id,
           instanceId:      question_instance_id,
@@ -491,6 +575,19 @@ serve(async (req) => {
 
     // M2: see the short-text path above.
     // Anti-gætte-pause (./quiz-cooldown.ts): the database refused the answer; nothing was written.
+    // D-384 (./round-parked.ts): the round was parked (the pupil left the course); nothing was written.
+    // D-384 (./round-activation.ts): the round was resumed after the read check; the trigger refused the answer
+    // in the answer function's own transaction, so nothing was written.
+    if (rpcError && isStaleActivationError(rpcError)) {
+      console.log("FLOW: STALE ACTIVATION (atomic)")
+      const r = staleActivationReply()
+      return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+    }
+    if (rpcError && isRoundParkedError(rpcError)) {
+      console.log("FLOW: ROUND PARKED")
+      const r = roundParkedReply()
+      return new Response(JSON.stringify(r.body), { status: r.status, headers: corsHeaders })
+    }
     if (rpcError && isQuizCooldownError(rpcError)) {
       console.log("FLOW: QUIZ COOLDOWN (mc)")
       const r = cooldownReply(rpcError, Date.now())

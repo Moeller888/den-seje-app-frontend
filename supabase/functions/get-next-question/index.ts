@@ -27,6 +27,7 @@ import {
   type LevelReadClient,
 } from "./level-flow.ts";
 import { SERVED_SNAPSHOT_ENV, deliveredQuestion, deliveryProposal, servedSnapshotEnabled } from "./served-snapshot.ts";
+import { COURSE_PARKING_ENV, activationOf, courseParkingEnabled, parkResultOf, resumeOutcomeOf } from "./course-parking.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -339,6 +340,9 @@ serve(async (req) => {
     // version the same: new instances propose the row they are built from, open and repeated rounds are
     // served from their snapshot.
     const servedSnapshot = servedSnapshotEnabled(Deno.env.get(SERVED_SNAPSHOT_ENV));
+    // D-384 (./course-parking.ts, Edge secret LAERLIGVERSE_COURSE_PARKING, only after migration 20261124160000): an open
+    // course round is parked when the pupil leaves the course and resumed inside it. Off: no new call, no new column.
+    const courseParking = courseParkingEnabled(Deno.env.get(COURSE_PARKING_ENV));
     // Lærligverse L5 (Edge secret LAERLIGVERSE_SERVED_MODE, only after migration 20261108043500): when the
     // server-directed sequence chose a step for THIS request, the new instance records that step's activity mode
     // (served_mode), which process-event later sends as question_attempts.mode. Anything but "on", or no
@@ -385,6 +389,23 @@ serve(async (req) => {
       return deliveredQuestion(row ? (row as { served_snapshot?: unknown }).served_snapshot : null);
     };
 
+    // D-384: inside the server sequence the pupil returns to THIS course: an active course round of another course is
+    // parked, and this course's parked round is resumed — the same instance, in the server's step — so the due loop
+    // below serves it. 'none' and 'other_active' change nothing here (an active ordinary round is handled below exactly
+    // as before); 'wrong_step' answers as an active round in another step does (the round stays parked, nothing lost).
+    if (courseParking && sequence !== null && targeting.mode === "on") {
+      const resumed = resumeOutcomeOf(await admin().rpc("resume_parked_course_round", {
+        p_student_id: student_id, p_objective: targeting.objective, p_step: sequence.step,
+      }));
+      console.log("COURSE_ROUND_PARKING:", { action: "resume", outcome: resumed });
+      if (resumed === "wrong_step") {
+        return new Response(JSON.stringify({ error: "open_question_other_step" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 409,
+        });
+      }
+    }
+
     // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
     // Due instances are served regardless of grade filter (backwards compatible).
     // Read through the backend client, scoped to the verified student: the embedded question carries
@@ -393,7 +414,7 @@ serve(async (req) => {
       .from("question_instances")
       .select(`
         id,
-        repeat_count,
+        repeat_count,${courseParking ? "\n        activation_no," : ""}
         next_review_at,
         questions (${targeting.mode === "on" ? "\n          learning_objective," : ""}
           content,
@@ -440,6 +461,14 @@ serve(async (req) => {
       // database keeps course rounds since 20261120150000): the ordinary quiz says so in a state the pupil can act
       // on; a targeted request without the sequence gets an explicit conflict, as D-329 rule 3.
       if (sequence === null && isCourseItem(instance.questions.metadata)) {
+        // D-384: the pupil left the course. Park the round (same row, nothing answered, nothing lost) and go on with
+        // the ordinary quiz; the course resumes it. Only when parking is off or impossible (another round of the same
+        // course is already parked) does D-383's answer below stay.
+        if (courseParking) {
+          const parked = parkResultOf(await admin().rpc("park_open_course_round", { p_student_id: student_id }));
+          console.log("COURSE_ROUND_PARKING:", { action: "park", outcome: parked.kind });
+          if (parked.kind === "parked" && parked.instanceId === instance.id) continue;
+        }
         return targeting.mode === "off"
           ? new Response(JSON.stringify({ step: "no_questions", reason: "course_round_open" }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -461,6 +490,8 @@ serve(async (req) => {
       // Outside the try: an invalid round, or a malformed delivered version, fails loud instead of being
       // skipped like bad content.
       const roundNo = roundNoOf(instance);
+      // D-384: the round's activation (bumped by every resume), so process-event can refuse an older tab's answer.
+      const activation = courseParking ? activationOf(instance) : {};
       // K1: an open round with a delivered version is served FROM it (a reload never shows a later edit);
       // without one it is served from the question row as before (version unknown).
       const delivered = servedSnapshot ? await deliveredFor(instance.id) : null;
@@ -478,6 +509,7 @@ serve(async (req) => {
           JSON.stringify({
             question_instance_id: instance.id,
             round_no: roundNo,
+            ...activation,
             content: pub.content,
             answer_format: format,
             answer_type: q.answer_type || "short",
@@ -689,12 +721,22 @@ serve(async (req) => {
     if (!inserted && targeting.mode === "on") {
       // A concurrent request may have won idx_one_open_question (one open instance per pupil): then the
       // objective is NOT exhausted. Say so explicitly; the caller's retry gets that instance as due.
-      const { data: openRows, error: openError } = await admin()
-        .from("question_instances")
-        .select("id")
-        .eq("student_id", student_id)
-        .eq("answered", false)
-        .limit(1);
+      // D-384: a parked course round is not the pupil's ACTIVE open round; parked_at is only read with parking on (then
+      // the column exists). Off: exactly the read before.
+      const { data: openRows, error: openError } = courseParking
+        ? await admin()
+          .from("question_instances")
+          .select("id")
+          .eq("student_id", student_id)
+          .eq("answered", false)
+          .is("parked_at", null)
+          .limit(1)
+        : await admin()
+          .from("question_instances")
+          .select("id")
+          .eq("student_id", student_id)
+          .eq("answered", false)
+          .limit(1);
       if (openError) throw openError;
       if (Array.isArray(openRows) && openRows.length > 0) {
         return new Response(JSON.stringify({ error: "open_question_exists" }), {
@@ -756,11 +798,11 @@ serve(async (req) => {
       if (repeatError) throw repeatError;
 
       if (repeatId) {
-        const { data: repeatRows, error: repeatFetchError } = await admin()
-          .from("question_instances")
-          .select(`
+        // A plain string (D-384's optional column makes it one of two): supabase-js's type-level select parser cannot
+        // read a union of literals, and the due read above is a string for the same reason. Runtime is unchanged.
+        const repeatColumns: string = `
             id,
-            repeat_count,
+            repeat_count,${courseParking ? "\n            activation_no," : ""}
             questions (
               content,
               answer_format,
@@ -768,16 +810,20 @@ serve(async (req) => {
               metadata,
               is_active
             )
-          `)
+          `;
+        const { data: repeatRows, error: repeatFetchError } = await admin()
+          .from("question_instances")
+          .select(repeatColumns)
           .eq("id", repeatId)
           .eq("student_id", student_id)
           .limit(1);
 
         if (repeatFetchError) throw repeatFetchError;
 
-        const repeatRow = Array.isArray(repeatRows) && repeatRows.length > 0
+        // The selected columns, typed by hand (the select string is a plain string, see repeatColumns).
+        const repeatRow = (Array.isArray(repeatRows) && repeatRows.length > 0
           ? repeatRows[0]
-          : null;
+          : null) as unknown as { id: string; repeat_count?: unknown; activation_no?: unknown; questions?: unknown } | null;
 
         if (repeatRow) {
           // PostgREST returns a to-one embed as an object, but supabase-js types it as an array.
@@ -805,6 +851,8 @@ serve(async (req) => {
           if (rq && rq.is_active !== false) {
             // The reopened round, read back after the reopen (outside the try, so it fails loud).
             const roundNo = roundNoOf(repeatRow);
+            // D-384: a reopened round keeps its activation (a once-resumed round is > 0); served so its answer passes.
+            const activation = courseParking ? activationOf(repeatRow) : {};
             // K1: the reopen took the round's snapshot in the same statement; serve FROM it.
             const delivered = servedSnapshot ? await deliveredFor(repeatRow.id) : null;
             const src = delivered ?? rq;
@@ -820,6 +868,7 @@ serve(async (req) => {
                 JSON.stringify({
                   question_instance_id: repeatRow.id,
                   round_no: roundNo,
+                  ...activation,
                   content: pub.content,
                   answer_format: format,
                   answer_type: src.answer_type || "short",

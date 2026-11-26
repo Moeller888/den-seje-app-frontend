@@ -37,7 +37,9 @@ function chain(kind, name, client, ops) {
 }
 export function createClient(_url, key, opts) {
   const client = key === "SERVICE" ? "admin" : "user";
-  T().push({ createClient: client, auth: opts?.global?.headers?.Authorization ? "pupil-jwt" : "none" });
+  // D-384: the answer client's activation header is traced only when present (every other trace is unchanged).
+  const act = opts?.global?.headers?.["x-laerlig-activation-no"];
+  T().push({ createClient: client, auth: opts?.global?.headers?.Authorization ? "pupil-jwt" : "none", ...(act !== undefined ? { activation: act } : {}) });
   return {
     auth: { getUser: async () => { T().push({ client, kind: "auth.getUser" }); return globalThis.__peUser(); } },
     from: (table) => chain("from", table, client, []),

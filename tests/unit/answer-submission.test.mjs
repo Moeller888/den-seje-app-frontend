@@ -84,8 +84,13 @@ test("app.js takes the H5 path only when the flag is on, and recovers only when 
   }
 });
 
-test("H5 off: app.js sends exactly the request it always sent", () => {
-  assert.match(APP, /\(\{ data, error \} = await supabase\.functions\.invoke\(\s*"process-event",\s*\{\s*body: \{\s*student_id: studentId,\s*question_instance_id: currentInstanceId,\s*answer: userAnswer,\s*question_shown_at: questionShownAt\s*\}\s*\}\s*\)\);/);
+test("H5 off: app.js sends exactly the request it always sent (plus D-384's activation_no only when the server sent one)", () => {
+  assert.match(APP, /\(\{ data, error \} = await supabase\.functions\.invoke\(\s*"process-event",\s*\{\s*body: \{\s*student_id: studentId,\s*question_instance_id: currentInstanceId,\s*answer: userAnswer,\s*question_shown_at: questionShownAt,\s*\/\/[^\n]*\n\s*\.\.\.\(currentActivationNo !== null \? \{ activation_no: currentActivationNo \} : \{\}\)\s*\}\s*\}\s*\)\);/);
+  // The extra key comes ONLY from the server's own answer (activationNoOf(parsed) where the question is read; null
+  // otherwise), so with LAERLIGVERSE_COURSE_PARKING off — no activation_no in any response — the body is byte-identical.
+  assert.equal((APP.match(/(?<!let )currentActivationNo = /g) ?? []).length, 1, "assigned in exactly one place (besides its declaration)");
+  assert.match(APP, /currentActivationNo = activationNoOf\(parsed\);/);
+  assert.match(APP, /let currentActivationNo = null;/);
   assert.equal((APP.match(/functions\.invoke\(\s*"process-event"/g) ?? []).length, 2, "the legacy call and sendSubmission");
 });
 
@@ -325,4 +330,62 @@ test("app.js: storage is verified before every send, an incompatible backend blo
   for (const ctx of contexts) {
     assert.match(ctx, /outcome\.kind === "(graded|refused|invalid_answer|client_outdated|quiz_cooldown)"|owner === "other"/, ctx.slice(-140));
   }
+});
+
+// ── D-384: the round's activation (stale-tab protection) ─────────────────────────────────────────────
+import {
+  isValidActivationNo, activationNoOf, legacyRefusalOf, LEGACY_REFUSED_OUTCOMES,
+} from "../../js/answer-submission.js";
+
+test("D-384: activation_no is read only from the server's answer, as a whole number ≥ 0", () => {
+  for (const ok of [0, 1, 2147483647]) assert.equal(isValidActivationNo(ok), true, String(ok));
+  for (const bad of [-1, 1.5, "1", null, undefined, NaN, 2147483648]) assert.equal(isValidActivationNo(bad), false, String(bad));
+  assert.equal(activationNoOf({ activation_no: 3 }), 3);
+  for (const p of [{}, { activation_no: "3" }, { activation_no: -1 }, null, undefined]) assert.equal(activationNoOf(p), null, JSON.stringify(p));
+});
+
+test("D-384: an H5 submission is locked to the activation it was made in; without one the record is exactly as before", () => {
+  const plain = make();
+  assert.equal("activation_no" in plain.record, false, "no activation handed out → the H5 record of today");
+  const locked = make({ activationNo: 2 });
+  assert.equal(locked.ok, true);
+  assert.equal(locked.record.activation_no, 2);
+  assert.deepEqual(make({ activationNo: -1 }), { ok: false, reason: "invalid_activation_no" });
+  // Stored and read back (also blocked) — and a record with a broken activation is discarded, never sent.
+  assert.deepEqual(parseRecord(JSON.stringify(locked.record), NOW), locked.record);
+  assert.deepEqual(parseRecord(JSON.stringify(blockRecord(locked.record)), NOW), blockRecord(locked.record));
+  assert.equal(parseRecord(JSON.stringify({ ...locked.record, activation_no: "2" }), NOW), null);
+  assert.equal(parseRecord(JSON.stringify({ ...locked.record, activation_no: -1 }), NOW), null);
+  assert.deepEqual(parseRecord(JSON.stringify(plain.record), NOW), plain.record, "today's records stay readable");
+  // The body carries it on every retry of the same submission; without one, the body is today's.
+  assert.equal(h5RequestBody(locked.record, NOW).activation_no, 2);
+  assert.equal("activation_no" in h5RequestBody(plain.record, NOW), false);
+});
+
+test("D-384: stale_activation is a confirmed refusal (409) with a Danish text, on the H5 and the legacy path", async () => {
+  assert.equal(REFUSAL_STATUS.stale_activation, 409);
+  assert.ok(REFUSED_OUTCOMES.includes("stale_activation"));
+  assert.match(REFUSAL_TEXT.stale_activation, /åbnet igen/);
+  for (const o of LEGACY_REFUSED_OUTCOMES) assert.ok(REFUSAL_TEXT[o] && !/rigtigt|forkert/i.test(REFUSAL_TEXT[o]), o);
+  const rec = make({ activationNo: 1 }).record;
+  assert.deepEqual(await classifyResponse(httpError(409, { outcome: "stale_activation", error: "Stale activation" }), rec),
+    { kind: "refused", outcome: "stale_activation", reason: null });
+  // Legacy path: exactly these two outcomes with exactly 409; anything else keeps today's handling (null).
+  assert.equal(await legacyRefusalOf(httpError(409, { outcome: "stale_activation" }).error), "stale_activation");
+  assert.equal(await legacyRefusalOf(httpError(409, { outcome: "round_parked" }).error), "round_parked");
+  for (const [status, body] of [[500, { outcome: "stale_activation" }], [409, { outcome: "round_closed" }], [409, "x"], [409, { error: "x" }]]) {
+    assert.equal(await legacyRefusalOf(httpError(status, body).error), null, `${status} ${JSON.stringify(body)}`);
+  }
+  assert.equal(await legacyRefusalOf(fetchError().error), null);
+  assert.equal(await legacyRefusalOf(null), null);
+});
+
+test("D-384: app.js turns a legacy refusal into the text and a fresh load — never 'prøv igen' on a dead end", () => {
+  const i = APP.indexOf("const refusal = await legacyRefusalOf(error);");
+  assert.ok(i > 0, "the legacy error branch asks legacyRefusalOf");
+  const branch = APP.slice(i, i + 600);
+  assert.match(branch, /feedback\.textContent = REFUSAL_TEXT\[refusal\];/);
+  assert.match(branch, /setTimeout\(\(\) => \{ loadAndRenderQuestion\(\); \}, 2500\);/);
+  assert.ok(i < APP.indexOf('feedback.textContent = "⚠️ Fejl ved svar – prøv igen";'), "checked before the generic retry text");
+  assert.match(APP, /createSubmission\(\{ studentId, instanceId: currentInstanceId, roundNo: currentRoundNo, activationNo: currentActivationNo, answer: userAnswer \}\)/);
 });

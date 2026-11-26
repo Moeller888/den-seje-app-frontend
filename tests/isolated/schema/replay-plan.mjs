@@ -122,6 +122,8 @@ export function extractSchemaPart(file, sql) {
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
 export const NOT_IN_PRODUCTION = Object.freeze({
+  "20261124160000_course_round_parking.sql":
+    "D-384 (F8), not applied in production: an open course round can be parked (parked_at/parked_objective, idx_one_open_question becomes one ACTIVE open round, park/resume RPCs) and D-383's three repeat functions and release_open_question_outside learn the parked state; it requires 20261120150000 (not applied either); applying it needs its own owner GO",
   "20261123100000_course_scope_before_candidate_limit.sql":
     "D-383 follow-up, not applied in production: it re-creates get_unserved_questions_for_student and get_question_candidates_for_student with p_course_scope (course items filtered before the limit); it requires 20261120150000 (not applied either); applying it needs its own owner GO",
   "20261120150000_course_items_out_of_ordinary_quiz.sql":
@@ -342,6 +344,8 @@ export const TEST_PROFILES = Object.freeze({
       "TEST PROFILE introduction: D-383 (NOT applied in production) — course items out of the ordinary quiz's level candidates and repeats; the lane where course items and ordinary requests meet",
     "20261123100000_course_scope_before_candidate_limit.sql":
       "TEST PROFILE introduction: D-383 follow-up (NOT applied in production) — the shared candidate RPCs filter course items before their limit (p_course_scope)",
+    "20261124160000_course_round_parking.sql":
+      "TEST PROFILE introduction: D-384 (NOT applied in production) — an open course round is parked when the pupil leaves the course and resumed inside it; the lane where course rounds and ordinary requests meet",
   }),
 });
 
