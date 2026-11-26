@@ -1,0 +1,928 @@
+{
+ "decision": "D-388",
+ "what": "HAIR-25 forsøg G4: tre frisurer i gråt og brunt som hoveder på Northstars fælles hovedbase",
+ "approvedOn": "2026-11-26",
+ "ownerText": "Jeg godkender V5H-2, D5-2 og D4-1 i både brun og grå, præcis som vist på G4-vurderingssiden. Godkendelsen omfatter kun disse tre kandidater.",
+ "approvedPage": {
+  "path": "run-3/forsoeg-g4/vurdering.html",
+  "sha256": "90b091f6ae22692b7196cd2b709befb024cc7796bc27ecd4d5ac23777724f0ec"
+ },
+ "verdicts": {
+  "path": "run-3/forsoeg-g4/visual/verdicts.json",
+  "sha256": "abdc87e6d2cd4b4b22c9997376ea756f6e770ecb9c89353f10436ca27144584f"
+ },
+ "notApproved": [
+  "V5H-1",
+  "D5-1",
+  "D4-2"
+ ],
+ "method": {
+  "version": "hair25v3-metode-r7a-2026-11-24",
+  "manifestSha256": "60a8c6139dbe0b7b624989ef177f7622415984b210760f07156f9474ba925edf",
+  "codeFingerprint": "2ba166f8f1a98b1e1bb0855a27435c83415332a8c61769b52a4146c91ee313a4",
+  "post": "r7 + greyTone (r7a)"
+ },
+ "privateRecipeVariant": {
+  "trialId": "V5H-2",
+  "note": "V5H er en særskilt privat opskriftsvariant: den låste oversætters V5-opskrift med ÉN komponent ændret (fletningen, recipe.components[1], lagt bag figurens højre øre). r7a's kode er uændret; efterbehandlingen brugte variantens gemte recipe.json. Dokumentationen bevares i den private arbejdskopi (se recipes.V5H-2.variant)."
+ },
+ "recipes": {
+  "V5H-2": {
+   "callId": "H25V3-dev13-V5H-2",
+   "recipe": {
+    "path": "run-3/forsoeg-g4/kald/V5H-2/recipe.json",
+    "sha256": "107ff0e5cb3d915b56760a3adec5f2b961dfbd58058fa9724adc1f3d48d7adda"
+   },
+   "prompt": {
+    "path": "run-3/forsoeg-g4/kald/V5H-2/prompt.txt",
+    "sha256": "ec84717adb79c57f33fc2e3763c6d2a1f28184fdf5a5501750d60de635c5d99c"
+   },
+   "prepared": {
+    "path": "run-3/forsoeg-g4/kald/V5H-2/prepared.json",
+    "sha256": "22ceddef02abaad5301b4e32f9847afd08df2d4235b05a71855af45122300bd7"
+   },
+   "raw": {
+    "path": "run-3/forsoeg-g4/kald/V5H-2/first/raw.png",
+    "sha256": "1a1392c00a5291c2ef28dc787ff73656e1f16b364a6eda95be4ad90028e1d4ea"
+   },
+   "eval": {
+    "path": "run-3/forsoeg-g4/faerdig/V5H-2/eval.json",
+    "sha256": "433d76376024604312171f4195648c80613ed18db1cc8d65b9248d3e9af1440c"
+   },
+   "privateRecipeVariant": true,
+   "variant": {
+    "name": "V5H — særskilt privat opskriftsvariant (kun recipe.components[1], fletningen, lagt om bag figurens højre øre; prompten byte for byte V5-1's)",
+    "files": {
+     "v3-workcopy/tools/avatar/hair25v3/g4-v5-guide-h.mjs": "ed23dce0e96f948303f09f142dde1ee31e73e04c200debcedb886fe515cb70f5",
+     "run-3/forsoeg-g4/v5-variant-h/v5h-kontrol.json": "caed33393a7f5589b3bbc4a4666f2f66d0d3103bdeb64bfcc43ede8c63be9587",
+     "run-3/forsoeg-g4/pakke-v2/plan-v2.json": "365c378e1028672c53dfc8620453b28f4cef40f03cb9d68618b1aefeb035092f",
+     "run-3/forsoeg-g4/pakke-v2/SEKSKALDSPAKKE-G4-v2.md": "5135ef4dced16cf51e321c60ad1f5c0f1c961b9b2d0b6383a9b6f89add83b2ac"
+    }
+   }
+  },
+  "D5-2": {
+   "callId": "H25V3-dev13-D5-2",
+   "recipe": {
+    "path": "run-3/forsoeg-g4/kald/D5-2/recipe.json",
+    "sha256": "c0ed9e0c150beee1af2200037a3a45dda7dacb18aac5822f0c48e49b06a2b44a"
+   },
+   "prompt": {
+    "path": "run-3/forsoeg-g4/kald/D5-2/prompt.txt",
+    "sha256": "48a78bb6cfecf56e1f6698d0588e3e23645651e412c3500d00e4d5ab2f06b7c8"
+   },
+   "prepared": {
+    "path": "run-3/forsoeg-g4/kald/D5-2/prepared.json",
+    "sha256": "7e53e0bdd773a24625aeebb14b960cb5fdcff921d142e9174237ec8d021cf2ab"
+   },
+   "raw": {
+    "path": "run-3/forsoeg-g4/kald/D5-2/first/raw.png",
+    "sha256": "86c743cc31737ceb359029a200663717a4055e0a8d3b06cccb3acc252db63deb"
+   },
+   "eval": {
+    "path": "run-3/forsoeg-g4/faerdig/D5-2/eval.json",
+    "sha256": "12050a60ff9d1c3f5b6ef79e40db67f2cb1e8d7c0314d4444ed01206ed7f203a"
+   },
+   "privateRecipeVariant": false
+  },
+  "D4-1": {
+   "callId": "H25V3-dev13-D4-1",
+   "recipe": {
+    "path": "run-3/forsoeg-g4/kald/D4-1/recipe.json",
+    "sha256": "59766cb53b89925a9d3ede3e19ceddb41aa7e0f715c8bdc79c972dd9ea2ac5d8"
+   },
+   "prompt": {
+    "path": "run-3/forsoeg-g4/kald/D4-1/prompt.txt",
+    "sha256": "07e3b5b831312a1e34267715bc90884dfd3ef5120858db9dce7f37a2c9194826"
+   },
+   "prepared": {
+    "path": "run-3/forsoeg-g4/kald/D4-1/prepared.json",
+    "sha256": "e8de048ce4f92c237b234d203b3673f16eb00b7d3fa71f44e313b86d40a76ff0"
+   },
+   "raw": {
+    "path": "run-3/forsoeg-g4/kald/D4-1/first/raw.png",
+    "sha256": "c293ebf9f8112f81a247a2d949659ebb8faf277758bd75e3896944e67891aea5"
+   },
+   "eval": {
+    "path": "run-3/forsoeg-g4/faerdig/D4-1/eval.json",
+    "sha256": "62abc564dedba5f6b26074643d4cb6e23347943610badbd143c0851859d3db17"
+   },
+   "privateRecipeVariant": false
+  }
+ },
+ "private": "De godkendte PNG-hoveder, vurderingssiden, opskrifterne og alle mellemfiler ligger uden for repositoryet (DenSejeApp-artefacts/hair-25-trial); kun de seks WebP-hoveder publiceres.",
+ "webpArgs": "tools/avatar/build-northstar-runtime-assets.mjs CWEBP_ARGS (tabsfri, -exact); afkodet og sammenlignet byte for byte",
+ "renderCheck": "appens egen northstarCompose (js/avatar-layers.js) genskaber vurderingssidens figur-app, hoved-1til1, tank-app og sweater-app byte for byte fra WebP-hovederne",
+ "hairInFrontZones": {
+  "oerer": [
+   0,
+   1024,
+   280,
+   470
+  ],
+  "skuldre": [
+   0,
+   1024,
+   470,
+   760
+  ]
+ },
+ "order": [
+  "h25v5",
+  "h25d5",
+  "h25d4"
+ ],
+ "hairs": {
+  "h25v5-grey": {
+   "trialId": "V5H-2",
+   "callId": "H25V3-dev13-V5H-2",
+   "colour": "grey",
+   "name": "Én lang fletning over højre skulder (PRIVAT OPSKRIFTSVARIANT V5H)",
+   "label": "Sidefletning · gråt",
+   "file": "head-h25v5-grey-v1.webp",
+   "approvedPng": {
+    "path": "run-3/forsoeg-g4/faerdig/V5H-2/grey-head.png",
+    "sha256": "17748fffa394dac3ee6f083ef019b6aaa9d0379c1a3ffa85ea6a59441d74a969",
+    "pixelSha256": "14b947ce685ed55173e53b4ea026266f5d8f6616394212f21bcfa8cc2127c461"
+   },
+   "webp": {
+    "sha256": "ae646734b1abdbc9ad74ebb5d7c6a26db7dfb03533e577dec99628d9e5c7e2c6",
+    "bytes": 102028,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/forsoeg-g4/faerdig/V5H-2/views-graa/figur-app.png": "11598509342fd27bb5e9be6369cba154c686e30aae7856f5d4abb9f347b62a77",
+    "run-3/forsoeg-g4/faerdig/V5H-2/views-graa/hoved-1til1.png": "6605ab4175e9a5c8068bf1eabcec367c2c00926ab0b1afaae8190f43568ec5f1",
+    "run-3/forsoeg-g4/faerdig/V5H-2/views-graa/tank-app.png": "d990170ad9b78565b6d2a7bad7ad642f7685c499a51638a8a4f2b776cb4a5182",
+    "run-3/forsoeg-g4/faerdig/V5H-2/views-graa/sweater-app.png": "cc3e3394e0e34f5506d5a13111bb1f4d41ec71a1a884178625c92ed181445f74"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "5ac7b502aaab6599e0539eddff51239f52d4977f5ece91ed827ced92a945d544",
+    "top-sweater-ls2-navy": "8e513b405476bce52c2e2f357ef0581bcb4c44d59cd0fb5b91fb98fc6f2a2152",
+    "top-tank-burgundy-pique": "28016ff3844e183e7b2b346b6dc4656bde393e6a29c13cfb26babdf134b19c65",
+    "top-tee-hip-breton-stripe": "e2ab30cb5d2b57b006809db97859330ff2c554897881e015c8cdfb1f781b47e5",
+    "top-sweater-ls2-sand-fox": "ca919d4b2753983918ac21340ababb38a690b2e1c4fcd8023dbfffdf0949ab70",
+    "top-tank-heather": "c5245398e0f916e3f28f43d675b1e5d464e254f401b4ebf48bf3c7e7cf575c82",
+    "top-tank-navy": "855967af4323bf20940b8b008fe121bbf1f01e6bda389c1782538b7a3786de39",
+    "top-sweater-ls2-heather": "2b5a217d3341cdb1a02759557dc1554f50e23d39bc3eec017e571189d7e486da"
+   },
+   "hairInFront": {
+    "top-tee-hip-cream": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    },
+    "top-sweater-ls2-navy": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.48
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    },
+    "top-tank-burgundy-pique": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-tee-hip-breton-stripe": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    },
+    "top-sweater-ls2-sand-fox": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-tank-heather": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.49
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-tank-navy": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.49
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-sweater-ls2-heather": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    }
+   }
+  },
+  "h25v5-brown": {
+   "trialId": "V5H-2",
+   "callId": "H25V3-dev13-V5H-2",
+   "colour": "brown",
+   "name": "Én lang fletning over højre skulder (PRIVAT OPSKRIFTSVARIANT V5H)",
+   "label": "Sidefletning · brunt",
+   "file": "head-h25v5-brown-v1.webp",
+   "approvedPng": {
+    "path": "run-3/forsoeg-g4/faerdig/V5H-2/brown-head.png",
+    "sha256": "0c5206096478c0575530f8456632b688037eae1b5e77c5932de9e94b94a7b638",
+    "pixelSha256": "4bc035f4a7abd11a00ecb9e63acd05450b8e8228c11ad8fae422d2252be5b03c"
+   },
+   "webp": {
+    "sha256": "58e1e912b3b38521d07fe6a9e7cc7466f687e776ef50946dbaa4b6c91e62d1c2",
+    "bytes": 115090,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/forsoeg-g4/faerdig/V5H-2/views/figur-app.png": "adbe8e9c95581548437dc5afe03b9e19324931f853366106505cface06b5ad18",
+    "run-3/forsoeg-g4/faerdig/V5H-2/views/hoved-1til1.png": "1c5cbebb6544ad3a72ea34ea9d2dbed9e46102c6a13535d9da03ff13ebf2c7e7",
+    "run-3/forsoeg-g4/faerdig/V5H-2/views/tank-app.png": "7e461450c3594e6118f741f2b9f77c434d94ffc151c96c8d85cf068f728b76cf",
+    "run-3/forsoeg-g4/faerdig/V5H-2/views/sweater-app.png": "304475a8692e87377b4309711abe2a4c8a171fbd8426694178bcb1092c417fb2"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "6d8406c1d9c60a4a1ef2bc104a8b8fbb074a8c0f775d58fcf029e9fae9b16d4f",
+    "top-sweater-ls2-navy": "07f764b19c3b0d0b0171767539ae877664cb2808af4b863a58e9ea8f0b881eec",
+    "top-tank-burgundy-pique": "ad4a0b17dcfd8a8ecff7570335c2024e58861b445734065ef4c4f0efec7cf734",
+    "top-tee-hip-breton-stripe": "8a8455045beca88594e683233be015b3e3453d7083d29d5af1ab934e8c5de6d6",
+    "top-sweater-ls2-sand-fox": "6f16fa907f052e64bfdb2afd0a537ac8beefe7dd5821f3974f91f52cd66a76b0",
+    "top-tank-heather": "2ffb470c353dc53e463e7f09076062fac3df4ff2166885aea59ea92620f8bd1a",
+    "top-tank-navy": "71e4fbdc0da0612d25da96c9fd6f63bb5fa70baa2a73aca3faee82a4cbc4bf3c",
+    "top-sweater-ls2-heather": "4bbb521ebe0aa92a9f2f6274f7fa535826d5238f267003175fb5f3f9394401e7"
+   },
+   "hairInFront": {
+    "top-tee-hip-cream": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    },
+    "top-sweater-ls2-navy": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.49
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    },
+    "top-tank-burgundy-pique": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.48
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-tee-hip-breton-stripe": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    },
+    "top-sweater-ls2-sand-fox": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-tank-heather": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.48
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-tank-navy": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.47
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-sweater-ls2-heather": {
+     "oerer": {
+      "hairPxAlpha224": 46273,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 12698,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    }
+   }
+  },
+  "h25d5-grey": {
+   "trialId": "D5-2",
+   "callId": "H25V3-dev13-D5-2",
+   "colour": "grey",
+   "name": "To lange fletninger",
+   "label": "Lange fletninger · gråt",
+   "file": "head-h25d5-grey-v1.webp",
+   "approvedPng": {
+    "path": "run-3/forsoeg-g4/faerdig/D5-2/grey-head.png",
+    "sha256": "94ef71e12f0d8edb6832d63a27a1dfa939c4c9e8ed31bc81d7102b73f3d32f82",
+    "pixelSha256": "297fb3c9ed50217de6ef354886d1a0dd78b60faa8e40d9345054a65e7affe0b6"
+   },
+   "webp": {
+    "sha256": "814bf1e7d3f4828d4edaeb18f8b2d4e871dc16efd205bd0a43a8e8ac67bfbc49",
+    "bytes": 113250,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/forsoeg-g4/faerdig/D5-2/views-graa/figur-app.png": "506d613c78848cc8dffe9f25f736855743aa76474a24dc2aeafacf98242e1104",
+    "run-3/forsoeg-g4/faerdig/D5-2/views-graa/hoved-1til1.png": "0119e03f95ad32e5ef50676d29f31b8a3097a3f8fceb5c0842e2b7f5ad473048",
+    "run-3/forsoeg-g4/faerdig/D5-2/views-graa/tank-app.png": "fa3141b22ca03749c2ab88d84143016664fca9c422899b8f2b240400eaa25f7e",
+    "run-3/forsoeg-g4/faerdig/D5-2/views-graa/sweater-app.png": "958949d1a494f3dcff82b04964d92052406d914098652f26c7cfab9728b847a4"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "b6b5f608810fd8888860b9f4e71cb368be52f5cb8be4ba8844fd422d97db18d5",
+    "top-sweater-ls2-navy": "1e45efe93313563b67f113b4da047e542fdf85666135b9bbdbf586410c9a5160",
+    "top-tank-burgundy-pique": "c854e4033d9517610c5d1a91d7e80a45cf30f21d4eb21e6273c069e023897c1d",
+    "top-tee-hip-breton-stripe": "b92b46fad99d2f6871dc855a348278f4707cfa7978f0dbced74ca687c412e8f0",
+    "top-sweater-ls2-sand-fox": "453fcde8e3a61aea6607609851888459339b6248ac1f65a9f08cd59c415e9be0",
+    "top-tank-heather": "085604f0195b284c948e8dfa578aa9cbef5d1d21dde079022b4870e6142ceb2a",
+    "top-tank-navy": "cb4d4926196321b6066e42b2ac2fec936ae99ea16a69d4a6fd8e2b4e0a8ed6c9",
+    "top-sweater-ls2-heather": "5821f3b18fa540c18f8e6ea206fc464c88076ecda5d88eb49dcf681ddcb130e0"
+   },
+   "hairInFront": {
+    "top-tee-hip-cream": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    },
+    "top-sweater-ls2-navy": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    },
+    "top-tank-burgundy-pique": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-tee-hip-breton-stripe": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.53
+     }
+    },
+    "top-sweater-ls2-sand-fox": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.53
+     }
+    },
+    "top-tank-heather": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.41
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-tank-navy": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.48
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-sweater-ls2-heather": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.52
+     }
+    }
+   }
+  },
+  "h25d5-brown": {
+   "trialId": "D5-2",
+   "callId": "H25V3-dev13-D5-2",
+   "colour": "brown",
+   "name": "To lange fletninger",
+   "label": "Lange fletninger · brunt",
+   "file": "head-h25d5-brown-v1.webp",
+   "approvedPng": {
+    "path": "run-3/forsoeg-g4/faerdig/D5-2/brown-head.png",
+    "sha256": "6b5b4f120f46bef02d355bc836e9ddcca952ebcf0d381889bbea5652b2f904da",
+    "pixelSha256": "1b87660008e4eb12890c55aa2e53adf651c4a9621072cc65890d75b9c6f8e18f"
+   },
+   "webp": {
+    "sha256": "fb665cd65ab334142c84b9813ef17ebd1d4ce353b6419d59aa21c195e5c15091",
+    "bytes": 130940,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/forsoeg-g4/faerdig/D5-2/views/figur-app.png": "19c2cf09d8c4058aa605c67066b47503e736a8d1ec79f16af7e0df5c365ab3fa",
+    "run-3/forsoeg-g4/faerdig/D5-2/views/hoved-1til1.png": "8fd7ce39c42882a2bc95f9a34d42b74173c6f2dc1c1f95eb6268d992f5be644b",
+    "run-3/forsoeg-g4/faerdig/D5-2/views/tank-app.png": "0e56191ec7bb599ca4215726222fe8eb07c69bb9d4e3d64dd3900e8092e0854e",
+    "run-3/forsoeg-g4/faerdig/D5-2/views/sweater-app.png": "e1e9ea87414c8217e17c6cede93026ac1cc9e7a7162c7343374d035a6157739f"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "4f491acad18c265e75c06d9422384636247f0db08391169d9691daceaaa448f0",
+    "top-sweater-ls2-navy": "860f5c69cc7f2d1f623370be2ce0ad865db41d624736455e2c210fb8c3d81d67",
+    "top-tank-burgundy-pique": "ff84c7231a4b70b11fc99982bc6e043cef9eb38f3f243663f22a348c5c31825a",
+    "top-tee-hip-breton-stripe": "5e3539fd248d68e159c2ed9b3836fcf2de61720f2d5d040f73118a4a170d0f07",
+    "top-sweater-ls2-sand-fox": "f540a62f4d709e6f99d33a5bedd65fe89f21e6930687ad1100c6b512f46687d0",
+    "top-tank-heather": "36b166f939578bb181ad03a719dc8759dfd4808b6fc7dc6477f218e1906af962",
+    "top-tank-navy": "dce1b23c650dc24f047b4083bd38fdb16cc0f479495a2783064537b34723d29f",
+    "top-sweater-ls2-heather": "2380ded13b949ad24f1e143b4283ff10968f0ee6315326fc6d3919bdbdf77e4f"
+   },
+   "hairInFront": {
+    "top-tee-hip-cream": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.53
+     }
+    },
+    "top-sweater-ls2-navy": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    },
+    "top-tank-burgundy-pique": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-tee-hip-breton-stripe": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.48
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.53
+     }
+    },
+    "top-sweater-ls2-sand-fox": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    },
+    "top-tank-heather": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-tank-navy": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.47
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.5
+     }
+    },
+    "top-sweater-ls2-heather": {
+     "oerer": {
+      "hairPxAlpha224": 50679,
+      "notInFront": 0,
+      "maxChannelDiff": 0.49
+     },
+     "skuldre": {
+      "hairPxAlpha224": 18633,
+      "notInFront": 0,
+      "maxChannelDiff": 0.51
+     }
+    }
+   }
+  },
+  "h25d4-grey": {
+   "trialId": "D4-1",
+   "callId": "H25V3-dev13-D4-1",
+   "colour": "grey",
+   "name": "Høj hestehale med tydelig forbindelse",
+   "label": "Høj hestehale · gråt",
+   "file": "head-h25d4-grey-v1.webp",
+   "approvedPng": {
+    "path": "run-3/forsoeg-g4/faerdig/D4-1/grey-head.png",
+    "sha256": "b9fd398ee71ea64e02f159c1c237280ce3989cfcdba385c424f36720dc2d930f",
+    "pixelSha256": "ea3a3a888830708071b0442fc1f30ad6ae1aca6f1a5544dba5687d2b667bd6b8"
+   },
+   "webp": {
+    "sha256": "03f664946d84b663c6466c99384d7723716af5fdfb4cfcbd65085340189e52a5",
+    "bytes": 94134,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/forsoeg-g4/faerdig/D4-1/views-graa/figur-app.png": "cd44467e4dde467df44df63b0d4217eb0dae669b37ca3379198b62b57dffa5f2",
+    "run-3/forsoeg-g4/faerdig/D4-1/views-graa/hoved-1til1.png": "21bc2e36ffdc1269ab47b84b3d4a3cc14dff1bcdcacf2066bb5de9e56203becc",
+    "run-3/forsoeg-g4/faerdig/D4-1/views-graa/tank-app.png": "32a44aedb119ae6395c578a0ca8b4b631954c8897fc8d217de6cf84a1d06ea21",
+    "run-3/forsoeg-g4/faerdig/D4-1/views-graa/sweater-app.png": "b6ef1aedc3b85e96eab2829f02a6b9a9e55ab7ff39c929f9401eece5a089f227"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "caae79b1d1194f4584a006e0459bbccc895fa69c080b98835f46e1fcfbc5d8b8",
+    "top-sweater-ls2-navy": "7ab880864d94cb93e19530661edf48b9d68dc632dc3e8d7ea9d7733d42bf9703",
+    "top-tank-burgundy-pique": "a9a4878cc3a44121bedbf1bf43854a9c6e8455e7636a8afc25379e7a932080ae",
+    "top-tee-hip-breton-stripe": "c8b01bb551a70e4cc3bc873109e11c5052fd6e98310ffddc75188a05116bdab4",
+    "top-sweater-ls2-sand-fox": "4ebe54df1ad24ebaed5388b1298e048cac6cbbc279fa2adafdb81f1ed311ebc9",
+    "top-tank-heather": "2a403de99decd4fafa3dd8852035b02ada545ff00bf5af6f596be3d4d9b49306",
+    "top-tank-navy": "a8ff1ffb47bbe389a8ba3551ebb08bd0054f7c07d101ceb8726266f0cd0385f0",
+    "top-sweater-ls2-heather": "affdfcd022bd3a52a2edda4dcaa7c2051fd7bfce04919e712313e4576e27e7a2"
+   },
+   "hairInFront": {
+    "top-tee-hip-cream": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-sweater-ls2-navy": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-tank-burgundy-pique": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-tee-hip-breton-stripe": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-sweater-ls2-sand-fox": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-tank-heather": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-tank-navy": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-sweater-ls2-heather": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    }
+   }
+  },
+  "h25d4-brown": {
+   "trialId": "D4-1",
+   "callId": "H25V3-dev13-D4-1",
+   "colour": "brown",
+   "name": "Høj hestehale med tydelig forbindelse",
+   "label": "Høj hestehale · brunt",
+   "file": "head-h25d4-brown-v1.webp",
+   "approvedPng": {
+    "path": "run-3/forsoeg-g4/faerdig/D4-1/brown-head.png",
+    "sha256": "ab66116d009d8181cb86ff8f0f4c7760dcb74de655b9423dc213e9d17ce4c8bb",
+    "pixelSha256": "0cd2df7237ad98b4208ce185ba13629a0ca3145b7f9e5fbaefeda9630710c070"
+   },
+   "webp": {
+    "sha256": "77083400c4d3ab79b758386831ae4941b6219ea80cd471dfc0f4495c2d58e4f6",
+    "bytes": 101734,
+    "lossless": true
+   },
+   "pageViews": {
+    "run-3/forsoeg-g4/faerdig/D4-1/views/figur-app.png": "6529d9d7b7103aee065c92014df9298655683b910683fe79a628d4cbebd5c023",
+    "run-3/forsoeg-g4/faerdig/D4-1/views/hoved-1til1.png": "844cf9610840bdb46a19deec1cbab1239c2ce48af042619d8d224783a7733b59",
+    "run-3/forsoeg-g4/faerdig/D4-1/views/tank-app.png": "f35b49c81861b3ae3a6dea63e649cf97342ade3d66445c08ef96fa3716a805b0",
+    "run-3/forsoeg-g4/faerdig/D4-1/views/sweater-app.png": "2e3c95346b33a67c819c408f328ab0cbf1052471442785d53dc3fe719b4630b8"
+   },
+   "figureRgbaSha256": {
+    "top-tee-hip-cream": "2a7d0c5cbb13351144eb5cb4cce1f7d09af02869fb29c3e95ce4bb580f680be8",
+    "top-sweater-ls2-navy": "d663432066a78a0b5110aa9cb236fe8577985b1f5ae3811db8ffc4db66c26393",
+    "top-tank-burgundy-pique": "988a469793c64cc20fd3799f84cc7e3b5c4a07df50c135fd1ea5cc0f5236eb6f",
+    "top-tee-hip-breton-stripe": "1b94e06d9f507e40241968d1edb2ee851e2d2f0f23637122322edaae35eee758",
+    "top-sweater-ls2-sand-fox": "cfffa3b731cdc219e4d1213c879fc43149f1baf1afd2bcb4d108e16301d6d119",
+    "top-tank-heather": "48eed9271feb7570cf12fa75b93d9f7ff2176835516fe44f006720756982bd16",
+    "top-tank-navy": "6dd9566568100669fde7c604503ce37e4e2413b872b5ad4912f8473ec0dcaa93",
+    "top-sweater-ls2-heather": "0e33e06d207fe0637c2c27256f1e1cd9f20a4afcfbf89721a07ac782dac8d90b"
+   },
+   "hairInFront": {
+    "top-tee-hip-cream": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-sweater-ls2-navy": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-tank-burgundy-pique": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-tee-hip-breton-stripe": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-sweater-ls2-sand-fox": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-tank-heather": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-tank-navy": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    },
+    "top-sweater-ls2-heather": {
+     "oerer": {
+      "hairPxAlpha224": 47127,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     },
+     "skuldre": {
+      "hairPxAlpha224": 849,
+      "notInFront": 0,
+      "maxChannelDiff": 0
+     }
+    }
+   }
+  }
+ }
+}
