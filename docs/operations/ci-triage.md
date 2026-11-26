@@ -181,6 +181,32 @@ Det er 15 forekomster fordelt på 12 tests i 4 spec-filer: `mobile-ux-validation
 **Næste skridt:** én issue for WebKit-mønstret, der tæller fejltypen pr. kørsel med `run-triage`. Ingen test springes
 over, og ingen retries hæves.
 
+### Overvågningskandidater 2026-11-25/26 (ikke løst; en bestået genkørsel er ikke en fundet årsag)
+
+**`tests/unit/english-activation-migrations-run.test.mjs`** (unit, PGlite):
+- **Observeret:** #746 på `836b2536`, Playwright Tests run 45689203165 forsøg 1, `unit (shard 4/4)`. To delscenarier
+  forventede en afvisning, men migrationen blev accepteret: "2b must refuse" (linje 230) og "2a must refuse" (linje
+  255). Det var 6,7 s, og de øvrige 4 tests bestod.
+- **Genkørsel:** ét ejer-godkendt forsøg 2 af de fejlede jobs var grønt.
+- **Lokalt:** 6/6 på præcis `836b2536` og på main `93ac063b`. Grøn i #742's og main's CI samme dag.
+- **Mulig årsag (UBEKRÆFTET):** testen deler én PGlite-instans mellem scenarier og stoler på BEGIN/ROLLBACK og
+  SAVEPOINT. Symptomet ligner en ændring, der ikke blev rullet tilbage før næste scenarie, fx et tidligere scenarie,
+  der efterlod 2a aktiv. Testen bruger ingen af #746's filer.
+- **Bevaret log:** første fejllinje ovenfor; den fulde shard-log er gemt lokalt hos agenten.
+
+**`[firefox] tests/isolated/laerligverse-host.isolated.spec.mjs:196`** ("the host page is keyboard-operable …"),
+K1-testprofil:
+- **Observeret:** main `31260d39` (#757, kun dokumentation), Isolated E2E run 45765533364 forsøg 1, job 139725664879.
+  Efter login med tastaturet (`keyboard.type` + Enter) forblev `body` på `data-state="login"`, og
+  `toHaveAttribute("data-session", "active")` fejlede efter 5 s (linje 210). 139 andre tests bestod.
+- **Kontekst:** `31260d39` adskiller sig kun fra den grønne `4a70e3f9` med avatar-dokumentation. Samme test bestod på
+  `4a70e3f9` og i #744's CI.
+- **Mulig årsag (UBEKRÆFTET):** login-flowet med tastatur i Firefox. Der er samme `toHaveAttribute`-mønster
+  som de kendte `stav-til`-tilfælde ovenfor, men ingen påvist sammenhæng.
+- **Genkørsel:** ét ejer-godkendt forsøg 2 af præcis dette job var grønt (run 45765533364, 2026-11-26 ~07:10Z). Årsagen er ikke fundet.
+- **Politik som ovenfor:** ingen hævet timeout, ingen svækket assertion og ingen sprunget test uden dokumenteret
+  grundlag.
+
 ## 6. Genkørsler (D4)
 
 Automatisk genkørsel er **ikke** indført. Det kræver ejerens særskilte GO. Den anbefalede politik, hvis det
