@@ -18,6 +18,7 @@ import { availableParallelism } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { BINARY_DEPENDENT } from "./unit-ci-exclusions.mjs";
+import { loadUnitWeights } from "./support/unit-weights.mjs";
 import { parseCounts, timingTable, resolveConcurrency, parseShard, planShards, parseBudget, budgetReport, driftReport, PG_ENV, detectPgFiles, pgLaneScheduler } from "./support/unit-timing.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -42,7 +43,8 @@ console.log(`unit suite in CI: ${suite.length} of ${all.length} files ` +
 // SHARDING (UNIT_SHARD=i/n). Every shard plans the SAME deterministic partition of the whole suite
 // (planShards self-checks that it is one: every file exactly once) and runs only its own part, so
 // the n shard jobs together run every file exactly once. Weights only balance the shards.
-const weights = JSON.parse(readFileSync(join(HERE, "unit-ci-weights.json"), "utf8")).weights ?? {};
+// The shared weights file plus one fragment per new or changed weight (tests/support/unit-weights.mjs).
+const { weights } = loadUnitWeights(join(HERE, ".."));
 const budgetS = parseBudget(process.env.UNIT_SHARD_BUDGET_S);
 const shard = parseShard(process.env.UNIT_SHARD);
 let run = suite;

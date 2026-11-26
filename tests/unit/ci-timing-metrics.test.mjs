@@ -12,8 +12,11 @@ import { readFileSync } from "node:fs";
 import { parseCounts, resolveConcurrency, timingTable } from "../support/unit-timing.mjs";
 import { aggregate, render } from "../support/timing-reporter.mjs";
 import TimingReporter from "../support/timing-reporter.mjs";
+import { loadUnitWeights } from "../support/unit-weights.mjs";
+import { fileURLToPath } from "node:url";
 import { analyze, median, pct, renderMarkdown, INFERRED_FULL_MIN } from "../../tools/ci/ci-timing-baseline.mjs";
 
+const REPO_DIR = fileURLToPath(new URL("../../", import.meta.url));
 const read = (p) => readFileSync(new URL(p, new URL("../../", import.meta.url)), "utf8").split("\r\n").join("\n");
 
 // ── unit runner ─────────────────────────────────────────────────────────────────────────────
@@ -224,7 +227,7 @@ test("the unit-shard matrix is exactly 1..N and the job reads N from strategy.jo
 test("the real suite: the workflow's shards cover every CI file exactly once and are balanced", () => {
   const unitDir = new URL("./", import.meta.url);
   const suite = readdirSync(unitDir).filter((f) => f.endsWith(".test.mjs") && !BINARY_DEPENDENT.includes(f)).sort();
-  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  const { weights } = loadUnitWeights(REPO_DIR);
   const n = unitShardMatrix().shards.length;
   const plan = planShards(suite, n, weights);
   assert.equal(plan.length, n);
@@ -410,7 +413,7 @@ test("pgLaneScheduler: no deadlock when only PG files are left, and none with no
 test("the real suite: every shard plan, run with its weights as durations, keeps the lane", () => {
   const suite = ciSuite();
   const pg = new Set(realPg());
-  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  const { weights } = loadUnitWeights(REPO_DIR);
   const n = unitShardMatrix().shards.length;
   const dur = (f) => (Number.isFinite(weights[f]) && weights[f] > 0 ? weights[f] : 1);
   for (const s of planShards(suite, n, weights)) checkRun(s.order, dur, 3, (f) => pg.has(f));
@@ -510,18 +513,18 @@ function heavyWithoutWeight(suite, weights, isPg) {
 }
 
 test("every heavy CI file (PGlite, real PostgreSQL, *-migration-run, *-concurrency) has a measured weight", () => {
-  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  const { weights } = loadUnitWeights(REPO_DIR);
   const pg = new Set(realPg());
   const suite = ciSuite();
   const heavy = suite.filter((f) => pg.has(f) || HEAVY_NAME.test(f) || usesPglite(f));
   assert.ok(heavy.length >= 100, `expected the ≥ 100 database files of 2026-11-24, found ${heavy.length}`);
   assert.deepEqual(heavyWithoutWeight(suite, weights, (f) => pg.has(f)), [],
-    "a heavy test file has no weight in tests/unit-ci-weights.json: add its seconds from its own PR's unit run " +
+    "a heavy test file has no weight: add tests/unit-ci-weights.d/<file>.json with its seconds from its own PR's unit run " +
     "(the drift report lists it as 'no weight'), or run tools/ci/unit-weights-refresh.mjs --write once it is on main");
 });
 
 test("negative control: without its weight, a one-minute database file is planned at the end of its shard", () => {
-  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  const { weights } = loadUnitWeights(REPO_DIR);
   const suite = ciSuite();
   const f = "order-categorize-activation-migration-run.test.mjs";
   assert.ok(suite.includes(f) && weights[f] >= 30, `${f} is in the suite and weighs ≥ 30 s`);
@@ -542,4 +545,97 @@ test("negative control: without its weight, a one-minute database file is planne
     assert.ok(startShare(weights, count) < 0.25, `${count} shards: with its weight it starts in the first quarter of its shard's time`);
     assert.ok(startShare(without, count) > 0.75, `${count} shards: without it, it starts in the last quarter — the tail that hit the timeout`);
   }
+});
+
+// ── Weight fragments (2026-11-26) ───────────────────────────────────────────────────────────
+// Every PR that added a weight rewrote the shared file's one-line `_comment`, so any two such PRs conflicted
+// (#746 / #742). A new or changed weight is now one file of its own: tests/unit-ci-weights.d/<test file>.json.
+import { mkdtempSync, mkdirSync, writeFileSync as writeFileSyncFrag, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join as joinFrag } from "node:path";
+import { execFileSync as execFrag } from "node:child_process";
+import { FRAGMENT_DIR, readWeightFragments } from "../support/unit-weights.mjs";
+
+function fragRepo(base, fragments) {
+  const root = mkdtempSync(joinFrag(tmpdir(), "weights-frag-"));
+  mkdirSync(joinFrag(root, "tests", "unit-ci-weights.d"), { recursive: true });
+  writeFileSyncFrag(joinFrag(root, "tests", "unit-ci-weights.json"), JSON.stringify({ _comment: "x", weights: base }, null, 2) + "\n");
+  for (const [name, body] of Object.entries(fragments)) writeFileSyncFrag(joinFrag(root, "tests", "unit-ci-weights.d", name), body);
+  return root;
+}
+
+test("weight fragments: a fragment adds a new weight and overrides the shared file's entry; README.md is allowed", () => {
+  const root = fragRepo({ "a.test.mjs": 6, "b.test.mjs": 2 }, {
+    "a.test.mjs.json": JSON.stringify({ seconds: 1.8, source: "PR #749 unit run 1" }),
+    "c-migration-run.test.mjs.json": JSON.stringify({ seconds: 4.9, source: "PR #746 unit run 2" }),
+    "README.md": "# fragments\n",
+  });
+  const r = loadUnitWeights(root);
+  assert.deepEqual(r.weights, { "a.test.mjs": 1.8, "b.test.mjs": 2, "c-migration-run.test.mjs": 4.9 });
+  assert.deepEqual(r.base, { "a.test.mjs": 6, "b.test.mjs": 2 }, "the shared file itself is unchanged");
+  assert.deepEqual(r.fragments.map((f) => f.file), ["a.test.mjs", "c-migration-run.test.mjs"]);
+  rmSync(root, { recursive: true, force: true });
+  // No fragment directory at all is the shared file alone.
+  const bare = fragRepo({ "a.test.mjs": 6 }, {});
+  rmSync(joinFrag(bare, "tests", "unit-ci-weights.d"), { recursive: true });
+  assert.deepEqual(loadUnitWeights(bare).weights, { "a.test.mjs": 6 });
+});
+
+test("weight fragments fail loudly: a wrong name, not JSON, no or a non-positive seconds, no source, an unknown key", () => {
+  const cases = {
+    "a.test.mjs": JSON.stringify({ seconds: 1, source: "s" }),
+    "A.test.mjs.json": JSON.stringify({ seconds: 1, source: "s" }),
+    "a.test.mjs.json.bak": "{}",
+  };
+  for (const [name, body] of Object.entries(cases)) {
+    assert.throws(() => loadUnitWeights(fragRepo({}, { [name]: body })), /is not <test file>\.test\.mjs\.json/, name);
+  }
+  const bodies = [
+    ["{ seconds: 1 }", /not JSON/],
+    ["[]", /not an object/],
+    [JSON.stringify({ source: "s" }), /seconds must be a number > 0/],
+    [JSON.stringify({ seconds: 0, source: "s" }), /seconds must be a number > 0/],
+    [JSON.stringify({ seconds: "3", source: "s" }), /seconds must be a number > 0/],
+    [JSON.stringify({ seconds: 3 }), /source .* is required/],
+    [JSON.stringify({ seconds: 3, source: " " }), /source .* is required/],
+    [JSON.stringify({ seconds: 3, source: "s", weight: 3 }), /unknown key weight/],
+  ];
+  for (const [body, re] of bodies) assert.throws(() => loadUnitWeights(fragRepo({}, { "a.test.mjs.json": body })), re, body);
+});
+
+test("the repository's fragments are valid and each names a test file that exists", () => {
+  const suite = new Set(readdirSync(new URL("./", import.meta.url)).filter((f) => f.endsWith(".test.mjs")));
+  for (const f of readWeightFragments(joinFrag(REPO_DIR, FRAGMENT_DIR))) {
+    assert.ok(suite.has(f.file), `${FRAGMENT_DIR}/${f.file}.json names no test file — delete the stale fragment`);
+  }
+});
+
+test("the reason for fragments: two branches adding weights as fragments merge without conflict; the old way conflicts", () => {
+  const g = (cwd, ...a) => execFrag("git", a, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+  const root = fragRepo({ "a.test.mjs": 6 }, {});
+  g(root, "init", "-q", "-b", "main");
+  g(root, "config", "user.email", "t@example.invalid"); g(root, "config", "user.name", "t"); g(root, "config", "core.autocrlf", "false");
+  g(root, "add", "-A"); g(root, "commit", "-q", "-m", "base");
+  const shared = joinFrag(root, "tests", "unit-ci-weights.json");
+  const branch = (name, file, seconds, oldWay) => {
+    g(root, "switch", "-q", "-c", name, "main");
+    if (oldWay) {
+      writeFileSyncFrag(shared, JSON.stringify({ _comment: `x + measured on ${name}`, weights: { "a.test.mjs": 6, [file]: seconds } }, null, 2) + "\n");
+    } else {
+      mkdirSync(joinFrag(root, "tests", "unit-ci-weights.d"), { recursive: true }); // git keeps no empty directory
+      writeFileSyncFrag(joinFrag(root, "tests", "unit-ci-weights.d", `${file}.json`), JSON.stringify({ seconds, source: name }) + "\n");
+    }
+    g(root, "add", "-A"); g(root, "commit", "-q", "-m", name);
+  };
+  branch("old-1", "b.test.mjs", 4.9, true);
+  branch("old-2", "c.test.mjs", 2.5, true);
+  g(root, "switch", "-q", "old-1");
+  assert.throws(() => g(root, "merge", "-q", "--no-edit", "old-2"), "the shared one-line comment conflicts");
+  g(root, "merge", "--abort");
+  branch("new-1", "b.test.mjs", 4.9, false);
+  branch("new-2", "c.test.mjs", 2.5, false);
+  g(root, "switch", "-q", "new-1");
+  g(root, "merge", "-q", "--no-edit", "new-2");
+  assert.deepEqual(loadUnitWeights(root).weights, { "a.test.mjs": 6, "b.test.mjs": 4.9, "c.test.mjs": 2.5 });
+  rmSync(root, { recursive: true, force: true });
 });
