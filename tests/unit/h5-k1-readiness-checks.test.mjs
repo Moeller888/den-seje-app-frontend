@@ -7,7 +7,7 @@
 //   1. The checks file is one SELECT statement: no writing or DDL keyword outside comments and string
 //      literals, and no function outside a small read-only set (the Lærlig guard rejects e.g. query_to_xml
 //      for execute_sql). Both runbook integrity blocks are read-only too.
-//   2. Before H5 (production's applied order today: D-280 part 1, D-278, G1, G2, D-316): every pre check ok,
+//   2. Before H5 (production's applied order until 2026-11-04 09:54Z: D-280 part 1, D-278, G1, G2, D-316): every pre check ok,
 //      every H5/K1 check false, GATE-A1 the only open gate — no SQL error although question_attempts is absent.
 //   3. After the full chain (bootstrap → alignment → D-327 → K1, ledger as apply_migration writes it): every
 //      pre/boot/align/d327/k1 check ok; cutover false; GATE-M2 the only open gate.
@@ -40,6 +40,7 @@ import {
   D278, D280_PATHS, G1, BOOTSTRAP, ALIGN, TOP10_BEFORE, TOP10_ID, uid, baseSql, migrationSql, FINGERPRINT_SQL,
 } from "./helpers/h5-integration-chain.mjs";
 import { G2, G2_SEED_SQL } from "./helpers/g2-h5-orders.mjs";
+import { extractFunction } from "./helpers/answer-chain-schema.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CHECKS_SQL = readFileSync(join(ROOT, "docs", "operations", "h5-k1-readiness-checks.sql"), "utf8");
@@ -49,7 +50,11 @@ const D316 = "20261102100000_release_open_rounds_on_inactive_questions.sql";
 const D327 = "20261103100000_question_attempts_history_no_action.sql";
 const K1 = "20261103110000_l1_k1_attempt_context.sql";
 
-// Production's applied order today (2026-11-04), then the binding activation order (D-327 / PR #536).
+// Production's applied order BEFORE H5 (until 2026-11-04 09:54Z), then the binding activation order (D-327 / PR #536).
+// Since then production has applied the first three steps of that order: the bootstrap as 20261104095423, the
+// alignment as 20261104140659 and D-327 as 20261104163310 (docs/operations/production-actions/
+// 2026-11-04T0954Z-h5-bootstrap-applied.md, 2026-11-04T1406Z-h5-alignment-applied.md, docs/decisions/D-327.md).
+// K1 is NOT applied. The name PROD_TODAY is kept; the stages below still model each step of the chain.
 const PROD_TODAY = [D280_PATHS, D278, G1, G2, D316];
 const FULL = [...PROD_TODAY, BOOTSTRAP, ALIGN, D327, K1];
 // The names runbook §3 prescribes for apply_migration.
@@ -222,6 +227,41 @@ test("4c. missing prerequisites give NO-GO: an unreviewed body, or G1 not applie
   c = await checks(noG1);
   assert.equal(c["PRE-01"].ok, false, "D-280 part 1's body, G1 not applied");
   assertOnlyGate(c, null);
+});
+
+// D-383 (20261120150000) replaces release + the three request_repeat_*_for_student and adds question_is_course_item in
+// one transaction. Its bodies are taken VERBATIM from the migration file (the md5 is the body text), on top of
+// production's chain here. PRE-02 accepts exactly the set before D-383 or the set after it — never a mixture, never
+// the after-bodies without the helper, never any other body — and nothing else in the readiness result changes.
+const D383_FILE = "20261120150000_course_items_out_of_ordinary_quiz.sql";
+const D383_BODIES = ["question_is_course_item", "release_open_question_outside", "request_repeat_question_for_student",
+  "request_repeat_question_servable_for_student", "request_repeat_level_question_for_student"];
+test("4d. PRE-02 after D-383: all four after-bodies with the helper pass; a mixture or a missing helper does not", async () => {
+  const before = await checks(await db(PROD_TODAY));
+  const after = await db(PROD_TODAY);
+  for (const name of D383_BODIES) await after.exec(extractFunction(D383_FILE, name));
+  const c = await checks(after);
+  assert.equal(c["PRE-02"].ok, true, c["PRE-02"].actual);
+  assert.match(c["PRE-02"].actual, /release=e52e69fa .*rqs=c14b90cc rqss=b23d72a1 rql=410d0ab6 course=00cc41a0/);
+  assert.match(before["PRE-02"].actual, /course=mangler$/);
+  for (const id of Object.keys(before)) {
+    if (id !== "PRE-02") assert.deepEqual([id, c[id].ok], [id, before[id].ok], `${id} is unchanged by D-383`);
+  }
+  assertOnlyGate(c, "GATE-A1");
+
+  const mixed = await db(PROD_TODAY);
+  await mixed.exec(extractFunction(D383_FILE, "question_is_course_item"));
+  await mixed.exec(extractFunction(D383_FILE, "release_open_question_outside"));
+  assert.equal((await checks(mixed))["PRE-02"].ok, false, "release after D-383, the repeat functions before: refused");
+
+  const noHelper = await db(PROD_TODAY);
+  for (const name of D383_BODIES) await noHelper.exec(extractFunction(D383_FILE, name));
+  await noHelper.exec("DROP FUNCTION public.question_is_course_item(jsonb) CASCADE");
+  assert.equal((await checks(noHelper))["PRE-02"].ok, false, "the after-bodies without the helper: refused");
+
+  const helperOnly = await db(PROD_TODAY);
+  await helperOnly.exec(extractFunction(D383_FILE, "question_is_course_item"));
+  assert.equal((await checks(helperOnly))["PRE-02"].ok, false, "the helper with the before-bodies: refused");
 });
 
 test("5. a missing constraint, a missing trigger and a disabled trigger are detected", async () => {
