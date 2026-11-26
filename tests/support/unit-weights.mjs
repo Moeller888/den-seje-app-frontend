@@ -44,6 +44,11 @@ export function loadUnitWeights(root) {
   const doc = JSON.parse(readFileSync(join(root, WEIGHTS_FILE), "utf8"));
   const base = doc && typeof doc === "object" && doc.weights && typeof doc.weights === "object" ? doc.weights : null;
   if (!base) throw new Error(`${WEIGHTS_FILE}: no "weights" object`);
+  // A wrong value would silently be planned at the median (planShards treats it as unknown), so it fails here instead.
+  for (const [file, s] of Object.entries(base)) {
+    if (!/^[a-z0-9][a-z0-9.-]*\.test\.mjs$/.test(file)) throw new Error(`${WEIGHTS_FILE}: "${file}" is not a test file name`);
+    if (typeof s !== "number" || !Number.isFinite(s) || s <= 0) throw new Error(`${WEIGHTS_FILE}: ${file} must be a number > 0`);
+  }
   const fragments = readWeightFragments(join(root, FRAGMENT_DIR));
   const weights = { ...base };
   for (const f of fragments) weights[f.file] = f.seconds;

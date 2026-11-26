@@ -695,3 +695,47 @@ test("the real suite with fragments: 4 shards (the workflow) and 5 shards (the p
     assert.ok(plan.every((s) => s.files.length > 0), `${n} shards: none empty`);
   }
 });
+
+import { writeAtomic } from "../../tools/ci/unit-weights-refresh.mjs";
+
+test("an interrupted refresh is safe to repeat: the shared file is replaced whole, and a second fold deletes what the first left", () => {
+  const root = fragRepo({ "a.test.mjs": 6 }, {
+    "a.test.mjs.json": JSON.stringify({ seconds: 1.8, source: "PR run" }),
+    "b.test.mjs.json": JSON.stringify({ seconds: 4.9, source: "PR run" }),
+  });
+  const shared = joinFrag(root, "tests", "unit-ci-weights.json"), dir = joinFrag(root, FRAGMENT_DIR);
+  const measured = { "a.test.mjs": 2.2 };
+  // Interrupted after the shared file, before the fold: the run is not finished, and the leftover shows.
+  writeAtomic(shared, JSON.stringify({ _comment: "x", weights: measured }, null, 2) + "\n");
+  assert.deepEqual(readdirSync(joinFrag(root, "tests")).sort(), ["unit-ci-weights.d", "unit-ci-weights.json"], "no .tmp left behind");
+  assert.equal(loadUnitWeights(root).weights["a.test.mjs"], 1.8, "until the fold, the covered fragment still wins (git status shows it)");
+  // Repeating the same command measures the same values: the fold finishes the job, and a third run changes nothing.
+  assert.deepEqual(foldFragments(dir, measured).map((f) => f.file), ["a.test.mjs"]);
+  assert.deepEqual(foldFragments(dir, measured), [], "idempotent");
+  assert.deepEqual(loadUnitWeights(root).weights, { "a.test.mjs": 2.2, "b.test.mjs": 4.9 });
+  // The order in the tool is fixed: the shared file first, then the fold.
+  const src = read("tools/ci/unit-weights-refresh.mjs");
+  const w = src.indexOf("writeAtomic(file,"), f = src.indexOf("foldFragments(join(REPO_ROOT");
+  assert.ok(w > 0 && f > w, "the tool replaces the shared file before it deletes fragments");
+  assert.ok(!/writeFileSync\(file\b/.test(src), "the shared file is never written in place");
+  rmSync(root, { recursive: true, force: true });
+});
+
+test("the shared file fails loudly on a wrong weight instead of planning it at the median", () => {
+  for (const [weights, re] of [
+    [{ "a.test.mjs": "3" }, /a\.test\.mjs must be a number > 0/],
+    [{ "a.test.mjs": 0 }, /must be a number > 0/],
+    [{ "a.test.mjs": -2 }, /must be a number > 0/],
+    [{ "a.test.mjs": null }, /must be a number > 0/],
+    [{ "a.spec.ts": 3 }, /is not a test file name/],
+  ]) assert.throws(() => loadUnitWeights(fragRepo(weights, {})), re, JSON.stringify(weights));
+});
+
+test("the real suite: every CI file has a valid weight, and every weight names a file that exists", () => {
+  const suite = readdirSync(new URL("./", import.meta.url)).filter((f) => f.endsWith(".test.mjs") && !BINARY_DEPENDENT.includes(f)).sort();
+  const { weights } = loadUnitWeights(REPO_DIR);
+  const missing = suite.filter((f) => !(Number.isFinite(weights[f]) && weights[f] > 0));
+  assert.deepEqual(missing, [], "a CI file without a weight: add tests/unit-ci-weights.d/<file>.json from its CI run");
+  const all = new Set(readdirSync(new URL("./", import.meta.url)));
+  assert.deepEqual(Object.keys(weights).filter((f) => !all.has(f)), [], "a weight for a deleted file: remove it with the next refresh");
+});

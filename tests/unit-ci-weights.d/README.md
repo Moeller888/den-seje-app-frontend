@@ -15,3 +15,9 @@ Et fragment tilsidesætter den delte fils værdi for samme testfil (`tests/suppo
 manglende `source` eller `seconds` ≤ 0 får kørslen til at fejle højlydt. `tools/ci/unit-weights-refresh.mjs --write`
 folder målingerne ind i den delte fil og sletter selv de fragmenter, målingen dækker. Ellers ville et efterladt fragment
 tilsidesætte den nyere måling. Commit sletningerne sammen med den delte fil.
+
+Den delte fil erstattes atomisk (skrives til `.tmp` og omdøbes), og først derefter slettes fragmenterne. Afbrydes
+kørslen imellem, viser `git status` det halvfærdige resultat. Samme kommando med samme `--runs` kan køres igen og
+færdiggør sletningen. En vægt i den delte fil, der ikke er et tal > 0, får kørslen til at fejle, så den aldrig stiltiende
+planlægges som medianen. Hver CI-testfil skal have en vægt (testen i `tests/unit/ci-timing-metrics.test.mjs`): en ny
+testfil får sit fragment fra sin første CI-kørsel.
